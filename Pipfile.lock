@@ -1,11 +1,11 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "d9217ce59060d3d6b3611709d68f7e7fe77313fc919f884110fb59767ecaea5f"
+            "sha256": "4f5d754a3acbf363b8cb30501d6dcadd6831d977c41b2aa7532f88b670aa7ee7"
         },
         "pipfile-spec": 6,
         "requires": {
-            "python_version": "3.8"
+            "python_version": "3"
         },
         "sources": [
             {
@@ -16,12 +16,12 @@
         ]
     },
     "default": {
-        "urwid": {
+        "npyscreen": {
             "hashes": [
-                "sha256:588bee9c1cb208d0906a9f73c613d2bd32c3ed3702012f51efe318a3f2127eae"
+                "sha256:622ee0f9a5dae946e635b7c6e0f6d65e1ed3c9ea0d20b89dab7f58d580e5126e"
             ],
             "index": "pypi",
-            "version": "==2.1.2"
+            "version": "==4.10.5"
         }
     },
     "develop": {}
