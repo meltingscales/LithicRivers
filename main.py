@@ -17,13 +17,19 @@ from asciimatics.widgets import Frame, Layout, Divider, Button
 DEFAULT_SIZE = (15, 20)
 
 
-def gen_tile() -> str:
+def gen_tile(choices=None) -> str:
+
+    if choices is None:
+        choices = ['@', '.']
+
+    rare, common = choices
+
     i = random.randint(1, 10)
 
     if i >= 10:
-        return 'i'
+        return rare
 
-    return ' '
+    return common
 
 
 def gen_world(size=DEFAULT_SIZE) -> List[List[str]]:
@@ -110,11 +116,12 @@ class RootPage(Frame):
 
         self.add_layout(layout1)
 
-        text1 = asciimatics.widgets.Text(name="text1", label="hello - tile generated = [{}]".format(gen_tile()))
-        layout1.add_widget(text1)
+        textTileGen = asciimatics.widgets.Text(name="textTileGen",
+                                               label="hello - random tile generated = [{}]".format(gen_tile()))
+        layout1.add_widget(textTileGen)
 
-        layout2 = TabButtons(self, 0)
-        self.add_layout(layout2)
+        layoutButtons = TabButtons(self, 0)
+        self.add_layout(layoutButtons)
         self.fix()
 
 
@@ -175,10 +182,10 @@ def demo(screen: Screen, scene: Scene):
     ]
 
     def handleEvent(event: KeyboardEvent):
-        daChar=chr(event.key_code)
+        daChar = chr(event.key_code)
         print("WOW! Event = {}".format(daChar))
         pprint(event)
-        screen.set_title("HOLD UP, YOU PRESSING "+daChar+"?")
+        screen.set_title("HOLD UP, YOU PRESSING " + daChar + "?")
 
     screen.play(scenes, stop_on_resize=True, start_scene=scene, allow_int=True, unhandled_input=handleEvent)
 
