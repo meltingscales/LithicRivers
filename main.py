@@ -176,13 +176,13 @@ def demo(screen: Screen, scene: Scene):
             print("No effects ;_;")
             return
 
-        daRootPage: RootPage = daEffects[0]
+        maybeDaRootPage: RootPage = daEffects[0]
 
-        if daRootPage.title.strip() == 'Root Page':
+        if maybeDaRootPage.title.strip() == 'Root Page':
             # screen.set_title("HOLD UP, YOU PRESSING " + daChar + "?")
-            daRootPage.labelFoo.text = f"pressing {daChar}?"
+            maybeDaRootPage.labelFoo.text = f"pressing {daChar}?"
         else:
-            print("Not supposed to handle " + daRootPage.title)
+            print("Not supposed to handle " + maybeDaRootPage.title)
 
     screen.play(scenes, stop_on_resize=True, start_scene=scene, allow_int=True, unhandled_input=handleEvent)
 
