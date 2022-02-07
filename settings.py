@@ -1,0 +1,1 @@
+DEFAULT_SIZE = (15, 20)
