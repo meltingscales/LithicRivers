@@ -3,13 +3,12 @@
 # Press Ctrl+F5 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 import sys
-from pprint import pprint
-from typing import List
+from typing import List, Tuple, Union
 
 import asciimatics.widgets
 import numpy
 from asciimatics.effects import Effect
-from asciimatics.event import KeyboardEvent
+from asciimatics.event import KeyboardEvent, MouseEvent
 from asciimatics.exceptions import ResizeScreenError, NextScene, StopApplication
 from asciimatics.scene import Scene
 from asciimatics.screen import Screen
@@ -57,6 +56,33 @@ print_world(world, size=DEFAULT_SIZE, borderchar='#')
 def raise_(ex):
     """Because we can't use raise in lambda for some reason..."""
     raise ex
+
+
+class Player:
+    def __init__(self):
+        self.x = 0
+        self.y = 0
+        self.displaySymbol = '$'
+        self.health = 100
+        self.stamina = 100
+
+    def move(self, vecoffset: Tuple[int, int]):
+        xoffset, yoffset = vecoffset
+
+        self.x += xoffset
+        self.y += yoffset
+
+    def moveUp(self):
+        self.move((0, 1))
+
+    def moveDown(self):
+        self.move((0, -1))
+
+    def moveLeft(self):
+        self.move((-1, 0))
+
+    def moveRight(self):
+        self.move((1, 0))
 
 
 class TabButtons(Layout):
@@ -165,7 +191,12 @@ def demo(screen: Screen, scene: Scene):
         Scene([CharliePage(screen)], -1, name="CharliePage"),
     ]
 
-    def handleEvent(event: KeyboardEvent):
+    def handleEvent(event: Union[KeyboardEvent, MouseEvent]):
+        if not isinstance(event, KeyboardEvent):
+            print("not keyboard event, ignoring... - {}".format(event))
+            return
+        event: KeyboardEvent
+
         daChar = chr(event.key_code)
         # pprint(event)
 
