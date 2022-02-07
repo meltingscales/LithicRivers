@@ -8,6 +8,7 @@ from pprint import pprint
 from typing import List, Tuple
 
 import asciimatics.widgets
+import numpy
 from asciimatics.event import KeyboardEvent
 from asciimatics.exceptions import ResizeScreenError, NextScene, StopApplication
 from asciimatics.scene import Scene
@@ -17,19 +18,24 @@ from asciimatics.widgets import Frame, Layout, Divider, Button
 DEFAULT_SIZE = (15, 20)
 
 
-def gen_tile(choices=None) -> str:
-
+def gen_tile(choices=None, weights=None) -> str:
     if choices is None:
-        choices = ['@', '.']
+        choices = ['@', ',', '.']
 
-    rare, common = choices
+    if weights is None:
+        weights = [5, 15, 100]
 
-    i = random.randint(1, 10)
+    weights = numpy.asarray(weights)
 
-    if i >= 10:
-        return rare
+    normalizedWeights = weights
 
-    return common
+    if weights.sum() != 1:
+        normalizedWeights = weights / weights.sum()
+
+    if len(weights) != len(choices):
+        raise ValueError(f"Weights and choices for {gen_tile.__name__}() must be the same length!")
+
+    return numpy.random.choice(choices, p=normalizedWeights)
 
 
 def gen_world(size=DEFAULT_SIZE) -> List[List[str]]:
