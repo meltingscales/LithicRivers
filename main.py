@@ -2,6 +2,7 @@
 
 # Press Ctrl+F5 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+import io
 import sys
 from typing import List, Tuple, Union
 
@@ -15,7 +16,6 @@ from asciimatics.screen import Screen
 from asciimatics.widgets import Frame, Layout, Divider, Button
 
 from settings import DEFAULT_SIZE
-from textUtil import print_world
 
 
 def gen_tile(choices=None, weights=None) -> str:
@@ -36,21 +36,6 @@ def gen_tile(choices=None, weights=None) -> str:
         normalizedWeights = weights / weights.sum()
 
     return numpy.random.choice(choices, p=normalizedWeights)
-
-
-def gen_world(size=DEFAULT_SIZE) -> List[List[str]]:
-    width, height = size
-    resultworld = []
-    for y in range(0, height):
-        row = []
-        for x in range(0, width):
-            row.append(gen_tile())
-        resultworld.append(row)
-    return resultworld
-
-
-world = gen_world()
-print_world(world, size=DEFAULT_SIZE, borderchar='#')
 
 
 def raise_(ex):
@@ -83,6 +68,78 @@ class Player:
 
     def moveRight(self):
         self.move((1, 0))
+
+
+class World:
+
+    @staticmethod
+    def gen_world(size: Tuple[int, int]) -> List[List[str]]:
+        width, height = size
+        resultworld = []
+        for y in range(0, height):
+            row = []
+            for x in range(0, width):
+                row.append(gen_tile())
+            resultworld.append(row)
+        return resultworld
+
+    def __init__(self, size=DEFAULT_SIZE):
+        self.size = size
+        self.worlddata = World.gen_world(size)
+
+    def print_world(self, borderchar: str = None) -> str:
+
+        if borderchar == '':
+            borderchar = None
+
+        daFile = io.StringIO()
+
+        size = self.size
+        juiceWorld = self.worlddata
+
+        width, height = size
+        for y in range(0, height):
+            row = juiceWorld[y]
+
+            if (y == 0) and borderchar:
+                print((borderchar * 2) + (borderchar * width), file=daFile)
+
+            for x in range(0, width):
+                tile = row[x]
+
+                if (x == 0) and borderchar:
+                    print(borderchar, end='', file=daFile)
+
+                print(tile, end='', file=daFile)
+
+                if (x == (width - 1)) and borderchar:
+                    print(borderchar, end='', file=daFile)
+
+            print("\n", end='', file=daFile)
+
+            if (y == (height - 1)) and borderchar:
+                print((borderchar * 2) + (borderchar * width), file=daFile)
+
+        ret = daFile.getvalue()
+        daFile.close()
+        return ret
+
+
+class Game:
+    def __init__(self, player=None, world=None):
+
+        if player is None:
+            player = Player()
+
+        if world is None:
+            world = World()
+
+        self.player = player
+        self.world = world
+
+
+# Global game object...
+GAME = Game()
 
 
 class TabButtons(Layout):
@@ -122,13 +179,21 @@ class RootPage(Frame):
 
         self.add_layout(layout1)
 
-        textTileGen = asciimatics.widgets.Text(name="textTileGen",
-                                               label="hello - random tile generated = [{}]".format(gen_tile()))
+        self.textTileGen = asciimatics.widgets.Text(name="textTileGen",
+                                                    label="[focus input]", readonly=True)
+        layout1.add_widget(self.textTileGen)
 
         self.labelFoo = asciimatics.widgets.Label(name="labelFoo", label='foo :)')
-
-        layout1.add_widget(textTileGen)
         layout1.add_widget(self.labelFoo)
+
+        self.textBoxGameRender = asciimatics.widgets.TextBox(
+            name="textBoxGameRender",
+            label="World:",
+            height=20,
+            readonly=True,
+        )
+        self.textBoxGameRender.value = GAME.world.print_world(borderchar='')
+        layout1.add_widget(self.textBoxGameRender)
 
         layoutButtons = TabButtons(self, 0)
         self.add_layout(layoutButtons)
@@ -210,8 +275,11 @@ def demo(screen: Screen, scene: Scene):
         maybeDaRootPage: RootPage = daEffects[0]
 
         if maybeDaRootPage.title.strip() == 'Root Page':
+            daRootPage = maybeDaRootPage
             # screen.set_title("HOLD UP, YOU PRESSING " + daChar + "?")
-            maybeDaRootPage.labelFoo.text = f"pressing {daChar}?"
+            daRootPage.labelFoo.text = f"pressing {daChar}?"
+            # daRootPage.textBoxGameRender.value = GAME.world.print_world()
+            daRootPage.textBoxGameRender.value = "test\nit\nout"
         else:
             print("Not supposed to handle " + maybeDaRootPage.title)
 
@@ -221,6 +289,8 @@ def demo(screen: Screen, scene: Scene):
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     print('wow its PyCharm!')
+
+    print(GAME.world.print_world())
 
     last_scene = None
     while True:

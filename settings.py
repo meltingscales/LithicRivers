@@ -1,1 +1,1 @@
-DEFAULT_SIZE = (15, 20)
+DEFAULT_SIZE = (3, 3)
