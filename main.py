@@ -167,6 +167,25 @@ class TabButtons(Layout):
         buttons[active_tab_idx].disabled = True
 
 
+class GameWidget(asciimatics.widgets.Widget):
+
+    def __init__(self, name):
+        super().__init__(name)
+        pass
+
+    def update(self, frame_no):
+        pass
+
+    def reset(self):
+        pass
+
+    def process_event(self, event):
+        pass
+
+    def required_height(self, offset, width):
+        pass
+
+
 class RootPage(Frame):
     def __init__(self, screen):
         super().__init__(screen,
@@ -186,14 +205,12 @@ class RootPage(Frame):
         self.labelFoo = asciimatics.widgets.Label(name="labelFoo", label='foo :)')
         layout1.add_widget(self.labelFoo)
 
-        self.textBoxGameRender = asciimatics.widgets.TextBox(
-            name="textBoxGameRender",
-            label="World:",
-            height=20,
-            readonly=True,
+        self.widgetGame = GameWidget(
+            name="widgetGame",
+            game=GAME
         )
-        self.textBoxGameRender.value = GAME.world.print_world(borderchar='')
-        layout1.add_widget(self.textBoxGameRender)
+        self.widgetGame.value = GAME.world.print_world(borderchar='')
+        layout1.add_widget(self.widgetGame)
 
         layoutButtons = TabButtons(self, 0)
         self.add_layout(layoutButtons)
@@ -279,7 +296,7 @@ def demo(screen: Screen, scene: Scene):
             # screen.set_title("HOLD UP, YOU PRESSING " + daChar + "?")
             daRootPage.labelFoo.text = f"pressing {daChar}?"
             # daRootPage.textBoxGameRender.value = GAME.world.print_world()
-            daRootPage.textBoxGameRender.value = "test\nit\nout"
+            # daRootPage.widgetGame.asdfadsf
         else:
             print("Not supposed to handle " + maybeDaRootPage.title)
 
