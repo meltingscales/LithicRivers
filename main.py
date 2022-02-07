@@ -72,6 +72,12 @@ class Player:
 
 class World:
 
+    def get_height(self):
+        return self.size[1]
+
+    def get_width(self):
+        return self.size[0]
+
     @staticmethod
     def gen_world(size: Tuple[int, int]) -> List[List[str]]:
         width, height = size
@@ -126,7 +132,7 @@ class World:
 
 
 class Game:
-    def __init__(self, player=None, world=None):
+    def __init__(self, player: Player = None, world: World = None):
 
         if player is None:
             player = Player()
@@ -169,8 +175,12 @@ class TabButtons(Layout):
 
 class GameWidget(asciimatics.widgets.Widget):
 
-    def __init__(self, name):
-        super().__init__(name)
+    def __init__(self, name, game: Game):
+        super(GameWidget, self).__init__(name)
+        self.game = game
+
+        # hey bro just copy from asciimatics.widgets.Label... ;3
+        heybrojustcopyfromtheLabelClassBroNoonewillevenNoticeItsJustThatEASYBROJUSTGODOITJEEZ = asciimatics.widgets.Label
         pass
 
     def update(self, frame_no):
@@ -180,10 +190,11 @@ class GameWidget(asciimatics.widgets.Widget):
         pass
 
     def process_event(self, event):
-        pass
+        # this widget has no user interactions
+        return event
 
     def required_height(self, offset, width):
-        pass
+        return self.game.world.get_height()
 
 
 class RootPage(Frame):
