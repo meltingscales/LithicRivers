@@ -258,13 +258,20 @@ class GameWidget(asciimatics.widgets.Widget):
 
     def update(self, frame_no: int):
         self._frame.canvas: Canvas
-        self._frame.canvas.paint(f'|~-~ World {self.game.world.name} ~-~|', self._x, self._y)
-        self._frame.canvas.paint(f'wew lad (frame_no % 100) = {(frame_no % 100):03d}', self._x, self._y + 1)
-        worldStr: str = self.game.world.print_world()
-        i = 1
-        for line in worldStr.split('\n'):
-            self._frame.canvas.paint(line, self._x, self._y + 1 + i)
-            i += 1
+
+        content = f'|~-~ World {self.game.world.name} ~-~|\n'
+        content += f'wew lad (frame_no % 100) = {(frame_no % 100):03d}\n'
+        content += self.game.world.print_world()
+
+        (colour, attr, background) = self._frame.palette[
+            self._pick_palette_key("label", selected=False, allow_input_state=False)
+        ]
+
+        for i, text in enumerate(_split_text(content, self._w, self._h, self._frame.canvas.unicode_aware)):
+            self._frame.canvas.paint(
+                f"{text:{self._align}{self._w}}",
+                self._x, self._y + i, colour, attr, background
+            )
 
     def reset(self):
         pass
@@ -391,7 +398,7 @@ def demo(screen: Screen, scene: Scene):
 
     def handleEvent(event: Union[KeyboardEvent, MouseEvent]):
         if not isinstance(event, KeyboardEvent):
-            print("not keyboard event, ignoring... - {}".format(event))
+            # print("not keyboard event, ignoring... - {}".format(event))
             return
         event: KeyboardEvent
 
