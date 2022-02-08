@@ -245,21 +245,26 @@ class SwagLabel(asciimatics.widgets.Widget):
 
 
 class GameWidget(asciimatics.widgets.Widget):
-    __slots__ = ["_required_height",'_game','_align']
+    __slots__ = ["_required_height", '_game', '_align']
 
     def __init__(self, game: Game, align='<', name: str = None):
         super(GameWidget, self).__init__(name, tab_stop=False)
 
         self.game = game
-        self._required_height = self.game.world.get_height()
+        self._required_height = self.game.world.get_height() + 2
         self._align = align
 
         self._frame: Frame
 
     def update(self, frame_no: int):
         self._frame.canvas: Canvas
-        self._frame.canvas.paint('|~-~ World {} ~-~|'.format(self.game.world.name), 0, 0)
-        self._frame.canvas.paint(f'wew lad (frame_no % 100) = {(frame_no % 100):3d}', 0, 1)
+        self._frame.canvas.paint(f'|~-~ World {self.game.world.name} ~-~|', self._x, self._y)
+        self._frame.canvas.paint(f'wew lad (frame_no % 100) = {(frame_no % 100):03d}', self._x, self._y + 1)
+        worldStr: str = self.game.world.print_world()
+        i = 1
+        for line in worldStr.split('\n'):
+            self._frame.canvas.paint(line, self._x, self._y + 1 + i)
+            i += 1
 
     def reset(self):
         pass
@@ -314,14 +319,14 @@ class RootPage(Frame):
                                                     label="[focus input]", readonly=True)
         layout1.add_widget(self.textTileGen)
 
-        self.labelFoo = SwagLabel(name="labelFoo", label='foo :)')
-        layout1.add_widget(self.labelFoo)
-
         self.widgetGame = GameWidget(
             name="widgetGame",
             game=GAME
         )
         layout1.add_widget(self.widgetGame)
+
+        self.labelFoo = SwagLabel(name="labelFoo", label='foo :)')
+        layout1.add_widget(self.labelFoo)
 
         layoutButtons = TabButtons(self, 0)
         self.add_layout(layoutButtons)
@@ -406,8 +411,6 @@ def demo(screen: Screen, scene: Scene):
             daRootPage = maybeDaRootPage
             # screen.set_title("HOLD UP, YOU PRESSING " + daChar + "?")
             daRootPage.labelFoo.text = f"pressing {daChar}?"
-            # daRootPage.textBoxGameRender.value = GAME.world.print_world()
-            # daRootPage.widgetGame.asdfadsf
         else:
             print("Not supposed to handle " + maybeDaRootPage.title)
 
