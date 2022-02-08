@@ -94,6 +94,7 @@ class World:
         self.size = size
         self.name = name
         self.worlddata = World.gen_world(size)
+        self.gametick = 0
 
     def print_world(self, borderchar: str = None) -> str:
 
@@ -242,6 +243,28 @@ class SwagLabel(asciimatics.widgets.Widget):
         The current value for this Label.
         """
         return self._value
+
+
+class inputUtil:
+
+    @staticmethod
+    def handle_movement(keyboardEvent: KeyboardEvent) -> Union[None, Tuple[int, int]]:
+        '''
+        :param keyboardEvent:
+        :return: Vector the input resolves to.
+        '''
+        inputmap = {
+            'w': (0, 1),
+            'a': (-1, 0),
+            's': (0, -1),
+            'd': (1, 0)
+        }
+
+        datKey = chr(keyboardEvent.key_code).lower()
+        if datKey in inputmap.keys():
+            return inputmap[datKey]
+
+        return None
 
 
 class GameWidget(asciimatics.widgets.Widget):
@@ -396,7 +419,7 @@ def demo(screen: Screen, scene: Scene):
         Scene([CharliePage(screen)], -1, name="CharliePage"),
     ]
 
-    def handleEvent(event: Union[KeyboardEvent, MouseEvent]):
+    def handle_event(event: Union[KeyboardEvent, MouseEvent]):
         if not isinstance(event, KeyboardEvent):
             # print("not keyboard event, ignoring... - {}".format(event))
             return
@@ -418,10 +441,16 @@ def demo(screen: Screen, scene: Scene):
             daRootPage = maybeDaRootPage
             # screen.set_title("HOLD UP, YOU PRESSING " + daChar + "?")
             daRootPage.labelFoo.text = f"pressing {daChar}?"
+
+            moveVec = inputUtil.handle_movement(event)
+            if moveVec:
+                daRootPage.labelFoo.text += ("... you move ({:3d}{:3d})".format(*moveVec))
+
         else:
             print("Not supposed to handle " + maybeDaRootPage.title)
 
-    screen.play(scenes, stop_on_resize=True, start_scene=scene, allow_int=True, unhandled_input=handleEvent)
+    screen.set_title("dwarfasciigame test :3")
+    screen.play(scenes, stop_on_resize=True, start_scene=scene, allow_int=True, unhandled_input=handle_event)
 
 
 # Press the green button in the gutter to run the script.
