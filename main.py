@@ -21,12 +21,79 @@ from asciimatics.widgets.widget import Widget
 from settings import DEFAULT_SIZE
 
 
-def gen_tile(choices=None, weights=None) -> str:
+def raise_(ex):
+    """Because we can't use raise in lambda for some reason..."""
+    raise ex
+
+
+class Item:
+    def __init__(self, name, charsheet: List[str] = None):
+        self.name = name
+        self.charsheet = charsheet
+
+    def render(self, scale=1):
+        return self.charsheet[scale - 1]
+
+
+class Items:
+    """
+    A bunch of default items.
+    """
+
+    @staticmethod
+    def Rock():
+        return Item("Rock",
+                    charsheet=['*'])
+
+    @staticmethod
+    def Gold_Nugget():
+        return Item("Gold Nugget",
+                    charsheet=['c'])
+
+    @staticmethod
+    def Stick():
+        return Item("Stick",
+                    charsheet=['\\'])
+
+
+class Tiles:
+    @staticmethod
+    def Dirt():
+        return Tile('Dirt',
+                    [',', ',.\n'
+                          '.,', ',.,\n'
+                                '.,.\n'
+                                ',.,'],
+                    {0.99: Items.Rock(),
+                     0.01: Items.Gold_Nugget()})
+
+    @staticmethod
+    def Tree():
+        return Tile('Tree',
+                    ['t', '/\\\n'
+                          '||', '/|\\\n'
+                                ';|;\n'
+                                '/|\\\n'],
+                    {1.00: Items.Stick()})
+
+
+class Tile:
+    def __init__(self, name: str, charsheet: List[str] = None, drops: Dict[float, Item] = None):
+        self.name = name
+        self.charsheet = charsheet
+        self.drops = drops
+
+    def render(self, scale=1):
+        return self.charsheet[scale - 1]
+
+
+def gen_tile(choices: List[Tile] = None, weights: List[int] = None) -> Tile:
     if choices is None:
-        choices = ['@', ',', '.']
+        choices = [Tiles.Tree(),
+                   Tiles.Dirt()]
 
     if weights is None:
-        weights = [5, 15, 100]
+        weights = [5, 100]
 
     if len(weights) != len(choices):
         raise ValueError(f"Weights and choices for {gen_tile.__name__}() must be the same length!")
@@ -41,9 +108,24 @@ def gen_tile(choices=None, weights=None) -> str:
     return numpy.random.choice(choices, p=normalizedWeights)
 
 
-def raise_(ex):
-    """Because we can't use raise in lambda for some reason..."""
-    raise ex
+def DEPRECATED_gen_tile(choices=None, weights=None) -> str:
+    if choices is None:
+        choices = ['@', ',', '.']
+
+    if weights is None:
+        weights = [5, 15, 100]
+
+    if len(weights) != len(choices):
+        raise ValueError(f"Weights and choices for {DEPRECATED_gen_tile.__name__}() must be the same length!")
+
+    weights = numpy.asarray(weights)
+
+    normalizedWeights = weights
+
+    if weights.sum() != 1:
+        normalizedWeights = weights / weights.sum()
+
+    return numpy.random.choice(choices, p=normalizedWeights)
 
 
 class Player:
@@ -85,7 +167,7 @@ class World:
         return self.size[0]
 
     @staticmethod
-    def gen_world(size: Tuple[int, int]) -> List[List[str]]:
+    def gen_random_world(size: Tuple[int, int]) -> List[List[Tile]]:
         width, height = size
         resultworld = []
         for y in range(0, height):
@@ -98,91 +180,8 @@ class World:
     def __init__(self, name="Gaia", size=DEFAULT_SIZE):
         self.size = size
         self.name = name
-        self.worlddata = World.gen_world(size)
+        self.worlddata = World.gen_random_world(size)
         self.gametick = 0
-
-    def DEPRECATED_print_world(self, borderchar: str = None) -> str:
-
-        if borderchar == '':
-            borderchar = None
-
-        daFile = io.StringIO()
-
-        size = self.size
-        juiceWorld = self.worlddata
-
-        width, height = size
-        for y in range(0, height):
-            row = juiceWorld[y]
-
-            if (y == 0) and borderchar:
-                print((borderchar * 2) + (borderchar * width), file=daFile)
-
-            for x in range(0, width):
-                tile = row[x]
-
-                if (x == 0) and borderchar:
-                    print(borderchar, end='', file=daFile)
-
-                print(tile, end='', file=daFile)
-
-                if (x == (width - 1)) and borderchar:
-                    print(borderchar, end='', file=daFile)
-
-            print("\n", end='', file=daFile)
-
-            if (y == (height - 1)) and borderchar:
-                print((borderchar * 2) + (borderchar * width), file=daFile)
-
-        ret = daFile.getvalue()
-        daFile.close()
-        return ret
-
-
-class Item:
-    def __init__(self, name, charsheet: List[str] = None):
-        self.name = name
-        self.charsheet = charsheet
-
-    def render(self, scale=1):
-        return self.charsheet[scale - 1]
-
-
-class Items:
-    """
-    A bunch of default items.
-    """
-
-    @staticmethod
-    def Rock():
-        return Item(
-            "Rock",
-            charsheet=['*']
-        )
-
-    @staticmethod
-    def Gold_Nugget():
-        return Item(
-            "Gold Nugget",
-            charsheet=['c']
-        )
-
-
-class Tile:
-    def __init__(self, name: str = 'Stone', charsheet: List[str] = None, drops: Dict[float, Item] = None):
-
-        if drops is None:
-            drops = {0.99: Items.Rock(),
-                     0.01: Items.Gold_Nugget()}
-
-        if charsheet is None:
-            self.charsheet = [',', ',,\n'
-                                   ',,']
-        self.name = name
-        self.drops = drops
-
-    def render(self, scale=1):
-        return self.charsheet[scale - 1]
 
 
 class Game:
@@ -210,8 +209,8 @@ class Game:
 
         for row in self.world.worlddata:
             retrow = []
-            for item in row:
-                retrow.append(item)  # TODO: Get sprite based on size
+            for tile in row:
+                retrow.append(tile.render(scale=scale))  # TODO: will break with scale>2... we need to print to a buffer
             ret.append(retrow)
 
         # TODO: Assert ret is well-formed
@@ -541,7 +540,7 @@ def demo(screen: Screen, scene: Scene):
 if __name__ == '__main__':
     print('wow its PyCharm!')
 
-    print(GAME.world.DEPRECATED_print_world())
+    print(GAME.render_world())
 
     last_scene = None
     while True:
