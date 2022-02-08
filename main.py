@@ -175,6 +175,75 @@ class TabButtons(Layout):
         buttons[active_tab_idx].disabled = True
 
 
+class SwagLabel(asciimatics.widgets.Widget):
+    """
+    A text label. But swaggy.
+    This class was made to test how to extend Widget class.
+    """
+
+    __slots__ = ["_text", "_required_height", "_align"]
+
+    def __init__(self, label, height=1, align="<", name=None):
+        """
+        :param label: The text to be displayed for the Label.
+        :param height: Optional height for the label.  Defaults to 1 line.
+        :param align: Optional alignment for the Label.  Defaults to left aligned.
+            Options are "<" = left, ">" = right and "^" = centre
+        :param name: The name of this widget.
+
+        """
+        # Labels have no value and so should have no name for look-ups either.
+        super(SwagLabel, self).__init__(name, tab_stop=False)
+
+        # Although this is a label, we don't want it to contribute to the layout
+        # tab calculations, so leave internal `_label` value as None.
+        # Also ensure that the label really is text.
+        self._text = str(label)
+        self._required_height = height
+        self._align = align
+
+    def process_event(self, event):
+        # Labels have no user interactions
+        return event
+
+    def update(self, frame_no):
+        (colour, attr, background) = self._frame.palette[
+            self._pick_palette_key("label", selected=False, allow_input_state=False)]
+        swag = "[ {SwagLabel} oh yeahh! ]"
+        for i, text in enumerate(
+                _split_text(self._text, self._w, self._h, self._frame.canvas.unicode_aware)):
+            text = swag + " " + text
+            self._frame.canvas.paint(
+                "{:{}{}}".format(text, self._align, self._w),
+                self._x, self._y + i, colour, attr, background
+            )
+
+    def reset(self):
+        pass
+
+    def required_height(self, offset, width):
+        # Allow one line for text and a blank spacer before it.
+        return self._required_height
+
+    @property
+    def text(self):
+        """
+        The current text for this Label.
+        """
+        return self._text
+
+    @text.setter
+    def text(self, new_value):
+        self._text = new_value
+
+    @property
+    def value(self):
+        """
+        The current value for this Label.
+        """
+        return self._value
+
+
 class GameWidget(asciimatics.widgets.Widget):
     # __slots__ = ["_draw_line", "_required_height", "_line_char"]
 
@@ -216,14 +285,14 @@ class RootPage(Frame):
                                                     label="[focus input]", readonly=True)
         layout1.add_widget(self.textTileGen)
 
-        self.labelFoo = asciimatics.widgets.Label(name="labelFoo", label='foo :)')
+        self.labelFoo = SwagLabel(name="labelFoo", label='foo :)')
         layout1.add_widget(self.labelFoo)
 
-        self.widgetGame = GameWidget(
-            name="widgetGame",
-            game=GAME
-        )
-        layout1.add_widget(self.widgetGame)
+        # self.widgetGame = GameWidget(
+        #     name="widgetGame",
+        #     game=GAME
+        # )
+        # layout1.add_widget(self.widgetGame)
 
         layoutButtons = TabButtons(self, 0)
         self.add_layout(layoutButtons)
