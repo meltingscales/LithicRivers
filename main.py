@@ -12,8 +12,9 @@ from asciimatics.effects import Effect
 from asciimatics.event import KeyboardEvent, MouseEvent
 from asciimatics.exceptions import ResizeScreenError, NextScene, StopApplication
 from asciimatics.scene import Scene
-from asciimatics.screen import Screen
-from asciimatics.widgets import Frame, Layout, Divider, Button
+from asciimatics.screen import Screen, Canvas
+from asciimatics.widgets import Frame, Layout, Divider, Button, _split_text
+from asciimatics.widgets.widget import Widget
 
 from settings import DEFAULT_SIZE
 
@@ -89,8 +90,9 @@ class World:
             resultworld.append(row)
         return resultworld
 
-    def __init__(self, size=DEFAULT_SIZE):
+    def __init__(self, name="Gaia", size=DEFAULT_SIZE):
         self.size = size
+        self.name = name
         self.worlddata = World.gen_world(size)
 
     def print_world(self, borderchar: str = None) -> str:
@@ -174,17 +176,18 @@ class TabButtons(Layout):
 
 
 class GameWidget(asciimatics.widgets.Widget):
+    # __slots__ = ["_draw_line", "_required_height", "_line_char"]
 
-    def __init__(self, name, game: Game):
-        super(GameWidget, self).__init__(name)
+    def __init__(self, name: str, game: Game):
+        super(asciimatics.widgets.Widget, self).__init__(name=name, tab_stop=False)
+
         self.game = game
+        self._frame: Frame
 
-        # hey bro just copy from asciimatics.widgets.Label... ;3
-        heybrojustcopyfromtheLabelClassBroNoonewillevenNoticeItsJustThatEASYBROJUSTGODOITJEEZ = asciimatics.widgets.Label
-        pass
-
-    def update(self, frame_no):
-        pass
+    def update(self, frame_no: int):
+        self._frame.canvas: Canvas
+        self._frame.canvas.paint('|~-~ World {} ~-~|'.format(self.game.world.name), 0, 0)
+        self._frame.canvas.paint('wew lad (frame_no % 100) = ' + str(frame_no % 100), 0, 1)
 
     def reset(self):
         pass
@@ -220,7 +223,6 @@ class RootPage(Frame):
             name="widgetGame",
             game=GAME
         )
-        self.widgetGame.value = GAME.world.print_world(borderchar='')
         layout1.add_widget(self.widgetGame)
 
         layoutButtons = TabButtons(self, 0)
