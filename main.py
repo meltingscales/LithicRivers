@@ -245,18 +245,21 @@ class SwagLabel(asciimatics.widgets.Widget):
 
 
 class GameWidget(asciimatics.widgets.Widget):
-    # __slots__ = ["_draw_line", "_required_height", "_line_char"]
+    __slots__ = ["_required_height",'_game','_align']
 
-    def __init__(self, name: str, game: Game):
-        super(asciimatics.widgets.Widget, self).__init__(name=name, tab_stop=False)
+    def __init__(self, game: Game, align='<', name: str = None):
+        super(GameWidget, self).__init__(name, tab_stop=False)
 
         self.game = game
+        self._required_height = self.game.world.get_height()
+        self._align = align
+
         self._frame: Frame
 
     def update(self, frame_no: int):
         self._frame.canvas: Canvas
         self._frame.canvas.paint('|~-~ World {} ~-~|'.format(self.game.world.name), 0, 0)
-        self._frame.canvas.paint('wew lad (frame_no % 100) = ' + str(frame_no % 100), 0, 1)
+        self._frame.canvas.paint(f'wew lad (frame_no % 100) = {(frame_no % 100):3d}', 0, 1)
 
     def reset(self):
         pass
@@ -266,7 +269,33 @@ class GameWidget(asciimatics.widgets.Widget):
         return event
 
     def required_height(self, offset, width):
-        return self.game.world.get_height()
+        return self._game.world.get_height()
+
+    @property
+    def text(self):
+        """
+        The current text for this Label.
+        """
+        return self._text
+
+    @text.setter
+    def text(self, new_value):
+        self._text = new_value
+
+    @property
+    def value(self):
+        """
+        The current value for this Label.
+        """
+        return self._value
+
+    @property
+    def game(self):
+        return self._game
+
+    @game.setter
+    def game(self, new_value):
+        self._game = new_value
 
 
 class RootPage(Frame):
@@ -288,11 +317,11 @@ class RootPage(Frame):
         self.labelFoo = SwagLabel(name="labelFoo", label='foo :)')
         layout1.add_widget(self.labelFoo)
 
-        # self.widgetGame = GameWidget(
-        #     name="widgetGame",
-        #     game=GAME
-        # )
-        # layout1.add_widget(self.widgetGame)
+        self.widgetGame = GameWidget(
+            name="widgetGame",
+            game=GAME
+        )
+        layout1.add_widget(self.widgetGame)
 
         layoutButtons = TabButtons(self, 0)
         self.add_layout(layoutButtons)
