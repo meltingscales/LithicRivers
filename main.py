@@ -4,7 +4,8 @@
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 import io
 import sys
-from typing import List, Tuple, Union
+from pprint import pprint
+from typing import List, Tuple, Union, Dict
 
 import asciimatics.widgets
 import numpy
@@ -14,6 +15,7 @@ from asciimatics.exceptions import ResizeScreenError, NextScene, StopApplication
 from asciimatics.scene import Scene
 from asciimatics.screen import Screen, Canvas
 from asciimatics.widgets import Frame, Layout, Divider, Button, _split_text
+from asciimatics.widgets.utilities import THEMES
 from asciimatics.widgets.widget import Widget
 
 from settings import DEFAULT_SIZE
@@ -70,6 +72,9 @@ class Player:
     def moveRight(self):
         self.move((1, 0))
 
+    def render(self, scale):
+        return '$'
+
 
 class World:
 
@@ -96,7 +101,7 @@ class World:
         self.worlddata = World.gen_world(size)
         self.gametick = 0
 
-    def print_world(self, borderchar: str = None) -> str:
+    def DEPRECATED_print_world(self, borderchar: str = None) -> str:
 
         if borderchar == '':
             borderchar = None
@@ -134,6 +139,52 @@ class World:
         return ret
 
 
+class Item:
+    def __init__(self, name, charsheet: List[str] = None):
+        self.name = name
+        self.charsheet = charsheet
+
+    def render(self, scale=1):
+        return self.charsheet[scale - 1]
+
+
+class Items:
+    """
+    A bunch of default items.
+    """
+
+    @staticmethod
+    def Rock():
+        return Item(
+            "Rock",
+            charsheet=['*']
+        )
+
+    @staticmethod
+    def Gold_Nugget():
+        return Item(
+            "Gold Nugget",
+            charsheet=['c']
+        )
+
+
+class Tile:
+    def __init__(self, name: str = 'Stone', charsheet: List[str] = None, drops: Dict[float, Item] = None):
+
+        if drops is None:
+            drops = {0.99: Items.Rock(),
+                     0.01: Items.Gold_Nugget()}
+
+        if charsheet is None:
+            self.charsheet = [',', ',,\n'
+                                   ',,']
+        self.name = name
+        self.drops = drops
+
+    def render(self, scale=1):
+        return self.charsheet[scale - 1]
+
+
 class Game:
     def __init__(self, player: Player = None, world: World = None):
 
@@ -145,6 +196,29 @@ class Game:
 
         self.player = player
         self.world = world
+
+    def render_world(self, scale: int = 1) -> List[List[str]]:
+        r"""
+        :param scale: Scaling for sprites. <pre><code>
+        1 = x, 2 = \/, 3 = \ /, etc.
+                   /\       x
+                           / \
+        :return:
+        """
+
+        ret = []
+
+        for row in self.world.worlddata:
+            retrow = []
+            for item in row:
+                retrow.append(item)  # TODO: Get sprite based on size
+            ret.append(retrow)
+
+        # TODO: Assert ret is well-formed
+
+        ret[self.player.y][self.player.x] = self.player.render(scale=scale)
+
+        return ret
 
 
 # Global game object...
@@ -254,9 +328,9 @@ class inputUtil:
         :return: Vector the input resolves to.
         '''
         inputmap = {
-            'w': (0, 1),
+            'w': (0, -1),
             'a': (-1, 0),
-            's': (0, -1),
+            's': (0, 1),
             'd': (1, 0)
         }
 
@@ -284,7 +358,11 @@ class GameWidget(asciimatics.widgets.Widget):
 
         content = f'|~-~ World {self.game.world.name} ~-~|\n'
         content += f'wew lad (frame_no % 100) = {(frame_no % 100):03d}\n'
-        content += self.game.world.print_world()
+
+        for row in self.game.render_world():
+            for char in row:
+                content += char
+            content += '\n'
 
         (colour, attr, background) = self._frame.palette[
             self._pick_palette_key("label", selected=False, allow_input_state=False)
@@ -346,7 +424,7 @@ class RootPage(Frame):
         self.add_layout(layout1)
 
         self.textTileGen = asciimatics.widgets.Text(name="textTileGen",
-                                                    label="[focus input]", readonly=True)
+                                                    label="[focus input/type in me!]", readonly=False)
         layout1.add_widget(self.textTileGen)
 
         self.widgetGame = GameWidget(
@@ -420,13 +498,6 @@ def demo(screen: Screen, scene: Scene):
     ]
 
     def handle_event(event: Union[KeyboardEvent, MouseEvent]):
-        if not isinstance(event, KeyboardEvent):
-            # print("not keyboard event, ignoring... - {}".format(event))
-            return
-        event: KeyboardEvent
-
-        daChar = chr(event.key_code)
-        # pprint(event)
 
         daScene: Scene = screen.current_scene
         daEffects: List[Effect] = daScene.effects
@@ -436,6 +507,15 @@ def demo(screen: Screen, scene: Scene):
             return
 
         maybeDaRootPage: RootPage = daEffects[0]
+        maybeDaRootPage.set_theme('bright')  # TODO can we set this earlier, and set it once?
+
+        if not isinstance(event, KeyboardEvent):
+            # print("not keyboard event, ignoring... - {}".format(event))
+            return
+        event: KeyboardEvent
+
+        daChar = chr(event.key_code)
+        # pprint(event)
 
         if maybeDaRootPage.title.strip() == 'Root Page':
             daRootPage = maybeDaRootPage
@@ -445,6 +525,10 @@ def demo(screen: Screen, scene: Scene):
             moveVec = inputUtil.handle_movement(event)
             if moveVec:
                 daRootPage.labelFoo.text += ("... you move ({:3d}{:3d})".format(*moveVec))
+                GAME.player.move(moveVec)
+                print("\n\n")
+            else:
+                daRootPage.labelFoo.text += "... '{}' is not a movement key.".format(daChar)
 
         else:
             print("Not supposed to handle " + maybeDaRootPage.title)
@@ -457,7 +541,7 @@ def demo(screen: Screen, scene: Scene):
 if __name__ == '__main__':
     print('wow its PyCharm!')
 
-    print(GAME.world.print_world())
+    print(GAME.world.DEPRECATED_print_world())
 
     last_scene = None
     while True:
