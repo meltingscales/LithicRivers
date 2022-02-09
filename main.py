@@ -108,26 +108,6 @@ def gen_tile(choices: List[Tile] = None, weights: List[int] = None) -> Tile:
     return numpy.random.choice(choices, p=normalizedWeights)
 
 
-def DEPRECATED_gen_tile(choices=None, weights=None) -> str:
-    if choices is None:
-        choices = ['@', ',', '.']
-
-    if weights is None:
-        weights = [5, 15, 100]
-
-    if len(weights) != len(choices):
-        raise ValueError(f"Weights and choices for {DEPRECATED_gen_tile.__name__}() must be the same length!")
-
-    weights = numpy.asarray(weights)
-
-    normalizedWeights = weights
-
-    if weights.sum() != 1:
-        normalizedWeights = weights / weights.sum()
-
-    return numpy.random.choice(choices, p=normalizedWeights)
-
-
 class Player:
     def __init__(self):
         self.x = 0
