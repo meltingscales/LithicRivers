@@ -2,9 +2,9 @@
 
 # Press Ctrl+F5 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-import io
+import logging
+import os.path
 import sys
-from pprint import pprint
 from typing import List, Tuple, Union, Dict
 
 import asciimatics.widgets
@@ -15,15 +15,19 @@ from asciimatics.exceptions import ResizeScreenError, NextScene, StopApplication
 from asciimatics.scene import Scene
 from asciimatics.screen import Screen, Canvas
 from asciimatics.widgets import Frame, Layout, Divider, Button, _split_text
-from asciimatics.widgets.utilities import THEMES
-from asciimatics.widgets.widget import Widget
 
-from settings import DEFAULT_SIZE
+from settings import DEFAULT_SIZE, LOGFILENAME
 
 
 def raise_(ex):
     """Because we can't use raise in lambda for some reason..."""
     raise ex
+
+
+if os.path.exists(LOGFILENAME):
+    os.remove(LOGFILENAME)
+
+logging.basicConfig(filename=LOGFILENAME, level=logging.DEBUG)
 
 
 class Item:
@@ -57,6 +61,10 @@ class Items:
 
 
 class Tiles:
+    """
+    A bunch of default tiles.
+    """
+
     @staticmethod
     def Dirt():
         return Tile('Dirt',
@@ -96,7 +104,9 @@ def gen_tile(choices: List[Tile] = None, weights: List[int] = None) -> Tile:
         weights = [5, 100]
 
     if len(weights) != len(choices):
-        raise ValueError(f"Weights and choices for {gen_tile.__name__}() must be the same length!")
+        ve = ValueError(f"Weights and choices for {gen_tile.__name__}() must be the same length!")
+        logging.error(ve)
+        raise ve
 
     weights = numpy.asarray(weights)
 
@@ -121,6 +131,15 @@ class Player:
 
         self.x += xoffset
         self.y += yoffset
+
+    def calcOffset(self, vec: Tuple[int, int]) -> Tuple[int, int]:
+        """Where would I move, if I did move?"""
+        xoffset, yoffset = vec
+
+        return (
+            self.x + xoffset,
+            self.y + yoffset
+        )
 
     def moveUp(self):
         self.move((0, 1))
@@ -195,9 +214,21 @@ class Game:
 
         # TODO: Assert ret is well-formed
 
+        logging.info("player x,y={:2d},{:2d}".format(self.player.x, self.player.y))
         ret[self.player.y][self.player.x] = self.player.render(scale=scale)
 
         return ret
+
+    def move_player(self, vec):
+        possiblePosition = self.player.calcOffset(vec)
+
+        # check bounds
+        if (possiblePosition[0] < 0) or (possiblePosition[1] < 0) \
+                or (possiblePosition[0] > self.world.get_width()) or (possiblePosition[1] > self.world.get_height()):
+            logging.debug("Tried to move OOB! {} would have resulted in {}".format(vec, possiblePosition))
+            return
+
+        self.player.move(vec)
 
 
 # Global game object...
@@ -220,7 +251,7 @@ class TabButtons(Layout):
             Button("Alpha Page", lambda: raise_(NextScene("AlphaPage"))),
             Button("Bravo Page", lambda: raise_(NextScene("BravoPage"))),
             Button("Charlie Page", lambda: raise_(NextScene("CharliePage"))),
-            Button("Quit", lambda: (print("Bye!"), raise_(StopApplication("Quit"))))
+            Button("Quit", lambda: (logging.info("Bye!"), raise_(StopApplication("Quit"))))
         ]
 
         for i, button in enumerate(buttons):
@@ -302,10 +333,10 @@ class inputUtil:
 
     @staticmethod
     def handle_movement(keyboardEvent: KeyboardEvent) -> Union[None, Tuple[int, int]]:
-        '''
+        """
         :param keyboardEvent:
         :return: Vector the input resolves to.
-        '''
+        """
         inputmap = {
             'w': (0, -1),
             'a': (-1, 0),
@@ -332,6 +363,7 @@ class GameWidget(asciimatics.widgets.Widget):
 
         self._frame: Frame
 
+    # noinspection PyTypeHints
     def update(self, frame_no: int):
         self._frame.canvas: Canvas
 
@@ -482,7 +514,7 @@ def demo(screen: Screen, scene: Scene):
         daEffects: List[Effect] = daScene.effects
 
         if len(daEffects) <= 0:
-            print("No effects ;_;")
+            logging.debug("No effects ;_;")
             return
 
         maybeDaRootPage: RootPage = daEffects[0]
@@ -504,13 +536,12 @@ def demo(screen: Screen, scene: Scene):
             moveVec = inputUtil.handle_movement(event)
             if moveVec:
                 daRootPage.labelFoo.text += ("... you move ({:3d}{:3d})".format(*moveVec))
-                GAME.player.move(moveVec)
-                print("\n\n")
+                GAME.move_player(moveVec)
             else:
                 daRootPage.labelFoo.text += "... '{}' is not a movement key.".format(daChar)
 
         else:
-            print("Not supposed to handle " + maybeDaRootPage.title)
+            logging.debug("Not supposed to handle " + maybeDaRootPage.title)
 
     screen.set_title("dwarfasciigame test :3")
     screen.play(scenes, stop_on_resize=True, start_scene=scene, allow_int=True, unhandled_input=handle_event)
@@ -518,9 +549,12 @@ def demo(screen: Screen, scene: Scene):
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    print('wow its PyCharm!')
 
-    print(GAME.render_world())
+    print(f"see {LOGFILENAME} for logs.")
+
+    logging.info('wow its PyCharm!')
+
+    logging.debug(GAME.render_world())
 
     last_scene = None
     while True:
