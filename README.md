@@ -1,5 +1,9 @@
 # dwarfasciigame
 
+## play it
+
+<https://github.com/HenryFBP/dwarfasciigame/releases>
+
 ## what is this
 
 god help me
