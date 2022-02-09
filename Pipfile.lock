@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "337aa03adf7a1a2e1fb80b2a6359792dde2b11fdaef444cf647adbea8d787316"
+            "sha256": "c8845f2e6ee994ddd5e88c9951b739392bd7349c0a7117f42d9daf38eda58dfb"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -145,6 +145,14 @@
             "markers": "python_version >= '2.6' and python_version not in '3.0, 3.1, 3.2, 3.3'",
             "version": "==0.18.2"
         },
+        "macholib": {
+            "hashes": [
+                "sha256:1542c41da3600509f91c165cb897e7e54c0e74008bd8da5da7ebbee519d593d2",
+                "sha256:885613dd02d3e26dbd2b541eb4cc4ce611b841f827c0958ab98656e478b9e6f6"
+            ],
+            "markers": "sys_platform == 'darwin'",
+            "version": "==1.15.2"
+        },
         "pefile": {
             "hashes": [
                 "sha256:344a49e40a94e10849f0fe34dddc80f773a12b40675bf2f7be4b8be578bdd94a"
@@ -183,14 +191,6 @@
             ],
             "markers": "sys_platform == 'win32'",
             "version": "==0.2.0"
-        },
-        "setuptools": {
-            "hashes": [
-                "sha256:07e97e2f1e5607d240454e98c75c7004560ac8417ca5ae1dbaa50811cb6cc95c",
-                "sha256:23aad87cc27f4ae704079618c1d117a71bd43d41e355f0698c35f6b1c796d26c"
-            ],
-            "markers": "python_version >= '3.7'",
-            "version": "==60.8.1"
         }
     }
 }

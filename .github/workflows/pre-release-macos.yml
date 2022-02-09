@@ -1,5 +1,5 @@
 ---
-name: "pre-release-osx"
+name: "pre-release-macos"
 
 on:
   push:
@@ -23,10 +23,10 @@ jobs:
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "latest-osx"
+          automatic_release_tag: "latest-macos"
           prerelease: true
-          title: "Development Build OSX"
+          title: "Development Build macOS"
           files: |
             dist/*
 #            potemkeys/*.jsonc
-        id: "automatic_releases_osx"
+        id: "automatic_releases_macos"
