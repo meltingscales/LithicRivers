@@ -1,0 +1,32 @@
+---
+name: "pre-release-osx"
+
+on:
+  push:
+    branches:
+      - "master"
+    tags-ignore:
+      - "*"
+
+jobs:
+  gh_pre_release:
+    runs-on: macos-latest
+
+    steps:
+      - name: "Checkout source code"
+        uses: "actions/checkout@v2.4.0"
+
+      - run: "./scripts/setup.sh"
+      - run: "./scripts/generate_exe.sh"
+      - run: "ls dist/"
+
+      - uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "latest-osx"
+          prerelease: true
+          title: "Development Build OSX"
+          files: |
+            dist/*
+#            potemkeys/*.jsonc
+        id: "automatic_releases_osx"
