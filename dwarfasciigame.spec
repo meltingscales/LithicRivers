@@ -10,7 +10,7 @@ block_cipher = None
 added_files = [
     # ('potemkeys/potemkeysoptions.jsonc', './'),
     # ('potemkeys/pelleds.jpg', './'),
-    ('LICENSE', './'),
+    # ('LICENSE', './'),
     ('README.md', './'),
 ]
 
