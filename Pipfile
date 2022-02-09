@@ -9,6 +9,7 @@ numpy = "*"
 
 [dev-packages]
 pyinstaller = "*"
+macholib = { version = "*", sys_platform = "== 'darwin'" }
 
 [requires]
 python_version = "3"
