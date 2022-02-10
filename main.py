@@ -223,8 +223,12 @@ class Game:
         possiblePosition = self.player.calcOffset(vec)
 
         # check bounds
-        if (possiblePosition[0] < 0) or (possiblePosition[1] < 0) \
-                or (possiblePosition[0] > self.world.get_width()) or (possiblePosition[1] > self.world.get_height()):
+        if (
+                (possiblePosition[0] < 0) or
+                (possiblePosition[1] < 0) or
+                (possiblePosition[0] >= self.world.get_width()) or
+                (possiblePosition[1] >= self.world.get_height())
+        ):
             logging.debug("Tried to move OOB! {} would have resulted in {}".format(vec, possiblePosition))
             return
 
