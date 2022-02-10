@@ -16,7 +16,7 @@ god help me
 
     pipenv install
     pipenv shell
-    python ./main.py
+    python -m lithicrivers
 
 ## notes
 - https://github.com/peterbrittain/asciimatics/blob/v1.13/samples/tab_demo.py
