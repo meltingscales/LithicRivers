@@ -216,10 +216,6 @@ class RootPage(Frame):
 
         self.add_layout(layout1)
 
-        self.textTileGen = asciimatics.widgets.Text(name="textTileGen",
-                                                    label="[focus input/type in me!]", readonly=False)
-        layout1.add_widget(self.textTileGen)
-
         self.labelFeet = asciimatics.widgets.Label(name='labelFeet', label='at your feet rests...[idk bro]')
         layout1.add_widget(self.labelFeet)
         self.labelFeet.text = 'Below your feet is a [{}].'.format(self.game.get_tile_at_player_feet())
