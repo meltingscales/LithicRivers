@@ -6,7 +6,7 @@ import numpy
 from dwarfasciigame.settings import DEFAULT_SIZE
 
 
-class Renderable(object):
+class Renderable:
     def __init__(self, sprite_sheet):
         self.sprite_sheet = sprite_sheet
         if not sprite_sheet:
@@ -20,7 +20,7 @@ class Renderable(object):
         return self.sprite_sheet[normscale]
 
 
-class Entity(object):
+class Entity:
 
     def __init__(self):
         self.x = 0
@@ -65,8 +65,8 @@ class Player(Entity, Renderable):
         #                                                     '%%'])
 
         super(Entity).__init__()
-        super(Renderable).__init__(sprite_sheet=['$', '[]\n'
-                                                      '%%'])
+        super(Renderable).__init__(['$', '[]\n'
+                                         '%%'])
 
 
 class Items:
