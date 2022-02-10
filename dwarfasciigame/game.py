@@ -6,11 +6,25 @@ import numpy
 from dwarfasciigame.settings import DEFAULT_SIZE
 
 
-class Player:
+class Renderable(object):
+    def __init__(self, sprite_sheet):
+        self.sprite_sheet = sprite_sheet
+        if not sprite_sheet:
+            self.sprite_sheet = ['?', '??\n'
+                                      '??', '???\n'
+                                            '???\n'
+                                            '???']
+
+    def render(self, scale: int = 1) -> str:
+        normscale = scale - 1
+        return self.sprite_sheet[normscale]
+
+
+class Entity(object):
+
     def __init__(self):
         self.x = 0
         self.y = 0
-        self.displaySymbol = '$'
         self.health = 100
         self.stamina = 100
 
@@ -41,8 +55,18 @@ class Player:
     def moveRight(self):
         self.move((1, 0))
 
-    def render(self, scale):
-        return '$'
+
+class Player(Entity, Renderable):
+
+    def __init__(self):
+        # super(Entity, self).__init__()
+
+        # super(Renderable, self).__init__(sprite_sheet=['$', '[]\n'
+        #                                                     '%%'])
+
+        super(Entity).__init__()
+        super(Renderable).__init__(sprite_sheet=['$', '[]\n'
+                                                      '%%'])
 
 
 class Items:
@@ -81,7 +105,7 @@ class Tile:
         self.charsheet = charsheet
         self.drops = drops
 
-    def render(self, scale=1):
+    def render(self, scale=1) -> str:
         return self.charsheet[scale - 1]
 
 
@@ -158,6 +182,9 @@ class World:
         self.worlddata = World.gen_random_world(size)
         self.gametick = 0
 
+    def get_tile_at(self, x: int, y: int):
+        return self.worlddata[y][x]
+
 
 class Game:
     def __init__(self, player: Player = None, world: World = None):
@@ -170,6 +197,9 @@ class Game:
 
         self.player = player
         self.world = world
+
+    def get_tile_at_player_feet(self) -> Tile:
+        return self.world.get_tile_at(self.player.x, self.player.y)
 
     def render_world(self, scale: int = 1) -> List[List[str]]:
         r"""
@@ -185,7 +215,9 @@ class Game:
         for row in self.world.worlddata:
             retrow = []
             for tile in row:
-                retrow.append(tile.render(scale=scale))  # TODO: will break with scale>2... we need to print to a buffer
+                sprite = tile.render(scale=scale)
+                logging.debug('render: {}'.format(sprite))
+                retrow.append(sprite)  # TODO: will break with scale>2... we need to print to a buffer
             ret.append(retrow)
 
         # TODO: Assert ret is well-formed
