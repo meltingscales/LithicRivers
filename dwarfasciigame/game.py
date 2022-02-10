@@ -59,14 +59,9 @@ class Entity:
 class Player(Entity, Renderable):
 
     def __init__(self):
-        # super(Entity, self).__init__()
-
-        # super(Renderable, self).__init__(sprite_sheet=['$', '[]\n'
-        #                                                     '%%'])
-
-        super(Entity).__init__()
-        super(Renderable).__init__(['$', '[]\n'
-                                         '%%'])
+        Entity.__init__(self)
+        Renderable.__init__(self, ['$', '[]\n'
+                                        '%%'])
 
 
 class Items:
@@ -107,6 +102,9 @@ class Tile:
 
     def render(self, scale=1) -> str:
         return self.charsheet[scale - 1]
+
+    def __str__(self):
+        return f"<Tile '{self.name}': [{self.render(1)}]>"
 
 
 def gen_tile(choices: List[Tile] = None, weights: List[int] = None) -> Tile:
