@@ -1,3 +1,3 @@
 GAME_NAME = 'dwarfasciigame'
-DEFAULT_SIZE = (20,25)
+DEFAULT_SIZE = (50,15)
 LOGFILENAME = GAME_NAME + '.log'

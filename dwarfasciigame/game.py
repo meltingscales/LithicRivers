@@ -6,7 +6,7 @@ import numpy
 from dwarfasciigame.settings import DEFAULT_SIZE
 
 
-class Renderable:
+class SpriteRenderable:
     def __init__(self, sprite_sheet):
         self.sprite_sheet = sprite_sheet
         if not sprite_sheet:
@@ -15,9 +15,9 @@ class Renderable:
                                             '???\n'
                                             '???']
 
-    def render(self, scale: int = 1) -> str:
-        normscale = scale - 1
-        return self.sprite_sheet[normscale]
+    def render_sprite(self, scale: int = 1) -> str:
+        normalized_scale = scale - 1
+        return self.sprite_sheet[normalized_scale]
 
 
 class Entity:
@@ -56,12 +56,12 @@ class Entity:
         self.move((1, 0))
 
 
-class Player(Entity, Renderable):
+class Player(Entity, SpriteRenderable):
 
     def __init__(self):
         Entity.__init__(self)
-        Renderable.__init__(self, ['$', '[]\n'
-                                        '%%'])
+        SpriteRenderable.__init__(self, ['$', '[]\n'
+                                              '%%'])
 
 
 class Items:
@@ -72,48 +72,43 @@ class Items:
     @staticmethod
     def Rock():
         return Item("Rock",
-                    charsheet=['*'])
+                    sprite_sheet=['*'])
 
     @staticmethod
     def Gold_Nugget():
         return Item("Gold Nugget",
-                    charsheet=['c'])
+                    sprite_sheet=['c'])
 
     @staticmethod
     def Stick():
         return Item("Stick",
-                    charsheet=['\\'])
+                    sprite_sheet=['\\'])
 
 
-class Item:
-    def __init__(self, name, charsheet: List[str] = None):
+class Item(SpriteRenderable):
+    def __init__(self, name, sprite_sheet: List[str] = None):
+        SpriteRenderable.__init__(self, sprite_sheet)
         self.name = name
-        self.charsheet = charsheet
-
-    def render(self, scale=1):
-        return self.charsheet[scale - 1]
 
 
-class Tile:
-    def __init__(self, name: str, charsheet: List[str] = None, drops: Dict[float, Item] = None):
+class Tile(SpriteRenderable):
+    def __init__(self, name: str, sprite_sheet: List[str] = None, drops: Dict[float, Item] = None):
+        SpriteRenderable.__init__(self, sprite_sheet)
         self.name = name
-        self.charsheet = charsheet
         self.drops = drops
 
-    def render(self, scale=1) -> str:
-        return self.charsheet[scale - 1]
-
     def __str__(self):
-        return f"<Tile '{self.name}': [{self.render(1)}]>"
+        return f"<Tile '{self.name}': [{self.render_sprite(1)}]>"
 
 
 def gen_tile(choices: List[Tile] = None, weights: List[int] = None) -> Tile:
     if choices is None:
         choices = [Tiles.Tree(),
-                   Tiles.Dirt()]
+                   Tiles.Dirt(),
+                   Tiles.DaFuq()]
 
     if weights is None:
-        weights = [5, 100]
+        weights = [5, 100, 1]
 
     if len(weights) != len(choices):
         ve = ValueError(f"Weights and choices for {gen_tile.__name__}() must be the same length!")
@@ -153,6 +148,10 @@ class Tiles:
                                 ';|;\n'
                                 '/|\\\n'],
                     {1.00: Items.Stick()})
+
+    @staticmethod
+    def DaFuq():
+        return Tile("Dafuq is this?", drops={1.00: Items.Gold_Nugget()})
 
 
 class World:
@@ -213,7 +212,7 @@ class Game:
         for row in self.world.worlddata:
             retrow = []
             for tile in row:
-                sprite = tile.render(scale=scale)
+                sprite = tile.render_sprite(scale=scale)
                 logging.debug('render: {}'.format(sprite))
                 retrow.append(sprite)  # TODO: will break with scale>2... we need to print to a buffer
             ret.append(retrow)
@@ -221,7 +220,7 @@ class Game:
         # TODO: Assert ret is well-formed
 
         logging.info("player x,y={:2d},{:2d}".format(self.player.x, self.player.y))
-        ret[self.player.y][self.player.x] = self.player.render(scale=scale)
+        ret[self.player.y][self.player.x] = self.player.render_sprite(scale=scale)
 
         return ret
 
