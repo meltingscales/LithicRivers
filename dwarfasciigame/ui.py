@@ -149,6 +149,7 @@ class GameWidget(asciimatics.widgets.Widget):
 
         for row in self.game.render_world():
             for char in row:
+                logging.debug('printchar: {}'.format(char))
                 content += char
             content += '\n'
 
@@ -218,6 +219,10 @@ class RootPage(Frame):
         self.textTileGen = asciimatics.widgets.Text(name="textTileGen",
                                                     label="[focus input/type in me!]", readonly=False)
         layout1.add_widget(self.textTileGen)
+
+        self.labelFeet = asciimatics.widgets.Label(name='labelFeet', label='at your feet rests...[idk bro]')
+        layout1.add_widget(self.labelFeet)
+        self.labelFeet.text = 'Below your feet is a [{}].'.format(self.game.get_tile_at_player_feet())
 
         self.widgetGame = GameWidget(
             name="widgetGame",
@@ -300,31 +305,34 @@ def demo(screen: Screen, scene: Scene, game: Game):
             logging.debug("No effects ;_;")
             return
 
-        maybeDaRootPage: RootPage = daEffects[0]
-        maybeDaRootPage.set_theme('bright')  # TODO can we set this earlier, and set it once?
+        maybe_root_page: RootPage = daEffects[0]
+        maybe_root_page.set_theme('bright')  # TODO can we set this earlier, and set it once?
 
         if not isinstance(event, KeyboardEvent):
             # print("not keyboard event, ignoring... - {}".format(event))
             return
         event: KeyboardEvent
 
-        daChar = chr(event.key_code)
+        char = chr(event.key_code)
         # pprint(event)
 
-        if maybeDaRootPage.title.strip() == 'Root Page':
-            daRootPage = maybeDaRootPage
-            # screen.set_title("HOLD UP, YOU PRESSING " + daChar + "?")
-            daRootPage.labelFoo.text = f"pressing {daChar}?"
+        if maybe_root_page.title.strip() == 'Root Page':
+            root_page = maybe_root_page
+            # screen.set_title("HOLD UP, YOU PRESSING " + char + "?")
+            root_page.labelFoo.text = f"pressing {char}?"
 
             moveVec = inputUtil.handle_movement(event)
             if moveVec:
-                daRootPage.labelFoo.text += ("... you move ({:3d}{:3d})".format(*moveVec))
-                daRootPage.game.move_player(moveVec)
+                root_page.labelFoo.text += ("... you move ({:3d}{:3d})".format(*moveVec))
+                root_page.game.move_player(moveVec)
+
+                root_page.labelFeet.text = 'Below your feet is a [{}].'.format(root_page.game.get_tile_at_player_feet())
+
             else:
-                daRootPage.labelFoo.text += "... '{}' is not a movement key.".format(daChar)
+                root_page.labelFoo.text += "... '{}' is not a movement key.".format(char)
 
         else:
-            logging.debug("Not supposed to handle " + maybeDaRootPage.title)
+            logging.debug("Not supposed to handle " + maybe_root_page.title)
 
     screen.set_title("dwarfasciigame test :3")
     screen.play(scenes, stop_on_resize=True, start_scene=scene, allow_int=True, unhandled_input=handle_event)
