@@ -1,3 +1,3 @@
-GAME_NAME = 'dwarfasciigame'
+GAME_NAME = 'LithicRivers'
 DEFAULT_SIZE = (50,15)
 LOGFILENAME = GAME_NAME + '.log'
