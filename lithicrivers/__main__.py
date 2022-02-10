@@ -1,7 +1,3 @@
-# This is a sample Python script.
-
-# Press Ctrl+F5 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 import logging
 import os.path
 import sys
@@ -9,9 +5,9 @@ import sys
 from asciimatics.exceptions import ResizeScreenError
 from asciimatics.screen import Screen
 
-from dwarfasciigame.game import Game
-from dwarfasciigame.settings import LOGFILENAME
-from dwarfasciigame.ui import demo
+from lithicrivers.game import Game
+from lithicrivers.settings import LOGFILENAME
+from lithicrivers.ui import demo
 
 if os.path.exists(LOGFILENAME):
     os.remove(LOGFILENAME)

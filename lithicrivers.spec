@@ -14,7 +14,7 @@ added_files = [
     ('README.md', './'),
 ]
 
-a = Analysis(['dwarfasciigame/__main__.py'],
+a = Analysis(['lithicrivers/__main__.py'],
              pathex=[],
              binaries=[],
              datas=added_files,
@@ -36,7 +36,7 @@ exe = EXE(pyz,
           a.zipfiles,
           a.datas,
           [],
-          name='dwarfasciigame',
+          name='LithicRivers',
           debug=False,
           bootloader_ignore_signals=False,
           strip=False,

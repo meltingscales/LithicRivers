@@ -1,1 +1,1 @@
-pipenv run pyinstaller ./dwarfasciigame.spec
+pipenv run pyinstaller ./lithicrivers.spec

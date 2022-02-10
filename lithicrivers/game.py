@@ -3,7 +3,7 @@ from typing import List, Tuple, Dict
 
 import numpy
 
-from dwarfasciigame.settings import DEFAULT_SIZE
+from lithicrivers.settings import DEFAULT_SIZE
 
 
 class SpriteRenderable:

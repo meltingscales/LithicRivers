@@ -1,8 +1,10 @@
-# dwarfasciigame
+# LithicRivers
+
+rocks and shit
 
 ## play it
 
-<https://github.com/HenryFBP/dwarfasciigame/releases>
+<https://github.com/HenryFBP/LithicRivers/releases>
 
 ## what is this
 

@@ -8,8 +8,9 @@ from asciimatics.exceptions import NextScene, StopApplication
 from asciimatics.scene import Scene
 from asciimatics.screen import Canvas, Screen
 from asciimatics.widgets import Layout, Divider, Button, _split_text, Frame, Label
+from lithicrivers.settings import GAME_NAME
 
-from dwarfasciigame.game import Game
+from lithicrivers.game import Game
 
 
 class TabButtons(Layout):
@@ -330,7 +331,7 @@ def demo(screen: Screen, scene: Scene, game: Game):
         else:
             logging.debug("Not supposed to handle " + maybe_root_page.title)
 
-    screen.set_title("dwarfasciigame test :3")
+    screen.set_title("{} test :3".format(GAME_NAME))
     screen.play(scenes, stop_on_resize=True, start_scene=scene, allow_int=True, unhandled_input=handle_event)
 
 
