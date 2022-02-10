@@ -14,7 +14,7 @@ added_files = [
     ('README.md', './'),
 ]
 
-a = Analysis(['main.py'],
+a = Analysis(['dwarfasciigame/__main__.py'],
              pathex=[],
              binaries=[],
              datas=added_files,

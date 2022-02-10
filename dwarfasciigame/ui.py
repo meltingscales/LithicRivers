@@ -1,242 +1,15 @@
-# This is a sample Python script.
-
-# Press Ctrl+F5 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 import logging
-import os.path
-import sys
-from typing import List, Tuple, Union, Dict
+from typing import Union, Tuple, List
 
 import asciimatics.widgets
-import numpy
 from asciimatics.effects import Effect
 from asciimatics.event import KeyboardEvent, MouseEvent
-from asciimatics.exceptions import ResizeScreenError, NextScene, StopApplication
+from asciimatics.exceptions import NextScene, StopApplication
 from asciimatics.scene import Scene
-from asciimatics.screen import Screen, Canvas
-from asciimatics.widgets import Frame, Layout, Divider, Button, _split_text
+from asciimatics.screen import Canvas, Screen
+from asciimatics.widgets import Layout, Divider, Button, _split_text, Frame, Label
 
-from settings import DEFAULT_SIZE, LOGFILENAME
-
-
-def raise_(ex):
-    """Because we can't use raise in lambda for some reason..."""
-    raise ex
-
-
-if os.path.exists(LOGFILENAME):
-    os.remove(LOGFILENAME)
-
-logging.basicConfig(filename=LOGFILENAME, level=logging.DEBUG)
-
-
-class Item:
-    def __init__(self, name, charsheet: List[str] = None):
-        self.name = name
-        self.charsheet = charsheet
-
-    def render(self, scale=1):
-        return self.charsheet[scale - 1]
-
-
-class Items:
-    """
-    A bunch of default items.
-    """
-
-    @staticmethod
-    def Rock():
-        return Item("Rock",
-                    charsheet=['*'])
-
-    @staticmethod
-    def Gold_Nugget():
-        return Item("Gold Nugget",
-                    charsheet=['c'])
-
-    @staticmethod
-    def Stick():
-        return Item("Stick",
-                    charsheet=['\\'])
-
-
-class Tiles:
-    """
-    A bunch of default tiles.
-    """
-
-    @staticmethod
-    def Dirt():
-        return Tile('Dirt',
-                    [',', ',.\n'
-                          '.,', ',.,\n'
-                                '.,.\n'
-                                ',.,'],
-                    {0.99: Items.Rock(),
-                     0.01: Items.Gold_Nugget()})
-
-    @staticmethod
-    def Tree():
-        return Tile('Tree',
-                    ['t', '/\\\n'
-                          '||', '/|\\\n'
-                                ';|;\n'
-                                '/|\\\n'],
-                    {1.00: Items.Stick()})
-
-
-class Tile:
-    def __init__(self, name: str, charsheet: List[str] = None, drops: Dict[float, Item] = None):
-        self.name = name
-        self.charsheet = charsheet
-        self.drops = drops
-
-    def render(self, scale=1):
-        return self.charsheet[scale - 1]
-
-
-def gen_tile(choices: List[Tile] = None, weights: List[int] = None) -> Tile:
-    if choices is None:
-        choices = [Tiles.Tree(),
-                   Tiles.Dirt()]
-
-    if weights is None:
-        weights = [5, 100]
-
-    if len(weights) != len(choices):
-        ve = ValueError(f"Weights and choices for {gen_tile.__name__}() must be the same length!")
-        logging.error(ve)
-        raise ve
-
-    weights = numpy.asarray(weights)
-
-    normalizedWeights = weights
-
-    if weights.sum() != 1:
-        normalizedWeights = weights / weights.sum()
-
-    return numpy.random.choice(choices, p=normalizedWeights)
-
-
-class Player:
-    def __init__(self):
-        self.x = 0
-        self.y = 0
-        self.displaySymbol = '$'
-        self.health = 100
-        self.stamina = 100
-
-    def move(self, vecoffset: Tuple[int, int]):
-        xoffset, yoffset = vecoffset
-
-        self.x += xoffset
-        self.y += yoffset
-
-    def calcOffset(self, vec: Tuple[int, int]) -> Tuple[int, int]:
-        """Where would I move, if I did move?"""
-        xoffset, yoffset = vec
-
-        return (
-            self.x + xoffset,
-            self.y + yoffset
-        )
-
-    def moveUp(self):
-        self.move((0, 1))
-
-    def moveDown(self):
-        self.move((0, -1))
-
-    def moveLeft(self):
-        self.move((-1, 0))
-
-    def moveRight(self):
-        self.move((1, 0))
-
-    def render(self, scale):
-        return '$'
-
-
-class World:
-
-    def get_height(self):
-        return self.size[1]
-
-    def get_width(self):
-        return self.size[0]
-
-    @staticmethod
-    def gen_random_world(size: Tuple[int, int]) -> List[List[Tile]]:
-        width, height = size
-        resultworld = []
-        for y in range(0, height):
-            row = []
-            for x in range(0, width):
-                row.append(gen_tile())
-            resultworld.append(row)
-        return resultworld
-
-    def __init__(self, name="Gaia", size=DEFAULT_SIZE):
-        self.size = size
-        self.name = name
-        self.worlddata = World.gen_random_world(size)
-        self.gametick = 0
-
-
-class Game:
-    def __init__(self, player: Player = None, world: World = None):
-
-        if player is None:
-            player = Player()
-
-        if world is None:
-            world = World()
-
-        self.player = player
-        self.world = world
-
-    def render_world(self, scale: int = 1) -> List[List[str]]:
-        r"""
-        :param scale: Scaling for sprites. <pre><code>
-        1 = x, 2 = \/, 3 = \ /, etc.
-                   /\       x
-                           / \
-        :return:
-        """
-
-        ret = []
-
-        for row in self.world.worlddata:
-            retrow = []
-            for tile in row:
-                retrow.append(tile.render(scale=scale))  # TODO: will break with scale>2... we need to print to a buffer
-            ret.append(retrow)
-
-        # TODO: Assert ret is well-formed
-
-        logging.info("player x,y={:2d},{:2d}".format(self.player.x, self.player.y))
-        ret[self.player.y][self.player.x] = self.player.render(scale=scale)
-
-        return ret
-
-    def move_player(self, vec):
-        possiblePosition = self.player.calcOffset(vec)
-
-        # check bounds
-        if (
-                (possiblePosition[0] < 0) or
-                (possiblePosition[1] < 0) or
-                (possiblePosition[0] >= self.world.get_width()) or
-                (possiblePosition[1] >= self.world.get_height())
-        ):
-            logging.debug("Tried to move OOB! {} would have resulted in {}".format(vec, possiblePosition))
-            return
-
-        self.player.move(vec)
-
-
-# Global game object...
-GAME = Game()
+from dwarfasciigame.game import Game
 
 
 class TabButtons(Layout):
@@ -252,7 +25,7 @@ class TabButtons(Layout):
 
         buttons = [
             Button("Root Page", lambda: raise_(NextScene("RootPage"))),
-            Button("Alpha Page", lambda: raise_(NextScene("AlphaPage"))),
+            Button("Help Page", lambda: raise_(NextScene("HelpPage"))),
             Button("Bravo Page", lambda: raise_(NextScene("BravoPage"))),
             Button("Charlie Page", lambda: raise_(NextScene("CharliePage"))),
             Button("Quit", lambda: (logging.info("Bye!"), raise_(StopApplication("Quit"))))
@@ -427,12 +200,16 @@ class GameWidget(asciimatics.widgets.Widget):
 
 
 class RootPage(Frame):
-    def __init__(self, screen):
+    __slots__ = ['game']
+
+    def __init__(self, screen, game: Game):
         super().__init__(screen,
                          screen.height,
                          screen.width,
                          can_scroll=False,
                          title="Root Page")
+
+        self.game = game
 
         layout1 = Layout([1], fill_frame=True)
 
@@ -444,7 +221,7 @@ class RootPage(Frame):
 
         self.widgetGame = GameWidget(
             name="widgetGame",
-            game=GAME
+            game=self.game
         )
         layout1.add_widget(self.widgetGame)
 
@@ -456,16 +233,18 @@ class RootPage(Frame):
         self.fix()
 
 
-class AlphaPage(Frame):
+class HelpPage(Frame):
     def __init__(self, screen):
         super().__init__(screen,
                          screen.height,
                          screen.width,
                          can_scroll=False,
-                         title="Alpha Page")
+                         title="Help Page")
         layout1 = Layout([1], fill_frame=True)
         self.add_layout(layout1)
         # add your widgets here
+
+        layout1.add_widget(Label("WASD+SPACE...try clicking :P"))
 
         layout2 = TabButtons(self, 1)
         self.add_layout(layout2)
@@ -504,10 +283,10 @@ class CharliePage(Frame):
         self.fix()
 
 
-def demo(screen: Screen, scene: Scene):
+def demo(screen: Screen, scene: Scene, game: Game):
     scenes = [
-        Scene([RootPage(screen)], -1, name="RootPage"),
-        Scene([AlphaPage(screen)], -1, name="AlphaPage"),
+        Scene([RootPage(screen, game)], -1, name="RootPage"),
+        Scene([HelpPage(screen)], -1, name="HelpPage"),
         Scene([BravoPage(screen)], -1, name="BravoPage"),
         Scene([CharliePage(screen)], -1, name="CharliePage"),
     ]
@@ -540,7 +319,7 @@ def demo(screen: Screen, scene: Scene):
             moveVec = inputUtil.handle_movement(event)
             if moveVec:
                 daRootPage.labelFoo.text += ("... you move ({:3d}{:3d})".format(*moveVec))
-                GAME.move_player(moveVec)
+                daRootPage.game.move_player(moveVec)
             else:
                 daRootPage.labelFoo.text += "... '{}' is not a movement key.".format(daChar)
 
@@ -551,21 +330,6 @@ def demo(screen: Screen, scene: Scene):
     screen.play(scenes, stop_on_resize=True, start_scene=scene, allow_int=True, unhandled_input=handle_event)
 
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-
-    print(f"see {LOGFILENAME} for logs.")
-
-    logging.info('wow its PyCharm!')
-
-    logging.debug(GAME.render_world())
-
-    last_scene = None
-    while True:
-        try:
-            Screen.wrapper(demo, catch_interrupt=True, arguments=[last_scene])
-            sys.exit(0)
-        except ResizeScreenError as e:
-            last_scene = e.scene
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+def raise_(ex):
+    """Because we can't use raise in lambda for some reason..."""
+    raise ex
