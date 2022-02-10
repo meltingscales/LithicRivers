@@ -2,6 +2,8 @@
 
 rocks and shit
 
+ascii dwarf mine game, very wip...
+
 ## play it
 
 <https://github.com/HenryFBP/LithicRivers/releases>
