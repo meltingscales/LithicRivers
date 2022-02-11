@@ -1,3 +1,9 @@
 #!/usr/bin/env bash
 
-pipenv run pyinstaller ./lithicrivers.spec
+if [[ $platform == 'linux' ]]; then
+  PYCMD=python
+else #osx needs to use python3
+  PYCMD=python3
+fi
+
+$PYCMD -m pipenv run pyinstaller ./lithicrivers.spec
