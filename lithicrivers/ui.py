@@ -10,7 +10,8 @@ from asciimatics.screen import Canvas, Screen
 from asciimatics.widgets import Layout, Divider, Button, _split_text, Frame, Label
 
 from lithicrivers.game import Game, Tile, Tiles
-from lithicrivers.settings import GAME_NAME
+from lithicrivers.model import Vector2
+from lithicrivers.settings import GAME_NAME, KEYMAP
 
 
 class TabButtons(Layout):
@@ -49,8 +50,8 @@ class GameWidget(asciimatics.widgets.Widget):
 
         self._frame: Frame
 
-        print("we need {} height...".format(self.required_height(0, 0)))
-        print(self.game.viewport)
+        # print("we need {} height...".format(self.required_height(0, 0)))
+        # print(self.game.viewport)
 
     def required_height(self, offset, width):
         return self.game.viewport.get_height() + 2  # +2 for our random text shit
@@ -204,30 +205,23 @@ class CharliePage(Frame):
 class InputHandler:
 
     @staticmethod
-    def handle_movement(keyboardEvent: KeyboardEvent) -> Union[None, Tuple[int, int]]:
+    def handle_movement(keyboardEvent: KeyboardEvent) -> Union[None, Vector2]:
         """
         :param keyboardEvent:
         :return: Vector the input resolves to.
         """
-        inputmap = {
-            'w': (0, -1),
-            'a': (-1, 0),
-            's': (0, 1),
-            'd': (1, 0)
-        }
 
         datKey = chr(keyboardEvent.key_code).lower()
-        if datKey in inputmap.keys():
-            return inputmap[datKey]
+        if datKey in KEYMAP.MOVEMENT_VECTOR_MAP.keys():
+            return KEYMAP.MOVEMENT_VECTOR_MAP[datKey]
 
         return None
 
     @staticmethod
     def handle_mining(event: KeyboardEvent, game: Game, root_page: RootPage):
         # TODO: clean up state... :P why do we pass all these as args?
-        char = chr(event.key_code)
 
-        if not (char.lower() == 'u'):
+        if not KEYMAP.matches_keyboard_event('MINE', event):
             return
 
         root_page.labelFoo.text += "...but it is a mining key!"
