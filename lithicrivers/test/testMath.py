@@ -4,7 +4,6 @@ from lithicrivers.model import Vector2
 god i hate math
 '''
 
-
 import unittest
 
 
