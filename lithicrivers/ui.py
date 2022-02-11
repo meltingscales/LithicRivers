@@ -272,7 +272,7 @@ def demo(screen: Screen, scene: Scene, game: Game):
             if moveVec:
                 root_page.game.move_player(moveVec)
 
-                root_page.labelFoo.text += ("pos={:02d},{:02d}".format(game.player.x, game.player.y))
+                root_page.labelFoo.text += ("pos={:02d},{:02d}".format(game.player.position.x, game.player.position.y))
 
                 root_page.labelFeet.text = 'Below your feet is a [{}].'.format(root_page.game.get_tile_at_player_feet())
 
