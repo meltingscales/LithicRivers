@@ -4,8 +4,9 @@ from typing import List, Tuple, Dict
 
 import numpy
 
-from lithicrivers.model import Vector2
-from lithicrivers.settings import DEFAULT_SIZE, DEFAULT_VIEWPORT
+from lithicrivers.model import Vector2, Viewport
+from lithicrivers.settings import DEFAULT_SIZE, DEFAULT_VIEWPORT, VEC_UP, VEC_DOWN, VEC_LEFT, VEC_RIGHT, \
+    DEFAULT_PLAYER_POSITION
 
 
 class SpriteRenderable:
@@ -25,37 +26,28 @@ class SpriteRenderable:
 class Entity:
 
     def __init__(self):
-        self.x = 0
-        self.y = 0
+        self.position = DEFAULT_PLAYER_POSITION
         self.health = 100
         self.stamina = 100
 
-    def move(self, vecoffset: Tuple[int, int]):
-        xoffset, yoffset = vecoffset
+    def move(self, vec: Vector2):
+        self.position += vec
 
-        self.x += xoffset
-        self.y += yoffset
-
-    def calcOffset(self, vec: Vector2) -> Tuple[int, int]:
+    def calcOffset(self, vec: Vector2) -> Vector2:
         """Where would I move, if I did move?"""
-        xoffset, yoffset = vec.x, vec.y
-
-        return (
-            self.x + xoffset,
-            self.y + yoffset
-        )
+        return self.position + vec
 
     def moveUp(self):
-        self.move((0, 1))
+        self.move(VEC_UP)
 
     def moveDown(self):
-        self.move((0, -1))
+        self.move(VEC_DOWN)
 
     def moveLeft(self):
-        self.move((-1, 0))
+        self.move(VEC_LEFT)
 
     def moveRight(self):
-        self.move((1, 0))
+        self.move(VEC_RIGHT)
 
 
 class Player(Entity, SpriteRenderable):
@@ -162,13 +154,13 @@ class Tiles:
 class World:
 
     def get_height(self):
-        return self.size[1]
+        return self.size.y
 
     def get_width(self):
-        return self.size[0]
+        return self.size.x
 
     @staticmethod
-    def gen_random_world(size: Tuple[int, int]) -> List[List[Tile]]:
+    def gen_random_world(size: Vector2) -> List[List[Tile]]:
         width, height = size
         resultworld = []
         for y in range(0, height):
@@ -184,8 +176,8 @@ class World:
         self.worlddata = World.gen_random_world(size)
         self.gametick = 0
 
-    def get_tile_at(self, x: int, y: int):
-        return self.worlddata[y][x]
+    def get_tile_at(self, pos: Vector2):
+        return self.worlddata[pos.y][pos.x]
 
 
 class Game:
@@ -211,12 +203,12 @@ class Game:
         self.viewport.lowerright.x += 1
 
     def get_tile_at_player_feet(self) -> Tile:
-        return self.world.get_tile_at(self.player.x, self.player.y)
+        return self.world.get_tile_at(self.player.position)
 
     def render_world_viewport(
             self,
             scale: int = 1,
-            viewport: Tuple[Tuple[int, int], Tuple[int, int]] = None
+            viewport: Viewport = None
     ) -> List[List[str]]:
         r"""
         :param viewport: Viewport to render.
@@ -251,7 +243,7 @@ class Game:
                 sprite = tile.render_sprite(scale=scale)
 
                 # if we are here, render us!
-                if (self.player.y == y) and (self.player.x == x):
+                if (self.player.position.y == y) and (self.player.position.x == x):
                     sprite = self.player.render_sprite(scale=scale)
 
                 # logging.debug('render: {}'.format(sprite))
@@ -290,8 +282,8 @@ class Game:
 
         # TODO: Assert ret is well-formed
 
-        logging.info("player x,y={:2d},{:2d}".format(self.player.x, self.player.y))
-        ret[self.player.y][self.player.x] = self.player.render_sprite(scale=scale)
+        logging.info("player x,y={:2d},{:2d}".format(self.player.position.x, self.player.position.y))
+        ret[self.player.position.y][self.player.position.x] = self.player.render_sprite(scale=scale)
 
         return ret
 
@@ -300,10 +292,10 @@ class Game:
 
         # check bounds
         if (
-                (possiblePosition[0] < 0) or
-                (possiblePosition[1] < 0) or
-                (possiblePosition[0] >= self.world.get_width()) or
-                (possiblePosition[1] >= self.world.get_height())
+                (possiblePosition.x < 0) or
+                (possiblePosition.y < 0) or
+                (possiblePosition.x >= self.world.get_width()) or
+                (possiblePosition.y >= self.world.get_height())
         ):
             logging.debug("Tried to move OOB! {} would have resulted in {}".format(vec, possiblePosition))
             return

@@ -8,7 +8,13 @@ GAME_NAME = 'LithicRivers'
 # DEFAULT_SIZE = (50, 15)
 DEFAULT_SIZE = Vector2(20, 20)
 DEFAULT_VIEWPORT = Viewport(Vector2(0, 0), Vector2(5, 5))
+DEFAULT_PLAYER_POSITION=Vector2(0,0)
 LOGFILENAME = GAME_NAME + '.log'
+
+VEC_UP = Vector2(0, 1)
+VEC_DOWN = Vector2(0, -1)
+VEC_LEFT = Vector2(-1, 0)
+VEC_RIGHT = Vector2(1, 0)
 
 
 class Keymap:
