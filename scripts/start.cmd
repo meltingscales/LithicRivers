@@ -1,4 +1,4 @@
-pipenv run python3 -m lithicrivers
+pipenv run python -m lithicrivers
 
 echo "Done."
 
