@@ -107,28 +107,6 @@ class SwagLabel(asciimatics.widgets.Widget):
         return self._value
 
 
-class inputUtil:
-
-    @staticmethod
-    def handle_movement(keyboardEvent: KeyboardEvent) -> Union[None, Tuple[int, int]]:
-        """
-        :param keyboardEvent:
-        :return: Vector the input resolves to.
-        """
-        inputmap = {
-            'w': (0, -1),
-            'a': (-1, 0),
-            's': (0, 1),
-            'd': (1, 0)
-        }
-
-        datKey = chr(keyboardEvent.key_code).lower()
-        if datKey in inputmap.keys():
-            return inputmap[datKey]
-
-        return None
-
-
 class GameWidget(asciimatics.widgets.Widget):
     __slots__ = ["_required_height", '_game', '_align']
 
@@ -150,7 +128,7 @@ class GameWidget(asciimatics.widgets.Widget):
 
         for row in self.game.render_world():
             for char in row:
-                logging.debug('printchar: {}'.format(char))
+                # logging.debug('printchar: {}'.format(char))
                 content += char
             content += '\n'
 
@@ -246,7 +224,7 @@ class HelpPage(Frame):
         self.add_layout(layout1)
         # add your widgets here
 
-        layout1.add_widget(Label("WASD+SPACE...try clicking :P"))
+        layout1.add_widget(Label("keys: WASD, U, arrows, TAB, ENTER...try clicking :P"))
 
         layout2 = TabButtons(self, 1)
         self.add_layout(layout2)
@@ -285,6 +263,36 @@ class CharliePage(Frame):
         self.fix()
 
 
+class InputHandler:
+
+    @staticmethod
+    def handle_movement(keyboardEvent: KeyboardEvent) -> Union[None, Tuple[int, int]]:
+        """
+        :param keyboardEvent:
+        :return: Vector the input resolves to.
+        """
+        inputmap = {
+            'w': (0, -1),
+            'a': (-1, 0),
+            's': (0, 1),
+            'd': (1, 0)
+        }
+
+        datKey = chr(keyboardEvent.key_code).lower()
+        if datKey in inputmap.keys():
+            return inputmap[datKey]
+
+        return None
+
+    @staticmethod
+    def handle_mining(event: KeyboardEvent, game: Game, root_page: RootPage):
+        # TODO: clean up state... :P why do we pass all these as args?
+        char = chr(event.key_code)
+
+        if char.lower() == 'u':
+            root_page.labelFoo.text += "...but it is a mining key!"
+
+
 def demo(screen: Screen, scene: Scene, game: Game):
     scenes = [
         Scene([RootPage(screen, game)], -1, name="RootPage"),
@@ -318,7 +326,7 @@ def demo(screen: Screen, scene: Scene, game: Game):
             # screen.set_title("HOLD UP, YOU PRESSING " + char + "?")
             root_page.labelFoo.text = f"pressing {char}?"
 
-            moveVec = inputUtil.handle_movement(event)
+            moveVec = InputHandler.handle_movement(event)
             if moveVec:
                 root_page.labelFoo.text += ("... you move ({:3d}{:3d})".format(*moveVec))
                 root_page.game.move_player(moveVec)
@@ -328,10 +336,12 @@ def demo(screen: Screen, scene: Scene, game: Game):
             else:
                 root_page.labelFoo.text += "... '{}' is not a movement key.".format(char)
 
+            InputHandler.handle_mining(event, root_page.game, root_page)
+
         else:
             logging.debug("Not supposed to handle " + maybe_root_page.title)
 
-    screen.set_title("{} test :3".format(GAME_NAME))
+    screen.set_title("~~-[ {} ]-~~".format(GAME_NAME))
     screen.play(scenes, stop_on_resize=True, start_scene=scene, allow_int=True, unhandled_input=handle_event)
 
 
