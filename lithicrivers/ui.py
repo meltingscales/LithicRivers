@@ -168,6 +168,7 @@ class HelpPage(Frame):
         helptxt = KEYMAP.generate_key_guide()
         helptxt = ("Hello! Welcome to {}. Below are keys.\n"
                    "By the way, game UI nav is arrow keys + space or enter.\n"
+                   "You can also use the mouse! Left click works!\n"
                    "Enjoy!\n".format(GAME_NAME) + helptxt)
 
         helptxtheight = len(helptxt.split('\n'))

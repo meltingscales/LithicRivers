@@ -5,11 +5,15 @@ god i hate math
 '''
 
 
-def testVecBoundingBox():
-    v1 = Vector2(0, 0)
-    v2 = Vector2(5, 5)
+import unittest
 
-    v3 = Vector2(4, 4)
 
-    assert (v3.insideBoundingBox(v1, v2))
-    assert (v3.insideBoundingBox(v2, v1))
+class Testing(unittest.TestCase):
+    def testVecBoundingBox(self):
+        v1 = Vector2(0, 0)
+        v2 = Vector2(5, 5)
+
+        v3 = Vector2(4, 4)
+
+        self.assert_(v3.insideBoundingBox(v1, v2))
+        self.assert_(v3.insideBoundingBox(v2, v1))

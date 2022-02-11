@@ -19,6 +19,9 @@ class Vector2:
     def __mul__(self, other):
         return Vector2(x=(self.x * other.x), y=(self.y * other.y))
 
+    def __eq__(self, other):
+        return (self.x == other.x) and (self.y == other.y)
+
     def __getitem__(self, item):
         if item == 0:
             return self.x
@@ -46,7 +49,8 @@ class Viewport:
         self.lowerright = lowerright
 
     def get_height(self):
-        logging.debug("returning self.lowerright.y - self.topleft.y = {} - {}".format(self.lowerright.y, self.topleft.y))
+        logging.debug(
+            "returning self.lowerright.y - self.topleft.y = {} - {}".format(self.lowerright.y, self.topleft.y))
         return self.lowerright.y - self.topleft.y
 
     def __str__(self):
