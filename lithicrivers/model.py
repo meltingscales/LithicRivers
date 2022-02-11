@@ -51,3 +51,7 @@ class Viewport:
 
     def __str__(self):
         return "<Viewport topleft=[{}] lowerright=[{}] >".format(self.topleft, self.lowerright)
+
+
+class StopGame(Exception):
+    pass

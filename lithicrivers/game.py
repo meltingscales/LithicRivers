@@ -173,11 +173,11 @@ class World:
     def __init__(self, name="Gaia", size=DEFAULT_SIZE):
         self.size = size
         self.name = name
-        self.worlddata = World.gen_random_world(size)
+        self.data = World.gen_random_world(size)
         self.gametick = 0
 
     def get_tile_at(self, pos: Vector2):
-        return self.worlddata[pos.y][pos.x]
+        return self.data[pos.y][pos.x]
 
 
 class Game:
@@ -193,6 +193,8 @@ class Game:
 
         self.player = player
         self.world = world
+
+        self.running = True
 
     def slide_viewport_left(self):
         self.viewport.topleft.x -= 1
@@ -231,7 +233,7 @@ class Game:
             if (y >= self.world.get_height()) or (y < 0):
                 continue
 
-            row = self.world.worlddata[y]
+            row = self.world.data[y]
             retrow = []
 
             for x in range(viewport.topleft.x, viewport.lowerright.x):
@@ -272,7 +274,7 @@ class Game:
 
         ret = []
 
-        for row in self.world.worlddata:
+        for row in self.world.data:
             retrow = []
             for tile in row:
                 sprite = tile.render_sprite(scale=scale)
