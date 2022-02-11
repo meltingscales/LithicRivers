@@ -1,1 +1,1 @@
-pipenv run python
+pipenv run python -m unittest lithicrivers
