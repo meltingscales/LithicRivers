@@ -205,7 +205,7 @@ class RootPage(Frame):
         )
         layout1.add_widget(self.widgetGame)
 
-        self.labelFoo = SwagLabel(name="labelFoo", label='foo :)')
+        self.labelFoo = Label(name="labelFoo", label='foo :)')
         layout1.add_widget(self.labelFoo)
 
         layoutButtons = TabButtons(self, 0)
