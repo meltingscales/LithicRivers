@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 
-pipenv run python -m lithicrivers
+pipenv run python3 -m lithicrivers
 
 echo "Done."
