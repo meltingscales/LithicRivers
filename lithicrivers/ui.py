@@ -39,16 +39,20 @@ class TabButtons(Layout):
 
 
 class GameWidget(asciimatics.widgets.Widget):
-    __slots__ = ["_required_height", '_game', '_align']
+    __slots__ = ['_game', '_align']
 
     def __init__(self, game: Game, align='<', name: str = None):
         super(GameWidget, self).__init__(name, tab_stop=False)
 
         self.game = game
-        self._required_height = (self.game.viewport.get_height() + 2)
         self._align = align
 
         self._frame: Frame
+
+        print("we need {} height...".format(self.required_height(0,0)))
+
+    def required_height(self, offset, width):
+        return self.game.viewport.get_height() + 2  # +2 for our random text shit
 
     # noinspection PyTypeHints
     def update(self, frame_no: int):
@@ -57,14 +61,16 @@ class GameWidget(asciimatics.widgets.Widget):
         content = f'|~-~ World {self.game.world.name} ~-~|\n'
         content += f'wew lad (frame_no % 100) = {(frame_no % 100):03d}\n'
 
-        for row in self.game.render_world_viewport():
+        toRender = self.game.render_world_viewport()
+
+        logging.debug("CONTENT RENDERED:")
+        logging.debug(content)
+
+        for row in toRender:
             for char in row:
                 # logging.debug('printchar: {}'.format(char))
                 content += char
             content += '\n'
-
-        logging.debug("CONTENT PRINTED TO SCREEN:")
-        logging.debug(content)
 
         (colour, attr, background) = self._frame.palette[
             self._pick_palette_key("label", selected=False, allow_input_state=False)

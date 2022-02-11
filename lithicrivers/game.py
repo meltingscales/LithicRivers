@@ -1,4 +1,5 @@
 import logging
+import pprint
 from typing import List, Tuple, Dict
 
 import numpy
@@ -261,6 +262,9 @@ class Game:
                 ret.append(retrow)
 
         # TODO: Assert ret is well-formed
+
+        logging.debug("Returning this from render_world_viewport()")
+        logging.debug(pprint.pformat(ret))
 
         return ret
 
