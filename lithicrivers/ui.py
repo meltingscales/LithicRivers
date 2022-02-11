@@ -10,7 +10,7 @@ from asciimatics.screen import Canvas, Screen
 from asciimatics.widgets import Layout, Divider, Button, _split_text, Frame, Label
 from lithicrivers.settings import GAME_NAME
 
-from lithicrivers.game import Game
+from lithicrivers.game import Game, Tile, Tiles
 
 
 class TabButtons(Layout):
@@ -289,8 +289,18 @@ class InputHandler:
         # TODO: clean up state... :P why do we pass all these as args?
         char = chr(event.key_code)
 
-        if char.lower() == 'u':
-            root_page.labelFoo.text += "...but it is a mining key!"
+        if not (char.lower() == 'u'):
+            return
+
+        root_page.labelFoo.text += "...but it is a mining key!"
+
+        tile_under: Tile = game.get_tile_at_player_feet()
+        if tile_under == Tiles.Dirt():
+            root_page.labelFoo.text += ' You can\'t mine dirt :P'
+            return  # can't mine dirt
+
+        if tile_under == Tiles.DaFuq():
+            root_page.labelFoo.text += ' What da fuq is that tile? :3c'
 
 
 def demo(screen: Screen, scene: Scene, game: Game):
