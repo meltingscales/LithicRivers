@@ -49,7 +49,8 @@ class GameWidget(asciimatics.widgets.Widget):
 
         self._frame: Frame
 
-        print("we need {} height...".format(self.required_height(0,0)))
+        print("we need {} height...".format(self.required_height(0, 0)))
+        print(self.game.viewport)
 
     def required_height(self, offset, width):
         return self.game.viewport.get_height() + 2  # +2 for our random text shit
@@ -88,9 +89,6 @@ class GameWidget(asciimatics.widgets.Widget):
     def process_event(self, event):
         # this widget has no user interactions
         return event
-
-    def required_height(self, offset, width):
-        return self._game.world.get_height()
 
     @property
     def text(self):
