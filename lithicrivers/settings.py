@@ -47,7 +47,13 @@ class Keymap:
                 "Could not handle this KeyboardEvent -- {} -- probably a special key: {}".format(ke.key_code, ke, ))
             return None
 
-    def matches_keyboard_event(self, key_name: str, ke: KeyboardEvent):
+    def matches(self, key_name: str, ke: KeyboardEvent):
+        """
+        Does this KeyboardEvent match a name of a key we have registered?
+        :param key_name: Name of a key -- i.e. 'MOVE_LEFT'
+        :param ke: KeyboardEvent.
+        :return: boolean
+        """
 
         try:
             key = self.__getattribute__(key_name)

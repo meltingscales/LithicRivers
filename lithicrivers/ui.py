@@ -221,7 +221,7 @@ class InputHandler:
     def handle_mining(event: KeyboardEvent, game: Game, root_page: RootPage):
         # TODO: clean up state... :P why do we pass all these as args?
 
-        if not KEYMAP.matches_keyboard_event('MINE', event):
+        if not KEYMAP.matches('MINE', event):
             return
 
         root_page.labelFoo.text += "...but it is a mining key!"
@@ -234,6 +234,14 @@ class InputHandler:
         if tile_under == Tiles.DaFuq():
             root_page.labelFoo.text += ' What da fuq is that tile? :3c'
 
+    @classmethod
+    def handle_viewport(cls, event, game):
+
+        if KEYMAP.matches('VIEWPORT_SLIDE_LEFT',event):
+            game.slide_viewport_left()
+
+        if KEYMAP.matches('VIEWPORT_SLIDE_RIGHT',event):
+            game.slide_viewport_right()
 
 def demo(screen: Screen, scene: Scene, game: Game):
     scenes = [
@@ -280,6 +288,8 @@ def demo(screen: Screen, scene: Scene, game: Game):
                 root_page.labelFoo.text += "... '{}' is not a movement key.".format(char)
 
             InputHandler.handle_mining(event, root_page.game, root_page)
+
+            InputHandler.handle_viewport(event, root_page.game)
 
         else:
             logging.debug("Not supposed to handle " + maybe_root_page.title)
