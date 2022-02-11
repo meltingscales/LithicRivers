@@ -3,7 +3,7 @@ from typing import List, Tuple, Dict
 
 import numpy
 
-from lithicrivers.settings import DEFAULT_SIZE
+from lithicrivers.settings import DEFAULT_SIZE, DEFAULT_VIEWPORT
 
 
 class SpriteRenderable:
@@ -185,13 +185,9 @@ class World:
     def get_tile_at(self, x: int, y: int):
         return self.worlddata[y][x]
 
-class Viewport:
-    def __init__(self, topleft=(0,0), lowerright=(10,10)):
-        self.topleft=topleft
-        self.lowerright=lowerright
 
 class Game:
-    def __init__(self, player: Player = None, world: World = None, viewport=Viewport()):
+    def __init__(self, player: Player = None, world: World = None, viewport=DEFAULT_VIEWPORT):
 
         self.viewport = viewport
 
@@ -204,13 +200,13 @@ class Game:
         self.player = player
         self.world = world
 
-    def shift_viewport_left(self):
-        self.viewport.topleft[0] -= 1
-        self.viewport.lowerright[0] -= 1
+    def slide_viewport_left(self):
+        self.viewport.topleft.x -= 1
+        self.viewport.lowerright.x -= 1
 
-    def shift_viewport_right(self):
-        self.viewport.topleft[0] += 1
-        self.viewport.lowerright[0] += 1
+    def slide_viewport_right(self):
+        self.viewport.topleft.x += 1
+        self.viewport.lowerright.x += 1
 
     def get_tile_at_player_feet(self) -> Tile:
         return self.world.get_tile_at(self.player.x, self.player.y)
@@ -235,7 +231,7 @@ class Game:
 
         ret = []
 
-        for y in range(viewport.topleft[1], viewport.lowerright[1]):
+        for y in range(viewport.topleft.y, viewport.lowerright.y):
 
             # if this viewport y is out of bounds, skip...
             if (y >= self.world.get_height()) or (y < 0):
@@ -244,7 +240,7 @@ class Game:
             row = self.world.worlddata[y]
             retrow = []
 
-            for x in range(viewport.topleft[0], viewport.lowerright[0]):
+            for x in range(viewport.topleft.x, viewport.lowerright.x):
 
                 if (x >= self.world.get_width()) or (x < 0):
                     continue

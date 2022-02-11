@@ -45,7 +45,7 @@ class GameWidget(asciimatics.widgets.Widget):
         super(GameWidget, self).__init__(name, tab_stop=False)
 
         self.game = game
-        self._required_height = (self.game.world.get_height() + 2)
+         self._required_height = (self.game.viewport.get_height() + 2)
         self._align = align
 
         self._frame: Frame
@@ -62,6 +62,9 @@ class GameWidget(asciimatics.widgets.Widget):
                 # logging.debug('printchar: {}'.format(char))
                 content += char
             content += '\n'
+
+        logging.debug("CONTENT PRINTED TO SCREEN:")
+        logging.debug(content)
 
         (colour, attr, background) = self._frame.palette[
             self._pick_palette_key("label", selected=False, allow_input_state=False)
