@@ -6,7 +6,7 @@ from asciimatics.exceptions import ResizeScreenError
 from asciimatics.screen import Screen
 
 from lithicrivers.game import Game
-from lithicrivers.settings import LOGFILENAME
+from lithicrivers.settings import LOGFILENAME, KEYMAP
 from lithicrivers.ui import demo
 
 if os.path.exists(LOGFILENAME):
@@ -23,14 +23,15 @@ if __name__ == '__main__':
 
     logging.info('wow its PyCharm!')
 
-    logging.debug(GAME.render_world())
+    # logging.debug(GAME.render_world())
+
+    # logging.debug(KEYMAP.get_valid_key_names())
 
     last_scene = None
     while True:
         try:
             Screen.wrapper(demo, catch_interrupt=True, arguments=[last_scene, GAME])
-            sys.exit(0)
         except ResizeScreenError as e:
-            last_scene = e.scene
+            pass
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/

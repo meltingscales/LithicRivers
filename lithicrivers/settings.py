@@ -1,5 +1,5 @@
 import logging
-from typing import Union
+from typing import Union, List
 
 from asciimatics.event import KeyboardEvent
 
@@ -36,6 +36,37 @@ class Keymap:
         self.VIEWPORT_SLIDE_RIGHT = ']'
 
         self.MINE = 'u'
+
+    def get_valid_key_names(self) -> List[str]:
+        # TODO: Make dis more efficient...
+        # TODO filtered_names = filter(lambda x: ..., all_names)
+        # TODO Will return an iterable, which can only be
+        # TODO consumed once unless you do list(filter(...)), but is more efficient for large collections
+
+        all_names = dir(self)
+        filtered_names = [
+            name for name in all_names
+            if (
+                    (not name.startswith('__')) and
+                    (isinstance(name, str)) and  # name must be string
+                    (isinstance(self.__getattribute__(name), str))  # self.[name] must be string
+            )
+        ]
+
+        return filtered_names
+
+    def generate_key_guide(self) -> str:
+        """
+        :return: Human readable guide for keys
+        """
+        retstr = ""
+
+        keynames = self.get_valid_key_names()
+
+        for keyname in keynames:
+            retstr += "'[{}]' - {}\n".format(self.__getattribute__(keyname), keyname)
+
+        return retstr
 
     @staticmethod
     def char_from_keyboard_event(ke: KeyboardEvent) -> Union[None, str]:
