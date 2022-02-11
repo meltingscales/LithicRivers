@@ -1,3 +1,4 @@
+import logging
 from typing import Tuple, List
 
 
@@ -36,11 +37,17 @@ class Viewport:
     """
     Please note that y grows downwards, and x grows rightwards.
     This is why topleft is "smaller" numerically than lowerright.
+
+    The reason for this is...I lazily used list(list(...)) as my underlying data structure for World :P
     """
 
-    def __init__(self, topleft, lowerright):
+    def __init__(self, topleft: Vector2, lowerright: Vector2):
         self.topleft = topleft
         self.lowerright = lowerright
 
     def get_height(self):
+        logging.debug("returning self.lowerright.y - self.topleft.y = {} - {}".format(self.lowerright.y, self.topleft.y))
         return self.lowerright.y - self.topleft.y
+
+    def __str__(self):
+        return "<Viewport topleft=[{}] lowerright=[{}] >".format(self.topleft, self.lowerright)
