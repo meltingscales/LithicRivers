@@ -2,12 +2,13 @@ import logging
 import os.path
 import sys
 
-from asciimatics.exceptions import ResizeScreenError
+from asciimatics.exceptions import ResizeScreenError, StopApplication
 from asciimatics.screen import Screen
 
 from lithicrivers.game import Game
-from lithicrivers.settings import LOGFILENAME, KEYMAP
+from lithicrivers.settings import LOGFILENAME, KEYMAP, GAME_NAME
 from lithicrivers.ui import demo
+from lithicrivers.model import StopGame
 
 if os.path.exists(LOGFILENAME):
     os.remove(LOGFILENAME)
@@ -19,19 +20,25 @@ if __name__ == '__main__':
 
     GAME = Game()
 
-    print(f"see {LOGFILENAME} for logs.")
-
-    logging.info('wow its PyCharm!')
-
-    # logging.debug(GAME.render_world())
-
-    # logging.debug(KEYMAP.get_valid_key_names())
+    print(f"Welcome to {GAME_NAME}.\n"
+          f"See '{LOGFILENAME}' for logs.")
 
     last_scene = None
-    while True:
+    while GAME.running:
         try:
+            logging.debug("Running Screen.wrapper()")
             Screen.wrapper(demo, catch_interrupt=True, arguments=[last_scene, GAME])
-        except ResizeScreenError as e:
+        except StopGame as se:
+            logging.debug("Caught StopGame!")
+            GAME.running = False
+        except ResizeScreenError as rse:
+            logging.debug("Caught ResizeScreenError !")
             pass
+            # Screen rendering stops and re-starts if we get a ResizeScreenError since we're in a while loop...
+
+    print("Game is no longer running :3c")
+    print("Goodbye!")
+
+    exit(0)
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/

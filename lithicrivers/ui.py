@@ -1,36 +1,38 @@
 import logging
-from typing import Union, Tuple, List
+from typing import Union, List
 
 import asciimatics.widgets
 from asciimatics.effects import Effect
 from asciimatics.event import KeyboardEvent, MouseEvent
-from asciimatics.exceptions import NextScene, StopApplication
+from asciimatics.exceptions import NextScene
 from asciimatics.scene import Scene
 from asciimatics.screen import Canvas, Screen
 from asciimatics.widgets import Layout, Divider, Button, _split_text, Frame, Label
 
 from lithicrivers.game import Game, Tile, Tiles
-from lithicrivers.model import Vector2
+from lithicrivers.model import Vector2, StopGame
 from lithicrivers.settings import GAME_NAME, KEYMAP, Keymap
 
 
 class TabButtons(Layout):
-    def __init__(self, frame, active_tab_idx):
+
+    def __init__(self, frame, active_tab_idx, game=None):
         cols = [1, 1, 1, 1, 1]
 
         super().__init__(cols)
 
         self._frame = frame
+        self.game = game
 
         for i, _ in enumerate(cols):
             self.add_widget(Divider(), i)
 
         buttons = [
-            Button("Root Page", raiseFn(NextScene, "RootPage")),
             Button("Help Page", raiseFn(NextScene, "HelpPage")),
+            Button("Root Page", raiseFn(NextScene, "RootPage")),
             Button("Bravo Page", raiseFn(NextScene, "BravoPage")),
             Button("Charlie Page", raiseFn(NextScene, "CharliePage")),
-            Button("Quit", lambda: (logging.info("Bye!"), raise_(StopApplication("Quit"))))
+            Button("Quit", raiseFn(StopGame, "Game stopping :P"))
         ]
 
         for i, button in enumerate(buttons):
@@ -147,7 +149,7 @@ class RootPage(Frame):
         self.labelFoo = Label(name="labelFoo", label='foo :)', height=1)
         layout1.add_widget(self.labelFoo)
 
-        layoutButtons = TabButtons(self, 0)
+        layoutButtons = TabButtons(self, 1)
         self.add_layout(layoutButtons)
         self.fix()
 
@@ -164,7 +166,9 @@ class HelpPage(Frame):
         # add your widgets here
 
         helptxt = KEYMAP.generate_key_guide()
-        helptxt = ("Hello! Welcome to {}. Below are keys. Enjoy!\n".format(GAME_NAME) + helptxt)
+        helptxt = ("Hello! Welcome to {}. Below are keys.\n"
+                   "By the way, game UI nav is arrow keys + space or enter.\n"
+                   "Enjoy!\n".format(GAME_NAME) + helptxt)
 
         helptxtheight = len(helptxt.split('\n'))
 
@@ -172,7 +176,7 @@ class HelpPage(Frame):
 
         layout1.add_widget(helpLabel)
 
-        layout2 = TabButtons(self, 1)
+        layout2 = TabButtons(self, 0)
         self.add_layout(layout2)
         self.fix()
 
@@ -253,11 +257,14 @@ class InputHandler:
 
 def demo(screen: Screen, scene: Scene, game: Game):
     scenes = [
-        Scene([RootPage(screen, game)], -1, name="RootPage"),
         Scene([HelpPage(screen)], -1, name="HelpPage"),
+        Scene([RootPage(screen, game)], -1, name="RootPage"),
         Scene([BravoPage(screen)], -1, name="BravoPage"),
         Scene([CharliePage(screen)], -1, name="CharliePage"),
     ]
+
+    for scene in scenes[::-1]:
+        scene.effects[0].set_theme('bright')
 
     def handle_event(event: Union[KeyboardEvent, MouseEvent]):
 
@@ -269,7 +276,6 @@ def demo(screen: Screen, scene: Scene, game: Game):
             return
 
         maybe_root_page: RootPage = daEffects[0]
-        maybe_root_page.set_theme('bright')  # TODO can we set this earlier, and set it once?
 
         if not isinstance(event, KeyboardEvent):
             # print("not keyboard event, ignoring... - {}".format(event))
@@ -306,7 +312,7 @@ def demo(screen: Screen, scene: Scene, game: Game):
     screen.play(scenes, stop_on_resize=True, start_scene=scene, allow_int=True, unhandled_input=handle_event)
 
 
-def raise_(ex):
+def _raise(ex):
     """Because we can't use raise in lambda for some reason..."""
     raise ex
 
