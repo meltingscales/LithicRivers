@@ -4,6 +4,7 @@ from typing import List, Tuple, Dict
 
 import numpy
 
+from lithicrivers.model import Vector2
 from lithicrivers.settings import DEFAULT_SIZE, DEFAULT_VIEWPORT
 
 
@@ -35,9 +36,9 @@ class Entity:
         self.x += xoffset
         self.y += yoffset
 
-    def calcOffset(self, vec: Tuple[int, int]) -> Tuple[int, int]:
+    def calcOffset(self, vec: Vector2) -> Tuple[int, int]:
         """Where would I move, if I did move?"""
-        xoffset, yoffset = vec
+        xoffset, yoffset = vec.x, vec.y
 
         return (
             self.x + xoffset,
@@ -294,7 +295,7 @@ class Game:
 
         return ret
 
-    def move_player(self, vec):
+    def move_player(self, vec: Vector2):
         possiblePosition = self.player.calcOffset(vec)
 
         # check bounds
