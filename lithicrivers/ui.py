@@ -11,7 +11,7 @@ from asciimatics.widgets import Layout, Divider, Button, _split_text, Frame, Lab
 
 from lithicrivers.game import Game, Tile, Tiles
 from lithicrivers.model import Vector2
-from lithicrivers.settings import GAME_NAME, KEYMAP
+from lithicrivers.settings import GAME_NAME, KEYMAP, Keymap
 
 
 class TabButtons(Layout):
@@ -211,7 +211,7 @@ class InputHandler:
         :return: Vector the input resolves to.
         """
 
-        datKey = chr(keyboardEvent.key_code).lower()
+        datKey = Keymap.char_from_keyboard_event(keyboardEvent)
         if datKey in KEYMAP.MOVEMENT_VECTOR_MAP.keys():
             return KEYMAP.MOVEMENT_VECTOR_MAP[datKey]
 
@@ -260,7 +260,7 @@ def demo(screen: Screen, scene: Scene, game: Game):
             return
         event: KeyboardEvent
 
-        char = chr(event.key_code)
+        char = Keymap.char_from_keyboard_event(event)
         # pprint(event)
 
         if maybe_root_page.title.strip() == 'Root Page':
