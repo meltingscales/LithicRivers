@@ -92,13 +92,16 @@ class Item(SpriteRenderable):
 
 
 class Tile(SpriteRenderable):
-    def __init__(self, name: str, sprite_sheet: List[str] = None, drops: Dict[float, Item] = None):
+    def __init__(self, tileid: str, sprite_sheet: List[str] = None, drops: Dict[float, Item] = None):
         SpriteRenderable.__init__(self, sprite_sheet)
-        self.name = name
+        self.tileid = tileid
         self.drops = drops
 
     def __str__(self):
-        return f"<Tile '{self.name}': [{self.render_sprite(1)}]>"
+        return f"<Tile '{self.tileid}': [{self.render_sprite(1)}]>"
+
+    def __eq__(self, other):
+        return self.tileid == other.tileid
 
 
 def gen_tile(choices: List[Tile] = None, weights: List[int] = None) -> Tile:
