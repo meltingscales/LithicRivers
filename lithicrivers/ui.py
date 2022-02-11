@@ -45,7 +45,7 @@ class GameWidget(asciimatics.widgets.Widget):
         super(GameWidget, self).__init__(name, tab_stop=False)
 
         self.game = game
-         self._required_height = (self.game.viewport.get_height() + 2)
+        self._required_height = (self.game.viewport.get_height() + 2)
         self._align = align
 
         self._frame: Frame
