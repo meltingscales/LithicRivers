@@ -8,9 +8,9 @@ from asciimatics.exceptions import NextScene, StopApplication
 from asciimatics.scene import Scene
 from asciimatics.screen import Canvas, Screen
 from asciimatics.widgets import Layout, Divider, Button, _split_text, Frame, Label
-from lithicrivers.settings import GAME_NAME
 
 from lithicrivers.game import Game, Tile, Tiles
+from lithicrivers.settings import GAME_NAME
 
 
 class TabButtons(Layout):
@@ -25,10 +25,10 @@ class TabButtons(Layout):
             self.add_widget(Divider(), i)
 
         buttons = [
-            Button("Root Page", lambda: raise_(NextScene("RootPage"))),
-            Button("Help Page", lambda: raise_(NextScene("HelpPage"))),
-            Button("Bravo Page", lambda: raise_(NextScene("BravoPage"))),
-            Button("Charlie Page", lambda: raise_(NextScene("CharliePage"))),
+            Button("Root Page", raiseFn(NextScene, "RootPage")),
+            Button("Help Page", raiseFn(NextScene, "HelpPage")),
+            Button("Bravo Page", raiseFn(NextScene, "BravoPage")),
+            Button("Charlie Page", raiseFn(NextScene, "CharliePage")),
             Button("Quit", lambda: (logging.info("Bye!"), raise_(StopApplication("Quit"))))
         ]
 
@@ -36,75 +36,6 @@ class TabButtons(Layout):
             self.add_widget(button, i)
 
         buttons[active_tab_idx].disabled = True
-
-
-class SwagLabel(asciimatics.widgets.Widget):
-    """
-    A text label. But swaggy.
-    This class was made to test how to extend Widget class.
-    """
-
-    __slots__ = ["_text", "_required_height", "_align"]
-
-    def __init__(self, label, height=1, align="<", name=None):
-        """
-        :param label: The text to be displayed for the Label.
-        :param height: Optional height for the label.  Defaults to 1 line.
-        :param align: Optional alignment for the Label.  Defaults to left aligned.
-            Options are "<" = left, ">" = right and "^" = centre
-        :param name: The name of this widget.
-
-        """
-        # Labels have no value and so should have no name for look-ups either.
-        super(SwagLabel, self).__init__(name, tab_stop=False)
-
-        # Although this is a label, we don't want it to contribute to the layout
-        # tab calculations, so leave internal `_label` value as None.
-        # Also ensure that the label really is text.
-        self._text = str(label)
-        self._required_height = height
-        self._align = align
-
-    def process_event(self, event):
-        # Labels have no user interactions
-        return event
-
-    def update(self, frame_no):
-        (colour, attr, background) = self._frame.palette[
-            self._pick_palette_key("label", selected=False, allow_input_state=False)]
-        swag = "[ {SwagLabel} oh yeahh! ]"
-        for i, text in enumerate(
-                _split_text(self._text, self._w, self._h, self._frame.canvas.unicode_aware)):
-            text = swag + " " + text
-            self._frame.canvas.paint(
-                "{:{}{}}".format(text, self._align, self._w),
-                self._x, self._y + i, colour, attr, background
-            )
-
-    def reset(self):
-        pass
-
-    def required_height(self, offset, width):
-        # Allow one line for text and a blank spacer before it.
-        return self._required_height
-
-    @property
-    def text(self):
-        """
-        The current text for this Label.
-        """
-        return self._text
-
-    @text.setter
-    def text(self, new_value):
-        self._text = new_value
-
-    @property
-    def value(self):
-        """
-        The current value for this Label.
-        """
-        return self._value
 
 
 class GameWidget(asciimatics.widgets.Widget):
@@ -358,3 +289,14 @@ def demo(screen: Screen, scene: Scene, game: Game):
 def raise_(ex):
     """Because we can't use raise in lambda for some reason..."""
     raise ex
+
+
+def raiseFn(clazz: any, name: str):
+    """
+    bruh, why?
+    """
+
+    def raiseNextScene(arg=name):
+        raise clazz(arg)
+
+    return raiseNextScene
