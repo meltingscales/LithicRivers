@@ -213,7 +213,7 @@ class Game:
             retrow = []
             for tile in row:
                 sprite = tile.render_sprite(scale=scale)
-                logging.debug('render: {}'.format(sprite))
+                # logging.debug('render: {}'.format(sprite))
                 retrow.append(sprite)  # TODO: will break with scale>2... we need to print to a buffer
             ret.append(retrow)
 
