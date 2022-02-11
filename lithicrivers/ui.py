@@ -45,7 +45,7 @@ class GameWidget(asciimatics.widgets.Widget):
         super(GameWidget, self).__init__(name, tab_stop=False)
 
         self.game = game
-        self._required_height = self.game.world.get_height() + 2
+        self._required_height = (self.game.world.get_height() + 2)
         self._align = align
 
         self._frame: Frame
@@ -57,7 +57,7 @@ class GameWidget(asciimatics.widgets.Widget):
         content = f'|~-~ World {self.game.world.name} ~-~|\n'
         content += f'wew lad (frame_no % 100) = {(frame_no % 100):03d}\n'
 
-        for row in self.game.render_world():
+        for row in self.game.render_world_viewport():
             for char in row:
                 # logging.debug('printchar: {}'.format(char))
                 content += char
@@ -136,7 +136,7 @@ class RootPage(Frame):
         )
         layout1.add_widget(self.widgetGame)
 
-        self.labelFoo = Label(name="labelFoo", label='foo :)')
+        self.labelFoo = Label(name="labelFoo", label='foo :)', height=1)
         layout1.add_widget(self.labelFoo)
 
         layoutButtons = TabButtons(self, 0)
@@ -265,12 +265,13 @@ def demo(screen: Screen, scene: Scene, game: Game):
         if maybe_root_page.title.strip() == 'Root Page':
             root_page = maybe_root_page
             # screen.set_title("HOLD UP, YOU PRESSING " + char + "?")
-            root_page.labelFoo.text = f"pressing {char}?"
+            root_page.labelFoo.text = f"pressing {char}? "
 
             moveVec = InputHandler.handle_movement(event)
             if moveVec:
-                root_page.labelFoo.text += ("... you move ({:3d}{:3d})".format(*moveVec))
                 root_page.game.move_player(moveVec)
+
+                root_page.labelFoo.text += ("pos={:02d},{:02d}".format(game.player.x, game.player.y))
 
                 root_page.labelFeet.text = 'Below your feet is a [{}].'.format(root_page.game.get_tile_at_player_feet())
 

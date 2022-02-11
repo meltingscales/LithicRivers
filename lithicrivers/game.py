@@ -185,9 +185,15 @@ class World:
     def get_tile_at(self, x: int, y: int):
         return self.worlddata[y][x]
 
+class Viewport:
+    def __init__(self, topleft=(0,0), lowerright=(10,10)):
+        self.topleft=topleft
+        self.lowerright=lowerright
 
 class Game:
-    def __init__(self, player: Player = None, world: World = None):
+    def __init__(self, player: Player = None, world: World = None, viewport=Viewport()):
+
+        self.viewport = viewport
 
         if player is None:
             player = Player()
@@ -198,8 +204,69 @@ class Game:
         self.player = player
         self.world = world
 
+    def shift_viewport_left(self):
+        self.viewport.topleft[0] -= 1
+        self.viewport.lowerright[0] -= 1
+
+    def shift_viewport_right(self):
+        self.viewport.topleft[0] += 1
+        self.viewport.lowerright[0] += 1
+
     def get_tile_at_player_feet(self) -> Tile:
         return self.world.get_tile_at(self.player.x, self.player.y)
+
+    def render_world_viewport(
+            self,
+            scale: int = 1,
+            viewport: Tuple[Tuple[int, int], Tuple[int, int]] = None
+    ) -> List[List[str]]:
+        r"""
+        :param viewport: Viewport to render.
+            if not specified, defaults to self.viewport
+        :param scale: Scaling for sprites.      <br><br><pre><code>
+        |   1 = x, 2 = \/, 3 = \ /, etc.        <br>
+        |              /\       x               <br>
+        |                      / \              <br></pre></code>
+        :return: A list of tiles.
+        """
+
+        if not viewport:
+            viewport = self.viewport
+
+        ret = []
+
+        for y in range(viewport.topleft[1], viewport.lowerright[1]):
+
+            # if this viewport y is out of bounds, skip...
+            if (y >= self.world.get_height()) or (y < 0):
+                continue
+
+            row = self.world.worlddata[y]
+            retrow = []
+
+            for x in range(viewport.topleft[0], viewport.lowerright[0]):
+
+                if (x >= self.world.get_width()) or (x < 0):
+                    continue
+
+                tile = row[x]
+                sprite = tile.render_sprite(scale=scale)
+
+                # if we are here, render us!
+                if (self.player.y == y) and (self.player.x == x):
+                    sprite = self.player.render_sprite(scale=scale)
+
+                # logging.debug('render: {}'.format(sprite))
+                # done with a single sprite in a row
+                retrow.append(sprite)
+
+            # done with a row
+            if len(retrow) > 0:
+                ret.append(retrow)
+
+        # TODO: Assert ret is well-formed
+
+        return ret
 
     def render_world(self, scale: int = 1) -> List[List[str]]:
         r"""
