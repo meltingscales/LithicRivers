@@ -163,7 +163,14 @@ class HelpPage(Frame):
         self.add_layout(layout1)
         # add your widgets here
 
-        layout1.add_widget(Label("keys: WASD, U, arrows, TAB, ENTER...try clicking :P"))
+        helptxt = KEYMAP.generate_key_guide()
+        helptxt = ("Hello! Welcome to {}. Below are keys. Enjoy!\n".format(GAME_NAME) + helptxt)
+
+        helptxtheight = len(helptxt.split('\n'))
+
+        helpLabel = Label(helptxt, height=helptxtheight)
+
+        layout1.add_widget(helpLabel)
 
         layout2 = TabButtons(self, 1)
         self.add_layout(layout2)
@@ -237,11 +244,12 @@ class InputHandler:
     @classmethod
     def handle_viewport(cls, event, game):
 
-        if KEYMAP.matches('VIEWPORT_SLIDE_LEFT',event):
+        if KEYMAP.matches('VIEWPORT_SLIDE_LEFT', event):
             game.slide_viewport_left()
 
-        if KEYMAP.matches('VIEWPORT_SLIDE_RIGHT',event):
+        if KEYMAP.matches('VIEWPORT_SLIDE_RIGHT', event):
             game.slide_viewport_right()
+
 
 def demo(screen: Screen, scene: Scene, game: Game):
     scenes = [
