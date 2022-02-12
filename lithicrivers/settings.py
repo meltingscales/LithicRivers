@@ -64,7 +64,7 @@ class Keymap:
         keynames = self.get_valid_key_names()
 
         for keyname in keynames:
-            retstr += "'[{}]' - {}\n".format(self.__getattribute__(keyname), keyname)
+            retstr += ": {} : - {}\n".format(self.__getattribute__(keyname), keyname)
 
         return retstr
 
