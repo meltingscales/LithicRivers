@@ -1,6 +1,6 @@
 import logging
 import pprint
-from typing import List, Tuple, Dict
+from typing import List, Dict
 
 import numpy
 
@@ -196,13 +196,15 @@ class Game:
 
         self.running = True
 
+    def slide_viewport(self, moveVec):
+        self.viewport.topleft += moveVec
+        self.viewport.lowerright += moveVec
+
     def slide_viewport_left(self):
-        self.viewport.topleft.x -= 1
-        self.viewport.lowerright.x -= 1
+        self.slide_viewport(VEC_LEFT)
 
     def slide_viewport_right(self):
-        self.viewport.topleft.x += 1
-        self.viewport.lowerright.x += 1
+        self.slide_viewport(VEC_RIGHT)
 
     def get_tile_at_player_feet(self) -> Tile:
         return self.world.get_tile_at(self.player.position)
@@ -303,3 +305,9 @@ class Game:
             return
 
         self.player.move(vec)
+
+    def player_outside_viewport(self):
+        return not self.player_inside_viewport()
+
+    def player_inside_viewport(self):
+        return self.player.position.insideBoundingRect(self.viewport.topleft, self.viewport.lowerright)

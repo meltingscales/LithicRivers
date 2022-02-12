@@ -7,7 +7,7 @@ from lithicrivers.model import Vector2
 class RenderStuff(unittest.TestCase):
     def testworldGen(self):
         for _ in range(0, 100):
-            self.assertEquals(
+            self.assertEqual(
                 World.gen_random_world_data(
                     Vector2(3, 3),
                     gen_function=lambda: Tiles.DaFuq()

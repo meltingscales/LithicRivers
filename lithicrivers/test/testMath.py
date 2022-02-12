@@ -14,5 +14,11 @@ class IHateMath(unittest.TestCase):
 
         v3 = Vector2(4, 4)
 
-        # self.assert_(v3.insideBoundingBox(v1, v2))
-        self.assert_(v3.insideBoundingBox(v2, v1))
+        v4 = Vector2(1, 9)
+
+        self.assertTrue(v3.insideBoundingRect(v1, v2))
+        # swap args shouldnt matter, it just flips the rect by 90 degrees
+        self.assertTrue(v3.insideBoundingRect(v2, v1))
+
+        self.assertFalse(v4.insideBoundingRect(v1, v2))
+        self.assertFalse(v4.insideBoundingRect(v2, v1))
