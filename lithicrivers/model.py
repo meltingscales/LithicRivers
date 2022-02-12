@@ -37,6 +37,7 @@ class Vector2:
 
     def insideBoundingRect(self, vec1, vec2):
 
+        # if our two points are flipped, flip em again :P
         if (vec1.x >= vec2.x) or (vec1.y >= vec2.y):
             vec2, vec1 = vec1, vec2
 
@@ -65,12 +66,12 @@ class Viewport:
         self.lowerright = lowerright
 
     @staticmethod
-    def generate_centered(center, halfsize: Vector2):
-        """Generate a Viewport centered on `center` with `halfsize` as its lower and upper bounds.
-        It doubles from `halfsize`."""
+    def generate_centered(center, radius: Vector2):
+        """Generate a Viewport centered on `center` with `radius` as its lower and upper bounds.
+        It doubles from `radius`."""
         return Viewport(
-            (center - halfsize),
-            (center + halfsize)
+            (center - radius),
+            (center + radius)
         )
 
     def get_height(self):

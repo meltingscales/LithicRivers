@@ -14,9 +14,16 @@ from lithicrivers.model import Vector2, StopGame
 from lithicrivers.settings import GAME_NAME, KEYMAP, Keymap
 
 
+class MainGameFrame(Layout):
+    def __init__(self, frame, active_tab_idx, game: Game = None):
+        cols = [1]
+
+        raise NotImplementedError("lazy!")
+
+
 class TabButtons(Layout):
 
-    def __init__(self, frame, active_tab_idx, game=None):
+    def __init__(self, frame, active_tab_idx, game: Game = None):
         cols = [1, 1, 1, 1, 1]
 
         super().__init__(cols)
@@ -127,30 +134,32 @@ class RootPage(Frame):
         super().__init__(screen,
                          screen.height,
                          screen.width,
-                         can_scroll=False,
+                         can_scroll=True,
                          title="Root Page")
+
+        columns = [70, 30]
 
         self.game = game
 
-        layout1 = Layout([1], fill_frame=True)
+        layout1 = Layout(columns=columns, fill_frame=True)
 
         self.add_layout(layout1)
 
         self.labelFeet = asciimatics.widgets.Label(name='labelFeet', label='at your feet rests...[idk bro]')
-        layout1.add_widget(self.labelFeet)
+        layout1.add_widget(self.labelFeet, column=1)
         self.labelFeet.text = 'Below your feet is a [{}].'.format(self.game.get_tile_at_player_feet())
 
-        self.labelInventory=Label(name='labelInventory',label='items i guess')
-        layout1.add_widget(self.labelInventory)
+        self.labelInventory = Label(name='labelInventory', label='items i guess')
+        layout1.add_widget(self.labelInventory, column=1)
 
         self.widgetGame = GameWidget(
             name="widgetGame",
             game=self.game
         )
-        layout1.add_widget(self.widgetGame)
+        layout1.add_widget(self.widgetGame, column=0)
 
         self.labelFoo = Label(name="labelFoo", label='foo :)', height=1)
-        layout1.add_widget(self.labelFoo)
+        layout1.add_widget(self.labelFoo, column=1)
 
         layoutButtons = TabButtons(self, 1)
         self.add_layout(layoutButtons)
@@ -315,7 +324,7 @@ def demo(screen: Screen, scene: Scene, game: Game):
                 root_page.labelFoo.text += "... '{}' is not a movement key.".format(char)
 
             InputHandler.handle_mining(event, root_page.game, root_page)
-            root_page.labelInventory.text = "Inventory: "+root_page.game.player.inventory.summary()
+            root_page.labelInventory.text = "Inventory: " + root_page.game.player.inventory.summary()
 
             InputHandler.handle_viewport(event, root_page.game)
 
