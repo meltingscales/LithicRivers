@@ -301,6 +301,10 @@ def demo(screen: Screen, scene: Scene, game: Game):
                 if game.player_outside_viewport():
                     game.slide_viewport(moveVec)
 
+                    # still outside? Something's wrong, let's reset the viewport...
+                    if game.player_outside_viewport():
+                        game.reset_viewport()
+
                 root_page.labelFeet.text = 'Below your feet is a [{}].'.format(root_page.game.get_tile_at_player_feet())
 
             else:

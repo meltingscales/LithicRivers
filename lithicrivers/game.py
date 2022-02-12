@@ -311,3 +311,6 @@ class Game:
 
     def player_inside_viewport(self):
         return self.player.position.insideBoundingRect(self.viewport.topleft, self.viewport.lowerright)
+
+    def reset_viewport(self):
+        raise NotImplementedError("TODO: Reset viewport")
