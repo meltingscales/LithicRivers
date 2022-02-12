@@ -34,19 +34,7 @@ class Vector2:
 
     def insideBoundingRect(self, vec1, vec2):
 
-        bound1 = Vector2(vec1.x, vec1.y)
-        bound2 = Vector2(vec2.x, vec1.y)
-        bound3 = Vector2(vec1.x, vec2.y)
-        bound4 = Vector2(vec2.x, vec2.y)
-
-        px = self.x
-        py = self.y
-        x1 = vec1.x
-        x2 = vec2.x
-        y1 = vec1.y
-        y2 = vec2.y
-
-        if not ((x1 < x2) and (y1 < y2)):
+        if (vec1.x >= vec2.x) or (vec1.y >= vec2.y):
             vec2, vec1 = vec1, vec2
 
         px = self.x
