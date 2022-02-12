@@ -16,6 +16,9 @@ class Vector2:
     def __add__(self, other):
         return Vector2(x=(self.x + other.x), y=(self.y + other.y))
 
+    def __sub__(self, other):
+        return Vector2(x=(self.x - other.x), y=(self.y - other.y))
+
     def __mul__(self, other):
         return Vector2(x=(self.x * other.x), y=(self.y * other.y))
 
@@ -60,6 +63,15 @@ class Viewport:
     def __init__(self, topleft: Vector2, lowerright: Vector2):
         self.topleft = topleft
         self.lowerright = lowerright
+
+    @staticmethod
+    def generate_centered(center, halfsize: Vector2):
+        """Generate a Viewport centered on `center` with `halfsize` as its lower and upper bounds.
+        It doubles from `halfsize`."""
+        return Viewport(
+            (center - halfsize),
+            (center + halfsize)
+        )
 
     def get_height(self):
         logging.debug(
