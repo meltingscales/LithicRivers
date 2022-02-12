@@ -220,13 +220,14 @@ class World:
         return self.size.x
 
     @staticmethod
-    def gen_random_world_data(size: Vector2, gen_function=gen_tile) -> List[List[Tile]]:
+    def gen_random_world_data(size: Vector2, gen_function=gen_tile, gf_args=[], gf_kwargs={}) -> \
+    List[List[Tile]]:
         width, height = size
         resultworld = []
         for y in range(0, height):
             row = []
             for x in range(0, width):
-                row.append(gen_function())
+                row.append(gen_function(*gf_args, **gf_kwargs))
             resultworld.append(row)
         return resultworld
 
