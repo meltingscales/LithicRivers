@@ -32,14 +32,33 @@ class Vector2:
     def __str__(self):
         return f"<{self.__class__.__name__} (x={self.x},y={self.y})>"
 
-    def insideBoundingBox(self, vec1, vec2):
+    def insideBoundingRect(self, vec1, vec2):
 
         bound1 = Vector2(vec1.x, vec1.y)
         bound2 = Vector2(vec2.x, vec1.y)
         bound3 = Vector2(vec1.x, vec2.y)
         bound4 = Vector2(vec2.x, vec2.y)
 
-        raise NotImplementedError("fuck i am lazy...")
+        px = self.x
+        py = self.y
+        x1 = vec1.x
+        x2 = vec2.x
+        y1 = vec1.y
+        y2 = vec2.y
+
+        if not ((x1 < x2) and (y1 < y2)):
+            vec2, vec1 = vec1, vec2
+
+        px = self.x
+        py = self.y
+        x1 = vec1.x
+        x2 = vec2.x
+        y1 = vec1.y
+        y2 = vec2.y
+
+        # YOINK from https://www.programming-idioms.org/idiom/178/check-if-point-is-inside-rectangle/2615/python
+        # Assuming that x1 < x2 and y1 < y2...
+        return (px >= x1) and (px <= x2) and (py >= y1) and (py <= y2)
 
 
 class Viewport:
