@@ -26,3 +26,8 @@ god help me
 
 ## TODO
 - add procedurally generated catgirls
+- do perf testing to fix lag on startup...thanks numpy...
+- auto-scale the viewport based off of viewable area
+  - determine from screen size
+  - determine from "blank space" in asciimatics (if this is even doable)
+- don't use numpy, its a bloated big ass chungoid that adds to the pyinstaller exe size
