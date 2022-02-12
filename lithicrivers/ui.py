@@ -247,7 +247,8 @@ class InputHandler:
             return  # can't mine dirt
 
         if tile_under == Tiles.DaFuq():
-            root_page.labelFoo.text += ' What da fuq is that tile? :3c'
+            game.player.inventory.add_item(tile_under.calc_drop())
+            game.set_tile_at_player_feet(Tiles.Dirt())
 
     @classmethod
     def handle_viewport(cls, event: KeyboardEvent, game: Game):
