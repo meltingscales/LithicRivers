@@ -1,6 +1,6 @@
 import logging
 import pprint
-from typing import List, Dict
+from typing import List, Dict, T
 
 import numpy
 
@@ -70,6 +70,11 @@ class Items:
         return Item("Stick",
                     sprite_sheet=['\\'])
 
+    @staticmethod
+    def Diamond():
+        return Item("Diamond",
+                    sprite_sheet=['d'])
+
 
 class Item(SpriteRenderable):
     def __init__(self, name, sprite_sheet: List[str] = None):
@@ -82,15 +87,18 @@ class Inventory:
         if items is None:
             items = []
 
-        self.items = items
+        self.itemsdata = items
+
+    def add_item(self, item):
+        self.itemsdata.append(item)
 
     def __str__(self):
-        return "<Inventory numItems={} summary={}>".format(len(self.items), self.summary())
+        return "<Inventory numItems={} summary={}>".format(len(self.itemsdata), self.summary())
 
     def count_items(self) -> Dict[str, int]:
         d = {}
 
-        for item in self.items:
+        for item in self.itemsdata:
             if item.name in d:
                 d[item.name] += 1
             else:
@@ -129,18 +137,14 @@ class Tile(SpriteRenderable):
     def __eq__(self, other):
         return self.tileid == other.tileid
 
+    def calc_drop(self):
+        return weighted_choice_dict(self.drops)
 
-def gen_tile(choices: List[Tile] = None, weights: List[int] = None) -> Tile:
-    if choices is None:
-        choices = [Tiles.Tree(),
-                   Tiles.Dirt(),
-                   Tiles.DaFuq()]
 
-    if weights is None:
-        weights = [5, 100, 1]
-
+def weighted_choice(weights: List[float], choices: List[T]) -> T:
     if len(weights) != len(choices):
-        ve = ValueError(f"Weights and choices for {gen_tile.__name__}() must be the same length!")
+        ve = ValueError(
+            f"Weights={weights} and choices={choices} for {weighted_choice.__name__}() must be the same length!")
         logging.error(ve)
         raise ve
 
@@ -152,6 +156,27 @@ def gen_tile(choices: List[Tile] = None, weights: List[int] = None) -> Tile:
         normalizedWeights = weights / weights.sum()
 
     return numpy.random.choice(choices, p=normalizedWeights)
+
+
+def weighted_choice_dict(dictWeight: Dict[float, T]) -> T:
+    weights = []
+    choices = []
+    for k, v in dictWeight.items():
+        weights.append(k)
+        choices.append(v)
+    return weighted_choice(weights, choices)
+
+
+def gen_tile(choices: List[Tile] = None, weights: List[int] = None) -> Tile:
+    if choices is None:
+        choices = [Tiles.Tree(),
+                   Tiles.Dirt(),
+                   Tiles.DaFuq()]
+
+    if weights is None:
+        weights = [5, 100, 1]
+
+    return weighted_choice(weights, choices)
 
 
 class Tiles:
@@ -180,7 +205,10 @@ class Tiles:
 
     @staticmethod
     def DaFuq():
-        return Tile("Dafuq is this?", drops={1.00: Items.Gold_Nugget()})
+        return Tile("Dafuq is this?", drops={
+            0.9: Items.Gold_Nugget(),
+            0.1: Items.Diamond()
+        })
 
 
 class World:
@@ -210,6 +238,9 @@ class World:
 
     def get_tile_at(self, pos: Vector2):
         return self.data[pos.y][pos.x]
+
+    def set_tile_at(self, pos: Vector2, tile: Tile):
+        self.data[pos.y][pos.x] = tile
 
 
 class Game:
@@ -346,3 +377,6 @@ class Game:
 
     def reset_viewport(self):
         raise NotImplementedError("TODO: Reset viewport")
+
+    def set_tile_at_player_feet(self, tile):
+        self.world.set_tile_at(self.player.position, tile)
