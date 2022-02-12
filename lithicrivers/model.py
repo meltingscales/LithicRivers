@@ -58,7 +58,7 @@ class Vector2:
 
         # YOINK from https://www.programming-idioms.org/idiom/178/check-if-point-is-inside-rectangle/2615/python
         # Assuming that x1 < x2 and y1 < y2...
-        return (px >= x1) and (px <= x2) and (py >= y1) and (py <= y2)
+        return (px >= x1) and (px < x2) and (py >= y1) and (py < y2)
 
 
 class Viewport:
