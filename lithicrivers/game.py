@@ -50,14 +50,6 @@ class Entity:
         self.move(VEC_RIGHT)
 
 
-class Player(Entity, SpriteRenderable):
-
-    def __init__(self):
-        Entity.__init__(self)
-        SpriteRenderable.__init__(self, ['$', '[]\n'
-                                              '%%'])
-
-
 class Items:
     """
     A bunch of default items.
@@ -83,6 +75,46 @@ class Item(SpriteRenderable):
     def __init__(self, name, sprite_sheet: List[str] = None):
         SpriteRenderable.__init__(self, sprite_sheet)
         self.name = name
+
+
+class Inventory:
+    def __init__(self, items: List[Item] = None):
+        if items is None:
+            items = []
+
+        self.items = items
+
+    def __str__(self):
+        return "<Inventory numItems={} summary={}>".format(len(self.items), self.summary())
+
+    def count_items(self) -> Dict[str, int]:
+        d = {}
+
+        for item in self.items:
+            if item.name in d:
+                d[item.name] += 1
+            else:
+                d[item.name] = 1
+
+        return d
+
+    def summary(self) -> str:
+        s = ''
+
+        for k, v in self.count_items().items():
+            s += '{}={}, '.format(k, v)
+
+        return s[0:len(s) - 2]  # wow you lazy bastard, you cant even fucking format a string???? AAFSDFASDFADFAFSD
+
+
+class Player(Entity, SpriteRenderable):
+
+    def __init__(self):
+        Entity.__init__(self)
+        SpriteRenderable.__init__(self, ['$', '[]\n'
+                                              '%%'])
+
+        self.inventory = Inventory([Item("Cookie", ['o'])])
 
 
 class Tile(SpriteRenderable):
@@ -191,8 +223,8 @@ class Game:
         if world is None:
             world = World()
 
-        self.player = player
-        self.world = world
+        self.player: Player = player
+        self.world: World = world
 
         self.running = True
 
