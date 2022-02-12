@@ -140,6 +140,9 @@ class RootPage(Frame):
         layout1.add_widget(self.labelFeet)
         self.labelFeet.text = 'Below your feet is a [{}].'.format(self.game.get_tile_at_player_feet())
 
+        self.labelInventory=Label(name='labelInventory',label='items i guess')
+        layout1.add_widget(self.labelInventory)
+
         self.widgetGame = GameWidget(
             name="widgetGame",
             game=self.game
@@ -311,6 +314,7 @@ def demo(screen: Screen, scene: Scene, game: Game):
                 root_page.labelFoo.text += "... '{}' is not a movement key.".format(char)
 
             InputHandler.handle_mining(event, root_page.game, root_page)
+            root_page.labelInventory.text = "Inventory: "+root_page.game.player.inventory.summary()
 
             InputHandler.handle_viewport(event, root_page.game)
 
