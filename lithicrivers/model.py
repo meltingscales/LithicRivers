@@ -33,6 +33,12 @@ class Vector2:
         return f"<{self.__class__.__name__} (x={self.x},y={self.y})>"
 
     def insideBoundingBox(self, vec1, vec2):
+
+        bound1 = Vector2(vec1.x, vec1.y)
+        bound2 = Vector2(vec2.x, vec1.y)
+        bound3 = Vector2(vec1.x, vec2.y)
+        bound4 = Vector2(vec2.x, vec2.y)
+
         raise NotImplementedError("fuck i am lazy...")
 
 
