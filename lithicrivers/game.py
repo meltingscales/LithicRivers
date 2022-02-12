@@ -160,20 +160,20 @@ class World:
         return self.size.x
 
     @staticmethod
-    def gen_random_world(size: Vector2) -> List[List[Tile]]:
+    def gen_random_world_data(size: Vector2, gen_function=gen_tile) -> List[List[Tile]]:
         width, height = size
         resultworld = []
         for y in range(0, height):
             row = []
             for x in range(0, width):
-                row.append(gen_tile())
+                row.append(gen_function())
             resultworld.append(row)
         return resultworld
 
     def __init__(self, name="Gaia", size=DEFAULT_SIZE):
         self.size = size
         self.name = name
-        self.data = World.gen_random_world(size)
+        self.data = World.gen_random_world_data(size)
         self.gametick = 0
 
     def get_tile_at(self, pos: Vector2):
