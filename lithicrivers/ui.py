@@ -48,6 +48,76 @@ class TabButtons(Layout):
         buttons[active_tab_idx].disabled = True
 
 
+class HeaderLabel(asciimatics.widgets.Widget):
+    """
+    A text label. But swaggy.
+    This class was made to test how to extend Widget class.
+    """
+
+    __slots__ = ["_text", "_required_height", "_align", 'header']
+
+    def __init__(self, label='', height=1, align="<", name=None, header='???'):
+        """
+        :param label: The text to be displayed for the Label.
+        :param height: Optional height for the label.  Defaults to 1 line.
+        :param align: Optional alignment for the Label.  Defaults to left aligned.
+            Options are "<" = left, ">" = right and "^" = centre
+        :param name: The name of this widget.
+
+        """
+        # Labels have no value and so should have no name for look-ups either.
+        super(HeaderLabel, self).__init__(name, tab_stop=False)
+
+        # Although this is a label, we don't want it to contribute to the layout
+        # tab calculations, so leave internal `_label` value as None.
+        # Also ensure that the label really is text.
+        self._text = str(label)
+        self._required_height = height
+        self._align = align
+        self.header = header
+
+    def process_event(self, event):
+        # Labels have no user interactions
+        return event
+
+    def update(self, frame_no):
+        (colour, attr, background) = self._frame.palette[
+            self._pick_palette_key("label", selected=False, allow_input_state=False)]
+        headerPrefix = "-[{:>5s}]: ".format(self.header)
+        for i, text in enumerate(
+                _split_text(self._text, self._w, self._h, self._frame.canvas.unicode_aware)):
+            text = headerPrefix + " " + text
+            self._frame.canvas.paint(
+                "{:{}{}}".format(text, self._align, self._w),
+                self._x, self._y + i, colour, attr, background
+            )
+
+    def reset(self):
+        pass
+
+    def required_height(self, offset, width):
+        # Allow one line for text and a blank spacer before it.
+        return self._required_height
+
+    @property
+    def text(self):
+        """
+        The current text for this Label.
+        """
+        return self._text
+
+    @text.setter
+    def text(self, new_value):
+        self._text = new_value
+
+    @property
+    def value(self):
+        """
+        The current value for this Label.
+        """
+        return self._value
+
+
 class GameWidget(asciimatics.widgets.Widget):
     __slots__ = ['_game', '_align']
 
@@ -69,13 +139,11 @@ class GameWidget(asciimatics.widgets.Widget):
     def update(self, frame_no: int):
         self._frame.canvas: Canvas
 
-        content = f'|~-~ World {self.game.world.name} ~-~|\n'
-        content += f'wew lad (frame_no % 100) = {(frame_no % 100):03d}\n'
+        content = ""
+        # content += f'|~-~ World {self.game.world.name} ~-~|\n'
+        # content += f'wew lad (frame_no % 100) = {(frame_no % 100):03d}\n'
 
         toRender = self.game.render_world_viewport()
-
-        logging.debug("CONTENT RENDERED:")
-        logging.debug(content)
 
         for row in toRender:
             for char in row:
@@ -145,12 +213,17 @@ class RootPage(Frame):
 
         self.add_layout(layout1)
 
-        self.labelFeet = asciimatics.widgets.Label(name='labelFeet', label='at your feet rests...[idk bro]')
-        layout1.add_widget(self.labelFeet, column=1)
-        self.labelFeet.text = 'Below your feet is a [{}].'.format(self.game.get_tile_at_player_feet())
+        self.labelPosition = HeaderLabel(name='labelPosition', header="POS")
+        layout1.add_widget(self.labelPosition, column=1)
+        self.labelPosition.text = str(self.game.render_pretty_player_position())
 
-        self.labelInventory = Label(name='labelInventory', label='items i guess')
+        self.labelFeet = HeaderLabel(name='labelFeet', header="FEET")
+        layout1.add_widget(self.labelFeet, column=1)
+        self.labelFeet.text = str(self.game.get_tile_at_player_feet())
+
+        self.labelInventory = HeaderLabel(name='labelInventory', header='INV')
         layout1.add_widget(self.labelInventory, column=1)
+        self.labelInventory.text = self.game.player.inventory.summary()
 
         self.widgetGame = GameWidget(
             name="widgetGame",
@@ -306,9 +379,11 @@ def demo(screen: Screen, scene: Scene, game: Game):
 
             moveVec = InputHandler.handle_movement(event)
             if moveVec:
+
                 root_page.game.move_player(moveVec)
 
-                root_page.labelFoo.text += ("pos={:02d},{:02d}".format(game.player.position.x, game.player.position.y))
+                # display pos
+                root_page.labelPosition.text = game.render_pretty_player_position()
 
                 # move the viewport with the player
                 if game.player_outside_viewport():
@@ -318,13 +393,13 @@ def demo(screen: Screen, scene: Scene, game: Game):
                     if game.player_outside_viewport():
                         game.reset_viewport()
 
-                root_page.labelFeet.text = 'Below your feet is a [{}].'.format(root_page.game.get_tile_at_player_feet())
+                root_page.labelFeet.text = '{}'.format(root_page.game.get_tile_at_player_feet())
 
             else:
                 root_page.labelFoo.text += "... '{}' is not a movement key.".format(char)
 
             InputHandler.handle_mining(event, root_page.game, root_page)
-            root_page.labelInventory.text = "Inventory: " + root_page.game.player.inventory.summary()
+            root_page.labelInventory.text = root_page.game.player.inventory.summary()
 
             InputHandler.handle_viewport(event, root_page.game)
 
