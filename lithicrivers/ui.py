@@ -12,13 +12,14 @@ from asciimatics.widgets import Layout, Divider, Button, _split_text, Frame, Lab
 from lithicrivers.game import Game, Tile, Tiles
 from lithicrivers.model import Vector2, StopGame
 from lithicrivers.settings import GAME_NAME, KEYMAP, Keymap
+from lithicrivers.textutil import presenting, list_label
 
 
-class MainGameFrame(Layout):
-    def __init__(self, frame, active_tab_idx, game: Game = None):
-        cols = [1]
-
-        raise NotImplementedError("lazy!")
+# class MainGameFrame(Layout):
+#     def __init__(self, frame, active_tab_idx, game: Game = None):
+#         cols = [1]
+#
+#         raise NotImplementedError("lazy!")
 
 
 class TabButtons(Layout):
@@ -35,9 +36,9 @@ class TabButtons(Layout):
             self.add_widget(Divider(), i)
 
         buttons = [
-            Button("Help Page", raiseFn(NextScene, "HelpPage")),
+            Button("Help", raiseFn(NextScene, "HelpPage")),
             Button("Root Page", raiseFn(NextScene, "RootPage")),
-            Button("Bravo Page", raiseFn(NextScene, "BravoPage")),
+            Button("Message Log", raiseFn(NextScene, "MessagePage")),
             Button("Charlie Page", raiseFn(NextScene, "CharliePage")),
             Button("Quit", raiseFn(StopGame, "Game stopping :P"))
         ]
@@ -83,7 +84,7 @@ class HeaderLabel(asciimatics.widgets.Widget):
     def update(self, frame_no):
         (colour, attr, background) = self._frame.palette[
             self._pick_palette_key("label", selected=False, allow_input_state=False)]
-        headerPrefix = "-[{:>5s}]: ".format(self.header)
+        headerPrefix = list_label(self.header)
         for i, text in enumerate(
                 _split_text(self._text, self._w, self._h, self._frame.canvas.unicode_aware)):
             text = headerPrefix + " " + text
@@ -241,21 +242,25 @@ class RootPage(Frame):
 
 
 class HelpPage(Frame):
-    def __init__(self, screen):
+    def __init__(self, screen, game: Game):
         super().__init__(screen,
                          screen.height,
                          screen.width,
                          can_scroll=False,
-                         title="Help Page")
+                         title="Help")
         layout1 = Layout([1], fill_frame=True)
         self.add_layout(layout1)
         # add your widgets here
 
-        helptxt = KEYMAP.generate_key_guide()
-        helptxt = ("Hello! Welcome to {}. Below are keys.\n"
+        helptxt = ""
+        helptxt = (f"Hello! Welcome to {GAME_NAME}. Below are keys.\n"
                    "By the way, game UI nav is arrow keys + space or enter.\n"
                    "You can also use the mouse! Left click works!\n"
-                   "Enjoy!\n".format(GAME_NAME) + helptxt)
+                   "Enjoy!\n"
+                   "\n"
+                   f"Your character's appearance: {presenting(game.player.render_sprite(1))}\n")
+
+        helptxt += KEYMAP.generate_key_guide()
 
         helptxtheight = len(helptxt.split('\n'))
 
@@ -268,13 +273,13 @@ class HelpPage(Frame):
         self.fix()
 
 
-class BravoPage(Frame):
+class MessageLogPage(Frame):
     def __init__(self, screen):
         super().__init__(screen,
                          screen.height,
                          screen.width,
                          can_scroll=False,
-                         title="Bravo Page")
+                         title="Message Log")
         layout1 = Layout([1], fill_frame=True)
         self.add_layout(layout1)
         # add your widgets here
@@ -345,9 +350,9 @@ class InputHandler:
 
 def demo(screen: Screen, scene: Scene, game: Game):
     scenes = [
-        Scene([HelpPage(screen)], -1, name="HelpPage"),
+        Scene([HelpPage(screen, game)], -1, name="HelpPage"),
         Scene([RootPage(screen, game)], -1, name="RootPage"),
-        Scene([BravoPage(screen)], -1, name="BravoPage"),
+        Scene([MessageLogPage(screen)], -1, name="MessageLogPage"),
         Scene([CharliePage(screen)], -1, name="CharliePage"),
     ]
 

@@ -4,6 +4,7 @@ from typing import Union, List
 from asciimatics.event import KeyboardEvent
 
 from lithicrivers.model import Vector2, Viewport
+from lithicrivers.textutil import associated
 
 GAME_NAME = 'LithicRivers'
 # DEFAULT_SIZE = (50, 15)
@@ -64,7 +65,8 @@ class Keymap:
         keynames = self.get_valid_key_names()
 
         for keyname in keynames:
-            retstr += ": {} : - {}\n".format(self.__getattribute__(keyname), keyname)
+            retstr += associated(self.__getattribute__(keyname), keyname)
+            retstr += '\n'
 
         return retstr
 
