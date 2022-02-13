@@ -221,7 +221,7 @@ class World:
 
     @staticmethod
     def gen_random_world_data(size: Vector2, gen_function=gen_tile, gf_args=[], gf_kwargs={}) -> \
-    List[List[Tile]]:
+            List[List[Tile]]:
         width, height = size
         resultworld = []
         for y in range(0, height):
@@ -381,3 +381,6 @@ class Game:
 
     def set_tile_at_player_feet(self, tile):
         self.world.set_tile_at(self.player.position, tile)
+
+    def render_pretty_player_position(self):
+        return "{:02d},{:02d}".format(self.player.position.x, self.player.position.y)
