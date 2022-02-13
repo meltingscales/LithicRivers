@@ -341,10 +341,10 @@ class InputHandler:
     @classmethod
     def handle_viewport(cls, event: KeyboardEvent, game: Game):
 
-        if KEYMAP.matches('VIEWPORT_SLIDE_LEFT', event):
+        if KEYMAP.matches('SLIDE_VIEWPORT_WEST', event):
             game.slide_viewport_left()
 
-        if KEYMAP.matches('VIEWPORT_SLIDE_RIGHT', event):
+        if KEYMAP.matches('SLIDE_VIEWPORT_EAST', event):
             game.slide_viewport_right()
 
 
