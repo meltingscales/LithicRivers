@@ -50,8 +50,8 @@ class TabButtons(Layout):
 
 class HeaderLabel(asciimatics.widgets.Widget):
     """
-    A text label. But swaggy.
-    This class was made to test how to extend Widget class.
+    A text label. But with a header.
+    This class was originally made to test how to extend Widget class.
     """
 
     __slots__ = ["_text", "_required_height", "_align", 'header']
@@ -213,6 +213,10 @@ class RootPage(Frame):
 
         self.add_layout(layout1)
 
+        self.labelMessage = HeaderLabel(name='labelMessage', header='MSG')
+        layout1.add_widget(self.labelMessage, column=1)
+        self.labelMessage.text = "Welcome to {}! <3".format(game.world.name)
+
         self.labelPosition = HeaderLabel(name='labelPosition', header="POS")
         layout1.add_widget(self.labelPosition, column=1)
         self.labelPosition.text = str(self.game.render_pretty_player_position())
@@ -230,9 +234,6 @@ class RootPage(Frame):
             game=self.game
         )
         layout1.add_widget(self.widgetGame, column=0)
-
-        self.labelFoo = Label(name="labelFoo", label='foo :)', height=1)
-        layout1.add_widget(self.labelFoo, column=1)
 
         layoutButtons = TabButtons(self, 1)
         self.add_layout(layoutButtons)
@@ -321,14 +322,14 @@ class InputHandler:
         if not KEYMAP.matches('MINE', event):
             return
 
-        root_page.labelFoo.text += "...but it is a mining key!"
-
         tile_under: Tile = game.get_tile_at_player_feet()
         if tile_under == Tiles.Dirt():
-            root_page.labelFoo.text += ' You can\'t mine dirt :P'
+            root_page.labelMessage.text = 'You can\'t mine dirt :P'
             return  # can't mine dirt
-
-        if tile_under == Tiles.DaFuq():
+        elif tile_under == Tiles.Tree():
+            root_page.labelMessage.text = 'Yell at me to let you mine trees. I\'m lazy.'
+            return  # can't mine dirt
+        elif tile_under == Tiles.DaFuq():
             game.player.inventory.add_item(tile_under.calc_drop())
             game.set_tile_at_player_feet(Tiles.Dirt())
 
@@ -369,42 +370,34 @@ def demo(screen: Screen, scene: Scene, game: Game):
             return
         event: KeyboardEvent
 
-        char = Keymap.char_from_keyboard_event(event)
-        # pprint(event)
-
-        if maybe_root_page.title.strip() == 'Root Page':
-            root_page = maybe_root_page
-            # screen.set_title("HOLD UP, YOU PRESSING " + char + "?")
-            root_page.labelFoo.text = f"pressing {char}? "
-
-            moveVec = InputHandler.handle_movement(event)
-            if moveVec:
-
-                root_page.game.move_player(moveVec)
-
-                # display pos
-                root_page.labelPosition.text = game.render_pretty_player_position()
-
-                # move the viewport with the player
-                if game.player_outside_viewport():
-                    game.slide_viewport(moveVec)
-
-                    # still outside? Something's wrong, let's reset the viewport...
-                    if game.player_outside_viewport():
-                        game.reset_viewport()
-
-                root_page.labelFeet.text = '{}'.format(root_page.game.get_tile_at_player_feet())
-
-            else:
-                root_page.labelFoo.text += "... '{}' is not a movement key.".format(char)
-
-            InputHandler.handle_mining(event, root_page.game, root_page)
-            root_page.labelInventory.text = root_page.game.player.inventory.summary()
-
-            InputHandler.handle_viewport(event, root_page.game)
-
-        else:
+        if maybe_root_page.title.strip() != 'Root Page':
             logging.debug("Not supposed to handle " + maybe_root_page.title)
+            return
+
+        root_page = maybe_root_page
+
+        moveVec = InputHandler.handle_movement(event)
+        if moveVec:
+
+            root_page.game.move_player(moveVec)
+
+            # display pos
+            root_page.labelPosition.text = game.render_pretty_player_position()
+
+            # move the viewport with the player
+            if game.player_outside_viewport():
+                game.slide_viewport(moveVec)
+
+                # still outside? Something's wrong, let's reset the viewport...
+                if game.player_outside_viewport():
+                    game.reset_viewport()
+
+            root_page.labelFeet.text = '{}'.format(root_page.game.get_tile_at_player_feet())
+
+        InputHandler.handle_mining(event, root_page.game, root_page)
+        root_page.labelInventory.text = root_page.game.player.inventory.summary()
+
+        InputHandler.handle_viewport(event, root_page.game)
 
     screen.set_title("~~-[ {} ]-~~".format(GAME_NAME))
     screen.play(scenes, stop_on_resize=True, start_scene=scene, allow_int=True, unhandled_input=handle_event)
