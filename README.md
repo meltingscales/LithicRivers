@@ -10,7 +10,7 @@ ascii dwarf mine game, very wip...
 
 ## what is this
 
-![](https://memestatic.fjcdn.com/pictures/Dwarf_834ec5_6504028.jpg)
+![](http://images3.memedroid.com/images/UPLOADED727/5c1d01829c2ff.jpeg)
 
 god help me
 
