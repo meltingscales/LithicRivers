@@ -1,10 +1,10 @@
 import logging
 import pprint
-from typing import List, Dict, T
+from typing import List, Dict
 
 import numpy
 
-from lithicrivers.model import Vector2, Viewport
+from lithicrivers.model import Vector2, Viewport, T
 from lithicrivers.settings import DEFAULT_SIZE, DEFAULT_VIEWPORT, VEC_UP, VEC_DOWN, VEC_LEFT, VEC_RIGHT, \
     DEFAULT_PLAYER_POSITION
 
@@ -25,8 +25,8 @@ class SpriteRenderable:
 
 class Entity:
 
-    def __init__(self):
-        self.position = DEFAULT_PLAYER_POSITION
+    def __init__(self, position: Vector2):
+        self.position = position
         self.health = 100
         self.stamina = 100
 
@@ -118,7 +118,7 @@ class Inventory:
 class Player(Entity, SpriteRenderable):
 
     def __init__(self):
-        Entity.__init__(self)
+        Entity.__init__(self, position=DEFAULT_PLAYER_POSITION)
         SpriteRenderable.__init__(self, ['$', '[]\n'
                                               '%%'])
 
@@ -220,8 +220,15 @@ class World:
         return self.size.x
 
     @staticmethod
-    def gen_random_world_data(size: Vector2, gen_function=gen_tile, gf_args=[], gf_kwargs={}) -> \
+    def gen_random_world_data(size: Vector2, gen_function=gen_tile, gf_args=None, gf_kwargs=None) -> \
             List[List[Tile]]:
+
+        if gf_kwargs is None:
+            gf_kwargs = {}
+
+        if gf_args is None:
+            gf_args = []
+
         width, height = size
         resultworld = []
         for y in range(0, height):

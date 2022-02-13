@@ -1,5 +1,7 @@
 import logging
-from typing import Tuple, List
+from typing import Tuple, List, TypeVar
+
+T = TypeVar('T')
 
 
 class Vector2:
