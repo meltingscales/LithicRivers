@@ -5,7 +5,7 @@ from typing import List, Dict
 import numpy
 
 from lithicrivers.model import Vector2, Viewport, T
-from lithicrivers.settings import DEFAULT_SIZE, DEFAULT_VIEWPORT, VEC_UP, VEC_DOWN, VEC_LEFT, VEC_RIGHT, \
+from lithicrivers.settings import DEFAULT_SIZE, DEFAULT_VIEWPORT, VEC2_NORTH, VEC2_SOUTH, VEC2_WEST, VEC2_EAST, \
     DEFAULT_PLAYER_POSITION
 
 
@@ -37,17 +37,17 @@ class Entity:
         """Where would I move, if I did move?"""
         return self.position + vec
 
-    def moveUp(self):
-        self.move(VEC_UP)
+    def move_north(self):
+        self.move(VEC2_NORTH)
 
-    def moveDown(self):
-        self.move(VEC_DOWN)
+    def move_south(self):
+        self.move(VEC2_SOUTH)
 
-    def moveLeft(self):
-        self.move(VEC_LEFT)
+    def move_west(self):
+        self.move(VEC2_WEST)
 
-    def moveRight(self):
-        self.move(VEC_RIGHT)
+    def move_east(self):
+        self.move(VEC2_EAST)
 
 
 class Items:
@@ -272,10 +272,10 @@ class Game:
         self.viewport.lowerright += moveVec
 
     def slide_viewport_left(self):
-        self.slide_viewport(VEC_LEFT)
+        self.slide_viewport(VEC2_WEST)
 
     def slide_viewport_right(self):
-        self.slide_viewport(VEC_RIGHT)
+        self.slide_viewport(VEC2_EAST)
 
     def get_tile_at_player_feet(self) -> Tile:
         return self.world.get_tile_at(self.player.position)

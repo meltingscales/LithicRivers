@@ -13,28 +13,39 @@ DEFAULT_PLAYER_POSITION = Vector2(250, 250)
 DEFAULT_VIEWPORT = Viewport.generate_centered(DEFAULT_PLAYER_POSITION, Vector2(40, 10))
 LOGFILENAME = GAME_NAME + '.log'
 
-VEC_UP = Vector2(0, 1)
-VEC_DOWN = Vector2(0, -1)
-VEC_LEFT = Vector2(-1, 0)
-VEC_RIGHT = Vector2(1, 0)
+VEC2_NORTH = Vector2(0, 1)
+VEC2_SOUTH = Vector2(0, -1)
+VEC2_WEST = Vector2(-1, 0)
+VEC2_EAST = Vector2(1, 0)
+
+NESW_MNEMONIC = \
+    '''
+      N
+    W   E
+      S
+    '''
 
 
 class Keymap:
     def __init__(self):
-        self.MOVE_UP = 'w'
-        self.MOVE_LEFT = 'a'
-        self.MOVE_DOWN = 's'
-        self.MOVE_RIGHT = 'd'
+
+        # cache
+        self._get_valid_key_names_cache = None
+
+        self.MOVE_NORTH = 'w'
+        self.MOVE_WEST = 'a'
+        self.MOVE_SOUTH = 's'
+        self.MOVE_EAST = 'd'
 
         self.MOVEMENT_VECTOR_MAP = {
-            self.MOVE_UP: Vector2(0, -1),
-            self.MOVE_LEFT: Vector2(-1, 0),
-            self.MOVE_DOWN: Vector2(0, 1),
-            self.MOVE_RIGHT: Vector2(1, 0)
+            self.MOVE_NORTH: VEC2_NORTH,
+            self.MOVE_WEST: VEC2_WEST,
+            self.MOVE_SOUTH: VEC2_SOUTH,
+            self.MOVE_EAST: VEC2_EAST
         }
 
-        self.VIEWPORT_SLIDE_LEFT = '['
-        self.VIEWPORT_SLIDE_RIGHT = ']'
+        self.SLIDE_VIEWPORT_WEST = '['
+        self.SLIDE_VIEWPORT_EAST = ']'
 
         self.MINE = 'u'
 
@@ -43,6 +54,9 @@ class Keymap:
         # TODO filtered_names = filter(lambda x: ..., all_names)
         # TODO Will return an iterable, which can only be
         # TODO consumed once unless you do list(filter(...)), but is more efficient for large collections
+
+        if self._get_valid_key_names_cache:
+            return self._get_valid_key_names_cache
 
         all_names = dir(self)
         filtered_names = [
@@ -53,6 +67,8 @@ class Keymap:
                     (isinstance(self.__getattribute__(name), str))  # self.[name] must be string
             )
         ]
+
+        self._get_valid_key_names_cache = filtered_names
 
         return filtered_names
 
@@ -83,7 +99,7 @@ class Keymap:
     def matches(self, key_name: str, ke: KeyboardEvent):
         """
         Does this KeyboardEvent match a name of a key we have registered?
-        :param key_name: Name of a key -- i.e. 'MOVE_LEFT'
+        :param key_name: Name of a key -- i.e. 'MOVE_NORTH'
         :param ke: KeyboardEvent.
         :return: boolean
         """
