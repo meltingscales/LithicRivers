@@ -1,0 +1,33 @@
+---
+name: "pre-release-macos10"
+
+on:
+  push:
+    branches:
+      - "master"
+    tags-ignore:
+      - "*"
+
+jobs:
+  gh_pre_release:
+    runs-on: macos-10.15
+
+    steps:
+      - name: "Checkout source code"
+        uses: "actions/checkout@v2.4.0"
+
+      - run: "./scripts/setup.sh"
+      - run: "./scripts/test.sh"
+      - run: "./scripts/generate_exe.sh"
+      - run: "ls dist/"
+
+      - uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "latest-macos10"
+          prerelease: true
+          title: "Development Build macOS 10"
+          files: |
+            dist/*
+#            potemkeys/*.jsonc
+        id: "automatic_releases_macos10"
