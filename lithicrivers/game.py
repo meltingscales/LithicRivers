@@ -126,9 +126,14 @@ class Player(Entity, SpriteRenderable):
 
 
 class Tile(SpriteRenderable):
-    def __init__(self, tileid: str, sprite_sheet: List[str] = None, drops: Dict[float, Item] = None):
+    def __init__(self,
+                 tileid: str,
+                 desc: str = None,
+                 sprite_sheet: List[str] = None,
+                 drops: Dict[float, Item] = None):
         SpriteRenderable.__init__(self, sprite_sheet)
         self.tileid = tileid
+        self.description = desc
         self.drops = drops
 
     def __str__(self):
@@ -187,21 +192,21 @@ class Tiles:
     @staticmethod
     def Dirt():
         return Tile('Dirt',
-                    [',', ',.\n'
-                          '.,', ',.,\n'
-                                '.,.\n'
-                                ',.,'],
-                    {0.99: Items.Rock(),
-                     0.01: Items.Gold_Nugget()})
+                    sprite_sheet=[',', ',.\n'
+                                       '.,', ',.,\n'
+                                             '.,.\n'
+                                             ',.,'],
+                    drops={0.99: Items.Rock(),
+                           0.01: Items.Gold_Nugget()})
 
     @staticmethod
     def Tree():
         return Tile('Tree',
-                    ['t', '/\\\n'
-                          '||', '/|\\\n'
-                                ';|;\n'
-                                '/|\\\n'],
-                    {1.00: Items.Stick()})
+                    sprite_sheet=['t', '/\\\n'
+                                       '||', '/|\\\n'
+                                             ';|;\n'
+                                             '/|\\\n'],
+                    drops={1.00: Items.Stick()})
 
     @staticmethod
     def DaFuq():
@@ -209,6 +214,10 @@ class Tiles:
             0.9: Items.Gold_Nugget(),
             0.1: Items.Diamond()
         })
+
+    @staticmethod
+    def Cloud():
+        return Tile("Cloud", sprite_sheet=['~'])
 
 
 class World:

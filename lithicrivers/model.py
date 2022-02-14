@@ -1,7 +1,61 @@
 import logging
-from typing import Tuple, List, TypeVar
+from typing import Tuple, List, TypeVar, Any
 
 T = TypeVar('T')
+
+
+class VectorN:
+    """
+    Vector (point) that can be any dimension (X, or X/Y, or X/Y/Z, or X/Y/Z/W, etc)
+    """
+
+    dimPosMap = {'x': 0, 'y': 1, 'z': 2, 'w': 3}
+
+    def __init__(self, *values: int):
+
+        self.x, self.y, self.z, self.w = (None, None, None, None,)
+        self.dimension_values = [*values, ]
+
+        # set x,y,z, etc
+        for dimName, dimIdx in self.dimPosMap.items():
+            if dimIdx < len(self.dimension_values):
+                self.__setattr__(dimName, self.dimension_values[dimIdx])
+            else:
+                self.__setattr__(dimName, None)
+
+    def __add__(self, other):
+        other: VectorN
+        return VectorN(*[
+            x + y for x, y in zip(self.dimension_values, other.dimension_values)
+        ])
+
+    def __eq__(self, other):
+        other: VectorN
+        return self.dimension_values == other.dimension_values
+
+    def dimension_order(self):
+        """are we "1"d, "2"d, "3"d, etc"""
+        return len(self.dimension_values)
+
+    # noinspection PyRedundantParentheses
+    def tuple(self) -> Tuple[int]:
+        return (*self.dimension_values,)
+
+    def list(self) -> List[int]:
+        return [*self.dimension_values, ]
+
+    def __getitem__(self, item: Any):
+        # indexing us like `self[1]`
+        if isinstance(item, int):
+            item: int
+            if item < len(self.dimension_values):
+                return self.dimension_values[item]
+            else:
+                raise IndexError("This is only a {} dimensional vector!".format(self.dimension_order()))
+
+        # indexing us like `self['y']`
+        if item in self.dimPosMap.keys():
+            return self.dimension_values[self.dimPosMap[item]]
 
 
 class Vector2:

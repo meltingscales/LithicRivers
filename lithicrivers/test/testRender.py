@@ -1,7 +1,6 @@
 import unittest
 
-from lithicrivers.game import Tiles, World
-from lithicrivers.model import Vector2
+from lithicrivers.game import Tiles
 
 
 class RenderStuff(unittest.TestCase):
