@@ -10,7 +10,7 @@ from asciimatics.screen import Canvas, Screen
 from asciimatics.widgets import Layout, Divider, Button, _split_text, Frame, Label
 
 from lithicrivers.game import Game, Tile, Tiles
-from lithicrivers.model import Vector2, StopGame
+from lithicrivers.model import VectorN, StopGame
 from lithicrivers.settings import GAME_NAME, KEYMAP, Keymap
 from lithicrivers.textutil import presenting, list_label
 
@@ -308,7 +308,7 @@ class CharliePage(Frame):
 class InputHandler:
 
     @staticmethod
-    def handle_movement(keyboardEvent: KeyboardEvent) -> Union[None, Vector2]:
+    def handle_movement(keyboardEvent: KeyboardEvent) -> Union[None, VectorN]:
         """
         :param keyboardEvent:
         :return: Vector the input resolves to.

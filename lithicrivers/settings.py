@@ -3,20 +3,20 @@ from typing import Union, List
 
 from asciimatics.event import KeyboardEvent
 
-from lithicrivers.model import Vector2, Viewport
+from lithicrivers.model import VectorN, Viewport
 from lithicrivers.textutil import associated
 
 GAME_NAME = 'LithicRivers'
 # DEFAULT_SIZE = (50, 15)
-DEFAULT_SIZE = Vector2(500, 500)
-DEFAULT_PLAYER_POSITION = Vector2(250, 250)
-DEFAULT_VIEWPORT = Viewport.generate_centered(DEFAULT_PLAYER_POSITION, Vector2(40, 10))
+DEFAULT_SIZE = VectorN(500, 500)
+DEFAULT_PLAYER_POSITION = VectorN(250, 250)
+DEFAULT_VIEWPORT = Viewport.generate_centered(DEFAULT_PLAYER_POSITION, VectorN(40, 10))
 LOGFILENAME = GAME_NAME + '.log'
 
-VEC2_NORTH = Vector2(0, 1)
-VEC2_SOUTH = Vector2(0, -1)
-VEC2_WEST = Vector2(-1, 0)
-VEC2_EAST = Vector2(1, 0)
+VEC2_NORTH = -VectorN(0, 1)  # negative because i am laaaaazy
+VEC2_SOUTH = -VectorN(0, -1)  # negative because i am laaaaazy
+VEC2_WEST = VectorN(-1, 0)
+VEC2_EAST = VectorN(1, 0)
 
 NESW_MNEMONIC = \
     '''
