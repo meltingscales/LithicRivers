@@ -188,7 +188,6 @@ def generate_tile(choices: List[Tile] = None, weights: List[int] = None, current
         elif current_location.z < 0:
             return Tiles.Bedrock()
 
-
     return weighted_choice(weights, choices)
 
 
@@ -228,8 +227,8 @@ class Tiles:
         return Tile("Cloud", sprite_sheet=['~'])
 
     @staticmethod
-    def Bedrock(cls):
-        pass
+    def Bedrock():
+        return Tile("Bedrock", sprite_sheet=['#'])
 
 
 class World:
@@ -247,6 +246,16 @@ class World:
             gf_args=None,
             gf_kwargs=None) -> \
             List[List[List[Tile]]]:
+        """
+        Generate world data.
+
+        Note gen_function MUST accept *args and **kwargs.
+        :param size:
+        :param gen_function:
+        :param gf_args:
+        :param gf_kwargs:
+        :return:
+        """
 
         if gf_kwargs is None:
             gf_kwargs = {}
@@ -262,7 +271,8 @@ class World:
                 row: List[Tile] = []
                 for x in range(0, size.x):
                     current_location = VectorN(x, y, z)
-                    row.append(gen_function(*gf_args, **gf_kwargs, current_location=current_location))
+                    tile = gen_function(*gf_args, **gf_kwargs, current_location=current_location)
+                    row.append(tile)
                 plane.append(row)
             resultworld.append(plane)
 
@@ -275,10 +285,11 @@ class World:
         self.gametick = 0
 
     def get_tile_at(self, pos: VectorN):
-        return self.data[pos.y][pos.x]
+        print('get_tile_at {}'.format(pos))
+        return self.data[pos.z][pos.y][pos.x]
 
     def set_tile_at(self, pos: VectorN, tile: Tile):
-        self.data[pos.y][pos.x] = tile
+        self.data[pos.z][pos.y][pos.x] = tile
 
 
 class Game:
@@ -336,7 +347,8 @@ class Game:
             if (y >= self.world.get_height()) or (y < 0):
                 continue
 
-            row = self.world.data[y]
+            plane = self.world.data[viewport.topleft.z]
+            row = plane[y]
             retrow = []
 
             for x in range(viewport.topleft.x, viewport.lowerright.x):
@@ -411,7 +423,7 @@ class Game:
         return not self.player_inside_viewport()
 
     def player_inside_viewport(self):
-        return self.player.position.insideBoundingRect(self.viewport.topleft, self.viewport.lowerright)
+        return self.player.position.insideBoundingRect(self.viewport.topleft.neuter(2), self.viewport.lowerright.neuter(2))
 
     def reset_viewport(self):
         raise NotImplementedError("TODO: Reset viewport")

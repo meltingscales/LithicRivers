@@ -23,6 +23,9 @@ class VectorN:
             else:
                 self.__setattr__(dimName, None)
 
+    def neuter(self, new_size: int):
+        return VectorN(*self.as_list()[0:(new_size - 1)])
+
     def apply_op(self, other, op):
         other: VectorN
         return VectorN(*[
