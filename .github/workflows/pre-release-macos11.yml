@@ -1,5 +1,5 @@
 ---
-name: "pre-release-macos"
+name: "pre-release-macos11"
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
 
 jobs:
   gh_pre_release:
-    runs-on: macos-latest
+    runs-on: macos-11
 
     steps:
       - name: "Checkout source code"
@@ -24,10 +24,10 @@ jobs:
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "latest-macos"
+          automatic_release_tag: "latest-macos11"
           prerelease: true
-          title: "Development Build macOS"
+          title: "Development Build macOS 11"
           files: |
             dist/*
 #            potemkeys/*.jsonc
-        id: "automatic_releases_macos"
+        id: "automatic_releases_macos11"
