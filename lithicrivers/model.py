@@ -23,25 +23,49 @@ class VectorN:
             else:
                 self.__setattr__(dimName, None)
 
-    def __add__(self, other):
+    def apply_op(self, other, op):
         other: VectorN
         return VectorN(*[
-            x + y for x, y in zip(self.dimension_values, other.dimension_values)
+            (op(a, b)) for a, b in zip(self.dimension_values, other.dimension_values)
         ])
+
+    def __neg__(self):
+        return VectorN(*[
+            (-1 * a) for a in self.dimension_values
+        ])
+
+    def __add__(self, other):
+        other: VectorN
+        self.assert_same_dimension_order(other)
+        return self.apply_op(other, int.__add__)
+
+    def __sub__(self, other):
+        other: VectorN
+        self.assert_same_dimension_order(other)
+        return self.apply_op(other, int.__sub__)
+
+    def __mul__(self, other):
+        other: VectorN
+        self.assert_same_dimension_order(other)
+        return self.apply_op(other, int.__mul__)
 
     def __eq__(self, other):
         other: VectorN
         return self.dimension_values == other.dimension_values
+
+    def assert_same_dimension_order(self, other):
+        other: VectorN
+        assert (self.dimension_order() == other.dimension_order())
 
     def dimension_order(self):
         """are we "1"d, "2"d, "3"d, etc"""
         return len(self.dimension_values)
 
     # noinspection PyRedundantParentheses
-    def tuple(self) -> Tuple[int]:
+    def as_tuple(self) -> Tuple[int]:
         return (*self.dimension_values,)
 
-    def list(self) -> List[int]:
+    def as_list(self) -> List[int]:
         return [*self.dimension_values, ]
 
     def __getitem__(self, item: Any):
@@ -57,41 +81,13 @@ class VectorN:
         if item in self.dimPosMap.keys():
             return self.dimension_values[self.dimPosMap[item]]
 
-
-class Vector2:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-
-    def tuple(self) -> Tuple[int, int]:
-        return self.x, self.y,
-
-    def list(self) -> List[int]:
-        return [self.x, self.y, ]
-
-    def __add__(self, other):
-        return Vector2(x=(self.x + other.x), y=(self.y + other.y))
-
-    def __sub__(self, other):
-        return Vector2(x=(self.x - other.x), y=(self.y - other.y))
-
-    def __mul__(self, other):
-        return Vector2(x=(self.x * other.x), y=(self.y * other.y))
-
-    def __eq__(self, other):
-        return (self.x == other.x) and (self.y == other.y)
-
-    def __getitem__(self, item):
-        if item == 0:
-            return self.x
-        if item == 1:
-            return self.y
-        raise IndexError(f"Cannot get item {item} of {self}!")
-
-    def __str__(self):
-        return f"<{self.__class__.__name__} (x={self.x},y={self.y})>"
-
     def insideBoundingRect(self, vec1, vec2):
+
+        if not (self.dimension_order() == 2):
+            raise Exception("Currently only implemented for 2d!")
+
+        vec1: VectorN
+        vec2: VectorN
 
         # if our two points are flipped, flip em again :P
         if (vec1.x >= vec2.x) or (vec1.y >= vec2.y):
@@ -117,12 +113,12 @@ class Viewport:
     The reason for this is...I lazily used list(list(...)) as my underlying data structure for World :P
     """
 
-    def __init__(self, topleft: Vector2, lowerright: Vector2):
+    def __init__(self, topleft: VectorN, lowerright: VectorN):
         self.topleft = topleft
         self.lowerright = lowerright
 
     @staticmethod
-    def generate_centered(center, radius: Vector2):
+    def generate_centered(center, radius: VectorN):
         """Generate a Viewport centered on `center` with `radius` as its lower and upper bounds.
         It doubles from `radius`."""
         return Viewport(

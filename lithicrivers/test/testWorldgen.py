@@ -2,7 +2,7 @@ import unittest
 from pprint import pprint
 
 from lithicrivers.game import World, Tiles
-from lithicrivers.model import Vector2
+from lithicrivers.model import VectorN
 
 
 class RenderStuff(unittest.TestCase):
@@ -10,7 +10,7 @@ class RenderStuff(unittest.TestCase):
         for _ in range(0, 100):
             self.assertEqual(
                 World.gen_random_world_data(
-                    Vector2(3, 3),
+                    VectorN(3, 3),
                     gen_function=lambda: Tiles.DaFuq()
                 ),
                 [
@@ -37,7 +37,7 @@ class RenderStuff(unittest.TestCase):
         daSize = 300
 
         world_data = World.gen_random_world_data(
-            size=Vector2(daSize, daSize),
+            size=VectorN(daSize, daSize),
             gf_kwargs={
                 "choices": [Tiles.Tree(), Tiles.Dirt()],
                 "weights": [50, 50]

@@ -4,7 +4,7 @@ from typing import List, Dict
 
 import numpy
 
-from lithicrivers.model import Vector2, Viewport, T
+from lithicrivers.model import VectorN, Viewport, T
 from lithicrivers.settings import DEFAULT_SIZE, DEFAULT_VIEWPORT, VEC2_NORTH, VEC2_SOUTH, VEC2_WEST, VEC2_EAST, \
     DEFAULT_PLAYER_POSITION
 
@@ -25,15 +25,15 @@ class SpriteRenderable:
 
 class Entity:
 
-    def __init__(self, position: Vector2):
+    def __init__(self, position: VectorN):
         self.position = position
         self.health = 100
         self.stamina = 100
 
-    def move(self, vec: Vector2):
+    def move(self, vec: VectorN):
         self.position += vec
 
-    def calcOffset(self, vec: Vector2) -> Vector2:
+    def calcOffset(self, vec: VectorN) -> VectorN:
         """Where would I move, if I did move?"""
         return self.position + vec
 
@@ -229,7 +229,7 @@ class World:
         return self.size.x
 
     @staticmethod
-    def gen_random_world_data(size: Vector2, gen_function=gen_tile, gf_args=None, gf_kwargs=None) -> \
+    def gen_random_world_data(size: VectorN, gen_function=gen_tile, gf_args=None, gf_kwargs=None) -> \
             List[List[Tile]]:
 
         if gf_kwargs is None:
@@ -253,10 +253,10 @@ class World:
         self.data = World.gen_random_world_data(size)
         self.gametick = 0
 
-    def get_tile_at(self, pos: Vector2):
+    def get_tile_at(self, pos: VectorN):
         return self.data[pos.y][pos.x]
 
-    def set_tile_at(self, pos: Vector2, tile: Tile):
+    def set_tile_at(self, pos: VectorN, tile: Tile):
         self.data[pos.y][pos.x] = tile
 
 
@@ -371,7 +371,7 @@ class Game:
 
         return ret
 
-    def move_player(self, vec: Vector2):
+    def move_player(self, vec: VectorN):
         possiblePosition = self.player.calcOffset(vec)
 
         # check bounds

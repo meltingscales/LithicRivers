@@ -1,4 +1,4 @@
-from lithicrivers.model import Vector2, VectorN
+from lithicrivers.model import VectorN
 
 '''
 god i hate math
@@ -31,17 +31,16 @@ class TestVectorN(unittest.TestCase):
         v1 = VectorN(1, 2, 3)
 
         self.assertEqual(v1 + v1, VectorN(2, 4, 6))
-        # self.assertEqual(v1 - v1, VectorN(0, 0, 0))
+        self.assertEqual(v1 - v1, VectorN(0, 0, 0))
+        self.assertEqual(v1 * v1, VectorN(1, 4, 9))
 
+    def testVecNBoundingBox(self):
+        v1 = VectorN(1, 2)
+        v2 = VectorN(6, 7)
 
-class IHateMath(unittest.TestCase):
-    def testVecBoundingBox(self):
-        v1 = Vector2(1, 2)
-        v2 = Vector2(6, 7)
+        v3 = VectorN(4, 4)
 
-        v3 = Vector2(4, 4)
-
-        v4 = Vector2(1, 9)
+        v4 = VectorN(1, 9)
 
         self.assertTrue(v3.insideBoundingRect(v1, v2))
         # swap args shouldnt matter, it just flips the rect by 90 degrees
