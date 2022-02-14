@@ -7,56 +7,86 @@ from lithicrivers.model import VectorN
 
 class RenderStuff(unittest.TestCase):
     def testworldGenConsistent(self):
-        for _ in range(0, 100):
-            self.assertEqual(
-                World.gen_random_world_data(
-                    VectorN(3, 3),
-                    gen_function=lambda: Tiles.DaFuq()
-                ),
+        daClouds = \
+            [
                 [
-                    [
-                        Tiles.DaFuq(),
-                        Tiles.DaFuq(),
-                        Tiles.DaFuq()
-                    ],
-                    [
-                        Tiles.DaFuq(),
-                        Tiles.DaFuq(),
-                        Tiles.DaFuq()
-                    ],
-                    [
-                        Tiles.DaFuq(),
-                        Tiles.DaFuq(),
-                        Tiles.DaFuq()
-                    ]
+                    Tiles.Cloud(),
+                    Tiles.Cloud(),
+                    Tiles.Cloud(),
+                ],
+                [
+                    Tiles.Cloud(),
+                    Tiles.Cloud(),
+                    Tiles.Cloud(),
+                ],
+                [
+                    Tiles.Cloud(),
+                    Tiles.Cloud(),
+                    Tiles.Cloud(),
                 ]
+            ],
+
+        for _ in range(0, 100):
+            worldData = World.gen_random_world_data(
+                VectorN(3, 3, 2),
+                gf_kwargs={
+                    'choices': [Tiles.Tree()],
+                    'weights': [69]
+                }
             )
 
-    def testWorldGenRandomSpread(self):
+            mockData = \
+                [
+                    [  # z
+                        [  # y
+                            Tiles.Tree(),  # x
+                            Tiles.Tree(),
+                            Tiles.Tree(),
+                        ],
+                        [
+                            Tiles.Tree(),
+                            Tiles.Tree(),
+                            Tiles.Tree(),
+                        ],
+                        [
+                            Tiles.Tree(),
+                            Tiles.Tree(),
+                            Tiles.Tree(),
+                        ]
+                    ],
+                    *daClouds
+                ]
 
-        daSize = 300
+            self.assertEqual(worldData, mockData)
 
-        world_data = World.gen_random_world_data(
-            size=VectorN(daSize, daSize),
-            gf_kwargs={
-                "choices": [Tiles.Tree(), Tiles.Dirt()],
-                "weights": [50, 50]
-            }
-        )
 
-        count_tiles = {}
-        for row in world_data:
+def testWorldGenRandomSpread(self):
+    daSize = 300
+
+    world_data = World.gen_random_world_data(
+        size=VectorN(daSize, daSize, 2),
+        gf_kwargs={
+            "choices": [Tiles.Tree(), Tiles.Dirt()],
+            "weights": [50, 50]
+        }
+    )
+
+    count_tiles = {}
+    for plane in world_data:
+        for row in plane:
             for tile in row:
-
                 if tile.tileid not in count_tiles:
                     count_tiles[tile.tileid] = 0
                 count_tiles[tile.tileid] += 1
 
-        pprint(count_tiles)
+    pprint(count_tiles)
 
-        numDirt = count_tiles[Tiles.Dirt().tileid]
-        numTree = count_tiles[Tiles.Tree().tileid]
+    numDirt = count_tiles[Tiles.Dirt().tileid]
+    numTree = count_tiles[Tiles.Tree().tileid]
+    numCloud = count_tiles[Tiles.Cloud().tileid]
 
-        self.assertAlmostEqual(numDirt / (daSize * daSize),
-                               numTree / (daSize * daSize),
-                               1)
+    self.assertAlmostEqual(numDirt / (daSize * daSize),
+                           numTree / (daSize * daSize),
+                           1)
+
+    self.assertEqual(numDirt + numTree, numCloud)

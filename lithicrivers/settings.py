@@ -7,9 +7,9 @@ from lithicrivers.model import VectorN, Viewport
 from lithicrivers.textutil import associated
 
 GAME_NAME = 'LithicRivers'
-# DEFAULT_SIZE = (50, 15)
+# DEFAULT_SIZE = (50, 15, 2)
 DEFAULT_SIZE = VectorN(500, 500, 3)
-DEFAULT_PLAYER_POSITION = VectorN(250, 250, 3)
+DEFAULT_PLAYER_POSITION = VectorN(250, 250, 0)
 DEFAULT_VIEWPORT = Viewport.generate_centered(DEFAULT_PLAYER_POSITION, radius=VectorN(40, 10, 0))
 LOGFILENAME = GAME_NAME + '.log'
 
