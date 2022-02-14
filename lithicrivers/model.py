@@ -29,6 +29,25 @@ class VectorN:
             (op(a, b)) for a, b in zip(self.dimension_values, other.dimension_values)
         ])
 
+    def dimension_order(self):
+        """are we "1"d, "2"d, "3"d, etc"""
+        return len(self.dimension_values)
+
+    # noinspection PyRedundantParentheses
+    def as_tuple(self) -> Tuple[int]:
+        return (*self.dimension_values,)
+
+    def as_list(self) -> List[int]:
+        return [*self.dimension_values, ]
+
+    def assert_same_dimension_order(self, other):
+        other: VectorN
+        if not (self.dimension_order() == other.dimension_order()):
+            raise ValueError(
+                "you cannot modify vector self ({}) with vector other ({}) as it is not the same dimension order!".format(
+                    self,
+                    other))
+
     def __neg__(self):
         return VectorN(*[
             (-1 * a) for a in self.dimension_values
@@ -53,20 +72,8 @@ class VectorN:
         other: VectorN
         return self.dimension_values == other.dimension_values
 
-    def assert_same_dimension_order(self, other):
-        other: VectorN
-        assert (self.dimension_order() == other.dimension_order())
-
-    def dimension_order(self):
-        """are we "1"d, "2"d, "3"d, etc"""
-        return len(self.dimension_values)
-
-    # noinspection PyRedundantParentheses
-    def as_tuple(self) -> Tuple[int]:
-        return (*self.dimension_values,)
-
-    def as_list(self) -> List[int]:
-        return [*self.dimension_values, ]
+    def __str__(self):
+        return "<VectorN({}) data={}>".format(self.dimension_order(), self.dimension_values)
 
     def __getitem__(self, item: Any):
         # indexing us like `self[1]`

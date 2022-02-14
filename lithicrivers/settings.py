@@ -8,15 +8,17 @@ from lithicrivers.textutil import associated
 
 GAME_NAME = 'LithicRivers'
 # DEFAULT_SIZE = (50, 15)
-DEFAULT_SIZE = VectorN(500, 500)
-DEFAULT_PLAYER_POSITION = VectorN(250, 250)
-DEFAULT_VIEWPORT = Viewport.generate_centered(DEFAULT_PLAYER_POSITION, VectorN(40, 10))
+DEFAULT_SIZE = VectorN(500, 500, 3)
+DEFAULT_PLAYER_POSITION = VectorN(250, 250, 3)
+DEFAULT_VIEWPORT = Viewport.generate_centered(DEFAULT_PLAYER_POSITION, radius=VectorN(40, 10, 0))
 LOGFILENAME = GAME_NAME + '.log'
 
-VEC2_NORTH = -VectorN(0, 1)  # negative because i am laaaaazy
-VEC2_SOUTH = -VectorN(0, -1)  # negative because i am laaaaazy
-VEC2_WEST = VectorN(-1, 0)
-VEC2_EAST = VectorN(1, 0)
+VEC_NORTH = -VectorN(0, 1, 0)  # negative because i am laaaaazy and my Y values are flipped
+VEC_SOUTH = -VectorN(0, -1, 0)  # negative because i am laaaaazy and my Y values are flipped
+VEC_WEST = VectorN(-1, 0, 0)
+VEC_EAST = VectorN(1, 0, 0)
+VEC_UP = VectorN(0, 0, -1)
+VEC_DOWN = VectorN(0, 0, -1)
 
 NESW_MNEMONIC = \
     '''
@@ -36,12 +38,16 @@ class Keymap:
         self.MOVE_WEST = 'a'
         self.MOVE_SOUTH = 's'
         self.MOVE_EAST = 'd'
+        self.MOVE_UP = 'q'
+        self.MOVE_DOWN = 'e'
 
         self.MOVEMENT_VECTOR_MAP = {
-            self.MOVE_NORTH: VEC2_NORTH,
-            self.MOVE_WEST: VEC2_WEST,
-            self.MOVE_SOUTH: VEC2_SOUTH,
-            self.MOVE_EAST: VEC2_EAST
+            self.MOVE_NORTH: VEC_NORTH,
+            self.MOVE_WEST: VEC_WEST,
+            self.MOVE_SOUTH: VEC_SOUTH,
+            self.MOVE_EAST: VEC_EAST,
+            self.MOVE_UP: VEC_UP,
+            self.MOVE_DOWN: VEC_DOWN,
         }
 
         self.SLIDE_VIEWPORT_WEST = '['
@@ -50,13 +56,6 @@ class Keymap:
         self.MINE = 'u'
 
     def get_valid_key_names(self) -> List[str]:
-        # TODO: Make dis more efficient...
-        # TODO filtered_names = filter(lambda x: ..., all_names)
-        # TODO Will return an iterable, which can only be
-        # TODO consumed once unless you do list(filter(...)), but is more efficient for large collections
-
-        if self._get_valid_key_names_cache:
-            return self._get_valid_key_names_cache
 
         all_names = dir(self)
         filtered_names = [
@@ -67,8 +66,6 @@ class Keymap:
                     (isinstance(self.__getattribute__(name), str))  # self.[name] must be string
             )
         ]
-
-        self._get_valid_key_names_cache = filtered_names
 
         return filtered_names
 
