@@ -5,7 +5,7 @@ from typing import List, Dict
 import numpy
 
 from lithicrivers.model import VectorN, Viewport, T
-from lithicrivers.settings import DEFAULT_SIZE, DEFAULT_VIEWPORT, VEC2_NORTH, VEC2_SOUTH, VEC2_WEST, VEC2_EAST, \
+from lithicrivers.settings import DEFAULT_SIZE, DEFAULT_VIEWPORT, VEC_NORTH, VEC_SOUTH, VEC_WEST, VEC_EAST, \
     DEFAULT_PLAYER_POSITION
 
 
@@ -38,16 +38,16 @@ class Entity:
         return self.position + vec
 
     def move_north(self):
-        self.move(VEC2_NORTH)
+        self.move(VEC_NORTH)
 
     def move_south(self):
-        self.move(VEC2_SOUTH)
+        self.move(VEC_SOUTH)
 
     def move_west(self):
-        self.move(VEC2_WEST)
+        self.move(VEC_WEST)
 
     def move_east(self):
-        self.move(VEC2_EAST)
+        self.move(VEC_EAST)
 
 
 class Items:
@@ -172,7 +172,7 @@ def weighted_choice_dict(dictWeight: Dict[float, T]) -> T:
     return weighted_choice(weights, choices)
 
 
-def gen_tile(choices: List[Tile] = None, weights: List[int] = None) -> Tile:
+def generate_tile(choices: List[Tile] = None, weights: List[int] = None, current_location: VectorN = None) -> Tile:
     if choices is None:
         choices = [Tiles.Tree(),
                    Tiles.Dirt(),
@@ -180,6 +180,14 @@ def gen_tile(choices: List[Tile] = None, weights: List[int] = None) -> Tile:
 
     if weights is None:
         weights = [5, 100, 1]
+
+    # for now, generate
+    if current_location:
+        if current_location.z > 0:
+            return Tiles.Cloud()
+        elif current_location.z < 0:
+            return Tiles.Bedrock()
+
 
     return weighted_choice(weights, choices)
 
@@ -219,6 +227,10 @@ class Tiles:
     def Cloud():
         return Tile("Cloud", sprite_sheet=['~'])
 
+    @staticmethod
+    def Bedrock(cls):
+        pass
+
 
 class World:
 
@@ -229,8 +241,12 @@ class World:
         return self.size.x
 
     @staticmethod
-    def gen_random_world_data(size: VectorN, gen_function=gen_tile, gf_args=None, gf_kwargs=None) -> \
-            List[List[Tile]]:
+    def gen_random_world_data(
+            size: VectorN,
+            gen_function=generate_tile,
+            gf_args=None,
+            gf_kwargs=None) -> \
+            List[List[List[Tile]]]:
 
         if gf_kwargs is None:
             gf_kwargs = {}
@@ -238,13 +254,18 @@ class World:
         if gf_args is None:
             gf_args = []
 
-        width, height = size
-        resultworld = []
-        for y in range(0, height):
-            row = []
-            for x in range(0, width):
-                row.append(gen_function(*gf_args, **gf_kwargs))
-            resultworld.append(row)
+        resultworld: List[List[List[Tile]]] = []
+
+        for z in range(0, size.z):
+            plane: List[List[Tile]] = []
+            for y in range(0, size.y):
+                row: List[Tile] = []
+                for x in range(0, size.x):
+                    current_location = VectorN(x, y, z)
+                    row.append(gen_function(*gf_args, **gf_kwargs, current_location=current_location))
+                plane.append(row)
+            resultworld.append(plane)
+
         return resultworld
 
     def __init__(self, name="Gaia", size=DEFAULT_SIZE):
@@ -281,10 +302,10 @@ class Game:
         self.viewport.lowerright += moveVec
 
     def slide_viewport_left(self):
-        self.slide_viewport(VEC2_WEST)
+        self.slide_viewport(VEC_WEST)
 
     def slide_viewport_right(self):
-        self.slide_viewport(VEC2_EAST)
+        self.slide_viewport(VEC_EAST)
 
     def get_tile_at_player_feet(self) -> Tile:
         return self.world.get_tile_at(self.player.position)

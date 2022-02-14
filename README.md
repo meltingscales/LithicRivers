@@ -45,3 +45,15 @@ god help me
     - determine from screen size
     - determine from "blank space" in asciimatics (if this is even doable)
 - don't use numpy, its a bloated big ass chungoid that adds to the pyinstaller exe size
+- allow player to place blocks
+- pushboxes
+- crafting
+- hunger
+- entities that move
+- fighting
+- explosions/fire
+- perlin noise worldgen (like minecraft)
+- conveyor belts
+- fluids
+- equipment
+- growing crops
