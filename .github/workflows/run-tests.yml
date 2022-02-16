@@ -10,7 +10,7 @@ on:
       - "*"
 
 jobs:
-  gh_pre_release:
+  run-tests:
     runs-on: ubuntu-latest
 
     steps:
