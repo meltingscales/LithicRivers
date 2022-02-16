@@ -34,6 +34,15 @@ class TestVectorN(unittest.TestCase):
         self.assertEqual(v1 - v1, VectorN(0, 0, 0))
         self.assertEqual(v1 * v1, VectorN(1, 4, 9))
 
+    def testVectorTrim(self):
+        v1 = VectorN(1, 2, 3).trim(2)
+        v2 = VectorN(1, 2)
+
+        # print(v1)
+        # print(v2)
+
+        self.assertEqual(v1, v2)
+
     def testVecNBoundingBox(self):
         v1 = VectorN(1, 2)
         v2 = VectorN(6, 7)
