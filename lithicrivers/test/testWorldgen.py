@@ -59,34 +59,34 @@ class RenderStuff(unittest.TestCase):
 
             self.assertEqual(worldData, mockData)
 
+    def testWorldGenRandomSpread(self):
+        daSize = 20
 
-def testWorldGenRandomSpread(self):
-    daSize = 300
+        world_data = World.gen_random_world_data(
+            radius=(VectorN(daSize, daSize, 2)),
+            gf_kwargs={
+                "choices": [Tiles.Tree(), Tiles.Dirt()],
+                "weights": [50, 50]
+            }
+        )
 
-    world_data = World.gen_random_world_data(
-        size=VectorN(daSize, daSize, 2),
-        gf_kwargs={
-            "choices": [Tiles.Tree(), Tiles.Dirt()],
-            "weights": [50, 50]
-        }
-    )
+        count_tiles = {}
+        for pos, tile in world_data:
+            # print(tile)
+            if tile.tileid not in count_tiles:
+                count_tiles[tile.tileid] = 0
+            count_tiles[tile.tileid] += 1
 
-    count_tiles = {}
-    for plane in world_data:
-        for row in plane:
-            for tile in row:
-                if tile.tileid not in count_tiles:
-                    count_tiles[tile.tileid] = 0
-                count_tiles[tile.tileid] += 1
+        pprint(count_tiles)
 
-    pprint(count_tiles)
+        numDirt = count_tiles[Tiles.Dirt().tileid]
+        numTree = count_tiles[Tiles.Tree().tileid]
+        numCloud = count_tiles[Tiles.Cloud().tileid]
 
-    numDirt = count_tiles[Tiles.Dirt().tileid]
-    numTree = count_tiles[Tiles.Tree().tileid]
-    numCloud = count_tiles[Tiles.Cloud().tileid]
+        self.assertAlmostEqual(
+            numDirt / (daSize * daSize),
+            numTree / (daSize * daSize), 1)
 
-    self.assertAlmostEqual(numDirt / (daSize * daSize),
-                           numTree / (daSize * daSize),
-                           1)
-
-    self.assertEqual(numDirt + numTree, numCloud)
+        self.assertEqual(
+            numDirt + numTree,
+            numCloud)

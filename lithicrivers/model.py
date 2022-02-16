@@ -27,12 +27,6 @@ class VectorN:
         """Trim VectorN down to smaller size."""
         return VectorN(*self.as_list()[0:new_size])
 
-    def apply_op(self, other, op):
-        other: VectorN
-        return VectorN(*[
-            (op(a, b)) for a, b in zip(self.dimension_values, other.dimension_values)
-        ])
-
     def dimension_order(self):
         """are we "1"d, "2"d, "3"d, etc"""
         return len(self.dimension_values)
@@ -60,17 +54,28 @@ class VectorN:
     def __add__(self, other):
         other: VectorN
         self.assert_same_dimension_order(other)
-        return self.apply_op(other, int.__add__)
+        return VectorN(*[
+            (a + b) for a, b in zip(self.dimension_values, other.dimension_values)
+        ])
 
     def __sub__(self, other):
         other: VectorN
         self.assert_same_dimension_order(other)
-        return self.apply_op(other, int.__sub__)
+        return VectorN(*[
+            (a - b) for a, b in zip(self.dimension_values, other.dimension_values)
+        ])
 
     def __mul__(self, other):
         other: VectorN
-        self.assert_same_dimension_order(other)
-        return self.apply_op(other, int.__mul__)
+        if isinstance(other, VectorN):
+            self.assert_same_dimension_order(other)
+            return VectorN(*[
+                (a * b) for a, b in zip(self.dimension_values, other.dimension_values)
+            ])
+        else:
+            return VectorN(*[
+                (a * other) for a in self.dimension_values
+            ])
 
     def __eq__(self, other):
         other: VectorN
@@ -115,6 +120,15 @@ class VectorN:
         # YOINK from https://www.programming-idioms.org/idiom/178/check-if-point-is-inside-rectangle/2615/python
         # Assuming that x1 < x2 and y1 < y2...
         return (px >= x1) and (px < x2) and (py >= y1) and (py < y2)
+
+    def serialize(self) -> str:
+        return ','.join([str(x) for x in self.dimension_values])
+
+    @staticmethod
+    def deserialize(s: str):
+        toks = s.split(',')
+        ints = [int(x) for x in toks]
+        return VectorN(*ints)
 
 
 class Viewport:
