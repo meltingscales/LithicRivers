@@ -7,24 +7,6 @@ from lithicrivers.model import VectorN
 
 class RenderStuff(unittest.TestCase):
     def testworldGenConsistent(self):
-        daClouds = \
-            [
-                [
-                    Tiles.Cloud(),
-                    Tiles.Cloud(),
-                    Tiles.Cloud(),
-                ],
-                [
-                    Tiles.Cloud(),
-                    Tiles.Cloud(),
-                    Tiles.Cloud(),
-                ],
-                [
-                    Tiles.Cloud(),
-                    Tiles.Cloud(),
-                    Tiles.Cloud(),
-                ]
-            ],
 
         for _ in range(0, 100):
             worldData = World.gen_random_world_data(
@@ -35,32 +17,12 @@ class RenderStuff(unittest.TestCase):
                 }
             )
 
-            mockData = \
-                [
-                    [  # z
-                        [  # y
-                            Tiles.Tree(),  # x
-                            Tiles.Tree(),
-                            Tiles.Tree(),
-                        ],
-                        [
-                            Tiles.Tree(),
-                            Tiles.Tree(),
-                            Tiles.Tree(),
-                        ],
-                        [
-                            Tiles.Tree(),
-                            Tiles.Tree(),
-                            Tiles.Tree(),
-                        ]
-                    ],
-                    *daClouds
-                ]
-
-            self.assertEqual(worldData, mockData)
+            self.assertEqual(worldData.get_tile(VectorN(0, 0, 0)), Tiles.Tree())
+            self.assertEqual(worldData.get_tile(VectorN(0, 0, 1)), Tiles.Cloud())
+            self.assertEqual(worldData.get_tile(VectorN(0, 0, -1)), Tiles.Bedrock())
 
     def testWorldGenRandomSpread(self):
-        daSize = 20
+        daSize = 100
 
         world_data = World.gen_random_world_data(
             radius=(VectorN(daSize, daSize, 2)),
