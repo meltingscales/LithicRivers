@@ -23,8 +23,9 @@ class VectorN:
             else:
                 self.__setattr__(dimName, None)
 
-    def neuter(self, new_size: int):
-        return VectorN(*self.as_list()[0:(new_size - 1)])
+    def trim(self, new_size: int):
+        """Trim VectorN down to smaller size."""
+        return VectorN(*self.as_list()[0:new_size])
 
     def apply_op(self, other, op):
         other: VectorN
@@ -94,7 +95,8 @@ class VectorN:
     def insideBoundingRect(self, vec1, vec2):
 
         if not (self.dimension_order() == 2):
-            raise Exception("Currently only implemented for 2d!")
+            raise Exception(
+                f"Currently only implemented for 2d! Cannot determine if {self} is within {vec1} and {vec2}")
 
         vec1: VectorN
         vec2: VectorN

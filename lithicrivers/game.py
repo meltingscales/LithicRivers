@@ -420,10 +420,11 @@ class Game:
         self.player.move(vec)
 
     def player_outside_viewport(self):
-        return not self.player_inside_viewport()
+        return not self.player_inside_2d_viewport()
 
-    def player_inside_viewport(self):
-        return self.player.position.insideBoundingRect(self.viewport.topleft.neuter(2), self.viewport.lowerright.neuter(2))
+    def player_inside_2d_viewport(self):
+        return self.player.position.trim(2).insideBoundingRect(self.viewport.topleft.trim(2),
+                                                               self.viewport.lowerright.trim(2))
 
     def reset_viewport(self):
         raise NotImplementedError("TODO: Reset viewport")
