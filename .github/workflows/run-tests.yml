@@ -1,0 +1,21 @@
+---
+name: "run-tests"
+
+on:
+  push:
+    branches:
+      - "master"
+      - "devel"
+    tags-ignore:
+      - "*"
+
+jobs:
+  gh_pre_release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: "Checkout source code"
+        uses: "actions/checkout@v2.4.0"
+
+      - run: "./scripts/setup.sh"
+      - run: "./scripts/test.sh"
