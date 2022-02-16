@@ -233,7 +233,9 @@ class Tiles:
 
 class WorldData:
     def __init__(self):
-        self.data = {}
+        self.data = {
+            VectorN(0, 0, 0).serialize(): Tiles.Dirt()
+        }
 
     def set_tile(self, pos: VectorN, t: Tile):
         self.data[pos.serialize()] = t
@@ -300,18 +302,17 @@ class World:
 
         return resultworld
 
-    def __init__(self, name="Gaia", size=(DEFAULT_SIZE_RADIUS * 2)):
+    def __init__(self, name="Gaia", size=DEFAULT_SIZE_RADIUS):
         self.size = size
         self.name = name
-        self.data = World.gen_random_world_data(size / 2)
+        self.data = World.gen_random_world_data(size)
         self.gametick = 0
 
-    def get_tile_at(self, pos: VectorN):
-        print('get_tile_at {}'.format(pos))
-        return self.data[pos.z][pos.y][pos.x]
+    def get_tile(self, pos: VectorN):
+        return self.data.get_tile(pos)
 
-    def set_tile_at(self, pos: VectorN, tile: Tile):
-        self.data[pos.z][pos.y][pos.x] = tile
+    def set_tile(self, pos: VectorN, tile: Tile):
+        self.data.set_tile(pos, tile)
 
 
 class Game:
@@ -341,7 +342,7 @@ class Game:
         self.slide_viewport(VEC_EAST)
 
     def get_tile_at_player_feet(self) -> Tile:
-        return self.world.get_tile_at(self.player.position)
+        return self.world.get_tile(self.player.position)
 
     def render_world_viewport(
             self,
@@ -363,22 +364,13 @@ class Game:
 
         ret = []
 
+        z = self.player.position.z
+
         for y in range(viewport.topleft.y, viewport.lowerright.y):
-
-            # if this viewport y is out of bounds, skip...
-            if (y >= self.world.get_height()) or (y < 0):
-                continue
-
-            plane = self.world.data[viewport.topleft.z]
-            row = plane[y]
             retrow = []
-
             for x in range(viewport.topleft.x, viewport.lowerright.x):
-
-                if (x >= self.world.get_width()) or (x < 0):
-                    continue
-
-                tile = row[x]
+                pos = VectorN(x, y, z)
+                tile = self.world.get_tile(pos)
                 sprite = tile.render_sprite(scale=scale)
 
                 # if we are here, render us!
@@ -388,13 +380,7 @@ class Game:
                 # logging.debug('render: {}'.format(sprite))
                 # done with a single sprite in a row
                 retrow.append(sprite)
-
-            # done with a row
-            if len(retrow) > 0:
-                ret.append(retrow)
-
-        # TODO: Assert ret is well-formed
-
+            ret.append(retrow)
         logging.debug("Returning this from render_world_viewport()")
         logging.debug(pprint.pformat(ret))
 
@@ -452,7 +438,7 @@ class Game:
         raise NotImplementedError("TODO: Reset viewport")
 
     def set_tile_at_player_feet(self, tile):
-        self.world.set_tile_at(self.player.position, tile)
+        self.world.set_tile(self.player.position, tile)
 
     def render_pretty_player_position(self):
         return "{:02d},{:02d}".format(self.player.position.x, self.player.position.y)
