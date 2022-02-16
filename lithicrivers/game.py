@@ -1,5 +1,7 @@
 import logging
+import pickle
 import pprint
+from pathlib import Path
 from typing import List, Dict, Union
 
 import numpy
@@ -236,6 +238,23 @@ class Tiles:
 
 
 class WorldData:
+
+    def serialize(self, filepath: Path) -> Path:
+        with open(filepath, 'wb') as fh:
+            pickle.dump(self.data, fh)
+
+        return filepath
+
+    @staticmethod
+    def deserialize(filepath: Path):
+        wd = WorldData()
+
+        with open(filepath, 'rb') as fh:
+            data = pickle.load(fh)
+        wd.data = data
+
+        return wd
+
     def __init__(self):
         self.data = {
             VectorN(0, 0, 0).serialize(): Tiles.Dirt()
