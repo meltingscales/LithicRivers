@@ -181,7 +181,7 @@ def generate_tile(choices: List[Tile] = None, weights: List[int] = None, current
     if weights is None:
         weights = [5, 100, 1]
 
-    # for now, generate
+    # for now, generate these stubs for other z values
     if current_location:
         if current_location.z > 0:
             return Tiles.Cloud()
@@ -423,12 +423,7 @@ class Game:
         possiblePosition = self.player.calcOffset(vec)
 
         # check bounds
-        if (
-                (possiblePosition.x < 0) or
-                (possiblePosition.y < 0) or
-                (possiblePosition.x >= self.world.get_width()) or
-                (possiblePosition.y >= self.world.get_height())
-        ):
+        if self.world.get_tile(possiblePosition) is None:
             logging.debug("Tried to move OOB! {} would have resulted in {}".format(vec, possiblePosition))
             return
 
