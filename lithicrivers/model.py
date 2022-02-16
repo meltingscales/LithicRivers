@@ -130,6 +130,9 @@ class VectorN:
         ints = [int(x) for x in toks]
         return VectorN(*ints)
 
+    def as_short_string(self):
+        return ','.join(str(x) for x in self.dimension_values)
+
 
 class Viewport:
     """
