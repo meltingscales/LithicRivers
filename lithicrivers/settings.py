@@ -8,7 +8,7 @@ from lithicrivers.textutil import associated
 
 GAME_NAME = 'LithicRivers'
 # DEFAULT_SIZE = (50, 15, 2)
-DEFAULT_SIZE = VectorN(500, 500, 3)
+DEFAULT_SIZE_RADIUS = VectorN(250, 250, 3)
 DEFAULT_PLAYER_POSITION = VectorN(250, 250, 0)
 DEFAULT_VIEWPORT = Viewport.generate_centered(DEFAULT_PLAYER_POSITION, radius=VectorN(40, 10, 0))
 LOGFILENAME = GAME_NAME + '.log'
@@ -18,7 +18,7 @@ VEC_SOUTH = -VectorN(0, -1, 0)  # negative because i am laaaaazy and my Y values
 VEC_WEST = VectorN(-1, 0, 0)
 VEC_EAST = VectorN(1, 0, 0)
 VEC_UP = VectorN(0, 0, -1)
-VEC_DOWN = VectorN(0, 0, -1)
+VEC_DOWN = VectorN(0, 0, 1)
 
 NESW_MNEMONIC = \
     '''

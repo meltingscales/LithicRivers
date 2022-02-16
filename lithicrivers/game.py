@@ -1,11 +1,11 @@
 import logging
 import pprint
-from typing import List, Dict
+from typing import List, Dict, Union
 
 import numpy
 
 from lithicrivers.model import VectorN, Viewport, T
-from lithicrivers.settings import DEFAULT_SIZE, DEFAULT_VIEWPORT, VEC_NORTH, VEC_SOUTH, VEC_WEST, VEC_EAST, \
+from lithicrivers.settings import DEFAULT_SIZE_RADIUS, DEFAULT_VIEWPORT, VEC_NORTH, VEC_SOUTH, VEC_WEST, VEC_EAST, \
     DEFAULT_PLAYER_POSITION
 
 
@@ -231,6 +231,32 @@ class Tiles:
         return Tile("Bedrock", sprite_sheet=['#'])
 
 
+class WorldData:
+    def __init__(self):
+        self.data = {}
+
+    def set_tile(self, pos: VectorN, t: Tile):
+        self.data[pos.serialize()] = t
+
+    def get_tile(self, pos: VectorN) -> Union[Tile, None]:
+        p = pos.serialize()
+
+        if p in self.data:
+            return self.data[p]
+
+        return None
+
+    def __getitem__(self, *item: int):
+        return self.get_tile(VectorN(*item))
+
+    def __setitem__(self, *item: int):
+        self.set_tile(VectorN(*item))
+
+    def __iter__(self):
+        for key, val in self.data.items():
+            yield key, val
+
+
 class World:
 
     def get_height(self):
@@ -241,16 +267,16 @@ class World:
 
     @staticmethod
     def gen_random_world_data(
-            size: VectorN,
+            radius: VectorN,
             gen_function=generate_tile,
             gf_args=None,
             gf_kwargs=None) -> \
-            List[List[List[Tile]]]:
+            WorldData:
         """
         Generate world data.
 
         Note gen_function MUST accept *args and **kwargs.
-        :param size:
+        :param radius:
         :param gen_function:
         :param gf_args:
         :param gf_kwargs:
@@ -263,25 +289,21 @@ class World:
         if gf_args is None:
             gf_args = []
 
-        resultworld: List[List[List[Tile]]] = []
+        resultworld = WorldData()
 
-        for z in range(0, size.z):
-            plane: List[List[Tile]] = []
-            for y in range(0, size.y):
-                row: List[Tile] = []
-                for x in range(0, size.x):
-                    current_location = VectorN(x, y, z)
-                    tile = gen_function(*gf_args, **gf_kwargs, current_location=current_location)
-                    row.append(tile)
-                plane.append(row)
-            resultworld.append(plane)
+        for z in range(-radius.z, radius.z):
+            for y in range(-radius.y, radius.y):
+                for x in range(-radius.x, radius.x):
+                    pos = VectorN(x, y, z)
+                    tile = gen_function(*gf_args, **gf_kwargs, current_location=pos)
+                    resultworld.set_tile(pos, tile)
 
         return resultworld
 
-    def __init__(self, name="Gaia", size=DEFAULT_SIZE):
+    def __init__(self, name="Gaia", size=(DEFAULT_SIZE_RADIUS * 2)):
         self.size = size
         self.name = name
-        self.data = World.gen_random_world_data(size)
+        self.data = World.gen_random_world_data(size / 2)
         self.gametick = 0
 
     def get_tile_at(self, pos: VectorN):
