@@ -230,6 +230,10 @@ class Tiles:
     def Bedrock():
         return Tile("Bedrock", sprite_sheet=['#'])
 
+    @staticmethod
+    def Empty():
+        return Tile("Empty", sprite_sheet=[' '])
+
 
 class WorldData:
     def __init__(self):
@@ -371,6 +375,9 @@ class Game:
             for x in range(viewport.topleft.x, viewport.lowerright.x):
                 pos = VectorN(x, y, z)
                 tile = self.world.get_tile(pos)
+                if not tile:
+                    tile = Tiles.Empty()
+
                 sprite = tile.render_sprite(scale=scale)
 
                 # if we are here, render us!
@@ -441,4 +448,4 @@ class Game:
         self.world.set_tile(self.player.position, tile)
 
     def render_pretty_player_position(self):
-        return "{:02d},{:02d}".format(self.player.position.x, self.player.position.y)
+        return "{}".format(self.player.position.as_short_string())
