@@ -38,7 +38,7 @@ class TabButtons(Layout):
         buttons = [
             Button("Help", raiseFn(NextScene, "HelpPage")),
             Button("Root Page", raiseFn(NextScene, "RootPage")),
-            Button("Message Log", raiseFn(NextScene, "MessagePage")),
+            Button("Message Log", raiseFn(NextScene, "MessageLogPage")),
             Button("Charlie Page", raiseFn(NextScene, "CharliePage")),
             Button("Quit", raiseFn(StopGame, "Game stopping :P"))
         ]
