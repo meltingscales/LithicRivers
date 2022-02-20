@@ -1,13 +1,7 @@
 ---
 name: "run-tests"
 
-on:
-  push:
-    branches:
-      - "master"
-      - "devel"
-    tags-ignore:
-      - "*"
+on: [push, pull_request]
 
 jobs:
   run-tests:
