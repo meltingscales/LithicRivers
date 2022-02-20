@@ -10,13 +10,14 @@ on:
 
 jobs:
   gh_pre_release:
-    needs: "run-tests"
     runs-on: windows-latest
+
     steps:
       - name: "Checkout source code"
         uses: "actions/checkout@v2.4.0"
 
       - run: "./scripts/setup.cmd"
+      - run: "./scripts/test.cmd"
       - run: "./scripts/generate_exe.cmd"
       - run: "ls dist/"
 
