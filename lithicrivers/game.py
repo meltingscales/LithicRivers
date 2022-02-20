@@ -22,6 +22,13 @@ class SpriteRenderable:
 
     def render_sprite(self, scale: int = 1) -> str:
         normalized_scale = scale - 1
+
+        if (normalized_scale >= len(self.sprite_sheet)) or (normalized_scale < 0):
+            raise Exception("Cannot render sprite with scale {} as it only has these sprites:\n{} ".format(
+                len(self.sprite_sheet),
+                self.sprite_sheet
+            ))
+
         return self.sprite_sheet[normalized_scale]
 
 
@@ -241,7 +248,8 @@ class Tiles:
 
     @staticmethod
     def Empty():
-        return Tile("Empty", sprite_sheet=[' '])
+        return Tile("Empty", sprite_sheet=[' ', '  \n'
+                                                '  '])
 
 
 class WorldData:
@@ -400,9 +408,9 @@ class Game:
 
         z = self.player.position.z
 
-        for y in range(viewport.topleft.y, viewport.lowerright.y):
+        for y in range(viewport.topleft.y, (viewport.lowerright.y + 1)):
             retrow = []
-            for x in range(viewport.topleft.x, viewport.lowerright.x):
+            for x in range(viewport.topleft.x, (viewport.lowerright.x + 1)):
                 pos = VectorN(x, y, z)
                 tile = self.world.get_tile(pos)
                 if not tile:

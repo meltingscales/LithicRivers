@@ -19,10 +19,9 @@ class RenderStuff(unittest.TestCase):
             '1,1,0': Tiles.Dirt()
         })
 
-        daScale=2
+        daScale = 2
 
         self.assertEqual(
-            someGame.render_world_viewport(daScale, viewport=Viewport(topleft=(0, 0), lowerright=(1, 1))),
             [
                 [
                     Tiles.Dirt().render_sprite(daScale),
@@ -35,5 +34,6 @@ class RenderStuff(unittest.TestCase):
                     ',.\n'
                     '.,'
                 ],
-            ]
+            ],
+            someGame.render_world_viewport(daScale, viewport=Viewport(topleft=(0, 0), lowerright=(1, 1))),
         )
