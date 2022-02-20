@@ -2,7 +2,7 @@
 name: "pre-release-ubuntu"
 
 on:
-  pull_request:
+  push:
     branches:
       - "release"
     tags-ignore:

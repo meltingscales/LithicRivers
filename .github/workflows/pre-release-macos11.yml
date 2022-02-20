@@ -2,7 +2,7 @@
 name: "pre-release-macos11"
 
 on:
-  pull_request:
+  push:
     branches:
       - "release"
     tags-ignore:

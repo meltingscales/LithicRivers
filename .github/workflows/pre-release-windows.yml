@@ -2,7 +2,7 @@
 name: "pre-release-windows"
 
 on:
-  pull_request:
+  push:
     branches:
       - "release"
     tags-ignore:
