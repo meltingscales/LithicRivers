@@ -257,25 +257,28 @@ class WorldData:
         with open(filepath, 'rb') as fh:
             return pickle.load(fh)
 
-    def __init__(self, tiledata: Dict[str, Tile] = None, entitydata: Dict[str, List[Entity]] = None):
-        if not tiledata:
-            self.tiledata = {
+    def __init__(self, tile_data: Dict[str, Tile] = None, entity_data: Dict[str, List[Entity]] = None):
+
+        self.tile_data = tile_data
+        if not self.tile_data:
+            self.tile_data = {
                 VectorN(0, 0, 0).serialize(): Tiles.Dirt()
             }
 
-        if not entitydata:
-            self.entityData = {
+        self.entity_data = entity_data
+        if not self.entity_data:
+            self.entity_data = {
                 VectorN(0, 0, 0).serialize(): [Entities.StumblingSheep()]
             }
 
     def set_tile(self, pos: VectorN, t: Tile):
-        self.tiledata[pos.serialize()] = t
+        self.tile_data[pos.serialize()] = t
 
     def get_tile(self, pos: VectorN) -> Union[Tile, None]:
         p = pos.serialize()
 
-        if p in self.tiledata:
-            return self.tiledata[p]
+        if p in self.tile_data:
+            return self.tile_data[p]
 
         return None
 
@@ -286,7 +289,7 @@ class WorldData:
         self.set_tile(VectorN(*item))
 
     def __iter__(self):
-        for key, val in self.tiledata.items():
+        for key, val in self.tile_data.items():
             yield key, val
 
 
@@ -417,32 +420,6 @@ class Game:
             ret.append(retrow)
         logging.debug("Returning this from render_world_viewport()")
         logging.debug(pprint.pformat(ret))
-
-        return ret
-
-    def render_world(self, scale: int = 1) -> List[List[str]]:
-        r"""
-        :param scale: Scaling for sprites.      <br><br><pre><code>
-        |   1 = x, 2 = \/, 3 = \ /, etc.        <br>
-        |              /\       x               <br>
-        |                      / \              <br></pre></code>
-        :return: A list of tiles.
-        """
-
-        ret = []
-
-        for row in self.world.data.tiledata:
-            retrow = []
-            for tile in row:
-                sprite = tile.render_sprite(scale=scale)
-                # logging.debug('render: {}'.format(sprite))
-                retrow.append(sprite)  # TODO: will break with scale>2... we need to print to a buffer
-            ret.append(retrow)
-
-        # TODO: Assert ret is well-formed
-
-        logging.info("player x,y={:2d},{:2d}".format(self.player.position.x, self.player.position.y))
-        ret[self.player.position.y][self.player.position.x] = self.player.render_sprite(scale=scale)
 
         return ret
 

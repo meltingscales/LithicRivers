@@ -4,28 +4,6 @@ from pprint import pprint
 from lithicrivers.game import World, Tiles, Game, WorldData
 from lithicrivers.model import VectorN
 
-
-class RenderStuff(unittest.TestCase):
-    def testRenderSimple(self):
-        someGame = Game()
-        someGame.world = WorldData(tiledata={
-            '0,0,0': Tiles.Dirt(),
-            '1,0,0': Tiles.Dirt()
-        })
-
-        self.assertEqual(
-            someGame.render_world(2),
-            [
-                [
-                    ',.\n'
-                    '.,',
-                    ',.\n'
-                    '.,'
-                ]
-            ]
-        )
-
-
 class GenStuff(unittest.TestCase):
     def testworldGenConsistent(self):
 

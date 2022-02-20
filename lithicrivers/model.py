@@ -1,5 +1,5 @@
 import logging
-from typing import Tuple, List, TypeVar, Any
+from typing import Tuple, List, TypeVar, Any, Union
 
 T = TypeVar('T')
 
@@ -12,6 +12,17 @@ class VectorN:
     dimPosMap = {'x': 0, 'y': 1, 'z': 2, 'w': 3}
 
     def __init__(self, *values: int):
+
+        # print(type(values))
+
+        # we're probably being passed a string, a list, or a VectorN object
+        if not isinstance(values, tuple):
+            values = VectorN.deserialize(values).as_tuple()
+
+        subelt = values[0]
+        # why is it nested? who knows :P
+        if isinstance(subelt, tuple):
+            values = subelt
 
         self.x, self.y, self.z, self.w = (None, None, None, None,)
         self.dimension_values = [*values, ]
@@ -125,10 +136,19 @@ class VectorN:
         return ','.join([str(x) for x in self.dimension_values])
 
     @staticmethod
-    def deserialize(s: str):
-        toks = s.split(',')
-        ints = [int(x) for x in toks]
-        return VectorN(*ints)
+    def deserialize(object: Union[str, list, tuple]):
+
+        if isinstance(object, VectorN):
+            return object
+
+        if isinstance(object, list):
+            return VectorN(*object)
+
+        if isinstance(object, str):
+            object = object.strip()
+            toks = object.split(',')
+            ints = [int(x.strip()) for x in toks]
+            return VectorN(*ints)
 
     def as_short_string(self):
         return ','.join(str(x) for x in self.dimension_values)
@@ -142,12 +162,13 @@ class Viewport:
     The reason for this is...I lazily used list(list(...)) as my underlying data structure for World :P
     """
 
-    def __init__(self, topleft: VectorN, lowerright: VectorN):
-        self.topleft = topleft
-        self.lowerright = lowerright
+    def __init__(self, topleft, lowerright):
+        self.topleft = VectorN(topleft)
+        self.lowerright = VectorN(lowerright)
+        print(self)
 
     @staticmethod
-    def generate_centered(center, radius: VectorN):
+    def generate_centered(center: VectorN, radius: VectorN):
         """Generate a Viewport centered on `center` with `radius` as its lower and upper bounds.
         It doubles from `radius`."""
         return Viewport(
