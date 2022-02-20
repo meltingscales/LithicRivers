@@ -9,7 +9,7 @@ import unittest
 
 class TestVectorN(unittest.TestCase):
     def testSimple(self):
-        # foo
+        # foosdfasdf
         v1 = VectorN(1, 2, 0)
         self.assertEqual(v1.x, 1)
         self.assertEqual(v1.y, 2)
