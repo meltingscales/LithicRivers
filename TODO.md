@@ -1,5 +1,11 @@
 # TODO
 
+- GH actions
+  - can I unify the 4 release actions? hopefully
+  - simplify files? :P
+  - https://stackoverflow.com/questions/63148639/create-dependencies-between-jobs-in-github-actions
+
+## game
 - add procedurally generated catgirls
 - do perf testing to fix lag on startup...thanks numpy...
 - auto-scale the viewport based off of viewable area
