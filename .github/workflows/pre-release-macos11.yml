@@ -10,13 +10,14 @@ on:
 
 jobs:
   gh_pre_release:
-    needs: "run-tests"
     runs-on: macos-11
+
     steps:
       - name: "Checkout source code"
         uses: "actions/checkout@v2.4.0"
 
       - run: "./scripts/setup.sh"
+      - run: "./scripts/test.sh"
       - run: "./scripts/generate_exe.sh"
       - run: "ls dist/"
 
