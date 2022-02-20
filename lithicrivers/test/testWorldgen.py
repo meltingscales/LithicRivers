@@ -1,11 +1,32 @@
 import unittest
 from pprint import pprint
 
-from lithicrivers.game import World, Tiles
+from lithicrivers.game import World, Tiles, Game, WorldData
 from lithicrivers.model import VectorN
 
 
 class RenderStuff(unittest.TestCase):
+    def testRenderSimple(self):
+        someGame = Game()
+        someGame.world = WorldData(tiledata={
+            '0,0,0': Tiles.Dirt(),
+            '1,0,0': Tiles.Dirt()
+        })
+
+        self.assertEqual(
+            someGame.render_world(2),
+            [
+                [
+                    ',.\n'
+                    '.,',
+                    ',.\n'
+                    '.,'
+                ]
+            ]
+        )
+
+
+class GenStuff(unittest.TestCase):
     def testworldGenConsistent(self):
 
         for _ in range(0, 100):
@@ -39,7 +60,7 @@ class RenderStuff(unittest.TestCase):
                 count_tiles[tile.tileid] = 0
             count_tiles[tile.tileid] += 1
 
-        pprint(count_tiles)
+        # pprint(count_tiles)
 
         numDirt = count_tiles[Tiles.Dirt().tileid]
         numTree = count_tiles[Tiles.Tree().tileid]

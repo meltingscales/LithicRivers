@@ -27,7 +27,8 @@ class SpriteRenderable:
 
 class Entity:
 
-    def __init__(self, position: VectorN):
+    def __init__(self, name: str, position: VectorN):
+        self.name = name
         self.position = position
         self.health = 100
         self.stamina = 100
@@ -50,6 +51,12 @@ class Entity:
 
     def move_east(self):
         self.move(VEC_EAST)
+
+
+class Entities:
+    @staticmethod
+    def StumblingSheep(position=VectorN(0, 0, 0)):
+        return Entity(name='Stumbling Sheep', position=position)
 
 
 class Items:
@@ -119,8 +126,8 @@ class Inventory:
 
 class Player(Entity, SpriteRenderable):
 
-    def __init__(self):
-        Entity.__init__(self, position=DEFAULT_PLAYER_POSITION)
+    def __init__(self, name="Inigo Montoya"):
+        Entity.__init__(self, name=name, position=DEFAULT_PLAYER_POSITION)
         SpriteRenderable.__init__(self, ['$', '[]\n'
                                               '%%'])
 
@@ -241,33 +248,34 @@ class WorldData:
 
     def serialize(self, filepath: Path) -> Path:
         with open(filepath, 'wb') as fh:
-            pickle.dump(self.data, fh)
+            pickle.dump(self, fh)
 
         return filepath
 
     @staticmethod
     def deserialize(filepath: Path):
-        wd = WorldData()
-
         with open(filepath, 'rb') as fh:
-            data = pickle.load(fh)
-        wd.data = data
+            return pickle.load(fh)
 
-        return wd
+    def __init__(self, tiledata: Dict[str, Tile] = None, entitydata: Dict[str, List[Entity]] = None):
+        if not tiledata:
+            self.tiledata = {
+                VectorN(0, 0, 0).serialize(): Tiles.Dirt()
+            }
 
-    def __init__(self):
-        self.data = {
-            VectorN(0, 0, 0).serialize(): Tiles.Dirt()
-        }
+        if not entitydata:
+            self.entityData = {
+                VectorN(0, 0, 0).serialize(): [Entities.StumblingSheep()]
+            }
 
     def set_tile(self, pos: VectorN, t: Tile):
-        self.data[pos.serialize()] = t
+        self.tiledata[pos.serialize()] = t
 
     def get_tile(self, pos: VectorN) -> Union[Tile, None]:
         p = pos.serialize()
 
-        if p in self.data:
-            return self.data[p]
+        if p in self.tiledata:
+            return self.tiledata[p]
 
         return None
 
@@ -278,7 +286,7 @@ class WorldData:
         self.set_tile(VectorN(*item))
 
     def __iter__(self):
-        for key, val in self.data.items():
+        for key, val in self.tiledata.items():
             yield key, val
 
 
@@ -423,7 +431,7 @@ class Game:
 
         ret = []
 
-        for row in self.world.data:
+        for row in self.world.data.tiledata:
             retrow = []
             for tile in row:
                 sprite = tile.render_sprite(scale=scale)
