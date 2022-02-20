@@ -2,6 +2,8 @@
 
 An ASCII game in development
 
+![actual screenshot](/media/screenshot.png)
+
 ## Play the game
 
 Visit <https://github.com/HenryFBP/LithicRivers/releases> to download a release for your platform.
@@ -31,8 +33,6 @@ read the help page
 ## meme
 
 take a look at some of our reviews below...
-
-![actual screenshot](/media/screenshot.png)
 
 ![why do we exist...just to suffer...?](/media/dafuq.png)
 
