@@ -1,4 +1,13 @@
+# py/ide stuff
 .idea/
 __pycache__/
 *.log
+
+# game
 *.lithicriversworlddata
+
+# coverage stuff
+.coverage
+coverage/
+.run/
+htmlcov/

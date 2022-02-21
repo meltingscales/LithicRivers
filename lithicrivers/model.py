@@ -1,5 +1,5 @@
 import logging
-from typing import Tuple, List, TypeVar, Any
+from typing import Tuple, List, TypeVar, Any, Union
 
 T = TypeVar('T')
 
@@ -11,10 +11,19 @@ class VectorN:
 
     dimPosMap = {'x': 0, 'y': 1, 'z': 2, 'w': 3}
 
-    def __init__(self, *values: int):
+    def __init__(self, *dimvals: int):
+
+        # we're probably being passed a string, a list, or a VectorN object
+        if not isinstance(dimvals, tuple):
+            dimvals = VectorN.deserialize(dimvals).as_tuple()
+
+        subelt = dimvals[0]
+        # why is it nested? who knows :P
+        if isinstance(subelt, tuple):
+            dimvals = subelt
 
         self.x, self.y, self.z, self.w = (None, None, None, None,)
-        self.dimension_values = [*values, ]
+        self.dimension_values = dimvals
 
         # set x,y,z, etc
         for dimName, dimIdx in self.dimPosMap.items():
@@ -82,7 +91,10 @@ class VectorN:
         return self.dimension_values == other.dimension_values
 
     def __str__(self):
-        return "<VectorN({}) data={}>".format(self.dimension_order(), self.dimension_values)
+        return "<Vec{} {}>".format(self.dimension_order(), self.dimension_values)
+
+    def __repr__(self):
+        return str(self)
 
     def __getitem__(self, item: Any):
         # indexing us like `self[1]`
@@ -125,10 +137,19 @@ class VectorN:
         return ','.join([str(x) for x in self.dimension_values])
 
     @staticmethod
-    def deserialize(s: str):
-        toks = s.split(',')
-        ints = [int(x) for x in toks]
-        return VectorN(*ints)
+    def deserialize(object: Union[str, list, tuple]):
+
+        if isinstance(object, VectorN):
+            return object
+
+        if isinstance(object, list):
+            return VectorN(*object)
+
+        if isinstance(object, str):
+            object = object.strip()
+            toks = object.split(',')
+            ints = [int(x.strip()) for x in toks]
+            return VectorN(*ints)
 
     def as_short_string(self):
         return ','.join(str(x) for x in self.dimension_values)
@@ -147,7 +168,7 @@ class Viewport:
         self.lowerright = lowerright
 
     @staticmethod
-    def generate_centered(center, radius: VectorN):
+    def generate_centered(center: VectorN, radius: VectorN):
         """Generate a Viewport centered on `center` with `radius` as its lower and upper bounds.
         It doubles from `radius`."""
         return Viewport(
