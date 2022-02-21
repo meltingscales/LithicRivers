@@ -18,6 +18,8 @@ An ASCII game in development
 
 ## Play the game
 
+Visit <https://replit.com/@HenryFBP/LithicRivers?embed=1> to play this game in an online terminal!
+
 Visit <https://github.com/HenryFBP/LithicRivers/releases> to download a release for your platform.
 
 Currently we support:
