@@ -4,6 +4,7 @@ from pprint import pprint
 from lithicrivers.game import World, Tiles, Game, WorldData
 from lithicrivers.model import VectorN
 
+
 class GenStuff(unittest.TestCase):
     def testworldGenConsistent(self):
 
