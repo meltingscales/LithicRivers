@@ -2,3 +2,6 @@
 __pycache__/
 *.log
 *.lithicriversworlddata
+.coverage
+.run/
+htmlcov/

@@ -10,6 +10,7 @@ numpy = "*"
 [dev-packages]
 pyinstaller = "*"
 macholib = { version = "*", sys_platform = "== 'darwin'" } # osx packaging tool for pyinstaller
+coverage = "*"
 
 [requires]
 python_version = "3"
