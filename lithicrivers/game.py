@@ -22,12 +22,20 @@ class SpriteRenderable:
 
     def render_sprite(self, scale: int = 1) -> str:
         normalized_scale = scale - 1
+
+        if (normalized_scale >= len(self.sprite_sheet)) or (normalized_scale < 0):
+            raise Exception("Cannot render sprite with scale {} as it only has these sprites:\n{} ".format(
+                len(self.sprite_sheet),
+                self.sprite_sheet
+            ))
+
         return self.sprite_sheet[normalized_scale]
 
 
 class Entity:
 
-    def __init__(self, position: VectorN):
+    def __init__(self, name: str, position: VectorN):
+        self.name = name
         self.position = position
         self.health = 100
         self.stamina = 100
@@ -50,6 +58,12 @@ class Entity:
 
     def move_east(self):
         self.move(VEC_EAST)
+
+
+class Entities:
+    @staticmethod
+    def StumblingSheep(position=VectorN(0, 0, 0)):
+        return Entity(name='Stumbling Sheep', position=position)
 
 
 class Items:
@@ -119,8 +133,8 @@ class Inventory:
 
 class Player(Entity, SpriteRenderable):
 
-    def __init__(self):
-        Entity.__init__(self, position=DEFAULT_PLAYER_POSITION)
+    def __init__(self, name="Inigo Montoya"):
+        Entity.__init__(self, name=name, position=DEFAULT_PLAYER_POSITION)
         SpriteRenderable.__init__(self, ['$', '[]\n'
                                               '%%'])
 
@@ -234,40 +248,45 @@ class Tiles:
 
     @staticmethod
     def Empty():
-        return Tile("Empty", sprite_sheet=[' '])
+        return Tile("Empty", sprite_sheet=[' ', '  \n'
+                                                '  '])
 
 
 class WorldData:
 
     def serialize(self, filepath: Path) -> Path:
         with open(filepath, 'wb') as fh:
-            pickle.dump(self.data, fh)
+            pickle.dump(self, fh)
 
         return filepath
 
     @staticmethod
     def deserialize(filepath: Path):
-        wd = WorldData()
-
         with open(filepath, 'rb') as fh:
-            data = pickle.load(fh)
-        wd.data = data
+            return pickle.load(fh)
 
-        return wd
+    def __init__(self, tile_data: Dict[str, Tile] = None, entity_data: Dict[str, List[Entity]] = None):
 
-    def __init__(self):
-        self.data = {
-            VectorN(0, 0, 0).serialize(): Tiles.Dirt()
-        }
+        self.tile_data = tile_data
+        if not self.tile_data:
+            self.tile_data = {
+                VectorN(0, 0, 0).serialize(): Tiles.Dirt()
+            }
+
+        self.entity_data = entity_data
+        if not self.entity_data:
+            self.entity_data = {
+                VectorN(0, 0, 0).serialize(): [Entities.StumblingSheep()]
+            }
 
     def set_tile(self, pos: VectorN, t: Tile):
-        self.data[pos.serialize()] = t
+        self.tile_data[pos.serialize()] = t
 
     def get_tile(self, pos: VectorN) -> Union[Tile, None]:
         p = pos.serialize()
 
-        if p in self.data:
-            return self.data[p]
+        if p in self.tile_data:
+            return self.tile_data[p]
 
         return None
 
@@ -278,7 +297,7 @@ class WorldData:
         self.set_tile(VectorN(*item))
 
     def __iter__(self):
-        for key, val in self.data.items():
+        for key, val in self.tile_data.items():
             yield key, val
 
 
@@ -389,9 +408,9 @@ class Game:
 
         z = self.player.position.z
 
-        for y in range(viewport.topleft.y, viewport.lowerright.y):
+        for y in range(viewport.topleft.y, (viewport.lowerright.y + 1)):
             retrow = []
-            for x in range(viewport.topleft.x, viewport.lowerright.x):
+            for x in range(viewport.topleft.x, (viewport.lowerright.x + 1)):
                 pos = VectorN(x, y, z)
                 tile = self.world.get_tile(pos)
                 if not tile:
@@ -409,32 +428,6 @@ class Game:
             ret.append(retrow)
         logging.debug("Returning this from render_world_viewport()")
         logging.debug(pprint.pformat(ret))
-
-        return ret
-
-    def render_world(self, scale: int = 1) -> List[List[str]]:
-        r"""
-        :param scale: Scaling for sprites.      <br><br><pre><code>
-        |   1 = x, 2 = \/, 3 = \ /, etc.        <br>
-        |              /\       x               <br>
-        |                      / \              <br></pre></code>
-        :return: A list of tiles.
-        """
-
-        ret = []
-
-        for row in self.world.data:
-            retrow = []
-            for tile in row:
-                sprite = tile.render_sprite(scale=scale)
-                # logging.debug('render: {}'.format(sprite))
-                retrow.append(sprite)  # TODO: will break with scale>2... we need to print to a buffer
-            ret.append(retrow)
-
-        # TODO: Assert ret is well-formed
-
-        logging.info("player x,y={:2d},{:2d}".format(self.player.position.x, self.player.position.y))
-        ret[self.player.position.y][self.player.position.x] = self.player.render_sprite(scale=scale)
 
         return ret
 
