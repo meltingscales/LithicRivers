@@ -35,5 +35,11 @@ class RenderStuff(unittest.TestCase):
                     '.,'
                 ],
             ],
-            someGame.render_world_viewport(daScale, viewport=Viewport(topleft=(0, 0), lowerright=(1, 1))),
+            someGame.render_world_viewport(
+                daScale,
+                viewport=Viewport(
+                    topleft=VectorN(0, 0),
+                    lowerright=VectorN(1, 1)
+                )
+            ),
         )

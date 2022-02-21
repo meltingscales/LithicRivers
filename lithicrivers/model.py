@@ -11,21 +11,19 @@ class VectorN:
 
     dimPosMap = {'x': 0, 'y': 1, 'z': 2, 'w': 3}
 
-    def __init__(self, *values: int):
-
-        # print(type(values))
+    def __init__(self, *dimvals: int):
 
         # we're probably being passed a string, a list, or a VectorN object
-        if not isinstance(values, tuple):
-            values = VectorN.deserialize(values).as_tuple()
+        if not isinstance(dimvals, tuple):
+            dimvals = VectorN.deserialize(dimvals).as_tuple()
 
-        subelt = values[0]
+        subelt = dimvals[0]
         # why is it nested? who knows :P
         if isinstance(subelt, tuple):
-            values = subelt
+            dimvals = subelt
 
         self.x, self.y, self.z, self.w = (None, None, None, None,)
-        self.dimension_values = [*values, ]
+        self.dimension_values = dimvals
 
         # set x,y,z, etc
         for dimName, dimIdx in self.dimPosMap.items():
@@ -93,7 +91,10 @@ class VectorN:
         return self.dimension_values == other.dimension_values
 
     def __str__(self):
-        return "<VectorN({}) data={}>".format(self.dimension_order(), self.dimension_values)
+        return "<Vec{} {}>".format(self.dimension_order(), self.dimension_values)
+
+    def __repr__(self):
+        return str(self)
 
     def __getitem__(self, item: Any):
         # indexing us like `self[1]`
@@ -162,10 +163,9 @@ class Viewport:
     The reason for this is...I lazily used list(list(...)) as my underlying data structure for World :P
     """
 
-    def __init__(self, topleft, lowerright):
-        self.topleft = VectorN(topleft)
-        self.lowerright = VectorN(lowerright)
-        print(self)
+    def __init__(self, topleft: VectorN, lowerright: VectorN):
+        self.topleft = topleft
+        self.lowerright = lowerright
 
     @staticmethod
     def generate_centered(center: VectorN, radius: VectorN):
