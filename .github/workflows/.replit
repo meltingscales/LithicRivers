@@ -1,0 +1,2 @@
+language = "bash"
+run = "bash scripts/setup.sh && bash scripts/start.sh"
