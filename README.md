@@ -4,6 +4,16 @@ An ASCII game in development
 
 ![actual screenshot](/media/screenshot.png)
 
+## wow, badges :P
+
+[![forthebadge](https://forthebadge.com/images/badges/contains-technical-debt.svg)](https://forthebadge.com)
+
+[![forthebadge](https://forthebadge.com/images/badges/built-with-swag.svg)](https://forthebadge.com)
+
+[![forthebadge](https://forthebadge.com/images/badges/check-it-out.svg)](https://forthebadge.com)
+
+[![forthebadge](https://forthebadge.com/images/badges/60-percent-of-the-time-works-every-time.svg)](https://forthebadge.com)
+
 ## Play the game
 
 Visit <https://github.com/HenryFBP/LithicRivers/releases> to download a release for your platform.
