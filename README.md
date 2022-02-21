@@ -4,18 +4,6 @@ An ASCII game in development
 
 ![actual screenshot](/media/screenshot.png)
 
-## wow, badges :P
-
-[![Coverage Status](https://coveralls.io/repos/github/HenryFBP/LithicRivers/badge.svg?branch=release)](https://coveralls.io/github/HenryFBP/LithicRivers?branch=release)
-
-[![forthebadge](https://forthebadge.com/images/badges/contains-technical-debt.svg)](https://forthebadge.com)
-
-[![forthebadge](https://forthebadge.com/images/badges/built-with-swag.svg)](https://forthebadge.com)
-
-[![forthebadge](https://forthebadge.com/images/badges/check-it-out.svg)](https://forthebadge.com)
-
-[![forthebadge](https://forthebadge.com/images/badges/60-percent-of-the-time-works-every-time.svg)](https://forthebadge.com)
-
 ## Play the game
 
 Visit <https://replit.com/@HenryFBP/LithicRivers?embed=1> to play this game in an online terminal!
@@ -32,6 +20,18 @@ Currently we support:
 ### How to play the game
 
 read the help page
+
+## wow, badges :P
+
+[![Coverage Status](https://coveralls.io/repos/github/HenryFBP/LithicRivers/badge.svg?branch=release)](https://coveralls.io/github/HenryFBP/LithicRivers?branch=release)
+
+[![forthebadge](https://forthebadge.com/images/badges/contains-technical-debt.svg)](https://forthebadge.com)
+
+[![forthebadge](https://forthebadge.com/images/badges/built-with-swag.svg)](https://forthebadge.com)
+
+[![forthebadge](https://forthebadge.com/images/badges/check-it-out.svg)](https://forthebadge.com)
+
+[![forthebadge](https://forthebadge.com/images/badges/60-percent-of-the-time-works-every-time.svg)](https://forthebadge.com)
 
 ## running
 
