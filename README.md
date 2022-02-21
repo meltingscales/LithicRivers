@@ -6,6 +6,8 @@ An ASCII game in development
 
 ## wow, badges :P
 
+[![Coverage Status](https://coveralls.io/repos/github/HenryFBP/LithicRivers/badge.svg?branch=release)](https://coveralls.io/github/HenryFBP/LithicRivers?branch=release)
+
 [![forthebadge](https://forthebadge.com/images/badges/contains-technical-debt.svg)](https://forthebadge.com)
 
 [![forthebadge](https://forthebadge.com/images/badges/built-with-swag.svg)](https://forthebadge.com)
