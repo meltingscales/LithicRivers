@@ -184,14 +184,15 @@ class RenderedData:
                 render_item = render_row[x]
 
                 if self.scale > 1:
-                    raise NotImplementedError("Lazy! as_string()")
-                    # render_item_split = render_item.split(eol)
-                    # for slice in render_item_split:
+                    for stripe_idx in range(0, self.scale):
+                        render_item_chunk = render_item.split(eol)
+                        slice = render_item_chunk[stripe_idx]
+                        ret += slice
                 else:
                     ret += render_item
 
             # add EOL at row end
-            if y < len(self.render_data)-1:
+            if y < len(self.render_data) - 1:
                 ret += eol
 
         return ret

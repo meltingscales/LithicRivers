@@ -25,13 +25,13 @@ class RenderStuff(unittest.TestCase):
 
     def testSortaSimpleRenderReverse(self):
         reverseRender = RenderedData.from_string('xy\n'
-                                                 'z ', scale=1)
+                                                 'zR', scale=1)
 
         self.assertEqual(
             reverseRender,
             [
                 ['x', 'y'],
-                ['z', ' ']
+                ['z', 'R']
             ],
         )
 
@@ -39,8 +39,8 @@ class RenderStuff(unittest.TestCase):
         someGame = Game()
         someGame.world = WorldData(tile_data={
             '0,0,0': Tiles.Dirt(),
-            '1,0,0': Tiles.Dirt(),
-            '0,1,0': Tiles.DaFuq(),
+            '1,0,0': Tiles.DaFuq(),
+            '0,1,0': Tiles.Dirt(),
             '1,1,0': Tiles.Dirt()
         })
 
