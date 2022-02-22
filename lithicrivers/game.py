@@ -6,7 +6,7 @@ from typing import List, Dict, Union
 
 import numpy
 
-from lithicrivers.model import VectorN, Viewport, T
+from lithicrivers.model import VectorN, Viewport, T, RenderedData
 from lithicrivers.settings import DEFAULT_SIZE_RADIUS, DEFAULT_VIEWPORT, VEC_NORTH, VEC_SOUTH, VEC_WEST, VEC_EAST, \
     DEFAULT_PLAYER_POSITION
 
@@ -390,7 +390,7 @@ class Game:
             self,
             scale: int = 1,
             viewport: Viewport = None
-    ) -> List[List[str]]:
+    ) -> RenderedData:
         r"""
         :param viewport: Viewport to render.
             if not specified, defaults to self.viewport
@@ -404,7 +404,7 @@ class Game:
         if not viewport:
             viewport = self.viewport
 
-        ret = []
+        ret: List[List[str]] = []
 
         z = self.player.position.z
 
@@ -429,7 +429,7 @@ class Game:
         logging.debug("Returning this from render_world_viewport()")
         logging.debug(pprint.pformat(ret))
 
-        return ret
+        return RenderedData(ret, scale=scale)
 
     def move_player(self, vec: VectorN):
         possiblePosition = self.player.calcOffset(vec)

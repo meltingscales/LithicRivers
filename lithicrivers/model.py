@@ -155,6 +155,52 @@ class VectorN:
         return ','.join(str(x) for x in self.dimension_values)
 
 
+class RenderedData:
+    """A rendered list of objects -- tile, sprite, etc.
+
+    Scale is necessary to know so that objects can be "sliced" by how many
+    columns/rows they inhabit...
+    """
+
+    def __init__(self, render_data: List[List[str]], scale=1):
+
+        # constructor flexibility
+        if isinstance(render_data, str):
+            render_data = list(list(render_data))
+
+        if isinstance(render_data[0], str):
+            render_data = list(render_data)
+
+        self.render_data = render_data
+        self.scale = scale
+
+    def as_string(self, eol='\n'):
+
+        ret = ""
+
+        for y in range(0, len(self.render_data)):
+            render_row = self.render_data[y]
+            for x in range(0, len(render_row)):
+                render_item = render_row[x]
+
+                if self.scale > 1:
+                    raise NotImplementedError("Lazy! as_string()")
+                    # render_item_split = render_item.split(eol)
+                    # for slice in render_item_split:
+                else:
+                    ret += render_item
+
+            # add EOL at row end
+            if y < len(self.render_data)-1:
+                ret += eol
+
+        return ret
+
+    @staticmethod
+    def from_string(param, scale, eol='\n'):
+        return ['TODO\n', 'LAZY!']
+
+
 class Viewport:
     """
     Please note that y grows downwards, and x grows rightwards.
