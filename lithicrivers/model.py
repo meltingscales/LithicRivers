@@ -194,8 +194,21 @@ class RenderedData:
         return eol.join(ret)
 
     @staticmethod
-    def from_string(param, scale, eol='\n'):
-        return ['TODO\n', 'LAZY!']
+    def from_string(string: str, scale: int = 1, eol='\n'):
+
+        raise NotImplementedError("Lazy!")
+
+        split = string.split(eol)
+        ret = []
+
+        for i in range(0, len(split)):
+            tok = split[i]
+            retslices = (list() for _ in range(0, ))
+            for stripe_idx in range(0, scale):
+                stripe = tok[0:stripe_idx]
+                print(stripe)
+
+        return ret
 
 
 class Viewport:
