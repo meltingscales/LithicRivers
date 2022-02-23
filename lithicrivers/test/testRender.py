@@ -58,6 +58,6 @@ class RenderStuff(unittest.TestCase):
             ',.??\n'
             '.,??\n'
             ',.,.\n'
-            '.,.,\n',
+            '.,.,',
             renderedViewport.as_string(),
         )
