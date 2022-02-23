@@ -176,26 +176,22 @@ class RenderedData:
 
     def as_string(self, eol='\n'):
 
-        ret = ""
+        ret = []
 
         for y in range(0, len(self.render_data)):
             render_row = self.render_data[y]
-            for x in range(0, len(render_row)):
-                render_item = render_row[x]
+            for stripe_idx in range(0, self.scale):
+                retSlice = []
+                for x in range(0, len(render_row)):
+                    render_item = render_row[x]
+                    render_item_chunk = render_item.split(eol)
+                    slice = render_item_chunk[stripe_idx]
+                    slice = slice.replace(eol, '')
+                    retSlice.append(slice)
 
-                if self.scale > 1:
-                    for stripe_idx in range(0, self.scale):
-                        render_item_chunk = render_item.split(eol)
-                        slice = render_item_chunk[stripe_idx]
-                        ret += slice
-                else:
-                    ret += render_item
+                ret.append(''.join(retSlice))
 
-            # add EOL at row end
-            if y < len(self.render_data) - 1:
-                ret += eol
-
-        return ret
+        return eol.join(ret)
 
     @staticmethod
     def from_string(param, scale, eol='\n'):
