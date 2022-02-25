@@ -53,8 +53,8 @@ class Keymap:
         self.SLIDE_VIEWPORT_WEST = '['
         self.SLIDE_VIEWPORT_EAST = ']'
 
-        self.SCALE_DOWN = '='
-        self.SCALE_UP = '-'
+        self.SCALE_UP = '='
+        self.SCALE_DOWN = '-'
 
         self.MINE = 'u'
 

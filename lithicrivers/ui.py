@@ -345,9 +345,9 @@ class InputHandler:
     @classmethod
     def handle_scale(cls, event, game):
         if KEYMAP.matches('SCALE_DOWN', event):
-            game.viewport.scale += 1
-        if KEYMAP.matches('SCALE_UP', event):
             game.viewport.scale -= 1
+        if KEYMAP.matches('SCALE_UP', event):
+            game.viewport.scale += 1
 
 
 def demo(screen: Screen, scene: Scene, game: Game):
