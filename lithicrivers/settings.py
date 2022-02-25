@@ -53,6 +53,9 @@ class Keymap:
         self.SLIDE_VIEWPORT_WEST = '['
         self.SLIDE_VIEWPORT_EAST = ']'
 
+        self.SCALE_DOWN = '='
+        self.SCALE_UP = '-'
+
         self.MINE = 'u'
 
     def get_valid_key_names(self) -> List[str]:

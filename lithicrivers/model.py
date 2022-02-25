@@ -174,7 +174,7 @@ class RenderedData:
         self.render_data = render_data
         self.scale = scale
 
-    def as_string(self, eol='\n'):
+    def as_string(self, eol='\n') -> str:
 
         ret = []
 
@@ -219,17 +219,19 @@ class Viewport:
     The reason for this is...I lazily used list(list(...)) as my underlying data structure for World :P
     """
 
-    def __init__(self, topleft: VectorN, lowerright: VectorN):
+    def __init__(self, topleft: VectorN, lowerright: VectorN, scale=1):
         self.topleft = topleft
         self.lowerright = lowerright
+        self.scale = scale
 
     @staticmethod
-    def generate_centered(center: VectorN, radius: VectorN):
+    def generate_centered(center: VectorN, radius: VectorN, scale=1):
         """Generate a Viewport centered on `center` with `radius` as its lower and upper bounds.
         It doubles from `radius`."""
         return Viewport(
             (center - radius),
-            (center + radius)
+            (center + radius),
+            scale=scale
         )
 
     def get_height(self):
@@ -238,7 +240,7 @@ class Viewport:
         return self.lowerright.y - self.topleft.y
 
     def __str__(self):
-        return "<Viewport topleft=[{}] lowerright=[{}] >".format(self.topleft, self.lowerright)
+        return "<Viewport scale={} topleft=[{}] lowerright=[{}] >".format(self.scale, self.topleft, self.lowerright)
 
 
 class StopGame(Exception):
