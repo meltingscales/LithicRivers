@@ -13,6 +13,7 @@ jobs:
 
       - run: "./scripts/setup.sh"
       - run: "./scripts/test.sh"
+      - run: "./scripts/test-tui.sh"
 
       - name: Coveralls
         uses: coverallsapp/github-action@master
