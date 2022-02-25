@@ -6,9 +6,11 @@ from typing import List, Dict, Union
 
 import numpy
 
-from lithicrivers.model import VectorN, Viewport, T, RenderedData
-from lithicrivers.settings import DEFAULT_SIZE_RADIUS, DEFAULT_VIEWPORT, VEC_NORTH, VEC_SOUTH, VEC_WEST, VEC_EAST, \
-    DEFAULT_PLAYER_POSITION
+from lithicrivers.model.generictype import T
+from lithicrivers.model.modelpleasemoveme import Viewport, RenderedData
+from lithicrivers.model.vector import VectorN
+from lithicrivers.settings import DEFAULT_SIZE_RADIUS, DEFAULT_VIEWPORT, DEFAULT_PLAYER_POSITION
+from lithicrivers.constants import VEC_NORTH, VEC_SOUTH, VEC_WEST, VEC_EAST
 
 
 def generate_sprite_repeat(char, scale: int = 1):
@@ -38,10 +40,11 @@ class SpriteRenderable:
     def render_sprite(self, scale: int = 1) -> str:
         normalized_scale = scale - 1
 
-        if (normalized_scale < 0):
+        if normalized_scale < 0:
             raise Exception("Cannot render {} with normalized_scale = {}".format(self, normalized_scale))
 
-        if (normalized_scale >= len(self.sprite_sheet)):
+        if normalized_scale >= len(self.sprite_sheet):
+            # if they ask for a sprite too large, give them '?'
             return generate_sprite_repeat('?', scale)
 
             # raise Exception("Cannot render sprite with scale {} as it only has these sprites:\n{} ".format(
@@ -378,7 +381,7 @@ class World:
 
 
 class Game:
-    def __init__(self, player: Player = None, world: World = None, viewport=DEFAULT_VIEWPORT):
+    def __init__(self, player: Player = None, world: World = None, viewport: Viewport = DEFAULT_VIEWPORT):
 
         self.viewport = viewport
 
@@ -393,15 +396,16 @@ class Game:
 
         self.running = True
 
-    def slide_viewport(self, moveVec):
-        self.viewport.topleft += moveVec
-        self.viewport.lowerright += moveVec
+    def slide_viewport(self, vec):
+        self.viewport.slide(vec)
 
-    def slide_viewport_left(self):
-        self.slide_viewport(VEC_WEST)
+    def scale_viewport_down(self, i):
+        # TODO: Handle viewport size change
+        self.viewport.scale_down(i)
 
-    def slide_viewport_right(self):
-        self.slide_viewport(VEC_EAST)
+    def scale_viewport_up(self, i):
+        # TODO: Handle viewport size change
+        self.viewport.scale_up(i)
 
     def get_tile_at_player_feet(self) -> Tile:
         return self.world.get_tile(self.player.position)
@@ -460,12 +464,12 @@ class Game:
 
         self.player.move(vec)
 
-    def player_outside_viewport(self):
-        return not self.player_inside_2d_viewport()
+    def player_outside_viewport(self, wiggle=0):
+        return not self.player_inside_2d_viewport(wiggle=wiggle)
 
-    def player_inside_2d_viewport(self):
+    def player_inside_2d_viewport(self, wiggle: int = 0):
         return self.player.position.trim(2).insideBoundingRect(self.viewport.topleft.trim(2),
-                                                               self.viewport.lowerright.trim(2))
+                                                               self.viewport.lowerright.trim(2), wiggle=wiggle)
 
     def reset_viewport(self):
         raise NotImplementedError("TODO: Reset viewport")

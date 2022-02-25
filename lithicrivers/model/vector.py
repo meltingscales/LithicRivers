@@ -1,7 +1,4 @@
-import logging
-from typing import Tuple, List, TypeVar, Any, Union
-
-T = TypeVar('T')
+from typing import Tuple, List, Any, Union
 
 
 class VectorN:
@@ -109,7 +106,7 @@ class VectorN:
         if item in self.dimPosMap.keys():
             return self.dimension_values[self.dimPosMap[item]]
 
-    def insideBoundingRect(self, vec1, vec2):
+    def insideBoundingRect(self, vec1, vec2, wiggle: int = 0):
 
         if not (self.dimension_order() == 2):
             raise Exception(
@@ -131,7 +128,10 @@ class VectorN:
 
         # YOINK from https://www.programming-idioms.org/idiom/178/check-if-point-is-inside-rectangle/2615/python
         # Assuming that x1 < x2 and y1 < y2...
-        return (px >= x1) and (px < x2) and (py >= y1) and (py < y2)
+        return ((px - wiggle) >= x1) and \
+               ((px + wiggle) < x2) and \
+               ((py - wiggle) >= y1) and \
+               ((py + wiggle) < y2)
 
     def serialize(self) -> str:
         return ','.join([str(x) for x in self.dimension_values])
@@ -153,95 +153,3 @@ class VectorN:
 
     def as_short_string(self):
         return ','.join(str(x) for x in self.dimension_values)
-
-
-class RenderedData:
-    """A rendered list of objects -- tile, sprite, etc.
-
-    Scale is necessary to know so that objects can be "sliced" by how many
-    columns/rows they inhabit...
-    """
-
-    def __init__(self, render_data: List[List[str]], scale=1):
-
-        # constructor flexibility
-        if isinstance(render_data, str):
-            render_data = list(list(render_data))
-
-        if isinstance(render_data[0], str):
-            render_data = list(render_data)
-
-        self.render_data = render_data
-        self.scale = scale
-
-    def as_string(self, eol='\n') -> str:
-
-        ret = []
-
-        for y in range(0, len(self.render_data)):
-            render_row = self.render_data[y]
-            for stripe_idx in range(0, self.scale):
-                retSlice = []
-                for x in range(0, len(render_row)):
-                    render_item = render_row[x]
-                    render_item_chunk = render_item.split(eol)
-                    slice = render_item_chunk[stripe_idx]
-                    slice = slice.replace(eol, '')
-                    retSlice.append(slice)
-
-                ret.append(''.join(retSlice))
-
-        return eol.join(ret)
-
-    @staticmethod
-    def from_string(string: str, scale: int = 1, eol='\n'):
-
-        raise NotImplementedError("Lazy!")
-
-        split = string.split(eol)
-        ret = []
-
-        for i in range(0, len(split)):
-            tok = split[i]
-            retslices = (list() for _ in range(0, ))
-            for stripe_idx in range(0, scale):
-                stripe = tok[0:stripe_idx]
-                print(stripe)
-
-        return ret
-
-
-class Viewport:
-    """
-    Please note that y grows downwards, and x grows rightwards.
-    This is why topleft is "smaller" numerically than lowerright.
-
-    The reason for this is...I lazily used list(list(...)) as my underlying data structure for World :P
-    """
-
-    def __init__(self, topleft: VectorN, lowerright: VectorN, scale=1):
-        self.topleft = topleft
-        self.lowerright = lowerright
-        self.scale = scale
-
-    @staticmethod
-    def generate_centered(center: VectorN, radius: VectorN, scale=1):
-        """Generate a Viewport centered on `center` with `radius` as its lower and upper bounds.
-        It doubles from `radius`."""
-        return Viewport(
-            (center - radius),
-            (center + radius),
-            scale=scale
-        )
-
-    def get_height(self):
-        logging.debug(
-            "returning self.lowerright.y - self.topleft.y = {} - {}".format(self.lowerright.y, self.topleft.y))
-        return self.lowerright.y - self.topleft.y
-
-    def __str__(self):
-        return "<Viewport scale={} topleft=[{}] lowerright=[{}] >".format(self.scale, self.topleft, self.lowerright)
-
-
-class StopGame(Exception):
-    pass

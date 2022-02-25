@@ -6,9 +6,9 @@ from asciimatics.exceptions import ResizeScreenError, StopApplication
 from asciimatics.screen import Screen
 
 from lithicrivers.game import Game
+from lithicrivers.model.modelpleasemoveme import StopGame
 from lithicrivers.settings import LOGFILENAME, KEYMAP, GAME_NAME
 from lithicrivers.ui import demo
-from lithicrivers.model import StopGame
 
 if os.path.exists(LOGFILENAME):
     os.remove(LOGFILENAME)
