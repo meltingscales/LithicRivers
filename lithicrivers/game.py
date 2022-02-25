@@ -400,12 +400,26 @@ class Game:
         self.viewport.slide(vec)
 
     def scale_viewport_down(self, i):
-        # TODO: Handle viewport size change
         self.viewport.scale_down(i)
 
+        # grow viewport by proportional scale... we will need n/(n-1) percent less render size
+        # TODO
+
+        # TODO: how do we deal with rounding errors?
+
+        # reset the viewport to center around player
+        # self.reset_viewport()
+
     def scale_viewport_up(self, i):
-        # TODO: Handle viewport size change
         self.viewport.scale_up(i)
+
+        # shrink viewport by proportional scale... we will need n/(n+1) percent more render size
+        # TODO
+
+        # TODO: how do we deal with rounding errors?
+
+        # reset the viewport to center around player
+        # self.reset_viewport()
 
     def get_tile_at_player_feet(self) -> Tile:
         return self.world.get_tile(self.player.position)
