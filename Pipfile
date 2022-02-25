@@ -11,6 +11,7 @@ numpy = "*"
 pyinstaller = "*"
 macholib = { version = "*", sys_platform = "== 'darwin'" } # osx packaging tool for pyinstaller
 coverage = "*"
+lcov = "*"
 
 [requires]
 python_version = "3"
