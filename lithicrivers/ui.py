@@ -10,7 +10,8 @@ from asciimatics.screen import Canvas, Screen
 from asciimatics.widgets import Layout, Divider, Button, _split_text, Frame, Label
 
 from lithicrivers.game import Game, Tile, Tiles
-from lithicrivers.model import VectorN, StopGame, RenderedData
+from lithicrivers.model.modelpleasemoveme import StopGame, RenderedData
+from lithicrivers.model.vector import VectorN
 from lithicrivers.settings import GAME_NAME, KEYMAP, Keymap
 from lithicrivers.textutil import presenting, list_label
 
@@ -337,17 +338,17 @@ class InputHandler:
     def handle_viewport(cls, event: KeyboardEvent, game: Game):
 
         if KEYMAP.matches('SLIDE_VIEWPORT_WEST', event):
-            game.slide_viewport_left()
+            game.viewport.slide_left()
 
         if KEYMAP.matches('SLIDE_VIEWPORT_EAST', event):
-            game.slide_viewport_right()
+            game.viewport.slide_right()
 
     @classmethod
     def handle_scale(cls, event, game):
         if KEYMAP.matches('SCALE_DOWN', event):
-            game.viewport.scale -= 1
+            game.scale_viewport_down(1)
         if KEYMAP.matches('SCALE_UP', event):
-            game.viewport.scale += 1
+            game.scale_viewport_up(1)
 
 
 def demo(screen: Screen, scene: Scene, game: Game):
@@ -392,7 +393,7 @@ def demo(screen: Screen, scene: Scene, game: Game):
             root_page.labelPosition.text = game.render_pretty_player_position()
 
             # move the viewport with the player
-            if game.player_outside_viewport():
+            if game.player_outside_viewport(wiggle=2):
                 game.slide_viewport(moveVec)
 
                 # still outside? Something's wrong, let's reset the viewport...
