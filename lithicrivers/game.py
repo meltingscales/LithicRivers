@@ -11,6 +11,21 @@ from lithicrivers.settings import DEFAULT_SIZE_RADIUS, DEFAULT_VIEWPORT, VEC_NOR
     DEFAULT_PLAYER_POSITION
 
 
+def generate_sprite_repeat(char, scale: int = 1):
+    normalized_scale = scale - 1
+
+    if normalized_scale == 0:
+        return char
+
+    ret = ""
+    for i in range(0, scale):
+        ret += char * scale
+        if i < (scale - 1):
+            ret += '\n'
+
+    return ret
+
+
 class SpriteRenderable:
     def __init__(self, sprite_sheet):
         self.sprite_sheet = sprite_sheet
@@ -23,11 +38,16 @@ class SpriteRenderable:
     def render_sprite(self, scale: int = 1) -> str:
         normalized_scale = scale - 1
 
-        if (normalized_scale >= len(self.sprite_sheet)) or (normalized_scale < 0):
-            raise Exception("Cannot render sprite with scale {} as it only has these sprites:\n{} ".format(
-                len(self.sprite_sheet),
-                self.sprite_sheet
-            ))
+        if (normalized_scale < 0):
+            raise Exception("Cannot render {} with normalized_scale = {}".format(self, normalized_scale))
+
+        if (normalized_scale >= len(self.sprite_sheet)):
+            return generate_sprite_repeat('?', scale)
+
+            # raise Exception("Cannot render sprite with scale {} as it only has these sprites:\n{} ".format(
+            #     len(self.sprite_sheet),
+            #     self.sprite_sheet
+            # ))
 
         return self.sprite_sheet[normalized_scale]
 
@@ -388,7 +408,6 @@ class Game:
 
     def render_world_viewport(
             self,
-            scale: int = 1,
             viewport: Viewport = None
     ) -> RenderedData:
         r"""
@@ -416,11 +435,11 @@ class Game:
                 if not tile:
                     tile = Tiles.Empty()
 
-                sprite = tile.render_sprite(scale=scale)
+                sprite = tile.render_sprite(scale=viewport.scale)
 
                 # if we are here, render us!
                 if (self.player.position.y == y) and (self.player.position.x == x):
-                    sprite = self.player.render_sprite(scale=scale)
+                    sprite = self.player.render_sprite(scale=viewport.scale)
 
                 # logging.debug('render: {}'.format(sprite))
                 # done with a single sprite in a row
@@ -429,7 +448,7 @@ class Game:
         logging.debug("Returning this from render_world_viewport()")
         logging.debug(pprint.pformat(ret))
 
-        return RenderedData(ret, scale=scale)
+        return RenderedData(ret, scale=viewport.scale)
 
     def move_player(self, vec: VectorN):
         possiblePosition = self.player.calcOffset(vec)

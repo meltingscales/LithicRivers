@@ -10,7 +10,7 @@ from asciimatics.screen import Canvas, Screen
 from asciimatics.widgets import Layout, Divider, Button, _split_text, Frame, Label
 
 from lithicrivers.game import Game, Tile, Tiles
-from lithicrivers.model import VectorN, StopGame
+from lithicrivers.model import VectorN, StopGame, RenderedData
 from lithicrivers.settings import GAME_NAME, KEYMAP, Keymap
 from lithicrivers.textutil import presenting, list_label
 
@@ -141,16 +141,11 @@ class GameWidget(asciimatics.widgets.Widget):
         self._frame.canvas: Canvas
 
         content = ""
-        # content += f'|~-~ World {self.game.world.name} ~-~|\n'
-        # content += f'wew lad (frame_no % 100) = {(frame_no % 100):03d}\n'
+        content += f'|~-~ World {self.game.world.name} ~-~|\n'
 
-        toRender = self.game.render_world_viewport()
+        toRender: RenderedData = self.game.render_world_viewport()
 
-        for row in toRender:
-            for char in row:
-                # logging.debug('printchar: {}'.format(char))
-                content += char
-            content += '\n'
+        content += toRender.as_string()
 
         (colour, attr, background) = self._frame.palette[
             self._pick_palette_key("label", selected=False, allow_input_state=False)
@@ -347,6 +342,13 @@ class InputHandler:
         if KEYMAP.matches('SLIDE_VIEWPORT_EAST', event):
             game.slide_viewport_right()
 
+    @classmethod
+    def handle_scale(cls, event, game):
+        if KEYMAP.matches('SCALE_DOWN', event):
+            game.viewport.scale += 1
+        if KEYMAP.matches('SCALE_UP', event):
+            game.viewport.scale -= 1
+
 
 def demo(screen: Screen, scene: Scene, game: Game):
     scenes = [
@@ -403,6 +405,8 @@ def demo(screen: Screen, scene: Scene, game: Game):
         root_page.labelInventory.text = root_page.game.player.inventory.summary()
 
         InputHandler.handle_viewport(event, root_page.game)
+
+        InputHandler.handle_scale(event, root_page.game)
 
     screen.set_title("~~-[ {} ]-~~".format(GAME_NAME))
     screen.play(scenes, stop_on_resize=True, start_scene=scene, allow_int=True, unhandled_input=handle_event)
