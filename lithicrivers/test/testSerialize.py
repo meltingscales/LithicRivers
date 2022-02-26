@@ -3,7 +3,7 @@ import unittest
 from pathlib import Path
 
 from lithicrivers.game import WorldData, World, Tiles, weighted_choice
-from lithicrivers.model import VectorN
+from lithicrivers.model.vector import VectorN
 
 filename = Path('testWorld.lithicriversworlddata')
 
