@@ -2,7 +2,7 @@ import unittest
 from pprint import pprint
 
 from lithicrivers.game import World, Tiles, Game, WorldData
-from lithicrivers.model import VectorN
+from lithicrivers.model.vector import VectorN
 
 
 class GenStuff(unittest.TestCase):

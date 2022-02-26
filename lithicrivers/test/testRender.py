@@ -1,7 +1,8 @@
 import unittest
 
 from lithicrivers.game import Tiles, Game, WorldData, generate_sprite_repeat
-from lithicrivers.model import Viewport, VectorN, RenderedData
+from lithicrivers.model.modelpleasemoveme import RenderedData, Viewport
+from lithicrivers.model.vector import VectorN
 
 
 class RenderStuff(unittest.TestCase):
@@ -40,7 +41,7 @@ def testSortaSimpleRender(self):
 
 
 def testSortaSimpleRenderReverse(self):
-    return;  # this disables the test
+    return None  # this disables the test
     self.assertEqual(
         RenderedData.from_string('xy\n'
                                  'zR', scale=1),

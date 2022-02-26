@@ -1,10 +1,11 @@
-from lithicrivers.model import VectorN
 
 '''
 god i hate math
 '''
 
 import unittest
+
+from lithicrivers.model.vector import VectorN
 
 
 class TestVectorN(unittest.TestCase):
