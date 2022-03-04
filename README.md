@@ -10,6 +10,12 @@ Visit <https://replit.com/@HenryFBP/LithicRivers?embed=1> to play this game in a
 
 Visit <https://github.com/HenryFBP/LithicRivers/releases> to download a release for your platform.
 
+If you have Docker, run this in bash:
+    
+    docker run --interactive --tty henryfbp/lithicrivers:latest
+
+to run the game in terminal locally. Please note saved games will be lost.
+
 Currently we support:
 
 - Windows
@@ -38,6 +44,13 @@ read the help page
     pipenv install
     pipenv shell
     python -m lithicrivers
+
+## building/release
+
+### Docker
+
+    docker build ./ --tag henryfbp/lithicrivers:latest
+    docker push henryfbp/lithicrivers
 
 ## notes
 
