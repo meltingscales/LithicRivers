@@ -1,10 +1,10 @@
 FROM python:3.8
 
-RUN pip install pipenv
+RUN pip install poetry
 
 WORKDIR /app/
 
-COPY Pipfile ./
+COPY pyproject.toml ./
 COPY Pipfile.lock ./
 RUN pipenv install
 

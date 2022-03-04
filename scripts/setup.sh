@@ -7,12 +7,12 @@ else #osx needs to use python3
 fi
 
 
-echo "Make sure pipenv exists..."
+echo "Make sure poetry exists..."
 
-which pipenv
+which poetry
 # if exit code is nonzero, it is not a command.
 if [ "$?" -eq "1" ]; then
-  $PYCMD -m pip install pipenv
+  $PYCMD -m pip install poetry
 fi
 
-$PYCMD -m pipenv install --dev
+$PYCMD -m poetry install --dev
