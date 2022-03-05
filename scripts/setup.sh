@@ -15,4 +15,4 @@ if [ "$?" -eq "1" ]; then
   $PYCMD -m pip install poetry
 fi
 
-$PYCMD -m poetry install --dev
+$PYCMD -m poetry install
