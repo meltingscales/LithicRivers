@@ -6,14 +6,14 @@ authors = ["Henry Post <HenryFBP@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-# asciimatics = "*"
-# numpy = "*"
+asciimatics = "*"
+numpy = "*"
 
 [tool.poetry.dev-dependencies]
-# pyinstaller = "*"
-# macholib = { version = "*", markers = "sys_platform == 'darwin'" } # osx packaging tool for pyinstaller
-# coverage = "*"
-# lcov = "*"
+pyinstaller = "*"
+macholib = { version = "*", markers = "sys_platform == 'darwin'" } # osx packaging tool for pyinstaller
+coverage = "*"
+lcov = "*"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
