@@ -1,14 +1,14 @@
 FROM python:3.8
 
-RUN pip install pipenv
+RUN pip install poetry
 
 WORKDIR /app/
 
-COPY Pipfile ./
-COPY Pipfile.lock ./
-RUN pipenv install
+COPY pyproject.toml ./
+COPY poetry.lock ./
+RUN poetry install --no-dev
 
 COPY ./lithicrivers/ /app/lithicrivers/
 # EXPOSE 5000
 
-CMD ["pipenv", "run", "python", "-m", "lithicrivers"]
+CMD ["poetry", "run", "python", "-m", "lithicrivers"]
