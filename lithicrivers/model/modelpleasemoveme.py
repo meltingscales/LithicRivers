@@ -88,13 +88,31 @@ class Viewport:
         if self.scale < 1:
             self.scale = 1
 
-    def scale_down(self, i):
-        self.scale -= i
-        self.clamp_scale()
+    def rescale_down(self, i=1):
+        self.rescale(-i)
 
-    def scale_up(self, i):
+    def rescale_up(self, i=1):
+        self.rescale(i)
+
+    def rescale(self, i: int):
+        original_scale = self.scale
         self.scale += i
         self.clamp_scale()
+        if self.scale != original_scale:
+            # how much do we want to scale the viewport?
+            scale_factor: float = (original_scale / self.scale)
+            scale_direction = (-1 if scale_factor > 1 else 1)
+
+            # TODO lol... this is NOT the right way to do it but it "works"
+            self.shrink(3 * scale_direction)
+
+            return
+
+            raise NotImplementedError(
+                "We must scale the viewport by {} to accommodate the new render! "
+                "Scale used to be {} but are now {}!".format(
+                    scale_factor,
+                    original_scale, self.scale))
 
     def slide(self, move_vec: VectorN):
         self.topleft += move_vec
@@ -114,13 +132,17 @@ class Viewport:
     def slide_right(self):
         self.slide(VEC_EAST)
 
-    def get_height(self):
-        logging.debug(
-            "returning self.lowerright.y - self.topleft.y = {} - {}".format(self.lowerright.y, self.topleft.y))
-        return self.lowerright.y - self.topleft.y
+    def get_height(self) -> int:
+        return abs(self.lowerright.y - self.topleft.y)
+
+    def get_width(self) -> int:
+        return abs(self.lowerright.x - self.topleft.x)
 
     def __str__(self):
         return "<Viewport scale={} topleft=[{}] lowerright=[{}] >".format(self.scale, self.topleft, self.lowerright)
+
+    def __repr__(self):
+        return str(self)
 
     def render_pretty(self):
         return "scale={scale} ({x1:2d},{y1:2d}), ({x2:2d},{y2:2d}) ".format(
@@ -128,6 +150,9 @@ class Viewport:
             x2=self.lowerright.x, y2=self.lowerright.y,
             scale=self.scale
         )
+
+    def get_size(self) -> VectorN:
+        return VectorN(self.get_width(), self.get_height())
 
 
 class StopGame(Exception):
