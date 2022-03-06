@@ -85,8 +85,8 @@ class Viewport:
         )
 
     def clamp_scale(self):
-        if self.scale < 0:
-            self.scale = 0
+        if self.scale < 1:
+            self.scale = 1
 
     def scale_down(self, i):
         self.scale -= i
@@ -113,6 +113,13 @@ class Viewport:
 
     def __str__(self):
         return "<Viewport scale={} topleft=[{}] lowerright=[{}] >".format(self.scale, self.topleft, self.lowerright)
+
+    def render_pretty(self):
+        return "scale={scale} ({x1:2d},{y1:2d}), ({x2:2d},{y2:2d}) ".format(
+            x1=self.topleft.x, y1=self.topleft.y,
+            x2=self.lowerright.x, y2=self.lowerright.y,
+            scale=self.scale
+        )
 
 
 class StopGame(Exception):

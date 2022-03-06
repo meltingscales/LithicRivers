@@ -159,7 +159,9 @@ class Player(Entity, SpriteRenderable):
     def __init__(self, name="Inigo Montoya"):
         Entity.__init__(self, name=name, position=DEFAULT_PLAYER_POSITION)
         SpriteRenderable.__init__(self, ['$', '[]\n'
-                                              '%%'])
+                                              '%%', '_o_\n'
+                                                    '/|\\\n'
+                                                    '/_\\'])
 
         self.inventory = Inventory([Item("Cookie", ['o'])])
 
