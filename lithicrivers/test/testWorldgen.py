@@ -1,7 +1,6 @@
 import unittest
-from pprint import pprint
 
-from lithicrivers.game import World, Tiles, Game, WorldData
+from lithicrivers.game import World, Tiles
 from lithicrivers.model.vector import VectorN
 
 

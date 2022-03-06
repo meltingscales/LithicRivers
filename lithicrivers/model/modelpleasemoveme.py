@@ -1,5 +1,5 @@
 import logging
-from typing import List, TypeVar
+from typing import List
 
 from lithicrivers.constants import VEC_WEST, VEC_EAST
 from lithicrivers.model.vector import VectorN
