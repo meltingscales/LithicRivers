@@ -58,10 +58,10 @@ class SpriteRenderable:
 class Entity:
 
     def __init__(self, name: str, position: VectorN):
-        self.name = name
-        self.position = position
-        self.health = 100
-        self.stamina = 100
+        self.name: str = name
+        self.position: VectorN = position
+        self.health: int = 100
+        self.stamina: int = 100
 
     def move(self, vec: VectorN):
         self.position += vec
@@ -460,14 +460,19 @@ class Game:
         return not self.player_inside_2d_viewport(wiggle=wiggle)
 
     def player_inside_2d_viewport(self, wiggle: int = 0):
-        return self.player.position.trim(2).insideBoundingRect(self.viewport.topleft.trim(2),
-                                                               self.viewport.lowerright.trim(2), wiggle=wiggle)
+        return self.player.position.trim(2).inside_bounding_rect(self.viewport.topleft.trim(2),
+                                                                 self.viewport.lowerright.trim(2), wiggle=wiggle)
 
     def reset_viewport(self):
-        raise NotImplementedError("TODO: Reset viewport")
+        px, py = self.player.position.trim(2)
+
+        vpwidth, vpheight = self.viewport.get_size()
+
+        raise NotImplementedError("TODO: Reset viewport...\n"
+                                  "{}".format([px, py, vpwidth, vpheight]))
 
     def set_tile_at_player_feet(self, tile):
         self.world.set_tile(self.player.position, tile)
 
     def render_pretty_player_position(self):
-        return "{}".format(self.player.position.as_short_string())
+        return str(self.player.position.as_short_string())

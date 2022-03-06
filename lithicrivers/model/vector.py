@@ -37,9 +37,8 @@ class VectorN:
         """are we "1"d, "2"d, "3"d, etc"""
         return len(self.dimension_values)
 
-    # noinspection PyRedundantParentheses
     def as_tuple(self) -> Tuple[int]:
-        return (*self.dimension_values,)
+        return *self.dimension_values,
 
     def as_list(self) -> List[int]:
         return [*self.dimension_values, ]
@@ -48,9 +47,8 @@ class VectorN:
         other: VectorN
         if not (self.dimension_order() == other.dimension_order()):
             raise ValueError(
-                "you cannot modify vector self ({}) with vector other ({}) as it is not the same dimension order!".format(
-                    self,
-                    other))
+                "you cannot perform an operation on vector `self` ({}) with vector `other` ({}) "
+                "as it is not the same dimension order!".format(self, other))
 
     def __neg__(self):
         return VectorN(*[
@@ -71,14 +69,15 @@ class VectorN:
             (a - b) for a, b in zip(self.dimension_values, other.dimension_values)
         ])
 
-    def __mul__(self, other):
-        other: VectorN
+    def __mul__(self, other: Union[any, int]):
         if isinstance(other, VectorN):
+            other: VectorN
             self.assert_same_dimension_order(other)
             return VectorN(*[
                 (a * b) for a, b in zip(self.dimension_values, other.dimension_values)
             ])
         else:
+            other: int
             return VectorN(*[
                 (a * other) for a in self.dimension_values
             ])
@@ -106,7 +105,7 @@ class VectorN:
         if item in self.dimPosMap.keys():
             return self.dimension_values[self.dimPosMap[item]]
 
-    def insideBoundingRect(self, vec1, vec2, wiggle: int = 0):
+    def inside_bounding_rect(self, vec1, vec2, wiggle: int = 0):
 
         if not (self.dimension_order() == 2):
             raise Exception(
@@ -137,18 +136,18 @@ class VectorN:
         return ','.join([str(x) for x in self.dimension_values])
 
     @staticmethod
-    def deserialize(object: Union[str, list, tuple]):
+    def deserialize(obj: Union[str, list, tuple]):
 
-        if isinstance(object, VectorN):
-            return object
+        if isinstance(obj, VectorN):
+            return obj
 
-        if isinstance(object, list):
-            return VectorN(*object)
+        if isinstance(obj, list):
+            return VectorN(*obj)
 
-        if isinstance(object, str):
-            object = object.strip()
-            toks = object.split(',')
-            ints = [int(x.strip()) for x in toks]
+        if isinstance(obj, str):
+            obj = obj.strip()
+            tokens = obj.split(',')
+            ints = [int(x.strip()) for x in tokens]
             return VectorN(*ints)
 
     def as_short_string(self):
