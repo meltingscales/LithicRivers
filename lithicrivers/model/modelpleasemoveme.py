@@ -96,9 +96,17 @@ class Viewport:
         self.scale += i
         self.clamp_scale()
 
-    def slide(self, moveVec):
-        self.topleft += moveVec
-        self.lowerright += moveVec
+    def slide(self, move_vec: VectorN):
+        self.topleft += move_vec
+        self.lowerright += move_vec
+
+    def shrink(self, n=1):
+        self.topleft += VectorN(n, n, 0)
+        self.lowerright += -VectorN(n, n, 0)
+
+    def grow(self, n=1):
+        self.topleft += -VectorN(n, n, 0)
+        self.lowerright += VectorN(n, n, 0)
 
     def slide_left(self):
         self.slide(VEC_WEST)

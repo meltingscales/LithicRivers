@@ -12,7 +12,7 @@ GAME_NAME = 'LithicRivers'
 # DEFAULT_SIZE = (50, 15, 2)
 DEFAULT_SIZE_RADIUS = VectorN(50, 50, 3)
 DEFAULT_PLAYER_POSITION = VectorN(25, 25, 0)
-DEFAULT_VIEWPORT = Viewport.generate_centered(DEFAULT_PLAYER_POSITION, radius=VectorN(40, 10, 0))
+DEFAULT_VIEWPORT = Viewport.generate_centered(DEFAULT_PLAYER_POSITION, radius=VectorN(15, 15, 0))
 LOGFILENAME = GAME_NAME + '.log'
 LOGGINGLEVEL = logging.INFO
 
