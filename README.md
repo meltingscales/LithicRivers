@@ -2,7 +2,7 @@
 
 An ASCII game in development
 
-![actual screenshot](/media/screenshot.png)
+![actual screenshot](media/screenshot.png)
 
 ## Play the game
 
@@ -62,7 +62,7 @@ read the help page
 
 take a look at some of our reviews below...
 
-![why do we exist...just to suffer...?](/media/dafuq.png)
+![why do we exist...just to suffer...?](media/dafuq.png)
 
 ![gnerf](http://images3.memedroid.com/images/UPLOADED727/5c1d01829c2ff.jpeg)
 
