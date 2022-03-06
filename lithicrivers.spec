@@ -1,5 +1,4 @@
 # -*- mode: python ; coding: utf-8 -*-
-# can run `pipenv run pyinstaller potemkeys.spec` to generate exe.
 
 from PyInstaller.building.api import PYZ, EXE
 from PyInstaller.building.build_main import Analysis
