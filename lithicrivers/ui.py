@@ -350,9 +350,9 @@ class InputHandler:
     @classmethod
     def handle_scale(cls, event, game):
         if KEYMAP.matches('SCALE_DOWN', event):
-            game.scale_viewport_down(1)
+            game.viewport.scale_down(1)
         if KEYMAP.matches('SCALE_UP', event):
-            game.scale_viewport_up(1)
+            game.viewport.scale_up(1)
 
 
 def demo(screen: Screen, scene: Scene, game: Game):
@@ -388,17 +388,17 @@ def demo(screen: Screen, scene: Scene, game: Game):
 
         root_page = maybe_root_page
 
-        moveVec = InputHandler.handle_movement(event)
-        if moveVec:
+        move_vec = InputHandler.handle_movement(event)
+        if move_vec:
 
-            root_page.game.move_player(moveVec)
+            root_page.game.move_player(move_vec)
 
             # display pos
             root_page.labelPosition.text = game.render_pretty_player_position()
 
             # move the viewport with the player
             if game.player_outside_viewport(wiggle=2):
-                game.slide_viewport(moveVec)
+                game.viewport.slide(move_vec)
 
                 # still outside? Something's wrong, let's reset the viewport...
                 if game.player_outside_viewport():
