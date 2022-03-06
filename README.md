@@ -41,15 +41,15 @@ read the help page
 
 ## running
 
-    pipenv install
-    pipenv shell
-    python -m lithicrivers
+    poetry install
+    poetry run python -m lithicrivers
 
 ## building/release
 
 ### Docker
 
     docker build ./ --tag henryfbp/lithicrivers:latest
+    docker run --interactive --tty henryfbp/lithicrivers:latest
     docker push henryfbp/lithicrivers
 
 ## notes
