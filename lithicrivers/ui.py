@@ -218,6 +218,10 @@ class RootPage(Frame):
         layout1.add_widget(self.labelPosition, column=1)
         self.labelPosition.text = str(self.game.render_pretty_player_position())
 
+        self.labelViewport = HeaderLabel(name='labelViewport', header="VIEW")
+        layout1.add_widget(self.labelViewport, column=1)
+        self.labelViewport.text = str(self.game.viewport.render_pretty())
+
         self.labelFeet = HeaderLabel(name='labelFeet', header="FEET")
         layout1.add_widget(self.labelFeet, column=1)
         self.labelFeet.text = str(self.game.get_tile_at_player_feet())
@@ -400,14 +404,18 @@ def demo(screen: Screen, scene: Scene, game: Game):
                 if game.player_outside_viewport():
                     game.reset_viewport()
 
-            root_page.labelFeet.text = '{}'.format(root_page.game.get_tile_at_player_feet())
+        InputHandler.handle_viewport(event, root_page.game)
+        InputHandler.handle_scale(event, root_page.game)
 
         InputHandler.handle_mining(event, root_page.game, root_page)
         root_page.labelInventory.text = root_page.game.player.inventory.summary()
 
-        InputHandler.handle_viewport(event, root_page.game)
+        # after we mine
+        root_page.labelFeet.text = str(root_page.game.get_tile_at_player_feet())
 
-        InputHandler.handle_scale(event, root_page.game)
+        # after we handle viewport
+
+        root_page.labelViewport.text = str(root_page.game.viewport.render_pretty())
 
     screen.set_title("~~-[ {} ]-~~".format(GAME_NAME))
     screen.play(scenes, stop_on_resize=True, start_scene=scene, allow_int=True, unhandled_input=handle_event)
