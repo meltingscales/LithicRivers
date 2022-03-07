@@ -1,4 +1,3 @@
-import logging
 from typing import List
 
 from lithicrivers.constants import VEC_WEST, VEC_EAST
@@ -106,13 +105,13 @@ class Viewport:
             # TODO lol... this is NOT the right way to do it but it "works"
             self.shrink(3 * scale_direction)
 
-            return
-
-            raise NotImplementedError(
-                "We must scale the viewport by {} to accommodate the new render! "
-                "Scale used to be {} but are now {}!".format(
-                    scale_factor,
-                    original_scale, self.scale))
+            # return
+            #
+            # raise NotImplementedError(
+            #     "We must scale the viewport by {} to accommodate the new render! "
+            #     "Scale used to be {} but are now {}!".format(
+            #         scale_factor,
+            #         original_scale, self.scale))
 
     def slide(self, move_vec: VectorN):
         self.topleft += move_vec
