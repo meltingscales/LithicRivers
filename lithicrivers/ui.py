@@ -12,7 +12,7 @@ from asciimatics.widgets import Layout, Divider, Button, _split_text, Frame, Lab
 from lithicrivers.game import Game, Tile, Tiles
 from lithicrivers.model.modelpleasemoveme import StopGame, RenderedData
 from lithicrivers.model.vector import VectorN
-from lithicrivers.settings import GAME_NAME, KEYMAP, Keymap
+from lithicrivers.settings import GAME_NAME, KEYMAP, Keymap, VIEWPORT_WIGGLE
 from lithicrivers.textutil import presenting, list_label
 
 
@@ -341,6 +341,9 @@ class InputHandler:
     @classmethod
     def handle_viewport(cls, event: KeyboardEvent, game: Game):
 
+        if KEYMAP.matches('RESET_VIEWPORT', event):
+            game.reset_viewport()
+
         if KEYMAP.matches('SLIDE_VIEWPORT_WEST', event):
             game.viewport.slide_left()
 
@@ -397,7 +400,7 @@ def demo(screen: Screen, scene: Scene, game: Game):
             root_page.labelPosition.text = game.render_pretty_player_position()
 
             # move the viewport with the player
-            if game.player_outside_viewport(wiggle=2):
+            if game.player_outside_viewport(wiggle=VIEWPORT_WIGGLE):
                 game.viewport.slide(move_vec)
 
                 # still outside? Something's wrong, let's reset the viewport...

@@ -422,9 +422,9 @@ class Game:
 
         z = self.player.position.z
 
-        for y in range(viewport.topleft.y, (viewport.lowerright.y + 1)):
+        for y in range(viewport.top_left.y, (viewport.lower_right.y + 1)):
             retrow = []
-            for x in range(viewport.topleft.x, (viewport.lowerright.x + 1)):
+            for x in range(viewport.top_left.x, (viewport.lower_right.x + 1)):
                 pos = VectorN(x, y, z)
                 tile = self.world.get_tile(pos)
                 if not tile:
@@ -460,11 +460,11 @@ class Game:
         return not self.player_inside_2d_viewport(wiggle=wiggle)
 
     def player_inside_2d_viewport(self, wiggle: int = 0):
-        return self.player.position.trim(2).inside_bounding_rect(self.viewport.topleft.trim(2),
-                                                                 self.viewport.lowerright.trim(2), wiggle=wiggle)
+        return self.player.position.trim(2).inside_bounding_rect(self.viewport.top_left.trim(2),
+                                                                 self.viewport.lower_right.trim(2), wiggle=wiggle)
 
     def reset_viewport(self):
-        # TODO: This is flawed/buggy, fix it
+        # TODO: Does this work for even/odd numbered sizes? Test this...
         px, py, pz = self.player.position
 
         vpwidth, vpheight = self.viewport.get_size()
@@ -483,10 +483,10 @@ class Game:
             vphLR += 1
 
         # make our bounds centered on the player position
-        self.viewport.topleft = \
+        self.viewport.top_left = \
             VectorN(px - vpwTL, py - vphTL, pz)
 
-        self.viewport.lowerright = \
+        self.viewport.lower_right = \
             VectorN(px + vpwLR, py + vphLR, pz)
 
     def set_tile_at_player_feet(self, tile):
