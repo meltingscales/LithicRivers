@@ -138,7 +138,7 @@ class Player(Entity, SpriteRenderable):
         SpriteRenderable.__init__(self, ['$', '[]\n'
                                               '%%'])
 
-        self.inventory = Inventory([Item("Cookie", ['o'])])
+        self.inventory = Inventory([Item("Crookie", ['o'])])
 
 
 class Tile(SpriteRenderable):
