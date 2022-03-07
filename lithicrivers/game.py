@@ -265,11 +265,17 @@ class Tiles:
 
     @staticmethod
     def Cloud():
-        return Tile("Cloud", sprite_sheet=['~'])
+        return Tile("Cloud", sprite_sheet=['~', '~o\n'
+                                                'oo', '.~~\n'
+                                                      '~~o\n'
+                                                      '~oo'])
 
     @staticmethod
     def Bedrock():
-        return Tile("Bedrock", sprite_sheet=['#'])
+        return Tile("Bedrock", sprite_sheet=['#', '|/\n'
+                                                  '/|', '|,/\n'
+                                                        '/|\\\n'
+                                                        '|/|'])
 
     @staticmethod
     def Empty():
@@ -339,17 +345,11 @@ class World:
             radius: VectorN,
             gen_function=generate_tile,
             gf_args=None,
-            gf_kwargs=None) -> \
-            WorldData:
+            gf_kwargs=None) -> WorldData:
         """
         Generate world data.
 
         Note gen_function MUST accept *args and **kwargs.
-        :param radius:
-        :param gen_function:
-        :param gf_args:
-        :param gf_kwargs:
-        :return:
         """
 
         if gf_kwargs is None:
