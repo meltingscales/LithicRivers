@@ -225,9 +225,15 @@ def generate_tile(choices: List[Tile] = None, weights: List[int] = None, current
     # for now, generate these stubs for other z values
     if current_location:
         if current_location.z > 0:
+            # we are in da sky
             return Tiles.Cloud()
+
         elif current_location.z < 0:
-            return Tiles.Bedrock()
+            # we are underground
+            return weighted_choice(
+                [1, 0.2, 0.05],
+                [Tiles.Bedrock(), Tiles.Dirt(), Tiles.DaFuq()]
+            )
 
     return weighted_choice(weights, choices)
 
