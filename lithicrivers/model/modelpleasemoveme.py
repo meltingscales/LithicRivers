@@ -63,14 +63,15 @@ class RenderedData:
 class Viewport:
     """
     Please note that y grows downwards, and x grows rightwards.
-    This is why topleft is "smaller" numerically than lowerright.
+    This is why top_left is "smaller" numerically than lower_right.
 
     The reason for this is...I lazily used list(list(...)) as my underlying data structure for World :P
     """
 
-    def __init__(self, topleft: VectorN, lowerright: VectorN, scale=1):
-        self.topleft = topleft
-        self.lowerright = lowerright
+    def __init__(self, top_left: VectorN, lower_right: VectorN, scale=1):
+        self.top_left = top_left
+        self.lower_right = lower_right
+        self.original_size = self.get_size()
         self.scale = scale
 
     @staticmethod
@@ -114,16 +115,16 @@ class Viewport:
             #         original_scale, self.scale))
 
     def slide(self, move_vec: VectorN):
-        self.topleft += move_vec
-        self.lowerright += move_vec
+        self.top_left += move_vec
+        self.lower_right += move_vec
 
     def shrink(self, n=1):
-        self.topleft += VectorN(n, n, 0)
-        self.lowerright += -VectorN(n, n, 0)
+        self.top_left += VectorN(n, n, 0)
+        self.lower_right += -VectorN(n, n, 0)
 
     def grow(self, n=1):
-        self.topleft += -VectorN(n, n, 0)
-        self.lowerright += VectorN(n, n, 0)
+        self.top_left += -VectorN(n, n, 0)
+        self.lower_right += VectorN(n, n, 0)
 
     def slide_left(self):
         self.slide(VEC_WEST)
@@ -132,21 +133,21 @@ class Viewport:
         self.slide(VEC_EAST)
 
     def get_height(self) -> int:
-        return abs(self.lowerright.y - self.topleft.y)
+        return abs(self.lower_right.y - self.top_left.y)
 
     def get_width(self) -> int:
-        return abs(self.lowerright.x - self.topleft.x)
+        return abs(self.lower_right.x - self.top_left.x)
 
     def __str__(self):
-        return "<Viewport scale={} topleft=[{}] lowerright=[{}] >".format(self.scale, self.topleft, self.lowerright)
+        return "<Viewport scale={} top_left=[{}] lower_right=[{}] >".format(self.scale, self.top_left, self.lower_right)
 
     def __repr__(self):
         return str(self)
 
     def render_pretty(self):
         return "scale={scale} ({x1:2d},{y1:2d}), ({x2:2d},{y2:2d}) ".format(
-            x1=self.topleft.x, y1=self.topleft.y,
-            x2=self.lowerright.x, y2=self.lowerright.y,
+            x1=self.top_left.x, y1=self.top_left.y,
+            x2=self.lower_right.x, y2=self.lower_right.y,
             scale=self.scale
         )
 

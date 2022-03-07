@@ -9,10 +9,24 @@ from lithicrivers.model.vector import VectorN
 from lithicrivers.textutil import associated
 
 GAME_NAME = 'LithicRivers'
-# DEFAULT_SIZE = (50, 15, 2)
+
 DEFAULT_SIZE_RADIUS = VectorN(50, 50, 3)
+'''The 3d radius of the world.'''
+
 DEFAULT_PLAYER_POSITION = VectorN(25, 25, 0)
-DEFAULT_VIEWPORT = Viewport.generate_centered(DEFAULT_PLAYER_POSITION, radius=VectorN(10, 10, 0))
+'''Default player position.'''
+
+VIEWPORT_RADIUS = VectorN(10, 10, 0)
+'''Radius of the viewport.'''
+
+DEFAULT_VIEWPORT = Viewport.generate_centered(DEFAULT_PLAYER_POSITION, radius=VIEWPORT_RADIUS)
+'''The viewport.'''
+
+VIEWPORT_WIGGLE = 2
+'''How far away is the player from the edge of the viewport before 
+we start sliding it to avoid them being derendered?
+Think super mario 64 camera.'''
+
 LOGFILENAME = GAME_NAME + '.log'
 LOGGINGLEVEL = logging.INFO
 
@@ -39,6 +53,7 @@ class Keymap:
             self.MOVE_DOWN: VEC_DOWN,
         }
 
+        self.RESET_VIEWPORT = 'r'
         self.SLIDE_VIEWPORT_WEST = '['
         self.SLIDE_VIEWPORT_EAST = ']'
 

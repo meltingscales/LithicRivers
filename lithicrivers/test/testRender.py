@@ -81,8 +81,8 @@ def testRenderGame(self):
     renderedViewport = someGame.render_world_viewport(
         daScale,
         viewport=Viewport(
-            topleft=VectorN(0, 0),
-            lowerright=VectorN(1, 1)
+            top_left=VectorN(0, 0),
+            lower_right=VectorN(1, 1)
         )
     )
 
