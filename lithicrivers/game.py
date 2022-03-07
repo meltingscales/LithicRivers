@@ -6,11 +6,11 @@ from typing import List, Dict, Union
 
 import numpy
 
+from lithicrivers.constants import VEC_NORTH, VEC_SOUTH, VEC_WEST, VEC_EAST
 from lithicrivers.model.generictype import T
 from lithicrivers.model.modelpleasemoveme import Viewport, RenderedData
 from lithicrivers.model.vector import VectorN
 from lithicrivers.settings import DEFAULT_SIZE_RADIUS, DEFAULT_VIEWPORT, DEFAULT_PLAYER_POSITION
-from lithicrivers.constants import VEC_NORTH, VEC_SOUTH, VEC_WEST, VEC_EAST
 
 
 def generate_sprite_repeat(char, scale: int = 1):
@@ -464,12 +464,30 @@ class Game:
                                                                  self.viewport.lowerright.trim(2), wiggle=wiggle)
 
     def reset_viewport(self):
-        px, py = self.player.position.trim(2)
+        # TODO: This is flawed/buggy, fix it
+        px, py, pz = self.player.position
 
         vpwidth, vpheight = self.viewport.get_size()
 
-        raise NotImplementedError("TODO: Reset viewport...\n"
-                                  "{}".format([px, py, vpwidth, vpheight]))
+        vpwTL = vpwidth // 2
+        vphTL = vpheight // 2
+
+        vpwLR = vpwidth // 2
+        vphLR = vpheight // 2
+
+        # preserve oddness
+        if (vpwidth % 2) != 0:
+            vpwLR += 1
+
+        if (vpheight % 2) != 0:
+            vphLR += 1
+
+        # make our bounds centered on the player position
+        self.viewport.topleft = \
+            VectorN(px - vpwTL, py - vphTL, pz)
+
+        self.viewport.lowerright = \
+            VectorN(px + vpwLR, py + vphLR, pz)
 
     def set_tile_at_player_feet(self, tile):
         self.world.set_tile(self.player.position, tile)
