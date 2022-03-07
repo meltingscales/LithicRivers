@@ -18,7 +18,10 @@ class GenStuff(unittest.TestCase):
 
             self.assertEqual(worldData.get_tile(VectorN(0, 0, 0)), Tiles.Tree())
             self.assertEqual(worldData.get_tile(VectorN(0, 0, 1)), Tiles.Cloud())
-            self.assertEqual(worldData.get_tile(VectorN(0, 0, -1)), Tiles.Bedrock())
+            self.assertIn(
+                worldData.get_tile(VectorN(0, 0, -1)),
+                [Tiles.Bedrock(), Tiles.Dirt(), Tiles.DaFuq()]
+            )
 
     def testWorldGenRandomSpread(self):
         daSize = 100
