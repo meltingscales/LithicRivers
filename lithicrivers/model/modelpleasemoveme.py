@@ -98,37 +98,29 @@ class Viewport:
 
     def rescale(self, i: int):
         original_scale = self.scale
+
         self.scale += i
         self.clamp_scale()
+
+        new_scale = self.scale
+
         # if we should scale,
-        if self.scale != original_scale:
+        if new_scale != original_scale:
+            factor: float = original_scale / new_scale
+            # this fucks up the viewport but we can just let the game reset it
+            self.top_left = VectorN(0, 0)
+            self.lower_right = VectorN(
+                int(factor * float(self.original_size.x)),
+                int(factor * float(self.original_size.y)),
+            )
 
-            # how much do we want to scale the viewport?
-            scale_factor: float = (original_scale / self.scale)
-            # if scale_factor < 1:
-            #     scale_factor = (self.scale / original_scale)
+            logging.info(factor)
+            logging.info(self.lower_right)
 
-            logging.info("scale_factor = {}".format(scale_factor))
-
-            scale_direction = (-1 if (scale_factor > 1) else 1)
-
-            scale_vertical = (int((scale_factor * self.get_height()) // 2))
-            scale_horizontal = (int((scale_factor * self.get_width()) // 2))
-
-            logging.info("Should scale vert by {}".format(scale_vertical))
-            logging.info("Should scale horz by {}".format(scale_horizontal))
-
-            logging.info(
-                "We must scale the viewport by {} to accommodate the new render! "
-                "Scale used to be {} but are now {}!".format(
-                    scale_direction * scale_factor,
-                    original_scale, self.scale))
-            if scale_direction == 1:
-                self.shrink_vertical(scale_vertical)
-                self.shrink_horizontal(scale_horizontal)
+            if factor < 0:
+                pass
             else:
-                self.grow_vertical(scale_vertical)
-                self.grow_horizontal(scale_horizontal)
+                pass
 
     def slide(self, move_vec: VectorN):
         self.top_left += move_vec
