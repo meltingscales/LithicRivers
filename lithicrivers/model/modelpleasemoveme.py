@@ -106,7 +106,7 @@ class Viewport:
 
         # if we should scale,
         if new_scale != original_scale:
-            factor: float = original_scale / new_scale
+            factor: float = 1 / new_scale
             # this fucks up the viewport but we can just let the game reset it
             self.top_left = VectorN(0, 0)
             self.lower_right = VectorN(
@@ -114,13 +114,8 @@ class Viewport:
                 int(factor * float(self.original_size.y)),
             )
 
-            logging.info(factor)
-            logging.info(self.lower_right)
-
-            if factor < 0:
-                pass
-            else:
-                pass
+            # logging.info(factor)
+            # logging.info(self.lower_right)
 
     def slide(self, move_vec: VectorN):
         self.top_left += move_vec
