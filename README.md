@@ -57,6 +57,11 @@ read the help page
 - https://github.com/peterbrittain/asciimatics/blob/v1.13/samples/tab_demo.py
 - https://stackoverflow.com/questions/9575409/calling-parent-class-init-with-multiple-inheritance-whats-the-right-way/50465583#50465583
 - https://github.com/zladovan/gorched
+- https://github.com/matcool/term-tris
+- https://github.com/topics/asciimatics
+- https://github.com/meysam81/notable-newts
+- https://github.com/JnyJny/GameOfLife
+- https://github.com/VedantKhairnar/The-Maze-Runner
 
 ## meme
 
