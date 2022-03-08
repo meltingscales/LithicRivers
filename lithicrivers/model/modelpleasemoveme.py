@@ -1,8 +1,9 @@
+import logging
 from typing import List
 
 from lithicrivers.constants import VEC_WEST, VEC_EAST
 from lithicrivers.model.vector import VectorN
-from lithicrivers.textutil import render_int_tuple
+from lithicrivers.textutil import render_tuple
 
 
 class RenderedData:
@@ -99,21 +100,35 @@ class Viewport:
         original_scale = self.scale
         self.scale += i
         self.clamp_scale()
+        # if we should scale,
         if self.scale != original_scale:
+
             # how much do we want to scale the viewport?
             scale_factor: float = (original_scale / self.scale)
-            scale_direction = (-1 if scale_factor > 1 else 1)
+            # if scale_factor < 1:
+            #     scale_factor = (self.scale / original_scale)
 
-            # TODO lol... this is NOT the right way to do it but it "works"
-            self.shrink(3 * scale_direction)
+            logging.info("scale_factor = {}".format(scale_factor))
 
-            # return
-            #
-            # raise NotImplementedError(
-            #     "We must scale the viewport by {} to accommodate the new render! "
-            #     "Scale used to be {} but are now {}!".format(
-            #         scale_factor,
-            #         original_scale, self.scale))
+            scale_direction = (-1 if (scale_factor > 1) else 1)
+
+            scale_vertical = (int((scale_factor * self.get_height()) // 2))
+            scale_horizontal = (int((scale_factor * self.get_width()) // 2))
+
+            logging.info("Should scale vert by {}".format(scale_vertical))
+            logging.info("Should scale horz by {}".format(scale_horizontal))
+
+            logging.info(
+                "We must scale the viewport by {} to accommodate the new render! "
+                "Scale used to be {} but are now {}!".format(
+                    scale_direction * scale_factor,
+                    original_scale, self.scale))
+            if scale_direction == 1:
+                self.shrink_vertical(scale_vertical)
+                self.shrink_horizontal(scale_horizontal)
+            else:
+                self.grow_vertical(scale_vertical)
+                self.grow_horizontal(scale_horizontal)
 
     def slide(self, move_vec: VectorN):
         self.top_left += move_vec
@@ -121,11 +136,24 @@ class Viewport:
 
     def shrink(self, n=1):
         self.top_left += VectorN(n, n, 0)
-        self.lower_right += -VectorN(n, n, 0)
+        self.lower_right -= VectorN(n, n, 0)
+
+    def shrink_horizontal(self, n=1):
+        self.top_left += VectorN(n, 0, 0)
+        self.lower_right -= VectorN(n, 0, 0)
+
+    def shrink_vertical(self, n=1):
+        self.top_left += VectorN(0, n, 0)
+        self.lower_right -= VectorN(0, n, 0)
+
+    def grow_horizontal(self, n=1):
+        self.shrink_horizontal(-n)
+
+    def grow_vertical(self, n=1):
+        self.shrink_vertical(-n)
 
     def grow(self, n=1):
-        self.top_left += -VectorN(n, n, 0)
-        self.lower_right += VectorN(n, n, 0)
+        self.shrink(-n)
 
     def slide_left(self):
         self.slide(VEC_WEST)
@@ -147,9 +175,9 @@ class Viewport:
 
     def render_pretty(self):
         return "<{scale}> [{size}] ({tl}, {lr}) ".format(
-            size=render_int_tuple(self.get_size().as_list()),
-            tl=render_int_tuple(self.top_left.trim(2).as_list()),
-            lr=render_int_tuple(self.lower_right.trim(2).as_list()),
+            size=render_tuple(self.get_size().as_list()),
+            tl=render_tuple(self.top_left.trim(2).as_list()),
+            lr=render_tuple(self.lower_right.trim(2).as_list()),
             scale=self.scale
         )
 

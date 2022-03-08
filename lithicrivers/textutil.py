@@ -11,12 +11,14 @@ This util exists to unify TUI styles and make the game look + feel cohesive.
 #     raise NotImplementedError("color NYI, im lazy")
 from typing import List
 
+from lithicrivers.model.generictype import T
+
 
 def presenting(text) -> str:
     return "~ {} ~".format(text)
 
 
-def render_int_tuple(tups: List[int], places=2) -> str:
+def render_tuple(tups: List[T], places=2) -> str:
     fstr = ""
 
     for i in range(0, len(tups)):
