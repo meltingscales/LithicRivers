@@ -3,29 +3,32 @@ from typing import Union, List
 
 from asciimatics.event import KeyboardEvent
 
-from lithicrivers.model import VectorN, Viewport
+from lithicrivers.constants import VEC_DOWN, VEC_UP, VEC_NORTH, VEC_SOUTH, VEC_WEST, VEC_EAST
+from lithicrivers.model.modelpleasemoveme import Viewport
+from lithicrivers.model.vector import VectorN
 from lithicrivers.textutil import associated
 
 GAME_NAME = 'LithicRivers'
-# DEFAULT_SIZE = (50, 15, 2)
+
 DEFAULT_SIZE_RADIUS = VectorN(50, 50, 3)
+'''The 3d radius of the world.'''
+
 DEFAULT_PLAYER_POSITION = VectorN(25, 25, 0)
-DEFAULT_VIEWPORT = Viewport.generate_centered(DEFAULT_PLAYER_POSITION, radius=VectorN(40, 10, 0))
+'''Default player position.'''
+
+VIEWPORT_RADIUS = VectorN(10, 10, 0)
+'''Radius of the viewport.'''
+
+DEFAULT_VIEWPORT = Viewport.generate_centered(DEFAULT_PLAYER_POSITION, radius=VIEWPORT_RADIUS)
+'''The viewport.'''
+
+VIEWPORT_WIGGLE = 2
+'''How far away is the player from the edge of the viewport before 
+we start sliding it to avoid them being derendered?
+Think super mario 64 camera.'''
+
 LOGFILENAME = GAME_NAME + '.log'
-
-VEC_NORTH = -VectorN(0, 1, 0)  # negative because i am laaaaazy and my Y values are flipped
-VEC_SOUTH = -VectorN(0, -1, 0)  # negative because i am laaaaazy and my Y values are flipped
-VEC_WEST = VectorN(-1, 0, 0)
-VEC_EAST = VectorN(1, 0, 0)
-VEC_UP = VectorN(0, 0, -1)
-VEC_DOWN = VectorN(0, 0, 1)
-
-NESW_MNEMONIC = \
-    '''
-      N
-    W   E
-      S
-    '''
+LOGGINGLEVEL = logging.INFO
 
 
 class Keymap:
@@ -50,8 +53,12 @@ class Keymap:
             self.MOVE_DOWN: VEC_DOWN,
         }
 
+        self.RESET_VIEWPORT = 'r'
         self.SLIDE_VIEWPORT_WEST = '['
         self.SLIDE_VIEWPORT_EAST = ']'
+
+        self.SCALE_UP = '='
+        self.SCALE_DOWN = '-'
 
         self.MINE = 'u'
 

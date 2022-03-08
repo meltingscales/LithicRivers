@@ -6,9 +6,26 @@ from typing import List, Dict, Union
 
 import numpy
 
-from lithicrivers.model import VectorN, Viewport, T
-from lithicrivers.settings import DEFAULT_SIZE_RADIUS, DEFAULT_VIEWPORT, VEC_NORTH, VEC_SOUTH, VEC_WEST, VEC_EAST, \
-    DEFAULT_PLAYER_POSITION
+from lithicrivers.constants import VEC_NORTH, VEC_SOUTH, VEC_WEST, VEC_EAST
+from lithicrivers.model.generictype import T
+from lithicrivers.model.modelpleasemoveme import Viewport, RenderedData
+from lithicrivers.model.vector import VectorN
+from lithicrivers.settings import DEFAULT_SIZE_RADIUS, DEFAULT_VIEWPORT, DEFAULT_PLAYER_POSITION
+
+
+def generate_sprite_repeat(char, scale: int = 1):
+    normalized_scale = scale - 1
+
+    if normalized_scale == 0:
+        return char
+
+    ret = ""
+    for i in range(0, scale):
+        ret += char * scale
+        if i < (scale - 1):
+            ret += '\n'
+
+    return ret
 
 
 class SpriteRenderable:
@@ -23,11 +40,17 @@ class SpriteRenderable:
     def render_sprite(self, scale: int = 1) -> str:
         normalized_scale = scale - 1
 
-        if (normalized_scale >= len(self.sprite_sheet)) or (normalized_scale < 0):
-            raise Exception("Cannot render sprite with scale {} as it only has these sprites:\n{} ".format(
-                len(self.sprite_sheet),
-                self.sprite_sheet
-            ))
+        if normalized_scale < 0:
+            raise Exception("Cannot render {} with normalized_scale = {}".format(self, normalized_scale))
+
+        if normalized_scale >= len(self.sprite_sheet):
+            # if they ask for a sprite too large, give them '?'
+            return generate_sprite_repeat('?', scale)
+
+            # raise Exception("Cannot render sprite with scale {} as it only has these sprites:\n{} ".format(
+            #     len(self.sprite_sheet),
+            #     self.sprite_sheet
+            # ))
 
         return self.sprite_sheet[normalized_scale]
 
@@ -35,10 +58,10 @@ class SpriteRenderable:
 class Entity:
 
     def __init__(self, name: str, position: VectorN):
-        self.name = name
-        self.position = position
-        self.health = 100
-        self.stamina = 100
+        self.name: str = name
+        self.position: VectorN = position
+        self.health: int = 100
+        self.stamina: int = 100
 
     def move(self, vec: VectorN):
         self.position += vec
@@ -136,7 +159,9 @@ class Player(Entity, SpriteRenderable):
     def __init__(self, name="Inigo Montoya"):
         Entity.__init__(self, name=name, position=DEFAULT_PLAYER_POSITION)
         SpriteRenderable.__init__(self, ['$', '[]\n'
-                                              '%%'])
+                                              '%%', '_o_\n'
+                                                    '/|\\\n'
+                                                    '/_\\'])
 
         self.inventory = Inventory([Item("Cookie", ['o'])])
 
@@ -200,9 +225,15 @@ def generate_tile(choices: List[Tile] = None, weights: List[int] = None, current
     # for now, generate these stubs for other z values
     if current_location:
         if current_location.z > 0:
+            # we are in da sky
             return Tiles.Cloud()
+
         elif current_location.z < 0:
-            return Tiles.Bedrock()
+            # we are underground
+            return weighted_choice(
+                [1, 0.2, 0.05],
+                [Tiles.Bedrock(), Tiles.Dirt(), Tiles.DaFuq()]
+            )
 
     return weighted_choice(weights, choices)
 
@@ -240,11 +271,17 @@ class Tiles:
 
     @staticmethod
     def Cloud():
-        return Tile("Cloud", sprite_sheet=['~'])
+        return Tile("Cloud", sprite_sheet=['~', '~o\n'
+                                                'oo', '.~~\n'
+                                                      '~~o\n'
+                                                      '~oo'])
 
     @staticmethod
     def Bedrock():
-        return Tile("Bedrock", sprite_sheet=['#'])
+        return Tile("Bedrock", sprite_sheet=['#', '|/\n'
+                                                  '/|', '|,/\n'
+                                                        '/|\\\n'
+                                                        '|/|'])
 
     @staticmethod
     def Empty():
@@ -314,17 +351,11 @@ class World:
             radius: VectorN,
             gen_function=generate_tile,
             gf_args=None,
-            gf_kwargs=None) -> \
-            WorldData:
+            gf_kwargs=None) -> WorldData:
         """
         Generate world data.
 
         Note gen_function MUST accept *args and **kwargs.
-        :param radius:
-        :param gen_function:
-        :param gf_args:
-        :param gf_kwargs:
-        :return:
         """
 
         if gf_kwargs is None:
@@ -358,7 +389,7 @@ class World:
 
 
 class Game:
-    def __init__(self, player: Player = None, world: World = None, viewport=DEFAULT_VIEWPORT):
+    def __init__(self, player: Player = None, world: World = None, viewport: Viewport = DEFAULT_VIEWPORT):
 
         self.viewport = viewport
 
@@ -373,24 +404,13 @@ class Game:
 
         self.running = True
 
-    def slide_viewport(self, moveVec):
-        self.viewport.topleft += moveVec
-        self.viewport.lowerright += moveVec
-
-    def slide_viewport_left(self):
-        self.slide_viewport(VEC_WEST)
-
-    def slide_viewport_right(self):
-        self.slide_viewport(VEC_EAST)
-
     def get_tile_at_player_feet(self) -> Tile:
         return self.world.get_tile(self.player.position)
 
     def render_world_viewport(
             self,
-            scale: int = 1,
             viewport: Viewport = None
-    ) -> List[List[str]]:
+    ) -> RenderedData:
         r"""
         :param viewport: Viewport to render.
             if not specified, defaults to self.viewport
@@ -404,32 +424,33 @@ class Game:
         if not viewport:
             viewport = self.viewport
 
-        ret = []
+        ret: List[List[str]] = []
 
         z = self.player.position.z
 
-        for y in range(viewport.topleft.y, (viewport.lowerright.y + 1)):
+        for y in range(viewport.top_left.y, (viewport.lower_right.y + 1)):
             retrow = []
-            for x in range(viewport.topleft.x, (viewport.lowerright.x + 1)):
+            for x in range(viewport.top_left.x, (viewport.lower_right.x + 1)):
                 pos = VectorN(x, y, z)
                 tile = self.world.get_tile(pos)
                 if not tile:
                     tile = Tiles.Empty()
 
-                sprite = tile.render_sprite(scale=scale)
+                sprite = tile.render_sprite(scale=viewport.scale)
 
                 # if we are here, render us!
                 if (self.player.position.y == y) and (self.player.position.x == x):
-                    sprite = self.player.render_sprite(scale=scale)
+                    sprite = self.player.render_sprite(scale=viewport.scale)
 
                 # logging.debug('render: {}'.format(sprite))
                 # done with a single sprite in a row
                 retrow.append(sprite)
             ret.append(retrow)
+
         logging.debug("Returning this from render_world_viewport()")
         logging.debug(pprint.pformat(ret))
 
-        return ret
+        return RenderedData(ret, scale=viewport.scale)
 
     def move_player(self, vec: VectorN):
         possiblePosition = self.player.calcOffset(vec)
@@ -441,18 +462,41 @@ class Game:
 
         self.player.move(vec)
 
-    def player_outside_viewport(self):
-        return not self.player_inside_2d_viewport()
+    def player_outside_viewport(self, wiggle=0):
+        return not self.player_inside_2d_viewport(wiggle=wiggle)
 
-    def player_inside_2d_viewport(self):
-        return self.player.position.trim(2).insideBoundingRect(self.viewport.topleft.trim(2),
-                                                               self.viewport.lowerright.trim(2))
+    def player_inside_2d_viewport(self, wiggle: int = 0):
+        return self.player.position.trim(2).inside_bounding_rect(self.viewport.top_left.trim(2),
+                                                                 self.viewport.lower_right.trim(2), wiggle=wiggle)
 
     def reset_viewport(self):
-        raise NotImplementedError("TODO: Reset viewport")
+        # TODO: Does this work for even/odd numbered sizes? Test this...
+        px, py, pz = self.player.position
+
+        vpwidth, vpheight = self.viewport.get_size()
+
+        vpwTL = vpwidth // 2
+        vphTL = vpheight // 2
+
+        vpwLR = vpwidth // 2
+        vphLR = vpheight // 2
+
+        # preserve oddness
+        if (vpwidth % 2) != 0:
+            vpwLR += 1
+
+        if (vpheight % 2) != 0:
+            vphLR += 1
+
+        # make our bounds centered on the player position
+        self.viewport.top_left = \
+            VectorN(px - vpwTL, py - vphTL, pz)
+
+        self.viewport.lower_right = \
+            VectorN(px + vpwLR, py + vphLR, pz)
 
     def set_tile_at_player_feet(self, tile):
         self.world.set_tile(self.player.position, tile)
 
     def render_pretty_player_position(self):
-        return "{}".format(self.player.position.as_short_string())
+        return str(self.player.position.as_short_string())

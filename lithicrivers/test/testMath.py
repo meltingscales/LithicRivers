@@ -1,10 +1,11 @@
-from lithicrivers.model import VectorN
 
 '''
 god i hate math
 '''
 
 import unittest
+
+from lithicrivers.model.vector import VectorN
 
 
 class TestVectorN(unittest.TestCase):
@@ -61,9 +62,9 @@ class TestVectorN(unittest.TestCase):
 
         v4 = VectorN(1, 9)
 
-        self.assertTrue(v3.insideBoundingRect(v1, v2))
+        self.assertTrue(v3.inside_bounding_rect(v1, v2))
         # swap args shouldnt matter, it just flips the rect by 90 degrees
-        self.assertTrue(v3.insideBoundingRect(v2, v1))
+        self.assertTrue(v3.inside_bounding_rect(v2, v1))
 
-        self.assertFalse(v4.insideBoundingRect(v1, v2))
-        self.assertFalse(v4.insideBoundingRect(v2, v1))
+        self.assertFalse(v4.inside_bounding_rect(v1, v2))
+        self.assertFalse(v4.inside_bounding_rect(v2, v1))

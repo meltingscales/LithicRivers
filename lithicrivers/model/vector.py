@@ -1,7 +1,4 @@
-import logging
-from typing import Tuple, List, TypeVar, Any, Union
-
-T = TypeVar('T')
+from typing import Tuple, List, Any, Union
 
 
 class VectorN:
@@ -40,9 +37,8 @@ class VectorN:
         """are we "1"d, "2"d, "3"d, etc"""
         return len(self.dimension_values)
 
-    # noinspection PyRedundantParentheses
     def as_tuple(self) -> Tuple[int]:
-        return (*self.dimension_values,)
+        return *self.dimension_values,
 
     def as_list(self) -> List[int]:
         return [*self.dimension_values, ]
@@ -51,9 +47,8 @@ class VectorN:
         other: VectorN
         if not (self.dimension_order() == other.dimension_order()):
             raise ValueError(
-                "you cannot modify vector self ({}) with vector other ({}) as it is not the same dimension order!".format(
-                    self,
-                    other))
+                "you cannot perform an operation on vector `self` ({}) with vector `other` ({}) "
+                "as it is not the same dimension order!".format(self, other))
 
     def __neg__(self):
         return VectorN(*[
@@ -74,14 +69,15 @@ class VectorN:
             (a - b) for a, b in zip(self.dimension_values, other.dimension_values)
         ])
 
-    def __mul__(self, other):
-        other: VectorN
+    def __mul__(self, other: Union[any, int]):
         if isinstance(other, VectorN):
+            other: VectorN
             self.assert_same_dimension_order(other)
             return VectorN(*[
                 (a * b) for a, b in zip(self.dimension_values, other.dimension_values)
             ])
         else:
+            other: int
             return VectorN(*[
                 (a * other) for a in self.dimension_values
             ])
@@ -109,7 +105,7 @@ class VectorN:
         if item in self.dimPosMap.keys():
             return self.dimension_values[self.dimPosMap[item]]
 
-    def insideBoundingRect(self, vec1, vec2):
+    def inside_bounding_rect(self, vec1, vec2, wiggle: int = 0):
 
         if not (self.dimension_order() == 2):
             raise Exception(
@@ -131,59 +127,28 @@ class VectorN:
 
         # YOINK from https://www.programming-idioms.org/idiom/178/check-if-point-is-inside-rectangle/2615/python
         # Assuming that x1 < x2 and y1 < y2...
-        return (px >= x1) and (px < x2) and (py >= y1) and (py < y2)
+        return ((px - wiggle) >= x1) and \
+               ((px + wiggle) < x2) and \
+               ((py - wiggle) >= y1) and \
+               ((py + wiggle) < y2)
 
     def serialize(self) -> str:
         return ','.join([str(x) for x in self.dimension_values])
 
     @staticmethod
-    def deserialize(object: Union[str, list, tuple]):
+    def deserialize(obj: Union[str, list, tuple]):
 
-        if isinstance(object, VectorN):
-            return object
+        if isinstance(obj, VectorN):
+            return obj
 
-        if isinstance(object, list):
-            return VectorN(*object)
+        if isinstance(obj, list):
+            return VectorN(*obj)
 
-        if isinstance(object, str):
-            object = object.strip()
-            toks = object.split(',')
-            ints = [int(x.strip()) for x in toks]
+        if isinstance(obj, str):
+            obj = obj.strip()
+            tokens = obj.split(',')
+            ints = [int(x.strip()) for x in tokens]
             return VectorN(*ints)
 
     def as_short_string(self):
         return ','.join(str(x) for x in self.dimension_values)
-
-
-class Viewport:
-    """
-    Please note that y grows downwards, and x grows rightwards.
-    This is why topleft is "smaller" numerically than lowerright.
-
-    The reason for this is...I lazily used list(list(...)) as my underlying data structure for World :P
-    """
-
-    def __init__(self, topleft: VectorN, lowerright: VectorN):
-        self.topleft = topleft
-        self.lowerright = lowerright
-
-    @staticmethod
-    def generate_centered(center: VectorN, radius: VectorN):
-        """Generate a Viewport centered on `center` with `radius` as its lower and upper bounds.
-        It doubles from `radius`."""
-        return Viewport(
-            (center - radius),
-            (center + radius)
-        )
-
-    def get_height(self):
-        logging.debug(
-            "returning self.lowerright.y - self.topleft.y = {} - {}".format(self.lowerright.y, self.topleft.y))
-        return self.lowerright.y - self.topleft.y
-
-    def __str__(self):
-        return "<Viewport topleft=[{}] lowerright=[{}] >".format(self.topleft, self.lowerright)
-
-
-class StopGame(Exception):
-    pass
