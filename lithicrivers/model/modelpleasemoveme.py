@@ -2,6 +2,7 @@ from typing import List
 
 from lithicrivers.constants import VEC_WEST, VEC_EAST
 from lithicrivers.model.vector import VectorN
+from lithicrivers.textutil import render_int_tuple
 
 
 class RenderedData:
@@ -145,9 +146,10 @@ class Viewport:
         return str(self)
 
     def render_pretty(self):
-        return "scale={scale} ({x1:2d},{y1:2d}), ({x2:2d},{y2:2d}) ".format(
-            x1=self.top_left.x, y1=self.top_left.y,
-            x2=self.lower_right.x, y2=self.lower_right.y,
+        return "<{scale}> [{size}] ({tl}, {lr}) ".format(
+            size=render_int_tuple(self.get_size().as_list()),
+            tl=render_int_tuple(self.top_left.trim(2).as_list()),
+            lr=render_int_tuple(self.lower_right.trim(2).as_list()),
             scale=self.scale
         )
 
