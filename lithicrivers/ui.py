@@ -10,8 +10,9 @@ from asciimatics.screen import Canvas, Screen
 from asciimatics.widgets import Layout, Divider, Button, _split_text, Frame, Label
 
 from lithicrivers.game import Game, Tile, Tiles
-from lithicrivers.model import VectorN, StopGame
-from lithicrivers.settings import GAME_NAME, KEYMAP, Keymap
+from lithicrivers.model.modelpleasemoveme import StopGame, RenderedData
+from lithicrivers.model.vector import VectorN
+from lithicrivers.settings import GAME_NAME, KEYMAP, Keymap, VIEWPORT_WIGGLE
 from lithicrivers.textutil import presenting, list_label
 
 
@@ -141,16 +142,11 @@ class GameWidget(asciimatics.widgets.Widget):
         self._frame.canvas: Canvas
 
         content = ""
-        # content += f'|~-~ World {self.game.world.name} ~-~|\n'
-        # content += f'wew lad (frame_no % 100) = {(frame_no % 100):03d}\n'
+        content += f'|~-~ World {self.game.world.name} ~-~|\n'
 
-        toRender = self.game.render_world_viewport()
+        toRender: RenderedData = self.game.render_world_viewport()
 
-        for row in toRender:
-            for char in row:
-                # logging.debug('printchar: {}'.format(char))
-                content += char
-            content += '\n'
+        content += toRender.as_string()
 
         (colour, attr, background) = self._frame.palette[
             self._pick_palette_key("label", selected=False, allow_input_state=False)
@@ -221,6 +217,10 @@ class RootPage(Frame):
         self.labelPosition = HeaderLabel(name='labelPosition', header="POS")
         layout1.add_widget(self.labelPosition, column=1)
         self.labelPosition.text = str(self.game.render_pretty_player_position())
+
+        self.labelViewport = HeaderLabel(name='labelViewport', header="VIEW")
+        layout1.add_widget(self.labelViewport, column=1)
+        self.labelViewport.text = str(self.game.viewport.render_pretty())
 
         self.labelFeet = HeaderLabel(name='labelFeet', header="FEET")
         layout1.add_widget(self.labelFeet, column=1)
@@ -341,11 +341,24 @@ class InputHandler:
     @classmethod
     def handle_viewport(cls, event: KeyboardEvent, game: Game):
 
+        if KEYMAP.matches('RESET_VIEWPORT', event):
+            game.reset_viewport()
+
         if KEYMAP.matches('SLIDE_VIEWPORT_WEST', event):
-            game.slide_viewport_left()
+            game.viewport.slide_left()
 
         if KEYMAP.matches('SLIDE_VIEWPORT_EAST', event):
-            game.slide_viewport_right()
+            game.viewport.slide_right()
+
+    @classmethod
+    def handle_scale(cls, event, game):
+        if KEYMAP.matches('SCALE_DOWN', event):
+            game.viewport.rescale_down(1)
+            game.reset_viewport()
+            
+        if KEYMAP.matches('SCALE_UP', event):
+            game.viewport.rescale_up(1)
+            game.reset_viewport()
 
 
 def demo(screen: Screen, scene: Scene, game: Game):
@@ -381,28 +394,34 @@ def demo(screen: Screen, scene: Scene, game: Game):
 
         root_page = maybe_root_page
 
-        moveVec = InputHandler.handle_movement(event)
-        if moveVec:
+        move_vec = InputHandler.handle_movement(event)
+        if move_vec:
 
-            root_page.game.move_player(moveVec)
+            root_page.game.move_player(move_vec)
 
             # display pos
             root_page.labelPosition.text = game.render_pretty_player_position()
 
             # move the viewport with the player
-            if game.player_outside_viewport():
-                game.slide_viewport(moveVec)
+            if game.player_outside_viewport(wiggle=VIEWPORT_WIGGLE):
+                game.viewport.slide(move_vec)
 
                 # still outside? Something's wrong, let's reset the viewport...
-                if game.player_outside_viewport():
+                if game.player_outside_viewport(wiggle=VIEWPORT_WIGGLE):
                     game.reset_viewport()
 
-            root_page.labelFeet.text = '{}'.format(root_page.game.get_tile_at_player_feet())
+        InputHandler.handle_viewport(event, root_page.game)
+        InputHandler.handle_scale(event, root_page.game)
 
         InputHandler.handle_mining(event, root_page.game, root_page)
         root_page.labelInventory.text = root_page.game.player.inventory.summary()
 
-        InputHandler.handle_viewport(event, root_page.game)
+        # after we mine
+        root_page.labelFeet.text = str(root_page.game.get_tile_at_player_feet())
+
+        # after we handle viewport
+
+        root_page.labelViewport.text = str(root_page.game.viewport.render_pretty())
 
     screen.set_title("~~-[ {} ]-~~".format(GAME_NAME))
     screen.play(scenes, stop_on_resize=True, start_scene=scene, allow_int=True, unhandled_input=handle_event)

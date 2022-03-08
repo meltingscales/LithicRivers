@@ -1,8 +1,7 @@
 import unittest
-from pprint import pprint
 
-from lithicrivers.game import World, Tiles, Game, WorldData
-from lithicrivers.model import VectorN
+from lithicrivers.game import World, Tiles
+from lithicrivers.model.vector import VectorN
 
 
 class GenStuff(unittest.TestCase):
@@ -19,7 +18,10 @@ class GenStuff(unittest.TestCase):
 
             self.assertEqual(worldData.get_tile(VectorN(0, 0, 0)), Tiles.Tree())
             self.assertEqual(worldData.get_tile(VectorN(0, 0, 1)), Tiles.Cloud())
-            self.assertEqual(worldData.get_tile(VectorN(0, 0, -1)), Tiles.Bedrock())
+            self.assertIn(
+                worldData.get_tile(VectorN(0, 0, -1)),
+                [Tiles.Bedrock(), Tiles.Dirt(), Tiles.DaFuq()]
+            )
 
     def testWorldGenRandomSpread(self):
         daSize = 100

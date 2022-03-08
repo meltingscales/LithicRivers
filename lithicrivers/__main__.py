@@ -1,21 +1,19 @@
 import logging
 import os.path
-import sys
 
-from asciimatics.exceptions import ResizeScreenError, StopApplication
+from asciimatics.exceptions import ResizeScreenError
 from asciimatics.screen import Screen
 
 from lithicrivers.game import Game
-from lithicrivers.settings import LOGFILENAME, KEYMAP, GAME_NAME
+from lithicrivers.model.modelpleasemoveme import StopGame
+from lithicrivers.settings import LOGFILENAME, GAME_NAME, LOGGINGLEVEL
 from lithicrivers.ui import demo
-from lithicrivers.model import StopGame
 
 if os.path.exists(LOGFILENAME):
     os.remove(LOGFILENAME)
 
-logging.basicConfig(filename=LOGFILENAME, level=logging.DEBUG)
+logging.basicConfig(filename=LOGFILENAME, level=LOGGINGLEVEL)
 
-# Press the green button in the gutter to run the script.
 if __name__ == '__main__':
 
     GAME = Game()
