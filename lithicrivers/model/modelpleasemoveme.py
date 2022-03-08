@@ -1,4 +1,5 @@
 import logging
+import math
 from typing import List
 
 from lithicrivers.constants import VEC_WEST, VEC_EAST
@@ -110,8 +111,8 @@ class Viewport:
             # this fucks up the viewport but we can just let the game reset it
             self.top_left = VectorN(0, 0)
             self.lower_right = VectorN(
-                int(factor * float(self.original_size.x)),
-                int(factor * float(self.original_size.y)),
+                math.floor(factor * float(self.original_size.x)),
+                math.floor(factor * float(self.original_size.y)),
             )
 
             # logging.info(factor)
