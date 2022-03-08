@@ -1,4 +1,3 @@
-import logging
 import math
 from typing import List
 
@@ -98,25 +97,19 @@ class Viewport:
         self.rescale(i)
 
     def rescale(self, i: int):
-        original_scale = self.scale
 
         self.scale += i
         self.clamp_scale()
 
         new_scale = self.scale
 
-        # if we should scale,
-        if new_scale != original_scale:
-            factor: float = 1 / new_scale
-            # this fucks up the viewport but we can just let the game reset it
-            self.top_left = VectorN(0, 0)
-            self.lower_right = VectorN(
-                math.floor(factor * float(self.original_size.x)),
-                math.floor(factor * float(self.original_size.y)),
-            )
-
-            # logging.info(factor)
-            # logging.info(self.lower_right)
+        factor: float = 1 / new_scale
+        # this fucks up the viewport but we can just let the game reset it
+        self.top_left = VectorN(0, 0)
+        self.lower_right = VectorN(
+            math.floor(factor * float(self.original_size.x)),
+            math.floor(factor * float(self.original_size.y)),
+        )
 
     def slide(self, move_vec: VectorN):
         self.top_left += move_vec
