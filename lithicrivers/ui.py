@@ -407,7 +407,7 @@ def demo(screen: Screen, scene: Scene, game: Game):
                 game.viewport.slide(move_vec)
 
                 # still outside? Something's wrong, let's reset the viewport...
-                if game.player_outside_viewport():
+                if game.player_outside_viewport(wiggle=VIEWPORT_WIGGLE):
                     game.reset_viewport()
 
         InputHandler.handle_viewport(event, root_page.game)
