@@ -252,7 +252,6 @@ class HelpPage(Frame):
         self.add_layout(layout1)
         # add your widgets here
 
-        helptxt = ""
         helptxt = (f"Hello! Welcome to {GAME_NAME}. Below are keys.\n"
                    "By the way, game UI nav is arrow keys + space or enter.\n"
                    "You can also use the mouse! Left click works!\n"
@@ -314,9 +313,9 @@ class InputHandler:
         :return: Vector the input resolves to.
         """
 
-        datKey = Keymap.char_from_keyboard_event(keyboardEvent)
-        if datKey in KEYMAP.MOVEMENT_VECTOR_MAP.keys():
-            return KEYMAP.MOVEMENT_VECTOR_MAP[datKey]
+        key = Keymap.char_from_keyboard_event(keyboardEvent)
+        if key in KEYMAP.MOVEMENT_VECTOR_MAP.keys():
+            return KEYMAP.MOVEMENT_VECTOR_MAP[key]
 
         return None
 

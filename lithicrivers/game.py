@@ -2,7 +2,7 @@ import logging
 import pickle
 import pprint
 from pathlib import Path
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Optional
 
 import numpy
 
@@ -66,6 +66,10 @@ class Entity:
     def move(self, vec: VectorN):
         self.position += vec
 
+    def onGameTick(self, game, event):
+        game: Game
+        raise NotImplementedError("You are meant to override this method.")
+
     def calcOffset(self, vec: VectorN) -> VectorN:
         """Where would I move, if I did move?"""
         return self.position + vec
@@ -83,10 +87,27 @@ class Entity:
         self.move(VEC_EAST)
 
 
-class Entities:
+class EntityRenderable(Entity, SpriteRenderable):
+
+    def __init__(self, name, position, sprite_sheet):
+        Entity.__init__(self, name=name, position=position)
+        SpriteRenderable.__init__(self, sprite_sheet=sprite_sheet)
+
+
+class Monster(EntityRenderable):
+    pass
+
+
+class Monsters:
     @staticmethod
-    def StumblingSheep(position=VectorN(0, 0, 0)):
-        return Entity(name='Stumbling Sheep', position=position)
+    def StumblingSheep(position):
+        return Monster(name='Stumbling Sheep', position=position, sprite_sheet=['S', 'c=\n'
+                                                                                     '||'])
+
+    @staticmethod
+    def Blob(position):
+        return Monster(name='Blob', position=position, sprite_sheet=['b', 'o.\n'
+                                                                          '0O'])
 
 
 class Items:
@@ -289,6 +310,20 @@ class Tiles:
                                                 '  '])
 
 
+class EntityData:
+    def __init__(self, entities: List[EntityRenderable]):
+        self.all_entities = entities
+
+    def get_entities_at(self, pos: VectorN) -> Optional[List[EntityRenderable]]:
+
+        entities = []
+        for entity in self.all_entities:
+            if entity.position == pos:
+                entities.append(entity)
+
+        return entities
+
+
 class WorldData:
 
     def serialize(self, filepath: Path) -> Path:
@@ -312,9 +347,13 @@ class WorldData:
 
         self.entity_data = entity_data
         if not self.entity_data:
-            self.entity_data = {
-                VectorN(0, 0, 0).serialize(): [Entities.StumblingSheep()]
-            }
+            self.entity_data = EntityData(
+                [
+                    Monsters.StumblingSheep(position=VectorN(10, 10, 0)),
+                    Monsters.Blob(position=VectorN(5, 5, 0)),
+                    Monsters.Blob(position=VectorN(5, 5, 0)),
+                    Monsters.Blob(position=VectorN(5, 5, 0))
+                ])
 
     def set_tile(self, pos: VectorN, t: Tile):
         self.tile_data[pos.serialize()] = t
@@ -412,6 +451,9 @@ class Game:
             viewport: Viewport = None
     ) -> RenderedData:
         r"""
+
+        the BIG chungus render function
+
         :param viewport: Viewport to render.
             if not specified, defaults to self.viewport
         :param scale: Scaling for sprites.      <br><br><pre><code>
@@ -436,10 +478,24 @@ class Game:
                 if not tile:
                     tile = Tiles.Empty()
 
+                # if there is a tile here, render it!
                 sprite = tile.render_sprite(scale=viewport.scale)
 
+                # if there is an entity here, render it!
+                entities = self.world.data.entity_data.get_entities_at(pos)
+                if entities:
+                    entity = entities[0]
+                    sprite = entity.render_sprite(scale=viewport.scale)
+                    logging.info("rendering this entity:")
+                    logging.info(entity)
+                    logging.info(sprite)
+
+                # if there are multiple entities, tile the number of entities...
+                if len(entities) > 1:
+                    sprite = generate_sprite_repeat(str(len(entities))[-1], viewport.scale)
+
                 # if we are here, render us!
-                if (self.player.position.y == y) and (self.player.position.x == x):
+                if self.player.position == pos:
                     sprite = self.player.render_sprite(scale=viewport.scale)
 
                 # logging.debug('render: {}'.format(sprite))
