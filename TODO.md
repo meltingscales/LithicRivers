@@ -3,6 +3,7 @@
 - GH actions
   - can I unify the 4 release actions? hopefully
   - simplify files? :P
+  - https://github.com/marketplace/actions/docker-push
   - https://stackoverflow.com/questions/63148639/create-dependencies-between-jobs-in-github-actions
   - https://www.edwardthomson.com/blog/github_actions_17_dependent_jobs.html
 
