@@ -1,6 +1,10 @@
 # LithicRivers
 
-An ASCII game in development
+An ASCII game in development.
+
+I may abandon this project due to poor decisions on choosing UI frameworks and realizing my render functions are really annoying and unsustainable.
+
+I plan to re-create this game outside of the terminal using a more mature dev framework that "just use asciimatics and curses bro" :P
 
 ![actual screenshot](media/screenshot.png)
 
