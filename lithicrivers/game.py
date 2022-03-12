@@ -68,7 +68,8 @@ class Entity:
 
     def onGameTick(self, game, event):
         game: Game
-        raise NotImplementedError("You are meant to override this method.")
+        raise NotImplementedError("You are meant to override this method for this object:\n"
+                                  "{}".format(self))
 
     def calcOffset(self, vec: VectorN) -> VectorN:
         """Where would I move, if I did move?"""
@@ -486,9 +487,9 @@ class Game:
                 if entities:
                     entity = entities[0]
                     sprite = entity.render_sprite(scale=viewport.scale)
-                    logging.info("rendering this entity:")
-                    logging.info(entity)
-                    logging.info(sprite)
+                    logging.debug("rendering this entity:")
+                    logging.debug(entity)
+                    logging.debug(sprite)
 
                 # if there are multiple entities, tile the number of entities...
                 if len(entities) > 1:

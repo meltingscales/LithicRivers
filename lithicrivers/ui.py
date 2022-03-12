@@ -142,11 +142,19 @@ class GameWidget(asciimatics.widgets.Widget):
         self._frame.canvas: Canvas
 
         content = ""
-        content += f'|~-~ World {self.game.world.name} ~-~|\n'
 
         toRender: RenderedData = self.game.render_world_viewport()
 
         content += toRender.as_string()
+
+        # desired_width = self.width - 2
+        # if desired_width != self.game.viewport.get_width():
+        #     self.game.viewport.set_width(desired_width)
+        #     self.game.reset_viewport()
+
+        # desired_height=unknown
+
+        # logging.info("gamewidget self.width={}".format(self.width))
 
         (colour, attr, background) = self._frame.palette[
             self._pick_palette_key("label", selected=False, allow_input_state=False)

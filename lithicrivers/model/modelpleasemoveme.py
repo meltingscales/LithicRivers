@@ -97,7 +97,6 @@ class Viewport:
         self.rescale(i)
 
     def rescale(self, i: int):
-
         self.scale += i
         self.clamp_scale()
 
@@ -147,6 +146,10 @@ class Viewport:
 
     def get_width(self) -> int:
         return abs(self.lower_right.x - self.top_left.x)
+
+    def set_width(self, width: int):
+        self.lower_right.x = 0
+        self.top_left.x = width
 
     def __str__(self):
         return "<Viewport scale={} top_left=[{}] lower_right=[{}] >".format(self.scale, self.top_left, self.lower_right)
