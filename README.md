@@ -69,6 +69,8 @@ read the help page
 - https://github.com/JnyJny/GameOfLife
 - https://github.com/VedantKhairnar/The-Maze-Runner
 
+<!--
+
 ## meme
 
 take a look at some of our reviews below...
@@ -78,3 +80,5 @@ take a look at some of our reviews below...
 ![gnerf](http://images3.memedroid.com/images/UPLOADED727/5c1d01829c2ff.jpeg)
 
 god help me
+
+-->
