@@ -40,7 +40,7 @@ class TabButtons(Layout):
             Button("Help", raiseFn(NextScene, "HelpPage")),
             Button("Root Page", raiseFn(NextScene, "RootPage")),
             Button("Message Log", raiseFn(NextScene, "MessageLogPage")),
-            Button("Charlie Page", raiseFn(NextScene, "CharliePage")),
+            Button("Extra Page", raiseFn(NextScene, "ExtraPage")),
             Button("Quit", raiseFn(StopGame, "Game stopping :P"))
         ]
 
@@ -289,13 +289,13 @@ class MessageLogPage(Frame):
         self.fix()
 
 
-class CharliePage(Frame):
+class ExtraPage(Frame):
     def __init__(self, screen):
         super().__init__(screen,
                          screen.height,
                          screen.width,
                          can_scroll=False,
-                         title="Charlie Page")
+                         title="Extra Page")
         layout1 = Layout([1], fill_frame=True)
         self.add_layout(layout1)
         # add your widgets here
@@ -366,7 +366,7 @@ def demo(screen: Screen, scene: Scene, game: Game):
         Scene([HelpPage(screen, game)], -1, name="HelpPage"),
         Scene([RootPage(screen, game)], -1, name="RootPage"),
         Scene([MessageLogPage(screen)], -1, name="MessageLogPage"),
-        Scene([CharliePage(screen)], -1, name="CharliePage"),
+        Scene([ExtraPage(screen)], -1, name="ExtraPage"),
     ]
 
     for scene in scenes[::-1]:
