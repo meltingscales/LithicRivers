@@ -5,9 +5,9 @@ description = "Flowing stone!"
 authors = ["Henry Post <HenryFBP@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.8"
-asciimatics = "*"
-numpy = "*"
+python = "^3.9"
+asciimatics = "^1.15.0"
+numpy = "^1.26.4"
 
 [tool.poetry.dev-dependencies]
 pyinstaller = "*"

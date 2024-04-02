@@ -1,14 +1,8 @@
-# LithicRivers (ABANDONED)
+# LithicRivers
 
-An ASCII game I never finished T_T
+An ASCII game I want to finish.
 
-Successor: <https://github.com/HenryFBP/MountainFlow>
-
-I am abandoning this project due to poor decisions on choosing UI frameworks and realizing my render functions are really annoying and unsustainable.
-
-I plan to re-create this game outside of the terminal using a more mature dev framework that "just use asciimatics and curses bro" :P
-
-![actual screenshot](media/screenshot.png)
+![Screenshot of the game](media/screenshot.png)
 
 ## Play the game
 
