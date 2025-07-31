@@ -92,9 +92,9 @@ class TestInputHandlerSimple(SimpleTUITestCase):
         tile = self.game.get_tile_at_player_feet()
         self.assertEqual(tile.tileid, Tiles.Dirt().tileid)
     
-    def test_mining_trees_not_implemented(self):
-        """Test that mining trees is not implemented."""
-        # Test mining trees (should not work)
+    def test_mining_trees_implemented(self):
+        """Test that mining trees is now implemented."""
+        # Test mining trees (should work now)
         player_pos = self.game.player.position
         self.game.world.set_tile(player_pos, Tiles.Tree())
         
@@ -104,9 +104,9 @@ class TestInputHandlerSimple(SimpleTUITestCase):
         # Handle mining
         InputHandler.handle_mining(event, self.game, root_page)
         
-        # Tile should still be tree
+        # Tile should be replaced with dirt
         tile = self.game.get_tile_at_player_feet()
-        self.assertEqual(tile.tileid, Tiles.Tree().tileid)
+        self.assertEqual(tile.tileid, Tiles.Dirt().tileid)
     
     def test_viewport_input_handling(self):
         """Test that viewport inputs are handled correctly."""
