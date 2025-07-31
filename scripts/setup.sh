@@ -6,13 +6,13 @@ else #osx needs to use python3
   PYCMD=python3
 fi
 
+echo "Installing uv..."
 
-echo "Make sure poetry exists..."
-
-which poetry
-# if exit code is nonzero, it is not a command.
+# Install uv if not already installed
+which uv
 if [ "$?" -eq "1" ]; then
-  $PYCMD -m pip install poetry
+  $PYCMD -m pip install uv
 fi
 
-$PYCMD -m poetry install
+# Install dependencies with uv
+uv sync --extra dev

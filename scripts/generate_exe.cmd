@@ -1,1 +1,1 @@
-poetry run pyinstaller ./lithicrivers.spec
+uv run pyinstaller ./lithicrivers.spec

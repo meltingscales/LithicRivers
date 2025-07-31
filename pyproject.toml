@@ -1,20 +1,85 @@
-[tool.poetry]
+[project]
 name = "LithicRivers"
 version = "0.1.0"
 description = "Flowing stone!"
-authors = ["Henry Post <HenryFBP@gmail.com>"]
+authors = [
+    {name = "Henry Post", email = "HenryFBP@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "asciimatics>=1.15.0",
+    "numpy>=1.26.4",
+]
 
-[tool.poetry.dependencies]
-python = "^3.9"
-asciimatics = "^1.15.0"
-numpy = "^1.26.4"
-
-[tool.poetry.dev-dependencies]
-pyinstaller = "*"
-macholib = { version = "*", markers = "sys_platform == 'darwin'" } # osx packaging tool for pyinstaller
-coverage = "*"
-lcov = "*"
+[project.optional-dependencies]
+dev = [
+    "pyinstaller",
+    "macholib; sys_platform == 'darwin'",
+    "coverage",
+    "lcov",
+    "pytest",
+    "pytest-cov",
+    "pytest-mock",
+    "black",
+    "isort",
+    "flake8",
+    "mypy",
+    "pre-commit",
+]
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.black]
+line-length = 88
+target-version = ['py39']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+[tool.pytest.ini_options]
+testpaths = ["lithicrivers/test"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "--cov=lithicrivers",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-report=lcov",
+]

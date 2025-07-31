@@ -1,4 +1,4 @@
-# TODO
+# old but still important TODO
 
 - GH actions
   - can I unify the 4 release actions? hopefully
@@ -33,3 +33,10 @@
 - quests?
 - stats?
 - cybernetics/augs
+
+
+# 2025 todo
+
+- get rid of numpy entirely
+- use seeded randomness for random worldgen for determinism
+- figure out how to properly test the TUI in a realistic way
