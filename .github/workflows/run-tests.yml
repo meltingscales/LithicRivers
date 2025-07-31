@@ -11,9 +11,9 @@ jobs:
       - name: "Checkout source code"
         uses: "actions/checkout@v2.4.0"
 
-      - run: "./scripts/setup.sh"
-      - run: "./scripts/test.sh"
-      - run: "./scripts/test-tui.sh"
+      - run: "make install"
+      - run: "make test-lcov"
+      - run: "make test-tui"
 
       - name: Coveralls
         uses: coverallsapp/github-action@master

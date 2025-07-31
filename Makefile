@@ -17,6 +17,32 @@ install: ## Install dependencies
 test: ## Run all tests
 	uv run coverage run -m unittest discover lithicrivers
 
+test-tui: ## Run TUI tests
+	@echo "Running TUI tests..."
+	@echo "1. Running simplified TUI tests..."
+	uv run python -m unittest lithicrivers.test.test_tui_simple
+	@echo "2. Running advanced mock-based tests..."
+	uv run python -m unittest lithicrivers.test.test_tui_advanced
+	@echo "3. Running headless TUI tests..."
+	uv run python -m unittest lithicrivers.test.test_tui_headless
+	@echo "4. Running visual regression tests..."
+	uv run python -m unittest lithicrivers.test.test_tui_visual
+	@echo "TUI tests completed!"
+
+test-tui-quick: ## Run quick TUI tests (simplified)
+	@echo "Running simplified TUI tests..."
+	uv run python -m unittest lithicrivers.test.test_tui_simple
+
+test-tui-headless: ## Run headless TUI tests
+	@echo "Running headless TUI tests..."
+	uv run python -m unittest lithicrivers.test.test_tui_headless
+
+test-tui-visual: ## Run visual regression tests
+	@echo "Running visual regression tests..."
+	uv run python -m unittest lithicrivers.test.test_tui_visual
+
+
+
 test-coverage: ## Run tests with coverage report
 	uv run coverage run -m unittest discover lithicrivers
 	uv run coverage report
