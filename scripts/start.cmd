@@ -1,4 +1,4 @@
-poetry run python -m lithicrivers
+uv run python -m lithicrivers
 
 echo "Done."
 

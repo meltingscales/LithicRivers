@@ -6,4 +6,4 @@ else #osx needs to use python3
   PYCMD=python3
 fi
 
-$PYCMD -m poetry run pyinstaller ./lithicrivers.spec
+uv run pyinstaller ./lithicrivers.spec

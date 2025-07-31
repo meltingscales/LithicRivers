@@ -1,5 +1,5 @@
-echo "Make sure poetry exists..."
-WHERE poetry
-IF %ERRORLEVEL% NEQ 0 python -m pip install poetry
+echo "Installing uv..."
+WHERE uv
+IF %ERRORLEVEL% NEQ 0 python -m pip install uv
 
-python -m poetry install
+uv sync --extra dev
