@@ -1,0 +1,494 @@
+"""
+Advanced TUI testing framework for LithicRivers.
+This module provides comprehensive testing for TUI components using realistic mocks.
+"""
+
+import unittest
+from unittest.mock import Mock, patch, MagicMock, call
+from typing import List, Optional, Dict, Any
+import asciimatics.screen
+import asciimatics.widgets
+from asciimatics.event import KeyboardEvent, MouseEvent
+from asciimatics.exceptions import NextScene, ResizeScreenError
+
+from lithicrivers.game_engine import GameEngine
+from lithicrivers.game import Game, Tiles, Items
+from lithicrivers.model.vector import VectorN
+from lithicrivers.constants import VEC_NORTH, VEC_SOUTH, VEC_WEST, VEC_EAST
+from lithicrivers.ui import GameWidget, RootPage, HelpPage, InputHandler
+
+
+class AdvancedMockScreen:
+    """Advanced mock screen that more closely mimics asciimatics behavior."""
+    
+    def __init__(self, width: int = 80, height: int = 24):
+        self.width = width
+        self.height = height
+        self.canvas = AdvancedMockCanvas(width, height)
+        self.colours = 256  # Standard color support
+        self.unicode_aware = True
+        self.palette = {
+            ('label', False, False): (7, 0, 0),  # Default colors
+            ('button', False, False): (7, 0, 0),
+            ('button', True, False): (0, 7, 0),
+            ('background', False, False): (0, 0, 0),
+            ('label', True, False): (0, 7, 0),  # Selected label
+            ('widget', False, False): (7, 0, 0),  # Widget colors
+            ('widget', True, False): (0, 7, 0),   # Selected widget
+        }
+        self._current_scene = None
+        self._scenes = {}
+    
+    def _pick_palette_key(self, key, selected=False, allow_input_state=False):
+        """Mock palette key picker."""
+        return (key, selected, allow_input_state)
+    
+    def get_dimensions(self):
+        return (self.width, self.height)
+    
+    def add_scene(self, scene_name: str, scene):
+        """Add a scene to the screen."""
+        self._scenes[scene_name] = scene
+    
+    def switch_scene(self, scene_name: str):
+        """Switch to a different scene."""
+        if scene_name in self._scenes:
+            self._current_scene = self._scenes[scene_name]
+            return True
+        return False
+    
+    def get_current_scene(self):
+        """Get the current scene."""
+        return self._current_scene
+
+
+class AdvancedMockCanvas:
+    """Advanced mock canvas that tracks rendering calls and content."""
+    
+    def __init__(self, width: int, height: int):
+        self.width = width
+        self.height = height
+        self.buffer = [[' ' for _ in range(width)] for _ in range(height)]
+        self.unicode_aware = True
+        self.paint_calls = []
+        self.clear_calls = 0
+    
+    def paint(self, text: str, x: int, y: int, colour: int, attr: int, background: int):
+        """Mock paint method that stores text and tracks calls."""
+        self.paint_calls.append({
+            'text': text,
+            'x': x,
+            'y': y,
+            'colour': colour,
+            'attr': attr,
+            'background': background
+        })
+        
+        if 0 <= y < self.height and 0 <= x < self.width:
+            for i, char in enumerate(text):
+                if 0 <= x + i < self.width:
+                    self.buffer[y][x + i] = char
+    
+    def get_content(self) -> List[List[str]]:
+        """Get the current content of the canvas."""
+        return [row[:] for row in self.buffer]
+    
+    def get_content_string(self) -> str:
+        """Get the canvas content as a string."""
+        return '\n'.join([''.join(row) for row in self.buffer])
+    
+    def clear(self):
+        """Clear the canvas and track the call."""
+        self.clear_calls += 1
+        self.buffer = [[' ' for _ in range(self.width)] for _ in range(self.height)]
+    
+    def get_paint_calls(self) -> List[Dict[str, Any]]:
+        """Get all paint calls made to this canvas."""
+        return self.paint_calls.copy()
+    
+    def reset_paint_calls(self):
+        """Reset the paint call tracking."""
+        self.paint_calls = []
+
+
+class MockFrame:
+    """Mock frame that provides the interface expected by widgets."""
+    
+    def __init__(self, screen: AdvancedMockScreen):
+        self.screen = screen
+        self.canvas = screen.canvas
+        self.palette = screen.palette
+        self._widgets = []
+        self._layout = None
+    
+    def add_widget(self, widget):
+        """Add a widget to the frame."""
+        self._widgets.append(widget)
+        widget._frame = self
+    
+    def set_layout(self, layout):
+        """Set the layout for the frame."""
+        self._layout = layout
+        layout._frame = self
+    
+    def get_widgets(self):
+        """Get all widgets in the frame."""
+        return self._widgets
+    
+    def _pick_palette_key(self, key, selected=False, allow_input_state=False):
+        """Mock palette key picker."""
+        return (key, selected, allow_input_state)
+
+
+class AdvancedUITestCase(unittest.TestCase):
+    """Advanced UI test case with comprehensive mocking and utilities."""
+    
+    def setUp(self):
+        """Set up common test fixtures."""
+        self.game_engine = GameEngine()
+        self.game = Game()
+        self.mock_screen = AdvancedMockScreen(80, 24)
+        self.mock_frame = MockFrame(self.mock_screen)
+        self.mock_canvas = self.mock_screen.canvas
+    
+    def create_test_world(self, tiles: dict) -> None:
+        """Create a test world with specified tiles."""
+        for pos_str, tile in tiles.items():
+            x, y, z = map(int, pos_str.split(','))
+            self.game_engine.set_tile(VectorN(x, y, z), tile)
+    
+    def get_rendered_content(self) -> str:
+        """Get the rendered content as a string."""
+        return self.mock_canvas.get_content_string()
+    
+    def assert_content_contains(self, text: str):
+        """Assert that the rendered content contains the given text."""
+        content = self.get_rendered_content()
+        self.assertIn(text, content, f"Expected '{text}' in content:\n{content}")
+    
+    def assert_content_not_contains(self, text: str):
+        """Assert that the rendered content does not contain the given text."""
+        content = self.get_rendered_content()
+        self.assertNotIn(text, content, f"Expected '{text}' not in content:\n{content}")
+    
+    def assert_paint_called_with(self, text: str, x: int = None, y: int = None):
+        """Assert that paint was called with specific parameters."""
+        calls = self.mock_canvas.get_paint_calls()
+        found = False
+        for call in calls:
+            if call['text'] == text:
+                if x is not None and call['x'] != x:
+                    continue
+                if y is not None and call['y'] != y:
+                    continue
+                found = True
+                break
+        self.assertTrue(found, f"Paint not called with text '{text}' at x={x}, y={y}")
+    
+    def create_keyboard_event(self, key_code: int) -> KeyboardEvent:
+        """Create a mock keyboard event."""
+        event = Mock(spec=KeyboardEvent)
+        event.key_code = key_code
+        return event
+    
+    def create_mouse_event(self, x: int, y: int, button: int = 1) -> MouseEvent:
+        """Create a mock mouse event."""
+        event = Mock(spec=MouseEvent)
+        event.x = x
+        event.y = y
+        event.buttons = [button]
+        return event
+
+
+class TestGameWidgetAdvanced(AdvancedUITestCase):
+    """Advanced tests for the GameWidget component."""
+    
+    def test_game_widget_rendering(self):
+        """Test that GameWidget renders game content correctly."""
+        # Set up a simple world
+        self.create_test_world({
+            "0,0,0": Tiles.Dirt(),
+            "1,0,0": Tiles.Tree(),
+        })
+        
+        # Create the widget
+        widget = GameWidget(self.game)
+        widget._frame = self.mock_frame
+        widget._x = 0
+        widget._y = 0
+        widget._w = 40
+        widget._h = 20
+        
+        # Update the widget
+        widget.update(0)
+        
+        # Check that content was rendered
+        content = self.get_rendered_content()
+        self.assertIn("Dirt", content)
+        self.assertIn("Tree", content)
+    
+    def test_game_widget_dimensions(self):
+        """Test that GameWidget calculates dimensions correctly."""
+        widget = GameWidget(self.game)
+        widget._frame = self.mock_frame
+        
+        # Test required height calculation
+        height = widget.required_height(0, 40)
+        self.assertGreater(height, 0)
+    
+    def test_game_widget_with_player_movement(self):
+        """Test that GameWidget updates when player moves."""
+        # Set up initial world
+        self.create_test_world({
+            "0,0,0": Tiles.Dirt(),
+            "1,0,0": Tiles.Tree(),
+        })
+        
+        widget = GameWidget(self.game)
+        widget._frame = self.mock_frame
+        widget._x = 0
+        widget._y = 0
+        widget._w = 40
+        widget._h = 20
+        
+        # Initial render
+        widget.update(0)
+        initial_content = self.get_rendered_content()
+        
+        # Move player
+        self.game.move_player(VEC_EAST)
+        
+        # Re-render
+        widget.update(0)
+        new_content = self.get_rendered_content()
+        
+        # Content should be different after player movement
+        self.assertNotEqual(initial_content, new_content)
+
+
+class TestInputHandlerAdvanced(AdvancedUITestCase):
+    """Advanced tests for the InputHandler."""
+    
+    def test_movement_input_handling(self):
+        """Test that movement inputs are handled correctly."""
+        # Test each movement direction
+        movement_tests = [
+            (ord('w'), VEC_NORTH),
+            (ord('s'), VEC_SOUTH),
+            (ord('a'), VEC_WEST),
+            (ord('d'), VEC_EAST),
+        ]
+        
+        for key_code, expected_direction in movement_tests:
+            event = self.create_keyboard_event(key_code)
+            result = InputHandler.handle_movement(event)
+            self.assertEqual(result, expected_direction)
+    
+    def test_mining_input_handling(self):
+        """Test that mining inputs are handled correctly."""
+        # Set up a mineable tile at player's position (DaFuq is mineable)
+        player_pos = self.game.player.position
+        self.game.world.set_tile(player_pos, Tiles.DaFuq())
+        
+        # Create mining event (use 'u' key which is mapped to MINE)
+        event = self.create_keyboard_event(ord('u'))
+        root_page = Mock()
+        
+        # Handle mining
+        InputHandler.handle_mining(event, self.game, root_page)
+        
+        # Check that tile was mined (should be replaced with Dirt)
+        tile = self.game.get_tile_at_player_feet()
+        self.assertEqual(tile.tileid, Tiles.Dirt().tileid)
+    
+    def test_viewport_input_handling(self):
+        """Test that viewport inputs are handled correctly."""
+        # Create a copy of the viewport manually since it doesn't have a copy method
+        initial_viewport = type(self.game.viewport)(
+            self.game.viewport.top_left,
+            self.game.viewport.lower_right,
+            self.game.viewport.scale
+        )
+        
+        # Test viewport movement (using correct keys)
+        event = self.create_keyboard_event(ord('['))  # Move viewport west
+        InputHandler.handle_viewport(event, self.game)
+        
+        # Viewport should have changed
+        self.assertNotEqual(initial_viewport.top_left, self.game.viewport.top_left)
+    
+    def test_scale_input_handling(self):
+        """Test that scale inputs are handled correctly."""
+        initial_scale = self.game.viewport.scale
+        
+        # Test scale change
+        event = self.create_keyboard_event(ord('='))  # Increase scale
+        InputHandler.handle_scale(event, self.game)
+        
+        # Scale should have changed
+        self.assertNotEqual(initial_scale, self.game.viewport.scale)
+
+
+class TestPageComponents(AdvancedUITestCase):
+    """Test the page components (RootPage, HelpPage, etc.)."""
+    
+    def test_root_page_creation(self):
+        """Test that RootPage can be created and rendered."""
+        page = RootPage(self.mock_screen, self.game)
+        
+        # Check that page has layouts
+        self.assertGreater(len(page._layouts), 0)
+        
+        # Check that GameWidget is present in layouts
+        game_widgets = []
+        for layout in page._layouts:
+            # Layout widgets are stored in a different attribute
+            if hasattr(layout, 'widgets'):
+                for widget in layout.widgets:
+                    if isinstance(widget, GameWidget):
+                        game_widgets.append(widget)
+        self.assertEqual(len(game_widgets), 1)
+    
+    def test_help_page_creation(self):
+        """Test that HelpPage can be created and rendered."""
+        page = HelpPage(self.mock_screen, self.game)
+        
+        # Check that page has layouts
+        self.assertGreater(len(page._layouts), 0)
+        
+        # Check that help content is present
+        help_labels = []
+        for layout in page._layouts:
+            # Layout widgets are stored in a different attribute
+            if hasattr(layout, 'widgets'):
+                for widget in layout.widgets:
+                    if hasattr(widget, 'text'):
+                        help_labels.append(widget)
+        self.assertGreater(len(help_labels), 0)
+    
+    def test_page_navigation(self):
+        """Test that pages can navigate between each other."""
+        # Create pages
+        root_page = RootPage(self.mock_screen, self.game)
+        help_page = HelpPage(self.mock_screen, self.game)
+        
+        # Add pages to screen
+        self.mock_screen.add_scene("RootPage", root_page)
+        self.mock_screen.add_scene("HelpPage", help_page)
+        
+        # Test navigation
+        self.assertTrue(self.mock_screen.switch_scene("HelpPage"))
+        self.assertEqual(self.mock_screen.get_current_scene(), help_page)
+
+
+class TestUIIntegration(AdvancedUITestCase):
+    """Integration tests for the complete UI system."""
+    
+    def test_complete_game_flow(self):
+        """Test a complete game flow with UI interactions."""
+        # Set up world
+        self.game.world.set_tile(VectorN(0, 0, 0), Tiles.Dirt())
+        self.game.world.set_tile(VectorN(1, 0, 0), Tiles.Tree())
+        self.game.world.set_tile(VectorN(0, 1, 0), Tiles.Bedrock())
+        
+        # Create root page
+        root_page = RootPage(self.mock_screen, self.game)
+        
+        # Simulate player movement
+        movement_event = self.create_keyboard_event(ord('d'))
+        move_vec = InputHandler.handle_movement(movement_event)
+        if move_vec:
+            self.game.move_player(move_vec)
+        
+        # Simulate mining
+        mining_event = self.create_keyboard_event(ord('u'))
+        InputHandler.handle_mining(mining_event, self.game, root_page)
+        
+        # Check game state - player should have moved east from initial position
+        expected_pos = VectorN(26, 25, 0)  # Initial position (25,25,0) + east (1,0,0)
+        self.assertEqual(self.game.player.position, expected_pos)
+        
+        # Check that tile was mined
+        tile = self.game.get_tile_at_player_feet()
+        self.assertEqual(tile, Tiles.Empty())
+    
+    def test_ui_responsiveness(self):
+        """Test that UI responds to various input events."""
+        root_page = RootPage(self.mock_screen, self.game)
+        
+        # Test various input events
+        events = [
+            (ord('w'), "north movement"),
+            (ord('s'), "south movement"),
+            (ord('a'), "west movement"),
+            (ord('d'), "east movement"),
+            (ord(' '), "mining"),
+            (ord('i'), "viewport up"),
+            (ord('k'), "viewport down"),
+            (ord('j'), "viewport left"),
+            (ord('l'), "viewport right"),
+            (ord('='), "scale up"),
+            (ord('-'), "scale down"),
+        ]
+        
+        for key_code, description in events:
+            with self.subTest(description):
+                event = self.create_keyboard_event(key_code)
+                
+                # Handle the event appropriately
+                if key_code in [ord('w'), ord('s'), ord('a'), ord('d')]:
+                    result = InputHandler.handle_movement(event)
+                    self.assertIsNotNone(result)
+                elif key_code == ord(' '):
+                    InputHandler.handle_mining(event, self.game, root_page)
+                elif key_code in [ord('i'), ord('k'), ord('j'), ord('l')]:
+                    InputHandler.handle_viewport(event, self.game)
+                elif key_code in [ord('='), ord('-')]:
+                    InputHandler.handle_scale(event, self.game)
+
+
+class TestUIPerformance(AdvancedUITestCase):
+    """Performance tests for UI components."""
+    
+    def test_game_widget_rendering_performance(self):
+        """Test that GameWidget renders efficiently."""
+        import time
+        
+        # Create a larger world
+        for x in range(-5, 6):
+            for y in range(-5, 6):
+                self.game.world.set_tile(VectorN(x, y, 0), Tiles.Dirt())
+        
+        widget = GameWidget(self.game)
+        widget._frame = self.mock_frame
+        widget._x = 0
+        widget._y = 0
+        widget._w = 80
+        widget._h = 24
+        
+        # Measure rendering time
+        start_time = time.time()
+        widget.update(0)
+        render_time = time.time() - start_time
+        
+        # Rendering should be fast (less than 100ms)
+        self.assertLess(render_time, 0.1, f"Rendering took {render_time:.3f}s")
+    
+    def test_input_handling_performance(self):
+        """Test that input handling is efficient."""
+        import time
+        
+        # Create many input events
+        events = [self.create_keyboard_event(ord('w')) for _ in range(100)]
+        
+        start_time = time.time()
+        for event in events:
+            InputHandler.handle_movement(event)
+        handle_time = time.time() - start_time
+        
+        # Input handling should be very fast
+        self.assertLess(handle_time, 0.01, f"Input handling took {handle_time:.3f}s")
+
+
+if __name__ == '__main__':
+    unittest.main() 

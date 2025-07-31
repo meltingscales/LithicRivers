@@ -113,6 +113,16 @@ class Items:
         return Item("Diamond",
                     sprite_sheet=['d'])
 
+    @staticmethod
+    def Log():
+        return Item("Log",
+                    sprite_sheet=['|'])
+
+    @staticmethod
+    def Acorn():
+        return Item("Acorn",
+                    sprite_sheet=['o'])
+
 
 class Item(SpriteRenderable):
     def __init__(self, name, sprite_sheet: List[str] = None):
@@ -260,7 +270,9 @@ class Tiles:
                                        '||', '/|\\\n'
                                              ';|;\n'
                                              '/|\\\n'],
-                    drops={1.00: Items.Stick()})
+                    drops={0.50: Items.Stick(),
+                           0.30: Items.Log(),
+                           0.20: Items.Acorn()})
 
     @staticmethod
     def DaFuq():

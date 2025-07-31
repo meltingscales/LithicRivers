@@ -3,6 +3,10 @@
 __pycache__/
 *.log
 
+# build and distribution directories
+build/
+dist/
+
 # game
 *.lithicriversworlddata
 
