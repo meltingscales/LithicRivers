@@ -1,10 +1,9 @@
 import logging
 import pickle
 import pprint
+import random
 from pathlib import Path
-from typing import List, Dict, Union
-
-import numpy
+from typing import List, Dict, Union, Optional
 
 from lithicrivers.constants import VEC_NORTH, VEC_SOUTH, VEC_WEST, VEC_EAST
 from lithicrivers.model.generictype import T
@@ -194,14 +193,15 @@ def weighted_choice(weights: List[float], choices: List[T]) -> T:
         logging.error(ve)
         raise ve
 
-    weights = numpy.asarray(weights)
-
-    normalizedWeights = weights
-
-    if weights.sum() != 1:
-        normalizedWeights = weights / weights.sum()
-
-    return numpy.random.choice(choices, p=normalizedWeights)
+    # Normalize weights to sum to 1
+    total_weight = sum(weights)
+    if total_weight == 0:
+        raise ValueError("Weights cannot all be zero")
+    
+    normalized_weights = [w / total_weight for w in weights]
+    
+    # Use random.choices for weighted selection
+    return random.choices(choices, weights=normalized_weights, k=1)[0]
 
 
 def weighted_choice_dict(dictWeight: Dict[float, T]) -> T:
@@ -351,7 +351,8 @@ class World:
             radius: VectorN,
             gen_function=generate_tile,
             gf_args=None,
-            gf_kwargs=None) -> WorldData:
+            gf_kwargs=None,
+            seed: Optional[int] = None) -> WorldData:
         """
         Generate world data.
 
@@ -366,19 +367,27 @@ class World:
 
         resultworld = WorldData()
 
-        for z in range(-radius.z, radius.z):
-            for y in range(-radius.y, radius.y):
-                for x in range(-radius.x, radius.x):
-                    pos = VectorN(x, y, z)
-                    tile = gen_function(*gf_args, **gf_kwargs, current_location=pos)
-                    resultworld.set_tile(pos, tile)
+        # Use seeded world generation if seed is provided
+        if seed is not None:
+            from lithicrivers.worldgen import generate_world_with_seed
+            world_data = generate_world_with_seed(radius, seed)
+            resultworld.tile_data = world_data
+        else:
+            # Fall back to original random generation
+            for z in range(-radius.z, radius.z):
+                for y in range(-radius.y, radius.y):
+                    for x in range(-radius.x, radius.x):
+                        pos = VectorN(x, y, z)
+                        tile = gen_function(*gf_args, **gf_kwargs, current_location=pos)
+                        resultworld.set_tile(pos, tile)
 
         return resultworld
 
-    def __init__(self, name="Gaia", size=DEFAULT_SIZE_RADIUS):
+    def __init__(self, name="Gaia", size=DEFAULT_SIZE_RADIUS, seed: Optional[int] = None):
         self.size = size
         self.name = name
-        self.data = World.gen_random_world_data(size)
+        self.seed = seed
+        self.data = World.gen_random_world_data(size, seed=seed)
         self.gametick = 0
 
     def get_tile(self, pos: VectorN):
@@ -389,7 +398,7 @@ class World:
 
 
 class Game:
-    def __init__(self, player: Player = None, world: World = None, viewport: Viewport = DEFAULT_VIEWPORT):
+    def __init__(self, player: Player = None, world: World = None, viewport: Viewport = DEFAULT_VIEWPORT, seed: Optional[int] = None):
 
         self.viewport = viewport
 
@@ -397,7 +406,7 @@ class Game:
             player = Player()
 
         if world is None:
-            world = World()
+            world = World(seed=seed)
 
         self.player: Player = player
         self.world: World = world

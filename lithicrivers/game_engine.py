@@ -9,8 +9,6 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Protocol, Tuple, Union
 from pathlib import Path
 
-import numpy
-
 from lithicrivers.constants import VEC_NORTH, VEC_SOUTH, VEC_WEST, VEC_EAST
 from lithicrivers.model.generictype import T
 from lithicrivers.model.modelpleasemoveme import Viewport, RenderedData
@@ -118,10 +116,11 @@ class GameEngine:
     This class is designed to be easily testable and manipulatable.
     """
     
-    def __init__(self, initial_state: Optional[GameState] = None):
+    def __init__(self, initial_state: Optional[GameState] = None, seed: Optional[int] = None):
         self.state = initial_state or GameState(
             player_position=DEFAULT_PLAYER_POSITION
         )
+        self.seed = seed
         self.action_history: List[GameAction] = []
     
     def reset_to_initial_state(self) -> None:
