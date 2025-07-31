@@ -45,6 +45,64 @@ action = MovePlayerAction(VEC_NORTH)
 new_state = action.apply(current_state)
 ```
 
+## Seeded World Generation
+
+### Deterministic World Creation
+
+LithicRivers now supports seeded world generation for reproducible worlds, similar to Minecraft:
+
+```python
+from lithicrivers.worldgen import SeededWorldGenerator, generate_world_with_seed
+from lithicrivers.model.vector import VectorN
+from lithicrivers.game import World, Game
+
+# Create a world with a specific seed
+world = World(seed=42)
+
+# Create a game with a seeded world
+game = Game(seed=42)
+
+# Generate world data directly
+world_data = generate_world_with_seed(VectorN(10, 10, 5), seed=42)
+
+# Use the SeededWorldGenerator class
+generator = SeededWorldGenerator(seed=42)
+tile = generator.generate_tile_for_position(VectorN(10, 20, 0))
+```
+
+### Key Features
+
+- **Deterministic**: Same seed always produces the same world
+- **Position-based**: Each position generates the same tile with the same seed
+- **Height-aware**: Different tile types based on z-coordinate (sky, surface, underground)
+- **Backward compatible**: Existing code works without seeds (uses random generation)
+
+### Testing Seeded Generation
+
+```python
+import unittest
+from lithicrivers.worldgen import SeededWorldGenerator
+from lithicrivers.model.vector import VectorN
+
+class TestSeededGeneration(unittest.TestCase):
+    def test_deterministic_generation(self):
+        generator = SeededWorldGenerator(seed=42)
+        pos = VectorN(10, 20, 0)
+        
+        tile1 = generator.generate_tile_for_position(pos)
+        tile2 = generator.generate_tile_for_position(pos)
+        
+        # Same position should always generate the same tile
+        self.assertEqual(tile1, tile2)
+    
+    def test_different_seeds_produce_different_worlds(self):
+        world1 = generate_world_with_seed(VectorN(5, 5, 2), seed=42)
+        world2 = generate_world_with_seed(VectorN(5, 5, 2), seed=12345)
+        
+        # Different seeds should produce different worlds
+        self.assertNotEqual(world1, world2)
+```
+
 ## Testing Framework
 
 ### Unit Testing Game Logic

@@ -8,11 +8,9 @@
 
 ## game
 - add procedurally generated catgirls
-- do perf testing to fix lag on startup...thanks numpy...
 - auto-scale the viewport based off of viewable area
     - determine from screen size
     - determine from "blank space" in asciimatics (if this is even doable)
-- don't use numpy, its a bloated big ass chungoid that adds to the pyinstaller exe size
 - allow player to place blocks
 - pushboxes
 - audio system
@@ -37,6 +35,9 @@
 
 # 2025 todo
 
-- get rid of numpy entirely
-- use seeded randomness for random worldgen for determinism
-- figure out how to properly test the TUI in a realistic way
+- figure out how to properly test the TUI in a realistic way, not with my existing jank bash script test-tui.sh
+- color-code different elements within the TUI
+- ask "are there any bugs or issues you see with my existing viewport code? can we stress test it?" to AI
+- ask "Are there any bugs or issues you see with my world data structure? how does minecraft do it?" to AI
+- limit the ability to zoom in to 1,2,3
+- for viewscale=2, there's dots on the bottom-right of the viewport. find a way to clamp the viewport to a specific dimension that's the same as viewscale=1.
