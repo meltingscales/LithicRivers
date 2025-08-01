@@ -1,7 +1,6 @@
-
-'''
+"""
 god i hate math
-'''
+"""
 
 import unittest
 
@@ -31,12 +30,12 @@ class TestVectorN(unittest.TestCase):
 
     def testSerialize(self):
         v1 = VectorN(1, 2, 3, 4)
-        self.assertEqual(v1.serialize(), '1,2,3,4')
-        self.assertEqual(VectorN.deserialize('1,2,3,4'), v1)
+        self.assertEqual(v1.serialize(), "1,2,3,4")
+        self.assertEqual(VectorN.deserialize("1,2,3,4"), v1)
 
         v2 = VectorN(1)
-        self.assertEqual(v2.serialize(), '1')
-        self.assertEqual(VectorN.deserialize('1'), v2)
+        self.assertEqual(v2.serialize(), "1")
+        self.assertEqual(VectorN.deserialize("1"), v2)
 
     def testMath(self):
         v1 = VectorN(1, 2, 3)

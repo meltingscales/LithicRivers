@@ -1,4 +1,4 @@
-from typing import Tuple, List, Any, Union
+from typing import Any, List, Tuple, Union
 
 
 class VectorN:
@@ -6,10 +6,9 @@ class VectorN:
     Vector (point) that can be any dimension (X, or X/Y, or X/Y/Z, or X/Y/Z/W, etc)
     """
 
-    dimPosMap = {'x': 0, 'y': 1, 'z': 2, 'w': 3}
+    dimPosMap = {"x": 0, "y": 1, "z": 2, "w": 3}
 
     def __init__(self, *dimvals: int):
-
         # we're probably being passed a string, a list, or a VectorN object
         if not isinstance(dimvals, tuple):
             dimvals = VectorN.deserialize(dimvals).as_tuple()
@@ -19,7 +18,12 @@ class VectorN:
         if isinstance(subelt, tuple):
             dimvals = subelt
 
-        self.x, self.y, self.z, self.w = (None, None, None, None,)
+        self.x, self.y, self.z, self.w = (
+            None,
+            None,
+            None,
+            None,
+        )
         self.dimension_values = dimvals
 
         # set x,y,z, etc
@@ -38,56 +42,58 @@ class VectorN:
         return len(self.dimension_values)
 
     def as_tuple(self) -> Tuple[int]:
-        return *self.dimension_values,
+        return (*self.dimension_values,)
 
     def as_list(self) -> List[int]:
-        return [*self.dimension_values, ]
+        return [
+            *self.dimension_values,
+        ]
 
     def assert_same_dimension_order(self, other):
         other: VectorN
         if not (self.dimension_order() == other.dimension_order()):
             raise ValueError(
-                "you cannot perform an operation on vector `self` ({}) with vector `other` ({}) "
-                "as it is not the same dimension order!".format(self, other))
+                f"you cannot perform an operation on vector `self` ({self}) with vector `other` ({other}) "
+                "as it is not the same dimension order!"
+            )
 
     def __neg__(self):
-        return VectorN(*[
-            (-1 * a) for a in self.dimension_values
-        ])
+        return VectorN(*[(-1 * a) for a in self.dimension_values])
 
     def __add__(self, other):
         other: VectorN
         self.assert_same_dimension_order(other)
-        return VectorN(*[
-            (a + b) for a, b in zip(self.dimension_values, other.dimension_values)
-        ])
+        return VectorN(
+            *[(a + b) for a, b in zip(self.dimension_values, other.dimension_values)]
+        )
 
     def __sub__(self, other):
         other: VectorN
         self.assert_same_dimension_order(other)
-        return VectorN(*[
-            (a - b) for a, b in zip(self.dimension_values, other.dimension_values)
-        ])
+        return VectorN(
+            *[(a - b) for a, b in zip(self.dimension_values, other.dimension_values)]
+        )
 
     def __mul__(self, other: Union[any, int]):
         if isinstance(other, VectorN):
             other: VectorN
             self.assert_same_dimension_order(other)
-            return VectorN(*[
-                (a * b) for a, b in zip(self.dimension_values, other.dimension_values)
-            ])
+            return VectorN(
+                *[
+                    (a * b)
+                    for a, b in zip(self.dimension_values, other.dimension_values)
+                ]
+            )
         else:
             other: int
-            return VectorN(*[
-                (a * other) for a in self.dimension_values
-            ])
+            return VectorN(*[(a * other) for a in self.dimension_values])
 
     def __eq__(self, other):
         other: VectorN
         return self.dimension_values == other.dimension_values
 
     def __str__(self):
-        return "<Vec{} {}>".format(self.dimension_order(), self.dimension_values)
+        return f"<Vec{self.dimension_order()} {self.dimension_values}>"
 
     def __repr__(self):
         return str(self)
@@ -99,17 +105,19 @@ class VectorN:
             if item < len(self.dimension_values):
                 return self.dimension_values[item]
             else:
-                raise IndexError("This is only a {} dimensional vector!".format(self.dimension_order()))
+                raise IndexError(
+                    f"This is only a {self.dimension_order()} dimensional vector!"
+                )
 
         # indexing us like `self['y']`
         if item in self.dimPosMap.keys():
             return self.dimension_values[self.dimPosMap[item]]
 
     def inside_bounding_rect(self, vec1, vec2, wiggle: int = 0):
-
         if not (self.dimension_order() == 2):
             raise Exception(
-                f"Currently only implemented for 2d! Cannot determine if {self} is within {vec1} and {vec2}")
+                f"Currently only implemented for 2d! Cannot determine if {self} is within {vec1} and {vec2}"
+            )
 
         vec1: VectorN
         vec2: VectorN
@@ -127,17 +135,18 @@ class VectorN:
 
         # YOINK from https://www.programming-idioms.org/idiom/178/check-if-point-is-inside-rectangle/2615/python
         # Assuming that x1 < x2 and y1 < y2...
-        return ((px - wiggle) >= x1) and \
-               ((px + wiggle) < x2) and \
-               ((py - wiggle) >= y1) and \
-               ((py + wiggle) < y2)
+        return (
+            ((px - wiggle) >= x1)
+            and ((px + wiggle) < x2)
+            and ((py - wiggle) >= y1)
+            and ((py + wiggle) < y2)
+        )
 
     def serialize(self) -> str:
-        return ','.join([str(x) for x in self.dimension_values])
+        return ",".join([str(x) for x in self.dimension_values])
 
     @staticmethod
     def deserialize(obj: Union[str, list, tuple]):
-
         if isinstance(obj, VectorN):
             return obj
 
@@ -146,9 +155,9 @@ class VectorN:
 
         if isinstance(obj, str):
             obj = obj.strip()
-            tokens = obj.split(',')
+            tokens = obj.split(",")
             ints = [int(x.strip()) for x in tokens]
             return VectorN(*ints)
 
     def as_short_string(self):
-        return ','.join(str(x) for x in self.dimension_values)
+        return ",".join(str(x) for x in self.dimension_values)

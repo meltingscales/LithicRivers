@@ -2,92 +2,93 @@
 This util exists to unify TUI styles and make the game look + feel cohesive.
 """
 
-from typing import List, Dict, Tuple, Optional
 from enum import Enum
+from typing import List, Tuple
 
 from lithicrivers.model.generictype import T
 
 
 class ColorScheme(Enum):
     """Color schemes for different UI elements."""
+
     # Basic colors (foreground, background, attributes)
-    DEFAULT = (7, 0, 0)      # White on black
-    ERROR = (1, 0, 0)        # Red on black
-    SUCCESS = (2, 0, 0)      # Green on black
-    WARNING = (3, 0, 0)      # Yellow on black
-    INFO = (4, 0, 0)         # Blue on black
-    HIGHLIGHT = (6, 0, 0)    # Cyan on black
-    
+    DEFAULT = (7, 0, 0)  # White on black
+    ERROR = (1, 0, 0)  # Red on black
+    SUCCESS = (2, 0, 0)  # Green on black
+    WARNING = (3, 0, 0)  # Yellow on black
+    INFO = (4, 0, 0)  # Blue on black
+    HIGHLIGHT = (6, 0, 0)  # Cyan on black
+
     # Tile colors
-    DIRT = (3, 0, 0)         # Yellow (earth)
-    TREE = (2, 0, 0)         # Green (nature)
-    BEDROCK = (8, 0, 0)      # Gray (stone)
-    CLOUD = (7, 0, 0)        # White (sky)
-    EMPTY = (0, 0, 0)        # Black (void)
-    GOLD_ORE = (3, 0, 0)     # Yellow (gold)
-    
+    DIRT = (3, 0, 0)  # Yellow (earth)
+    TREE = (2, 0, 0)  # Green (nature)
+    BEDROCK = (8, 0, 0)  # Gray (stone)
+    CLOUD = (7, 0, 0)  # White (sky)
+    EMPTY = (0, 0, 0)  # Black (void)
+    GOLD_ORE = (3, 0, 0)  # Yellow (gold)
+
     # Player colors
-    PLAYER = (6, 0, 0)       # Cyan (player)
-    
+    PLAYER = (6, 0, 0)  # Cyan (player)
+
     # UI element colors
-    HEADER = (7, 0, 1)       # White with bold
-    LABEL = (7, 0, 0)        # White
-    BUTTON = (7, 0, 0)       # White
-    BACKGROUND = (0, 0, 0)   # Black
-    BORDER = (8, 0, 0)       # Gray
-    TITLE = (7, 0, 1)        # White with bold
-    SUBTITLE = (8, 0, 0)     # Gray
-    MESSAGE = (7, 0, 0)      # White
-    STATUS = (6, 0, 0)       # Cyan
-    INVENTORY = (3, 0, 0)    # Yellow
-    
+    HEADER = (7, 0, 1)  # White with bold
+    LABEL = (7, 0, 0)  # White
+    BUTTON = (7, 0, 0)  # White
+    BACKGROUND = (0, 0, 0)  # Black
+    BORDER = (8, 0, 0)  # Gray
+    TITLE = (7, 0, 1)  # White with bold
+    SUBTITLE = (8, 0, 0)  # Gray
+    MESSAGE = (7, 0, 0)  # White
+    STATUS = (6, 0, 0)  # Cyan
+    INVENTORY = (3, 0, 0)  # Yellow
+
     # Item colors
-    ROCK = (8, 0, 0)         # Gray
-    GOLD = (3, 0, 0)         # Yellow
-    DIAMOND = (4, 0, 0)      # Blue
-    STICK = (3, 0, 0)        # Brown (yellow)
-    LOG = (3, 0, 0)          # Brown (yellow)
-    ACORN = (2, 0, 0)        # Green
-    COOKIE = (3, 0, 0)       # Brown (yellow)
-    
+    ROCK = (8, 0, 0)  # Gray
+    GOLD = (3, 0, 0)  # Yellow
+    DIAMOND = (4, 0, 0)  # Blue
+    STICK = (3, 0, 0)  # Brown (yellow)
+    LOG = (3, 0, 0)  # Brown (yellow)
+    ACORN = (2, 0, 0)  # Green
+    COOKIE = (3, 0, 0)  # Brown (yellow)
+
     # Special colors
-    RARE = (5, 0, 0)         # Magenta (rare items)
-    COMMON = (8, 0, 0)       # Gray (common items)
-    VALUABLE = (3, 0, 0)     # Yellow (valuable items)
+    RARE = (5, 0, 0)  # Magenta (rare items)
+    COMMON = (8, 0, 0)  # Gray (common items)
+    VALUABLE = (3, 0, 0)  # Yellow (valuable items)
 
 
 class ColorManager:
     """Manages color schemes and provides color utilities."""
-    
+
     def __init__(self):
         self.schemes = {scheme.name: scheme.value for scheme in ColorScheme}
-    
+
     def get_color(self, scheme_name: str) -> Tuple[int, int, int]:
         """Get color tuple for a scheme name."""
         return self.schemes.get(scheme_name.upper(), ColorScheme.DEFAULT.value)
-    
+
     def get_tile_color(self, tile_id: str) -> Tuple[int, int, int]:
         """Get color for a specific tile type."""
         tile_colors = {
-            'Dirt': ColorScheme.DIRT.value,
-            'Tree': ColorScheme.TREE.value,
-            'Bedrock': ColorScheme.BEDROCK.value,
-            'Cloud': ColorScheme.CLOUD.value,
-            'Empty': ColorScheme.EMPTY.value,
-            'Gold Ore': ColorScheme.GOLD_ORE.value,
+            "Dirt": ColorScheme.DIRT.value,
+            "Tree": ColorScheme.TREE.value,
+            "Bedrock": ColorScheme.BEDROCK.value,
+            "Cloud": ColorScheme.CLOUD.value,
+            "Empty": ColorScheme.EMPTY.value,
+            "Gold Ore": ColorScheme.GOLD_ORE.value,
         }
         return tile_colors.get(tile_id, ColorScheme.DEFAULT.value)
-    
+
     def get_item_color(self, item_name: str) -> Tuple[int, int, int]:
         """Get color for a specific item type."""
         item_colors = {
-            'Rock': ColorScheme.ROCK.value,
-            'Gold Nugget': ColorScheme.GOLD.value,
-            'Diamond': ColorScheme.DIAMOND.value,
-            'Stick': ColorScheme.STICK.value,
-            'Log': ColorScheme.LOG.value,
-            'Acorn': ColorScheme.ACORN.value,
-            'Cookie': ColorScheme.COOKIE.value,
+            "Rock": ColorScheme.ROCK.value,
+            "Gold Nugget": ColorScheme.GOLD.value,
+            "Diamond": ColorScheme.DIAMOND.value,
+            "Stick": ColorScheme.STICK.value,
+            "Log": ColorScheme.LOG.value,
+            "Acorn": ColorScheme.ACORN.value,
+            "Cookie": ColorScheme.COOKIE.value,
         }
         return item_colors.get(item_name, ColorScheme.DEFAULT.value)
 
@@ -97,7 +98,7 @@ COLOR_MANAGER = ColorManager()
 
 
 def presenting(text) -> str:
-    return "~ {} ~".format(text)
+    return f"~ {text} ~"
 
 
 def render_tuple(tups: List[T], places=2) -> str:
@@ -147,11 +148,11 @@ def get_color_for_ui_element(element_type: str) -> Tuple[int, int, int]:
     return COLOR_MANAGER.get_color(element_type)
 
 
-def list_label(text, width=5, align='>') -> str:
+def list_label(text, width=5, align=">") -> str:
     """Format a list label."""
     return "-[{:{}{}s}]: ".format(text, align, width)
 
 
 def emphasizing(text) -> str:
     """Format emphasized text."""
-    return "[ {} ]".format(text)
+    return f"[ {text} ]"
