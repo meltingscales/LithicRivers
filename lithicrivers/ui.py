@@ -370,6 +370,9 @@ class RootPage(Frame):
         self.add_layout(status_layout)
         self.statusLabel = Label("", name="statusLabel")
         status_layout.add_widget(self.statusLabel)
+        
+        # Initialize the status label with current player information
+        self.update_status_label()
 
         layout1 = Layout(columns=columns, fill_frame=True)
 
@@ -402,58 +405,8 @@ class RootPage(Frame):
         """Update the status label with current player information."""
         # Call parent update first
         super().update(frame_no)
-        
-        if hasattr(self, "statusLabel") and self.game:
-            player = self.game.player
-            position = player.position
 
-            # Calculate heading (direction player is facing)
-            heading = self._get_heading(position)
 
-            # Create status bar content
-            health_bar = self._create_bar(player.health, 100, "HP", "█", "░")
-            stamina_bar = self._create_bar(player.stamina, 100, "ST", "█", "░")
-
-            # Format the status bar
-            status_parts = [
-                f"Health: {health_bar}",
-                f"Stamina: {stamina_bar}",
-                f"Position: {position.as_short_string()}",
-                f"Heading: {heading}",
-                f"Tile: {self.game.get_tile_at_player_feet().tileid}",
-                f"Scale: {self.game.viewport.scale}x"
-            ]
-
-            # Join with separators
-            self.statusLabel.text = " | ".join(status_parts)
-
-    def _get_heading(self, position: VectorN) -> str:
-        """Get a simple heading based on position."""
-        # Simple heading based on position - could be enhanced with actual direction
-        x, y, z = position.x, position.y, position.z
-
-        if z > 0:
-            return "UP"
-        elif z < 0:
-            return "DOWN"
-        elif x > 0 and y > 0:
-            return "NE"
-        elif x > 0 and y < 0:
-            return "SE"
-        elif x < 0 and y > 0:
-            return "NW"
-        elif x < 0 and y < 0:
-            return "SW"
-        elif x > 0:
-            return "E"
-        elif x < 0:
-            return "W"
-        elif y > 0:
-            return "N"
-        elif y < 0:
-            return "S"
-        else:
-            return "HERE"
 
     def _create_bar(self, current: int, maximum: int, label: str, filled: str, empty: str) -> str:
         """Create a visual bar for health/stamina."""
@@ -474,9 +427,6 @@ class RootPage(Frame):
             player = self.game.player
             position = player.position
 
-            # Calculate heading (direction player is facing)
-            heading = self._get_heading(position)
-
             # Create status bar content
             health_bar = self._create_bar(player.health, 100, "HP", "█", "░")
             stamina_bar = self._create_bar(player.stamina, 100, "ST", "█", "░")
@@ -486,7 +436,6 @@ class RootPage(Frame):
                 f"Health: {health_bar}",
                 f"Stamina: {stamina_bar}",
                 f"Position: {position.as_short_string()}",
-                f"Heading: {heading}",
                 f"Tile: {self.game.get_tile_at_player_feet().tileid}",
                 f"Scale: {self.game.viewport.scale}x"
             ]
@@ -1213,8 +1162,8 @@ def demo(screen: Screen, scene: Scene, game: Game):
     active_popup = None  # Initialize to None
 
     scenes = [
-        Scene([HelpPage(screen, game)], -1, name="HelpPage"),
         Scene([RootPage(screen, game)], -1, name="RootPage"),
+        Scene([HelpPage(screen, game)], -1, name="HelpPage"),
         Scene([MessageLogPage(screen)], -1, name="MessageLogPage"),
         Scene([ExtraPage(screen)], -1, name="ExtraPage"),
     ]
