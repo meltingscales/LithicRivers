@@ -54,6 +54,7 @@ class Keymap:
         
         # Action keys
         self.MINE = config_manager.get_keybind("action", "MINE")
+        self.INTERACT = config_manager.get_keybind("action", "INTERACT")
         
         # Build movement vector map with both character and numpad support
         self.MOVEMENT_VECTOR_MAP = {}

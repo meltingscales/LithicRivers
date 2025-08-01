@@ -1,5 +1,5 @@
 import logging
-from typing import Union, List, Tuple
+from typing import Union, List, Tuple, Optional, Callable
 
 import asciimatics.widgets
 from asciimatics.effects import Effect
@@ -7,9 +7,9 @@ from asciimatics.event import KeyboardEvent, MouseEvent
 from asciimatics.exceptions import NextScene
 from asciimatics.scene import Scene
 from asciimatics.screen import Canvas, Screen
-from asciimatics.widgets import Layout, Divider, Button, _split_text, Frame, Label
+from asciimatics.widgets import Layout, Divider, Button, _split_text, Frame, Label, TextBox, RadioButtons
 
-from lithicrivers.game import Game, Tiles, Items
+from lithicrivers.game import Game, Tiles, Items, NPC
 from lithicrivers.model.vector import VectorN
 from lithicrivers.model.modelpleasemoveme import RenderedData, StopGame
 from lithicrivers.textutil import get_color_for_ui_element, presenting, list_label
@@ -181,6 +181,10 @@ class GameWidget(asciimatics.widgets.Widget):
             f"{content:{self._align}{self._w}}",
             self._x, self._y, header_color[0], header_color[1], header_color[2]
         )
+        
+        # Check if there's a popup to display
+        if hasattr(self._frame, 'popup') and self._frame.popup:
+            self._frame.popup.update(frame_no)
 
     def _render_colored_world(self, rendered_data: RenderedData):
         """Render the world with proper colors."""
@@ -259,7 +263,7 @@ class GameWidget(asciimatics.widgets.Widget):
 
 
 class RootPage(Frame):
-    __slots__ = ['game']
+    __slots__ = ['game', 'popup']
 
     def __init__(self, screen, game: Game):
         super().__init__(screen,
@@ -282,6 +286,7 @@ class RootPage(Frame):
             columns = [70, 30]
 
         self.game = game
+        self.popup = None
         
         # Adjust viewport size based on available screen space
         self._adjust_viewport_for_screen(screen)
@@ -436,6 +441,362 @@ class ExtraPage(Frame):
         self.fix()
 
 
+class DialogBox(Frame):
+    """A modal dialog box for conversations and interactions."""
+    
+    def __init__(self, screen, title: str, content: str, options: List[str] = None, 
+                 callback: Optional[Callable] = None, game: Game = None):
+        # Calculate dialog size based on content
+        max_width = min(80, screen.width - 4)
+        max_height = min(20, screen.height - 4)
+        
+        # Calculate required height for content
+        lines = _split_text(content, max_width - 4, max_height)
+        content_height = len(lines)
+        
+        # Add height for options if present
+        if options:
+            content_height += len(options) + 2
+        
+        # Ensure minimum height
+        height = max(content_height + 4, 8)
+        
+        super().__init__(
+            screen,
+            height,
+            max_width,
+            title=title,
+            can_scroll=False,
+            has_border=True
+        )
+        
+        self.game = game
+        self.callback = callback
+        self.options = options
+        
+        # Create layout
+        layout = Layout([1], fill_frame=True)
+        self.add_layout(layout)
+        
+        # Add content
+        content_widget = TextBox(content_height, content, name="content", readonly=True)
+        layout.add_widget(content_widget)
+        
+        # Add options if present
+        if options:
+            self.options_widget = RadioButtons(
+                options,
+                label="Choose an option:",
+                name="options"
+            )
+            layout.add_widget(self.options_widget)
+        
+        # Add buttons
+        button_layout = Layout([1, 1])
+        self.add_layout(button_layout)
+        
+        if options:
+            button_layout.add_widget(Button("Select", self._on_select), 0)
+        else:
+            button_layout.add_widget(Button("OK", self._on_ok), 0)
+        
+        button_layout.add_widget(Button("Cancel", self._on_cancel), 1)
+    
+    def _on_select(self):
+        """Handle option selection."""
+        if self.options_widget and self.callback:
+            selected = self.options_widget.value
+            if 0 <= selected < len(self.options):
+                self.callback(self.options[selected])
+        self._close()
+    
+    def _on_ok(self):
+        """Handle OK button."""
+        if self.callback:
+            self.callback(None)
+        self._close()
+    
+    def _on_cancel(self):
+        """Handle Cancel button."""
+        self._close()
+    
+    def _close(self):
+        """Close the dialog."""
+        raise NextScene("RootPage")
+
+
+class EntitySelectionPopup(Frame):
+    """A modal popup for selecting which entity to interact with."""
+    
+    def __init__(self, screen, game: Game, adjacent_entities: List[Tuple[str, VectorN, str]]):
+        # Calculate popup size and position
+        max_width = min(60, screen.width - 4)
+        height = len(adjacent_entities) + 8  # +8 for header, buttons, borders, etc.
+        
+        # Center the popup on screen
+        x = (screen.width - max_width) // 2
+        y = (screen.height - height) // 2
+        
+        super().__init__(
+            screen,
+            height,
+            max_width,
+            title="Choose Entity to Interact With",
+            can_scroll=False,
+            has_border=True
+        )
+        
+        self.game = game
+        self.adjacent_entities = adjacent_entities
+        self.screen = screen
+        
+        # Create layout
+        layout = Layout([1], fill_frame=True)
+        self.add_layout(layout)
+        
+        # Add header
+        header = Label(f"Found {len(adjacent_entities)} entities nearby:", name="header")
+        layout.add_widget(header)
+        
+        # Add entity options
+        self.entity_widget = RadioButtons(
+            [f"{name} ({color})" for name, pos, color in adjacent_entities],
+            label="Select an entity:",
+            name="entities"
+        )
+        layout.add_widget(self.entity_widget)
+        
+        # Add buttons
+        button_layout = Layout([1, 1])
+        self.add_layout(button_layout)
+        
+        button_layout.add_widget(Button("Interact", self._on_interact), 0)
+        button_layout.add_widget(Button("Cancel", self._on_cancel), 1)
+    
+    def _on_interact(self):
+        """Handle entity selection and interaction."""
+        selected = self.entity_widget.value
+        if 0 <= selected < len(self.adjacent_entities):
+            name, pos, color = self.adjacent_entities[selected]
+            self._handle_interaction(name, pos, color)
+        self._close()
+    
+    def _on_cancel(self):
+        """Handle cancel."""
+        self._close()
+    
+    def _handle_interaction(self, name: str, pos: VectorN, color: str):
+        """Handle the actual interaction."""
+        # Get the entity
+        entity = self.game.world.get_entity(pos)
+        
+        if hasattr(entity, 'interact'):
+            # For interactive entities, show their interaction text
+            interaction_text = entity.interact()
+            self._show_interaction_result(name, interaction_text)
+        elif hasattr(entity, 'get_conversation'):
+            # For NPCs, start conversation
+            self._start_npc_conversation(entity)
+        else:
+            # Default interaction
+            self._show_interaction_result(name, f"You interact with {name}.")
+    
+    def _show_interaction_result(self, name: str, text: str):
+        """Show the result of an interaction."""
+        # Create a result popup
+        result_popup = InteractionResultPopup(
+            self.screen,
+            f"Interacting with {name}",
+            text
+        )
+        # For now, just show the result in the message area
+        # TODO: Implement proper result popup display
+    
+    def _start_npc_conversation(self, npc):
+        """Start a conversation with an NPC."""
+        conversation = npc.get_conversation()
+        # For now, just show the conversation in the message area
+        # TODO: Implement proper conversation dialog
+        pass
+    
+    def _close(self):
+        """Close the popup and return to the game."""
+        raise NextScene("RootPage")
+
+
+class InteractionResultPopup(Frame):
+    """A popup to show the result of an interaction."""
+    
+    def __init__(self, screen, title: str, content: str):
+        # Calculate popup size
+        max_width = min(70, screen.width - 4)
+        lines = _split_text(content, max_width - 4, 10)
+        height = len(lines) + 6  # +6 for title, buttons, borders
+        
+        super().__init__(
+            screen,
+            height,
+            max_width,
+            title=title,
+            can_scroll=False,
+            has_border=True
+        )
+        
+        # Create layout
+        layout = Layout([1], fill_frame=True)
+        self.add_layout(layout)
+        
+        # Add content
+        content_widget = TextBox(len(lines), content, name="content", readonly=True)
+        layout.add_widget(content_widget)
+        
+        # Add buttons
+        button_layout = Layout([1])
+        self.add_layout(button_layout)
+        
+        button_layout.add_widget(Button("OK", self._on_ok), 0)
+    
+    def _on_ok(self):
+        """Handle OK button."""
+        self._close()
+    
+    def _close(self):
+        """Close the popup."""
+        raise NextScene("RootPage")
+
+
+class SimplePopup(asciimatics.widgets.Widget):
+    """A simple popup widget that can be overlaid on the current screen."""
+    
+    def __init__(self, screen, title: str, content: str, options: List[str] = None, callback=None):
+        super().__init__(name="popup")
+        self.screen = screen
+        self.title = title
+        self.content = content
+        self.options = options or []
+        self.callback = callback
+        self.selected_option = 0
+        self.visible = True
+        
+        # Calculate popup dimensions
+        self.popup_width = min(60, screen.width - 4)
+        self.popup_height = len(self.options) + 6 if self.options else 4
+        
+        # Center the popup
+        self.popup_x = (screen.width - self.popup_width) // 2
+        self.popup_y = (screen.height - self.popup_height) // 2
+    
+    def process_event(self, event):
+        """Handle keyboard events for the popup."""
+        if not self.visible:
+            return event
+        
+        if isinstance(event, KeyboardEvent):
+            if event.key_code == ord('q') or event.key_code == 27:  # q or ESC
+                self.visible = False
+                if self.callback:
+                    self.callback(None)
+                return None
+            
+            if self.options:
+                if event.key_code == ord('1') and len(self.options) >= 1:
+                    self.selected_option = 0
+                    self.visible = False
+                    if self.callback:
+                        self.callback(self.options[0])
+                    return None
+                elif event.key_code == ord('2') and len(self.options) >= 2:
+                    self.selected_option = 1
+                    self.visible = False
+                    if self.callback:
+                        self.callback(self.options[1])
+                    return None
+                elif event.key_code == ord('3') and len(self.options) >= 3:
+                    self.selected_option = 2
+                    self.visible = False
+                    if self.callback:
+                        self.callback(self.options[2])
+                    return None
+                elif event.key_code == ord('4') and len(self.options) >= 4:
+                    self.selected_option = 3
+                    self.visible = False
+                    if self.callback:
+                        self.callback(self.options[3])
+                    return None
+                elif event.key_code == ord('5') and len(self.options) >= 5:
+                    self.selected_option = 4
+                    self.visible = False
+                    if self.callback:
+                        self.callback(self.options[4])
+                    return None
+        
+        return event
+    
+    def update(self, frame_no):
+        """Draw the popup on the screen."""
+        if not self.visible:
+            return
+        
+        # Draw background
+        for y in range(self.popup_y, self.popup_y + self.popup_height):
+            for x in range(self.popup_x, self.popup_x + self.popup_width):
+                self.screen.print_at(' ', x, y, bg=Screen.COLOUR_BLACK)
+        
+        # Draw border
+        for x in range(self.popup_x, self.popup_x + self.popup_width):
+            self.screen.print_at('─', x, self.popup_y, fg=Screen.COLOUR_WHITE)
+            self.screen.print_at('─', x, self.popup_y + self.popup_height - 1, fg=Screen.COLOUR_WHITE)
+        
+        for y in range(self.popup_y, self.popup_y + self.popup_height):
+            self.screen.print_at('│', self.popup_x, y, fg=Screen.COLOUR_WHITE)
+            self.screen.print_at('│', self.popup_x + self.popup_width - 1, y, fg=Screen.COLOUR_WHITE)
+        
+        # Draw corners
+        self.screen.print_at('┌', self.popup_x, self.popup_y, fg=Screen.COLOUR_WHITE)
+        self.screen.print_at('┐', self.popup_x + self.popup_width - 1, self.popup_y, fg=Screen.COLOUR_WHITE)
+        self.screen.print_at('└', self.popup_x, self.popup_y + self.popup_height - 1, fg=Screen.COLOUR_WHITE)
+        self.screen.print_at('┘', self.popup_x + self.popup_width - 1, self.popup_y + self.popup_height - 1, fg=Screen.COLOUR_WHITE)
+        
+        # Draw title
+        title_x = self.popup_x + (self.popup_width - len(self.title)) // 2
+        self.screen.print_at(self.title, title_x, self.popup_y + 1, fg=Screen.COLOUR_YELLOW, attr=Screen.A_BOLD)
+        
+        # Draw content
+        lines = self.content.split('\n')
+        for i, line in enumerate(lines[:self.popup_height - 4]):
+            self.screen.print_at(line, self.popup_x + 1, self.popup_y + 2 + i, fg=Screen.COLOUR_WHITE)
+        
+        # Draw options
+        if self.options:
+            for i, option in enumerate(self.options):
+                if i < self.popup_height - 4:
+                    option_text = f"{i + 1}. {option}"
+                    if i == self.selected_option:
+                        self.screen.print_at(option_text, self.popup_x + 1, self.popup_y + 3 + i, 
+                                           fg=Screen.COLOUR_BLACK, bg=Screen.COLOUR_WHITE)
+                    else:
+                        self.screen.print_at(option_text, self.popup_x + 1, self.popup_y + 3 + i, fg=Screen.COLOUR_WHITE)
+        
+        # Draw instructions
+        if self.options:
+            self.screen.print_at("Press 1-5 to select, q to cancel", 
+                               self.popup_x + 1, self.popup_y + self.popup_height - 2, fg=Screen.COLOUR_CYAN)
+        else:
+            self.screen.print_at("Press any key to continue", 
+                               self.popup_x + 1, self.popup_y + self.popup_height - 2, fg=Screen.COLOUR_CYAN)
+    
+    def required_height(self, offset, width):
+        return self.popup_height
+    
+    def reset(self):
+        pass
+    
+    @property
+    def value(self):
+        """Required property for Widget base class."""
+        return None
+
+
 class InputHandler:
 
     @staticmethod
@@ -501,8 +862,116 @@ class InputHandler:
             game.viewport.rescale_up(1)
             game.reset_viewport()
 
+    @classmethod
+    def handle_interaction(cls, event: KeyboardEvent, game: Game, root_page: RootPage):
+        """Handle interaction with adjacent entities."""
+        if not KEYMAP.matches('INTERACT', event):
+            return
+        
+        # Get adjacent entities
+        adjacent_entities = game.world.get_adjacent_entities(game.player.position)
+        
+        if not adjacent_entities:
+            root_page.labelMessage.text = '[INFO] Nothing to interact with nearby.'
+            return
+        
+        # Check if there's an NPC adjacent (for conversation)
+        for name, pos, color in adjacent_entities:
+            entity = game.world.get_entity(pos)
+            if isinstance(entity, NPC):
+                # Start conversation with NPC
+                cls._start_npc_conversation(game, entity, root_page)
+                return
+        
+        # Show interaction popup for other entities
+        cls._show_interaction_popup(game, adjacent_entities, root_page)
+    
+    @classmethod
+    def _start_npc_conversation(cls, game: Game, npc: NPC, root_page: RootPage):
+        """Start a conversation with an NPC."""
+        conversation = npc.get_conversation()
+        
+        # Show the conversation in the message area for now
+        root_page.labelMessage.text = f'[INFO] Talking to {npc.name}: {conversation["text"]}'
+        
+        # For now, just show the conversation text
+        # TODO: Implement proper dialog box display
+        if conversation["options"]:
+            options_text = " | ".join(conversation["options"])
+            root_page.labelMessage.text += f'\nOptions: {options_text}'
+    
+    @classmethod
+    def _continue_npc_conversation(cls, game: Game, npc: NPC, conversation: dict, root_page: RootPage):
+        """Continue an NPC conversation."""
+        # Show the conversation in the message area for now
+        root_page.labelMessage.text = f'[INFO] Talking to {npc.name}: {conversation["text"]}'
+        
+        # For now, just show the conversation text
+        # TODO: Implement proper dialog box display
+        if conversation["options"]:
+            options_text = " | ".join(conversation["options"])
+            root_page.labelMessage.text += f'\nOptions: {options_text}'
+    
+    @classmethod
+    def _show_interaction_popup(cls, game: Game, adjacent_entities: List[Tuple[str, VectorN, str]], root_page: RootPage):
+        """Show interaction popup for entities."""
+        # Create entity options for the popup
+        entity_options = [f"{name} ({color})" for name, pos, color in adjacent_entities]
+        
+        def popup_callback(selected_option):
+            if selected_option:
+                # Find the selected entity
+                for i, option in enumerate(entity_options):
+                    if option == selected_option:
+                        name, pos, color = adjacent_entities[i]
+                        cls._handle_entity_interaction(game, name, pos, color, root_page)
+                        break
+        
+        # Create and show the popup
+        root_page.popup = SimplePopup(
+            root_page._screen,
+            "Choose Entity to Interact With",
+            f"Found {len(adjacent_entities)} entities nearby:",
+            entity_options,
+            popup_callback
+        )
+    
+    @classmethod
+    def _handle_entity_interaction(cls, game: Game, name: str, pos: VectorN, color: str, root_page: RootPage):
+        """Handle interaction with a specific entity."""
+        entity = game.world.get_entity(pos)
+        
+        if hasattr(entity, 'interact'):
+            # For interactive entities, show their interaction text
+            interaction_text = entity.interact()
+            cls._show_interaction_result(name, interaction_text, root_page)
+        elif hasattr(entity, 'get_conversation'):
+            # For NPCs, start conversation
+            cls._start_npc_conversation(game, entity, root_page)
+        else:
+            # Default interaction
+            cls._show_interaction_result(name, f"You interact with {name}.", root_page)
+    
+    @classmethod
+    def _show_interaction_result(cls, name: str, text: str, root_page: RootPage):
+        """Show the result of an interaction."""
+        def result_callback(selected_option):
+            # Just close the result popup
+            pass
+        
+        # Create and show the result popup
+        root_page.popup = SimplePopup(
+            root_page._screen,
+            f"Interacting with {name}",
+            text,
+            callback=result_callback
+        )
+
 
 def demo(screen: Screen, scene: Scene, game: Game):
+    # Create a global variable to store the current dialog
+    global current_dialog_scene
+    
     scenes = [
         Scene([HelpPage(screen, game)], -1, name="HelpPage"),
         Scene([RootPage(screen, game)], -1, name="RootPage"),
@@ -566,8 +1035,19 @@ def demo(screen: Screen, scene: Scene, game: Game):
                 if game.player_outside_viewport(wiggle=VIEWPORT_WIGGLE):
                     game.reset_viewport()
 
+        # Check if there's a popup that should handle the event first
+        if hasattr(root_page, 'popup') and root_page.popup and root_page.popup.visible:
+            result = root_page.popup.process_event(event)
+            if result is None:  # Event was handled by popup
+                return
+            # If popup is no longer visible, clear it
+            if not root_page.popup.visible:
+                root_page.popup = None
+                return
+        
         InputHandler.handle_viewport(event, root_page.game)
         InputHandler.handle_scale(event, root_page.game)
+        InputHandler.handle_interaction(event, root_page.game, root_page)
 
         InputHandler.handle_mining(event, root_page.game, root_page)
         root_page.labelInventory.text = root_page.game.player.inventory.summary()

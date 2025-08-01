@@ -17,6 +17,7 @@
     "SCALE_DOWN": "-"
   },
   "action": {
-    "MINE": "u"
+    "MINE": "u",
+    "INTERACT": "i"
   }
 }
