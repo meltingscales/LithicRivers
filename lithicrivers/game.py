@@ -162,14 +162,12 @@ class NPC(Entity, SpriteRenderable):
 
     def render_sprite(self, scale: int = 1) -> str:
         """Render the NPC sprite."""
-        if scale == 1:
-            return self.sprite
-        elif scale == 2:
-            return f"{self.sprite}{self.sprite}\n{self.sprite}{self.sprite}"
-        elif scale == 3:
-            return f"{self.sprite}{self.sprite}{self.sprite}\n{self.sprite}{self.sprite}{self.sprite}\n{self.sprite}{self.sprite}{self.sprite}"
-        else:
-            return self.sprite
+        scale_renders = {
+            1: self.sprite,
+            2: f"{self.sprite}{self.sprite}\n{self.sprite}{self.sprite}",
+            3: f"{self.sprite}{self.sprite}{self.sprite}\n{self.sprite}{self.sprite}{self.sprite}\n{self.sprite}{self.sprite}{self.sprite}"
+        }
+        return scale_renders.get(scale, self.sprite)
 
 
 class InteractiveEntity(Entity, SpriteRenderable):
@@ -190,14 +188,12 @@ class InteractiveEntity(Entity, SpriteRenderable):
 
     def render_sprite(self, scale: int = 1) -> str:
         """Render the entity sprite."""
-        if scale == 1:
-            return self.sprite
-        elif scale == 2:
-            return f"{self.sprite}{self.sprite}\n{self.sprite}{self.sprite}"
-        elif scale == 3:
-            return f"{self.sprite}{self.sprite}{self.sprite}\n{self.sprite}{self.sprite}{self.sprite}\n{self.sprite}{self.sprite}{self.sprite}"
-        else:
-            return self.sprite
+        scale_renders = {
+            1: self.sprite,
+            2: f"{self.sprite}{self.sprite}\n{self.sprite}{self.sprite}",
+            3: f"{self.sprite}{self.sprite}{self.sprite}\n{self.sprite}{self.sprite}{self.sprite}\n{self.sprite}{self.sprite}{self.sprite}"
+        }
+        return scale_renders.get(scale, self.sprite)
 
     def interact(self):
         """Handle interaction with this entity."""
@@ -370,11 +366,7 @@ class Tile(SpriteRenderable):
         import random
 
         # Determine number of acorns (1-3, with 90% chance of 1)
-        if random.random() < 0.9:
-            num_acorns = 1
-        else:
-            # 10% chance of 2-3 acorns, with equal probability
-            num_acorns = random.randint(2, 3)
+        num_acorns = 1 if random.random() < 0.9 else random.randint(2, 3)
 
         # Create list of items to return
         items = []

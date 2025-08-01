@@ -19,7 +19,7 @@ from asciimatics.widgets import (
 
 from lithicrivers.game import NPC, Game, Tile, Tiles
 from lithicrivers.keymap import KEYMAP
-from lithicrivers.model.modelpleasemoveme import RenderedData, StopGame, Viewport
+from lithicrivers.model.modelpleasemoveme import RenderedData, StopGameError, Viewport
 from lithicrivers.model.vector import VectorN
 from lithicrivers.settings import DEVELOPER_MODE, GAME_NAME, VIEWPORT_WIGGLE
 from lithicrivers.textutil import get_color_for_ui_element, list_label, presenting
@@ -47,7 +47,7 @@ class TabButtons(Layout):
         if DEVELOPER_MODE:
             buttons.append(Button("Test Popups", self._safe_scene_change("ExtraPage")))
 
-        buttons.append(Button("Quit", raise_fn(StopGame, "Game stopping :P")))
+        buttons.append(Button("Quit", raise_fn(StopGameError, "Game stopping :P")))
 
         # Create columns based on number of buttons
         cols = [1] * len(buttons)

@@ -5,7 +5,7 @@ from asciimatics.exceptions import ResizeScreenError
 from asciimatics.screen import Screen
 
 from lithicrivers.game import Game
-from lithicrivers.model.modelpleasemoveme import StopGame
+from lithicrivers.model.modelpleasemoveme import StopGameError
 from lithicrivers.settings import GAME_NAME, LOGFILENAME, LOGGINGLEVEL
 from lithicrivers.ui import demo
 
@@ -28,8 +28,8 @@ if __name__ == "__main__":
         try:
             logging.debug("Running Screen.wrapper()")
             Screen.wrapper(demo, catch_interrupt=True, arguments=[last_scene, GAME])
-        except StopGame:
-            logging.debug("Caught StopGame!")
+        except StopGameError:
+            logging.debug("Caught StopGameError!")
             GAME.running = False
         except ResizeScreenError:
             logging.debug("Caught ResizeScreenError !")
