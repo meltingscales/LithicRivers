@@ -96,7 +96,7 @@ class TestInputHandlerSimple(SimpleTUITestCase):
         """Test that mining inputs are handled correctly."""
         # Set up a mineable tile at player's position
         player_pos = self.game.player.position
-        self.game.world.set_tile(player_pos, Tiles.Gold_Ore())
+        self.game.world.set_tile(player_pos, Tiles.gold_ore())
 
         # Create mining event (use 'u' key which is mapped to MINE)
         event = self.create_keyboard_event(ord("u"))
@@ -107,13 +107,13 @@ class TestInputHandlerSimple(SimpleTUITestCase):
 
         # Check that tile was mined (should be replaced with Dirt)
         tile = self.game.get_tile_at_player_feet()
-        self.assertEqual(tile.tileid, Tiles.Dirt().tileid)
+        self.assertEqual(tile.tileid, Tiles.dirt().tileid)
 
     def test_mining_unmineable_tiles(self):
         """Test that unmineable tiles are handled correctly."""
         # Test mining dirt (should not work)
         player_pos = self.game.player.position
-        self.game.world.set_tile(player_pos, Tiles.Dirt())
+        self.game.world.set_tile(player_pos, Tiles.dirt())
 
         event = self.create_keyboard_event(ord("u"))
         root_page = Mock()
@@ -123,13 +123,13 @@ class TestInputHandlerSimple(SimpleTUITestCase):
 
         # Tile should still be dirt
         tile = self.game.get_tile_at_player_feet()
-        self.assertEqual(tile.tileid, Tiles.Dirt().tileid)
+        self.assertEqual(tile.tileid, Tiles.dirt().tileid)
 
     def test_mining_trees_implemented(self):
         """Test that mining trees is now implemented."""
         # Test mining trees (should work now)
         player_pos = self.game.player.position
-        self.game.world.set_tile(player_pos, Tiles.Tree())
+        self.game.world.set_tile(player_pos, Tiles.tree())
 
         event = self.create_keyboard_event(ord("u"))
         root_page = Mock()
@@ -139,7 +139,7 @@ class TestInputHandlerSimple(SimpleTUITestCase):
 
         # Tile should be replaced with dirt
         tile = self.game.get_tile_at_player_feet()
-        self.assertEqual(tile.tileid, Tiles.Dirt().tileid)
+        self.assertEqual(tile.tileid, Tiles.dirt().tileid)
 
     def test_viewport_input_handling(self):
         """Test that viewport inputs are handled correctly."""
@@ -160,7 +160,6 @@ class TestInputHandlerSimple(SimpleTUITestCase):
 
     def test_scale_input_handling(self):
         """Test that scale inputs are handled correctly."""
-        initial_scale = self.game.viewport.scale
 
         # Test scale up
         event = self.create_keyboard_event(ord("="))
@@ -195,7 +194,7 @@ class TestGameIntegrationSimple(SimpleTUITestCase):
         """Test that mining works correctly."""
         # Set up a mineable tile
         player_pos = self.game.player.position
-        self.game.world.set_tile(player_pos, Tiles.Gold_Ore())
+        self.game.world.set_tile(player_pos, Tiles.gold_ore())
 
         # Mine the tile
         event = self.create_keyboard_event(ord("u"))
@@ -204,7 +203,7 @@ class TestGameIntegrationSimple(SimpleTUITestCase):
 
         # Check that tile was replaced
         tile = self.game.get_tile_at_player_feet()
-        self.assertEqual(tile.tileid, Tiles.Dirt().tileid)
+        self.assertEqual(tile.tileid, Tiles.dirt().tileid)
 
     def test_viewport_integration(self):
         """Test that viewport changes work correctly."""

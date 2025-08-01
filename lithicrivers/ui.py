@@ -1,8 +1,7 @@
 import logging
-from typing import Callable, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Callable, Optional, Union
 
 import asciimatics.widgets
-from asciimatics.effects import Effect
 from asciimatics.event import KeyboardEvent, MouseEvent
 from asciimatics.exceptions import NextScene
 from asciimatics.scene import Scene
@@ -18,12 +17,15 @@ from asciimatics.widgets import (
     _split_text,
 )
 
-from lithicrivers.game import NPC, Game, Tiles
+from lithicrivers.game import NPC, Game, Tile, Tiles
 from lithicrivers.keymap import KEYMAP
 from lithicrivers.model.modelpleasemoveme import RenderedData, StopGame, Viewport
 from lithicrivers.model.vector import VectorN
 from lithicrivers.settings import DEVELOPER_MODE, GAME_NAME, VIEWPORT_WIGGLE
 from lithicrivers.textutil import get_color_for_ui_element, list_label, presenting
+
+if TYPE_CHECKING:
+    from asciimatics.effects import Effect
 
 # class MainGameFrame(Layout):
 #     def __init__(self, frame, active_tab_idx, game: Game = None):
@@ -45,7 +47,7 @@ class TabButtons(Layout):
         if DEVELOPER_MODE:
             buttons.append(Button("Test Popups", self._safe_scene_change("ExtraPage")))
 
-        buttons.append(Button("Quit", raiseFn(StopGame, "Game stopping :P")))
+        buttons.append(Button("Quit", raise_fn(StopGame, "Game stopping :P")))
 
         # Create columns based on number of buttons
         cols = [1] * len(buttons)
@@ -80,7 +82,7 @@ class TabButtons(Layout):
                             active_popup._screen.current_scene.remove_effect(
                                 active_popup
                             )
-                    except:
+                    except Exception:
                         pass
                     active_popup = None
             except NameError:
@@ -110,7 +112,7 @@ class HeaderLabel(asciimatics.widgets.Widget):
 
         """
         # Labels have no value and so should have no name for look-ups either.
-        super(HeaderLabel, self).__init__(name, tab_stop=False)
+        super().__init__(name, tab_stop=False)
 
         # Although this is a label, we don't want it to contribute to the layout
         # tab calculations, so leave internal `_label` value as None.
@@ -124,10 +126,10 @@ class HeaderLabel(asciimatics.widgets.Widget):
         # Labels have no user interactions
         return event
 
-    def update(self, frame_no):
+    def update(self, _frame_no):
         self._frame.canvas: Canvas
 
-        headerPrefix = list_label(self.header)
+        header_prefix = list_label(self.header)
 
         # Get colors for header and content
         header_color = get_color_for_ui_element("TITLE")
@@ -150,7 +152,7 @@ class HeaderLabel(asciimatics.widgets.Widget):
 
         # Render header with title color
         self._frame.canvas.paint(
-            headerPrefix,
+            header_prefix,
             self._x,
             self._y,
             header_color[0],
@@ -161,7 +163,7 @@ class HeaderLabel(asciimatics.widgets.Widget):
         # Render content with appropriate color
         self._frame.canvas.paint(
             self._text,
-            self._x + len(headerPrefix),
+            self._x + len(header_prefix),
             self._y,
             content_color[0],
             content_color[1],
@@ -171,7 +173,7 @@ class HeaderLabel(asciimatics.widgets.Widget):
     def reset(self):
         pass
 
-    def required_height(self, offset, width):
+    def required_height(self, _offset, _width):
         # Allow one line for text and a blank spacer before it.
         return self._required_height
 
@@ -197,8 +199,8 @@ class HeaderLabel(asciimatics.widgets.Widget):
 class GameWidget(asciimatics.widgets.Widget):
     __slots__ = ["_align", "_game"]
 
-    def __init__(self, game: Game, align="<", name: str = None):
-        super(GameWidget, self).__init__(name, tab_stop=False)
+    def __init__(self, game: Game, align="<", name: Optional[str] = None):
+        super().__init__(name, tab_stop=False)
 
         self.game = game
         self._align = align
@@ -208,18 +210,18 @@ class GameWidget(asciimatics.widgets.Widget):
         # print("we need {} height...".format(self.required_height(0, 0)))
         # print(self.game.viewport)
 
-    def required_height(self, offset, width):
+    def required_height(self, _offset, _width):
         # Account for scale: each tile takes up scale characters vertically
         return (
             self.game.viewport.get_height() * self.game.viewport.scale + 2
         )  # +2 for our random text shit
 
-    def required_width(self, offset, width):
+    def required_width(self, _offset, _width):
         # Account for scale: each tile takes up scale characters horizontally
         return self.game.viewport.get_width() * self.game.viewport.scale
 
     # noinspection PyTypeHints
-    def update(self, frame_no: int):
+    def update(self, _frame_no: int):
         self._frame.canvas: Canvas
 
         content = ""
@@ -229,9 +231,9 @@ class GameWidget(asciimatics.widgets.Widget):
         viewport_visible = getattr(self.game, "viewport_visible", True)
 
         if viewport_visible:
-            toRender: RenderedData = self.game.render_world_viewport()
+            to_render: RenderedData = self.game.render_world_viewport()
             # Render the world with colors
-            self._render_colored_world(toRender)
+            self._render_colored_world(to_render)
         # If viewport is hidden, render nothing at all
 
         # Render the header
@@ -280,7 +282,7 @@ class GameWidget(asciimatics.widgets.Widget):
                 )
 
     def _render_colored_row(
-        self, content: str, colors: List[Tuple[int, int, int]], y_pos: int
+        self, content: str, colors: list[tuple[int, int, int]], y_pos: int
     ):
         """Render a row with individual character colors."""
         x_pos = self._x
@@ -388,8 +390,8 @@ class RootPage(Frame):
         self.widgetGame = GameWidget(name="widgetGame", game=self.game)
         layout1.add_widget(self.widgetGame, column=0)
 
-        layoutButtons = TabButtons(self, 1)
-        self.add_layout(layoutButtons)
+        layout_buttons = TabButtons(self, 1)
+        self.add_layout(layout_buttons)
         self.fix()
 
     def _adjust_viewport_for_screen(self, screen):
@@ -469,9 +471,9 @@ class HelpPage(Frame):
 
         helptxtheight = len(helptxt.split("\n"))
 
-        helpLabel = Label(helptxt, height=helptxtheight, name="helpLabel")
+        help_label = Label(helptxt, height=helptxtheight, name="helpLabel")
 
-        layout1.add_widget(helpLabel)
+        layout1.add_widget(help_label)
 
         layout2 = TabButtons(self, 0)
         self.add_layout(layout2)
@@ -627,7 +629,7 @@ class DialogBox(Frame):
         screen,
         title: str,
         content: str,
-        options: List[str] = None,
+        options: Optional[list[str]] = None,
         callback: Optional[Callable] = None,
         game: Game = None,
     ):
@@ -709,15 +711,15 @@ class EntitySelectionPopup(Frame):
     """A modal popup for selecting which entity to interact with."""
 
     def __init__(
-        self, screen, game: Game, adjacent_entities: List[Tuple[str, VectorN, str]]
+        self, screen, game: Game, adjacent_entities: list[tuple[str, VectorN, str]]
     ):
         # Calculate popup size and position
         max_width = min(60, screen.width - 4)
         height = len(adjacent_entities) + 8  # +8 for header, buttons, borders, etc.
 
         # Center the popup on screen
-        x = (screen.width - max_width) // 2
-        y = (screen.height - height) // 2
+        (screen.width - max_width) // 2
+        (screen.height - height) // 2
 
         super().__init__(
             screen,
@@ -769,7 +771,7 @@ class EntitySelectionPopup(Frame):
         """Handle cancel."""
         self._close()
 
-    def _handle_interaction(self, name: str, pos: VectorN, color: str):
+    def _handle_interaction(self, name: str, pos: VectorN, _color: str):
         """Handle the actual interaction."""
         # Get the entity
         entity = self.game.world.get_entity(pos)
@@ -788,7 +790,7 @@ class EntitySelectionPopup(Frame):
     def _show_interaction_result(self, name: str, text: str):
         """Show the result of an interaction."""
         # Create a result popup
-        result_popup = InteractionResultPopup(
+        InteractionResultPopup(
             self.screen, f"Interacting with {name}", text
         )
         # For now, just show the result in the message area
@@ -796,7 +798,7 @@ class EntitySelectionPopup(Frame):
 
     def _start_npc_conversation(self, npc):
         """Start a conversation with an NPC."""
-        conversation = npc.get_conversation()
+        npc.get_conversation()
         # For now, just show the conversation in the message area
         # TODO: Implement proper conversation dialog
         pass
@@ -848,20 +850,20 @@ class InteractionResultPopup(Frame):
 
 class InputHandler:
     @staticmethod
-    def handle_movement(keyboardEvent: KeyboardEvent) -> Union[None, VectorN]:
+    def handle_movement(keyboard_event: KeyboardEvent) -> Union[None, VectorN]:
         """
         :param keyboardEvent:
         :return: Vector the input resolves to.
         """
 
         # First check for numpad movement
-        if KEYMAP.matches_numpad(keyboardEvent):
-            return KEYMAP.get_numpad_movement_vector(keyboardEvent)
+        if KEYMAP.matches_numpad(keyboard_event):
+            return KEYMAP.get_numpad_movement_vector(keyboard_event)
 
         # Then check for regular character movement
-        datKey = KEYMAP.char_from_keyboard_event(keyboardEvent)
-        if datKey in KEYMAP.MOVEMENT_VECTOR_MAP.keys():
-            return KEYMAP.MOVEMENT_VECTOR_MAP[datKey]
+        dat_key = KEYMAP.char_from_keyboard_event(keyboard_event)
+        if dat_key in KEYMAP.MOVEMENT_VECTOR_MAP:
+            return KEYMAP.MOVEMENT_VECTOR_MAP[dat_key]
 
         return None
 
@@ -873,19 +875,19 @@ class InputHandler:
             return
 
         tile_under: Tile = game.get_tile_at_player_feet()
-        if tile_under == Tiles.Dirt():
+        if tile_under == Tiles.dirt():
             root_page.labelMessage.text = "[ERROR] You can't mine dirt :P"
             return  # can't mine dirt
-        elif tile_under == Tiles.Tree():
+        elif tile_under == Tiles.tree():
             # Allow mining trees - they drop guaranteed acorns plus other items
             tree_drops = tile_under.calc_tree_drops()
             for item in tree_drops:
                 game.player.inventory.add_item(item)
-            game.set_tile_at_player_feet(Tiles.Dirt())
+            game.set_tile_at_player_feet(Tiles.dirt())
             root_page.labelMessage.text = "[SUCCESS] You chopped down the tree!"
-        elif tile_under == Tiles.Gold_Ore():
+        elif tile_under == Tiles.gold_ore():
             game.player.inventory.add_item(tile_under.calc_drop())
-            game.set_tile_at_player_feet(Tiles.Dirt())
+            game.set_tile_at_player_feet(Tiles.dirt())
             root_page.labelMessage.text = "[RARE] You found something mysterious!"
 
     @classmethod
@@ -929,7 +931,7 @@ class InputHandler:
             return
 
         # Check if there's an NPC adjacent (for conversation)
-        for name, pos, color in adjacent_entities:
+        for _name, pos, _color in adjacent_entities:
             entity = game.world.get_entity(pos)
             if isinstance(entity, NPC):
                 # Start conversation with NPC
@@ -1014,7 +1016,7 @@ class InputHandler:
     def _show_interaction_popup(
         cls,
         game: Game,
-        adjacent_entities: List[Tuple[str, VectorN, str]],
+        adjacent_entities: list[tuple[str, VectorN, str]],
         root_page: RootPage,
     ):
         """Show interaction popup for entities."""
@@ -1051,7 +1053,7 @@ class InputHandler:
 
     @classmethod
     def _handle_entity_interaction(
-        cls, game: Game, name: str, pos: VectorN, color: str, root_page: RootPage
+        cls, game: Game, name: str, pos: VectorN, _color: str, root_page: RootPage
     ):
         """Handle interaction with a specific entity."""
         entity = game.world.get_entity(pos)
@@ -1071,7 +1073,7 @@ class InputHandler:
     def _show_interaction_result(cls, name: str, text: str, root_page: RootPage):
         """Show the result of an interaction."""
 
-        def result_callback(selected_option):
+        def result_callback(_selected_option):
             # Just close the result popup
             global active_popup
             active_popup = None
@@ -1121,14 +1123,14 @@ def demo(screen: Screen, scene: Scene, game: Game):
         # Declare active_popup as global so we can access it
         global active_popup
 
-        daScene: Scene = screen.current_scene
-        daEffects: List[Effect] = daScene.effects
+        da_scene: Scene = screen.current_scene
+        da_effects: list[Effect] = da_scene.effects
 
-        if len(daEffects) <= 0:
+        if len(da_effects) <= 0:
             logging.debug("No effects ;_;")
             return
 
-        maybe_root_page: RootPage = daEffects[0]
+        maybe_root_page: RootPage = da_effects[0]
 
         # Check for terminal resize
         nonlocal last_screen_width, last_screen_height
@@ -1201,7 +1203,7 @@ def demo(screen: Screen, scene: Scene, game: Game):
                             active_popup._screen.current_scene.remove_effect(
                                 active_popup
                             )
-                    except:
+                    except Exception:
                         pass
                     active_popup = None
             except Exception as e:
@@ -1254,12 +1256,12 @@ def _raise(ex):
     raise ex
 
 
-def raiseFn(clazz: any, name: str):
+def raise_fn(clazz: any, name: str):
     """
     bruh, why?
     """
 
-    def raiseNextScene(arg=name):
+    def raise_next_scene(arg=name):
         raise clazz(arg)
 
-    return raiseNextScene
+    return raise_next_scene

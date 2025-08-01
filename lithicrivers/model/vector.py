@@ -1,4 +1,4 @@
-from typing import Any, List, Tuple, Union
+from typing import Any, Union
 
 
 class VectorN:
@@ -6,7 +6,7 @@ class VectorN:
     Vector (point) that can be any dimension (X, or X/Y, or X/Y/Z, or X/Y/Z/W, etc)
     """
 
-    dimPosMap = {"x": 0, "y": 1, "z": 2, "w": 3}
+    dim_pos_map = {"x": 0, "y": 1, "z": 2, "w": 3}
 
     def __init__(self, *dimvals: int):
         # we're probably being passed a string, a list, or a VectorN object
@@ -27,11 +27,11 @@ class VectorN:
         self.dimension_values = dimvals
 
         # set x,y,z, etc
-        for dimName, dimIdx in self.dimPosMap.items():
-            if dimIdx < len(self.dimension_values):
-                self.__setattr__(dimName, self.dimension_values[dimIdx])
+        for dim_name, dim_idx in self.dim_pos_map.items():
+            if dim_idx < len(self.dimension_values):
+                self.__setattr__(dim_name, self.dimension_values[dim_idx])
             else:
-                self.__setattr__(dimName, None)
+                self.__setattr__(dim_name, None)
 
     def trim(self, new_size: int):
         """Trim VectorN down to smaller size."""
@@ -41,10 +41,10 @@ class VectorN:
         """are we "1"d, "2"d, "3"d, etc"""
         return len(self.dimension_values)
 
-    def as_tuple(self) -> Tuple[int]:
+    def as_tuple(self) -> tuple[int]:
         return (*self.dimension_values,)
 
-    def as_list(self) -> List[int]:
+    def as_list(self) -> list[int]:
         return [
             *self.dimension_values,
         ]
@@ -110,7 +110,7 @@ class VectorN:
                 )
 
         # indexing us like `self['y']`
-        if item in self.dimPosMap.keys():
+        if item in self.dimPosMap:
             return self.dimension_values[self.dimPosMap[item]]
 
     def inside_bounding_rect(self, vec1, vec2, wiggle: int = 0):

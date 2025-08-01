@@ -3,7 +3,6 @@ This util exists to unify TUI styles and make the game look + feel cohesive.
 """
 
 from enum import Enum
-from typing import List, Tuple
 
 from lithicrivers.model.generictype import T
 
@@ -63,11 +62,11 @@ class ColorManager:
     def __init__(self):
         self.schemes = {scheme.name: scheme.value for scheme in ColorScheme}
 
-    def get_color(self, scheme_name: str) -> Tuple[int, int, int]:
+    def get_color(self, scheme_name: str) -> tuple[int, int, int]:
         """Get color tuple for a scheme name."""
         return self.schemes.get(scheme_name.upper(), ColorScheme.DEFAULT.value)
 
-    def get_tile_color(self, tile_id: str) -> Tuple[int, int, int]:
+    def get_tile_color(self, tile_id: str) -> tuple[int, int, int]:
         """Get color for a specific tile type."""
         tile_colors = {
             "Dirt": ColorScheme.DIRT.value,
@@ -79,7 +78,7 @@ class ColorManager:
         }
         return tile_colors.get(tile_id, ColorScheme.DEFAULT.value)
 
-    def get_item_color(self, item_name: str) -> Tuple[int, int, int]:
+    def get_item_color(self, item_name: str) -> tuple[int, int, int]:
         """Get color for a specific item type."""
         item_colors = {
             "Rock": ColorScheme.ROCK.value,
@@ -101,7 +100,7 @@ def presenting(text) -> str:
     return f"~ {text} ~"
 
 
-def render_tuple(tups: List[T], places=2) -> str:
+def render_tuple(tups: list[T], places=2) -> str:
     fstr = ""
     for i, tup in enumerate(tups):
         fstr += "("
@@ -133,17 +132,17 @@ def colorize_text(text: str, color_scheme: str) -> str:
     return text
 
 
-def get_color_for_tile(tile_id: str) -> Tuple[int, int, int]:
+def get_color_for_tile(tile_id: str) -> tuple[int, int, int]:
     """Get color tuple for a tile type."""
     return COLOR_MANAGER.get_tile_color(tile_id)
 
 
-def get_color_for_item(item_name: str) -> Tuple[int, int, int]:
+def get_color_for_item(item_name: str) -> tuple[int, int, int]:
     """Get color tuple for an item type."""
     return COLOR_MANAGER.get_item_color(item_name)
 
 
-def get_color_for_ui_element(element_type: str) -> Tuple[int, int, int]:
+def get_color_for_ui_element(element_type: str) -> tuple[int, int, int]:
     """Get color tuple for a UI element."""
     return COLOR_MANAGER.get_color(element_type)
 

@@ -4,7 +4,6 @@ This module provides utilities for testing UI components without requiring a ful
 """
 
 import unittest
-from typing import List
 
 from lithicrivers.constants import VEC_EAST, VEC_NORTH
 from lithicrivers.game_engine import GameEngine
@@ -39,7 +38,7 @@ class MockCanvas:
                 if 0 <= x + i < self.width:
                     self.buffer[y][x + i] = char
 
-    def get_content(self) -> List[List[str]]:
+    def get_content(self) -> list[list[str]]:
         """Get the current content of the canvas."""
         return self.buffer.copy()
 

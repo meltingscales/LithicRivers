@@ -72,6 +72,8 @@ ignore = [
     "C901",  # too complex
     "B008",  # do not perform function calls in argument defaults
     "B006",  # do not use mutable data structures for argument defaults
+    "ARG002",  # unused method arguments
+    "ARG001",  # unused function arguments
 ]
 
 # Allow fix for all enabled rules (when `--fix`) is provided.

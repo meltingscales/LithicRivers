@@ -3,7 +3,7 @@ import pickle
 import pprint
 import random
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Optional, Union
 
 from lithicrivers.constants import VEC_EAST, VEC_NORTH, VEC_SOUTH, VEC_WEST
 from lithicrivers.model.generictype import T
@@ -68,7 +68,7 @@ class Entity:
     def move(self, vec: VectorN):
         self.position += vec
 
-    def calcOffset(self, vec: VectorN) -> VectorN:
+    def calc_offset(self, vec: VectorN) -> VectorN:
         """Where would I move, if I did move?"""
         return self.position + vec
 
@@ -206,15 +206,15 @@ class InteractiveEntity(Entity, SpriteRenderable):
 
 class Entities:
     @staticmethod
-    def StumblingSheep(position=VectorN(0, 0, 0)):
+    def stumbling_sheep(position=VectorN(0, 0, 0)):
         return Entity("Stumbling Sheep", position)
 
     @staticmethod
-    def StarterNPC(position=VectorN(5, 5, 0)):
+    def starter_npc(position=VectorN(5, 5, 0)):
         return NPC("Elder Oak", position, sprite="N", color="cyan")
 
     @staticmethod
-    def TestEntity1(position=VectorN(6, 5, 0)):
+    def test_entity1(position=VectorN(6, 5, 0)):
         return InteractiveEntity(
             "Crystal Shard",
             position,
@@ -224,7 +224,7 @@ class Entities:
         )
 
     @staticmethod
-    def TestEntity2(position=VectorN(5, 6, 0)):
+    def test_entity2(position=VectorN(5, 6, 0)):
         return InteractiveEntity(
             "Ancient Relic",
             position,
@@ -240,38 +240,38 @@ class Items:
     """
 
     @staticmethod
-    def Rock():
+    def rock():
         return Item("Rock", sprite_sheet=["*"])
 
     @staticmethod
-    def Gold_Nugget():
+    def gold_nugget():
         return Item("Gold Nugget", sprite_sheet=["c"])
 
     @staticmethod
-    def Stick():
+    def stick():
         return Item("Stick", sprite_sheet=["\\"])
 
     @staticmethod
-    def Diamond():
+    def diamond():
         return Item("Diamond", sprite_sheet=["d"])
 
     @staticmethod
-    def Log():
+    def log():
         return Item("Log", sprite_sheet=["|"])
 
     @staticmethod
-    def Acorn():
+    def acorn():
         return Item("Acorn", sprite_sheet=["o"])
 
 
 class Item(SpriteRenderable):
-    def __init__(self, name, sprite_sheet: List[str] = None):
+    def __init__(self, name, sprite_sheet: Optional[list[str]] = None):
         SpriteRenderable.__init__(self, sprite_sheet)
         self.name = name
 
 
 class Inventory:
-    def __init__(self, items: List[Item] = None):
+    def __init__(self, items: Optional[list[Item]] = None):
         if items is None:
             items = []
 
@@ -283,7 +283,7 @@ class Inventory:
     def __str__(self):
         return f"<Inventory numItems={len(self.itemsdata)} summary={self.summary()}>"
 
-    def count_items(self) -> Dict[str, int]:
+    def count_items(self) -> dict[str, int]:
         d = {}
 
         for item in self.itemsdata:
@@ -314,7 +314,7 @@ class Inventory:
 
         return s[0 : len(s) - 2] if s else "Empty"
 
-    def _get_color_name(self, color: Tuple[int, int, int]) -> str:
+    def _get_color_name(self, color: tuple[int, int, int]) -> str:
         """Get a human-readable name for a color."""
         color_names = {
             (1, 0, 0): "red",
@@ -342,9 +342,9 @@ class Tile(SpriteRenderable):
     def __init__(
         self,
         tileid: str,
-        desc: str = None,
-        sprite_sheet: List[str] = None,
-        drops: Dict[float, Item] = None,
+        desc: Optional[str] = None,
+        sprite_sheet: Optional[list[str]] = None,
+        drops: Optional[dict[float, Item]] = None,
     ):
         SpriteRenderable.__init__(self, sprite_sheet)
         self.tileid = tileid
@@ -381,18 +381,18 @@ class Tile(SpriteRenderable):
 
         # Add guaranteed acorns
         for _ in range(num_acorns):
-            items.append(Items.Acorn())
+            items.append(Items.acorn())
 
         # Add other possible drops (stick, log) with original probabilities
         if random.random() < 0.5:
-            items.append(Items.Stick())
+            items.append(Items.stick())
         if random.random() < 0.3:
-            items.append(Items.Log())
+            items.append(Items.log())
 
         return items
 
 
-def weighted_choice(weights: List[float], choices: List[T]) -> T:
+def weighted_choice(weights: list[float], choices: list[T]) -> T:
     if len(weights) != len(choices):
         ve = ValueError(
             f"Weights={weights} and choices={choices} for {weighted_choice.__name__}() must be the same length!"
@@ -411,22 +411,22 @@ def weighted_choice(weights: List[float], choices: List[T]) -> T:
     return random.choices(choices, weights=normalized_weights, k=1)[0]
 
 
-def weighted_choice_dict(dictWeight: Dict[float, T]) -> T:
+def weighted_choice_dict(dict_weight: dict[float, T]) -> T:
     weights = []
     choices = []
-    for k, v in dictWeight.items():
+    for k, v in dict_weight.items():
         weights.append(k)
         choices.append(v)
     return weighted_choice(weights, choices)
 
 
 def generate_tile(
-    choices: List[Tile] = None,
-    weights: List[int] = None,
+    choices: Optional[list[Tile]] = None,
+    weights: Optional[list[int]] = None,
     current_location: VectorN = None,
 ) -> Tile:
     if choices is None:
-        choices = [Tiles.Tree(), Tiles.Dirt(), Tiles.Gold_Ore()]
+        choices = [Tiles.tree(), Tiles.dirt(), Tiles.gold_ore()]
 
     if weights is None:
         weights = [5, 100, 1]
@@ -435,12 +435,12 @@ def generate_tile(
     if current_location:
         if current_location.z > 0:
             # we are in da sky
-            return Tiles.Cloud()
+            return Tiles.cloud()
 
         elif current_location.z < 0:
             # we are underground
             return weighted_choice(
-                [1, 0.2, 0.05], [Tiles.Bedrock(), Tiles.Dirt(), Tiles.Gold_Ore()]
+                [1, 0.2, 0.05], [Tiles.bedrock(), Tiles.dirt(), Tiles.gold_ore()]
             )
 
     return weighted_choice(weights, choices)
@@ -452,39 +452,39 @@ class Tiles:
     """
 
     @staticmethod
-    def Dirt():
+    def dirt():
         return Tile(
             "Dirt",
             sprite_sheet=[",", ",.\n.,", ",.,\n.,.\n,.,"],
-            drops={0.99: Items.Rock(), 0.01: Items.Gold_Nugget()},
+            drops={0.99: Items.rock(), 0.01: Items.gold_nugget()},
         )
 
     @staticmethod
-    def Tree():
+    def tree():
         return Tile(
             "Tree",
             sprite_sheet=["t", "/\\\n||", "/|\\\n;|;\n/|\\\n"],
-            drops={0.50: Items.Stick(), 0.30: Items.Log(), 0.20: Items.Acorn()},
+            drops={0.50: Items.stick(), 0.30: Items.log(), 0.20: Items.acorn()},
         )
 
     @staticmethod
-    def Gold_Ore():
+    def gold_ore():
         return Tile(
             "Gold Ore",
             sprite_sheet=["?", "??\n??", "???\n???\n???"],
-            drops={0.9: Items.Gold_Nugget(), 0.1: Items.Diamond()},
+            drops={0.9: Items.gold_nugget(), 0.1: Items.diamond()},
         )
 
     @staticmethod
-    def Cloud():
+    def cloud():
         return Tile("Cloud", sprite_sheet=["~", "~o\noo", ".~~\n~~o\n~oo"])
 
     @staticmethod
-    def Bedrock():
+    def bedrock():
         return Tile("Bedrock", sprite_sheet=["#", "|/\n/|", "|,/\n/|\\\n|/|"])
 
     @staticmethod
-    def Empty():
+    def empty():
         return Tile("Empty", sprite_sheet=[" ", "  \n  "])
 
 
@@ -502,17 +502,17 @@ class WorldData:
 
     def __init__(
         self,
-        tile_data: Dict[str, Tile] = None,
-        entity_data: Dict[str, List[Entity]] = None,
+        tile_data: Optional[dict[str, Tile]] = None,
+        entity_data: Optional[dict[str, list[Entity]]] = None,
     ):
         self.tile_data = tile_data
         if not self.tile_data:
-            self.tile_data = {VectorN(0, 0, 0).serialize(): Tiles.Dirt()}
+            self.tile_data = {VectorN(0, 0, 0).serialize(): Tiles.dirt()}
 
         self.entity_data = entity_data
         if not self.entity_data:
             self.entity_data = {
-                VectorN(0, 0, 0).serialize(): [Entities.StumblingSheep()]
+                VectorN(0, 0, 0).serialize(): [Entities.stumbling_sheep()]
             }
 
     def set_tile(self, pos: VectorN, t: Tile):
@@ -533,8 +533,7 @@ class WorldData:
         self.set_tile(VectorN(*item))
 
     def __iter__(self):
-        for key, val in self.tile_data.items():
-            yield key, val
+        yield from self.tile_data.items()
 
 
 class World:
@@ -603,12 +602,12 @@ class World:
     def _add_starter_entities(self):
         """Add starter entities to the world."""
         # Add NPC
-        npc = Entities.StarterNPC()
+        npc = Entities.starter_npc()
         self.entities[npc.position.serialize()] = npc
 
         # Add test entities
-        entity1 = Entities.TestEntity1()
-        entity2 = Entities.TestEntity2()
+        entity1 = Entities.test_entity1()
+        entity2 = Entities.test_entity2()
         self.entities[entity1.position.serialize()] = entity1
         self.entities[entity2.position.serialize()] = entity2
 
@@ -637,7 +636,7 @@ class World:
         if key in self.entities:
             del self.entities[key]
 
-    def get_adjacent_entities(self, pos: VectorN) -> List[Tuple[str, VectorN, str]]:
+    def get_adjacent_entities(self, pos: VectorN) -> list[tuple[str, VectorN, str]]:
         """Get all entities adjacent to a position."""
         adjacent = []
         for dx in [-1, 0, 1]:
@@ -648,10 +647,7 @@ class World:
                 check_pos = VectorN(pos.x + dx, pos.y + dy, pos.z)
                 entity = self.get_entity(check_pos)
                 if entity:
-                    if hasattr(entity, "color"):
-                        color = entity.color
-                    else:
-                        color = "white"
+                    color = entity.color if hasattr(entity, "color") else "white"
                     adjacent.append((entity.name, check_pos, color))
 
         return adjacent
@@ -712,8 +708,8 @@ class Game:
         if not viewport:
             viewport = self.viewport
 
-        ret: List[List[str]] = []
-        color_data: List[List[Tuple[int, int, int]]] = []
+        ret: list[list[str]] = []
+        color_data: list[list[tuple[int, int, int]]] = []
 
         z = self.player.position.z
 
@@ -724,7 +720,7 @@ class Game:
                 pos = VectorN(x, y, z)
                 tile = self.world.get_tile(pos)
                 if not tile:
-                    tile = Tiles.Empty()
+                    tile = Tiles.empty()
 
                 sprite = tile.render_sprite(scale=viewport.scale)
                 tile_color = get_color_for_tile(tile.tileid)
@@ -766,12 +762,12 @@ class Game:
         return RenderedData(ret, scale=viewport.scale, color_data=color_data)
 
     def move_player(self, vec: VectorN):
-        possiblePosition = self.player.calcOffset(vec)
+        possible_position = self.player.calc_offset(vec)
 
         # check bounds
-        if self.world.get_tile(possiblePosition) is None:
+        if self.world.get_tile(possible_position) is None:
             logging.debug(
-                f"Tried to move OOB! {vec} would have resulted in {possiblePosition}"
+                f"Tried to move OOB! {vec} would have resulted in {possible_position}"
             )
             return
 
@@ -793,23 +789,23 @@ class Game:
 
         vpwidth, vpheight = self.viewport.get_size()
 
-        vpwTL = vpwidth // 2
-        vphTL = vpheight // 2
+        vpw_tl = vpwidth // 2
+        vph_tl = vpheight // 2
 
-        vpwLR = vpwidth // 2
-        vphLR = vpheight // 2
+        vpw_lr = vpwidth // 2
+        vph_lr = vpheight // 2
 
         # preserve oddness
         if (vpwidth % 2) != 0:
-            vpwLR += 1
+            vpw_lr += 1
 
         if (vpheight % 2) != 0:
-            vphLR += 1
+            vph_lr += 1
 
         # make our bounds centered on the player position
-        self.viewport.top_left = VectorN(px - vpwTL, py - vphTL, pz)
+        self.viewport.top_left = VectorN(px - vpw_tl, py - vph_tl, pz)
 
-        self.viewport.lower_right = VectorN(px + vpwLR, py + vphLR, pz)
+        self.viewport.lower_right = VectorN(px + vpw_lr, py + vph_lr, pz)
 
     def set_tile_at_player_feet(self, tile):
         self.world.set_tile(self.player.position, tile)

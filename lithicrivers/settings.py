@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import List, Union
+from typing import Union
 
 from asciimatics.event import KeyboardEvent
 
@@ -60,7 +60,7 @@ class Keymap:
             if not attr_name.startswith("_"):
                 setattr(self, attr_name, getattr(self._keymap, attr_name))
 
-    def get_valid_key_names(self) -> List[str]:
+    def get_valid_key_names(self) -> list[str]:
         return self._keymap.get_valid_key_names()
 
     def generate_key_guide(self) -> str:
