@@ -15,6 +15,7 @@ from lithicrivers.model.modelpleasemoveme import RenderedData, StopGame
 from lithicrivers.textutil import get_color_for_ui_element, presenting, list_label
 from lithicrivers.keymap import KEYMAP
 from lithicrivers.settings import GAME_NAME, VIEWPORT_WIGGLE
+from lithicrivers.model.modelpleasemoveme import Viewport
 
 
 # class MainGameFrame(Layout):
@@ -267,9 +268,23 @@ class RootPage(Frame):
                          can_scroll=True,
                          title="Root Page")
 
-        columns = [70, 30]
+        # Use more flexible column layout - game widget gets more space
+        # Calculate columns based on screen width for better space utilization
+        screen_width = screen.width
+        if screen_width >= 120:
+            # Large screen: give more space to game widget
+            columns = [80, 20]
+        elif screen_width >= 80:
+            # Medium screen: balanced layout
+            columns = [75, 25]
+        else:
+            # Small screen: minimal info panel
+            columns = [70, 30]
 
         self.game = game
+        
+        # Adjust viewport size based on available screen space
+        self._adjust_viewport_for_screen(screen)
 
         layout1 = Layout(columns=columns, fill_frame=True)
 
@@ -304,6 +319,57 @@ class RootPage(Frame):
         layoutButtons = TabButtons(self, 1)
         self.add_layout(layoutButtons)
         self.fix()
+
+    def _adjust_viewport_for_screen(self, screen):
+        """Adjust viewport size based on available screen space."""
+        # Calculate available space for the game widget
+        screen_width = screen.width
+        screen_height = screen.height
+        
+        # Account for info panel width (20-30% depending on screen size)
+        if screen_width >= 120:
+            info_panel_width = int(screen_width * 0.20)
+        elif screen_width >= 80:
+            info_panel_width = int(screen_width * 0.25)
+        else:
+            info_panel_width = int(screen_width * 0.30)
+        
+        # Account for borders, headers, and tab buttons
+        available_width = screen_width - info_panel_width - 4  # 4 for borders
+        available_height = screen_height - 6  # 6 for headers, borders, and tab buttons
+        
+        # Calculate optimal viewport size
+        # Each tile takes up scale characters, so we need to account for that
+        scale = self.game.viewport.scale
+        max_tiles_x = available_width // scale
+        max_tiles_y = available_height // scale
+        
+        # Ensure we have at least a minimum viewport size
+        min_tiles = 5
+        max_tiles_x = max(max_tiles_x, min_tiles)
+        max_tiles_y = max(max_tiles_y, min_tiles)
+        
+        # Calculate radius (half the viewport size)
+        radius_x = max_tiles_x // 2
+        radius_y = max_tiles_y // 2
+        
+        # Ensure radius is at least 1
+        radius_x = max(radius_x, 1)
+        radius_y = max(radius_y, 1)
+        
+        # Update viewport with new radius
+        new_viewport = Viewport.generate_centered(
+            self.game.player.position,
+            radius=VectorN(radius_x, radius_y, 0),
+            scale=self.game.viewport.scale
+        )
+        self.game.viewport = new_viewport
+
+    def handle_terminal_resize(self, screen):
+        """Handle terminal resize by recalculating viewport size."""
+        self._adjust_viewport_for_screen(screen)
+        # Update viewport display
+        self.labelViewport.text = str(self.game.viewport.render_pretty())
 
 
 class HelpPage(Frame):
@@ -447,6 +513,10 @@ def demo(screen: Screen, scene: Scene, game: Game):
     for scene in scenes[::-1]:
         scene.effects[0].set_theme('bright')
 
+    # Store the current screen dimensions to detect resize
+    last_screen_width = screen.width
+    last_screen_height = screen.height
+
     def handle_event(event: Union[KeyboardEvent, MouseEvent]):
 
         daScene: Scene = screen.current_scene
@@ -457,6 +527,17 @@ def demo(screen: Screen, scene: Scene, game: Game):
             return
 
         maybe_root_page: RootPage = daEffects[0]
+
+        # Check for terminal resize
+        nonlocal last_screen_width, last_screen_height
+        if (screen.width != last_screen_width or screen.height != last_screen_height):
+            logging.debug(f"Terminal resized from {last_screen_width}x{last_screen_height} to {screen.width}x{screen.height}")
+            last_screen_width = screen.width
+            last_screen_height = screen.height
+            
+            # Recalculate viewport for new screen size
+            if isinstance(maybe_root_page, RootPage):
+                maybe_root_page.handle_terminal_resize(screen)
 
         if not isinstance(event, KeyboardEvent):
             # print("not keyboard event, ignoring... - {}".format(event))
@@ -494,8 +575,7 @@ def demo(screen: Screen, scene: Scene, game: Game):
         # after we mine
         root_page.labelFeet.text = str(root_page.game.get_tile_at_player_feet())
 
-        # after we handle viewport
-
+        # update viewport display
         root_page.labelViewport.text = str(root_page.game.viewport.render_pretty())
 
     screen.set_title("~~-[ {} ]-~~".format(GAME_NAME))

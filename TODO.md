@@ -40,9 +40,7 @@
 - ask "Are there any bugs or issues you see with my world data structure? how does minecraft do it?" to AI
 - for viewscale=2, there's dots on the bottom-right of the viewport. find a way to clamp the viewport to a specific dimension that's the same as viewscale=1.
 - fix `make dev`
-- make sure the world viewport takes up as much space as it can in the TUI.
-- eventually, I'd like to publish this game on steam for $3. don't add/edit any code, I just want advice. What should I focus on before that?
-- fix color-coding for zooming in/out: for 2x scale, only the left half is colored, and it's offset by a factor of 2. The same issue happens for 3x zoom.
+ - eventually, I'd like to publish this game on steam for $3. don't add/edit any code, I just want advice. What should I focus on before that?
 - make the world lazy-generated and infinite
 - give me suggestions for different biomes!
 - add structure generation - old ruins, ore patches

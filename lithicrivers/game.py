@@ -462,7 +462,12 @@ class World:
         self.gametick = 0
 
     def get_tile(self, pos: VectorN):
-        return self.data.get_tile(pos)
+        tile = self.data.get_tile(pos)
+        if tile is None:
+            # Generate tile on-demand if it doesn't exist
+            tile = generate_tile(current_location=pos)
+            self.data.set_tile(pos, tile)
+        return tile
 
     def set_tile(self, pos: VectorN, tile: Tile):
         self.data.set_tile(pos, tile)

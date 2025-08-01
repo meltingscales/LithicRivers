@@ -78,7 +78,7 @@ class ConfigManager:
                 }
             },
             "viewport": {
-                "VIEWPORT_RADIUS": [10, 10, 0],
+                "VIEWPORT_RADIUS": [8, 8, 0],
                 "VIEWPORT_WIGGLE": 2
             }
         }
