@@ -89,6 +89,8 @@ class Viewport:
     def clamp_scale(self):
         if self.scale < 1:
             self.scale = 1
+        elif self.scale > 3:
+            self.scale = 3
 
     def rescale_down(self, i=1):
         self.rescale(-i)
