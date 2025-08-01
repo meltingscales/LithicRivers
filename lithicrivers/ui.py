@@ -314,6 +314,11 @@ class InputHandler:
         :return: Vector the input resolves to.
         """
 
+        # First check for numpad movement
+        if KEYMAP.matches_numpad(keyboardEvent):
+            return KEYMAP.get_numpad_movement_vector(keyboardEvent)
+
+        # Then check for regular character movement
         datKey = Keymap.char_from_keyboard_event(keyboardEvent)
         if datKey in KEYMAP.MOVEMENT_VECTOR_MAP.keys():
             return KEYMAP.MOVEMENT_VECTOR_MAP[datKey]

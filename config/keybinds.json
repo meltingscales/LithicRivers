@@ -1,9 +1,9 @@
 {
   "movement": {
-    "MOVE_NORTH": "w",
-    "MOVE_WEST": "a",
-    "MOVE_SOUTH": "s",
-    "MOVE_EAST": "d",
+    "MOVE_NORTH": "8",
+    "MOVE_WEST": "4",
+    "MOVE_SOUTH": "2",
+    "MOVE_EAST": "6",
     "MOVE_UP": "q",
     "MOVE_DOWN": "e"
   },

@@ -36,12 +36,12 @@ class ConfigManager:
         """Load keybinds from JSON file or create default if file doesn't exist."""
         default_keybinds = {
             "movement": {
-                "MOVE_NORTH": "w",
-                "MOVE_WEST": "a",
-                "MOVE_SOUTH": "s",
-                "MOVE_EAST": "d",
-                "MOVE_UP": "q",
-                "MOVE_DOWN": "e"
+                "MOVE_NORTH": "8",  # Numpad 8
+                "MOVE_WEST": "4",   # Numpad 4
+                "MOVE_SOUTH": "2",  # Numpad 2
+                "MOVE_EAST": "6",   # Numpad 6
+                "MOVE_UP": "q",     # Keep Q for up
+                "MOVE_DOWN": "e"    # Keep E for down
             },
             "viewport": {
                 "RESET_VIEWPORT": "r",

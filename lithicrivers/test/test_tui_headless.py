@@ -16,7 +16,7 @@ from asciimatics.exceptions import NextScene, ResizeScreenError
 from lithicrivers.game_engine import GameEngine
 from lithicrivers.game import Game, Tiles, Items
 from lithicrivers.model.vector import VectorN
-from lithicrivers.constants import VEC_NORTH, VEC_SOUTH, VEC_WEST, VEC_EAST
+from lithicrivers.constants import VEC_NORTH, VEC_SOUTH, VEC_WEST, VEC_EAST, VEC_UP, VEC_DOWN, VEC_NORTHWEST, VEC_NORTHEAST, VEC_SOUTHWEST, VEC_SOUTHEAST
 from lithicrivers.ui import GameWidget, RootPage, HelpPage, InputHandler, demo
 
 
@@ -130,12 +130,16 @@ class TestHeadlessInputHandler(HeadlessTUITestCase):
     
     def test_movement_input_headless(self):
         """Test movement input handling in headless mode."""
-        # Test each movement direction
+        # Test each movement direction with numpad keys
         movement_tests = [
-            (ord('w'), VEC_NORTH),
-            (ord('s'), VEC_SOUTH),
-            (ord('a'), VEC_WEST),
-            (ord('d'), VEC_EAST),
+            (ord('8'), VEC_NORTH),    # Numpad 8
+            (ord('2'), VEC_SOUTH),    # Numpad 2
+            (ord('4'), VEC_WEST),     # Numpad 4
+            (ord('6'), VEC_EAST),     # Numpad 6
+            (ord('7'), VEC_NORTHWEST), # Numpad 7
+            (ord('9'), VEC_NORTHEAST), # Numpad 9
+            (ord('1'), VEC_SOUTHWEST), # Numpad 1
+            (ord('3'), VEC_SOUTHEAST), # Numpad 3
         ]
         
         for key_code, expected_direction in movement_tests:
@@ -244,7 +248,7 @@ class TestHeadlessIntegration(HeadlessTUITestCase):
             root_page = RootPage(screen, self.game)
             
             # Simulate player movement
-            movement_event = self.create_keyboard_event(ord('d'))
+            movement_event = self.create_keyboard_event(ord('6'))  # Move east
             move_vec = InputHandler.handle_movement(movement_event)
             if move_vec:
                 self.game.move_player(move_vec)
@@ -273,10 +277,14 @@ class TestHeadlessIntegration(HeadlessTUITestCase):
             
             # Test various input events
             events = [
-                (ord('w'), "north movement"),
-                (ord('s'), "south movement"),
-                (ord('a'), "west movement"),
-                (ord('d'), "east movement"),
+                (ord('8'), "north movement"),
+                (ord('2'), "south movement"),
+                (ord('4'), "west movement"),
+                (ord('6'), "east movement"),
+                (ord('7'), "northwest movement"),
+                (ord('9'), "northeast movement"),
+                (ord('1'), "southwest movement"),
+                (ord('3'), "southeast movement"),
                 (ord(' '), "mining"),
                 (ord('i'), "viewport up"),
                 (ord('k'), "viewport down"),
@@ -291,7 +299,7 @@ class TestHeadlessIntegration(HeadlessTUITestCase):
                     event = self.create_keyboard_event(key_code)
                     
                     # Handle the event appropriately
-                    if key_code in [ord('w'), ord('s'), ord('a'), ord('d')]:
+                    if key_code in [ord('8'), ord('2'), ord('4'), ord('6'), ord('7'), ord('9'), ord('1'), ord('3')]:
                         result = InputHandler.handle_movement(event)
                         self.assertIsNotNone(result)
                     elif key_code == ord(' '):
@@ -345,7 +353,7 @@ class TestHeadlessPerformance(HeadlessTUITestCase):
         import time
         
         # Create many input events
-        events = [self.create_keyboard_event(ord('w')) for _ in range(100)]
+        events = [self.create_keyboard_event(ord('8')) for _ in range(100)]
         
         start_time = time.time()
         for event in events:
