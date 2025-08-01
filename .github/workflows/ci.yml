@@ -1,0 +1,127 @@
+---
+name: "Simplified CI/CD"
+
+on:
+  push:
+    branches: [main, develop, release]
+    tags-ignore: ["*"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # Always run tests
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: "Checkout source code"
+        uses: "actions/checkout@v2.4.0"
+
+      - name: "Install uv"
+        uses: "astral-sh/setup-uv@v1"
+        with:
+          version: "latest"
+
+      - name: "Cache dependencies"
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-uv-${{ hashFiles('**/pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-uv-
+
+      - name: "Install dependencies"
+        run: "make install"
+
+      - name: "Run tests"
+        run: "make test-lcov"
+
+      - name: "Run TUI tests"
+        run: "make test-tui"
+
+      - name: "Coveralls"
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  # Build for Ubuntu (release branch only)
+  build-ubuntu:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/release'
+    
+    steps:
+      - name: "Checkout source code"
+        uses: "actions/checkout@v2.4.0"
+
+      - name: "Install uv"
+        uses: "astral-sh/setup-uv@v1"
+        with:
+          version: "latest"
+
+      - name: "Cache dependencies"
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-uv-${{ hashFiles('**/pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-uv-
+
+      - name: "Install dependencies"
+        run: "make install"
+
+      - name: "Run tests"
+        run: "make test"
+
+      - name: "Build executable"
+        run: "make build"
+
+      - name: "Create Ubuntu release"
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "latest-ubuntu"
+          prerelease: true
+          title: "Development Build Ubuntu"
+          files: "dist/*"
+
+  # Build for Windows (release branch only)
+  build-windows:
+    needs: test
+    runs-on: windows-latest
+    if: github.ref == 'refs/heads/release'
+    
+    steps:
+      - name: "Checkout source code"
+        uses: "actions/checkout@v2.4.0"
+
+      - name: "Install uv"
+        uses: "astral-sh/setup-uv@v1"
+        with:
+          version: "latest"
+
+      - name: "Cache dependencies"
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-uv-${{ hashFiles('**/pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-uv-
+
+      - name: "Install dependencies"
+        run: "./scripts/setup.cmd"
+
+      - name: "Run tests"
+        run: "./scripts/test.cmd"
+
+      - name: "Build executable"
+        run: "./scripts/generate_exe.cmd"
+
+      - name: "Create Windows release"
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "latest-windows"
+          prerelease: true
+          title: "Development Build Windows"
+          files: "dist/*" 
