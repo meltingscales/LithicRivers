@@ -205,12 +205,22 @@ class TestGameIntegrationSimple(SimpleTUITestCase):
         """Test that scale changes work correctly."""
         initial_scale = self.game.viewport.scale
         
-        # Increase scale
+        # Try to decrease scale first to ensure we can increase it
+        event = self.create_keyboard_event(ord('-'))
+        InputHandler.handle_scale(event, self.game)
+        
+        # Now try to increase scale
         event = self.create_keyboard_event(ord('='))
         InputHandler.handle_scale(event, self.game)
         
-        # Check that scale changed
-        self.assertNotEqual(initial_scale, self.game.viewport.scale)
+        # Check that scale changed from the initial value
+        # If initial scale was 3, we can only decrease, so check that it changed
+        final_scale = self.game.viewport.scale
+        self.assertNotEqual(initial_scale, final_scale)
+        
+        # Verify scale is within valid range (1-3)
+        self.assertGreaterEqual(final_scale, 1)
+        self.assertLessEqual(final_scale, 3)
 
 
 class TestKeymapSimple(SimpleTUITestCase):

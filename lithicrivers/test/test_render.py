@@ -100,14 +100,17 @@ class RenderStuff(unittest.TestCase):
             '0,1,0': Tiles.Dirt(),
             '1,1,0': Tiles.Dirt()
         })
+        
+        # Move player out of the viewport so tiles are visible
+        someGame.player.position = VectorN(5, 5, 0)
 
         daScale = 2
 
         renderedViewport = someGame.render_world_viewport(
-            daScale,
             viewport=Viewport(
                 top_left=VectorN(0, 0),
-                lower_right=VectorN(1, 1)
+                lower_right=VectorN(1, 1),
+                scale=daScale
             )
         )
 

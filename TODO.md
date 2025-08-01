@@ -35,6 +35,7 @@
 
 # 2025 todo
 
+- are there any really fun terminal characters we can use as an alternative to just ASCII? can you list them?
 - add a dialog box/popup system, as well as a starter NPC that you can talk to and choose a dialog option at the end of a short conversation. Also, add a keybind to directionally interact with an adjacent item/block/entity, just like Caves of Qud. When you press the "Interact" button, it should let you choose from a list of adjacent things via a popup. Test this by making 2 identical entities, adjacent to eachother, with different names and different colors.
 - make the message log pane actually functional - dialog, interactions, mining, and pickups should be logged there.
 - add the ability to look around with 'L', just like caves of qud.
@@ -43,19 +44,27 @@
 - add a "commands" screen as a tab on the bottom, that lets you perform macro actions like walking for 2,000 steps or walking to a specific coordinate.
 - ask "are there any bugs or issues you see with my existing viewport code? can we stress test it?" to AI
 - ask "Are there any bugs or issues you see with my world data structure? how does minecraft do it?" to AI
-- fix `make dev`
  - eventually, I'd like to publish this game on steam for $3. don't add/edit any code, I just want advice. What should I focus on before that?
 - give me suggestions for different biomes!
 
 
-- add random but seeded structure generation - old ruins, ore patches, machines, crashed ships, behemoth corpses, etc. Have the structure definition files be stored in ./lithicrivers/data/structures/ and come up with a reasonable format for them that lets you use ASCII art to define structures. for example:
+- add random but seeded structure generation - old ruins, ore patches, machines, crashed ships, behemoth corpses, etc. Have the structure definition files be stored in ./lithicrivers/data/structures/ and come up with a reasonable format for them that lets you use ASCII art to define structures. TILDE in shape_layers.txt is a special character that separates a y-layer. for example:
 
 /lithicrivers/data/structures/small_ship.lrstructure/
-/lithicrivers/data/structures/small_ship.lrstructure/shape.txt
+/lithicrivers/data/structures/small_ship.lrstructure/shape_layers.txt
 
+....
+.XX.
+....
+~~~~
 .XXX
-X  A
+Xe A
 XXX.
+~~~~
+....
+.XX.
+....
+
 
 /lithicrivers/data/structures/small_ship.lrstructure/data.json
 {
@@ -63,7 +72,11 @@ XXX.
     ".": "empty",
     "X": "iron_scrap",
     "A": "door",
+    "e": "scrap_electronics",
   },
   "gen_biomes": "ALL",
-  "gen_chance": 0.001
+  "gen_chance": 0.001,
+  "y_layer_gen_range": [0, 0] //can generate only on layer 0, the ground.
 }
+
+I'd like you to also add a giant corpse (bone blocks), and a small temple (iron scrap with a buried treasure 2 blocks below the center)
