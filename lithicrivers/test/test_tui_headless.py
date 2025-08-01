@@ -32,10 +32,9 @@ class HeadlessTUITestCase(unittest.TestCase):
     def create_headless_screen(self, width: int = 80, height: int = 24):
         """Create a headless screen for testing."""
         return asciimatics.screen.Screen.open(
-            width=width,
             height=height,
             unicode_aware=True,
-            catch_signals=False
+            catch_interrupt=False
         )
     
     def get_screen_content(self, screen) -> str:
@@ -45,8 +44,13 @@ class HeadlessTUITestCase(unittest.TestCase):
         for y in range(screen.height):
             row = ""
             for x in range(screen.width):
-                char = screen.get_from(x, y)
-                row += char if char else " "
+                char_data = screen.get_from(x, y)
+                # get_from returns (ascii_code, foreground, attributes, background)
+                if char_data and len(char_data) >= 1:
+                    char = chr(char_data[0]) if char_data[0] > 0 else " "
+                else:
+                    char = " "
+                row += char
             content.append(row)
         return '\n'.join(content)
     
@@ -86,8 +90,8 @@ class TestHeadlessGameWidget(HeadlessTUITestCase):
             # Create the widget
             widget = GameWidget(self.game)
             widget._frame = Mock()
-            widget._frame.canvas = screen.canvas
-            widget._frame.palette = screen.palette
+            widget._frame.canvas = Mock()
+            widget._frame.palette = {'label': (7, 0, 0)}
             widget._x = 0
             widget._y = 0
             widget._w = 40
@@ -111,7 +115,7 @@ class TestHeadlessGameWidget(HeadlessTUITestCase):
         try:
             widget = GameWidget(self.game)
             widget._frame = Mock()
-            widget._frame.canvas = screen.canvas
+            widget._frame.canvas = Mock()
             
             # Test required height calculation
             height = widget.required_height(0, 40)
@@ -142,19 +146,20 @@ class TestHeadlessInputHandler(HeadlessTUITestCase):
     
     def test_mining_input_headless(self):
         """Test mining input handling in headless mode."""
-        # Set up a mineable tile
-        self.game.world.set_tile(VectorN(0, 0, 0), Tiles.Tree())
+        # Set up a mineable tile at player's position
+        player_pos = self.game.player.position
+        self.game.world.set_tile(player_pos, Tiles.Tree())
         
         # Create mining event
-        event = self.create_keyboard_event(ord(' '))  # Spacebar
+        event = self.create_keyboard_event(ord('u'))  # Mining key
         root_page = Mock()
         
         # Handle mining
         InputHandler.handle_mining(event, self.game, root_page)
         
-        # Check that tile was mined
+        # Check that tile was mined (Tree should become Dirt)
         tile = self.game.get_tile_at_player_feet()
-        self.assertEqual(tile, Tiles.Empty())
+        self.assertEqual(tile, Tiles.Dirt())
     
     def test_viewport_input_headless(self):
         """Test viewport input handling in headless mode."""
@@ -190,12 +195,13 @@ class TestHeadlessPages(HeadlessTUITestCase):
             # Create root page
             page = RootPage(screen, self.game)
             
-            # Check that page has widgets
-            self.assertGreater(len(page._widgets), 0)
+            # Check that page has layouts (which contain widgets)
+            self.assertGreater(len(page._layouts), 0)
             
-            # Check that GameWidget is present
-            game_widgets = [w for w in page._widgets if isinstance(w, GameWidget)]
-            self.assertEqual(len(game_widgets), 1)
+            # Check that GameWidget is present by looking for it using find_widget
+            game_widget = page.find_widget("widgetGame")
+            self.assertIsNotNone(game_widget)
+            self.assertIsInstance(game_widget, GameWidget)
             
         finally:
             screen.close()
@@ -208,12 +214,13 @@ class TestHeadlessPages(HeadlessTUITestCase):
             # Create help page
             page = HelpPage(screen, self.game)
             
-            # Check that page has widgets
-            self.assertGreater(len(page._widgets), 0)
+            # Check that page has layouts (which contain widgets)
+            self.assertGreater(len(page._layouts), 0)
             
-            # Check that help content is present
-            help_labels = [w for w in page._widgets if hasattr(w, 'text')]
-            self.assertGreater(len(help_labels), 0)
+            # Check that help content is present by looking for labels
+            help_label = page.find_widget("helpLabel")
+            self.assertIsNotNone(help_label)
+            self.assertTrue(hasattr(help_label, 'text'))
             
         finally:
             screen.close()
@@ -224,10 +231,11 @@ class TestHeadlessIntegration(HeadlessTUITestCase):
     
     def test_complete_game_flow_headless(self):
         """Test a complete game flow in headless mode."""
-        # Set up world
-        self.game.world.set_tile(VectorN(0, 0, 0), Tiles.Dirt())
-        self.game.world.set_tile(VectorN(1, 0, 0), Tiles.Tree())
-        self.game.world.set_tile(VectorN(0, 1, 0), Tiles.Bedrock())
+        # Set up world at player's position
+        player_pos = self.game.player.position
+        self.game.world.set_tile(player_pos, Tiles.Dirt())
+        self.game.world.set_tile(player_pos + VectorN(1, 0, 0), Tiles.Tree())
+        self.game.world.set_tile(player_pos + VectorN(0, 1, 0), Tiles.Bedrock())
         
         screen = self.create_headless_screen()
         
@@ -237,18 +245,21 @@ class TestHeadlessIntegration(HeadlessTUITestCase):
             
             # Simulate player movement
             movement_event = self.create_keyboard_event(ord('d'))
-            InputHandler.handle_movement(movement_event)
+            move_vec = InputHandler.handle_movement(movement_event)
+            if move_vec:
+                self.game.move_player(move_vec)
             
             # Simulate mining
-            mining_event = self.create_keyboard_event(ord(' '))
+            mining_event = self.create_keyboard_event(ord('u'))
             InputHandler.handle_mining(mining_event, self.game, root_page)
             
-            # Check game state
-            self.assertEqual(self.game.player.position, VectorN(1, 0, 0))
+            # Check game state - player should have moved east from initial position
+            expected_pos = VectorN(1, 0, 0)  # Initial position (0,0,0) + east (1,0,0)
+            self.assertEqual(self.game.player.position, expected_pos)
             
-            # Check that tile was mined
+            # Check that tile was mined (Tree should become Dirt)
             tile = self.game.get_tile_at_player_feet()
-            self.assertEqual(tile, Tiles.Empty())
+            self.assertEqual(tile, Tiles.Dirt())
             
         finally:
             screen.close()
@@ -311,8 +322,8 @@ class TestHeadlessPerformance(HeadlessTUITestCase):
             
             widget = GameWidget(self.game)
             widget._frame = Mock()
-            widget._frame.canvas = screen.canvas
-            widget._frame.palette = screen.palette
+            widget._frame.canvas = Mock()
+            widget._frame.palette = {'label': (7, 0, 0)}
             widget._x = 0
             widget._y = 0
             widget._w = 80

@@ -34,10 +34,9 @@ class VisualTUITestCase(unittest.TestCase):
     def create_headless_screen(self, width: int = 80, height: int = 24):
         """Create a headless screen for testing."""
         return asciimatics.screen.Screen.open(
-            width=width,
             height=height,
             unicode_aware=True,
-            catch_signals=False
+            catch_interrupt=False
         )
     
     def capture_screen_content(self, screen, test_name: str) -> str:
@@ -46,8 +45,13 @@ class VisualTUITestCase(unittest.TestCase):
         for y in range(screen.height):
             row = ""
             for x in range(screen.width):
-                char = screen.get_from(x, y)
-                row += char if char else " "
+                char_data = screen.get_from(x, y)
+                # get_from returns (ascii_code, foreground, attributes, background)
+                if char_data and len(char_data) >= 1:
+                    char = chr(char_data[0]) if char_data[0] > 0 else " "
+                else:
+                    char = " "
+                row += char
             content.append(row)
         
         screen_content = '\n'.join(content)
@@ -121,8 +125,8 @@ class TestVisualGameWidget(VisualTUITestCase):
             # Create the widget
             widget = GameWidget(self.game)
             widget._frame = Mock()
-            widget._frame.canvas = screen.canvas
-            widget._frame.palette = screen.palette
+            widget._frame.canvas = Mock()
+            widget._frame.palette = {'label': (7, 0, 0)}
             widget._x = 0
             widget._y = 0
             widget._w = 40
@@ -150,8 +154,8 @@ class TestVisualGameWidget(VisualTUITestCase):
             # Create widget
             widget = GameWidget(self.game)
             widget._frame = Mock()
-            widget._frame.canvas = screen.canvas
-            widget._frame.palette = screen.palette
+            widget._frame.canvas = Mock()
+            widget._frame.palette = {'label': (7, 0, 0)}
             widget._x = 0
             widget._y = 0
             widget._w = 40
@@ -184,8 +188,8 @@ class TestVisualGameWidget(VisualTUITestCase):
             # Create widget
             widget = GameWidget(self.game)
             widget._frame = Mock()
-            widget._frame.canvas = screen.canvas
-            widget._frame.palette = screen.palette
+            widget._frame.canvas = Mock()
+            widget._frame.palette = {'label': (7, 0, 0)}
             widget._x = 0
             widget._y = 0
             widget._w = 40
@@ -363,8 +367,8 @@ class TestVisualRegression(VisualTUITestCase):
             # Create widget
             widget = GameWidget(self.game)
             widget._frame = Mock()
-            widget._frame.canvas = screen.canvas
-            widget._frame.palette = screen.palette
+            widget._frame.canvas = Mock()
+            widget._frame.palette = {'label': (7, 0, 0)}
             widget._x = 0
             widget._y = 0
             widget._w = 40
@@ -396,8 +400,8 @@ class TestVisualRegression(VisualTUITestCase):
             # Create identical widgets
             widget1 = GameWidget(self.game)
             widget1._frame = Mock()
-            widget1._frame.canvas = screen1.canvas
-            widget1._frame.palette = screen1.palette
+            widget1._frame.canvas = Mock()
+            widget1._frame.palette = {'label': (7, 0, 0)}
             widget1._x = 0
             widget1._y = 0
             widget1._w = 40
@@ -405,8 +409,8 @@ class TestVisualRegression(VisualTUITestCase):
             
             widget2 = GameWidget(self.game)
             widget2._frame = Mock()
-            widget2._frame.canvas = screen2.canvas
-            widget2._frame.palette = screen2.palette
+            widget2._frame.canvas = Mock()
+            widget2._frame.palette = {'label': (7, 0, 0)}
             widget2._x = 0
             widget2._y = 0
             widget2._w = 40

@@ -162,6 +162,10 @@ class Viewport:
             scale=self.scale
         )
 
+    def copy(self):
+        """Create a copy of this viewport."""
+        return Viewport(self.top_left, self.lower_right, self.scale)
+
     def get_size(self) -> VectorN:
         return VectorN(self.get_width(), self.get_height())
 
