@@ -46,4 +46,24 @@
 - fix `make dev`
  - eventually, I'd like to publish this game on steam for $3. don't add/edit any code, I just want advice. What should I focus on before that?
 - give me suggestions for different biomes!
-- add random but seeded structure generation - old ruins, ore patches, machines, crashed ships, behemoth corpses, etc. Have the structure definition files be stored in ./lithicrivers/data/structures/ and come up with a reasonable format for them that lets you use ASCII art to define structures.
+
+
+- add random but seeded structure generation - old ruins, ore patches, machines, crashed ships, behemoth corpses, etc. Have the structure definition files be stored in ./lithicrivers/data/structures/ and come up with a reasonable format for them that lets you use ASCII art to define structures. for example:
+
+/lithicrivers/data/structures/small_ship.lrstructure/
+/lithicrivers/data/structures/small_ship.lrstructure/shape.txt
+
+.XXX
+X  A
+XXX.
+
+/lithicrivers/data/structures/small_ship.lrstructure/data.json
+{
+  "blocks": {
+    ".": "empty",
+    "X": "iron_scrap",
+    "A": "door",
+  },
+  "gen_biomes": "ALL",
+  "gen_chance": 0.001
+}
