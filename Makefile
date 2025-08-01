@@ -17,6 +17,8 @@ help: ## Show this help message
 	@echo "🎮 GAME"
 	@echo "------"
 	@echo "  run                  Run the game"
+	@echo "  run-debug            Run the game with remote debugging"
+	@echo "  debug-attach         Show PyCharm debugging instructions"
 	@echo ""
 	@echo "🔨 BUILDING"
 	@echo "----------"
@@ -75,6 +77,37 @@ test-lcov: ## Generate LCOV coverage report
 # Game
 run: ## Run the game
 	uv run python -m lithicrivers
+
+run-debug: ## Run the game with remote debugging enabled
+	@echo "🐛 Starting game with remote debugging..."
+	@echo "📝 In PyCharm: Run -> Attach to Process -> Select this Python process"
+	@echo "🔗 Or use: Run -> Edit Configurations -> + -> Python Debug Server"
+	@echo "🌐 Debug server will be available on localhost:5678"
+	PYTHONPATH=. uv run python -m lithicrivers --debug
+
+debug-attach: ## Show instructions for attaching to running process
+	@echo "🔗 PyCharm Remote Debugging Instructions"
+	@echo "========================================"
+	@echo ""
+	@echo "1. Start the game in another terminal:"
+	@echo "   make run"
+	@echo ""
+	@echo "2. In PyCharm:"
+	@echo "   - Go to Run -> Edit Configurations"
+	@echo "   - Click + -> Python Debug Server"
+	@echo "   - Set host: localhost, port: 5678"
+	@echo "   - Click OK"
+	@echo ""
+	@echo "3. Start the debug server:"
+	@echo "   - Run -> Start Debug Server"
+	@echo ""
+	@echo "4. In your running game terminal, add this line where you want to break:"
+	@echo "   import pydevd; pydevd.settrace(suspend=False, trace_only_current_thread=True)"
+	@echo ""
+	@echo "5. Or use the debug target instead:"
+	@echo "   make run-debug"
+	@echo ""
+	@echo "📚 More info: https://www.jetbrains.com/help/pycharm/remote-debugging-with-product.html"
 
 # Building
 build: ## Build executable

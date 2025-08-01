@@ -756,21 +756,14 @@ class Game:
         ret: list[list[str]] = []
         color_data: list[list[tuple[int, int, int]]] = []
 
-        player_z = self.player.position.z
+        z = self.player.position.z
 
         for y in range(viewport.top_left.y, (viewport.lower_right.y + 1)):
             retrow = []
             color_row = []
             for x in range(viewport.top_left.x, (viewport.lower_right.x + 1)):
-                # Find the highest non-empty tile at this position, but only up to player's Z level
-                tile = None
-                for z in range(player_z, -1, -1):  # Check from player's Z level down to 0
-                    pos = VectorN(x, y, z)
-                    temp_tile = self.world.get_tile(pos)
-                    if temp_tile and temp_tile.tileid != "Empty":
-                        tile = temp_tile
-                        break
-                
+                pos = VectorN(x, y, z)
+                tile = self.world.get_tile(pos)
                 if not tile:
                     tile = Tiles.empty()
 

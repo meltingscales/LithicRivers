@@ -116,6 +116,8 @@
 - give me suggestions for different biomes. I'd like a "Lithic River" biome to be an underground biome with molten lava and lots of ores...like the name of the game.
 
 
+- use pycharm debug server to figure out why the structures are not generating (see below)
+
 - add random but seeded structure generation - old ruins, ore patches, machines, crashed ships, behemoth corpses, etc. Have the structure definition files be stored in ./lithicrivers/data/structures/ and come up with a reasonable format for them that lets you use ASCII art to define structures. TILDE in shape_layers.txt is a special character that separates a y-layer. for example:
 
 /lithicrivers/data/structures/small_ship.lrstructure/

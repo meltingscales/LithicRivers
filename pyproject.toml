@@ -9,6 +9,7 @@ readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
     "asciimatics>=1.15.0",
+    "pydevd[dev]>=3.3.0",
     "steam[client]",
 ]
 
@@ -24,6 +25,7 @@ dev = [
     "ruff",
     "mypy",
     "pre-commit",
+    "pydevd",
 ]
 
 [build-system]
