@@ -32,8 +32,8 @@
   },
   "viewport": {
     "VIEWPORT_RADIUS": [
-      10,
-      10,
+      8,
+      8,
       0
     ],
     "VIEWPORT_WIGGLE": 2
