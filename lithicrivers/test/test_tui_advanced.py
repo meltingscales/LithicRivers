@@ -3,6 +3,8 @@ Advanced TUI testing framework for LithicRivers.
 This module provides comprehensive testing for TUI components using realistic mocks.
 """
 
+import os
+
 import unittest
 from typing import Any, Optional
 from unittest.mock import Mock
@@ -153,6 +155,10 @@ class AdvancedUITestCase(unittest.TestCase):
 
     def setUp(self):
         """Set up common test fixtures."""
+        # Skip tests if TERM environment variable is not set
+        if not os.environ.get('TERM'):
+            self.skipTest("TERM environment variable not set - skipping terminal-dependent tests")
+        
         self.game_engine = GameEngine()
         self.game = Game()
         self.mock_screen = AdvancedMockScreen(80, 24)

@@ -66,7 +66,19 @@ install: ## Install dependencies
 
 # Testing
 test: ## Run all tests
+	@if [ -z "$$TERM" ]; then \
+		echo "⚠️  TERM environment variable not set - some TUI tests will be skipped"; \
+	fi
 	TESTING=1 uv run coverage run -m unittest discover lithicrivers
+
+# Helper function to check if terminal is available
+check_term = @if [ -z "$$TERM" ]; then \
+	echo "⚠️  TERM environment variable not set - skipping terminal-dependent tests"; \
+	echo "   Available tests: simplified TUI tests (mock-based)"; \
+	echo "   Skipped tests: headless TUI tests, visual regression tests"; \
+else \
+	echo "✅ TERM environment variable detected - running all TUI tests"; \
+fi
 
 test-tui: ## Run TUI tests
 	@echo "Running TUI tests..."
@@ -74,10 +86,19 @@ test-tui: ## Run TUI tests
 	uv run python -m unittest lithicrivers.test.test_tui_simple
 	@echo "2. Running advanced mock-based tests..."
 	uv run python -m unittest lithicrivers.test.test_tui_advanced
-	@echo "3. Running headless TUI tests..."
-	uv run python -m unittest lithicrivers.test.test_tui_headless
-	@echo "4. Running visual regression tests..."
-	uv run python -m unittest lithicrivers.test.test_tui_visual
+	$(check_term)
+	@if [ -n "$$TERM" ]; then \
+		echo "3. Running headless TUI tests..."; \
+		uv run python -m unittest lithicrivers.test.test_tui_headless; \
+	else \
+		echo "3. Skipping headless TUI tests (no TERM)"; \
+	fi
+	@if [ -n "$$TERM" ]; then \
+		echo "4. Running visual regression tests..."; \
+		uv run python -m unittest lithicrivers.test.test_tui_visual; \
+	else \
+		echo "4. Skipping visual regression tests (no TERM)"; \
+	fi
 	@echo "TUI tests completed!"
 
 test-tui-quick: ## Run quick TUI tests (simplified)
@@ -85,12 +106,22 @@ test-tui-quick: ## Run quick TUI tests (simplified)
 	uv run python -m unittest lithicrivers.test.test_tui_simple
 
 test-tui-headless: ## Run headless TUI tests
-	@echo "Running headless TUI tests..."
-	uv run python -m unittest lithicrivers.test.test_tui_headless
+	@if [ -z "$$TERM" ]; then \
+		echo "⚠️  TERM environment variable not set - skipping headless TUI tests"; \
+		echo "   These tests require a terminal environment"; \
+	else \
+		echo "Running headless TUI tests..."; \
+		uv run python -m unittest lithicrivers.test.test_tui_headless; \
+	fi
 
 test-tui-visual: ## Run visual regression tests
-	@echo "Running visual regression tests..."
-	uv run python -m unittest lithicrivers.test.test_tui_visual
+	@if [ -z "$$TERM" ]; then \
+		echo "⚠️  TERM environment variable not set - skipping visual regression tests"; \
+		echo "   These tests require a terminal environment"; \
+	else \
+		echo "Running visual regression tests..."; \
+		uv run python -m unittest lithicrivers.test.test_tui_visual; \
+	fi
 
 
 
