@@ -2,6 +2,8 @@ import logging
 from typing import Union, List, Tuple, Optional, Callable
 
 import asciimatics.widgets
+
+
 from asciimatics.effects import Effect
 from asciimatics.event import KeyboardEvent, MouseEvent
 from asciimatics.exceptions import NextScene
@@ -922,9 +924,12 @@ class InputHandler:
         def conversation_callback(selected_option):
             global active_popup
             logging.debug(f"NPC conversation callback called with: '{selected_option}'")
-            if selected_option:
-                # Handle the selected option
-                response = selected_option
+            if selected_option is not None:
+                # Handle the selected option - PopUpDialog returns the index, so we need to get the actual text
+                if isinstance(selected_option, int) and 0 <= selected_option < len(conversation["options"]):
+                    response = conversation["options"][selected_option]
+                else:
+                    response = selected_option
                 logging.debug(f"NPC conversation: selected '{response}' from topic '{topic}'")
                 next_topic = npc.handle_response(response, topic)
                 logging.debug(f"NPC conversation: next_topic='{next_topic}', current_topic='{topic}'")
@@ -1095,7 +1100,7 @@ def demo(screen: Screen, scene: Scene, game: Game):
                     active_popup = None
                     return
             except Exception as e:
-                logging.debug(f"Error handling ESC key: {e}")
+                logging.info(f"Error handling ESC key: {e}")
                 active_popup = None
                 return
 
@@ -1115,15 +1120,15 @@ def demo(screen: Screen, scene: Scene, game: Game):
                         return
                 except Exception as e:
                     # Popup had an error, clear it
-                    logging.debug(f"Popup error: {e}")
+                    logging.info(f"Popup error: {e}")
                     active_popup = None
                     return
         except Exception as e:
-            logging.debug(f"Error in popup handling: {e}")
+            logging.info(f"Error in popup handling: {e}")
             active_popup = None
 
         if maybe_root_page.title.strip() != 'Root Page':
-            logging.debug("Not supposed to handle " + maybe_root_page.title)
+            logging.info("Not supposed to handle " + maybe_root_page.title)
             # Clear any active popup when switching to non-Root pages
             try:
                 if active_popup is not None:
@@ -1134,7 +1139,7 @@ def demo(screen: Screen, scene: Scene, game: Game):
                         pass
                     active_popup = None
             except Exception as e:
-                logging.debug(f"Error clearing popup on page switch: {e}")
+                logging.info(f"Error clearing popup on page switch: {e}")
                 active_popup = None
             return
 

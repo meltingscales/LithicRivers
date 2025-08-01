@@ -5,6 +5,8 @@ import random
 from pathlib import Path
 from typing import List, Dict, Union, Optional, Tuple
 
+
+
 from lithicrivers.constants import VEC_NORTH, VEC_SOUTH, VEC_WEST, VEC_EAST
 from lithicrivers.model.generictype import T
 from lithicrivers.model.modelpleasemoveme import Viewport, RenderedData
@@ -141,31 +143,31 @@ class NPC(Entity, SpriteRenderable):
     def handle_response(self, response: str, topic: str = "greeting"):
         """Handle a conversation response and return the next topic."""
         import logging
-        logging.debug(f"NPC handle_response: response='{response}', topic='{topic}'")
+        logging.info(f"NPC handle_response: response='{response}', topic='{topic}'")
         
         if response == "Tell me about this world":
-            logging.debug("NPC handle_response: returning 'about_world'")
+            logging.info("NPC handle_response: returning 'about_world'")
             return "about_world"
         elif response == "What can you do?":
-            logging.debug("NPC handle_response: returning 'about_world'")
+            logging.info("NPC handle_response: returning 'about_world'")
             return "about_world"
         elif response == "Tell me more about mining":
-            logging.debug("NPC handle_response: returning 'about_mining'")
+            logging.info("NPC handle_response: returning 'about_mining'")
             return "about_mining"
         elif response == "What about building?":
-            logging.debug("NPC handle_response: returning 'about_building'")
+            logging.info("NPC handle_response: returning 'about_building'")
             return "about_building"
         elif response == "Back to greeting":
-            logging.debug("NPC handle_response: returning 'greeting'")
+            logging.info("NPC handle_response: returning 'greeting'")
             return "greeting"
         elif response == "Goodbye":
-            logging.debug("NPC handle_response: returning 'goodbye'")
+            logging.info("NPC handle_response: returning 'goodbye'")
             return "goodbye"
         elif response == "OK":
-            logging.debug("NPC handle_response: returning None (end conversation)")
+            logging.info("NPC handle_response: returning None (end conversation)")
             return None  # End conversation
         else:
-            logging.debug(f"NPC handle_response: no match, returning current topic '{topic}'")
+            logging.info(f"NPC handle_response: no match, returning current topic '{topic}'")
             return topic  # Stay on current topic
     
     def render_sprite(self, scale: int = 1) -> str:
@@ -760,8 +762,8 @@ class Game:
             ret.append(retrow)
             color_data.append(color_row)
 
-        logging.debug("Returning this from render_world_viewport()")
-        logging.debug(pprint.pformat(ret))
+        logging.log(5, "Returning this from render_world_viewport()")
+        logging.log(5, pprint.pformat(ret))
 
         return RenderedData(ret, scale=viewport.scale, color_data=color_data)
 

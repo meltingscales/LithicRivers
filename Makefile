@@ -132,6 +132,8 @@ clean: ## Clean build artifacts
 	rm -rf .coverage
 	rm -rf htmlcov/
 	rm -rf coverage/
+	@echo "Removing log files..."
+	rm -f *.log
 	@echo "Removing Python cache files..."
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 	find . -type f -name "*.pyc" -delete 2>/dev/null || true

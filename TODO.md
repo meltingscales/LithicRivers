@@ -35,6 +35,7 @@
 
 # 2025 todo
 
+- use ruff for linting/formatting.
 - add multiple dimensions (like space, the void, etc) to the game.
 - add the ability to save (or auto-save) to a world file. just use serialization now, but later, we should optimize it like how Minecraft does - chunks, dimensions, and a custom binary file format with auto-saving and multi-threaded loading/saving.
 - instead of just "World Gaia", I want you to add some useful GUI elements to be rendered at the top of the screen with a small border. Things like health, current heading, etc. Make sure it's left-aligned but also takes up as much space as is possible (same width as world viewport)

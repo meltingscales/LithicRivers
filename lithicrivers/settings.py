@@ -13,7 +13,15 @@ from lithicrivers.config_manager import config_manager
 # Load settings from config manager
 GAME_NAME = config_manager.get_setting("game", "GAME_NAME")
 LOGFILENAME = config_manager.get_setting("game", "LOGFILENAME")
-LOGGINGLEVEL = getattr(logging, config_manager.get_setting("game", "LOGGINGLEVEL"))
+
+# Load logging level with support for custom levels
+log_level_str = config_manager.get_setting("game", "LOGGINGLEVEL")
+if log_level_str.isdigit():
+    LOGGINGLEVEL = int(log_level_str)
+else:
+    LOGGINGLEVEL = getattr(logging, log_level_str)
+
+
 
 # Load world settings based on environment
 if os.environ.get('TESTING') == '1':

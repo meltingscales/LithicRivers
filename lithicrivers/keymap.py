@@ -2,6 +2,8 @@ import logging
 from typing import Union, List
 from asciimatics.event import KeyboardEvent
 
+
+
 from lithicrivers.constants import (
     VEC_DOWN, VEC_UP, VEC_NORTH, VEC_SOUTH, VEC_WEST, VEC_EAST,
     VEC_NORTHWEST, VEC_NORTHEAST, VEC_SOUTHWEST, VEC_SOUTHEAST,
@@ -137,8 +139,7 @@ class Keymap:
             ke_char = chr(ke.key_code).lower()
             return ke_char
         except ValueError as ve:
-            logging.debug(
-                "Could not handle this KeyboardEvent -- {} -- probably a special key: {}".format(ke.key_code, ke, ))
+            logging.log(5, "Could not handle this KeyboardEvent -- {} -- probably a special key: {}".format(ke.key_code, ke, ))
             return None
     
     @staticmethod
