@@ -1,0 +1,9 @@
+{
+  "blocks": {
+    ".": "empty",
+    "B": "bone_block"
+  },
+  "gen_biomes": "ALL",
+  "gen_chance": 0.3,
+  "y_layer_gen_range": [-1, 1]
+} 
