@@ -35,12 +35,16 @@
 
 # 2025 todo
 
-- add a dialog box system, as well as a starter NPC that you can talk to and choose a dialog option at the end of a short conversation.
+- add a dialog box/popup system, as well as a starter NPC that you can talk to and choose a dialog option at the end of a short conversation. Also, add a keybind to directionally interact with an adjacent item/block/entity, just like Caves of Qud. When you press the "Interact" button, it should let you choose from a list of adjacent things via a popup. Test this by making 2 identical entities, adjacent to eachother, with different names and different colors.
+- make the message log pane actually functional - dialog, interactions, mining, and pickups should be logged there.
+- add the ability to look around with 'L', just like caves of qud.
+- make the help page give a full keybind list and sort it by category.
+- add an inventory screen as a tab on the bottom, like the help page and message log. make it really simple - just a simple list that you can page through with a cursor.
+- add a "commands" screen as a tab on the bottom, that lets you perform macro actions like walking for 2,000 steps or walking to a specific coordinate.
 - ask "are there any bugs or issues you see with my existing viewport code? can we stress test it?" to AI
 - ask "Are there any bugs or issues you see with my world data structure? how does minecraft do it?" to AI
-- for viewscale=2, there's dots on the bottom-right of the viewport. find a way to clamp the viewport to a specific dimension that's the same as viewscale=1.
+- for viewscale=2, there's dots on the bottom-right of the viewport. find a way to clamp the viewport to a specific dimension that's the same as viewscale=1. 
 - fix `make dev`
  - eventually, I'd like to publish this game on steam for $3. don't add/edit any code, I just want advice. What should I focus on before that?
-- make the world lazy-generated and infinite
 - give me suggestions for different biomes!
-- add structure generation - old ruins, ore patches
+- add random but seeded structure generation - old ruins, ore patches, machines, crashed ships, behemoth corpses, etc. Have the structure definition files be stored in ./lithicrivers/data/structures/ and come up with a reasonable format for them that lets you use ASCII art to define structures.

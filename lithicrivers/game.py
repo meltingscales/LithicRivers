@@ -83,10 +83,131 @@ class Entity:
         self.move(VEC_EAST)
 
 
+class NPC(Entity, SpriteRenderable):
+    """A non-player character that can have conversations."""
+    
+    def __init__(self, name: str, position: VectorN, sprite: str = "N", color: str = "cyan"):
+        super().__init__(name, position)
+        self.sprite = sprite
+        self.color = color
+        self.conversations = {}
+        self._setup_default_conversation()
+    
+    def _setup_default_conversation(self):
+        """Set up the default conversation for this NPC."""
+        self.conversations = {
+            "greeting": {
+                "text": f"Hello, traveler! I am {self.name}. Welcome to LithicRivers!",
+                "options": [
+                    "Tell me about this world",
+                    "What can you do?",
+                    "Goodbye"
+                ]
+            },
+            "about_world": {
+                "text": "This is a world of endless possibilities. You can mine, build, and explore to your heart's content. The world is procedurally generated, so there's always something new to discover!",
+                "options": [
+                    "Tell me more about mining",
+                    "What about building?",
+                    "Back to greeting"
+                ]
+            },
+            "about_mining": {
+                "text": "Mining is simple! Just press 'u' when standing on a mineable tile like Gold Ore. You'll get valuable resources that you can use for crafting and trading.",
+                "options": [
+                    "What about building?",
+                    "Back to greeting"
+                ]
+            },
+            "about_building": {
+                "text": "Building is coming soon! You'll be able to place blocks and create structures. For now, focus on gathering resources through mining.",
+                "options": [
+                    "Tell me about mining",
+                    "Back to greeting"
+                ]
+            },
+            "goodbye": {
+                "text": "Farewell, traveler! May your adventures be fruitful!",
+                "options": []
+            }
+        }
+    
+    def get_conversation(self, topic: str = "greeting"):
+        """Get a conversation topic."""
+        return self.conversations.get(topic, self.conversations["greeting"])
+    
+    def handle_response(self, response: str, topic: str = "greeting"):
+        """Handle a conversation response and return the next topic."""
+        if response == "Tell me about this world":
+            return "about_world"
+        elif response == "What can you do?":
+            return "about_world"
+        elif response == "Tell me more about mining":
+            return "about_mining"
+        elif response == "What about building?":
+            return "about_building"
+        elif response == "Back to greeting":
+            return "greeting"
+        elif response == "Goodbye":
+            return "goodbye"
+        else:
+            return topic  # Stay on current topic
+    
+    def render_sprite(self, scale: int = 1) -> str:
+        """Render the NPC sprite."""
+        if scale == 1:
+            return self.sprite
+        elif scale == 2:
+            return f"{self.sprite}{self.sprite}\n{self.sprite}{self.sprite}"
+        elif scale == 3:
+            return f"{self.sprite}{self.sprite}{self.sprite}\n{self.sprite}{self.sprite}{self.sprite}\n{self.sprite}{self.sprite}{self.sprite}"
+        else:
+            return self.sprite
+
+
+class InteractiveEntity(Entity, SpriteRenderable):
+    """An entity that can be interacted with."""
+    
+    def __init__(self, name: str, position: VectorN, sprite: str = "E", color: str = "yellow", interaction_text: str = "This is an interactive entity."):
+        super().__init__(name, position)
+        self.sprite = sprite
+        self.color = color
+        self.interaction_text = interaction_text
+    
+    def render_sprite(self, scale: int = 1) -> str:
+        """Render the entity sprite."""
+        if scale == 1:
+            return self.sprite
+        elif scale == 2:
+            return f"{self.sprite}{self.sprite}\n{self.sprite}{self.sprite}"
+        elif scale == 3:
+            return f"{self.sprite}{self.sprite}{self.sprite}\n{self.sprite}{self.sprite}{self.sprite}\n{self.sprite}{self.sprite}{self.sprite}"
+        else:
+            return self.sprite
+    
+    def interact(self):
+        """Handle interaction with this entity."""
+        return self.interaction_text
+
+
 class Entities:
     @staticmethod
     def StumblingSheep(position=VectorN(0, 0, 0)):
-        return Entity(name='Stumbling Sheep', position=position)
+        return Entity("Stumbling Sheep", position)
+    
+    @staticmethod
+    def StarterNPC(position=VectorN(5, 5, 0)):
+        return NPC("Elder Oak", position, sprite="N", color="cyan")
+    
+    @staticmethod
+    def TestEntity1(position=VectorN(6, 5, 0)):
+        return InteractiveEntity("Crystal Shard", position, sprite="C", color="blue", 
+                               interaction_text="This crystal shard glows with a soft blue light. It seems to pulse with energy.")
+    
+    @staticmethod
+    def TestEntity2(position=VectorN(5, 6, 0)):
+        return InteractiveEntity("Ancient Relic", position, sprite="R", color="red", 
+                               interaction_text="This ancient relic is covered in mysterious runes. It radiates warmth.")
 
 
 class Items:
@@ -410,6 +531,9 @@ class WorldData:
 
 
 class World:
+    """
+    A world contains world data and manages the world state.
+    """
 
     def get_height(self):
         return self.size.y
@@ -460,6 +584,22 @@ class World:
         self.seed = seed
         self.data = World.gen_random_world_data(size, seed=seed)
         self.gametick = 0
+        
+        # Add some starter entities
+        self.entities = {}
+        self._add_starter_entities()
+    
+    def _add_starter_entities(self):
+        """Add starter entities to the world."""
+        # Add NPC
+        npc = Entities.StarterNPC()
+        self.entities[npc.position.serialize()] = npc
+        
+        # Add test entities
+        entity1 = Entities.TestEntity1()
+        entity2 = Entities.TestEntity2()
+        self.entities[entity1.position.serialize()] = entity1
+        self.entities[entity2.position.serialize()] = entity2
 
     def get_tile(self, pos: VectorN):
         tile = self.data.get_tile(pos)
@@ -471,6 +611,39 @@ class World:
 
     def set_tile(self, pos: VectorN, tile: Tile):
         self.data.set_tile(pos, tile)
+    
+    def get_entity(self, pos: VectorN):
+        """Get an entity at a position."""
+        return self.entities.get(pos.serialize())
+    
+    def add_entity(self, entity: Entity):
+        """Add an entity to the world."""
+        self.entities[entity.position.serialize()] = entity
+    
+    def remove_entity(self, pos: VectorN):
+        """Remove an entity from the world."""
+        key = pos.serialize()
+        if key in self.entities:
+            del self.entities[key]
+    
+    def get_adjacent_entities(self, pos: VectorN) -> List[Tuple[str, VectorN, str]]:
+        """Get all entities adjacent to a position."""
+        adjacent = []
+        for dx in [-1, 0, 1]:
+            for dy in [-1, 0, 1]:
+                if dx == 0 and dy == 0:
+                    continue  # Skip the center position
+                
+                check_pos = VectorN(pos.x + dx, pos.y + dy, pos.z)
+                entity = self.get_entity(check_pos)
+                if entity:
+                    if hasattr(entity, 'color'):
+                        color = entity.color
+                    else:
+                        color = "white"
+                    adjacent.append((entity.name, check_pos, color))
+        
+        return adjacent
 
 
 class Game:
@@ -525,6 +698,23 @@ class Game:
 
                 sprite = tile.render_sprite(scale=viewport.scale)
                 tile_color = get_color_for_tile(tile.tileid)
+
+                # Check for entities at this position
+                entity = self.world.get_entity(pos)
+                if entity:
+                    sprite = entity.render_sprite(scale=viewport.scale)
+                    # Use entity color if available, otherwise use tile color
+                    if hasattr(entity, 'color'):
+                        if entity.color == "cyan":
+                            tile_color = (6, 0, 0)  # Cyan
+                        elif entity.color == "blue":
+                            tile_color = (4, 0, 0)  # Blue
+                        elif entity.color == "red":
+                            tile_color = (1, 0, 0)  # Red
+                        elif entity.color == "yellow":
+                            tile_color = (3, 0, 0)  # Yellow
+                        else:
+                            tile_color = (7, 0, 0)  # White
 
                 # if we are here, render us!
                 if (self.player.position.y == y) and (self.player.position.x == x):
