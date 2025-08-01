@@ -161,7 +161,12 @@ class GameWidget(asciimatics.widgets.Widget):
         # print(self.game.viewport)
 
     def required_height(self, offset, width):
-        return self.game.viewport.get_height() + 2  # +2 for our random text shit
+        # Account for scale: each tile takes up scale characters vertically
+        return self.game.viewport.get_height() * self.game.viewport.scale + 2  # +2 for our random text shit
+    
+    def required_width(self, offset, width):
+        # Account for scale: each tile takes up scale characters horizontally
+        return self.game.viewport.get_width() * self.game.viewport.scale
 
     # noinspection PyTypeHints
     def update(self, frame_no: int):
@@ -216,9 +221,14 @@ class GameWidget(asciimatics.widgets.Widget):
         """Render a row with individual character colors."""
         x_pos = self._x
         
-        for i, char in enumerate(content):
-            if i < len(colors):
-                color = colors[i]
+        # Clamp content to available width to prevent overflow
+        max_width = self._w if hasattr(self, '_w') else len(content)
+        clamped_content = content[:max_width]
+        clamped_colors = colors[:max_width]
+        
+        for i, char in enumerate(clamped_content):
+            if i < len(clamped_colors):
+                color = clamped_colors[i]
             else:
                 color = get_color_for_ui_element("DEFAULT")
             
