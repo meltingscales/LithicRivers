@@ -60,6 +60,12 @@ test-quick: ## Run quick tests only
 	uv run python -m unittest lithicrivers.test.test_tui_simple
 	@echo "✅ Quick tests completed!"
 
+test-lcov: ## Generate LCOV coverage report
+	@echo "📊 Generating LCOV coverage report..."
+	TESTING=1 uv run coverage run -m unittest discover lithicrivers
+	uv run coverage lcov -o coverage/lcov.info
+	@echo "✅ LCOV report generated!"
+
 # Game
 run: ## Run the game
 	uv run python -m lithicrivers

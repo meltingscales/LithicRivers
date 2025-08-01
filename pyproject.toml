@@ -75,6 +75,7 @@ ignore = [
     "B006",  # do not use mutable data structures for argument defaults
     "ARG002",  # unused method arguments
     "ARG001",  # unused function arguments
+    "RUF001",  # unused imports
 ]
 
 # Allow fix for all enabled rules (when `--fix`) is provided.

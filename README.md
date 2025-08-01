@@ -2,6 +2,16 @@
 
 An ASCII game I want to finish.
 
+## License
+
+This project is proprietary software. All rights reserved.
+
+**Commercial use, distribution, modification, or reproduction is strictly prohibited** without express written permission from the copyright holder.
+
+For licensing inquiries or source code access, please contact: **HenryFBP@gmail.com**
+
+See [LICENSE](LICENSE) for full terms.
+
 ![Screenshot of the game](media/screenshot.png)
 
 ## Play the game
