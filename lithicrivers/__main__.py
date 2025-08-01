@@ -9,6 +9,10 @@ from lithicrivers.model.modelpleasemoveme import StopGame
 from lithicrivers.settings import LOGFILENAME, GAME_NAME, LOGGINGLEVEL
 from lithicrivers.ui import demo
 
+# Add custom log levels for verbose debugging
+# logging.addLevelName(5, "SILLY")
+# logging.addLevelName(1, "INSANE")
+
 if os.path.exists(LOGFILENAME):
     os.remove(LOGFILENAME)
 

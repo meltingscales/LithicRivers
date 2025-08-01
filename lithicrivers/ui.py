@@ -56,7 +56,8 @@ class TabButtons(Layout):
         def safe_change():
             # Check if there's an active popup
             try:
-                if active_popup:
+                global active_popup
+                if active_popup is not None:
                     # Clear the popup before changing scenes
                     try:
                         if hasattr(active_popup, '_screen') and active_popup._screen.current_scene:
@@ -916,27 +917,35 @@ class InputHandler:
     def _show_npc_conversation(cls, game: Game, npc: NPC, topic: str, root_page: RootPage):
         """Show an NPC conversation for a specific topic."""
         conversation = npc.get_conversation(topic)
+        logging.debug(f"NPC conversation: showing topic '{topic}' with options: {conversation['options']}")
         
         def conversation_callback(selected_option):
             global active_popup
+            logging.debug(f"NPC conversation callback called with: '{selected_option}'")
             if selected_option:
                 # Handle the selected option
                 response = selected_option
+                logging.debug(f"NPC conversation: selected '{response}' from topic '{topic}'")
                 next_topic = npc.handle_response(response, topic)
+                logging.debug(f"NPC conversation: next_topic='{next_topic}', current_topic='{topic}'")
                 if next_topic and next_topic != topic:
                     # Continue the conversation with the next topic
+                    logging.debug(f"NPC conversation: continuing to topic '{next_topic}'")
                     # Clear the current popup first
                     active_popup = None
                     cls._show_npc_conversation(game, npc, next_topic, root_page)
                 else:
                     # No next topic or same topic, close the conversation
+                    logging.debug(f"NPC conversation: closing - next_topic='{next_topic}', current_topic='{topic}'")
                     active_popup = None
             else:
                 # No option selected, close the conversation
+                logging.debug("NPC conversation: no option selected, closing")
                 active_popup = None
         
         # Show the conversation in a popup
         from asciimatics.widgets import PopUpDialog
+        logging.debug(f"NPC conversation: creating popup with text: '{conversation['text'][:50]}...'")
         popup = PopUpDialog(
             root_page._screen,
             conversation["text"],
@@ -946,6 +955,7 @@ class InputHandler:
         # Track the active popup globally
         global active_popup
         active_popup = popup
+        logging.debug(f"NPC conversation: popup created, adding to scene")
         # Add the popup to the current scene
         root_page._screen.current_scene.add_effect(popup)
     
@@ -1077,41 +1087,54 @@ def demo(screen: Screen, scene: Scene, game: Game):
 
         # Check for ESC key to close popups
         if event.key_code == 27:  # ESC key
-            if active_popup:
-                # Remove the popup from the current scene
-                if hasattr(active_popup, '_screen') and active_popup._screen.current_scene:
-                    active_popup._screen.current_scene.remove_effect(active_popup)
+            try:
+                if active_popup is not None:
+                    # Remove the popup from the current scene
+                    if hasattr(active_popup, '_screen') and active_popup._screen.current_scene:
+                        active_popup._screen.current_scene.remove_effect(active_popup)
+                    active_popup = None
+                    return
+            except Exception as e:
+                logging.debug(f"Error handling ESC key: {e}")
                 active_popup = None
                 return
 
         # Check if there's an active popup that should handle the event first
-        if active_popup:
-            # Check if popup is still in the current scene
-            if active_popup not in screen.current_scene.effects:
-                # Popup was removed from scene, clear it
-                active_popup = None
-                return
-            
-            # Let the popup handle the event
-            try:
-                result = active_popup.process_event(event)
-                if result is None:  # Event was handled by popup
+        try:
+            if active_popup is not None:
+                # Check if popup is still in the current scene
+                if active_popup not in screen.current_scene.effects:
+                    # Popup was removed from scene, clear it
+                    active_popup = None
                     return
-            except Exception as e:
-                # Popup had an error, clear it
-                logging.debug(f"Popup error: {e}")
-                active_popup = None
-                return
+                
+                # Let the popup handle the event
+                try:
+                    result = active_popup.process_event(event)
+                    if result is None:  # Event was handled by popup
+                        return
+                except Exception as e:
+                    # Popup had an error, clear it
+                    logging.debug(f"Popup error: {e}")
+                    active_popup = None
+                    return
+        except Exception as e:
+            logging.debug(f"Error in popup handling: {e}")
+            active_popup = None
 
         if maybe_root_page.title.strip() != 'Root Page':
             logging.debug("Not supposed to handle " + maybe_root_page.title)
             # Clear any active popup when switching to non-Root pages
-            if active_popup:
-                try:
-                    if hasattr(active_popup, '_screen') and active_popup._screen.current_scene:
-                        active_popup._screen.current_scene.remove_effect(active_popup)
-                except:
-                    pass
+            try:
+                if active_popup is not None:
+                    try:
+                        if hasattr(active_popup, '_screen') and active_popup._screen.current_scene:
+                            active_popup._screen.current_scene.remove_effect(active_popup)
+                    except:
+                        pass
+                    active_popup = None
+            except Exception as e:
+                logging.debug(f"Error clearing popup on page switch: {e}")
                 active_popup = None
             return
 
