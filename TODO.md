@@ -43,7 +43,6 @@
 - add a "commands" screen as a tab on the bottom, that lets you perform macro actions like walking for 2,000 steps or walking to a specific coordinate.
 - ask "are there any bugs or issues you see with my existing viewport code? can we stress test it?" to AI
 - ask "Are there any bugs or issues you see with my world data structure? how does minecraft do it?" to AI
-- for viewscale=2, there's dots on the bottom-right of the viewport. find a way to clamp the viewport to a specific dimension that's the same as viewscale=1. 
 - fix `make dev`
  - eventually, I'd like to publish this game on steam for $3. don't add/edit any code, I just want advice. What should I focus on before that?
 - give me suggestions for different biomes!
