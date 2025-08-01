@@ -3,6 +3,8 @@ Headless TUI testing framework for LithicRivers.
 This module provides realistic TUI testing using asciimatics' headless mode.
 """
 
+import os
+
 import time
 import unittest
 from unittest.mock import Mock
@@ -31,6 +33,10 @@ class HeadlessTUITestCase(unittest.TestCase):
 
     def setUp(self):
         """Set up common test fixtures."""
+        # Skip tests if TERM environment variable is not set
+        if not os.environ.get('TERM'):
+            self.skipTest("TERM environment variable not set - skipping terminal-dependent tests")
+        
         self.game_engine = GameEngine()
         self.game = Game()
         self.screen = None

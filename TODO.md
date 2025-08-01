@@ -94,6 +94,8 @@
 
 # 2025 todo
 
+- the message log page looks empty until a key is pressed. make sure it's visible initially.
+
 - add a "fog of war" feature that obscures unvisited sections of the world, and add a limit to player vision. previously-visited sections of the world should appear as grayscale.
 
 - make sure the numpad keybindings also move the cursor for our asciimatics dialog boxes. try to do this in the cleanest way possible, so that asciimatics knows we're selecting a specific option.
