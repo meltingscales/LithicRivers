@@ -2,6 +2,7 @@ import logging
 import pickle
 import pprint
 import random
+from datetime import datetime
 from pathlib import Path
 from typing import Optional, Union
 
@@ -682,6 +683,10 @@ class Game:
         self.world: World = world
 
         self.running = True
+        self.message_log = MessageLog()
+        
+        # Add initial welcome message
+        self.message_log.add_message("Welcome to LithicRivers! Your adventures will be logged here.", "info")
 
     def get_tile_at_player_feet(self) -> Tile:
         return self.world.get_tile(self.player.position)
@@ -804,3 +809,64 @@ class Game:
 
     def render_pretty_player_position(self):
         return str(self.player.position.as_short_string())
+    
+    def log_mining(self, tile_name: str, items_dropped: list[str]):
+        """Log a mining event."""
+        if items_dropped:
+            items_str = ", ".join(items_dropped)
+            self.message_log.add_message(f"Mined {tile_name} and found: {items_str}", "mining")
+        else:
+            self.message_log.add_message(f"Mined {tile_name}", "mining")
+    
+    def log_interaction(self, entity_name: str, interaction_text: str):
+        """Log an interaction event."""
+        self.message_log.add_message(f"Interacted with {entity_name}: {interaction_text}", "interaction")
+    
+    def log_pickup(self, item_name: str):
+        """Log an item pickup event."""
+        self.message_log.add_message(f"Picked up: {item_name}", "pickup")
+    
+    def log_dialog(self, speaker: str, message: str):
+        """Log a dialog event."""
+        self.message_log.add_message(f"{speaker}: {message}", "dialog")
+    
+    def log_info(self, message: str):
+        """Log a general info message."""
+        self.message_log.add_message(message, "info")
+
+
+class MessageLog:
+    """A class to manage game messages for the message log pane."""
+
+    def __init__(self, max_messages: int = 100):
+        self.messages = []
+        self.max_messages = max_messages
+
+    def add_message(self, message: str, message_type: str = "info"):
+        """Add a message to the log with timestamp and type."""
+        timestamp = datetime.now().strftime("%H:%M:%S")
+        log_entry = {
+            "timestamp": timestamp,
+            "message": message,
+            "type": message_type  # info, mining, interaction, pickup, dialog
+        }
+
+        self.messages.append(log_entry)
+
+        # Keep only the most recent messages
+        if len(self.messages) > self.max_messages:
+            self.messages.pop(0)
+
+    def get_messages(self, message_type: Optional[str] = None) -> list[dict]:
+        """Get all messages, optionally filtered by type."""
+        if message_type is None:
+            return self.messages.copy()
+        return [msg for msg in self.messages if msg["type"] == message_type]
+
+    def get_recent_messages(self, count: int = 20) -> list[dict]:
+        """Get the most recent messages."""
+        return self.messages[-count:] if self.messages else []
+
+    def clear(self):
+        """Clear all messages."""
+        self.messages.clear()
