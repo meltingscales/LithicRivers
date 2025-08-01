@@ -47,6 +47,7 @@ class Keymap:
         self.RESET_VIEWPORT = config_manager.get_keybind("viewport", "RESET_VIEWPORT")
         self.SLIDE_VIEWPORT_WEST = config_manager.get_keybind("viewport", "SLIDE_VIEWPORT_WEST")
         self.SLIDE_VIEWPORT_EAST = config_manager.get_keybind("viewport", "SLIDE_VIEWPORT_EAST")
+        self.TOGGLE_VIEWPORT = config_manager.get_keybind("viewport", "TOGGLE_VIEWPORT")
         
         # Scale keys
         self.SCALE_UP = config_manager.get_keybind("scale", "SCALE_UP")
@@ -119,6 +120,13 @@ class Keymap:
         for keyname in keynames:
             retstr += associated(self.__getattribute__(keyname), keyname)
             retstr += '\n'
+        
+        # Add numpad movement keys
+        retstr += "\n=== NUMPAD MOVEMENT ===\n"
+        retstr += "Directions:      Keys:\n"
+        retstr += "  NW N NE       7 8 9\n"
+        retstr += "   W   E        4   6\n"
+        retstr += "  SW S SE       1 2 3\n"
         
         return retstr
     
@@ -194,6 +202,7 @@ class Keymap:
             "RESET_VIEWPORT": "viewport",
             "SLIDE_VIEWPORT_WEST": "viewport",
             "SLIDE_VIEWPORT_EAST": "viewport",
+            "TOGGLE_VIEWPORT": "viewport",
             # Scale keys
             "SCALE_UP": "scale",
             "SCALE_DOWN": "scale",
