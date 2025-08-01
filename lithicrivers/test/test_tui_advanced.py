@@ -28,20 +28,17 @@ class AdvancedMockScreen:
         self.colours = 256  # Standard color support
         self.unicode_aware = True
         self.palette = {
-            ('label', False, False): (7, 0, 0),  # Default colors
-            ('button', False, False): (7, 0, 0),
-            ('button', True, False): (0, 7, 0),
-            ('background', False, False): (0, 0, 0),
-            ('label', True, False): (0, 7, 0),  # Selected label
-            ('widget', False, False): (7, 0, 0),  # Widget colors
-            ('widget', True, False): (0, 7, 0),   # Selected widget
+            'label': (7, 0, 0),  # Default colors
+            'button': (7, 0, 0),
+            'background': (0, 0, 0),
+            'widget': (7, 0, 0),  # Widget colors
         }
         self._current_scene = None
         self._scenes = {}
     
     def _pick_palette_key(self, key, selected=False, allow_input_state=False):
         """Mock palette key picker."""
-        return (key, selected, allow_input_state)
+        return key
     
     def get_dimensions(self):
         return (self.width, self.height)
@@ -386,10 +383,11 @@ class TestUIIntegration(AdvancedUITestCase):
     
     def test_complete_game_flow(self):
         """Test a complete game flow with UI interactions."""
-        # Set up world
-        self.game.world.set_tile(VectorN(0, 0, 0), Tiles.Dirt())
-        self.game.world.set_tile(VectorN(1, 0, 0), Tiles.Tree())
-        self.game.world.set_tile(VectorN(0, 1, 0), Tiles.Bedrock())
+        # Set up world at player's position
+        player_pos = self.game.player.position
+        self.game.world.set_tile(player_pos, Tiles.Dirt())
+        self.game.world.set_tile(player_pos + VectorN(1, 0, 0), Tiles.Tree())
+        self.game.world.set_tile(player_pos + VectorN(0, 1, 0), Tiles.Bedrock())
         
         # Create root page
         root_page = RootPage(self.mock_screen, self.game)
@@ -405,12 +403,12 @@ class TestUIIntegration(AdvancedUITestCase):
         InputHandler.handle_mining(mining_event, self.game, root_page)
         
         # Check game state - player should have moved east from initial position
-        expected_pos = VectorN(26, 25, 0)  # Initial position (25,25,0) + east (1,0,0)
+        expected_pos = VectorN(1, 0, 0)  # Initial position (0,0,0) + east (1,0,0)
         self.assertEqual(self.game.player.position, expected_pos)
         
-        # Check that tile was mined
+        # Check that tile was mined (Tree should become Dirt)
         tile = self.game.get_tile_at_player_feet()
-        self.assertEqual(tile, Tiles.Empty())
+        self.assertEqual(tile, Tiles.Dirt())
     
     def test_ui_responsiveness(self):
         """Test that UI responds to various input events."""

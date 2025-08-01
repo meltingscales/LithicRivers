@@ -1,4 +1,5 @@
 import logging
+import os
 from typing import Union, List
 
 from asciimatics.event import KeyboardEvent
@@ -10,10 +11,16 @@ from lithicrivers.textutil import associated
 
 GAME_NAME = 'LithicRivers'
 
-DEFAULT_SIZE_RADIUS = VectorN(50, 50, 3)
+# Use smaller world size for tests to improve performance
+if os.environ.get('TESTING') == '1':
+    DEFAULT_SIZE_RADIUS = VectorN(5, 5, 1)  # Much smaller for tests
+    DEFAULT_PLAYER_POSITION = VectorN(0, 0, 0)  # Center of small test world
+else:
+    DEFAULT_SIZE_RADIUS = VectorN(50, 50, 3)  # Full size for production
+    DEFAULT_PLAYER_POSITION = VectorN(25, 25, 0)  # Center of large production world
 '''The 3d radius of the world.'''
 
-DEFAULT_PLAYER_POSITION = VectorN(25, 25, 0)
+# DEFAULT_PLAYER_POSITION is set above based on TESTING environment
 '''Default player position.'''
 
 VIEWPORT_RADIUS = VectorN(10, 10, 0)

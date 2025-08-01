@@ -264,7 +264,7 @@ class HelpPage(Frame):
 
         helptxtheight = len(helptxt.split('\n'))
 
-        helpLabel = Label(helptxt, height=helptxtheight)
+        helpLabel = Label(helptxt, height=helptxtheight, name="helpLabel")
 
         layout1.add_widget(helpLabel)
 

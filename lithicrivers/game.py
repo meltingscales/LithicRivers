@@ -190,6 +190,8 @@ class Tile(SpriteRenderable):
         return f"<Tile '{self.tileid}': [{self.render_sprite(1)}]>"
 
     def __eq__(self, other):
+        if other is None:
+            return False
         return self.tileid == other.tileid
 
     def calc_drop(self):

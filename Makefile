@@ -7,15 +7,15 @@ help: ## Show this help message
 
 # Development setup
 setup-dev: ## Install development dependencies
-	uv sync
+	uv sync --extra dev
 	uv run pre-commit install
 
 install: ## Install dependencies
-	uv sync
+	uv sync --extra dev
 
 # Testing
 test: ## Run all tests
-	uv run coverage run -m unittest discover lithicrivers
+	TESTING=1 uv run coverage run -m unittest discover lithicrivers
 
 test-tui: ## Run TUI tests
 	@echo "Running TUI tests..."
@@ -44,12 +44,12 @@ test-tui-visual: ## Run visual regression tests
 
 
 test-coverage: ## Run tests with coverage report
-	uv run coverage run -m unittest discover lithicrivers
+	TESTING=1 uv run coverage run -m unittest discover lithicrivers
 	uv run coverage report
 	uv run coverage html
 
 test-lcov: ## Generate LCOV coverage report
-	uv run coverage run -m unittest discover lithicrivers
+	TESTING=1 uv run coverage run -m unittest discover lithicrivers
 	uv run coverage lcov -o coverage/lcov.info
 
 # Running the game
