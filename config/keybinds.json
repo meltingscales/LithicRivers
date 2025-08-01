@@ -10,7 +10,8 @@
   "viewport": {
     "RESET_VIEWPORT": "r",
     "SLIDE_VIEWPORT_WEST": "[",
-    "SLIDE_VIEWPORT_EAST": "]"
+    "SLIDE_VIEWPORT_EAST": "]",
+    "TOGGLE_VIEWPORT": "v"
   },
   "scale": {
     "SCALE_UP": "=",

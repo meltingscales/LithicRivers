@@ -175,10 +175,14 @@ class GameWidget(asciimatics.widgets.Widget):
         content = ""
         content += f'|~-~ World {self.game.world.name} ~-~|\n'
 
-        toRender: RenderedData = self.game.render_world_viewport()
-
-        # Render the world with colors
-        self._render_colored_world(toRender)
+        # Check if viewport should be visible
+        viewport_visible = getattr(self.game, 'viewport_visible', True)
+        
+        if viewport_visible:
+            toRender: RenderedData = self.game.render_world_viewport()
+            # Render the world with colors
+            self._render_colored_world(toRender)
+        # If viewport is hidden, render nothing at all
         
         # Render the header
         header_color = get_color_for_ui_element("HEADER")
@@ -187,8 +191,8 @@ class GameWidget(asciimatics.widgets.Widget):
             self._x, self._y, header_color[0], header_color[1], header_color[2]
         )
         
-        # Check if there's a popup to display
-        if hasattr(self._frame, 'popup') and self._frame.popup:
+        # Check if there's a popup to display - render it last so it appears on top
+        if hasattr(self._frame, 'popup') and self._frame.popup and self._frame.popup.visible:
             self._frame.popup.update(frame_no)
 
     def _render_colored_world(self, rendered_data: RenderedData):
@@ -404,7 +408,9 @@ class HelpPage(Frame):
                    "You can also use the mouse! Left click works!\n"
                    "Enjoy!\n"
                    "\n"
-                   f"Your character's appearance: {presenting(game.player.render_sprite(1))}\n")
+                   f"Your character's appearance: {presenting(game.player.render_sprite(1))}\n"
+                   "\n"
+                   "=== KEYBINDS ===\n")
 
         helptxt += KEYMAP.generate_key_guide()
 
@@ -444,7 +450,57 @@ class ExtraPage(Frame):
                          title="Extra Page")
         layout1 = Layout([1], fill_frame=True)
         self.add_layout(layout1)
-        # add your widgets here
+        
+        # Add test popup buttons
+        from asciimatics.widgets import Button, Label
+        
+        def test_simple_popup():
+            """Test a simple popup without options."""
+            popup = SimplePopup(
+                screen,
+                "Test Popup",
+                "This is a test popup with no options.\nPress any key to continue.",
+                None,
+                lambda x: print("Simple popup closed")
+            )
+            self.popup = popup
+        
+        def test_options_popup():
+            """Test a popup with options."""
+            popup = SimplePopup(
+                screen,
+                "Test Options Popup",
+                "This is a test popup with options.\nSelect an option:",
+                ["Option 1", "Option 2", "Option 3", "Option 4"],
+                lambda x: print(f"Selected option: {x}")
+            )
+            self.popup = popup
+        
+        def test_large_popup():
+            """Test a large popup with lots of content."""
+            popup = SimplePopup(
+                screen,
+                "Large Test Popup",
+                "This is a large test popup with lots of content.\n\n"
+                "It has multiple lines of text to test how the popup handles "
+                "long content and multiple paragraphs.\n\n"
+                "The popup should automatically size itself to fit the content "
+                "while staying within the screen bounds.",
+                ["Continue", "Cancel"],
+                lambda x: print(f"Large popup result: {x}")
+            )
+            self.popup = popup
+        
+        # Add buttons to test different popup types
+        layout1.add_widget(Button("Test Simple Popup", test_simple_popup))
+        layout1.add_widget(Button("Test Options Popup", test_options_popup))
+        layout1.add_widget(Button("Test Large Popup", test_large_popup))
+        
+        # Add info text
+        info_label = Label("Click the buttons above to test different popup types.\n"
+                          "This will help verify that the SimplePopup class works correctly.\n"
+                          "Press 'v' in the main game to toggle viewport visibility.")
+        layout1.add_widget(info_label)
 
         layout2 = TabButtons(self, 3)
         self.add_layout(layout2)
@@ -747,34 +803,37 @@ class SimplePopup(asciimatics.widgets.Widget):
         if not self.visible:
             return
         
+        # Get the canvas from the frame
+        canvas = self.screen._canvas if hasattr(self.screen, '_canvas') else self.screen
+        
         # Draw background
         for y in range(self.popup_y, self.popup_y + self.popup_height):
             for x in range(self.popup_x, self.popup_x + self.popup_width):
-                self.screen.print_at(' ', x, y, bg=Screen.COLOUR_BLACK)
+                canvas.paint(' ', x, y, 0, 0, 0)  # Black background
         
         # Draw border
         for x in range(self.popup_x, self.popup_x + self.popup_width):
-            self.screen.print_at('─', x, self.popup_y, fg=Screen.COLOUR_WHITE)
-            self.screen.print_at('─', x, self.popup_y + self.popup_height - 1, fg=Screen.COLOUR_WHITE)
+            canvas.paint('─', x, self.popup_y, 7, 0, 0)  # White border
+            canvas.paint('─', x, self.popup_y + self.popup_height - 1, 7, 0, 0)
         
         for y in range(self.popup_y, self.popup_y + self.popup_height):
-            self.screen.print_at('│', self.popup_x, y, fg=Screen.COLOUR_WHITE)
-            self.screen.print_at('│', self.popup_x + self.popup_width - 1, y, fg=Screen.COLOUR_WHITE)
+            canvas.paint('│', self.popup_x, y, 7, 0, 0)  # White border
+            canvas.paint('│', self.popup_x + self.popup_width - 1, y, 7, 0, 0)
         
         # Draw corners
-        self.screen.print_at('┌', self.popup_x, self.popup_y, fg=Screen.COLOUR_WHITE)
-        self.screen.print_at('┐', self.popup_x + self.popup_width - 1, self.popup_y, fg=Screen.COLOUR_WHITE)
-        self.screen.print_at('└', self.popup_x, self.popup_y + self.popup_height - 1, fg=Screen.COLOUR_WHITE)
-        self.screen.print_at('┘', self.popup_x + self.popup_width - 1, self.popup_y + self.popup_height - 1, fg=Screen.COLOUR_WHITE)
+        canvas.paint('┌', self.popup_x, self.popup_y, 7, 0, 0)
+        canvas.paint('┐', self.popup_x + self.popup_width - 1, self.popup_y, 7, 0, 0)
+        canvas.paint('└', self.popup_x, self.popup_y + self.popup_height - 1, 7, 0, 0)
+        canvas.paint('┘', self.popup_x + self.popup_width - 1, self.popup_y + self.popup_height - 1, 7, 0, 0)
         
         # Draw title
         title_x = self.popup_x + (self.popup_width - len(self.title)) // 2
-        self.screen.print_at(self.title, title_x, self.popup_y + 1, fg=Screen.COLOUR_YELLOW, attr=Screen.A_BOLD)
+        canvas.paint(self.title, title_x, self.popup_y + 1, 3, 0, 0)  # Yellow title
         
         # Draw content
         lines = self.content.split('\n')
         for i, line in enumerate(lines[:self.popup_height - 4]):
-            self.screen.print_at(line, self.popup_x + 1, self.popup_y + 2 + i, fg=Screen.COLOUR_WHITE)
+            canvas.paint(line, self.popup_x + 1, self.popup_y + 2 + i, 7, 0, 0)  # White text
         
         # Draw options
         if self.options:
@@ -782,18 +841,18 @@ class SimplePopup(asciimatics.widgets.Widget):
                 if i < self.popup_height - 4:
                     option_text = f"{i + 1}. {option}"
                     if i == self.selected_option:
-                        self.screen.print_at(option_text, self.popup_x + 1, self.popup_y + 3 + i, 
-                                           fg=Screen.COLOUR_BLACK, bg=Screen.COLOUR_WHITE)
+                        # Highlighted option - just use different color for now
+                        canvas.paint(option_text, self.popup_x + 1, self.popup_y + 3 + i, 3, 0, 0)  # Yellow for selected
                     else:
-                        self.screen.print_at(option_text, self.popup_x + 1, self.popup_y + 3 + i, fg=Screen.COLOUR_WHITE)
+                        canvas.paint(option_text, self.popup_x + 1, self.popup_y + 3 + i, 7, 0, 0)  # White text
         
         # Draw instructions
         if self.options:
-            self.screen.print_at("Press 1-5 to select, q to cancel", 
-                               self.popup_x + 1, self.popup_y + self.popup_height - 2, fg=Screen.COLOUR_CYAN)
+            canvas.paint("Press 1-5 to select, q to cancel", 
+                        self.popup_x + 1, self.popup_y + self.popup_height - 2, 6, 0, 0)  # Cyan text
         else:
-            self.screen.print_at("Press any key to continue", 
-                               self.popup_x + 1, self.popup_y + self.popup_height - 2, fg=Screen.COLOUR_CYAN)
+            canvas.paint("Press any key to continue", 
+                        self.popup_x + 1, self.popup_y + self.popup_height - 2, 6, 0, 0)  # Cyan text
     
     def required_height(self, offset, width):
         return self.popup_height
@@ -861,6 +920,12 @@ class InputHandler:
 
         if KEYMAP.matches('SLIDE_VIEWPORT_EAST', event):
             game.viewport.slide_right()
+            
+        if KEYMAP.matches('TOGGLE_VIEWPORT', event):
+            # Toggle viewport visibility by setting a flag
+            if not hasattr(game, 'viewport_visible'):
+                game.viewport_visible = True
+            game.viewport_visible = not game.viewport_visible
 
     @classmethod
     def handle_scale(cls, event, game):
@@ -901,26 +966,44 @@ class InputHandler:
         """Start a conversation with an NPC."""
         conversation = npc.get_conversation()
         
-        # Show the conversation in the message area for now
-        root_page.labelMessage.text = f'[INFO] Talking to {npc.name}: {conversation["text"]}'
+        def conversation_callback(selected_option):
+            if selected_option:
+                # Handle the selected option
+                response = selected_option
+                next_topic = npc.handle_response(response, "greeting")
+                if next_topic:
+                    next_conversation = npc.get_conversation(next_topic)
+                    cls._show_interaction_result(npc.name, next_conversation["text"], root_page)
         
-        # For now, just show the conversation text
-        # TODO: Implement proper dialog box display
-        if conversation["options"]:
-            options_text = " | ".join(conversation["options"])
-            root_page.labelMessage.text += f'\nOptions: {options_text}'
+        # Show the conversation in a popup
+        root_page.popup = SimplePopup(
+            root_page._screen,
+            f"Conversation with {npc.name}",
+            conversation["text"],
+            conversation["options"],
+            conversation_callback
+        )
     
     @classmethod
     def _continue_npc_conversation(cls, game: Game, npc: NPC, conversation: dict, root_page: RootPage):
         """Continue an NPC conversation."""
-        # Show the conversation in the message area for now
-        root_page.labelMessage.text = f'[INFO] Talking to {npc.name}: {conversation["text"]}'
+        def conversation_callback(selected_option):
+            if selected_option:
+                # Handle the selected option
+                response = selected_option
+                next_topic = npc.handle_response(response, "greeting")
+                if next_topic:
+                    next_conversation = npc.get_conversation(next_topic)
+                    cls._show_interaction_result(npc.name, next_conversation["text"], root_page)
         
-        # For now, just show the conversation text
-        # TODO: Implement proper dialog box display
-        if conversation["options"]:
-            options_text = " | ".join(conversation["options"])
-            root_page.labelMessage.text += f'\nOptions: {options_text}'
+        # Show the conversation in a popup
+        root_page.popup = SimplePopup(
+            root_page._screen,
+            f"Conversation with {npc.name}",
+            conversation["text"],
+            conversation["options"],
+            conversation_callback
+        )
     
     @classmethod
     def _show_interaction_popup(cls, game: Game, adjacent_entities: List[Tuple[str, VectorN, str]], root_page: RootPage):
