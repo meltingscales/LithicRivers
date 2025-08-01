@@ -438,7 +438,7 @@ class HelpPage(Frame):
                    "\n"
                    "=== KEYBINDS ===\n")
 
-        helptxt += KEYMAP.generate_key_guide()
+        helptxt += KEYMAP.generate_categorized_key_guide()
 
         helptxtheight = len(helptxt.split('\n'))
 

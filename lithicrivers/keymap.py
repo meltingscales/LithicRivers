@@ -132,6 +132,46 @@ class Keymap:
         
         return retstr
     
+    def generate_categorized_key_guide(self) -> str:
+        """Generate a categorized keybind list sorted by category."""
+        # Group keybinds by category
+        categories = {}
+        keynames = self.get_valid_key_names()
+        
+        for keyname in keynames:
+            category = self._get_category_for_key(keyname)
+            if category not in categories:
+                categories[category] = []
+            categories[category].append(keyname)
+        
+        # Generate categorized output
+        retstr = ""
+        
+        # Define category order and display names
+        category_order = [
+            ("movement", "MOVEMENT"),
+            ("viewport", "VIEWPORT"),
+            ("scale", "SCALE"),
+            ("action", "ACTIONS")
+        ]
+        
+        for category, display_name in category_order:
+            if category in categories:
+                retstr += f"\n=== {display_name} ===\n"
+                # Sort keys within category for consistent display
+                for keyname in sorted(categories[category]):
+                    retstr += associated(self.__getattribute__(keyname), keyname)
+                    retstr += '\n'
+        
+        # Add numpad movement keys at the end
+        retstr += "\n=== NUMPAD MOVEMENT ===\n"
+        retstr += "Directions:      Keys:\n"
+        retstr += "  NW N NE       7 8 9\n"
+        retstr += "   W   E        4   6\n"
+        retstr += "  SW S SE       1 2 3\n"
+        
+        return retstr
+    
     @staticmethod
     def char_from_keyboard_event(ke: KeyboardEvent) -> Union[None, str]:
         """Extract character from keyboard event."""
@@ -208,7 +248,8 @@ class Keymap:
             "SCALE_UP": "scale",
             "SCALE_DOWN": "scale",
             # Action keys
-            "MINE": "action"
+            "MINE": "action",
+            "INTERACT": "action"
         }
         return category_mapping.get(key_name, "")
 
