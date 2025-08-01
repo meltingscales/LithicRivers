@@ -36,17 +36,27 @@
 # 2025 todo
 
 - add a "fog of war" feature that obscures unvisited sections of the world, and add a limit to player vision. previously-visited sections of the world should appear as grayscale.
+
 - add multiple dimensions (like space, the void, etc) to the game.
+
 - add the ability to save (or auto-save) to a world file. just use serialization now, but later, we should optimize it like how Minecraft does - chunks, dimensions, and a custom binary file format with auto-saving and multi-threaded loading/saving.
-- instead of just "World Gaia", I want you to add some useful GUI elements to be rendered at the top of the screen with a small border. Things like health, stamina, current heading, etc. Make sure it's left-aligned but also takes up as much space as is possible (same width as world viewport)
+
 - are there any really fun terminal characters we can use as an alternative to just ASCII? can you list them?
+
 - make the message log pane actually functional - dialog, interactions, mining, and pickups should be logged there.
-- add the ability to look around with 'L', just like caves of qud.
+
+- add the ability to look around with 'L', just like caves of qud.  
+
 - add an inventory screen as a tab on the bottom, like the help page and message log. make it really simple - just a simple list that you can page through with a cursor.
+
 - add a "commands" screen as a tab on the bottom, that lets you perform macro actions like walking for 2,000 steps or walking to a specific coordinate.
+
 - ask "are there any bugs or issues you see with my existing viewport code? can we stress test it?" to AI
+
 - ask "Are there any bugs or issues you see with my world data structure? how does minecraft do it?" to AI
- - eventually, I'd like to publish this game on steam for $3. don't add/edit any code, I just want advice. What should I focus on before that?
+
+- eventually, I'd like to publish this game on steam for $3. don't add/edit any code, I just want advice. What should I focus on before that?
+
 - give me suggestions for different biomes. I'd like a "Lithic River" biome to be an underground biome with molten lava and lots of ores...like the name of the game.
 
 
