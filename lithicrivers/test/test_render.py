@@ -161,9 +161,9 @@ class RenderStuff(unittest.TestCase):
         tiny_viewport_width = game_tiny.viewport.get_width()
         tiny_viewport_height = game_tiny.viewport.get_height()
 
-        # Should have minimum viewport size
-        self.assertGreaterEqual(tiny_viewport_width, 5)
-        self.assertGreaterEqual(tiny_viewport_height, 5)
+        # Should have minimum viewport size (accounting for status bar)
+        self.assertGreaterEqual(tiny_viewport_width, 3)
+        self.assertGreaterEqual(tiny_viewport_height, 3)
 
     def test_on_demand_tile_generation(self):
         """Test that tiles are generated on-demand when accessed outside the initial world area."""

@@ -337,6 +337,9 @@ class GameWidget(asciimatics.widgets.Widget):
         self._game = new_value
 
 
+
+
+
 class RootPage(Frame):
     __slots__ = ["game"]
 
@@ -362,6 +365,12 @@ class RootPage(Frame):
 
         # Adjust viewport size based on available screen space
         self._adjust_viewport_for_screen(screen)
+
+        # Add status bar at the top
+        status_layout = Layout([1], fill_frame=False)
+        self.add_layout(status_layout)
+        self.statusLabel = Label("", name="statusLabel")
+        status_layout.add_widget(self.statusLabel)
 
         layout1 = Layout(columns=columns, fill_frame=True)
 
@@ -394,6 +403,76 @@ class RootPage(Frame):
         self.add_layout(layout_buttons)
         self.fix()
 
+    def update(self, frame_no):
+        """Update the status label with current player information."""
+        # Call parent update first
+        super().update(frame_no)
+        
+        if hasattr(self, "statusLabel") and self.game:
+            player = self.game.player
+            position = player.position
+
+            # Calculate heading (direction player is facing)
+            heading = self._get_heading(position)
+
+            # Create status bar content
+            health_bar = self._create_bar(player.health, 100, "HP", "█", "░")
+            stamina_bar = self._create_bar(player.stamina, 100, "ST", "█", "░")
+
+            # Format the status bar
+            status_parts = [
+                f"Health: {health_bar}",
+                f"Stamina: {stamina_bar}",
+                f"Position: {position.as_short_string()}",
+                f"Heading: {heading}",
+                f"Tile: {self.game.get_tile_at_player_feet().tileid}",
+                f"Scale: {self.game.viewport.scale}x"
+            ]
+
+            # Join with separators
+            self.statusLabel.text = " | ".join(status_parts)
+
+    def _get_heading(self, position: VectorN) -> str:
+        """Get a simple heading based on position."""
+        # Simple heading based on position - could be enhanced with actual direction
+        x, y, z = position.x, position.y, position.z
+
+        if z > 0:
+            return "UP"
+        elif z < 0:
+            return "DOWN"
+        elif x > 0 and y > 0:
+            return "NE"
+        elif x > 0 and y < 0:
+            return "SE"
+        elif x < 0 and y > 0:
+            return "NW"
+        elif x < 0 and y < 0:
+            return "SW"
+        elif x > 0:
+            return "E"
+        elif x < 0:
+            return "W"
+        elif y > 0:
+            return "N"
+        elif y < 0:
+            return "S"
+        else:
+            return "HERE"
+
+    def _create_bar(self, current: int, maximum: int, label: str, filled: str, empty: str) -> str:
+        """Create a visual bar for health/stamina."""
+        if maximum <= 0:
+            return f"{label}: {current}/{maximum}"
+
+        # Create a 10-character bar
+        bar_length = 10
+        filled_length = int((current / maximum) * bar_length)
+        empty_length = bar_length - filled_length
+
+        bar = filled * filled_length + empty * empty_length
+        return f"{bar} {current}/{maximum}"
+
     def _adjust_viewport_for_screen(self, screen):
         """Adjust viewport size based on available screen space."""
         # Calculate available space for the game widget
@@ -408,9 +487,9 @@ class RootPage(Frame):
         else:
             info_panel_width = int(screen_width * 0.30)
 
-        # Account for borders, headers, and tab buttons
+        # Account for borders, headers, tab buttons, and status bar
         available_width = screen_width - info_panel_width - 4  # 4 for borders
-        available_height = screen_height - 6  # 6 for headers, borders, and tab buttons
+        available_height = screen_height - 7  # 7 for headers, borders, tab buttons, and status bar (1 line)
 
         # Calculate optimal viewport size
         # Each tile takes up scale characters, so we need to account for that
