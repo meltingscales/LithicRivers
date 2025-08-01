@@ -530,17 +530,66 @@ class HelpPage(Frame):
 
 
 class MessageLogPage(Frame):
-    def __init__(self, screen):
+    def __init__(self, screen, game: Game = None):
         super().__init__(
             screen, screen.height, screen.width, can_scroll=False, title="Message Log"
         )
+        self.game = game
+        
+        # Create main layout for messages
         layout1 = Layout([1], fill_frame=True)
         self.add_layout(layout1)
-        # add your widgets here
-
+        
+        # Create message display widget
+        from asciimatics.widgets import TextBox
+        self.message_display = TextBox(
+            height=screen.height - 4,  # Leave room for tab buttons
+            name="message_display",
+            readonly=True
+        )
+        layout1.add_widget(self.message_display)
+        
+        # Create tab buttons
         layout2 = TabButtons(self, 2)
         self.add_layout(layout2)
+        
         self.fix()
+    
+    def update_messages(self):
+        """Update the message display with current messages."""
+        if not self.game or not self.game.message_log:
+            return
+        
+        messages = self.game.message_log.get_recent_messages(50)  # Show last 50 messages
+        if not messages:
+            self.message_display.value = "No messages yet.\n\nStart playing to see your actions logged here!"
+            return
+        
+        # Format messages for display
+        formatted_messages = []
+        for msg in messages:
+            timestamp = msg["timestamp"]
+            message_type = msg["type"]
+            message = msg["message"]
+            
+            # Add color coding based on message type
+            type_icon = {
+                "mining": "⛏️ ",
+                "interaction": "💬 ",
+                "pickup": "📦 ",
+                "dialog": "🗣️ ",
+                "info": "ℹ️ "
+            }.get(message_type, "• ")
+            
+            formatted_messages.append(f"[{timestamp}] {type_icon}{message}")
+        
+        # Join all messages with newlines
+        self.message_display.value = "\n".join(formatted_messages)
+    
+    def update(self, frame_no):
+        """Update the frame, refreshing messages."""
+        super().update(frame_no)
+        self.update_messages()
 
 
 class ExtraPage(Frame):
@@ -929,13 +978,18 @@ class InputHandler:
         elif tile_under == Tiles.tree():
             # Allow mining trees - they drop guaranteed acorns plus other items
             tree_drops = tile_under.calc_tree_drops()
+            dropped_items = []
             for item in tree_drops:
                 game.player.inventory.add_item(item)
+                dropped_items.append(item.name)
             game.set_tile_at_player_feet(Tiles.dirt())
+            game.log_mining("tree", dropped_items)
             root_page.update_status_label()
         elif tile_under == Tiles.gold_ore():
-            game.player.inventory.add_item(tile_under.calc_drop())
+            dropped_item = tile_under.calc_drop()
+            game.player.inventory.add_item(dropped_item)
             game.set_tile_at_player_feet(Tiles.dirt())
+            game.log_mining("gold ore", [dropped_item.name])
             root_page.update_status_label()
 
     @classmethod
@@ -1014,6 +1068,9 @@ class InputHandler:
         logging.debug(
             f"NPC conversation: showing topic '{topic}' with options: {conversation['options']}"
         )
+        
+        # Log the NPC's conversation text
+        game.log_dialog(npc.name, conversation["text"])
 
         def conversation_callback(selected_option):
             global active_popup
@@ -1029,6 +1086,10 @@ class InputHandler:
                 logging.debug(
                     f"NPC conversation: selected '{response}' from topic '{topic}'"
                 )
+                
+                # Log the player's response
+                game.log_dialog("You", response)
+                
                 next_topic = npc.handle_response(response, topic)
                 logging.debug(
                     f"NPC conversation: next_topic='{next_topic}', current_topic='{topic}'"
@@ -1120,13 +1181,17 @@ class InputHandler:
         if hasattr(entity, "interact"):
             # For interactive entities, show their interaction text
             interaction_text = entity.interact()
+            game.log_interaction(name, interaction_text)
             cls._show_interaction_result(name, interaction_text, root_page)
         elif hasattr(entity, "get_conversation"):
             # For NPCs, start conversation
+            game.log_interaction(name, "Started conversation")
             cls._start_npc_conversation(game, entity, root_page)
         else:
             # Default interaction
-            cls._show_interaction_result(name, f"You interact with {name}.", root_page)
+            default_text = f"You interact with {name}."
+            game.log_interaction(name, default_text)
+            cls._show_interaction_result(name, default_text, root_page)
 
     @classmethod
     def _show_interaction_result(cls, name: str, text: str, root_page: RootPage):
@@ -1164,7 +1229,7 @@ def demo(screen: Screen, scene: Scene, game: Game):
     scenes = [
         Scene([RootPage(screen, game)], -1, name="RootPage"),
         Scene([HelpPage(screen, game)], -1, name="HelpPage"),
-        Scene([MessageLogPage(screen)], -1, name="MessageLogPage"),
+        Scene([MessageLogPage(screen, game)], -1, name="MessageLogPage"),
         Scene([ExtraPage(screen)], -1, name="ExtraPage"),
     ]
 
