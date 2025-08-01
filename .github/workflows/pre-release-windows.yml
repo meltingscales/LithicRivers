@@ -16,6 +16,11 @@ jobs:
       - name: "Checkout source code"
         uses: "actions/checkout@v2.4.0"
 
+      - name: "Install uv"
+        uses: "astral-sh/setup-uv@v1"
+        with:
+          version: "latest"
+
       - run: "./scripts/setup.cmd"
       - run: "./scripts/test.cmd"
       - run: "./scripts/generate_exe.cmd"
