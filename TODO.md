@@ -36,10 +36,11 @@
 # 2025 todo
 
 - use ruff for linting/formatting.
+- add a "fog of war" feature that obscures unvisited sections of the world, and add a limit to player vision. previously-visited sections of the world should appear as grayscale.
 - add multiple dimensions (like space, the void, etc) to the game.
 - add the ability to save (or auto-save) to a world file. just use serialization now, but later, we should optimize it like how Minecraft does - chunks, dimensions, and a custom binary file format with auto-saving and multi-threaded loading/saving.
 - instead of just "World Gaia", I want you to add some useful GUI elements to be rendered at the top of the screen with a small border. Things like health, current heading, etc. Make sure it's left-aligned but also takes up as much space as is possible (same width as world viewport)
-- Add a config item in "settings.json" that toggles debug mode - things like our "Test Popups" screen. If it's enabled, show debug elements. If it's disabled, hide them.
+- Add a config item in "settings.json" that toggles developer mode - things like our "Test Popups" screen. If it's enabled, show debug elements. If it's disabled, hide them.
 - are there any really fun terminal characters we can use as an alternative to just ASCII? can you list them?
 - make the message log pane actually functional - dialog, interactions, mining, and pickups should be logged there.
 - add the ability to look around with 'L', just like caves of qud.

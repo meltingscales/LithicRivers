@@ -13,6 +13,7 @@ from lithicrivers.config_manager import config_manager
 # Load settings from config manager
 GAME_NAME = config_manager.get_setting("game", "GAME_NAME")
 LOGFILENAME = config_manager.get_setting("game", "LOGFILENAME")
+DEVELOPER_MODE = config_manager.get_setting("game", "DEVELOPER_MODE")
 
 # Load logging level with support for custom levels
 log_level_str = config_manager.get_setting("game", "LOGGINGLEVEL")

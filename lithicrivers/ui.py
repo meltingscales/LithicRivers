@@ -16,7 +16,7 @@ from lithicrivers.model.vector import VectorN
 from lithicrivers.model.modelpleasemoveme import RenderedData, StopGame
 from lithicrivers.textutil import get_color_for_ui_element, presenting, list_label
 from lithicrivers.keymap import KEYMAP
-from lithicrivers.settings import GAME_NAME, VIEWPORT_WIGGLE
+from lithicrivers.settings import GAME_NAME, VIEWPORT_WIGGLE, DEVELOPER_MODE
 from lithicrivers.model.modelpleasemoveme import Viewport
 
 
@@ -30,7 +30,21 @@ from lithicrivers.model.modelpleasemoveme import Viewport
 class TabButtons(Layout):
 
     def __init__(self, frame, active_tab_idx, game: Game = None):
-        cols = [1, 1, 1, 1, 1]
+        # Create buttons list based on developer mode
+        buttons = [
+            Button("Help", self._safe_scene_change("HelpPage")),
+            Button("Root Page", self._safe_scene_change("RootPage")),
+            Button("Message Log", self._safe_scene_change("MessageLogPage")),
+        ]
+        
+        # Add Test Popups button only if developer mode is enabled
+        if DEVELOPER_MODE:
+            buttons.append(Button("Test Popups", self._safe_scene_change("ExtraPage")))
+        
+        buttons.append(Button("Quit", raiseFn(StopGame, "Game stopping :P")))
+        
+        # Create columns based on number of buttons
+        cols = [1] * len(buttons)
 
         super().__init__(cols)
 
@@ -39,14 +53,6 @@ class TabButtons(Layout):
 
         for i, _ in enumerate(cols):
             self.add_widget(Divider(), i)
-
-        buttons = [
-            Button("Help", self._safe_scene_change("HelpPage")),
-            Button("Root Page", self._safe_scene_change("RootPage")),
-            Button("Message Log", self._safe_scene_change("MessageLogPage")),
-            Button("Test Popups", self._safe_scene_change("ExtraPage")),
-            Button("Quit", raiseFn(StopGame, "Game stopping :P"))
-        ]
 
         for i, button in enumerate(buttons):
             self.add_widget(button, i)

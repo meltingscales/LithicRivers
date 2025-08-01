@@ -2,7 +2,8 @@
   "game": {
     "GAME_NAME": "LithicRivers",
     "LOGFILENAME": "LithicRivers.log",
-    "LOGGINGLEVEL": "INFO"
+    "LOGGINGLEVEL": "INFO",
+    "DEVELOPER_MODE": true
   },
   "world": {
     "DEFAULT_SIZE_RADIUS": {
