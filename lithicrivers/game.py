@@ -688,7 +688,8 @@ class Game:
         self.world: World = world
 
         self.running = True
-        self.message_log = MessageLog()
+        self.message_log = MessageLog(game=self)
+        self.gametick = 0
 
         # Add initial welcome message
         self.message_log.add_message(
@@ -776,6 +777,7 @@ class Game:
             return
 
         self.player.move(vec)
+        self.increment_tick()
 
     def player_outside_viewport(self, wiggle=0):
         return not self.player_inside_2d_viewport(wiggle=wiggle)
@@ -845,19 +847,26 @@ class Game:
         """Log a general info message."""
         self.message_log.add_message(message, "info")
 
+    def increment_tick(self):
+        """Increment the game tick counter."""
+        self.gametick += 1
+
 
 class MessageLog:
     """A class to manage game messages for the message log pane."""
 
-    def __init__(self, max_messages: int = 100):
+    def __init__(self, max_messages: int = 100, game: "Game" = None):
         self.messages = []
         self.max_messages = max_messages
+        self.game = game
 
     def add_message(self, message: str, message_type: str = "info"):
-        """Add a message to the log with timestamp and type."""
+        """Add a message to the log with timestamp, game tick, and type."""
         timestamp = datetime.now().strftime("%H:%M:%S")
+        gametick = self.game.gametick if self.game else 0
         log_entry = {
             "timestamp": timestamp,
+            "gametick": gametick,
             "message": message,
             "type": message_type,  # info, mining, interaction, pickup, dialog
         }
