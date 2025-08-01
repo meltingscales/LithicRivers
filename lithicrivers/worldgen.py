@@ -9,6 +9,7 @@ from typing import Any, Optional
 
 from lithicrivers.game import Tile, Tiles
 from lithicrivers.model.vector import VectorN
+from lithicrivers.structure_generator import create_structure_manager
 
 
 @dataclass
@@ -42,6 +43,7 @@ class SeededWorldGenerator:
 
         self.seed = WorldSeed(seed)
         self.rng = random.Random(seed)
+        self.structure_manager = create_structure_manager()
 
     def get_seed(self) -> WorldSeed:
         """Get the current world seed."""
@@ -127,6 +129,7 @@ class SeededWorldGenerator:
         """
         world_data = {}
 
+        # First, generate basic terrain
         for z in range(-radius.z, radius.z):
             for y in range(-radius.y, radius.y):
                 for x in range(-radius.x, radius.x):
@@ -134,7 +137,44 @@ class SeededWorldGenerator:
                     tile = self.generate_tile_for_position(pos)
                     world_data[pos.serialize()] = tile
 
+        # Then, generate structures
+        self._generate_structures(world_data, radius)
+
         return world_data
+
+    def _generate_structures(self, world_data: dict[str, Tile], radius: VectorN) -> None:
+        """
+        Generate structures in the world using seeded randomness.
+        
+        Args:
+            world_data: World data dictionary to modify
+            radius: The radius of the world
+        """
+        # Force a ship to spawn very close to the player's actual position (25,25,0)
+        # Place ship at 20,20,0 which should be clearly visible from position (25,25,0)
+        forced_ship_pos = VectorN(20, 20, 0)
+        print(f"FORCING SHIP TO SPAWN AT {forced_ship_pos}")  # Debug output
+        self.structure_manager.place_structure("small_ship", world_data, forced_ship_pos, self.rng)
+        
+        # Generate structures in chunks for better distribution
+        chunk_size = 16  # 16x16 chunks
+        
+        for chunk_z in range(-radius.z // chunk_size, radius.z // chunk_size + 1):
+            for chunk_y in range(-radius.y // chunk_size, radius.y // chunk_size + 1):
+                for chunk_x in range(-radius.x // chunk_size, radius.x // chunk_size + 1):
+                    chunk_center = VectorN(
+                        chunk_x * chunk_size,
+                        chunk_y * chunk_size,
+                        chunk_z * chunk_size
+                    )
+                    
+                    # Use chunk-specific seeding for deterministic structure placement
+                    chunk_seed = hash((self.seed.seed, chunk_x, chunk_y, chunk_z))
+                    chunk_rng = random.Random(chunk_seed)
+                    
+                    self.structure_manager.generate_structures_for_chunk(
+                        world_data, chunk_center, chunk_size // 2, chunk_rng
+                    )
 
 
 def create_world_generator(seed: Optional[int] = None) -> SeededWorldGenerator:

@@ -101,8 +101,6 @@
 
 - are there any really fun terminal characters we can use as an alternative to just ASCII? can you list them?
 
-- make the message log pane actually functional - dialog, interactions, mining, and pickups should be logged there.
-
 - add the ability to look around with 'L', just like caves of qud.  
 
 - add an inventory screen as a tab on the bottom, like the help page and message log. make it really simple - just a simple list that you can page through with a cursor.

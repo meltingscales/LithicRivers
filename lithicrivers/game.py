@@ -485,6 +485,46 @@ class Tiles:
     def empty():
         return Tile("Empty", sprite_sheet=[" ", "  \n  "])
 
+    @staticmethod
+    def iron_scrap():
+        return Tile(
+            "Iron Scrap",
+            sprite_sheet=["=", "==\n==", "===\n===\n==="],
+            drops={0.8: Items.rock(), 0.2: Items.gold_nugget()},
+        )
+
+    @staticmethod
+    def bone_block():
+        return Tile(
+            "Bone Block",
+            sprite_sheet=["|", "||\n||", "|||\n|||\n|||"],
+            drops={0.7: Items.rock(), 0.3: Items.gold_nugget()},
+        )
+
+    @staticmethod
+    def door():
+        return Tile(
+            "Door",
+            sprite_sheet=["D", "DD\nDD", "DDD\nDDD\nDDD"],
+            drops={0.5: Items.rock()},
+        )
+
+    @staticmethod
+    def scrap_electronics():
+        return Tile(
+            "Scrap Electronics",
+            sprite_sheet=["e", "ee\nee", "eee\neee\neee"],
+            drops={0.6: Items.rock(), 0.4: Items.gold_nugget()},
+        )
+
+    @staticmethod
+    def treasure():
+        return Tile(
+            "Buried Treasure",
+            sprite_sheet=["$", "$$\n$$", "$$$\n$$$\n$$$"],
+            drops={0.3: Items.gold_nugget(), 0.7: Items.diamond()},
+        )
+
 
 class WorldData:
     def serialize(self, filepath: Path) -> Path:
@@ -716,14 +756,21 @@ class Game:
         ret: list[list[str]] = []
         color_data: list[list[tuple[int, int, int]]] = []
 
-        z = self.player.position.z
+        player_z = self.player.position.z
 
         for y in range(viewport.top_left.y, (viewport.lower_right.y + 1)):
             retrow = []
             color_row = []
             for x in range(viewport.top_left.x, (viewport.lower_right.x + 1)):
-                pos = VectorN(x, y, z)
-                tile = self.world.get_tile(pos)
+                # Find the highest non-empty tile at this position, but only up to player's Z level
+                tile = None
+                for z in range(player_z, -1, -1):  # Check from player's Z level down to 0
+                    pos = VectorN(x, y, z)
+                    temp_tile = self.world.get_tile(pos)
+                    if temp_tile and temp_tile.tileid != "Empty":
+                        tile = temp_tile
+                        break
+                
                 if not tile:
                     tile = Tiles.empty()
 
