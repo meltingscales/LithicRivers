@@ -332,8 +332,10 @@ class InputHandler:
             root_page.labelMessage.text = 'You can\'t mine dirt :P'
             return  # can't mine dirt
         elif tile_under == Tiles.Tree():
-            # Allow mining trees - they drop a mix of stick, log, and acorn
-            game.player.inventory.add_item(tile_under.calc_drop())
+            # Allow mining trees - they drop guaranteed acorns plus other items
+            tree_drops = tile_under.calc_tree_drops()
+            for item in tree_drops:
+                game.player.inventory.add_item(item)
             game.set_tile_at_player_feet(Tiles.Dirt())
             root_page.labelMessage.text = 'You chopped down the tree!'
         elif tile_under == Tiles.DaFuq():
