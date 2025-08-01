@@ -42,7 +42,7 @@ class TabButtons(Layout):
             Button("Help", raiseFn(NextScene, "HelpPage")),
             Button("Root Page", raiseFn(NextScene, "RootPage")),
             Button("Message Log", raiseFn(NextScene, "MessageLogPage")),
-            Button("Extra Page", raiseFn(NextScene, "ExtraPage")),
+            Button("Test Popups", raiseFn(NextScene, "ExtraPage")),
             Button("Quit", raiseFn(StopGame, "Game stopping :P"))
         ]
 
@@ -191,9 +191,7 @@ class GameWidget(asciimatics.widgets.Widget):
             self._x, self._y, header_color[0], header_color[1], header_color[2]
         )
         
-        # Check if there's a popup to display - render it last so it appears on top
-        if hasattr(self._frame, 'popup') and self._frame.popup and self._frame.popup.visible:
-            self._frame.popup.update(frame_no)
+
 
     def _render_colored_world(self, rendered_data: RenderedData):
         """Render the world with proper colors."""
@@ -277,7 +275,7 @@ class GameWidget(asciimatics.widgets.Widget):
 
 
 class RootPage(Frame):
-    __slots__ = ['game', 'popup']
+    __slots__ = ['game']
 
     def __init__(self, screen, game: Game):
         super().__init__(screen,
@@ -300,7 +298,6 @@ class RootPage(Frame):
             columns = [70, 30]
 
         self.game = game
-        self.popup = None
         
         # Adjust viewport size based on available screen space
         self._adjust_viewport_for_screen(screen)
@@ -447,58 +444,93 @@ class ExtraPage(Frame):
                          screen.height,
                          screen.width,
                          can_scroll=False,
-                         title="Extra Page")
+                         title="Test Popups")
         layout1 = Layout([1], fill_frame=True)
         self.add_layout(layout1)
         
         # Add test popup buttons
         from asciimatics.widgets import Button, Label
         
-        def test_simple_popup():
-            """Test a simple popup without options."""
-            popup = SimplePopup(
+        def test_simple_dialog():
+            """Test a simple dialog without options."""
+            def callback(result):
+                print(f"Simple dialog result: {result}")
+            
+            # Use asciimatics PopUpDialog for simple dialog
+            from asciimatics.widgets import PopUpDialog
+            popup = PopUpDialog(
                 screen,
-                "Test Popup",
-                "This is a test popup with no options.\nPress any key to continue.",
-                None,
-                lambda x: print("Simple popup closed")
+                "This is a test dialog with no options.\nPress OK to continue.",
+                ["OK"],
+                callback
             )
-            self.popup = popup
+            # Add the popup to the current scene
+            screen.current_scene.add_effect(popup)
         
-        def test_options_popup():
-            """Test a popup with options."""
-            popup = SimplePopup(
+        def test_options_dialog():
+            """Test a dialog with options."""
+            def callback(result):
+                print(f"Options dialog result: {result}")
+            
+            # Use asciimatics PopUpDialog for options dialog
+            from asciimatics.widgets import PopUpDialog
+            popup = PopUpDialog(
                 screen,
-                "Test Options Popup",
-                "This is a test popup with options.\nSelect an option:",
+                "This is a test dialog with options.\nSelect an option:",
                 ["Option 1", "Option 2", "Option 3", "Option 4"],
-                lambda x: print(f"Selected option: {x}")
+                callback
             )
-            self.popup = popup
+            # Add the popup to the current scene
+            screen.current_scene.add_effect(popup)
         
-        def test_large_popup():
-            """Test a large popup with lots of content."""
-            popup = SimplePopup(
+        def test_large_dialog():
+            """Test a large dialog with lots of content."""
+            def callback(result):
+                print(f"Large dialog result: {result}")
+            
+            # Use asciimatics PopUpDialog for large dialog
+            from asciimatics.widgets import PopUpDialog
+            popup = PopUpDialog(
                 screen,
-                "Large Test Popup",
-                "This is a large test popup with lots of content.\n\n"
-                "It has multiple lines of text to test how the popup handles "
+                "This is a large test dialog with lots of content.\n\n"
+                "It has multiple lines of text to test how the dialog handles "
                 "long content and multiple paragraphs.\n\n"
-                "The popup should automatically size itself to fit the content "
+                "The dialog should automatically size itself to fit the content "
                 "while staying within the screen bounds.",
                 ["Continue", "Cancel"],
-                lambda x: print(f"Large popup result: {x}")
+                callback
             )
-            self.popup = popup
+            # Add the popup to the current scene
+            screen.current_scene.add_effect(popup)
         
-        # Add buttons to test different popup types
-        layout1.add_widget(Button("Test Simple Popup", test_simple_popup))
-        layout1.add_widget(Button("Test Options Popup", test_options_popup))
-        layout1.add_widget(Button("Test Large Popup", test_large_popup))
+        def test_popup_box():
+            """Test asciimatics PopUpDialog."""
+            from asciimatics.widgets import PopUpDialog
+            
+            def callback(result):
+                print(f"Popup dialog result: {result}")
+            
+            # Create a popup dialog using asciimatics PopUpDialog
+            popup = PopUpDialog(
+                screen,
+                "This is a test popup dialog.\n\n"
+                "This uses the built-in asciimatics PopupDialog widget.\n"
+                "It should work much better than our custom implementation.",
+                ["OK", "Cancel"],
+                callback
+            )
+            # Add the popup to the current scene
+            screen.current_scene.add_effect(popup)
+        
+        # Add buttons to test different dialog types
+        layout1.add_widget(Button("Test Simple Dialog", test_simple_dialog))
+        layout1.add_widget(Button("Test Options Dialog", test_options_dialog))
+        layout1.add_widget(Button("Test Large Dialog", test_large_dialog))
+        layout1.add_widget(Button("Test Popup Dialog", test_popup_box))
         
         # Add info text
-        info_label = Label("Click the buttons above to test different popup types.\n"
-                          "This will help verify that the SimplePopup class works correctly.\n"
+        info_label = Label("Click the buttons above to test different dialog types.\n"
+                          "These use proper asciimatics components instead of custom widgets.\n"
                           "Press 'v' in the main game to toggle viewport visibility.")
         layout1.add_widget(info_label)
 
@@ -588,7 +620,9 @@ class DialogBox(Frame):
     
     def _close(self):
         """Close the dialog."""
-        raise NextScene("RootPage")
+        # Remove this dialog from the current scene
+        if hasattr(self, '_screen') and self._screen.current_scene:
+            self._screen.current_scene.remove_effect(self)
 
 
 class EntitySelectionPopup(Frame):
@@ -687,7 +721,9 @@ class EntitySelectionPopup(Frame):
     
     def _close(self):
         """Close the popup and return to the game."""
-        raise NextScene("RootPage")
+        # Remove this popup from the current scene
+        if hasattr(self, '_screen') and self._screen.current_scene:
+            self._screen.current_scene.remove_effect(self)
 
 
 class InteractionResultPopup(Frame):
@@ -728,142 +764,12 @@ class InteractionResultPopup(Frame):
     
     def _close(self):
         """Close the popup."""
-        raise NextScene("RootPage")
+        # Remove this popup from the current scene
+        if hasattr(self, '_screen') and self._screen.current_scene:
+            self._screen.current_scene.remove_effect(self)
 
 
-class SimplePopup(asciimatics.widgets.Widget):
-    """A simple popup widget that can be overlaid on the current screen."""
-    
-    def __init__(self, screen, title: str, content: str, options: List[str] = None, callback=None):
-        super().__init__(name="popup")
-        self.screen = screen
-        self.title = title
-        self.content = content
-        self.options = options or []
-        self.callback = callback
-        self.selected_option = 0
-        self.visible = True
-        
-        # Calculate popup dimensions
-        self.popup_width = min(60, screen.width - 4)
-        self.popup_height = len(self.options) + 6 if self.options else 4
-        
-        # Center the popup
-        self.popup_x = (screen.width - self.popup_width) // 2
-        self.popup_y = (screen.height - self.popup_height) // 2
-    
-    def process_event(self, event):
-        """Handle keyboard events for the popup."""
-        if not self.visible:
-            return event
-        
-        if isinstance(event, KeyboardEvent):
-            if event.key_code == ord('q') or event.key_code == 27:  # q or ESC
-                self.visible = False
-                if self.callback:
-                    self.callback(None)
-                return None
-            
-            if self.options:
-                if event.key_code == ord('1') and len(self.options) >= 1:
-                    self.selected_option = 0
-                    self.visible = False
-                    if self.callback:
-                        self.callback(self.options[0])
-                    return None
-                elif event.key_code == ord('2') and len(self.options) >= 2:
-                    self.selected_option = 1
-                    self.visible = False
-                    if self.callback:
-                        self.callback(self.options[1])
-                    return None
-                elif event.key_code == ord('3') and len(self.options) >= 3:
-                    self.selected_option = 2
-                    self.visible = False
-                    if self.callback:
-                        self.callback(self.options[2])
-                    return None
-                elif event.key_code == ord('4') and len(self.options) >= 4:
-                    self.selected_option = 3
-                    self.visible = False
-                    if self.callback:
-                        self.callback(self.options[3])
-                    return None
-                elif event.key_code == ord('5') and len(self.options) >= 5:
-                    self.selected_option = 4
-                    self.visible = False
-                    if self.callback:
-                        self.callback(self.options[4])
-                    return None
-        
-        return event
-    
-    def update(self, frame_no):
-        """Draw the popup on the screen."""
-        if not self.visible:
-            return
-        
-        # Get the canvas from the frame
-        canvas = self.screen._canvas if hasattr(self.screen, '_canvas') else self.screen
-        
-        # Draw background
-        for y in range(self.popup_y, self.popup_y + self.popup_height):
-            for x in range(self.popup_x, self.popup_x + self.popup_width):
-                canvas.paint(' ', x, y, 0, 0, 0)  # Black background
-        
-        # Draw border
-        for x in range(self.popup_x, self.popup_x + self.popup_width):
-            canvas.paint('─', x, self.popup_y, 7, 0, 0)  # White border
-            canvas.paint('─', x, self.popup_y + self.popup_height - 1, 7, 0, 0)
-        
-        for y in range(self.popup_y, self.popup_y + self.popup_height):
-            canvas.paint('│', self.popup_x, y, 7, 0, 0)  # White border
-            canvas.paint('│', self.popup_x + self.popup_width - 1, y, 7, 0, 0)
-        
-        # Draw corners
-        canvas.paint('┌', self.popup_x, self.popup_y, 7, 0, 0)
-        canvas.paint('┐', self.popup_x + self.popup_width - 1, self.popup_y, 7, 0, 0)
-        canvas.paint('└', self.popup_x, self.popup_y + self.popup_height - 1, 7, 0, 0)
-        canvas.paint('┘', self.popup_x + self.popup_width - 1, self.popup_y + self.popup_height - 1, 7, 0, 0)
-        
-        # Draw title
-        title_x = self.popup_x + (self.popup_width - len(self.title)) // 2
-        canvas.paint(self.title, title_x, self.popup_y + 1, 3, 0, 0)  # Yellow title
-        
-        # Draw content
-        lines = self.content.split('\n')
-        for i, line in enumerate(lines[:self.popup_height - 4]):
-            canvas.paint(line, self.popup_x + 1, self.popup_y + 2 + i, 7, 0, 0)  # White text
-        
-        # Draw options
-        if self.options:
-            for i, option in enumerate(self.options):
-                if i < self.popup_height - 4:
-                    option_text = f"{i + 1}. {option}"
-                    if i == self.selected_option:
-                        # Highlighted option - just use different color for now
-                        canvas.paint(option_text, self.popup_x + 1, self.popup_y + 3 + i, 3, 0, 0)  # Yellow for selected
-                    else:
-                        canvas.paint(option_text, self.popup_x + 1, self.popup_y + 3 + i, 7, 0, 0)  # White text
-        
-        # Draw instructions
-        if self.options:
-            canvas.paint("Press 1-5 to select, q to cancel", 
-                        self.popup_x + 1, self.popup_y + self.popup_height - 2, 6, 0, 0)  # Cyan text
-        else:
-            canvas.paint("Press any key to continue", 
-                        self.popup_x + 1, self.popup_y + self.popup_height - 2, 6, 0, 0)  # Cyan text
-    
-    def required_height(self, offset, width):
-        return self.popup_height
-    
-    def reset(self):
-        pass
-    
-    @property
-    def value(self):
-        """Required property for Widget base class."""
-        return None
+
 
 
 class InputHandler:
@@ -976,13 +882,15 @@ class InputHandler:
                     cls._show_interaction_result(npc.name, next_conversation["text"], root_page)
         
         # Show the conversation in a popup
-        root_page.popup = SimplePopup(
+        from asciimatics.widgets import PopUpDialog
+        popup = PopUpDialog(
             root_page._screen,
-            f"Conversation with {npc.name}",
             conversation["text"],
             conversation["options"],
             conversation_callback
         )
+        # Add the popup to the current scene
+        root_page._screen.current_scene.add_effect(popup)
     
     @classmethod
     def _continue_npc_conversation(cls, game: Game, npc: NPC, conversation: dict, root_page: RootPage):
@@ -997,13 +905,15 @@ class InputHandler:
                     cls._show_interaction_result(npc.name, next_conversation["text"], root_page)
         
         # Show the conversation in a popup
-        root_page.popup = SimplePopup(
+        from asciimatics.widgets import PopUpDialog
+        popup = PopUpDialog(
             root_page._screen,
-            f"Conversation with {npc.name}",
             conversation["text"],
             conversation["options"],
             conversation_callback
         )
+        # Add the popup to the current scene
+        root_page._screen.current_scene.add_effect(popup)
     
     @classmethod
     def _show_interaction_popup(cls, game: Game, adjacent_entities: List[Tuple[str, VectorN, str]], root_page: RootPage):
@@ -1021,13 +931,15 @@ class InputHandler:
                         break
         
         # Create and show the popup
-        root_page.popup = SimplePopup(
+        from asciimatics.widgets import PopUpDialog
+        popup = PopUpDialog(
             root_page._screen,
-            "Choose Entity to Interact With",
             f"Found {len(adjacent_entities)} entities nearby:",
             entity_options,
             popup_callback
         )
+        # Add the popup to the current scene
+        root_page._screen.current_scene.add_effect(popup)
     
     @classmethod
     def _handle_entity_interaction(cls, game: Game, name: str, pos: VectorN, color: str, root_page: RootPage):
@@ -1053,12 +965,15 @@ class InputHandler:
             pass
         
         # Create and show the result popup
-        root_page.popup = SimplePopup(
+        from asciimatics.widgets import PopUpDialog
+        popup = PopUpDialog(
             root_page._screen,
-            f"Interacting with {name}",
-            text,
-            callback=result_callback
+            f"Interacting with {name}\n\n{text}",
+            ["OK"],
+            result_callback
         )
+        # Add the popup to the current scene
+        root_page._screen.current_scene.add_effect(popup)
 
 
 def demo(screen: Screen, scene: Scene, game: Game):
@@ -1071,6 +986,9 @@ def demo(screen: Screen, scene: Scene, game: Game):
         Scene([MessageLogPage(screen)], -1, name="MessageLogPage"),
         Scene([ExtraPage(screen)], -1, name="ExtraPage"),
     ]
+    
+    # Add dialog scenes that will be created dynamically
+    # These will be added when needed via NextScene
 
     for scene in scenes[::-1]:
         scene.effects[0].set_theme('bright')
@@ -1128,15 +1046,7 @@ def demo(screen: Screen, scene: Scene, game: Game):
                 if game.player_outside_viewport(wiggle=VIEWPORT_WIGGLE):
                     game.reset_viewport()
 
-        # Check if there's a popup that should handle the event first
-        if hasattr(root_page, 'popup') and root_page.popup and root_page.popup.visible:
-            result = root_page.popup.process_event(event)
-            if result is None:  # Event was handled by popup
-                return
-            # If popup is no longer visible, clear it
-            if not root_page.popup.visible:
-                root_page.popup = None
-                return
+
         
         InputHandler.handle_viewport(event, root_page.game)
         InputHandler.handle_scale(event, root_page.game)
