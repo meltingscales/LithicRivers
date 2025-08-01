@@ -186,11 +186,6 @@ class GameEngine:
         with open(filepath, "rb") as f:
             self.state = pickle.load(f)
 
-    def reset_to_initial_state(self) -> None:
-        """Reset the game to its initial state."""
-        self.state = GameState(player_position=DEFAULT_PLAYER_POSITION)
-        self.action_history.clear()
-
 
 class Inventory:
     """Inventory system for the game."""

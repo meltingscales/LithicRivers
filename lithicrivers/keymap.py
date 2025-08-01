@@ -220,10 +220,10 @@ class Keymap:
         """
         try:
             key = self.__getattribute__(key_name)
-        except AttributeError:
+        except AttributeError as err:
             raise AttributeError(
                 f"No key named {key_name} found.\nValid keys: {dir(self)}"
-            )
+            ) from err
 
         ke_char = Keymap.char_from_keyboard_event(ke)
         return ke_char == key.lower()

@@ -109,12 +109,7 @@ class ConfigManager:
     ) -> VectorN:
         """Get a vector setting, handling environment-specific values."""
         value = self.settings.get(category, {}).get(key, {})
-        if isinstance(value, dict):
-            # Environment-specific setting
-            coords = value.get(environment, [0, 0, 0])
-        else:
-            # Direct setting
-            coords = value
+        coords = value.get(environment, [0, 0, 0]) if isinstance(value, dict) else value
 
         return VectorN(*coords)
 

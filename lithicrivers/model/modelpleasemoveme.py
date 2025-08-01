@@ -225,5 +225,5 @@ class Viewport:
         return VectorN(self.get_width(), self.get_height())
 
 
-class StopGame(Exception):
+class StopGameError(Exception):
     pass

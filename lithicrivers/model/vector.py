@@ -1,4 +1,4 @@
-from typing import Any, Union
+from typing import Any, ClassVar, Union
 
 
 class VectorN:
@@ -6,7 +6,7 @@ class VectorN:
     Vector (point) that can be any dimension (X, or X/Y, or X/Y/Z, or X/Y/Z/W, etc)
     """
 
-    dim_pos_map = {"x": 0, "y": 1, "z": 2, "w": 3}
+    dim_pos_map: ClassVar[dict[str, int]] = {"x": 0, "y": 1, "z": 2, "w": 3}
 
     def __init__(self, *dimvals: int):
         # we're probably being passed a string, a list, or a VectorN object
