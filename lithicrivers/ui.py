@@ -910,18 +910,30 @@ class InputHandler:
     @classmethod
     def _start_npc_conversation(cls, game: Game, npc: NPC, root_page: RootPage):
         """Start a conversation with an NPC."""
-        conversation = npc.get_conversation()
+        cls._show_npc_conversation(game, npc, "greeting", root_page)
+    
+    @classmethod
+    def _show_npc_conversation(cls, game: Game, npc: NPC, topic: str, root_page: RootPage):
+        """Show an NPC conversation for a specific topic."""
+        conversation = npc.get_conversation(topic)
         
         def conversation_callback(selected_option):
+            global active_popup
             if selected_option:
                 # Handle the selected option
                 response = selected_option
-                next_topic = npc.handle_response(response, "greeting")
-                if next_topic:
-                    next_conversation = npc.get_conversation(next_topic)
-                    cls._show_interaction_result(npc.name, next_conversation["text"], root_page)
-            global active_popup
-            active_popup = None
+                next_topic = npc.handle_response(response, topic)
+                if next_topic and next_topic != topic:
+                    # Continue the conversation with the next topic
+                    # Clear the current popup first
+                    active_popup = None
+                    cls._show_npc_conversation(game, npc, next_topic, root_page)
+                else:
+                    # No next topic or same topic, close the conversation
+                    active_popup = None
+            else:
+                # No option selected, close the conversation
+                active_popup = None
         
         # Show the conversation in a popup
         from asciimatics.widgets import PopUpDialog
@@ -937,33 +949,7 @@ class InputHandler:
         # Add the popup to the current scene
         root_page._screen.current_scene.add_effect(popup)
     
-    @classmethod
-    def _continue_npc_conversation(cls, game: Game, npc: NPC, conversation: dict, root_page: RootPage):
-        """Continue an NPC conversation."""
-        def conversation_callback(selected_option):
-            if selected_option:
-                # Handle the selected option
-                response = selected_option
-                next_topic = npc.handle_response(response, "greeting")
-                if next_topic:
-                    next_conversation = npc.get_conversation(next_topic)
-                    cls._show_interaction_result(npc.name, next_conversation["text"], root_page)
-            global active_popup
-            active_popup = None
-        
-        # Show the conversation in a popup
-        from asciimatics.widgets import PopUpDialog
-        popup = PopUpDialog(
-            root_page._screen,
-            conversation["text"],
-            conversation["options"],
-            conversation_callback
-        )
-        # Track the active popup globally
-        global active_popup
-        active_popup = popup
-        # Add the popup to the current scene
-        root_page._screen.current_scene.add_effect(popup)
+
     
     @classmethod
     def _show_interaction_popup(cls, game: Game, adjacent_entities: List[Tuple[str, VectorN, str]], root_page: RootPage):
