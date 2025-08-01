@@ -14,7 +14,7 @@ from asciimatics.exceptions import NextScene, ResizeScreenError
 from lithicrivers.game_engine import GameEngine
 from lithicrivers.game import Game, Tiles, Items
 from lithicrivers.model.vector import VectorN
-from lithicrivers.constants import VEC_NORTH, VEC_SOUTH, VEC_WEST, VEC_EAST
+from lithicrivers.constants import VEC_NORTH, VEC_SOUTH, VEC_WEST, VEC_EAST, VEC_UP, VEC_DOWN, VEC_NORTHWEST, VEC_NORTHEAST, VEC_SOUTHWEST, VEC_SOUTHEAST
 from lithicrivers.ui import GameWidget, RootPage, HelpPage, InputHandler
 
 
@@ -268,12 +268,16 @@ class TestInputHandlerAdvanced(AdvancedUITestCase):
     
     def test_movement_input_handling(self):
         """Test that movement inputs are handled correctly."""
-        # Test each movement direction
+        # Test each movement direction with numpad keys
         movement_tests = [
-            (ord('w'), VEC_NORTH),
-            (ord('s'), VEC_SOUTH),
-            (ord('a'), VEC_WEST),
-            (ord('d'), VEC_EAST),
+            (ord('8'), VEC_NORTH),    # Numpad 8
+            (ord('2'), VEC_SOUTH),    # Numpad 2
+            (ord('4'), VEC_WEST),     # Numpad 4
+            (ord('6'), VEC_EAST),     # Numpad 6
+            (ord('7'), VEC_NORTHWEST), # Numpad 7
+            (ord('9'), VEC_NORTHEAST), # Numpad 9
+            (ord('1'), VEC_SOUTHWEST), # Numpad 1
+            (ord('3'), VEC_SOUTHEAST), # Numpad 3
         ]
         
         for key_code, expected_direction in movement_tests:
@@ -382,18 +386,11 @@ class TestUIIntegration(AdvancedUITestCase):
     """Integration tests for the complete UI system."""
     
     def test_complete_game_flow(self):
-        """Test a complete game flow with UI interactions."""
-        # Set up world at player's position
-        player_pos = self.game.player.position
-        self.game.world.set_tile(player_pos, Tiles.Dirt())
-        self.game.world.set_tile(player_pos + VectorN(1, 0, 0), Tiles.Tree())
-        self.game.world.set_tile(player_pos + VectorN(0, 1, 0), Tiles.Bedrock())
-        
-        # Create root page
+        """Test a complete game flow with movement and mining."""
         root_page = RootPage(self.mock_screen, self.game)
         
         # Simulate player movement
-        movement_event = self.create_keyboard_event(ord('d'))
+        movement_event = self.create_keyboard_event(ord('6'))  # Move east
         move_vec = InputHandler.handle_movement(movement_event)
         if move_vec:
             self.game.move_player(move_vec)
@@ -416,10 +413,14 @@ class TestUIIntegration(AdvancedUITestCase):
         
         # Test various input events
         events = [
-            (ord('w'), "north movement"),
-            (ord('s'), "south movement"),
-            (ord('a'), "west movement"),
-            (ord('d'), "east movement"),
+            (ord('8'), "north movement"),
+            (ord('2'), "south movement"),
+            (ord('4'), "west movement"),
+            (ord('6'), "east movement"),
+            (ord('7'), "northwest movement"),
+            (ord('9'), "northeast movement"),
+            (ord('1'), "southwest movement"),
+            (ord('3'), "southeast movement"),
             (ord(' '), "mining"),
             (ord('i'), "viewport up"),
             (ord('k'), "viewport down"),
@@ -434,7 +435,7 @@ class TestUIIntegration(AdvancedUITestCase):
                 event = self.create_keyboard_event(key_code)
                 
                 # Handle the event appropriately
-                if key_code in [ord('w'), ord('s'), ord('a'), ord('d')]:
+                if key_code in [ord('8'), ord('2'), ord('4'), ord('6'), ord('7'), ord('9'), ord('1'), ord('3')]:
                     result = InputHandler.handle_movement(event)
                     self.assertIsNotNone(result)
                 elif key_code == ord(' '):

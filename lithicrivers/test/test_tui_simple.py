@@ -10,9 +10,8 @@ from typing import List
 from lithicrivers.game_engine import GameEngine
 from lithicrivers.game import Game, Tiles, Items
 from lithicrivers.model.vector import VectorN
-from lithicrivers.constants import VEC_NORTH, VEC_SOUTH, VEC_WEST, VEC_EAST
-from lithicrivers.ui import InputHandler
-from lithicrivers.settings import KEYMAP
+from lithicrivers.constants import VEC_NORTH, VEC_SOUTH, VEC_WEST, VEC_EAST, VEC_UP, VEC_DOWN, VEC_NORTHWEST, VEC_NORTHEAST, VEC_SOUTHWEST, VEC_SOUTHEAST
+from lithicrivers.ui import GameWidget, RootPage, HelpPage, InputHandler, KEYMAP
 
 
 class SimpleTUITestCase(unittest.TestCase):
@@ -35,12 +34,16 @@ class TestInputHandlerSimple(SimpleTUITestCase):
     
     def test_movement_input_handling(self):
         """Test that movement inputs are handled correctly."""
-        # Test each movement direction
+        # Test each movement direction with numpad keys
         movement_tests = [
-            (ord('w'), VEC_NORTH),
-            (ord('s'), VEC_SOUTH),
-            (ord('a'), VEC_WEST),
-            (ord('d'), VEC_EAST),
+            (ord('8'), VEC_NORTH),    # Numpad 8
+            (ord('2'), VEC_SOUTH),    # Numpad 2
+            (ord('4'), VEC_WEST),     # Numpad 4
+            (ord('6'), VEC_EAST),     # Numpad 6
+            (ord('7'), VEC_NORTHWEST), # Numpad 7
+            (ord('9'), VEC_NORTHEAST), # Numpad 9
+            (ord('1'), VEC_SOUTHWEST), # Numpad 1
+            (ord('3'), VEC_SOUTHEAST), # Numpad 3
         ]
         
         for key_code, expected_direction in movement_tests:
@@ -49,9 +52,23 @@ class TestInputHandlerSimple(SimpleTUITestCase):
                 result = InputHandler.handle_movement(event)
                 self.assertEqual(result, expected_direction)
     
+    def test_character_movement_input_handling(self):
+        """Test that character-based movement inputs still work for up/down."""
+        # Test character-based movement for up/down (Q/E)
+        character_movement_tests = [
+            (ord('q'), VEC_UP),       # Q for up
+            (ord('e'), VEC_DOWN),     # E for down
+        ]
+        
+        for key_code, expected_direction in character_movement_tests:
+            with self.subTest(f"key_code={key_code}"):
+                event = self.create_keyboard_event(key_code)
+                result = InputHandler.handle_movement(event)
+                self.assertEqual(result, expected_direction)
+    
     def test_invalid_movement_input(self):
         """Test that invalid movement inputs return None."""
-        invalid_keys = [ord('x'), ord('y'), ord('z'), ord('1'), ord('2')]
+        invalid_keys = [ord('x'), ord('y'), ord('z'), ord('5'), ord('0')]  # 5 is center (no movement), 0 is not used
         
         for key_code in invalid_keys:
             with self.subTest(f"key_code={key_code}"):
@@ -151,7 +168,7 @@ class TestGameIntegrationSimple(SimpleTUITestCase):
         initial_pos = self.game.player.position
         
         # Move player east
-        event = self.create_keyboard_event(ord('d'))
+        event = self.create_keyboard_event(ord('6'))  # Numpad 6 for east
         move_vec = InputHandler.handle_movement(event)
         self.game.move_player(move_vec)
         
@@ -201,18 +218,33 @@ class TestKeymapSimple(SimpleTUITestCase):
     
     def test_keymap_matches(self):
         """Test that keymap matching works correctly."""
-        # Test movement keys
-        movement_keys = [
-            (ord('w'), 'MOVE_NORTH'),
-            (ord('a'), 'MOVE_WEST'),
-            (ord('s'), 'MOVE_SOUTH'),
-            (ord('d'), 'MOVE_EAST'),
+        # Test character-based movement keys (Q/E for up/down)
+        character_movement_keys = [
+            (ord('q'), 'MOVE_UP'),
+            (ord('e'), 'MOVE_DOWN'),
         ]
         
-        for key_code, key_name in movement_keys:
+        for key_code, key_name in character_movement_keys:
             with self.subTest(f"key_name={key_name}"):
                 event = self.create_keyboard_event(key_code)
                 self.assertTrue(KEYMAP.matches(key_name, event))
+    
+    def test_keymap_numpad_movement(self):
+        """Test that numpad movement keys work correctly."""
+        # Test numpad movement keys
+        numpad_movement_keys = [
+            (ord('8'), 'MOVE_NORTH'),
+            (ord('2'), 'MOVE_SOUTH'),
+            (ord('4'), 'MOVE_WEST'),
+            (ord('6'), 'MOVE_EAST'),
+        ]
+        
+        for key_code, key_name in numpad_movement_keys:
+            with self.subTest(f"key_name={key_name}"):
+                event = self.create_keyboard_event(key_code)
+                # Numpad keys are handled differently, so we test the movement handler directly
+                result = InputHandler.handle_movement(event)
+                self.assertIsNotNone(result)
     
     def test_keymap_mine_key(self):
         """Test that mining key is mapped correctly."""

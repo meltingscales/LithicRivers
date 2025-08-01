@@ -2,7 +2,11 @@ import logging
 from typing import Union, List
 from asciimatics.event import KeyboardEvent
 
-from lithicrivers.constants import VEC_DOWN, VEC_UP, VEC_NORTH, VEC_SOUTH, VEC_WEST, VEC_EAST
+from lithicrivers.constants import (
+    VEC_DOWN, VEC_UP, VEC_NORTH, VEC_SOUTH, VEC_WEST, VEC_EAST,
+    VEC_NORTHWEST, VEC_NORTHEAST, VEC_SOUTHWEST, VEC_SOUTHEAST,
+    NUMPAD_7, NUMPAD_8, NUMPAD_9, NUMPAD_4, NUMPAD_6, NUMPAD_1, NUMPAD_2, NUMPAD_3, NUMPAD_5
+)
 from lithicrivers.config_manager import config_manager
 from lithicrivers.textutil import associated
 
@@ -17,14 +21,16 @@ class Keymap:
         # Load keybinds from config
         self._load_keybinds()
         
-        # Build movement vector map
-        self.MOVEMENT_VECTOR_MAP = {
-            self.MOVE_NORTH: VEC_NORTH,
-            self.MOVE_WEST: VEC_WEST,
-            self.MOVE_SOUTH: VEC_SOUTH,
-            self.MOVE_EAST: VEC_EAST,
-            self.MOVE_UP: VEC_UP,
-            self.MOVE_DOWN: VEC_DOWN,
+        # Build numpad movement vector map
+        self.NUMPAD_MOVEMENT_VECTOR_MAP = {
+            NUMPAD_8: VEC_NORTH,
+            NUMPAD_2: VEC_SOUTH,
+            NUMPAD_4: VEC_WEST,
+            NUMPAD_6: VEC_EAST,
+            NUMPAD_7: VEC_NORTHWEST,
+            NUMPAD_9: VEC_NORTHEAST,
+            NUMPAD_1: VEC_SOUTHWEST,
+            NUMPAD_3: VEC_SOUTHEAST,
         }
     
     def _load_keybinds(self):
@@ -48,19 +54,45 @@ class Keymap:
         
         # Action keys
         self.MINE = config_manager.get_keybind("action", "MINE")
+        
+        # Build movement vector map with both character and numpad support
+        self.MOVEMENT_VECTOR_MAP = {}
+        
+        # Add character-based movement
+        if self.MOVE_NORTH and self.MOVE_NORTH.isalpha():
+            self.MOVEMENT_VECTOR_MAP[self.MOVE_NORTH] = VEC_NORTH
+        if self.MOVE_WEST and self.MOVE_WEST.isalpha():
+            self.MOVEMENT_VECTOR_MAP[self.MOVE_WEST] = VEC_WEST
+        if self.MOVE_SOUTH and self.MOVE_SOUTH.isalpha():
+            self.MOVEMENT_VECTOR_MAP[self.MOVE_SOUTH] = VEC_SOUTH
+        if self.MOVE_EAST and self.MOVE_EAST.isalpha():
+            self.MOVEMENT_VECTOR_MAP[self.MOVE_EAST] = VEC_EAST
+        if self.MOVE_UP and self.MOVE_UP.isalpha():
+            self.MOVEMENT_VECTOR_MAP[self.MOVE_UP] = VEC_UP
+        if self.MOVE_DOWN and self.MOVE_DOWN.isalpha():
+            self.MOVEMENT_VECTOR_MAP[self.MOVE_DOWN] = VEC_DOWN
     
     def reload_keybinds(self):
         """Reload keybinds from config files."""
         config_manager.keybinds = config_manager._load_keybinds()
         self._load_keybinds()
-        self.MOVEMENT_VECTOR_MAP = {
-            self.MOVE_NORTH: VEC_NORTH,
-            self.MOVE_WEST: VEC_WEST,
-            self.MOVE_SOUTH: VEC_SOUTH,
-            self.MOVE_EAST: VEC_EAST,
-            self.MOVE_UP: VEC_UP,
-            self.MOVE_DOWN: VEC_DOWN,
-        }
+        
+        # Rebuild movement vector map
+        self.MOVEMENT_VECTOR_MAP = {}
+        
+        # Add character-based movement
+        if self.MOVE_NORTH and self.MOVE_NORTH.isalpha():
+            self.MOVEMENT_VECTOR_MAP[self.MOVE_NORTH] = VEC_NORTH
+        if self.MOVE_WEST and self.MOVE_WEST.isalpha():
+            self.MOVEMENT_VECTOR_MAP[self.MOVE_WEST] = VEC_WEST
+        if self.MOVE_SOUTH and self.MOVE_SOUTH.isalpha():
+            self.MOVEMENT_VECTOR_MAP[self.MOVE_SOUTH] = VEC_SOUTH
+        if self.MOVE_EAST and self.MOVE_EAST.isalpha():
+            self.MOVEMENT_VECTOR_MAP[self.MOVE_EAST] = VEC_EAST
+        if self.MOVE_UP and self.MOVE_UP.isalpha():
+            self.MOVEMENT_VECTOR_MAP[self.MOVE_UP] = VEC_UP
+        if self.MOVE_DOWN and self.MOVE_DOWN.isalpha():
+            self.MOVEMENT_VECTOR_MAP[self.MOVE_DOWN] = VEC_DOWN
     
     def get_valid_key_names(self) -> List[str]:
         """Get list of valid key names."""
@@ -100,6 +132,11 @@ class Keymap:
                 "Could not handle this KeyboardEvent -- {} -- probably a special key: {}".format(ke.key_code, ke, ))
             return None
     
+    @staticmethod
+    def key_code_from_keyboard_event(ke: KeyboardEvent) -> Union[None, int]:
+        """Extract key code from keyboard event for special keys like numpad."""
+        return ke.key_code
+    
     def matches(self, key_name: str, ke: KeyboardEvent) -> bool:
         """
         Does this KeyboardEvent match a name of a key we have registered?
@@ -114,6 +151,24 @@ class Keymap:
         
         ke_char = Keymap.char_from_keyboard_event(ke)
         return ke_char == key.lower()
+    
+    def matches_numpad(self, ke: KeyboardEvent) -> bool:
+        """
+        Check if the keyboard event is a numpad movement key.
+        :param ke: KeyboardEvent.
+        :return: boolean
+        """
+        key_code = Keymap.key_code_from_keyboard_event(ke)
+        return key_code in self.NUMPAD_MOVEMENT_VECTOR_MAP
+    
+    def get_numpad_movement_vector(self, ke: KeyboardEvent):
+        """
+        Get movement vector for numpad key.
+        :param ke: KeyboardEvent.
+        :return: VectorN or None
+        """
+        key_code = Keymap.key_code_from_keyboard_event(ke)
+        return self.NUMPAD_MOVEMENT_VECTOR_MAP.get(key_code)
     
     def update_keybind(self, key_name: str, value: str):
         """Update a keybind and save to config file."""
