@@ -50,7 +50,7 @@ class TestViewportScaling(unittest.TestCase):
         # Test with different scales
         for scale in [1, 2, 3]:
             self.game.viewport.scale = scale
-            widget = GameWidget(self.game)
+            GameWidget(self.game)
 
             # Calculate expected dimensions
             expected_height = self.game.viewport.get_height() * scale + 2

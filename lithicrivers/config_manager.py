@@ -2,7 +2,7 @@ import json
 import logging
 import sys
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 from lithicrivers.model.vector import VectorN
 
@@ -31,7 +31,7 @@ class ConfigManager:
         config_dir.mkdir(exist_ok=True)
         return config_dir
 
-    def _load_keybinds(self) -> Dict[str, Any]:
+    def _load_keybinds(self) -> dict[str, Any]:
         """Load keybinds from JSON file or create default if file doesn't exist."""
         default_keybinds = {
             "movement": {
@@ -53,7 +53,7 @@ class ConfigManager:
 
         return self._load_json_file(self.keybinds_file, default_keybinds)
 
-    def _load_settings(self) -> Dict[str, Any]:
+    def _load_settings(self) -> dict[str, Any]:
         """Load settings from JSON file or create default if file doesn't exist."""
         default_settings = {
             "game": {
@@ -77,8 +77,8 @@ class ConfigManager:
         return self._load_json_file(self.settings_file, default_settings)
 
     def _load_json_file(
-        self, file_path: Path, default_data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, file_path: Path, default_data: dict[str, Any]
+    ) -> dict[str, Any]:
         """Load JSON file or create default if file doesn't exist."""
         try:
             if file_path.exists():

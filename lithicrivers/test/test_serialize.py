@@ -17,16 +17,16 @@ class TestSerialize(unittest.TestCase):
         if os.path.exists(filename):
             os.remove(filename)
 
-    def testSimpleSer(self):
+    def test_simple_ser(self):
         for i in range(-5, 5):
-            somePos = VectorN(i, i, i)
-            someTile = weighted_choice(
-                [1, 1, 1], [Tiles.Tree(), Tiles.Gold_Ore(), Tiles.Bedrock()]
+            some_pos = VectorN(i, i, i)
+            some_tile = weighted_choice(
+                [1, 1, 1], [Tiles.tree(), Tiles.gold_ore(), Tiles.bedrock()]
             )
-            someTile.description = "Wow serialize test!!"
+            some_tile.description = "Wow serialize test!!"
 
             wd = World.gen_random_world_data(radius=VectorN(5, 5, 5))
-            wd.set_tile(somePos, someTile)
+            wd.set_tile(some_pos, some_tile)
             # make a world and edit a random block
 
             # file shoudl not exist
@@ -36,10 +36,10 @@ class TestSerialize(unittest.TestCase):
             wd.serialize(filename)
 
             # deserialize it
-            unserWD = WorldData.deserialize(filename)
+            unser_wd = WorldData.deserialize(filename)
 
             # assert the block we changed exists
-            self.assertEqual(unserWD.get_tile(somePos), someTile)
+            self.assertEqual(unser_wd.get_tile(some_pos), some_tile)
 
             # delete file
             os.remove(filename)

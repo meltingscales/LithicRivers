@@ -4,7 +4,7 @@ This module provides comprehensive testing for TUI components using realistic mo
 """
 
 import unittest
-from typing import Any, Dict, List
+from typing import Any, Optional
 from unittest.mock import Mock
 
 import asciimatics.screen
@@ -97,7 +97,7 @@ class AdvancedMockCanvas:
                 if 0 <= x + i < self.width:
                     self.buffer[y][x + i] = char
 
-    def get_content(self) -> List[List[str]]:
+    def get_content(self) -> list[list[str]]:
         """Get the current content of the canvas."""
         return [row[:] for row in self.buffer]
 
@@ -110,7 +110,7 @@ class AdvancedMockCanvas:
         self.clear_calls += 1
         self.buffer = [[" " for _ in range(self.width)] for _ in range(self.height)]
 
-    def get_paint_calls(self) -> List[Dict[str, Any]]:
+    def get_paint_calls(self) -> list[dict[str, Any]]:
         """Get all paint calls made to this canvas."""
         return self.paint_calls.copy()
 
@@ -179,7 +179,7 @@ class AdvancedUITestCase(unittest.TestCase):
         content = self.get_rendered_content()
         self.assertNotIn(text, content, f"Expected '{text}' not in content:\n{content}")
 
-    def assert_paint_called_with(self, text: str, x: int = None, y: int = None):
+    def assert_paint_called_with(self, text: str, x: Optional[int] = None, y: Optional[int] = None):
         """Assert that paint was called with specific parameters."""
         calls = self.mock_canvas.get_paint_calls()
         found = False
@@ -242,8 +242,8 @@ class TestGameWidgetAdvanced(AdvancedUITestCase):
         # Set up initial world
         self.create_test_world(
             {
-                "0,0,0": Tiles.Dirt(),
-                "1,0,0": Tiles.Tree(),
+                "0,0,0": Tiles.dirt(),
+                "1,0,0": Tiles.tree(),
             }
         )
 
@@ -295,7 +295,7 @@ class TestInputHandlerAdvanced(AdvancedUITestCase):
         """Test that mining inputs are handled correctly."""
         # Set up a mineable tile at player's position (Gold Ore is mineable)
         player_pos = self.game.player.position
-        self.game.world.set_tile(player_pos, Tiles.Gold_Ore())
+        self.game.world.set_tile(player_pos, Tiles.gold_ore())
 
         # Create mining event (use 'u' key which is mapped to MINE)
         event = self.create_keyboard_event(ord("u"))
@@ -306,7 +306,7 @@ class TestInputHandlerAdvanced(AdvancedUITestCase):
 
         # Check that tile was mined (should be replaced with Dirt)
         tile = self.game.get_tile_at_player_feet()
-        self.assertEqual(tile.tileid, Tiles.Dirt().tileid)
+        self.assertEqual(tile.tileid, Tiles.dirt().tileid)
 
     def test_viewport_input_handling(self):
         """Test that viewport inputs are handled correctly."""
@@ -404,7 +404,7 @@ class TestUIIntegration(AdvancedUITestCase):
 
         # Check that tile was mined (Tree should become Dirt)
         tile = self.game.get_tile_at_player_feet()
-        self.assertEqual(tile, Tiles.Dirt())
+        self.assertEqual(tile, Tiles.dirt())
 
     def test_ui_responsiveness(self):
         """Test that UI responds to various input events."""
@@ -464,7 +464,7 @@ class TestUIPerformance(AdvancedUITestCase):
         # Create a larger world
         for x in range(-5, 6):
             for y in range(-5, 6):
-                self.game.world.set_tile(VectorN(x, y, 0), Tiles.Dirt())
+                self.game.world.set_tile(VectorN(x, y, 0), Tiles.dirt())
 
         widget = GameWidget(self.game)
         widget._frame = self.mock_frame

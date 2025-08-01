@@ -35,7 +35,6 @@
 
 # 2025 todo
 
-- use ruff for linting/formatting.
 - add a "fog of war" feature that obscures unvisited sections of the world, and add a limit to player vision. previously-visited sections of the world should appear as grayscale.
 - add multiple dimensions (like space, the void, etc) to the game.
 - add the ability to save (or auto-save) to a world file. just use serialization now, but later, we should optimize it like how Minecraft does - chunks, dimensions, and a custom binary file format with auto-saving and multi-threaded loading/saving.

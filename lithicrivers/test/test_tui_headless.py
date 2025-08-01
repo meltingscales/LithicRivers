@@ -154,7 +154,7 @@ class TestHeadlessInputHandler(HeadlessTUITestCase):
         """Test mining input handling in headless mode."""
         # Set up a mineable tile at player's position
         player_pos = self.game.player.position
-        self.game.world.set_tile(player_pos, Tiles.Tree())
+        self.game.world.set_tile(player_pos, Tiles.tree())
 
         # Create mining event
         event = self.create_keyboard_event(ord("u"))  # Mining key
@@ -165,7 +165,7 @@ class TestHeadlessInputHandler(HeadlessTUITestCase):
 
         # Check that tile was mined (Tree should become Dirt)
         tile = self.game.get_tile_at_player_feet()
-        self.assertEqual(tile, Tiles.Dirt())
+        self.assertEqual(tile, Tiles.dirt())
 
     def test_viewport_input_headless(self):
         """Test viewport input handling in headless mode."""
@@ -239,9 +239,9 @@ class TestHeadlessIntegration(HeadlessTUITestCase):
         """Test a complete game flow in headless mode."""
         # Set up world at player's position
         player_pos = self.game.player.position
-        self.game.world.set_tile(player_pos, Tiles.Dirt())
-        self.game.world.set_tile(player_pos + VectorN(1, 0, 0), Tiles.Tree())
-        self.game.world.set_tile(player_pos + VectorN(0, 1, 0), Tiles.Bedrock())
+        self.game.world.set_tile(player_pos, Tiles.dirt())
+        self.game.world.set_tile(player_pos + VectorN(1, 0, 0), Tiles.tree())
+        self.game.world.set_tile(player_pos + VectorN(0, 1, 0), Tiles.bedrock())
 
         screen = self.create_headless_screen()
 
@@ -266,7 +266,7 @@ class TestHeadlessIntegration(HeadlessTUITestCase):
 
             # Check that tile was mined (Tree should become Dirt)
             tile = self.game.get_tile_at_player_feet()
-            self.assertEqual(tile, Tiles.Dirt())
+            self.assertEqual(tile, Tiles.dirt())
 
         finally:
             screen.close()
@@ -337,7 +337,7 @@ class TestHeadlessPerformance(HeadlessTUITestCase):
             # Create a larger world
             for x in range(-5, 6):
                 for y in range(-5, 6):
-                    self.game.world.set_tile(VectorN(x, y, 0), Tiles.Dirt())
+                    self.game.world.set_tile(VectorN(x, y, 0), Tiles.dirt())
 
             widget = GameWidget(self.game)
             widget._frame = Mock()

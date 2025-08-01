@@ -13,7 +13,7 @@ class TestDialogSystem(unittest.TestCase):
 
     def test_npc_creation(self):
         """Test that NPCs can be created with conversations."""
-        npc = Entities.StarterNPC()
+        npc = Entities.starter_npc()
         self.assertIsInstance(npc, NPC)
         self.assertEqual(npc.name, "Elder Oak")
         self.assertEqual(npc.color, "cyan")
@@ -27,7 +27,7 @@ class TestDialogSystem(unittest.TestCase):
 
     def test_npc_conversation_flow(self):
         """Test NPC conversation flow."""
-        npc = Entities.StarterNPC()
+        npc = Entities.starter_npc()
 
         # Test initial conversation
         conv = npc.get_conversation("greeting")
@@ -43,8 +43,8 @@ class TestDialogSystem(unittest.TestCase):
 
     def test_interactive_entity_creation(self):
         """Test that interactive entities can be created."""
-        entity1 = Entities.TestEntity1()
-        entity2 = Entities.TestEntity2()
+        entity1 = Entities.test_entity1()
+        entity2 = Entities.test_entity2()
 
         self.assertIsInstance(entity1, InteractiveEntity)
         self.assertIsInstance(entity2, InteractiveEntity)
@@ -83,7 +83,7 @@ class TestDialogSystem(unittest.TestCase):
 
         # Check that the NPC is in the adjacent list
         npc_found = False
-        for name, pos, color in adjacent:
+        for name, _pos, _color in adjacent:
             if name == "Elder Oak":
                 npc_found = True
                 break
@@ -91,8 +91,8 @@ class TestDialogSystem(unittest.TestCase):
 
     def test_entity_rendering_colors(self):
         """Test that entities render with correct colors."""
-        entity1 = Entities.TestEntity1()
-        entity2 = Entities.TestEntity2()
+        entity1 = Entities.test_entity1()
+        entity2 = Entities.test_entity2()
 
         # Test sprite rendering
         sprite1 = entity1.render_sprite(scale=1)
@@ -108,8 +108,8 @@ class TestDialogSystem(unittest.TestCase):
 
     def test_interaction_text(self):
         """Test that interactive entities have proper interaction text."""
-        entity1 = Entities.TestEntity1()
-        entity2 = Entities.TestEntity2()
+        entity1 = Entities.test_entity1()
+        entity2 = Entities.test_entity2()
 
         self.assertIn("crystal shard", entity1.interact().lower())
         self.assertIn("ancient relic", entity2.interact().lower())

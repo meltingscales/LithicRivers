@@ -5,7 +5,7 @@ This module provides seeded randomness for reproducible world generation.
 
 import random
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from lithicrivers.game import Tile, Tiles
 from lithicrivers.model.vector import VectorN
@@ -53,7 +53,7 @@ class SeededWorldGenerator:
         self.rng = random.Random(seed)
 
     def seeded_weighted_choice(
-        self, weights: List[float], choices: List[Any], context: str = ""
+        self, weights: list[float], choices: list[Any], context: str = ""
     ) -> Any:
         """
         Make a weighted choice using the seeded random number generator.
@@ -103,19 +103,19 @@ class SeededWorldGenerator:
         # Generate based on height (z-coordinate)
         if position.z > 0:
             # Sky level - always clouds
-            return Tiles.Cloud()
+            return Tiles.cloud()
         elif position.z < 0:
             # Underground - weighted choice between bedrock, dirt, and rare items
             weights = [1, 0.2, 0.05]
-            choices = [Tiles.Bedrock(), Tiles.Dirt(), Tiles.Gold_Ore()]
+            choices = [Tiles.bedrock(), Tiles.dirt(), Tiles.gold_ore()]
             return local_rng.choices(choices, weights=weights, k=1)[0]
         else:
             # Surface level - weighted choice between trees, dirt, and rare items
             weights = [5, 100, 1]
-            choices = [Tiles.Tree(), Tiles.Dirt(), Tiles.Gold_Ore()]
+            choices = [Tiles.tree(), Tiles.dirt(), Tiles.gold_ore()]
             return local_rng.choices(choices, weights=weights, k=1)[0]
 
-    def generate_world_data(self, radius: VectorN) -> Dict[str, Tile]:
+    def generate_world_data(self, radius: VectorN) -> dict[str, Tile]:
         """
         Generate world data for the given radius using seeded randomness.
 
@@ -152,7 +152,7 @@ def create_world_generator(seed: Optional[int] = None) -> SeededWorldGenerator:
 
 def generate_world_with_seed(
     radius: VectorN, seed: Optional[int] = None
-) -> Dict[str, Tile]:
+) -> dict[str, Tile]:
     """
     Generate world data with a specific seed.
 

@@ -8,7 +8,7 @@ from lithicrivers.model.vector import VectorN
 
 
 class TestVectorN(unittest.TestCase):
-    def testSimple(self):
+    def test_simple(self):
         # foosdfasdf
         v1 = VectorN(1, 2, 0)
         self.assertEqual(v1.x, 1)
@@ -20,15 +20,15 @@ class TestVectorN(unittest.TestCase):
         self.assertEqual(v1[1], 2)
         self.assertEqual(v1[2], 0)
 
-        daError = "Didn't throw error."
+        da_error = "Didn't throw error."
         try:
             self.assertEqual(v1[3], None)
         except IndexError as e:
-            daError = e
+            da_error = e
         finally:
-            self.assertIsInstance(daError, IndexError)
+            self.assertIsInstance(da_error, IndexError)
 
-    def testSerialize(self):
+    def test_serialize(self):
         v1 = VectorN(1, 2, 3, 4)
         self.assertEqual(v1.serialize(), "1,2,3,4")
         self.assertEqual(VectorN.deserialize("1,2,3,4"), v1)
@@ -37,14 +37,14 @@ class TestVectorN(unittest.TestCase):
         self.assertEqual(v2.serialize(), "1")
         self.assertEqual(VectorN.deserialize("1"), v2)
 
-    def testMath(self):
+    def test_math(self):
         v1 = VectorN(1, 2, 3)
 
         self.assertEqual(v1 + v1, VectorN(2, 4, 6))
         self.assertEqual(v1 - v1, VectorN(0, 0, 0))
         self.assertEqual(v1 * v1, VectorN(1, 4, 9))
 
-    def testVectorTrim(self):
+    def test_vector_trim(self):
         v1 = VectorN(1, 2, 3).trim(2)
         v2 = VectorN(1, 2)
 
@@ -53,7 +53,7 @@ class TestVectorN(unittest.TestCase):
 
         self.assertEqual(v1, v2)
 
-    def testVecNBoundingBox(self):
+    def test_vec_n_bounding_box(self):
         v1 = VectorN(1, 2)
         v2 = VectorN(6, 7)
 

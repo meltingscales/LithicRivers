@@ -103,11 +103,11 @@ class TestSeededWorldGenerator(unittest.TestCase):
         underground_tile = generator.generate_tile_for_position(underground_pos)
 
         # Sky should always be clouds
-        self.assertEqual(sky_tile, Tiles.Cloud())
+        self.assertEqual(sky_tile, Tiles.cloud())
 
         # Surface and underground should be different from sky
-        self.assertNotEqual(surface_tile, Tiles.Cloud())
-        self.assertNotEqual(underground_tile, Tiles.Cloud())
+        self.assertNotEqual(surface_tile, Tiles.cloud())
+        self.assertNotEqual(underground_tile, Tiles.cloud())
 
     def test_generate_world_data(self):
         """Test generating world data with seeded randomness."""

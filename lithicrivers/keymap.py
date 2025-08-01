@@ -1,5 +1,5 @@
 import logging
-from typing import List, Union
+from typing import Union
 
 from asciimatics.event import KeyboardEvent
 
@@ -116,7 +116,7 @@ class Keymap:
         if self.MOVE_DOWN and self.MOVE_DOWN.isalpha():
             self.MOVEMENT_VECTOR_MAP[self.MOVE_DOWN] = VEC_DOWN
 
-    def get_valid_key_names(self) -> List[str]:
+    def get_valid_key_names(self) -> list[str]:
         """Get list of valid key names."""
         if self._get_valid_key_names_cache is None:
             all_names = dir(self)

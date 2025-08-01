@@ -16,12 +16,12 @@ class RenderStuff(unittest.TestCase):
 
         self.assertEqual("???\n???\n???", generate_sprite_repeat("?", 3))
 
-    def testSimpleRender(self):
-        self.assertEqual(Tiles.Gold_Ore().render_sprite(), "?")
-        self.assertEqual(Tiles.Gold_Ore().render_sprite(1), "?")
-        self.assertEqual(Tiles.Gold_Ore().render_sprite(2), "??\n??")
+    def test_simple_render(self):
+        self.assertEqual(Tiles.gold_ore().render_sprite(), "?")
+        self.assertEqual(Tiles.gold_ore().render_sprite(1), "?")
+        self.assertEqual(Tiles.gold_ore().render_sprite(2), "??\n??")
 
-    def testColorExpansionForScaledSprites(self):
+    def test_color_expansion_for_scaled_sprites(self):
         """Test that color data is properly expanded for scaled sprites."""
         # Create a simple rendered data with 2x2 tiles at scale 2
         render_data = [["a", "b"], ["c", "d"]]
@@ -42,12 +42,12 @@ class RenderStuff(unittest.TestCase):
         self.assertEqual(rendered_data.get_color_at(0, 1), (3, 0, 0))
         self.assertEqual(rendered_data.get_color_at(1, 1), (4, 0, 0))
 
-    def testSortaSimpleRender(self):
-        someRender = RenderedData(render_data=[["x", "y"], ["z", "R"]], scale=1)
+    def test_sorta_simple_render(self):
+        some_render = RenderedData(render_data=[["x", "y"], ["z", "R"]], scale=1)
 
-        self.assertEqual(someRender.as_string(), "xy\nzR")
+        self.assertEqual(some_render.as_string(), "xy\nzR")
 
-    def testSortaSimpleRenderReverse(self):
+    def test_sorta_simple_render_reverse(self):
         return None  # this disables the test
         self.assertEqual(
             RenderedData.from_string("xy\nzR", scale=1),
@@ -59,34 +59,34 @@ class RenderStuff(unittest.TestCase):
             [["xx\nxx", "yy\nyy"], ["zz\nzz", "RR\nRR"]],
         )
 
-    def testRenderGame(self):
-        someGame = Game()
-        someGame.world = WorldData(
+    def test_render_game(self):
+        some_game = Game()
+        some_game.world = WorldData(
             tile_data={
-                "0,0,0": Tiles.Dirt(),
-                "1,0,0": Tiles.Gold_Ore(),
-                "0,1,0": Tiles.Dirt(),
-                "1,1,0": Tiles.Dirt(),
+                "0,0,0": Tiles.dirt(),
+                "1,0,0": Tiles.gold_ore(),
+                "0,1,0": Tiles.dirt(),
+                "1,1,0": Tiles.dirt(),
             }
         )
 
         # Move player out of the viewport so tiles are visible
-        someGame.player.position = VectorN(5, 5, 0)
+        some_game.player.position = VectorN(5, 5, 0)
 
-        daScale = 2
+        da_scale = 2
 
-        renderedViewport = someGame.render_world_viewport(
+        rendered_viewport = some_game.render_world_viewport(
             viewport=Viewport(
-                top_left=VectorN(0, 0), lower_right=VectorN(1, 1), scale=daScale
+                top_left=VectorN(0, 0), lower_right=VectorN(1, 1), scale=da_scale
             )
         )
 
         self.assertEqual(
             ",.??\n.,??\n,.,.\n.,.,",
-            renderedViewport.as_string(),
+            rendered_viewport.as_string(),
         )
 
-    def testViewportSizing(self):
+    def test_viewport_sizing(self):
         """Test that viewport sizing works correctly."""
         from lithicrivers.model.modelpleasemoveme import Viewport
         from lithicrivers.model.vector import VectorN
@@ -114,7 +114,7 @@ class RenderStuff(unittest.TestCase):
         self.assertEqual(scaled_viewport.get_width(), 20)  # abs(10 - (-10)) = 20
         self.assertEqual(scaled_viewport.get_height(), 20)
 
-    def testDynamicViewportSizing(self):
+    def test_dynamic_viewport_sizing(self):
         """Test that viewport sizing dynamically adjusts based on available space."""
         from unittest.mock import Mock
 
@@ -131,7 +131,7 @@ class RenderStuff(unittest.TestCase):
         # Test small screen (80x24)
         small_screen = create_mock_screen(80, 24)
         game = Game()
-        root_page = RootPage(small_screen, game)
+        RootPage(small_screen, game)
 
         # Check that viewport was adjusted for small screen
         # Small screen should have smaller viewport than large screen
@@ -141,7 +141,7 @@ class RenderStuff(unittest.TestCase):
         # Test large screen (160x48)
         large_screen = create_mock_screen(160, 48)
         game_large = Game()
-        root_page_large = RootPage(large_screen, game_large)
+        RootPage(large_screen, game_large)
 
         # Check that viewport was adjusted for large screen
         # Large screen should have larger viewport
@@ -156,7 +156,7 @@ class RenderStuff(unittest.TestCase):
         # Even with a very small screen, viewport should be at least 5x5
         tiny_screen = create_mock_screen(40, 12)
         game_tiny = Game()
-        root_page_tiny = RootPage(tiny_screen, game_tiny)
+        RootPage(tiny_screen, game_tiny)
 
         tiny_viewport_width = game_tiny.viewport.get_width()
         tiny_viewport_height = game_tiny.viewport.get_height()
@@ -165,7 +165,7 @@ class RenderStuff(unittest.TestCase):
         self.assertGreaterEqual(tiny_viewport_width, 5)
         self.assertGreaterEqual(tiny_viewport_height, 5)
 
-    def testOnDemandTileGeneration(self):
+    def test_on_demand_tile_generation(self):
         """Test that tiles are generated on-demand when accessed outside the initial world area."""
         from lithicrivers.game import Game
         from lithicrivers.model.vector import VectorN

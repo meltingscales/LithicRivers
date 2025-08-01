@@ -5,11 +5,14 @@ This module is designed to be easily testable and manipulatable programmatically
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional, Protocol
+from typing import TYPE_CHECKING, Optional, Protocol
 
 from lithicrivers.model.modelpleasemoveme import RenderedData, Viewport
 from lithicrivers.model.vector import VectorN
 from lithicrivers.settings import DEFAULT_PLAYER_POSITION, DEFAULT_VIEWPORT
+
+if TYPE_CHECKING:
+    from lithicrivers.game import Item, Tile
 
 
 @dataclass
@@ -20,8 +23,8 @@ class GameState:
     player_health: int = 100
     player_stamina: int = 100
     viewport: Viewport = field(default_factory=lambda: DEFAULT_VIEWPORT)
-    world_data: Dict[str, "Tile"] = field(default_factory=dict)
-    entities: List["Entity"] = field(default_factory=list)
+    world_data: dict[str, "Tile"] = field(default_factory=dict)
+    entities: list["Entity"] = field(default_factory=list)
     inventory: "Inventory" = field(default_factory=lambda: Inventory())
 
     def copy(self) -> "GameState":
@@ -91,7 +94,7 @@ class MineAction:
             # Replace with empty tile
             from lithicrivers.game import Tiles
 
-            new_state.world_data[tile_key] = Tiles.Empty()
+            new_state.world_data[tile_key] = Tiles.empty()
 
         return new_state
 
@@ -121,7 +124,7 @@ class GameEngine:
     ):
         self.state = initial_state or GameState(player_position=DEFAULT_PLAYER_POSITION)
         self.seed = seed
-        self.action_history: List[GameAction] = []
+        self.action_history: list[GameAction] = []
 
     def reset_to_initial_state(self) -> None:
         """Reset the game to its initial state."""
@@ -192,7 +195,7 @@ class GameEngine:
 class Inventory:
     """Inventory system for the game."""
 
-    def __init__(self, items: List["Item"] = None):
+    def __init__(self, items: Optional[list["Item"]] = None):
         self.items = items or []
 
     def add_item(self, item: "Item") -> None:
@@ -203,7 +206,7 @@ class Inventory:
         """Create a copy of this inventory."""
         return Inventory(items=self.items.copy())
 
-    def count_items(self) -> Dict[str, int]:
+    def count_items(self) -> dict[str, int]:
         """Count items by name."""
         counts = {}
         for item in self.items:
@@ -235,4 +238,3 @@ class Entity:
 
 
 # Import these here to avoid circular imports
-from lithicrivers.game import Item, Tile
