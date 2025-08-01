@@ -3,13 +3,14 @@ import pickle
 import pprint
 import random
 from pathlib import Path
-from typing import List, Dict, Union, Optional
+from typing import List, Dict, Union, Optional, Tuple
 
 from lithicrivers.constants import VEC_NORTH, VEC_SOUTH, VEC_WEST, VEC_EAST
 from lithicrivers.model.generictype import T
 from lithicrivers.model.modelpleasemoveme import Viewport, RenderedData
 from lithicrivers.model.vector import VectorN
 from lithicrivers.settings import DEFAULT_SIZE_RADIUS, DEFAULT_VIEWPORT, DEFAULT_PLAYER_POSITION
+from lithicrivers.textutil import get_color_for_tile, get_color_for_item, COLOR_MANAGER
 
 
 def generate_sprite_repeat(char, scale: int = 1):
@@ -161,6 +162,33 @@ class Inventory:
             s += '{}={}, '.format(k, v)
 
         return s[0:len(s) - 2]  # wow you lazy bastard, you cant even fucking format a string???? AAFSDFASDFADFAFSD
+    
+    def colored_summary(self) -> str:
+        """Generate a colored summary of inventory items."""
+        s = ''
+        
+        for k, v in self.count_items().items():
+            # Get color for this item
+            item_color = get_color_for_item(k)
+            color_name = self._get_color_name(item_color)
+            s += f'{k}={v} ({color_name}), '
+        
+        return s[0:len(s) - 2] if s else "Empty"
+    
+    def _get_color_name(self, color: Tuple[int, int, int]) -> str:
+        """Get a human-readable name for a color."""
+        color_names = {
+            (1, 0, 0): "red",
+            (2, 0, 0): "green", 
+            (3, 0, 0): "yellow",
+            (4, 0, 0): "blue",
+            (5, 0, 0): "magenta",
+            (6, 0, 0): "cyan",
+            (7, 0, 0): "white",
+            (8, 0, 0): "gray",
+            (0, 0, 0): "black",
+        }
+        return color_names.get(color, "default")
 
 
 class Player(Entity, SpriteRenderable):
@@ -470,18 +498,20 @@ class Game:
         |   1 = x, 2 = \/, 3 = \ /, etc.        <br>
         |              /\       x               <br>
         |                      / \              <br></pre></code>
-        :return: A list of tiles.
+        :return: A list of tiles with color information.
         """
 
         if not viewport:
             viewport = self.viewport
 
         ret: List[List[str]] = []
+        color_data: List[List[Tuple[int, int, int]]] = []
 
         z = self.player.position.z
 
         for y in range(viewport.top_left.y, (viewport.lower_right.y + 1)):
             retrow = []
+            color_row = []
             for x in range(viewport.top_left.x, (viewport.lower_right.x + 1)):
                 pos = VectorN(x, y, z)
                 tile = self.world.get_tile(pos)
@@ -489,20 +519,24 @@ class Game:
                     tile = Tiles.Empty()
 
                 sprite = tile.render_sprite(scale=viewport.scale)
+                tile_color = get_color_for_tile(tile.tileid)
 
                 # if we are here, render us!
                 if (self.player.position.y == y) and (self.player.position.x == x):
                     sprite = self.player.render_sprite(scale=viewport.scale)
+                    tile_color = COLOR_MANAGER.get_color("PLAYER")
 
                 # logging.debug('render: {}'.format(sprite))
                 # done with a single sprite in a row
                 retrow.append(sprite)
+                color_row.append(tile_color)
             ret.append(retrow)
+            color_data.append(color_row)
 
         logging.debug("Returning this from render_world_viewport()")
         logging.debug(pprint.pformat(ret))
 
-        return RenderedData(ret, scale=viewport.scale)
+        return RenderedData(ret, scale=viewport.scale, color_data=color_data)
 
     def move_player(self, vec: VectorN):
         possiblePosition = self.player.calcOffset(vec)

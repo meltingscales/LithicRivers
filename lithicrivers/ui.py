@@ -1,5 +1,5 @@
 import logging
-from typing import Union, List
+from typing import Union, List, Tuple
 
 import asciimatics.widgets
 from asciimatics.effects import Effect
@@ -9,11 +9,12 @@ from asciimatics.scene import Scene
 from asciimatics.screen import Canvas, Screen
 from asciimatics.widgets import Layout, Divider, Button, _split_text, Frame, Label
 
-from lithicrivers.game import Game, Tile, Tiles
-from lithicrivers.model.modelpleasemoveme import StopGame, RenderedData
+from lithicrivers.game import Game, Tiles, Items
 from lithicrivers.model.vector import VectorN
-from lithicrivers.settings import GAME_NAME, KEYMAP, Keymap, VIEWPORT_WIGGLE
-from lithicrivers.textutil import presenting, list_label
+from lithicrivers.model.modelpleasemoveme import RenderedData, StopGame
+from lithicrivers.textutil import get_color_for_ui_element, presenting, list_label
+from lithicrivers.keymap import KEYMAP
+from lithicrivers.settings import GAME_NAME, VIEWPORT_WIGGLE
 
 
 # class MainGameFrame(Layout):
@@ -83,16 +84,40 @@ class HeaderLabel(asciimatics.widgets.Widget):
         return event
 
     def update(self, frame_no):
-        (colour, attr, background) = self._frame.palette[
-            self._pick_palette_key("label", selected=False, allow_input_state=False)]
+        self._frame.canvas: Canvas
+
         headerPrefix = list_label(self.header)
-        for i, text in enumerate(
-                _split_text(self._text, self._w, self._h, self._frame.canvas.unicode_aware)):
-            text = headerPrefix + " " + text
-            self._frame.canvas.paint(
-                "{:{}{}}".format(text, self._align, self._w),
-                self._x, self._y + i, colour, attr, background
-            )
+        
+        # Get colors for header and content
+        header_color = get_color_for_ui_element("TITLE")
+        
+        # Determine content color based on message type
+        if self._text.startswith('[ERROR]'):
+            content_color = get_color_for_ui_element("ERROR")
+        elif self._text.startswith('[SUCCESS]'):
+            content_color = get_color_for_ui_element("SUCCESS")
+        elif self._text.startswith('[WARNING]'):
+            content_color = get_color_for_ui_element("WARNING")
+        elif self._text.startswith('[INFO]'):
+            content_color = get_color_for_ui_element("INFO")
+        elif self._text.startswith('[RARE]'):
+            content_color = get_color_for_ui_element("RARE")
+        elif self._text.startswith('[VALUABLE]'):
+            content_color = get_color_for_ui_element("VALUABLE")
+        else:
+            content_color = get_color_for_ui_element("LABEL")
+        
+        # Render header with title color
+        self._frame.canvas.paint(
+            headerPrefix,
+            self._x, self._y, header_color[0], header_color[1], header_color[2]
+        )
+        
+        # Render content with appropriate color
+        self._frame.canvas.paint(
+            self._text,
+            self._x + len(headerPrefix), self._y, content_color[0], content_color[1], content_color[2]
+        )
 
     def reset(self):
         pass
@@ -146,16 +171,54 @@ class GameWidget(asciimatics.widgets.Widget):
 
         toRender: RenderedData = self.game.render_world_viewport()
 
-        content += toRender.as_string()
+        # Render the world with colors
+        self._render_colored_world(toRender)
+        
+        # Render the header
+        header_color = get_color_for_ui_element("HEADER")
+        self._frame.canvas.paint(
+            f"{content:{self._align}{self._w}}",
+            self._x, self._y, header_color[0], header_color[1], header_color[2]
+        )
 
-        (colour, attr, background) = self._frame.palette[
-            self._pick_palette_key("label", selected=False, allow_input_state=False)
-        ]
-
-        for i, text in enumerate(_split_text(content, self._w, self._h, self._frame.canvas.unicode_aware)):
+    def _render_colored_world(self, rendered_data: RenderedData):
+        """Render the world with proper colors."""
+        start_y = self._y + 1  # Start after the header
+        
+        for y in range(len(rendered_data.render_data)):
+            render_row = rendered_data.render_data[y]
+            for stripe_idx in range(rendered_data.scale):
+                row_content = ""
+                row_colors = []
+                
+                for x in range(len(render_row)):
+                    render_item = render_row[x]
+                    render_item_chunk = render_item.split('\n')
+                    slice = render_item_chunk[stripe_idx] if stripe_idx < len(render_item_chunk) else " "
+                    slice = slice.replace('\n', '')
+                    row_content += slice
+                    
+                    # Get color for this position
+                    color = rendered_data.get_color_at(x, y)
+                    row_colors.append(color)
+                
+                # Render this row with colors
+                self._render_colored_row(row_content, row_colors, start_y + y * rendered_data.scale + stripe_idx)
+    
+    def _render_colored_row(self, content: str, colors: List[Tuple[int, int, int]], y_pos: int):
+        """Render a row with individual character colors."""
+        x_pos = self._x
+        
+        for i, char in enumerate(content):
+            if i < len(colors):
+                color = colors[i]
+            else:
+                color = get_color_for_ui_element("DEFAULT")
+            
+            # Paint each character with its color
             self._frame.canvas.paint(
-                f"{text:{self._align}{self._w}}",
-                self._x, self._y + i, colour, attr, background
+                char,
+                x_pos + i, y_pos, color[0], color[1], color[2]
             )
 
     def reset(self):
@@ -228,7 +291,7 @@ class RootPage(Frame):
 
         self.labelInventory = HeaderLabel(name='labelInventory', header='INV')
         layout1.add_widget(self.labelInventory, column=1)
-        self.labelInventory.text = self.game.player.inventory.summary()
+        self.labelInventory.text = self.game.player.inventory.colored_summary()
 
         self.widgetGame = GameWidget(
             name="widgetGame",
@@ -319,7 +382,7 @@ class InputHandler:
             return KEYMAP.get_numpad_movement_vector(keyboardEvent)
 
         # Then check for regular character movement
-        datKey = Keymap.char_from_keyboard_event(keyboardEvent)
+        datKey = KEYMAP.char_from_keyboard_event(keyboardEvent)
         if datKey in KEYMAP.MOVEMENT_VECTOR_MAP.keys():
             return KEYMAP.MOVEMENT_VECTOR_MAP[datKey]
 
@@ -334,7 +397,7 @@ class InputHandler:
 
         tile_under: Tile = game.get_tile_at_player_feet()
         if tile_under == Tiles.Dirt():
-            root_page.labelMessage.text = 'You can\'t mine dirt :P'
+            root_page.labelMessage.text = '[ERROR] You can\'t mine dirt :P'
             return  # can't mine dirt
         elif tile_under == Tiles.Tree():
             # Allow mining trees - they drop guaranteed acorns plus other items
@@ -342,10 +405,11 @@ class InputHandler:
             for item in tree_drops:
                 game.player.inventory.add_item(item)
             game.set_tile_at_player_feet(Tiles.Dirt())
-            root_page.labelMessage.text = 'You chopped down the tree!'
+            root_page.labelMessage.text = '[SUCCESS] You chopped down the tree!'
         elif tile_under == Tiles.DaFuq():
             game.player.inventory.add_item(tile_under.calc_drop())
             game.set_tile_at_player_feet(Tiles.Dirt())
+            root_page.labelMessage.text = '[RARE] You found something mysterious!'
 
     @classmethod
     def handle_viewport(cls, event: KeyboardEvent, game: Game):

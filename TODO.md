@@ -36,8 +36,7 @@
 # 2025 todo
 
 - add a dialog box system, as well as a starter NPC that you can talk to and choose a dialog option at the end of a short conversation.
-- like caves of qud, use the numpad for 8-way movement. WASD can be used for something else later.
-- color-code different elements within the TUI
+- color-code different elements, items, and sections within the TUI
 - ask "are there any bugs or issues you see with my existing viewport code? can we stress test it?" to AI
 - ask "Are there any bugs or issues you see with my world data structure? how does minecraft do it?" to AI
 - for viewscale=2, there's dots on the bottom-right of the viewport. find a way to clamp the viewport to a specific dimension that's the same as viewscale=1.

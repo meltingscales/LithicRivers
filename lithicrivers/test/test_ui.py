@@ -132,13 +132,13 @@ class TestInputHandler(UITestCase):
     
     def test_handle_movement(self):
         """Test handling movement input."""
-        # Test north movement
-        event = MockKeyboardEvent(ord('w'))
+        # Test north movement (numpad 8)
+        event = MockKeyboardEvent(ord('8'))
         result = self.InputHandler.handle_movement(event)
         self.assertEqual(result, VEC_NORTH)
         
-        # Test east movement
-        event = MockKeyboardEvent(ord('d'))
+        # Test east movement (numpad 6)
+        event = MockKeyboardEvent(ord('6'))
         result = self.InputHandler.handle_movement(event)
         self.assertEqual(result, VEC_EAST)
         
