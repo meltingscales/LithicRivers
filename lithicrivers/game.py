@@ -140,21 +140,32 @@ class NPC(Entity, SpriteRenderable):
     
     def handle_response(self, response: str, topic: str = "greeting"):
         """Handle a conversation response and return the next topic."""
+        import logging
+        logging.debug(f"NPC handle_response: response='{response}', topic='{topic}'")
+        
         if response == "Tell me about this world":
+            logging.debug("NPC handle_response: returning 'about_world'")
             return "about_world"
         elif response == "What can you do?":
+            logging.debug("NPC handle_response: returning 'about_world'")
             return "about_world"
         elif response == "Tell me more about mining":
+            logging.debug("NPC handle_response: returning 'about_mining'")
             return "about_mining"
         elif response == "What about building?":
+            logging.debug("NPC handle_response: returning 'about_building'")
             return "about_building"
         elif response == "Back to greeting":
+            logging.debug("NPC handle_response: returning 'greeting'")
             return "greeting"
         elif response == "Goodbye":
+            logging.debug("NPC handle_response: returning 'goodbye'")
             return "goodbye"
         elif response == "OK":
+            logging.debug("NPC handle_response: returning None (end conversation)")
             return None  # End conversation
         else:
+            logging.debug(f"NPC handle_response: no match, returning current topic '{topic}'")
             return topic  # Stay on current topic
     
     def render_sprite(self, scale: int = 1) -> str:
