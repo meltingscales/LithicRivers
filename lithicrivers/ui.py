@@ -536,16 +536,16 @@ class MessageLogPage(Frame):
         )
         self.game = game
         
-        # Create main layout for messages
+        # Create main layout for messages - use full width
         layout1 = Layout([1], fill_frame=True)
         self.add_layout(layout1)
         
-        # Create message display widget
-        from asciimatics.widgets import TextBox
-        self.message_display = TextBox(
+        # Create message display widget using Label for better width handling
+        from asciimatics.widgets import Label
+        self.message_display = Label(
+            "",  # Initial empty text
             height=screen.height - 4,  # Leave room for tab buttons
-            name="message_display",
-            readonly=True
+            name="message_display"
         )
         layout1.add_widget(self.message_display)
         
@@ -562,7 +562,7 @@ class MessageLogPage(Frame):
         
         messages = self.game.message_log.get_recent_messages(50)  # Show last 50 messages
         if not messages:
-            self.message_display.value = "No messages yet.\n\nStart playing to see your actions logged here!"
+            self.message_display.text = "No messages yet.\n\nStart playing to see your actions logged here!"
             return
         
         # Format messages for display
@@ -584,7 +584,7 @@ class MessageLogPage(Frame):
             formatted_messages.append(f"[{timestamp}] {type_icon}{message}")
         
         # Join all messages with newlines
-        self.message_display.value = "\n".join(formatted_messages)
+        self.message_display.text = "\n".join(formatted_messages)
     
     def update(self, frame_no):
         """Update the frame, refreshing messages."""
