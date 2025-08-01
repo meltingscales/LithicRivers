@@ -559,6 +559,9 @@ class MessageLogPage(Frame):
         self.add_layout(layout2)
 
         self.fix()
+        
+        # Initialize the message display immediately
+        self.update_messages()
 
     def update_messages(self):
         """Update the message display with current messages."""
@@ -578,6 +581,7 @@ class MessageLogPage(Frame):
         formatted_messages = []
         for msg in messages:
             timestamp = msg["timestamp"]
+            gametick = msg.get("gametick", 0)  # Get gametick, default to 0 for backward compatibility
             message_type = msg["type"]
             message = msg["message"]
 
@@ -590,7 +594,7 @@ class MessageLogPage(Frame):
                 "info": "ℹ️ ",
             }.get(message_type, "• ")
 
-            formatted_messages.append(f"[{timestamp}] {type_icon}{message}")
+            formatted_messages.append(f"[{timestamp} T{gametick}] {type_icon}{message}")
 
         # Join all messages with newlines
         self.message_display.text = "\n".join(formatted_messages)
@@ -991,12 +995,14 @@ class InputHandler:
                 dropped_items.append(item.name)
             game.set_tile_at_player_feet(Tiles.dirt())
             game.log_mining("tree", dropped_items)
+            game.increment_tick()
             root_page.update_status_label()
         elif tile_under == Tiles.gold_ore():
             dropped_item = tile_under.calc_drop()
             game.player.inventory.add_item(dropped_item)
             game.set_tile_at_player_feet(Tiles.dirt())
             game.log_mining("gold ore", [dropped_item.name])
+            game.increment_tick()
             root_page.update_status_label()
 
     @classmethod
@@ -1191,15 +1197,18 @@ class InputHandler:
             # For interactive entities, show their interaction text
             interaction_text = entity.interact()
             game.log_interaction(name, interaction_text)
+            game.increment_tick()
             cls._show_interaction_result(name, interaction_text, root_page)
         elif hasattr(entity, "get_conversation"):
             # For NPCs, start conversation
             game.log_interaction(name, "Started conversation")
+            game.increment_tick()
             cls._start_npc_conversation(game, entity, root_page)
         else:
             # Default interaction
             default_text = f"You interact with {name}."
             game.log_interaction(name, default_text)
+            game.increment_tick()
             cls._show_interaction_result(name, default_text, root_page)
 
     @classmethod
