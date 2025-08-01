@@ -7,6 +7,7 @@ This module provides integration with Valve's Steam API using the steam[client] 
 try:
     import steam.client
     import steam.guard
+
     STEAM_AVAILABLE = True
 except ImportError:
     STEAM_AVAILABLE = False
@@ -15,20 +16,22 @@ except ImportError:
 
 class SteamAPI:
     """Steam API integration class for LithicRivers."""
-    
+
     def __init__(self):
         """Initialize the Steam API client."""
         self.client = None
         self.is_connected = False
-        
+
         if not STEAM_AVAILABLE:
-            raise ImportError("Steam API not available. Install with 'pip install steam[client]'")
-    
+            raise ImportError(
+                "Steam API not available. Install with 'pip install steam[client]'"
+            )
+
     def connect(self):
         """Connect to Steam API."""
         if not STEAM_AVAILABLE:
             return False
-            
+
         try:
             self.client = steam.client.SteamClient()
             self.is_connected = True
@@ -37,28 +40,28 @@ class SteamAPI:
             print(f"Failed to connect to Steam API: {e}")
             self.is_connected = False
             return False
-    
+
     def disconnect(self):
         """Disconnect from Steam API."""
         if self.client:
             self.client.close()
             self.client = None
         self.is_connected = False
-    
+
     def is_available(self):
         """Check if Steam API is available."""
         return STEAM_AVAILABLE
-    
+
     def get_user_info(self):
         """Get current user information if connected."""
         if not self.is_connected or not self.client:
             return None
-        
+
         try:
             return {
-                'steam_id': self.client.user.steam_id,
-                'persona_name': self.client.user.persona_name,
-                'online': self.client.user.online
+                "steam_id": self.client.user.steam_id,
+                "persona_name": self.client.user.persona_name,
+                "online": self.client.user.online,
             }
         except Exception:
             return None
@@ -92,4 +95,4 @@ def cleanup_steam():
     global steam_api
     if steam_api:
         steam_api.disconnect()
-        steam_api = None 
+        steam_api = None

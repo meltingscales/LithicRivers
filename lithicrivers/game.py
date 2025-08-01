@@ -1,3 +1,8 @@
+"""
+Game logic for LithicRivers.
+Copyright (c) 2024 Henry Post. All rights reserved.
+"""
+
 import logging
 import pickle
 import pprint
@@ -166,7 +171,7 @@ class NPC(Entity, SpriteRenderable):
         scale_renders = {
             1: self.sprite,
             2: f"{self.sprite}{self.sprite}\n{self.sprite}{self.sprite}",
-            3: f"{self.sprite}{self.sprite}{self.sprite}\n{self.sprite}{self.sprite}{self.sprite}\n{self.sprite}{self.sprite}{self.sprite}"
+            3: f"{self.sprite}{self.sprite}{self.sprite}\n{self.sprite}{self.sprite}{self.sprite}\n{self.sprite}{self.sprite}{self.sprite}",
         }
         return scale_renders.get(scale, self.sprite)
 
@@ -192,7 +197,7 @@ class InteractiveEntity(Entity, SpriteRenderable):
         scale_renders = {
             1: self.sprite,
             2: f"{self.sprite}{self.sprite}\n{self.sprite}{self.sprite}",
-            3: f"{self.sprite}{self.sprite}{self.sprite}\n{self.sprite}{self.sprite}{self.sprite}\n{self.sprite}{self.sprite}{self.sprite}"
+            3: f"{self.sprite}{self.sprite}{self.sprite}\n{self.sprite}{self.sprite}{self.sprite}\n{self.sprite}{self.sprite}{self.sprite}",
         }
         return scale_renders.get(scale, self.sprite)
 
@@ -684,9 +689,11 @@ class Game:
 
         self.running = True
         self.message_log = MessageLog()
-        
+
         # Add initial welcome message
-        self.message_log.add_message("Welcome to LithicRivers! Your adventures will be logged here.", "info")
+        self.message_log.add_message(
+            "Welcome to LithicRivers! Your adventures will be logged here.", "info"
+        )
 
     def get_tile_at_player_feet(self) -> Tile:
         return self.world.get_tile(self.player.position)
@@ -809,27 +816,31 @@ class Game:
 
     def render_pretty_player_position(self):
         return str(self.player.position.as_short_string())
-    
+
     def log_mining(self, tile_name: str, items_dropped: list[str]):
         """Log a mining event."""
         if items_dropped:
             items_str = ", ".join(items_dropped)
-            self.message_log.add_message(f"Mined {tile_name} and found: {items_str}", "mining")
+            self.message_log.add_message(
+                f"Mined {tile_name} and found: {items_str}", "mining"
+            )
         else:
             self.message_log.add_message(f"Mined {tile_name}", "mining")
-    
+
     def log_interaction(self, entity_name: str, interaction_text: str):
         """Log an interaction event."""
-        self.message_log.add_message(f"Interacted with {entity_name}: {interaction_text}", "interaction")
-    
+        self.message_log.add_message(
+            f"Interacted with {entity_name}: {interaction_text}", "interaction"
+        )
+
     def log_pickup(self, item_name: str):
         """Log an item pickup event."""
         self.message_log.add_message(f"Picked up: {item_name}", "pickup")
-    
+
     def log_dialog(self, speaker: str, message: str):
         """Log a dialog event."""
         self.message_log.add_message(f"{speaker}: {message}", "dialog")
-    
+
     def log_info(self, message: str):
         """Log a general info message."""
         self.message_log.add_message(message, "info")
@@ -848,7 +859,7 @@ class MessageLog:
         log_entry = {
             "timestamp": timestamp,
             "message": message,
-            "type": message_type  # info, mining, interaction, pickup, dialog
+            "type": message_type,  # info, mining, interaction, pickup, dialog
         }
 
         self.messages.append(log_entry)

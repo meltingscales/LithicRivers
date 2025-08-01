@@ -1,3 +1,8 @@
+"""
+UI components for LithicRivers.
+Copyright (c) 2024 Henry Post. All rights reserved.
+"""
+
 import logging
 from typing import TYPE_CHECKING, Callable, Optional, Union
 
@@ -336,9 +341,6 @@ class GameWidget(asciimatics.widgets.Widget):
         self._game = new_value
 
 
-
-
-
 class RootPage(Frame):
     __slots__ = ["game"]
 
@@ -370,7 +372,7 @@ class RootPage(Frame):
         self.add_layout(status_layout)
         self.statusLabel = Label("", name="statusLabel")
         status_layout.add_widget(self.statusLabel)
-        
+
         # Initialize the status label with current player information
         self.update_status_label()
 
@@ -406,9 +408,9 @@ class RootPage(Frame):
         # Call parent update first
         super().update(frame_no)
 
-
-
-    def _create_bar(self, current: int, maximum: int, label: str, filled: str, empty: str) -> str:
+    def _create_bar(
+        self, current: int, maximum: int, label: str, filled: str, empty: str
+    ) -> str:
         """Create a visual bar for health/stamina."""
         if maximum <= 0:
             return f"{label}: {current}/{maximum}"
@@ -420,7 +422,7 @@ class RootPage(Frame):
 
         bar = filled * filled_length + empty * empty_length
         return f"{bar} {current}/{maximum}"
-        
+
     def update_status_label(self):
         """Update the status label with current player information."""
         if hasattr(self, "statusLabel") and self.game:
@@ -437,7 +439,7 @@ class RootPage(Frame):
                 f"Stamina: {stamina_bar}",
                 f"Position: {position.as_short_string()}",
                 f"Tile: {self.game.get_tile_at_player_feet().tileid}",
-                f"Scale: {self.game.viewport.scale}x"
+                f"Scale: {self.game.viewport.scale}x",
             ]
 
             # Join with separators
@@ -459,7 +461,9 @@ class RootPage(Frame):
 
         # Account for borders, headers, tab buttons, and status bar
         available_width = screen_width - info_panel_width - 4  # 4 for borders
-        available_height = screen_height - 7  # 7 for headers, borders, tab buttons, and status bar (1 line)
+        available_height = (
+            screen_height - 7
+        )  # 7 for headers, borders, tab buttons, and status bar (1 line)
 
         # Calculate optimal viewport size
         # Each tile takes up scale characters, so we need to account for that
@@ -535,57 +539,62 @@ class MessageLogPage(Frame):
             screen, screen.height, screen.width, can_scroll=False, title="Message Log"
         )
         self.game = game
-        
+
         # Create main layout for messages - use full width
         layout1 = Layout([1], fill_frame=True)
         self.add_layout(layout1)
-        
+
         # Create message display widget using Label for better width handling
         from asciimatics.widgets import Label
+
         self.message_display = Label(
             "",  # Initial empty text
             height=screen.height - 4,  # Leave room for tab buttons
-            name="message_display"
+            name="message_display",
         )
         layout1.add_widget(self.message_display)
-        
+
         # Create tab buttons
         layout2 = TabButtons(self, 2)
         self.add_layout(layout2)
-        
+
         self.fix()
-    
+
     def update_messages(self):
         """Update the message display with current messages."""
         if not self.game or not self.game.message_log:
             return
-        
-        messages = self.game.message_log.get_recent_messages(50)  # Show last 50 messages
+
+        messages = self.game.message_log.get_recent_messages(
+            50
+        )  # Show last 50 messages
         if not messages:
-            self.message_display.text = "No messages yet.\n\nStart playing to see your actions logged here!"
+            self.message_display.text = (
+                "No messages yet.\n\nStart playing to see your actions logged here!"
+            )
             return
-        
+
         # Format messages for display
         formatted_messages = []
         for msg in messages:
             timestamp = msg["timestamp"]
             message_type = msg["type"]
             message = msg["message"]
-            
+
             # Add color coding based on message type
             type_icon = {
                 "mining": "⛏️ ",
                 "interaction": "💬 ",
                 "pickup": "📦 ",
                 "dialog": "🗣️ ",
-                "info": "ℹ️ "
+                "info": "ℹ️ ",
             }.get(message_type, "• ")
-            
+
             formatted_messages.append(f"[{timestamp}] {type_icon}{message}")
-        
+
         # Join all messages with newlines
         self.message_display.text = "\n".join(formatted_messages)
-    
+
     def update(self, frame_no):
         """Update the frame, refreshing messages."""
         super().update(frame_no)
@@ -888,9 +897,7 @@ class EntitySelectionPopup(Frame):
     def _show_interaction_result(self, name: str, text: str):
         """Show the result of an interaction."""
         # Create a result popup
-        InteractionResultPopup(
-            self.screen, f"Interacting with {name}", text
-        )
+        InteractionResultPopup(self.screen, f"Interacting with {name}", text)
         # For now, just show the result in the message area
         # TODO: Implement proper result popup display
 
@@ -993,7 +1000,9 @@ class InputHandler:
             root_page.update_status_label()
 
     @classmethod
-    def handle_viewport(cls, event: KeyboardEvent, game: Game, root_page: RootPage = None):
+    def handle_viewport(
+        cls, event: KeyboardEvent, game: Game, root_page: RootPage = None
+    ):
         if KEYMAP.matches("RESET_VIEWPORT", event):
             game.reset_viewport()
             if root_page:
@@ -1068,7 +1077,7 @@ class InputHandler:
         logging.debug(
             f"NPC conversation: showing topic '{topic}' with options: {conversation['options']}"
         )
-        
+
         # Log the NPC's conversation text
         game.log_dialog(npc.name, conversation["text"])
 
@@ -1086,10 +1095,10 @@ class InputHandler:
                 logging.debug(
                     f"NPC conversation: selected '{response}' from topic '{topic}'"
                 )
-                
+
                 # Log the player's response
                 game.log_dialog("You", response)
-                
+
                 next_topic = npc.handle_response(response, topic)
                 logging.debug(
                     f"NPC conversation: next_topic='{next_topic}', current_topic='{topic}'"
@@ -1343,7 +1352,7 @@ def demo(screen: Screen, scene: Scene, game: Game):
 
             # display pos
             root_page.labelPosition.text = game.render_pretty_player_position()
-            
+
             # Update status label immediately
             root_page.update_status_label()
 

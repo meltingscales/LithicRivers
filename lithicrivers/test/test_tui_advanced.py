@@ -4,7 +4,6 @@ This module provides comprehensive testing for TUI components using realistic mo
 """
 
 import os
-
 import unittest
 from typing import Any, Optional
 from unittest.mock import Mock
@@ -156,9 +155,11 @@ class AdvancedUITestCase(unittest.TestCase):
     def setUp(self):
         """Set up common test fixtures."""
         # Skip tests if TERM environment variable is not set
-        if not os.environ.get('TERM'):
-            self.skipTest("TERM environment variable not set - skipping terminal-dependent tests")
-        
+        if not os.environ.get("TERM"):
+            self.skipTest(
+                "TERM environment variable not set - skipping terminal-dependent tests"
+            )
+
         self.game_engine = GameEngine()
         self.game = Game()
         self.mock_screen = AdvancedMockScreen(80, 24)
@@ -185,7 +186,9 @@ class AdvancedUITestCase(unittest.TestCase):
         content = self.get_rendered_content()
         self.assertNotIn(text, content, f"Expected '{text}' not in content:\n{content}")
 
-    def assert_paint_called_with(self, text: str, x: Optional[int] = None, y: Optional[int] = None):
+    def assert_paint_called_with(
+        self, text: str, x: Optional[int] = None, y: Optional[int] = None
+    ):
         """Assert that paint was called with specific parameters."""
         calls = self.mock_canvas.get_paint_calls()
         found = False

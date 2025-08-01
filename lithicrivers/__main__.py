@@ -1,3 +1,8 @@
+"""
+LithicRivers - Main entry point
+Copyright (c) 2024 Henry Post. All rights reserved.
+"""
+
 import logging
 import os.path
 
