@@ -197,6 +197,35 @@ class Tile(SpriteRenderable):
     def calc_drop(self):
         return weighted_choice_dict(self.drops)
 
+    def calc_tree_drops(self):
+        """
+        Special drop calculation for trees that guarantees 1-3 acorns.
+        90% chance of exactly 1 acorn, 10% chance of 2-3 acorns.
+        """
+        import random
+        
+        # Determine number of acorns (1-3, with 90% chance of 1)
+        if random.random() < 0.9:
+            num_acorns = 1
+        else:
+            # 10% chance of 2-3 acorns, with equal probability
+            num_acorns = random.randint(2, 3)
+        
+        # Create list of items to return
+        items = []
+        
+        # Add guaranteed acorns
+        for _ in range(num_acorns):
+            items.append(Items.Acorn())
+        
+        # Add other possible drops (stick, log) with original probabilities
+        if random.random() < 0.5:
+            items.append(Items.Stick())
+        if random.random() < 0.3:
+            items.append(Items.Log())
+        
+        return items
+
 
 def weighted_choice(weights: List[float], choices: List[T]) -> T:
     if len(weights) != len(choices):
