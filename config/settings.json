@@ -1,0 +1,41 @@
+{
+  "game": {
+    "GAME_NAME": "LithicRivers",
+    "LOGFILENAME": "LithicRivers.log",
+    "LOGGINGLEVEL": "INFO"
+  },
+  "world": {
+    "DEFAULT_SIZE_RADIUS": {
+      "production": [
+        50,
+        50,
+        3
+      ],
+      "testing": [
+        5,
+        5,
+        1
+      ]
+    },
+    "DEFAULT_PLAYER_POSITION": {
+      "production": [
+        25,
+        25,
+        0
+      ],
+      "testing": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "viewport": {
+    "VIEWPORT_RADIUS": [
+      10,
+      10,
+      0
+    ],
+    "VIEWPORT_WIGGLE": 2
+  }
+}

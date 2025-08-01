@@ -1,0 +1,151 @@
+import logging
+from typing import Union, List
+from asciimatics.event import KeyboardEvent
+
+from lithicrivers.constants import VEC_DOWN, VEC_UP, VEC_NORTH, VEC_SOUTH, VEC_WEST, VEC_EAST
+from lithicrivers.config_manager import config_manager
+from lithicrivers.textutil import associated
+
+
+class Keymap:
+    """Keymap class that loads keybinds from JSON configuration."""
+    
+    def __init__(self):
+        # Cache for valid key names
+        self._get_valid_key_names_cache = None
+        
+        # Load keybinds from config
+        self._load_keybinds()
+        
+        # Build movement vector map
+        self.MOVEMENT_VECTOR_MAP = {
+            self.MOVE_NORTH: VEC_NORTH,
+            self.MOVE_WEST: VEC_WEST,
+            self.MOVE_SOUTH: VEC_SOUTH,
+            self.MOVE_EAST: VEC_EAST,
+            self.MOVE_UP: VEC_UP,
+            self.MOVE_DOWN: VEC_DOWN,
+        }
+    
+    def _load_keybinds(self):
+        """Load keybinds from config manager."""
+        # Movement keys
+        self.MOVE_NORTH = config_manager.get_keybind("movement", "MOVE_NORTH")
+        self.MOVE_WEST = config_manager.get_keybind("movement", "MOVE_WEST")
+        self.MOVE_SOUTH = config_manager.get_keybind("movement", "MOVE_SOUTH")
+        self.MOVE_EAST = config_manager.get_keybind("movement", "MOVE_EAST")
+        self.MOVE_UP = config_manager.get_keybind("movement", "MOVE_UP")
+        self.MOVE_DOWN = config_manager.get_keybind("movement", "MOVE_DOWN")
+        
+        # Viewport keys
+        self.RESET_VIEWPORT = config_manager.get_keybind("viewport", "RESET_VIEWPORT")
+        self.SLIDE_VIEWPORT_WEST = config_manager.get_keybind("viewport", "SLIDE_VIEWPORT_WEST")
+        self.SLIDE_VIEWPORT_EAST = config_manager.get_keybind("viewport", "SLIDE_VIEWPORT_EAST")
+        
+        # Scale keys
+        self.SCALE_UP = config_manager.get_keybind("scale", "SCALE_UP")
+        self.SCALE_DOWN = config_manager.get_keybind("scale", "SCALE_DOWN")
+        
+        # Action keys
+        self.MINE = config_manager.get_keybind("action", "MINE")
+    
+    def reload_keybinds(self):
+        """Reload keybinds from config files."""
+        config_manager.keybinds = config_manager._load_keybinds()
+        self._load_keybinds()
+        self.MOVEMENT_VECTOR_MAP = {
+            self.MOVE_NORTH: VEC_NORTH,
+            self.MOVE_WEST: VEC_WEST,
+            self.MOVE_SOUTH: VEC_SOUTH,
+            self.MOVE_EAST: VEC_EAST,
+            self.MOVE_UP: VEC_UP,
+            self.MOVE_DOWN: VEC_DOWN,
+        }
+    
+    def get_valid_key_names(self) -> List[str]:
+        """Get list of valid key names."""
+        if self._get_valid_key_names_cache is None:
+            all_names = dir(self)
+            filtered_names = [
+                name for name in all_names
+                if (
+                        (not name.startswith('__')) and
+                        (isinstance(name, str)) and  # name must be string
+                        (isinstance(self.__getattribute__(name), str))  # self.[name] must be string
+                )
+            ]
+            self._get_valid_key_names_cache = filtered_names
+        
+        return self._get_valid_key_names_cache
+    
+    def generate_key_guide(self) -> str:
+        """Generate human readable guide for keys."""
+        retstr = ""
+        keynames = self.get_valid_key_names()
+        
+        for keyname in keynames:
+            retstr += associated(self.__getattribute__(keyname), keyname)
+            retstr += '\n'
+        
+        return retstr
+    
+    @staticmethod
+    def char_from_keyboard_event(ke: KeyboardEvent) -> Union[None, str]:
+        """Extract character from keyboard event."""
+        try:
+            ke_char = chr(ke.key_code).lower()
+            return ke_char
+        except ValueError as ve:
+            logging.debug(
+                "Could not handle this KeyboardEvent -- {} -- probably a special key: {}".format(ke.key_code, ke, ))
+            return None
+    
+    def matches(self, key_name: str, ke: KeyboardEvent) -> bool:
+        """
+        Does this KeyboardEvent match a name of a key we have registered?
+        :param key_name: Name of a key -- i.e. 'MOVE_NORTH'
+        :param ke: KeyboardEvent.
+        :return: boolean
+        """
+        try:
+            key = self.__getattribute__(key_name)
+        except AttributeError as ae:
+            raise AttributeError("No key named {} found.\nValid keys: {}".format(key_name, dir(self)))
+        
+        ke_char = Keymap.char_from_keyboard_event(ke)
+        return ke_char == key.lower()
+    
+    def update_keybind(self, key_name: str, value: str):
+        """Update a keybind and save to config file."""
+        # Determine category based on key name
+        category = self._get_category_for_key(key_name)
+        if category:
+            config_manager.update_keybind(category, key_name, value)
+            # Reload keybinds to reflect changes
+            self.reload_keybinds()
+    
+    def _get_category_for_key(self, key_name: str) -> str:
+        """Get the category for a given key name."""
+        category_mapping = {
+            # Movement keys
+            "MOVE_NORTH": "movement",
+            "MOVE_WEST": "movement", 
+            "MOVE_SOUTH": "movement",
+            "MOVE_EAST": "movement",
+            "MOVE_UP": "movement",
+            "MOVE_DOWN": "movement",
+            # Viewport keys
+            "RESET_VIEWPORT": "viewport",
+            "SLIDE_VIEWPORT_WEST": "viewport",
+            "SLIDE_VIEWPORT_EAST": "viewport",
+            # Scale keys
+            "SCALE_UP": "scale",
+            "SCALE_DOWN": "scale",
+            # Action keys
+            "MINE": "action"
+        }
+        return category_mapping.get(key_name, "")
+
+
+# Global keymap instance
+KEYMAP = Keymap() 

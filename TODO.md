@@ -36,14 +36,11 @@
 # 2025 todo
 
 - add a dialog box system, as well as a starter NPC that you can talk to and choose a dialog option at the end of a short conversation.
-- unify keybinds to 1 file, perhaps being managed as part of a class that loads a JSON file. Have the keybinds be stored in a JSON file that can be modified by the user, and gets packaged as part of the exe. Do the same thing for settings.py - extract it to a json file so a user can edit it easily.
 - like caves of qud, use the numpad for 8-way movement. WASD can be used for something else later.
 - color-code different elements within the TUI
 - ask "are there any bugs or issues you see with my existing viewport code? can we stress test it?" to AI
 - ask "Are there any bugs or issues you see with my world data structure? how does minecraft do it?" to AI
-- limit the ability to zoom in to 1,2,3 scales.
 - for viewscale=2, there's dots on the bottom-right of the viewport. find a way to clamp the viewport to a specific dimension that's the same as viewscale=1.
 - fix `make dev`
-- segregate the makefile targets into sections visually in the `help` target
 - make sure the world viewport takes up as much space as it can in the TUI.
 - eventually, I'd like to publish this game on steam for $3. don't add/edit any code, I just want advice. What should I focus on before that?
