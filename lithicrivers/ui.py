@@ -39,10 +39,10 @@ class TabButtons(Layout):
             self.add_widget(Divider(), i)
 
         buttons = [
-            Button("Help", raiseFn(NextScene, "HelpPage")),
-            Button("Root Page", raiseFn(NextScene, "RootPage")),
-            Button("Message Log", raiseFn(NextScene, "MessageLogPage")),
-            Button("Test Popups", raiseFn(NextScene, "ExtraPage")),
+            Button("Help", self._safe_scene_change("HelpPage")),
+            Button("Root Page", self._safe_scene_change("RootPage")),
+            Button("Message Log", self._safe_scene_change("MessageLogPage")),
+            Button("Test Popups", self._safe_scene_change("ExtraPage")),
             Button("Quit", raiseFn(StopGame, "Game stopping :P"))
         ]
 
@@ -50,6 +50,26 @@ class TabButtons(Layout):
             self.add_widget(button, i)
 
         buttons[active_tab_idx].disabled = True
+    
+    def _safe_scene_change(self, scene_name):
+        """Safely change scenes, preventing change if popup is active."""
+        def safe_change():
+            # Check if there's an active popup
+            try:
+                if active_popup:
+                    # Clear the popup before changing scenes
+                    try:
+                        if hasattr(active_popup, '_screen') and active_popup._screen.current_scene:
+                            active_popup._screen.current_scene.remove_effect(active_popup)
+                    except:
+                        pass
+                    active_popup = None
+            except NameError:
+                # active_popup not defined, safe to proceed
+                pass
+            # Proceed with scene change
+            raise NextScene(scene_name)
+        return safe_change
 
 
 class HeaderLabel(asciimatics.widgets.Widget):
@@ -455,6 +475,8 @@ class ExtraPage(Frame):
             """Test a simple dialog without options."""
             def callback(result):
                 print(f"Simple dialog result: {result}")
+                global active_popup
+                active_popup = None
             
             # Use asciimatics PopUpDialog for simple dialog
             from asciimatics.widgets import PopUpDialog
@@ -464,6 +486,9 @@ class ExtraPage(Frame):
                 ["OK"],
                 callback
             )
+            # Track the active popup globally
+            global active_popup
+            active_popup = popup
             # Add the popup to the current scene
             screen.current_scene.add_effect(popup)
         
@@ -471,6 +496,8 @@ class ExtraPage(Frame):
             """Test a dialog with options."""
             def callback(result):
                 print(f"Options dialog result: {result}")
+                global active_popup
+                active_popup = None
             
             # Use asciimatics PopUpDialog for options dialog
             from asciimatics.widgets import PopUpDialog
@@ -480,6 +507,9 @@ class ExtraPage(Frame):
                 ["Option 1", "Option 2", "Option 3", "Option 4"],
                 callback
             )
+            # Track the active popup globally
+            global active_popup
+            active_popup = popup
             # Add the popup to the current scene
             screen.current_scene.add_effect(popup)
         
@@ -487,6 +517,8 @@ class ExtraPage(Frame):
             """Test a large dialog with lots of content."""
             def callback(result):
                 print(f"Large dialog result: {result}")
+                global active_popup
+                active_popup = None
             
             # Use asciimatics PopUpDialog for large dialog
             from asciimatics.widgets import PopUpDialog
@@ -500,6 +532,9 @@ class ExtraPage(Frame):
                 ["Continue", "Cancel"],
                 callback
             )
+            # Track the active popup globally
+            global active_popup
+            active_popup = popup
             # Add the popup to the current scene
             screen.current_scene.add_effect(popup)
         
@@ -509,6 +544,8 @@ class ExtraPage(Frame):
             
             def callback(result):
                 print(f"Popup dialog result: {result}")
+                global active_popup
+                active_popup = None
             
             # Create a popup dialog using asciimatics PopUpDialog
             popup = PopUpDialog(
@@ -519,6 +556,9 @@ class ExtraPage(Frame):
                 ["OK", "Cancel"],
                 callback
             )
+            # Track the active popup globally
+            global active_popup
+            active_popup = popup
             # Add the popup to the current scene
             screen.current_scene.add_effect(popup)
         
@@ -880,6 +920,8 @@ class InputHandler:
                 if next_topic:
                     next_conversation = npc.get_conversation(next_topic)
                     cls._show_interaction_result(npc.name, next_conversation["text"], root_page)
+            global active_popup
+            active_popup = None
         
         # Show the conversation in a popup
         from asciimatics.widgets import PopUpDialog
@@ -889,6 +931,9 @@ class InputHandler:
             conversation["options"],
             conversation_callback
         )
+        # Track the active popup globally
+        global active_popup
+        active_popup = popup
         # Add the popup to the current scene
         root_page._screen.current_scene.add_effect(popup)
     
@@ -903,6 +948,8 @@ class InputHandler:
                 if next_topic:
                     next_conversation = npc.get_conversation(next_topic)
                     cls._show_interaction_result(npc.name, next_conversation["text"], root_page)
+            global active_popup
+            active_popup = None
         
         # Show the conversation in a popup
         from asciimatics.widgets import PopUpDialog
@@ -912,6 +959,9 @@ class InputHandler:
             conversation["options"],
             conversation_callback
         )
+        # Track the active popup globally
+        global active_popup
+        active_popup = popup
         # Add the popup to the current scene
         root_page._screen.current_scene.add_effect(popup)
     
@@ -929,6 +979,8 @@ class InputHandler:
                         name, pos, color = adjacent_entities[i]
                         cls._handle_entity_interaction(game, name, pos, color, root_page)
                         break
+            global active_popup
+            active_popup = None
         
         # Create and show the popup
         from asciimatics.widgets import PopUpDialog
@@ -938,6 +990,9 @@ class InputHandler:
             entity_options,
             popup_callback
         )
+        # Track the active popup globally
+        global active_popup
+        active_popup = popup
         # Add the popup to the current scene
         root_page._screen.current_scene.add_effect(popup)
     
@@ -962,7 +1017,8 @@ class InputHandler:
         """Show the result of an interaction."""
         def result_callback(selected_option):
             # Just close the result popup
-            pass
+            global active_popup
+            active_popup = None
         
         # Create and show the result popup
         from asciimatics.widgets import PopUpDialog
@@ -972,6 +1028,9 @@ class InputHandler:
             ["OK"],
             result_callback
         )
+        # Track the active popup globally
+        global active_popup
+        active_popup = popup
         # Add the popup to the current scene
         root_page._screen.current_scene.add_effect(popup)
 
@@ -979,6 +1038,10 @@ class InputHandler:
 def demo(screen: Screen, scene: Scene, game: Game):
     # Create a global variable to store the current dialog
     global current_dialog_scene
+    
+    # Global variable to track active popups
+    global active_popup
+    active_popup = None  # Initialize to None
     
     scenes = [
         Scene([HelpPage(screen, game)], -1, name="HelpPage"),
@@ -998,6 +1061,8 @@ def demo(screen: Screen, scene: Scene, game: Game):
     last_screen_height = screen.height
 
     def handle_event(event: Union[KeyboardEvent, MouseEvent]):
+        # Declare active_popup as global so we can access it
+        global active_popup
 
         daScene: Scene = screen.current_scene
         daEffects: List[Effect] = daScene.effects
@@ -1024,8 +1089,44 @@ def demo(screen: Screen, scene: Scene, game: Game):
             return
         event: KeyboardEvent
 
+        # Check for ESC key to close popups
+        if event.key_code == 27:  # ESC key
+            if active_popup:
+                # Remove the popup from the current scene
+                if hasattr(active_popup, '_screen') and active_popup._screen.current_scene:
+                    active_popup._screen.current_scene.remove_effect(active_popup)
+                active_popup = None
+                return
+
+        # Check if there's an active popup that should handle the event first
+        if active_popup:
+            # Check if popup is still in the current scene
+            if active_popup not in screen.current_scene.effects:
+                # Popup was removed from scene, clear it
+                active_popup = None
+                return
+            
+            # Let the popup handle the event
+            try:
+                result = active_popup.process_event(event)
+                if result is None:  # Event was handled by popup
+                    return
+            except Exception as e:
+                # Popup had an error, clear it
+                logging.debug(f"Popup error: {e}")
+                active_popup = None
+                return
+
         if maybe_root_page.title.strip() != 'Root Page':
             logging.debug("Not supposed to handle " + maybe_root_page.title)
+            # Clear any active popup when switching to non-Root pages
+            if active_popup:
+                try:
+                    if hasattr(active_popup, '_screen') and active_popup._screen.current_scene:
+                        active_popup._screen.current_scene.remove_effect(active_popup)
+                except:
+                    pass
+                active_popup = None
             return
 
         root_page = maybe_root_page
