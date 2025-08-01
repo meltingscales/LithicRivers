@@ -198,9 +198,11 @@ class GameWidget(asciimatics.widgets.Widget):
                     slice = slice.replace('\n', '')
                     row_content += slice
                     
-                    # Get color for this position
-                    color = rendered_data.get_color_at(x, y)
-                    row_colors.append(color)
+                    # Get color for this position and repeat it for each character in the scaled sprite
+                    tile_color = rendered_data.get_color_at(x, y)
+                    # Repeat the color for each character in the scaled sprite slice
+                    for _ in range(len(slice)):
+                        row_colors.append(tile_color)
                 
                 # Render this row with colors
                 self._render_colored_row(row_content, row_colors, start_y + y * rendered_data.scale + stripe_idx)
