@@ -8,121 +8,56 @@ from lithicrivers.constants import VEC_DOWN, VEC_UP, VEC_NORTH, VEC_SOUTH, VEC_W
 from lithicrivers.model.modelpleasemoveme import Viewport
 from lithicrivers.model.vector import VectorN
 from lithicrivers.textutil import associated
+from lithicrivers.config_manager import config_manager
 
-GAME_NAME = 'LithicRivers'
+# Load settings from config manager
+GAME_NAME = config_manager.get_setting("game", "GAME_NAME")
+LOGFILENAME = config_manager.get_setting("game", "LOGFILENAME")
+LOGGINGLEVEL = getattr(logging, config_manager.get_setting("game", "LOGGINGLEVEL"))
 
-# Use smaller world size for tests to improve performance
+# Load world settings based on environment
 if os.environ.get('TESTING') == '1':
-    DEFAULT_SIZE_RADIUS = VectorN(5, 5, 1)  # Much smaller for tests
-    DEFAULT_PLAYER_POSITION = VectorN(0, 0, 0)  # Center of small test world
+    DEFAULT_SIZE_RADIUS = config_manager.get_vector_setting("world", "DEFAULT_SIZE_RADIUS", "testing")
+    DEFAULT_PLAYER_POSITION = config_manager.get_vector_setting("world", "DEFAULT_PLAYER_POSITION", "testing")
 else:
-    DEFAULT_SIZE_RADIUS = VectorN(50, 50, 3)  # Full size for production
-    DEFAULT_PLAYER_POSITION = VectorN(25, 25, 0)  # Center of large production world
-'''The 3d radius of the world.'''
+    DEFAULT_SIZE_RADIUS = config_manager.get_vector_setting("world", "DEFAULT_SIZE_RADIUS", "production")
+    DEFAULT_PLAYER_POSITION = config_manager.get_vector_setting("world", "DEFAULT_PLAYER_POSITION", "production")
 
-# DEFAULT_PLAYER_POSITION is set above based on TESTING environment
-'''Default player position.'''
+# Load viewport settings
+VIEWPORT_RADIUS = config_manager.get_vector_setting("viewport", "VIEWPORT_RADIUS")
+VIEWPORT_WIGGLE = config_manager.get_setting("viewport", "VIEWPORT_WIGGLE")
 
-VIEWPORT_RADIUS = VectorN(10, 10, 0)
-'''Radius of the viewport.'''
-
+# Create default viewport
 DEFAULT_VIEWPORT = Viewport.generate_centered(DEFAULT_PLAYER_POSITION, radius=VIEWPORT_RADIUS)
-'''The viewport.'''
-
-VIEWPORT_WIGGLE = 2
-'''How far away is the player from the edge of the viewport before 
-we start sliding it to avoid them being derendered?
-Think super mario 64 camera.'''
-
-LOGFILENAME = GAME_NAME + '.log'
-LOGGINGLEVEL = logging.INFO
 
 
 class Keymap:
+    """Legacy Keymap class - now uses config manager internally."""
+    
     def __init__(self):
-
-        # cache
-        self._get_valid_key_names_cache = None
-
-        self.MOVE_NORTH = 'w'
-        self.MOVE_WEST = 'a'
-        self.MOVE_SOUTH = 's'
-        self.MOVE_EAST = 'd'
-        self.MOVE_UP = 'q'
-        self.MOVE_DOWN = 'e'
-
-        self.MOVEMENT_VECTOR_MAP = {
-            self.MOVE_NORTH: VEC_NORTH,
-            self.MOVE_WEST: VEC_WEST,
-            self.MOVE_SOUTH: VEC_SOUTH,
-            self.MOVE_EAST: VEC_EAST,
-            self.MOVE_UP: VEC_UP,
-            self.MOVE_DOWN: VEC_DOWN,
-        }
-
-        self.RESET_VIEWPORT = 'r'
-        self.SLIDE_VIEWPORT_WEST = '['
-        self.SLIDE_VIEWPORT_EAST = ']'
-
-        self.SCALE_UP = '='
-        self.SCALE_DOWN = '-'
-
-        self.MINE = 'u'
-
+        # Import the new Keymap class
+        from lithicrivers.keymap import Keymap as NewKeymap
+        self._keymap = NewKeymap()
+        
+        # Copy all attributes for backward compatibility
+        for attr_name in dir(self._keymap):
+            if not attr_name.startswith('_'):
+                setattr(self, attr_name, getattr(self._keymap, attr_name))
+    
     def get_valid_key_names(self) -> List[str]:
-
-        all_names = dir(self)
-        filtered_names = [
-            name for name in all_names
-            if (
-                    (not name.startswith('__')) and
-                    (isinstance(name, str)) and  # name must be string
-                    (isinstance(self.__getattribute__(name), str))  # self.[name] must be string
-            )
-        ]
-
-        return filtered_names
-
+        return self._keymap.get_valid_key_names()
+    
     def generate_key_guide(self) -> str:
-        """
-        :return: Human readable guide for keys
-        """
-        retstr = ""
-
-        keynames = self.get_valid_key_names()
-
-        for keyname in keynames:
-            retstr += associated(self.__getattribute__(keyname), keyname)
-            retstr += '\n'
-
-        return retstr
-
+        return self._keymap.generate_key_guide()
+    
     @staticmethod
     def char_from_keyboard_event(ke: KeyboardEvent) -> Union[None, str]:
-        try:
-            ke_char = chr(ke.key_code).lower()
-            return ke_char
-        except ValueError as ve:
-            logging.debug(
-                "Could not handle this KeyboardEvent -- {} -- probably a special key: {}".format(ke.key_code, ke, ))
-            return None
-
+        from lithicrivers.keymap import KEYMAP as NEW_KEYMAP
+        return NEW_KEYMAP.char_from_keyboard_event(ke)
+    
     def matches(self, key_name: str, ke: KeyboardEvent):
-        """
-        Does this KeyboardEvent match a name of a key we have registered?
-        :param key_name: Name of a key -- i.e. 'MOVE_NORTH'
-        :param ke: KeyboardEvent.
-        :return: boolean
-        """
-
-        try:
-            key = self.__getattribute__(key_name)
-        except AttributeError as ae:
-            raise AttributeError("No key named {} found.\nValid keys: {}".format(key_name, dir(self)))
-
-        ke_char = Keymap.char_from_keyboard_event(ke)
-
-        return ke_char == key.lower()
+        return self._keymap.matches(key_name, ke)
 
 
+# Create global keymap instance
 KEYMAP = Keymap()

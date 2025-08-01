@@ -1,0 +1,22 @@
+{
+  "movement": {
+    "MOVE_NORTH": "w",
+    "MOVE_WEST": "a",
+    "MOVE_SOUTH": "s",
+    "MOVE_EAST": "d",
+    "MOVE_UP": "q",
+    "MOVE_DOWN": "e"
+  },
+  "viewport": {
+    "RESET_VIEWPORT": "r",
+    "SLIDE_VIEWPORT_WEST": "[",
+    "SLIDE_VIEWPORT_EAST": "]"
+  },
+  "scale": {
+    "SCALE_UP": "=",
+    "SCALE_DOWN": "-"
+  },
+  "action": {
+    "MINE": "u"
+  }
+}
