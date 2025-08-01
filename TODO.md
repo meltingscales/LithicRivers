@@ -33,9 +33,72 @@
 - cybernetics/augs
 
 
+# pre-steam-release TODO:
+
+- steam SDK integration
+- achievements system
+- steam App ID
+- Steam build pipeline
+- steam store page
+
+## ux and polish
+- save system with auto backups
+- settings and options menu
+- sound!
+- tutorial and onboarding
+- error handling
+- performance...lmao its a TUI
+
+## content
+- core gameplay loop
+- progression system
+- content volume: At least a few hours of content. we should strive for proc-gen stuff because theres more replayability
+- modding system??
+- replayability
+
+## steam-specific features
+- achievements
+- trading cards
+- cloud saves
+- controller support
+- steam workshop
+
+## marketing
+- store page stuff
+- community hub
+- presskit
+
+## legal
+- ToS
+- privacy policy
+- age rating
+- tax info
+
+## QA
+- bug testing
+- perf testing
+- user testing
+- steam deck compat
+
+
+## Priority Order for Your Project:
+- Complete the save system (already in your TODO)
+- Add Steam SDK integration
+- Polish the core gameplay loop
+- Add achievements system
+- Create compelling store page content
+- Implement cloud saves
+- Add controller support
+- Set up Steam Workshop for mods
+
+
 # 2025 todo
 
 - add a "fog of war" feature that obscures unvisited sections of the world, and add a limit to player vision. previously-visited sections of the world should appear as grayscale.
+
+- add a python steam API? if one exists, use valve's. YEP it does. Use `steam[client]`
+
+- make sure the numpad keybindings also move the cursor for our asciimatics dialog boxes. try to do this in the cleanest way possible, so that asciimatics knows we're selecting a specific option.
 
 - add multiple dimensions (like space, the void, etc) to the game.
 
