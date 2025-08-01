@@ -1,9 +1,43 @@
 import math
-from typing import List
+from typing import List, Tuple, Dict, Any
 
 from lithicrivers.constants import VEC_WEST, VEC_EAST
 from lithicrivers.model.vector import VectorN
-from lithicrivers.textutil import render_tuple
+from lithicrivers.textutil import render_tuple, get_color_for_tile, get_color_for_item, COLOR_MANAGER
+
+
+class ColoredRenderedData:
+    """A rendered list of objects with color information."""
+    
+    def __init__(self, render_data: List[List[str]], color_data: List[List[Tuple[int, int, int]]], scale=1):
+        self.render_data = render_data
+        self.color_data = color_data
+        self.scale = scale
+    
+    def as_string(self, eol='\n') -> str:
+        """Convert to string (without color information)."""
+        ret = []
+        
+        for y in range(0, len(self.render_data)):
+            render_row = self.render_data[y]
+            for stripe_idx in range(0, self.scale):
+                retSlice = []
+                for x in range(0, len(render_row)):
+                    render_item = render_row[x]
+                    render_item_chunk = render_item.split(eol)
+                    slice = render_item_chunk[stripe_idx]
+                    slice = slice.replace(eol, '')
+                    retSlice.append(slice)
+                
+                ret.append(''.join(retSlice))
+        
+        return eol.join(ret)
+    
+    def get_color_at(self, x: int, y: int) -> Tuple[int, int, int]:
+        """Get color information at a specific position."""
+        if 0 <= y < len(self.color_data) and 0 <= x < len(self.color_data[y]):
+            return self.color_data[y][x]
+        return COLOR_MANAGER.get_color("DEFAULT")
 
 
 class RenderedData:
@@ -13,7 +47,7 @@ class RenderedData:
     columns/rows they inhabit...
     """
 
-    def __init__(self, render_data: List[List[str]], scale=1):
+    def __init__(self, render_data: List[List[str]], scale=1, color_data: List[List[Tuple[int, int, int]]] = None):
 
         # constructor flexibility
         if isinstance(render_data, str):
@@ -24,6 +58,12 @@ class RenderedData:
 
         self.render_data = render_data
         self.scale = scale
+        
+        # Initialize color data if not provided
+        if color_data is None:
+            self.color_data = [[COLOR_MANAGER.get_color("DEFAULT") for _ in row] for row in render_data]
+        else:
+            self.color_data = color_data
 
     def as_string(self, eol='\n') -> str:
 
@@ -43,6 +83,12 @@ class RenderedData:
                 ret.append(''.join(retSlice))
 
         return eol.join(ret)
+    
+    def get_color_at(self, x: int, y: int) -> Tuple[int, int, int]:
+        """Get color information at a specific position."""
+        if 0 <= y < len(self.color_data) and 0 <= x < len(self.color_data[y]):
+            return self.color_data[y][x]
+        return COLOR_MANAGER.get_color("DEFAULT")
 
     @staticmethod
     def from_string(string: str, scale: int = 1, eol='\n'):
