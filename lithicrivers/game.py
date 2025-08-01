@@ -456,7 +456,12 @@ class Tiles:
 
     @staticmethod
     def Gold_Ore():
-        return Tile("Gold Ore", drops={
+        return Tile("Gold Ore", 
+                    sprite_sheet=['?', '??\n'
+                                       '??', '???\n'
+                                             '???\n'
+                                             '???'],
+                    drops={
             0.9: Items.Gold_Nugget(),
             0.1: Items.Diamond()
         })
@@ -649,7 +654,17 @@ class World:
 class Game:
     def __init__(self, player: Player = None, world: World = None, viewport: Viewport = DEFAULT_VIEWPORT, seed: Optional[int] = None):
 
-        self.viewport = viewport
+        # Create a copy of the viewport to avoid shared state between tests
+        if viewport is DEFAULT_VIEWPORT:
+            from lithicrivers.model.modelpleasemoveme import Viewport
+            from lithicrivers.model.vector import VectorN
+            self.viewport = Viewport(
+                top_left=VectorN(viewport.top_left.x, viewport.top_left.y, viewport.top_left.z),
+                lower_right=VectorN(viewport.lower_right.x, viewport.lower_right.y, viewport.lower_right.z),
+                scale=viewport.scale
+            )
+        else:
+            self.viewport = viewport
 
         if player is None:
             player = Player()
@@ -700,7 +715,9 @@ class Game:
                 tile_color = get_color_for_tile(tile.tileid)
 
                 # Check for entities at this position
-                entity = self.world.get_entity(pos)
+                entity = None
+                if hasattr(self.world, 'get_entity'):
+                    entity = self.world.get_entity(pos)
                 if entity:
                     sprite = entity.render_sprite(scale=viewport.scale)
                     # Use entity color if available, otherwise use tile color
