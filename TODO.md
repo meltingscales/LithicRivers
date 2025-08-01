@@ -35,7 +35,6 @@
 
 # 2025 todo
 
-- make trees guaranteed to drop at least 1 acorn, up to 3, but dropping 1 90% of the time.
 - add a dialog box system, as well as a starter NPC that you can talk to and choose a dialog option at the end of a short conversation.
 - unify keybinds to 1 file, perhaps being managed as part of a class that loads a JSON file. Have the keybinds be stored in a JSON file that can be modified by the user, and gets packaged as part of the exe. Do the same thing for settings.py - extract it to a json file so a user can edit it easily.
 - like caves of qud, use the numpad for 8-way movement. WASD can be used for something else later.
