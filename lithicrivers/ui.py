@@ -225,7 +225,6 @@ class GameWidget(asciimatics.widgets.Widget):
         self._frame.canvas: Canvas
 
         content = ""
-        content += f"|~-~ World {self.game.world.name} ~-~|\n"
 
         # Check if viewport should be visible
         viewport_visible = getattr(self.game, "viewport_visible", True)
@@ -376,10 +375,6 @@ class RootPage(Frame):
 
         self.add_layout(layout1)
 
-        self.labelMessage = HeaderLabel(name="labelMessage", header="MSG")
-        layout1.add_widget(self.labelMessage, column=1)
-        self.labelMessage.text = f"Welcome to {game.world.name}! <3"
-
         self.labelPosition = HeaderLabel(name="labelPosition", header="POS")
         layout1.add_widget(self.labelPosition, column=1)
         self.labelPosition.text = str(self.game.render_pretty_player_position())
@@ -472,6 +467,32 @@ class RootPage(Frame):
 
         bar = filled * filled_length + empty * empty_length
         return f"{bar} {current}/{maximum}"
+        
+    def update_status_label(self):
+        """Update the status label with current player information."""
+        if hasattr(self, "statusLabel") and self.game:
+            player = self.game.player
+            position = player.position
+
+            # Calculate heading (direction player is facing)
+            heading = self._get_heading(position)
+
+            # Create status bar content
+            health_bar = self._create_bar(player.health, 100, "HP", "█", "░")
+            stamina_bar = self._create_bar(player.stamina, 100, "ST", "█", "░")
+
+            # Format the status bar
+            status_parts = [
+                f"Health: {health_bar}",
+                f"Stamina: {stamina_bar}",
+                f"Position: {position.as_short_string()}",
+                f"Heading: {heading}",
+                f"Tile: {self.game.get_tile_at_player_feet().tileid}",
+                f"Scale: {self.game.viewport.scale}x"
+            ]
+
+            # Join with separators
+            self.statusLabel.text = " | ".join(status_parts)
 
     def _adjust_viewport_for_screen(self, screen):
         """Adjust viewport size based on available screen space."""
@@ -955,7 +976,6 @@ class InputHandler:
 
         tile_under: Tile = game.get_tile_at_player_feet()
         if tile_under == Tiles.dirt():
-            root_page.labelMessage.text = "[ERROR] You can't mine dirt :P"
             return  # can't mine dirt
         elif tile_under == Tiles.tree():
             # Allow mining trees - they drop guaranteed acorns plus other items
@@ -963,38 +983,50 @@ class InputHandler:
             for item in tree_drops:
                 game.player.inventory.add_item(item)
             game.set_tile_at_player_feet(Tiles.dirt())
-            root_page.labelMessage.text = "[SUCCESS] You chopped down the tree!"
+            root_page.update_status_label()
         elif tile_under == Tiles.gold_ore():
             game.player.inventory.add_item(tile_under.calc_drop())
             game.set_tile_at_player_feet(Tiles.dirt())
-            root_page.labelMessage.text = "[RARE] You found something mysterious!"
+            root_page.update_status_label()
 
     @classmethod
-    def handle_viewport(cls, event: KeyboardEvent, game: Game):
+    def handle_viewport(cls, event: KeyboardEvent, game: Game, root_page: RootPage = None):
         if KEYMAP.matches("RESET_VIEWPORT", event):
             game.reset_viewport()
+            if root_page:
+                root_page.update_status_label()
 
         if KEYMAP.matches("SLIDE_VIEWPORT_WEST", event):
             game.viewport.slide_left()
+            if root_page:
+                root_page.update_status_label()
 
         if KEYMAP.matches("SLIDE_VIEWPORT_EAST", event):
             game.viewport.slide_right()
+            if root_page:
+                root_page.update_status_label()
 
         if KEYMAP.matches("TOGGLE_VIEWPORT", event):
             # Toggle viewport visibility by setting a flag
             if not hasattr(game, "viewport_visible"):
                 game.viewport_visible = True
             game.viewport_visible = not game.viewport_visible
+            if root_page:
+                root_page.update_status_label()
 
     @classmethod
-    def handle_scale(cls, event, game):
+    def handle_scale(cls, event, game, root_page: RootPage = None):
         if KEYMAP.matches("SCALE_DOWN", event):
             game.viewport.rescale_down(1)
             game.reset_viewport()
+            if root_page:
+                root_page.update_status_label()
 
         if KEYMAP.matches("SCALE_UP", event):
             game.viewport.rescale_up(1)
             game.reset_viewport()
+            if root_page:
+                root_page.update_status_label()
 
     @classmethod
     def handle_interaction(cls, event: KeyboardEvent, game: Game, root_page: RootPage):
@@ -1006,7 +1038,6 @@ class InputHandler:
         adjacent_entities = game.world.get_adjacent_entities(game.player.position)
 
         if not adjacent_entities:
-            root_page.labelMessage.text = "[INFO] Nothing to interact with nearby."
             return
 
         # Check if there's an NPC adjacent (for conversation)
@@ -1298,6 +1329,9 @@ def demo(screen: Screen, scene: Scene, game: Game):
 
             # display pos
             root_page.labelPosition.text = game.render_pretty_player_position()
+            
+            # Update status label immediately
+            root_page.update_status_label()
 
             # move the viewport with the player
             if game.player_outside_viewport(wiggle=VIEWPORT_WIGGLE):
@@ -1307,8 +1341,8 @@ def demo(screen: Screen, scene: Scene, game: Game):
                 if game.player_outside_viewport(wiggle=VIEWPORT_WIGGLE):
                     game.reset_viewport()
 
-        InputHandler.handle_viewport(event, root_page.game)
-        InputHandler.handle_scale(event, root_page.game)
+        InputHandler.handle_viewport(event, root_page.game, root_page)
+        InputHandler.handle_scale(event, root_page.game, root_page)
         InputHandler.handle_interaction(event, root_page.game, root_page)
 
         InputHandler.handle_mining(event, root_page.game, root_page)
