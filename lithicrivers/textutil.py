@@ -24,7 +24,7 @@ class ColorScheme(Enum):
     BEDROCK = (8, 0, 0)      # Gray (stone)
     CLOUD = (7, 0, 0)        # White (sky)
     EMPTY = (0, 0, 0)        # Black (void)
-    DAFUQ = (5, 0, 0)        # Magenta (mysterious)
+    GOLD_ORE = (3, 0, 0)     # Yellow (gold)
     
     # Player colors
     PLAYER = (6, 0, 0)       # Cyan (player)
@@ -74,7 +74,7 @@ class ColorManager:
             'Bedrock': ColorScheme.BEDROCK.value,
             'Cloud': ColorScheme.CLOUD.value,
             'Empty': ColorScheme.EMPTY.value,
-            'Dafuq is this?': ColorScheme.DAFUQ.value,
+            'Gold Ore': ColorScheme.GOLD_ORE.value,
         }
         return tile_colors.get(tile_id, ColorScheme.DEFAULT.value)
     

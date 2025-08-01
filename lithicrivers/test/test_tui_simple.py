@@ -80,7 +80,7 @@ class TestInputHandlerSimple(SimpleTUITestCase):
         """Test that mining inputs are handled correctly."""
         # Set up a mineable tile at player's position
         player_pos = self.game.player.position
-        self.game.world.set_tile(player_pos, Tiles.DaFuq())
+        self.game.world.set_tile(player_pos, Tiles.Gold_Ore())
         
         # Create mining event (use 'u' key which is mapped to MINE)
         event = self.create_keyboard_event(ord('u'))
@@ -179,7 +179,7 @@ class TestGameIntegrationSimple(SimpleTUITestCase):
         """Test that mining works correctly."""
         # Set up a mineable tile
         player_pos = self.game.player.position
-        self.game.world.set_tile(player_pos, Tiles.DaFuq())
+        self.game.world.set_tile(player_pos, Tiles.Gold_Ore())
         
         # Mine the tile
         event = self.create_keyboard_event(ord('u'))

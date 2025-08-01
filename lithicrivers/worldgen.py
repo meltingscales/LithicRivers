@@ -103,12 +103,12 @@ class SeededWorldGenerator:
         elif position.z < 0:
             # Underground - weighted choice between bedrock, dirt, and rare items
             weights = [1, 0.2, 0.05]
-            choices = [Tiles.Bedrock(), Tiles.Dirt(), Tiles.DaFuq()]
+            choices = [Tiles.Bedrock(), Tiles.Dirt(), Tiles.Gold_Ore()]
             return local_rng.choices(choices, weights=weights, k=1)[0]
         else:
             # Surface level - weighted choice between trees, dirt, and rare items
             weights = [5, 100, 1]
-            choices = [Tiles.Tree(), Tiles.Dirt(), Tiles.DaFuq()]
+            choices = [Tiles.Tree(), Tiles.Dirt(), Tiles.Gold_Ore()]
             return local_rng.choices(choices, weights=weights, k=1)[0]
     
     def generate_world_data(self, radius: VectorN) -> Dict[str, Tile]:
