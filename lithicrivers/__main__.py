@@ -6,7 +6,7 @@ from asciimatics.screen import Screen
 
 from lithicrivers.game import Game
 from lithicrivers.model.modelpleasemoveme import StopGame
-from lithicrivers.settings import LOGFILENAME, GAME_NAME, LOGGINGLEVEL
+from lithicrivers.settings import GAME_NAME, LOGFILENAME, LOGGINGLEVEL
 from lithicrivers.ui import demo
 
 # Add custom log levels for verbose debugging
@@ -18,22 +18,20 @@ if os.path.exists(LOGFILENAME):
 
 logging.basicConfig(filename=LOGFILENAME, level=LOGGINGLEVEL)
 
-if __name__ == '__main__':
-
+if __name__ == "__main__":
     GAME = Game()
 
-    print(f"Welcome to {GAME_NAME}.\n"
-          f"See '{LOGFILENAME}' for logs.")
+    print(f"Welcome to {GAME_NAME}.\nSee '{LOGFILENAME}' for logs.")
 
     last_scene = None
     while GAME.running:
         try:
             logging.debug("Running Screen.wrapper()")
             Screen.wrapper(demo, catch_interrupt=True, arguments=[last_scene, GAME])
-        except StopGame as se:
+        except StopGame:
             logging.debug("Caught StopGame!")
             GAME.running = False
-        except ResizeScreenError as rse:
+        except ResizeScreenError:
             logging.debug("Caught ResizeScreenError !")
             pass
             # Screen rendering stops and re-starts if we get a ResizeScreenError since we're in a while loop...

@@ -2,14 +2,13 @@ import os.path
 import unittest
 from pathlib import Path
 
-from lithicrivers.game import WorldData, World, Tiles, weighted_choice
+from lithicrivers.game import Tiles, World, WorldData, weighted_choice
 from lithicrivers.model.vector import VectorN
 
-filename = Path('testWorld.lithicriversworlddata')
+filename = Path("testWorld.lithicriversworlddata")
 
 
 class TestSerialize(unittest.TestCase):
-
     def setUp(self) -> None:
         if os.path.exists(filename):
             os.remove(filename)
@@ -21,7 +20,9 @@ class TestSerialize(unittest.TestCase):
     def testSimpleSer(self):
         for i in range(-5, 5):
             somePos = VectorN(i, i, i)
-            someTile = weighted_choice([1, 1, 1], [Tiles.Tree(), Tiles.Gold_Ore(), Tiles.Bedrock()])
+            someTile = weighted_choice(
+                [1, 1, 1], [Tiles.Tree(), Tiles.Gold_Ore(), Tiles.Bedrock()]
+            )
             someTile.description = "Wow serialize test!!"
 
             wd = World.gen_random_world_data(radius=VectorN(5, 5, 5))
@@ -42,4 +43,3 @@ class TestSerialize(unittest.TestCase):
 
             # delete file
             os.remove(filename)
-

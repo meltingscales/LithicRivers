@@ -116,12 +116,15 @@ build-docker: ## Build Docker image
 
 # Code quality
 lint: ## Run linting
-	uv run flake8 lithicrivers/
+	uv run ruff check lithicrivers/
 	uv run mypy lithicrivers/
 
+lint-stats: ## Run linting with statistics
+	uv run ruff check lithicrivers/ --statistics
+
 format: ## Format code
-	uv run black lithicrivers/
-	uv run isort lithicrivers/
+	uv run ruff format lithicrivers/
+	uv run ruff check --fix lithicrivers/
 
 # Cleanup
 clean: ## Clean build artifacts

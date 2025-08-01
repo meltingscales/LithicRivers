@@ -1,23 +1,31 @@
 import math
-from typing import List, Tuple, Dict, Any
+from typing import List, Tuple
 
-from lithicrivers.constants import VEC_WEST, VEC_EAST
+from lithicrivers.constants import VEC_EAST, VEC_WEST
 from lithicrivers.model.vector import VectorN
-from lithicrivers.textutil import render_tuple, get_color_for_tile, get_color_for_item, COLOR_MANAGER
+from lithicrivers.textutil import (
+    COLOR_MANAGER,
+    render_tuple,
+)
 
 
 class ColoredRenderedData:
     """A rendered list of objects with color information."""
-    
-    def __init__(self, render_data: List[List[str]], color_data: List[List[Tuple[int, int, int]]], scale=1):
+
+    def __init__(
+        self,
+        render_data: List[List[str]],
+        color_data: List[List[Tuple[int, int, int]]],
+        scale=1,
+    ):
         self.render_data = render_data
         self.color_data = color_data
         self.scale = scale
-    
-    def as_string(self, eol='\n') -> str:
+
+    def as_string(self, eol="\n") -> str:
         """Convert to string (without color information)."""
         ret = []
-        
+
         for y in range(0, len(self.render_data)):
             render_row = self.render_data[y]
             for stripe_idx in range(0, self.scale):
@@ -26,13 +34,13 @@ class ColoredRenderedData:
                     render_item = render_row[x]
                     render_item_chunk = render_item.split(eol)
                     slice = render_item_chunk[stripe_idx]
-                    slice = slice.replace(eol, '')
+                    slice = slice.replace(eol, "")
                     retSlice.append(slice)
-                
-                ret.append(''.join(retSlice))
-        
+
+                ret.append("".join(retSlice))
+
         return eol.join(ret)
-    
+
     def get_color_at(self, x: int, y: int) -> Tuple[int, int, int]:
         """Get color information at a specific position."""
         if 0 <= y < len(self.color_data) and 0 <= x < len(self.color_data[y]):
@@ -47,8 +55,12 @@ class RenderedData:
     columns/rows they inhabit...
     """
 
-    def __init__(self, render_data: List[List[str]], scale=1, color_data: List[List[Tuple[int, int, int]]] = None):
-
+    def __init__(
+        self,
+        render_data: List[List[str]],
+        scale=1,
+        color_data: List[List[Tuple[int, int, int]]] = None,
+    ):
         # constructor flexibility
         if isinstance(render_data, str):
             render_data = list(list(render_data))
@@ -58,15 +70,16 @@ class RenderedData:
 
         self.render_data = render_data
         self.scale = scale
-        
+
         # Initialize color data if not provided
         if color_data is None:
-            self.color_data = [[COLOR_MANAGER.get_color("DEFAULT") for _ in row] for row in render_data]
+            self.color_data = [
+                [COLOR_MANAGER.get_color("DEFAULT") for _ in row] for row in render_data
+            ]
         else:
             self.color_data = color_data
 
-    def as_string(self, eol='\n') -> str:
-
+    def as_string(self, eol="\n") -> str:
         ret = []
 
         for y in range(0, len(self.render_data)):
@@ -77,13 +90,13 @@ class RenderedData:
                     render_item = render_row[x]
                     render_item_chunk = render_item.split(eol)
                     slice = render_item_chunk[stripe_idx]
-                    slice = slice.replace(eol, '')
+                    slice = slice.replace(eol, "")
                     retSlice.append(slice)
 
-                ret.append(''.join(retSlice))
+                ret.append("".join(retSlice))
 
         return eol.join(ret)
-    
+
     def get_color_at(self, x: int, y: int) -> Tuple[int, int, int]:
         """Get color information at a specific position."""
         if 0 <= y < len(self.color_data) and 0 <= x < len(self.color_data[y]):
@@ -91,8 +104,7 @@ class RenderedData:
         return COLOR_MANAGER.get_color("DEFAULT")
 
     @staticmethod
-    def from_string(string: str, scale: int = 1, eol='\n'):
-
+    def from_string(string: str, scale: int = 1, eol="\n"):
         raise NotImplementedError("Lazy!")
 
         split = string.split(eol)
@@ -100,7 +112,12 @@ class RenderedData:
 
         for i in range(0, len(split)):
             tok = split[i]
-            retslices = (list() for _ in range(0, ))
+            retslices = (
+                list()
+                for _ in range(
+                    0,
+                )
+            )
             for stripe_idx in range(0, scale):
                 stripe = tok[0:stripe_idx]
                 print(stripe)
@@ -126,11 +143,7 @@ class Viewport:
     def generate_centered(center: VectorN, radius: VectorN, scale=1):
         """Generate a Viewport centered on `center` with `radius` as its lower and upper bounds.
         It doubles from `radius`."""
-        return Viewport(
-            (center - radius),
-            (center + radius),
-            scale=scale
-        )
+        return Viewport((center - radius), (center + radius), scale=scale)
 
     def clamp_scale(self):
         if self.scale < 1:
@@ -145,7 +158,6 @@ class Viewport:
         self.rescale(i)
 
     def rescale(self, i: int):
-
         self.scale += i
         self.clamp_scale()
 
@@ -197,18 +209,13 @@ class Viewport:
         return abs(self.lower_right.x - self.top_left.x)
 
     def __str__(self):
-        return "<Viewport scale={} top_left=[{}] lower_right=[{}] >".format(self.scale, self.top_left, self.lower_right)
+        return f"<Viewport scale={self.scale} top_left=[{self.top_left}] lower_right=[{self.lower_right}] >"
 
     def __repr__(self):
         return str(self)
 
     def render_pretty(self):
-        return "<{scale}> [{size}] ({tl}, {lr}) ".format(
-            size=render_tuple(self.get_size().as_list()),
-            tl=render_tuple(self.top_left.trim(2).as_list()),
-            lr=render_tuple(self.lower_right.trim(2).as_list()),
-            scale=self.scale
-        )
+        return f"<{self.scale}> [{render_tuple(self.get_size().as_list())}] ({render_tuple(self.top_left.trim(2).as_list())}, {render_tuple(self.lower_right.trim(2).as_list())}) "
 
     def copy(self):
         """Create a copy of this viewport."""

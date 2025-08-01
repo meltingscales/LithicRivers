@@ -2,8 +2,12 @@ from lithicrivers.model.vector import VectorN
 
 VEC_DOWN = VectorN(0, 0, 1)
 VEC_UP = VectorN(0, 0, -1)
-VEC_NORTH = -VectorN(0, 1, 0)  # negative because i am laaaaazy and my Y values are flipped
-VEC_SOUTH = -VectorN(0, -1, 0)  # negative because i am laaaaazy and my Y values are flipped
+VEC_NORTH = -VectorN(
+    0, 1, 0
+)  # negative because i am laaaaazy and my Y values are flipped
+VEC_SOUTH = -VectorN(
+    0, -1, 0
+)  # negative because i am laaaaazy and my Y values are flipped
 VEC_WEST = VectorN(-1, 0, 0)
 VEC_EAST = VectorN(1, 0, 0)
 
@@ -24,17 +28,15 @@ NUMPAD_2 = 50  # South
 NUMPAD_3 = 51  # Southeast
 NUMPAD_5 = 53  # Center (no movement)
 
-NESW_MNEMONIC = \
-    '''
+NESW_MNEMONIC = """
       N
     W   E
       S
-    '''
+    """
 
 # 8-way movement mnemonic
-EIGHT_WAY_MNEMONIC = \
-    '''
+EIGHT_WAY_MNEMONIC = """
     7 8 9
     4   6
     1 2 3
-    '''
+    """
