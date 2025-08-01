@@ -125,14 +125,23 @@ format: ## Format code
 
 # Cleanup
 clean: ## Clean build artifacts
+	@echo "Cleaning build artifacts..."
 	rm -rf build/
 	rm -rf dist/
 	rm -rf *.egg-info/
 	rm -rf .coverage
 	rm -rf htmlcov/
 	rm -rf coverage/
-	find . -type d -name __pycache__ -delete
-	find . -type f -name "*.pyc" -delete
+	@echo "Removing Python cache files..."
+	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+	find . -type f -name "*.pyc" -delete 2>/dev/null || true
+	find . -type f -name "*.pyo" -delete 2>/dev/null || true
+	find . -type f -name "*.pyd" -delete 2>/dev/null || true
+	@echo "Removing temporary files..."
+	rm -rf .pytest_cache/
+	rm -rf .mypy_cache/
+	rm -rf .ruff_cache/
+	@echo "Clean complete!"
 
 # Migration from Poetry to uv
 migrate-to-uv: ## Migrate from Poetry to uv
