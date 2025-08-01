@@ -122,13 +122,15 @@ class NPC(Entity, SpriteRenderable):
             "about_building": {
                 "text": "Building is coming soon! You'll be able to place blocks and create structures. For now, focus on gathering resources through mining.",
                 "options": [
-                    "Tell me about mining",
+                    "Tell me more about mining",
                     "Back to greeting"
                 ]
             },
             "goodbye": {
                 "text": "Farewell, traveler! May your adventures be fruitful!",
-                "options": []
+                "options": [
+                    "OK"
+                ]
             }
         }
     
@@ -150,6 +152,8 @@ class NPC(Entity, SpriteRenderable):
             return "greeting"
         elif response == "Goodbye":
             return "goodbye"
+        elif response == "OK":
+            return None  # End conversation
         else:
             return topic  # Stay on current topic
     
@@ -282,7 +286,7 @@ class Inventory:
         for k, v in self.count_items().items():
             s += '{}={}, '.format(k, v)
 
-        return s[0:len(s) - 2]  # wow you lazy bastard, you cant even fucking format a string???? AAFSDFASDFADFAFSD
+        return s[0:len(s) - 2]
     
     def colored_summary(self) -> str:
         """Generate a colored summary of inventory items."""

@@ -39,6 +39,7 @@
 - add the ability to save (or auto-save) to a world file. just use serialization now, but later, we should optimize it like how Minecraft does - chunks, dimensions, and a custom binary file format with auto-saving and multi-threaded loading/saving.
 - instead of just "World Gaia", I want you to add some useful GUI elements to be rendered at the top of the screen with a small border. Things like health, current heading, etc. Make sure it's left-aligned but also takes up as much space as is possible (same width as world viewport)
 - Add a config item in "settings.json" that toggles debug mode - things like our "Test Popups" screen. If it's enabled, show debug elements. If it's disabled, hide them.
+- Make sure we're using logging everywhere instead of print.
 - are there any really fun terminal characters we can use as an alternative to just ASCII? can you list them?
 - make the message log pane actually functional - dialog, interactions, mining, and pickups should be logged there.
 - add the ability to look around with 'L', just like caves of qud.
@@ -48,7 +49,7 @@
 - ask "are there any bugs or issues you see with my existing viewport code? can we stress test it?" to AI
 - ask "Are there any bugs or issues you see with my world data structure? how does minecraft do it?" to AI
  - eventually, I'd like to publish this game on steam for $3. don't add/edit any code, I just want advice. What should I focus on before that?
-- give me suggestions for different biomes!
+- give me suggestions for different biomes.
 
 
 - add random but seeded structure generation - old ruins, ore patches, machines, crashed ships, behemoth corpses, etc. Have the structure definition files be stored in ./lithicrivers/data/structures/ and come up with a reasonable format for them that lets you use ASCII art to define structures. TILDE in shape_layers.txt is a special character that separates a y-layer. for example:
