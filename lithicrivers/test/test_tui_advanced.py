@@ -280,9 +280,9 @@ class TestInputHandlerAdvanced(AdvancedUITestCase):
     
     def test_mining_input_handling(self):
         """Test that mining inputs are handled correctly."""
-        # Set up a mineable tile at player's position (DaFuq is mineable)
+        # Set up a mineable tile at player's position (Gold Ore is mineable)
         player_pos = self.game.player.position
-        self.game.world.set_tile(player_pos, Tiles.DaFuq())
+        self.game.world.set_tile(player_pos, Tiles.Gold_Ore())
         
         # Create mining event (use 'u' key which is mapped to MINE)
         event = self.create_keyboard_event(ord('u'))

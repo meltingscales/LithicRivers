@@ -406,7 +406,7 @@ class InputHandler:
                 game.player.inventory.add_item(item)
             game.set_tile_at_player_feet(Tiles.Dirt())
             root_page.labelMessage.text = '[SUCCESS] You chopped down the tree!'
-        elif tile_under == Tiles.DaFuq():
+        elif tile_under == Tiles.Gold_Ore():
             game.player.inventory.add_item(tile_under.calc_drop())
             game.set_tile_at_player_feet(Tiles.Dirt())
             root_page.labelMessage.text = '[RARE] You found something mysterious!'

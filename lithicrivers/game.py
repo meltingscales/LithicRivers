@@ -286,7 +286,7 @@ def generate_tile(choices: List[Tile] = None, weights: List[int] = None, current
     if choices is None:
         choices = [Tiles.Tree(),
                    Tiles.Dirt(),
-                   Tiles.DaFuq()]
+                   Tiles.Gold_Ore()]
 
     if weights is None:
         weights = [5, 100, 1]
@@ -301,7 +301,7 @@ def generate_tile(choices: List[Tile] = None, weights: List[int] = None, current
             # we are underground
             return weighted_choice(
                 [1, 0.2, 0.05],
-                [Tiles.Bedrock(), Tiles.Dirt(), Tiles.DaFuq()]
+                [Tiles.Bedrock(), Tiles.Dirt(), Tiles.Gold_Ore()]
             )
 
     return weighted_choice(weights, choices)
@@ -334,8 +334,8 @@ class Tiles:
                            0.20: Items.Acorn()})
 
     @staticmethod
-    def DaFuq():
-        return Tile("Dafuq is this?", drops={
+    def Gold_Ore():
+        return Tile("Gold Ore", drops={
             0.9: Items.Gold_Nugget(),
             0.1: Items.Diamond()
         })

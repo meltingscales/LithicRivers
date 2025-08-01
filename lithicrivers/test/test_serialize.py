@@ -21,7 +21,7 @@ class TestSerialize(unittest.TestCase):
     def testSimpleSer(self):
         for i in range(-5, 5):
             somePos = VectorN(i, i, i)
-            someTile = weighted_choice([1, 1, 1], [Tiles.Tree(), Tiles.DaFuq(), Tiles.Bedrock()])
+            someTile = weighted_choice([1, 1, 1], [Tiles.Tree(), Tiles.Gold_Ore(), Tiles.Bedrock()])
             someTile.description = "Wow serialize test!!"
 
             wd = World.gen_random_world_data(radius=VectorN(5, 5, 5))
