@@ -12,11 +12,7 @@ For licensing inquiries or source code access, please contact: **HenryFBP@gmail.
 
 See [LICENSE](LICENSE) for full terms.
 
-![Screenshot of the game](media/screenshot.png)
-
 ## Play the game
-
-Visit <https://replit.com/@HenryFBP/LithicRivers?embed=1> to play this game in an online terminal!
 
 Visit <https://github.com/HenryFBP/LithicRivers/releases> to download a release for your platform.
 

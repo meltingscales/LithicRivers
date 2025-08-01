@@ -8,9 +8,6 @@
 
 ## game
 - add procedurally generated catgirls
-- auto-scale the viewport based off of viewable area
-    - determine from screen size
-    - determine from "blank space" in asciimatics (if this is even doable)
 - allow player to place blocks
 - pushboxes
 - audio system
@@ -98,7 +95,7 @@
 
 - add a "fog of war" feature that obscures unvisited sections of the world, and add a limit to player vision. previously-visited sections of the world should appear as grayscale.
 
-- make sure the numpad keybindings also move the cursor for our asciimatics dialog boxes. try to do this in the cleanest way possible, so that asciimatics knows we're selecting a specific option.
+- make sure the numpad keybindings also move the cursor for our asciimatics dialog boxes. try to do this in the cleanest way possible, so that asciimatics knows we're selecting a specific option. 
 
 - add multiple dimensions (like space, the void, etc) to the game.
 
