@@ -93,6 +93,14 @@
 
 - interface for blind people to play the game, modular command lookup and help system. actually test it with popular screen readers.
 
+- a world map system like Qud that allows fast travel, and make the map tiles an average of the cells in a current chunk: a nuked chunk actually looks like a wasteland on the global map
+
+- restrict the ability to travel in the Z axis to stairs blocks only, unless you're flying or have a giant drill
+
+- make sure that building is not annoying! it should be really fun and easy.
+
+- hot bar system like Factorio with multiple swappable items and easy editing
+
 - ability to toggle variable Z-axis rendering for tall buildings
 
 - separate 3D world explorer program, a la mcedit 
@@ -104,6 +112,10 @@
 - actually establish the game's lore: the world ends after a fusion reactor explodes in the year 2186. this triggers a runaway greenhouse effect in the Earth's atmosphere that kills most humans and causes the world's economy to devolve. most complicated manufacturing gets taken over and destroyed. fast forward 1,000 years later to the year 3186, and you awaken as a heavily damaged android from SapienCorp, an old company that used to produce AI robots. you only wake up due to a 32-bit date overflow error that causes you to turn on and awaken in a desolate wasteland of a world with no real goals other than to repair yourself and explore.
 
 - modular body parts system like Qud, but more emphasis on crafting and modding
+
+- fuel cells of different types, jetpacks, antigravity (with extremely comedic "fall into space" mishaps), falling mechanic, electrical tools, gas powered tools
+
+- make inventory management not annoying: simple controls, toggle selections, "are you sure" to destructive or dangerous actions, "junk" rules or auto-dump option
 
 - start as an android with only 1 arm and 1 full leg, 1 damaged leg, with a quest to upgrade your body to less damaged. walk speed debuff, attack debuff, etc. "armless legless" as a funny challenge. 
 
