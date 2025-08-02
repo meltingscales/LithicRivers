@@ -91,9 +91,17 @@
 
 # 2025 todo
 
+- interface for blind people to play the game, modular command lookup and help system.
+
+- ability to toggle variable Z-axis rendering for tall buildings
+
+- separate 3D world explorer program, a la mcedit 
+
+- separate web portal for viewing game stats, map, entities, and performance 
+
 - add a reference to hushy and lapfox Trax to the game somehow. music, sprites, items, tools, etc
 
-- actually establish the game's lore
+- actually establish the game's lore: the world ends after a fusion reactor explodes in the year 2186. this triggers a runaway greenhouse effect in the Earth's atmosphere that kills most humans and causes the world's economy to devolve. most complicated manufacturing gets taken over and destroyed. fast forward 1,000 years later to the year 3186, and you awaken as a heavily damaged android from SapienCorp, an old company that used to produce AI robots. you only wake up due to a 32-bit date overflow error that causes you to turn on and awaken in a desolate wasteland of a world with no real goals other than to repair yourself and explore.
 
 - modular body parts system like Qud, but more emphasis on crafting and modding
 
@@ -110,6 +118,14 @@
 - procedurally generated dungeons that ARE NOT just structures, but similar to how the original rogue generated dungeons
 
 - a couple main questlines that reward different play styles
+
+- 10 to 20 static, main questlines NPCs, buildings, items, and dungeons
+
+- "everything is craftable" and "everything is raw materials"
+
+- simple query-based crafting system with a missing materials tracker like Factorio and the ability to view ratios for spreadsheet optimization 
+
+- NPC tribes that naturally gather from the environment and build machines by themselves
 
 - options for true rogue like, "roguelite", and custom difficulty templates
 
@@ -140,5 +156,3 @@
 - eventually, I'd like to publish this game on steam for $3. don't add/edit any code, I just want advice. What should I focus on before that?
 
 - give me suggestions for different biomes. I'd like a "Lithic River" biome to be an underground biome with molten lava and lots of ores...like the name of the game.
-
-- When you interact with an NPC -or- an Entity, I want you to be able to choose from a list of all NPCs AND entities that are adjacent to you. Currently, if you're next to 1 or more entities and at least 1 NPC, you immediately start dialogue with the NPC, but I'd rather it open a menu that lets you pick from a list of NPCs as well as Entities.
