@@ -100,10 +100,9 @@ class SeededWorldGenerator:
         Returns:
             The generated tile
         """
-        # Use position-based seeding for consistent generation
+        # Use position-based context for consistent generation
         # This ensures the same position always generates the same tile
-        position_seed = hash((self.seed.seed, position.x, position.y, position.z))
-        local_rng = random.Random(position_seed)
+        position_context = f"pos_{position.x}_{position.y}_{position.z}"
 
         # Generate based on height (z-coordinate)
         if position.z > 0:
@@ -113,12 +112,12 @@ class SeededWorldGenerator:
             # Underground - weighted choice between bedrock, dirt, and rare items
             weights = [1, 0.2, 0.05]
             choices = [Tiles.bedrock(), Tiles.dirt(), Tiles.gold_ore()]
-            return local_rng.choices(choices, weights=weights, k=1)[0]
+            return self.seeded_weighted_choice(weights, choices, position_context)
         else:
             # Surface level - weighted choice between trees, dirt, and rare items
             weights = [5, 100, 1]
             choices = [Tiles.tree(), Tiles.dirt(), Tiles.gold_ore()]
-            return local_rng.choices(choices, weights=weights, k=1)[0]
+            return self.seeded_weighted_choice(weights, choices, position_context)
 
     def generate_world_data(self, radius: VectorN) -> dict[str, Tile]:
         """

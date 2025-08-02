@@ -91,6 +91,8 @@
 
 # 2025 todo
 
+- worldgen does not seem like it's actually seeding correctly, it seems to vary when new worlds are created with the same seed.
+
 - add a "fog of war" feature that obscures unvisited sections of the world, and add a limit to player vision. previously-visited sections of the world should appear as grayscale.
 
 - make sure the numpad keybindings also move the cursor for our asciimatics dialog boxes. try to do this in the cleanest way possible, so that asciimatics knows we're selecting a specific option.
@@ -114,39 +116,3 @@
 - eventually, I'd like to publish this game on steam for $3. don't add/edit any code, I just want advice. What should I focus on before that?
 
 - give me suggestions for different biomes. I'd like a "Lithic River" biome to be an underground biome with molten lava and lots of ores...like the name of the game.
-
-
-- use pycharm debug server to figure out why the structures are not generating (see below)
-
-- add random but seeded structure generation - old ruins, ore patches, machines, crashed ships, behemoth corpses, etc. Have the structure definition files be stored in ./lithicrivers/data/structures/ and come up with a reasonable format for them that lets you use ASCII art to define structures. TILDE in shape_layers.txt is a special character that separates a y-layer. for example:
-
-/lithicrivers/data/structures/small_ship.lrstructure/
-/lithicrivers/data/structures/small_ship.lrstructure/shape_layers.txt
-
-....
-.XX.
-....
-~~~~
-.XXX
-Xe A
-XXX.
-~~~~
-....
-.XX.
-....
-
-
-/lithicrivers/data/structures/small_ship.lrstructure/data.json
-{
-  "blocks": {
-    ".": "empty",
-    "X": "iron_scrap",
-    "A": "door",
-    "e": "scrap_electronics",
-  },
-  "gen_biomes": "ALL",
-  "gen_chance": 0.001,
-  "y_layer_gen_range": [0, 0] //can generate only on layer 0, the ground.
-}
-
-I'd like you to also add a giant corpse (bone blocks), and a small temple (iron scrap with a buried treasure 2 blocks below the center)

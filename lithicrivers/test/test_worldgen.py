@@ -162,6 +162,68 @@ class TestWorldGenerationFunctions(unittest.TestCase):
         # Same seed should produce identical world data
         self.assertEqual(world_data1, world_data2)
 
+    def test_world_generation_includes_structures_deterministic(self):
+        """Test that world generation includes structures and is deterministic."""
+        radius = VectorN(5, 5, 2)  # Larger radius to ensure structures are generated
+
+        # Generate two worlds with the same seed
+        world_data1 = generate_world_with_seed(radius, seed=42)
+        world_data2 = generate_world_with_seed(radius, seed=42)
+
+        # Same seed should produce identical world data (including structures)
+        self.assertEqual(world_data1, world_data2)
+
+        # Verify that structures are present (should have more tiles than just terrain)
+        terrain_only_count = (2 * radius.x) * (2 * radius.y) * (2 * radius.z)
+        self.assertGreater(len(world_data1), terrain_only_count, 
+                          "World should contain structures in addition to terrain")
+
+        # Check for specific structure tiles (iron_scrap, bone_block, etc.)
+        structure_tiles = []
+        for tile in world_data1.values():
+            if tile.tileid in ["Iron Scrap", "Bone Block", "Door", "Scrap Electronics", "Treasure"]:
+                structure_tiles.append(tile.tileid)
+        
+        self.assertGreater(len(structure_tiles), 0, 
+                          "World should contain structure tiles")
+
+    def test_structure_placement_deterministic(self):
+        """Test that structure placement is deterministic across multiple generations."""
+        radius = VectorN(10, 10, 2)
+        seed = 12345
+
+        # Generate multiple worlds with the same seed
+        world_data1 = generate_world_with_seed(radius, seed=seed)
+        world_data2 = generate_world_with_seed(radius, seed=seed)
+        world_data3 = generate_world_with_seed(radius, seed=seed)
+
+        # All three worlds should be identical
+        self.assertEqual(world_data1, world_data2)
+        self.assertEqual(world_data2, world_data3)
+        self.assertEqual(world_data1, world_data3)
+
+        # Verify structure tiles are in the same positions
+        structure_positions1 = []
+        structure_positions2 = []
+        structure_positions3 = []
+
+        for pos_str, tile in world_data1.items():
+            if tile.tileid in ["Iron Scrap", "Bone Block", "Door", "Scrap Electronics", "Treasure"]:
+                structure_positions1.append(pos_str)
+
+        for pos_str, tile in world_data2.items():
+            if tile.tileid in ["Iron Scrap", "Bone Block", "Door", "Scrap Electronics", "Treasure"]:
+                structure_positions2.append(pos_str)
+
+        for pos_str, tile in world_data3.items():
+            if tile.tileid in ["Iron Scrap", "Bone Block", "Door", "Scrap Electronics", "Treasure"]:
+                structure_positions3.append(pos_str)
+
+        # Structure positions should be identical across all generations
+        self.assertEqual(structure_positions1, structure_positions2)
+        self.assertEqual(structure_positions2, structure_positions3)
+        self.assertEqual(structure_positions1, structure_positions3)
+
     def test_generate_world_with_seed_different_seeds(self):
         """Test that different seeds produce different worlds."""
         radius = VectorN(2, 2, 1)
