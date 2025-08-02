@@ -1058,15 +1058,7 @@ class InputHandler:
         if not adjacent_entities:
             return
 
-        # Check if there's an NPC adjacent (for conversation)
-        for _name, pos, _color in adjacent_entities:
-            entity = game.world.get_entity(pos)
-            if isinstance(entity, NPC):
-                # Start conversation with NPC
-                cls._start_npc_conversation(game, entity, root_page)
-                return
-
-        # Show interaction popup for other entities
+        # Show interaction popup for entities
         cls._show_interaction_popup(game, adjacent_entities, root_page)
 
     @classmethod
@@ -1158,16 +1150,17 @@ class InputHandler:
         # Create entity options for the popup
         entity_options = [f"{name} ({color})" for name, pos, color in adjacent_entities]
 
-        def popup_callback(selected_option):
-            if selected_option:
+        def popup_callback(selected_option: int):
+            """Handle the selected option."""
+            if selected_option is not None:
+
                 # Find the selected entity
-                for i, option in enumerate(entity_options):
-                    if option == selected_option:
-                        name, pos, color = adjacent_entities[i]
-                        cls._handle_entity_interaction(
-                            game, name, pos, color, root_page
-                        )
-                        break
+                chosen_entity = adjacent_entities[selected_option]
+                name, pos, color = chosen_entity
+                cls._handle_entity_interaction(
+                    game, name, pos, color, root_page
+                )
+
             global active_popup
             active_popup = None
 
