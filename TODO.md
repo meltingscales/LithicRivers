@@ -89,7 +89,9 @@
 - Set up Steam Workshop for mods
 
 
-# 2025 todo
+# eventually todo
+
+- plant growth that's self limiting and based on nearby blocks, but allows for farming manually or by automated means
 
 - interface for blind people to play the game, modular command lookup and help system. actually test it with popular screen readers.
 
@@ -169,9 +171,10 @@
 
 - give me suggestions for different biomes. I'd like a "Lithic River" biome to be an underground biome with molten lava and lots of ores...like the name of the game.
 
-## MVP for steam release 
+## MVP for steam release (2026)
 
 - perlin noise worldgen
 - block placement, push boxes, and fluids
 - basic crafting and a body repair/modular body feature with a damaged android body
 - procedural dungeons
+- body modularity means dynamic walk and break speeds, so tick rate needs to be larger than 1, perhaps 200 or so.
