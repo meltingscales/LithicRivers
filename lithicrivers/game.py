@@ -91,6 +91,8 @@ class Entity:
         self.move(VEC_EAST)
 
 
+
+
 class NPC(Entity, SpriteRenderable):
     """A non-player character that can have conversations."""
 
@@ -101,10 +103,45 @@ class NPC(Entity, SpriteRenderable):
         self.sprite = sprite
         self.color = color
         self.conversations = {}
+        # Default sprite sheet for all NPCs
+        self.sprite_sheet = [
+            sprite,  # 1x1
+            f"{sprite}{sprite}\n{sprite}{sprite}",  # 2x2
+            f"{sprite}{sprite}{sprite}\n{sprite}{sprite}{sprite}\n{sprite}{sprite}{sprite}"  # 3x3
+        ]
         self._setup_default_conversation()
 
     def _setup_default_conversation(self):
-        """Set up the default conversation for this NPC."""
+        self.conversations = {
+            "greeting": {
+                "text": f"Hello, I am {self.name}.",
+                "options": ["Goodbye"],
+            },
+            "goodbye": {
+                "text": "Goodbye!",
+                "options": [],
+            },
+        }
+
+    def get_conversation(self, topic: str = "greeting"):
+        return self.conversations.get(topic, self.conversations["greeting"])
+
+    def handle_response(self, response: str, topic: str = "greeting"):
+        if response == "Goodbye":
+            return "goodbye"
+        return "greeting"
+
+class ElderOak(NPC):
+    def __init__(self, position: VectorN):
+        super().__init__("Elder Oak", position, sprite="N", color="cyan")
+        self.sprite_sheet = [
+            "N",  # 1x1
+            "NN\nNN",  # 2x2 - Simple 2x2 tree
+            " N \nNNN\n N "  # 3x3 - Tree with trunk and branches
+        ]
+        self._setup_default_conversation()
+
+    def _setup_default_conversation(self):
         self.conversations = {
             "greeting": {
                 "text": f"Hello, traveler! I am {self.name}. Welcome to LithicRivers!",
@@ -132,49 +169,21 @@ class NPC(Entity, SpriteRenderable):
             },
         }
 
-    def get_conversation(self, topic: str = "greeting"):
-        """Get a conversation topic."""
-        return self.conversations.get(topic, self.conversations["greeting"])
-
     def handle_response(self, response: str, topic: str = "greeting"):
-        """Handle a conversation response and return the next topic."""
-        import logging
-
-        logging.info(f"NPC handle_response: response='{response}', topic='{topic}'")
-
-        if response == "Tell me about this world" or response == "What can you do?":
-            logging.info("NPC handle_response: returning 'about_world'")
+        if response == "Tell me about this world":
             return "about_world"
+        elif response == "What can you do?":
+            return "about_mining"
         elif response == "Tell me more about mining":
-            logging.info("NPC handle_response: returning 'about_mining'")
             return "about_mining"
         elif response == "What about building?":
-            logging.info("NPC handle_response: returning 'about_building'")
             return "about_building"
         elif response == "Back to greeting":
-            logging.info("NPC handle_response: returning 'greeting'")
             return "greeting"
-        elif response == "Goodbye":
-            logging.info("NPC handle_response: returning 'goodbye'")
+        elif response == "Goodbye" or response == "OK":
             return "goodbye"
-        elif response == "OK":
-            logging.info("NPC handle_response: returning None (end conversation)")
-            return None  # End conversation
         else:
-            logging.info(
-                f"NPC handle_response: no match, returning current topic '{topic}'"
-            )
-            return topic  # Stay on current topic
-
-    def render_sprite(self, scale: int = 1) -> str:
-        """Render the NPC sprite."""
-        scale_renders = {
-            1: self.sprite,
-            2: f"{self.sprite}{self.sprite}\n{self.sprite}{self.sprite}",
-            3: f"{self.sprite}{self.sprite}{self.sprite}\n{self.sprite}{self.sprite}{self.sprite}\n{self.sprite}{self.sprite}{self.sprite}",
-        }
-        return scale_renders.get(scale, self.sprite)
-
+            return "greeting"
 
 class InteractiveEntity(Entity, SpriteRenderable):
     """An entity that can be interacted with."""
@@ -191,15 +200,32 @@ class InteractiveEntity(Entity, SpriteRenderable):
         self.sprite = sprite
         self.color = color
         self.interaction_text = interaction_text
+        
+        # Create sprite sheet based on the sprite character
+        if sprite == "C":  # Crystal Shard
+            self.sprite_sheet = [
+                "C",  # 1x1
+                "CC\nCC",  # 2x2 - Simple 2x2 crystal
+                " C \nCCC\n C "  # 3x3 - Crystal with facets
+            ]
+        elif sprite == "R":  # Ancient Relic
+            self.sprite_sheet = [
+                "R",  # 1x1
+                "RR\nRR",  # 2x2 - Simple 2x2 relic
+                " R \nRRR\n R "  # 3x3 - Relic with ornate details
+            ]
+        else:
+            # Default sprite sheet for other interactive entities
+            self.sprite_sheet = [
+                sprite,  # 1x1
+                f"{sprite}{sprite}\n{sprite}{sprite}",  # 2x2
+                f"{sprite}{sprite}{sprite}\n{sprite}{sprite}{sprite}\n{sprite}{sprite}{sprite}"  # 3x3
+            ]
 
     def render_sprite(self, scale: int = 1) -> str:
         """Render the entity sprite."""
-        scale_renders = {
-            1: self.sprite,
-            2: f"{self.sprite}{self.sprite}\n{self.sprite}{self.sprite}",
-            3: f"{self.sprite}{self.sprite}{self.sprite}\n{self.sprite}{self.sprite}{self.sprite}\n{self.sprite}{self.sprite}{self.sprite}",
-        }
-        return scale_renders.get(scale, self.sprite)
+        # Use the SpriteRenderable's render_sprite method
+        return super().render_sprite(scale)
 
     def interact(self):
         """Handle interaction with this entity."""
@@ -213,7 +239,7 @@ class Entities:
 
     @staticmethod
     def starter_npc(position=VectorN(5, 5, 0)):
-        return NPC("Elder Oak", position, sprite="N", color="cyan")
+        return ElderOak(position)
 
     @staticmethod
     def test_entity1(position=VectorN(6, 5, 0)):
