@@ -168,3 +168,10 @@
 - eventually, I'd like to publish this game on steam for $3. don't add/edit any code, I just want advice. What should I focus on before that?
 
 - give me suggestions for different biomes. I'd like a "Lithic River" biome to be an underground biome with molten lava and lots of ores...like the name of the game.
+
+## MVP for steam release 
+
+- perlin noise worldgen
+- block placement, push boxes, and fluids
+- basic crafting and a body repair/modular body feature with a damaged android body
+- procedural dungeons
