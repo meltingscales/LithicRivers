@@ -201,26 +201,12 @@ class InteractiveEntity(Entity, SpriteRenderable):
         self.color = color
         self.interaction_text = interaction_text
         
-        # Create sprite sheet based on the sprite character
-        if sprite == "C":  # Crystal Shard
-            self.sprite_sheet = [
-                "C",  # 1x1
-                "CC\nCC",  # 2x2 - Simple 2x2 crystal
-                " C \nCCC\n C "  # 3x3 - Crystal with facets
-            ]
-        elif sprite == "R":  # Ancient Relic
-            self.sprite_sheet = [
-                "R",  # 1x1
-                "RR\nRR",  # 2x2 - Simple 2x2 relic
-                " R \nRRR\n R "  # 3x3 - Relic with ornate details
-            ]
-        else:
-            # Default sprite sheet for other interactive entities
-            self.sprite_sheet = [
-                sprite,  # 1x1
-                f"{sprite}{sprite}\n{sprite}{sprite}",  # 2x2
-                f"{sprite}{sprite}{sprite}\n{sprite}{sprite}{sprite}\n{sprite}{sprite}{sprite}"  # 3x3
-            ]
+        # Default sprite sheet for all interactive entities
+        self.sprite_sheet = [
+            sprite,  # 1x1
+            f"{sprite}{sprite}\n{sprite}{sprite}",  # 2x2
+            f"{sprite}{sprite}{sprite}\n{sprite}{sprite}{sprite}\n{sprite}{sprite}{sprite}"  # 3x3
+        ]
 
     def render_sprite(self, scale: int = 1) -> str:
         """Render the entity sprite."""
@@ -230,6 +216,37 @@ class InteractiveEntity(Entity, SpriteRenderable):
     def interact(self):
         """Handle interaction with this entity."""
         return self.interaction_text
+
+
+class CrystalShard(InteractiveEntity):
+    def __init__(self, position: VectorN):
+        super().__init__(
+            "Crystal Shard",
+            position,
+            sprite="C",
+            color="blue",
+            interaction_text="This crystal shard glows with a soft blue light. It seems to pulse with energy.",
+        )
+        self.sprite_sheet = [
+            "C",  # 1x1
+            "CC\nCC",  # 2x2 - Simple 2x2 crystal
+            " C \nCCC\n C "  # 3x3 - Crystal with facets
+        ]
+
+class AncientRelic(InteractiveEntity):
+    def __init__(self, position: VectorN):
+        super().__init__(
+            "Ancient Relic",
+            position,
+            sprite="R",
+            color="red",
+            interaction_text="This ancient relic is covered in mysterious runes. It radiates warmth.",
+        )
+        self.sprite_sheet = [
+            "R",  # 1x1
+            "RR\nRR",  # 2x2 - Simple 2x2 relic
+            " R \nRRR\n R "  # 3x3 - Relic with ornate details
+        ]
 
 
 class Entities:
@@ -243,23 +260,11 @@ class Entities:
 
     @staticmethod
     def test_entity1(position=VectorN(6, 5, 0)):
-        return InteractiveEntity(
-            "Crystal Shard",
-            position,
-            sprite="C",
-            color="blue",
-            interaction_text="This crystal shard glows with a soft blue light. It seems to pulse with energy.",
-        )
+        return CrystalShard(position)
 
     @staticmethod
     def test_entity2(position=VectorN(5, 6, 0)):
-        return InteractiveEntity(
-            "Ancient Relic",
-            position,
-            sprite="R",
-            color="red",
-            interaction_text="This ancient relic is covered in mysterious runes. It radiates warmth.",
-        )
+        return AncientRelic(position)
 
 
 class Items:
