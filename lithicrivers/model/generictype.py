@@ -1,3 +1,9 @@
+"""
+Generic type definitions for LithicRivers
+Copyright (c) 2024 Henry Post. All rights reserved.
+"""
+
 from typing import TypeVar
 
-T = TypeVar("T")
+# Generic type parameter for weighted choice functions
+T = TypeVar('T') 

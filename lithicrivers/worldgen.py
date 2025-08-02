@@ -7,6 +7,9 @@ import random
 from dataclasses import dataclass
 from typing import Any, Optional
 
+from lithicrivers.logging_config import get_logger
+
+logger = get_logger(__name__)
 from lithicrivers.game import Tile, Tiles
 from lithicrivers.model.vector import VectorN
 from lithicrivers.structure_generator import create_structure_manager
@@ -153,7 +156,7 @@ class SeededWorldGenerator:
         # Force a ship to spawn very close to the player's actual position (25,25,0)
         # Place ship at 20,20,0 which should be clearly visible from position (25,25,0)
         forced_ship_pos = VectorN(20, 20, 0)
-        print(f"FORCING SHIP TO SPAWN AT {forced_ship_pos}")  # Debug output
+        logger.info(f"FORCING SHIP TO SPAWN AT {forced_ship_pos}")  # Debug output
         self.structure_manager.place_structure("small_ship", world_data, forced_ship_pos, self.rng)
         
         # Generate structures in chunks for better distribution

@@ -1,0 +1,53 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug LithicRivers",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/lithicrivers/__main__.py",
+            "args": ["--debug"],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "TERM": "xterm-256color",
+                "PYTHONPATH": "${workspaceFolder}"
+            },
+            "justMyCode": false,
+            "stopOnEntry": false,
+            "python": "${workspaceFolder}/.venv/bin/python"
+        },
+        {
+            "name": "Debug LithicRivers (External Terminal)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/lithicrivers/__main__.py",
+            "args": ["--debug"],
+            "console": "externalTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "TERM": "xterm-256color",
+                "PYTHONPATH": "${workspaceFolder}"
+            },
+            "justMyCode": false,
+            "stopOnEntry": false,
+            "python": "${workspaceFolder}/.venv/bin/python"
+        },
+        {
+            "name": "Debug LithicRivers (Remote Debug)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/lithicrivers/__main__.py",
+            "args": ["--debug"],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "TERM": "xterm-256color",
+                "PYTHONPATH": "${workspaceFolder}"
+            },
+            "justMyCode": false,
+            "stopOnEntry": false,
+            "python": "${workspaceFolder}/.venv/bin/python"
+        }
+    ]
+} 

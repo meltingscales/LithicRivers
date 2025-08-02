@@ -13,7 +13,7 @@ from typing import Optional, Union
 
 from lithicrivers.constants import VEC_EAST, VEC_NORTH, VEC_SOUTH, VEC_WEST
 from lithicrivers.model.generictype import T
-from lithicrivers.model.modelpleasemoveme import RenderedData, Viewport
+from lithicrivers.model.model import RenderedData, Viewport
 from lithicrivers.model.vector import VectorN
 from lithicrivers.settings import (
     DEFAULT_PLAYER_POSITION,
@@ -701,7 +701,7 @@ class Game:
     ):
         # Create a copy of the viewport to avoid shared state between tests
         if viewport is DEFAULT_VIEWPORT:
-            from lithicrivers.model.modelpleasemoveme import Viewport
+            from lithicrivers.model.model import Viewport
             from lithicrivers.model.vector import VectorN
 
             self.viewport = Viewport(

@@ -24,7 +24,7 @@ from asciimatics.widgets import (
 
 from lithicrivers.game import NPC, Game, Tile, Tiles
 from lithicrivers.keymap import KEYMAP
-from lithicrivers.model.modelpleasemoveme import RenderedData, StopGameError, Viewport
+from lithicrivers.model.model import RenderedData, StopGameError, Viewport
 from lithicrivers.model.vector import VectorN
 from lithicrivers.settings import DEVELOPER_MODE, GAME_NAME, VIEWPORT_WIGGLE
 from lithicrivers.textutil import get_color_for_ui_element, list_label, presenting

@@ -1,7 +1,7 @@
 import unittest
 
 from lithicrivers.game import Game, Tiles, WorldData, generate_sprite_repeat
-from lithicrivers.model.modelpleasemoveme import RenderedData, Viewport
+from lithicrivers.model.model import RenderedData, Viewport
 from lithicrivers.model.vector import VectorN
 
 
@@ -88,7 +88,7 @@ class RenderStuff(unittest.TestCase):
 
     def test_viewport_sizing(self):
         """Test that viewport sizing works correctly."""
-        from lithicrivers.model.modelpleasemoveme import Viewport
+        from lithicrivers.model.model import Viewport
         from lithicrivers.model.vector import VectorN
 
         # Test that viewport can be created with different sizes

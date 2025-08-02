@@ -55,7 +55,7 @@
 
 ## steam-specific features
 - achievements
-- trading cards
+- trading cardsp
 - cloud saves
 - controller support
 - steam workshop
