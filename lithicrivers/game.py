@@ -253,13 +253,16 @@ class AncientRelic(InteractiveEntity):
         ]
 
 
-class StumblingSheep(Entity):
+class StumblingSheep(InteractiveEntity):
     """A sheep that stumbles around randomly."""
     
     def __init__(self, position: VectorN):
-        super().__init__("Stumbling Sheep", position)
-        self.sprite = "S"
-        self.color = "white"
+        super().__init__("Stumbling Sheep", position, sprite="S", color="white", interaction_text="You pet the sheep. It looks at you like this: -w-")
+        self.sprite_sheet = [
+            "S",
+            "@@\n,,",
+            "@w@\n###\n| |"
+        ]
     
     def tick(self):
         """Called each game tick. 50% chance to move in a random direction."""
@@ -269,17 +272,6 @@ class StumblingSheep(Entity):
             random_direction = random.choice(directions)
             self.move(random_direction)
     
-    def render_sprite(self, scale: int = 1) -> str:
-        """Render the sheep sprite."""
-        if scale == 1:
-            return "S"
-        elif scale == 2:
-            return "@@\n"+\
-                   ",,"
-        elif scale == 3:
-            return "@w@\n###\n| |"
-        else:
-            return self.sprite
 
 
 class Entities:
