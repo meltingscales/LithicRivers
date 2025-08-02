@@ -3,7 +3,8 @@
     "GAME_NAME": "LithicRivers",
     "LOGFILENAME": "LithicRivers.log",
     "LOGGINGLEVEL": "INFO",
-    "DEVELOPER_MODE": true
+    "DEVELOPER_MODE": true,
+    "DEFAULT_SEED": 27015
   },
   "world": {
     "DEFAULT_SIZE_RADIUS": {
