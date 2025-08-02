@@ -675,9 +675,6 @@ class World:
         adjacent = []
         for dx in [-1, 0, 1]:
             for dy in [-1, 0, 1]:
-                if dx == 0 and dy == 0:
-                    continue  # Skip the center position
-
                 check_pos = VectorN(pos.x + dx, pos.y + dy, pos.z)
                 entity = self.get_entity(check_pos)
                 if entity:
