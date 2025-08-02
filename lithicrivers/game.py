@@ -71,6 +71,10 @@ class Entity:
         self.health: int = 100
         self.stamina: int = 100
 
+    def tick(self):
+        """Called each game tick. Override in subclasses."""
+        pass
+
     def move(self, vec: VectorN):
         self.position += vec
 
@@ -249,10 +253,39 @@ class AncientRelic(InteractiveEntity):
         ]
 
 
+class StumblingSheep(Entity):
+    """A sheep that stumbles around randomly."""
+    
+    def __init__(self, position: VectorN):
+        super().__init__("Stumbling Sheep", position)
+        self.sprite = "S"
+        self.color = "white"
+    
+    def tick(self):
+        """Called each game tick. 50% chance to move in a random direction."""
+        if random.random() < 0.5:
+            # Choose a random direction
+            directions = [VEC_NORTH, VEC_SOUTH, VEC_EAST, VEC_WEST]
+            random_direction = random.choice(directions)
+            self.move(random_direction)
+    
+    def render_sprite(self, scale: int = 1) -> str:
+        """Render the sheep sprite."""
+        if scale == 1:
+            return "S"
+        elif scale == 2:
+            return "@@\n"+\
+                   ",,"
+        elif scale == 3:
+            return "@w@\n###\n| |"
+        else:
+            return self.sprite
+
+
 class Entities:
     @staticmethod
     def stumbling_sheep(position=VectorN(0, 0, 0)):
-        return Entity("Stumbling Sheep", position)
+        return StumblingSheep(position)
 
     @staticmethod
     def starter_npc(position=VectorN(5, 5, 0)):
@@ -370,6 +403,9 @@ class Player(Entity, SpriteRenderable):
 
         self.inventory = Inventory([Item("Cookie", ["o"])])
 
+    def tick(self):
+        """Called each game tick. Override when I add poison damage, for example."""
+        pass
 
 class Tile(SpriteRenderable):
     def __init__(
@@ -675,6 +711,11 @@ class World:
         entity2 = Entities.test_entity2()
         self.entities[entity1.position.serialize()] = entity1
         self.entities[entity2.position.serialize()] = entity2
+        
+        # Add StumblingSheep 2 blocks north of player spawn
+        sheep_position = DEFAULT_PLAYER_POSITION + (VEC_NORTH * 2)
+        sheep = Entities.stumbling_sheep(sheep_position)
+        self.entities[sheep.position.serialize()] = sheep
 
     def get_tile(self, pos: VectorN):
         tile = self.data.get_tile(pos)
@@ -713,6 +754,10 @@ class World:
                     adjacent.append((entity.name, check_pos, color))
 
         return adjacent
+
+    def get_all_entities(self) -> list[Entity]:
+        """Get all entities in the world."""
+        return list(self.entities.values())
 
 
 class Game:
@@ -914,6 +959,14 @@ class Game:
     def increment_tick(self):
         """Increment the game tick counter."""
         self.gametick += 1
+        self.process_entity_ticks()
+
+    def process_entity_ticks(self):
+        """Process ticks for all entities that have a tick method."""
+        # Get all entities in the world
+        for entity in self.world.get_all_entities():
+            if hasattr(entity, 'tick') and callable(getattr(entity, 'tick')):
+                entity.tick()
 
 
 class MessageLog:
