@@ -91,7 +91,7 @@
 
 # 2025 todo
 
-- interface for blind people to play the game, modular command lookup and help system.
+- interface for blind people to play the game, modular command lookup and help system. actually test it with popular screen readers.
 
 - ability to toggle variable Z-axis rendering for tall buildings
 
