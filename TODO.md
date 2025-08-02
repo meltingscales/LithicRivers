@@ -116,3 +116,5 @@
 - eventually, I'd like to publish this game on steam for $3. don't add/edit any code, I just want advice. What should I focus on before that?
 
 - give me suggestions for different biomes. I'd like a "Lithic River" biome to be an underground biome with molten lava and lots of ores...like the name of the game.
+
+- When you interact with an NPC -or- an Entity, I want you to be able to choose from a list of all NPCs AND entities that are adjacent to you. Currently, if you're next to 1 or more entities and at least 1 NPC, you immediately start dialogue with the NPC, but I'd rather it open a menu that lets you pick from a list of NPCs as well as Entities.
