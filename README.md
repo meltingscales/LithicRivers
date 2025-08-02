@@ -16,12 +16,6 @@ See [LICENSE](LICENSE) for full terms.
 
 Visit <https://github.com/HenryFBP/LithicRivers/releases> to download a release for your platform.
 
-If you have Docker, run this in bash:
-    
-    docker run --interactive --tty henryfbp/lithicrivers:latest
-
-to run the game in terminal locally. Please note saved games will be lost.
-
 Currently we support:
 
 - Windows
@@ -29,11 +23,7 @@ Currently we support:
 - OSX 11
 - Debian (built on Ubuntu)
 
-### How to play the game
-
-read the help page
-
-## wow, badges :P
+## Badges
 
 [![Coverage Status](https://coveralls.io/repos/github/HenryFBP/LithicRivers/badge.svg?branch=release)](https://coveralls.io/github/HenryFBP/LithicRivers?branch=release)
 
@@ -45,18 +35,14 @@ read the help page
 
 [![forthebadge](https://forthebadge.com/images/badges/60-percent-of-the-time-works-every-time.svg)](https://forthebadge.com)
 
-## running
+## Running
 
-    poetry install
-    poetry run python -m lithicrivers
+    make run
 
 ## building/release
 
-### Docker
-
-    docker build ./ --tag henryfbp/lithicrivers:latest
-    docker run --interactive --tty henryfbp/lithicrivers:latest
-    docker push henryfbp/lithicrivers
+    make build
+    ls ./dist/
 
 ## notes
 

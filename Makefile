@@ -1,4 +1,4 @@
-.PHONY: help install test build run clean lint format
+.PHONY: help install test build run clean lint format log-monitor
 
 # Default target
 help: ## Show this help message
@@ -19,6 +19,7 @@ help: ## Show this help message
 	@echo "  run                  Run the game"
 	@echo "  run-debug            Run the game with remote debugging"
 	@echo "  debug-attach         Show PyCharm debugging instructions"
+	@echo "  log-monitor          Monitor game logs in real-time"
 	@echo ""
 	@echo "🔨 BUILDING"
 	@echo "----------"
@@ -108,6 +109,19 @@ debug-attach: ## Show instructions for attaching to running process
 	@echo "   make run-debug"
 	@echo ""
 	@echo "📚 More info: https://www.jetbrains.com/help/pycharm/remote-debugging-with-product.html"
+
+log-monitor: ## Monitor game logs in real-time
+	@echo "📋 Monitoring LithicRivers.log in real-time..."
+	@echo "🔄 Press Ctrl+C to stop monitoring"
+	@echo ""
+	@if [ -f "LithicRivers.log" ]; then \
+		echo "📄 Found existing log file, starting monitor..."; \
+		tail -f LithicRivers.log; \
+	else \
+		echo "📄 No log file found yet. Starting monitor (will show logs when game runs)..."; \
+		touch LithicRivers.log; \
+		tail -f LithicRivers.log; \
+	fi
 
 # Building
 build: ## Build executable

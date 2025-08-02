@@ -5,7 +5,7 @@ from typing import Union
 from asciimatics.event import KeyboardEvent
 
 from lithicrivers.config_manager import config_manager
-from lithicrivers.model.modelpleasemoveme import Viewport
+from lithicrivers.model.model import Viewport
 
 # Load settings from config manager
 GAME_NAME = config_manager.get_setting("game", "GAME_NAME")
