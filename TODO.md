@@ -147,7 +147,7 @@
 
 - add an inventory screen as a tab on the bottom, like the help page and message log. make it really simple - just a simple list that you can page through with a cursor.
 
-- add a "commands" screen as a tab on the bottom, that lets you perform macro actions like walking for 2,000 steps or walking to a specific coordinate.
+- add a "commands" screen as a tab on the bottom, that lets you perform macro actions like walking for 2,000 steps or walking to a specific coordinate. probably integrate this with the blind feature.
 
 - ask "are there any bugs or issues you see with my existing viewport code? can we stress test it?" to AI
 
