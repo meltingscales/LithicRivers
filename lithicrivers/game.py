@@ -607,20 +607,16 @@ class World:
 
         resultworld = WorldData()
 
-        # Use seeded world generation if seed is provided
-        if seed is not None:
-            from lithicrivers.worldgen import generate_world_with_seed
+        # Always use seeded world generation for consistent structure placement
+        from lithicrivers.worldgen import generate_world_with_seed
+        from lithicrivers.settings import DEFAULT_SEED
 
-            world_data = generate_world_with_seed(radius, seed)
-            resultworld.tile_data = world_data
-        else:
-            # Fall back to original random generation
-            for z in range(-radius.z, radius.z):
-                for y in range(-radius.y, radius.y):
-                    for x in range(-radius.x, radius.x):
-                        pos = VectorN(x, y, z)
-                        tile = gen_function(*gf_args, **gf_kwargs, current_location=pos)
-                        resultworld.set_tile(pos, tile)
+        # Use provided seed or default seed for consistency
+        if seed is None:
+            seed = DEFAULT_SEED
+
+        world_data = generate_world_with_seed(radius, seed)
+        resultworld.tile_data = world_data
 
         return resultworld
 
