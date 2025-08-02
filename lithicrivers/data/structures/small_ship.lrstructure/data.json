@@ -6,6 +6,6 @@
     "e": "scrap_electronics"
   },
   "gen_biomes": "ALL",
-  "gen_chance": 1.0,
+  "gen_chance": 0.15,
   "y_layer_gen_range": [-1, 1]
 } 
