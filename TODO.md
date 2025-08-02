@@ -91,6 +91,28 @@
 
 # 2025 todo
 
+- add a reference to hushy and lapfox Trax to the game somehow. music, sprites, items, tools, etc
+
+- actually establish the game's lore
+
+- modular body parts system like Qud, but more emphasis on crafting and modding
+
+- start as an android with only 1 arm and 1 full leg, 1 damaged leg, with a quest to upgrade your body to less damaged. walk speed debuff, attack debuff, etc. "armless legless" as a funny challenge. 
+
+- ability to program automation with simple block based logic, i.e. Redstone, and, computercraft-like programming system that uses Lua or similar scripting language
+
+- EXP doesn't exist. rather, your stats are directly dictated by your equipment and body composition 
+
+- relics and techmagic system
+
+- heavy rewards for learning automation but not required to finish the game at all. you can choose to play it as a factory builder, or you can choose to play it as a hack and slash dungeon crawler.
+
+- procedurally generated dungeons that ARE NOT just structures, but similar to how the original rogue generated dungeons
+
+- a couple main questlines that reward different play styles
+
+- options for true rogue like, "roguelite", and custom difficulty templates
+
 - worldgen does not seem like it's actually seeding correctly, it seems to vary when new worlds are created with the same seed.
 
 - add a "fog of war" feature that obscures unvisited sections of the world, and add a limit to player vision. previously-visited sections of the world should appear as grayscale.
@@ -100,6 +122,8 @@
 - add multiple dimensions (like space, the void, etc) to the game.
 
 - add the ability to save (or auto-save) to a world file. just use serialization now, but later, we should optimize it like how Minecraft does - chunks, dimensions, and a custom binary file format with auto-saving and multi-threaded loading/saving.
+
+- add durability to crashes to the world saving process. maintain a WAL like sqlite perhaps? or just snapshot every 100 ticks?
 
 - are there any really fun terminal characters we can use as an alternative to just ASCII? can you list them?
 
