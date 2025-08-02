@@ -697,25 +697,25 @@ class World:
         self.gametick = 0
 
         # Add some starter entities
-        self.entities = {}
+        self.entities = list()
         self._add_starter_entities()
 
     def _add_starter_entities(self):
         """Add starter entities to the world."""
         # Add NPC
         npc = Entities.starter_npc()
-        self.entities[npc.position.serialize()] = npc
+        self.entities.append(npc)
 
         # Add test entities
         entity1 = Entities.test_entity1()
         entity2 = Entities.test_entity2()
-        self.entities[entity1.position.serialize()] = entity1
-        self.entities[entity2.position.serialize()] = entity2
+        self.entities.append(entity1)
+        self.entities.append(entity2)
         
         # Add StumblingSheep 2 blocks north of player spawn
         sheep_position = DEFAULT_PLAYER_POSITION + (VEC_NORTH * 2)
         sheep = Entities.stumbling_sheep(sheep_position)
-        self.entities[sheep.position.serialize()] = sheep
+        self.entities.append(sheep)
 
     def get_tile(self, pos: VectorN):
         tile = self.data.get_tile(pos)
@@ -730,17 +730,18 @@ class World:
 
     def get_entity(self, pos: VectorN):
         """Get an entity at a position."""
-        return self.entities.get(pos.serialize())
+        for entity in self.entities:
+            if entity.position == pos:
+                return entity
+        return None
 
     def add_entity(self, entity: Entity):
         """Add an entity to the world."""
-        self.entities[entity.position.serialize()] = entity
+        self.entities.append(entity)
 
-    def remove_entity(self, pos: VectorN):
+    def remove_entity(self, entity: Entity):
         """Remove an entity from the world."""
-        key = pos.serialize()
-        if key in self.entities:
-            del self.entities[key]
+        self.entities.remove(entity)
 
     def get_adjacent_entities(self, pos: VectorN) -> list[tuple[str, VectorN, str]]:
         """Get all entities adjacent to a position."""
@@ -757,7 +758,7 @@ class World:
 
     def get_all_entities(self) -> list[Entity]:
         """Get all entities in the world."""
-        return list(self.entities.values())
+        return self.entities
 
 
 class Game:
