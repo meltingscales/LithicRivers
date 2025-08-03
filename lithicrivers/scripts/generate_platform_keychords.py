@@ -238,7 +238,7 @@ class KeychordCapture:
                 keycode = event.key_code
                 
                 # Handle special cases
-                if keycode == 27 or keycode == -1:  # ESC (different terminals use different codes)
+                if keycode == -1:  # ESC (different terminals use different codes)
                     if sequence:  # ESC pressed during sequence, meaning we want to use the current sequence    
                         return sequence  # Return the current sequence
                     else:  # ESC pressed at start
