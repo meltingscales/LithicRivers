@@ -5,6 +5,9 @@ Copyright (c) 2024 Henry Post. All rights reserved.
 
 import logging
 from typing import TYPE_CHECKING, Callable, Optional, Union
+import platform
+import subprocess
+import os
 
 import asciimatics.widgets
 from asciimatics.event import KeyboardEvent, MouseEvent
@@ -31,6 +34,84 @@ from lithicrivers.textutil import get_color_for_ui_element, list_label, presenti
 
 if TYPE_CHECKING:
     from asciimatics.effects import Effect
+
+
+def get_numlock_state() -> bool:
+    """Get the current numlock state using platform-specific APIs."""
+    try:
+        if platform.system() == "Windows":
+            return _get_numlock_state_windows()
+        elif platform.system() == "Linux":
+            return _get_numlock_state_linux()
+        else:
+            # For other platforms, assume numlock is on
+            return True
+    except Exception as e:
+        logging.debug(f"Could not detect numlock state: {e}")
+        # Assume numlock is on if detection fails
+        return True
+
+
+def _get_numlock_state_windows() -> bool:
+    """Get numlock state on Windows using the Windows API."""
+    try:
+        import ctypes
+        hllDll = ctypes.WinDLL("User32.dll")
+        VK_NUMLOCK = 0x90
+        return bool(hllDll.GetKeyState(VK_NUMLOCK) & 0x0001)
+    except Exception as e:
+        logging.debug(f"Windows numlock detection failed: {e}")
+        return True
+
+
+def _get_numlock_state_linux() -> bool:
+    """Get numlock state on Linux using portable methods."""
+    try:
+        # Try to use xset first (most portable)
+        result = subprocess.run(
+            ["xset", "q"], 
+            capture_output=True, 
+            text=True, 
+            timeout=1
+        )
+        if result.returncode == 0:
+            # Look for "Num Lock: on" or "Num Lock: off" in the output
+            # xset output can have variable spacing, so use more robust matching
+            output = result.stdout.lower()
+            import re
+            if re.search(r"num lock:\s*on", output):
+                return True
+            elif re.search(r"num lock:\s*off", output):
+                return False
+        
+        # If xset fails, try to check if we're in a headless environment
+        # In headless environments, assume numlock is on (safe default)
+        if not os.environ.get('DISPLAY'):
+            return True
+            
+        # Try to use setleds as another fallback
+        try:
+            result = subprocess.run(
+                ["setleds", "-L"], 
+                capture_output=True, 
+                text=True, 
+                timeout=1
+            )
+            if result.returncode == 0:
+                output = result.stdout.lower()
+                import re
+                if re.search(r"num lock:\s*on", output):
+                    return True
+                elif re.search(r"num lock:\s*off", output):
+                    return False
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            pass
+            
+        # If all methods fail, assume numlock is on (safe default)
+        return True
+    except Exception as e:
+        logging.debug(f"Linux numlock detection failed: {e}")
+        return True
 
 
 def _generate_entity_selection_message(adjacent_entities: list[tuple[str, VectorN, str]]) -> str:
@@ -66,6 +147,68 @@ def _generate_entity_selection_message(adjacent_entities: list[tuple[str, Vector
             # Join with commas and "and" for the last item
             all_but_last = ", ".join(entity_list[:-1])
             return f"Found {all_but_last}, and {entity_list[-1]} nearby:"
+
+
+def _detect_numlock_issue(event: KeyboardEvent) -> bool:
+    """Detect if numlock is off by checking if numpad keys are sending unexpected codes."""
+    # When numlock is off, numpad keys send different key codes:
+    # Numpad 8 (normally 56) becomes UP_ARROW (-204)
+    # Numpad 2 (normally 50) becomes DOWN_ARROW (-205) 
+    # Numpad 4 (normally 52) becomes LEFT_ARROW (-206)
+    # Numpad 6 (normally 54) becomes RIGHT_ARROW (-207)
+    # Numpad 7 (normally 55) becomes HOME (-208)
+    # Numpad 9 (normally 57) becomes PAGE_UP (-209)
+    # Numpad 1 (normally 49) becomes END (-210)
+    # Numpad 3 (normally 51) becomes PAGE_DOWN (-211)
+    
+    numlock_off_codes = [-204, -205, -206, -207, -208, -209, -210, -211]  # Arrow keys, home, end, page up/down
+    return event.key_code in numlock_off_codes
+
+
+def _show_numlock_warning(world_map):
+    """Show a warning popup about numlock being off."""
+    warning_text = """⚠️  NUMLOCK WARNING ⚠️
+
+Your NumLock key appears to be turned OFF. This can cause issues with movement controls.
+
+When NumLock is OFF:
+• Numpad 8 becomes Up Arrow
+• Numpad 2 becomes Down Arrow  
+• Numpad 4 becomes Left Arrow
+• Numpad 6 becomes Right Arrow
+• And so on...
+
+To fix this:
+1. Press your NumLock key to turn it ON
+2. The numpad keys should then work normally for movement
+
+You can still use Q/E for up/down movement regardless of NumLock state."""
+
+    def warning_callback(_selected_option):
+        # Just close the warning popup
+        global active_popup
+        active_popup = None
+
+    # Create and show the warning popup
+    from asciimatics.widgets import PopUpDialog
+
+    popup = PopUpDialog(
+        world_map._screen,
+        "NumLock Warning",
+        ["OK"],
+        warning_callback,
+    )
+    # Track the active popup globally
+    global active_popup
+    active_popup = popup
+    # Add the popup to the current scene
+    world_map._screen.current_scene.add_effect(popup)
+
+
+
+
+
+
 
 
 class TabButtons(Layout):
@@ -1323,7 +1466,13 @@ def demo(screen: Screen, scene: Scene, game: Game):
     # Global variable to track active popups
     global active_popup
     active_popup = None  # Initialize to None
+    
+    # Global variable to track if numlock warning has been shown
+    global numlock_warning_shown
+    numlock_warning_shown = False  # Initialize to False
+    
 
+    
     scenes = [
         Scene([WorldMap(screen, game)], -1, name="WorldMap"),
         Scene([HelpPage(screen, game)], -1, name="HelpPage"),
@@ -1345,6 +1494,8 @@ def demo(screen: Screen, scene: Scene, game: Game):
     def handle_event(event: Union[KeyboardEvent, MouseEvent]):
         # Declare active_popup as global so we can access it
         global active_popup
+        # Declare numlock_warning_shown as global so we can access it
+        global numlock_warning_shown
 
         current_scene: Scene = screen.current_scene
         current_effects: list[Effect] = current_scene.effects
@@ -1444,6 +1595,33 @@ def demo(screen: Screen, scene: Scene, game: Game):
             return
 
         world_map = current_effect
+
+        # Check numlock state during first interaction (proactive detection)
+        if not numlock_warning_shown and not get_numlock_state():
+            # Show warning immediately if numlock is off
+            _show_numlock_warning(world_map)
+            numlock_warning_shown = True
+            return  # Don't process movement until user acknowledges warning
+
+        # Check if numlock has been toggled on (state changed from off to on)
+        if active_popup is not None and get_numlock_state():
+            # Close the popup if numlock is now on
+            try:
+                if hasattr(active_popup, "_screen") and active_popup._screen.current_scene:
+                    active_popup._screen.current_scene.remove_effect(active_popup)
+                active_popup = None
+            except Exception as e:
+                logging.info(f"Error closing numlock popup: {e}")
+                active_popup = None
+            return  # Process the movement after closing popup
+        
+        # Check for numlock issues before handling movement (fallback detection)
+        if _detect_numlock_issue(event):
+            # Only show warning if no popup is currently active and warning hasn't been shown
+            if active_popup is None and not numlock_warning_shown:
+                _show_numlock_warning(world_map)
+                numlock_warning_shown = True
+            return  # Don't process movement when numlock is off
 
         move_vec = InputHandler.handle_movement(event)
         if move_vec:
