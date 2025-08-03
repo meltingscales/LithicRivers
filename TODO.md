@@ -91,7 +91,8 @@
 
 # eventually todo
 
-- print logo briefly when game boots
+- print logo briefly when game boots (config/logo.txt)
+- print boot log briefly when game boots (config/boot_message.dat), making sure to add corruption. Make sure to print it slowly. Create a custom UI element to do this. Also, add a "SKIP_INTRO" env var to skip this for development purposes.
 
 - if numlock is not toggled, the game crashes if you try to move.
 
@@ -179,7 +180,6 @@
 
 ## MVP for steam release (2026)
 
-- unit tests are slow as hell, fix that
 - perlin noise worldgen
 - block placement, push boxes, and fluids
 - basic crafting and a body repair/modular body feature with a damaged android body

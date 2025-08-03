@@ -2,6 +2,8 @@
 This util exists to unify TUI styles and make the game look + feel cohesive.
 """
 
+import random
+import string
 from enum import Enum
 
 from lithicrivers.model.generictype import T
@@ -94,6 +96,30 @@ class ColorManager:
 
 # Global color manager instance
 COLOR_MANAGER = ColorManager()
+
+
+def corrupt_text(text, corruption_rate=0.01):
+    """
+    Randomly replaces characters in text with a random glitchy ASCII symbol
+    at a given corruption rate, preserving newlines exactly.
+    """
+    # Glitch symbols have a higher probability than standard printable characters
+    glitch_symbols = list("█▓▒░#%@*&$<>/\\=+-~^?!")
+    normal_chars = [c for c in string.printable if not c.isspace() and c not in glitch_symbols]
+    corruption_pool = glitch_symbols * 6 + normal_chars  # Bias toward glitch symbols 6:1
+
+    corrupted_chars = []
+
+    for char in text:
+        if char in '\n\r':
+            # Preserve newlines exactly
+            corrupted_chars.append(char)
+        elif random.random() < corruption_rate:
+            corrupted_chars.append(random.choice(corruption_pool))
+        else:
+            corrupted_chars.append(char)
+
+    return ''.join(corrupted_chars)
 
 
 def presenting(text) -> str:

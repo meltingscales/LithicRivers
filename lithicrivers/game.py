@@ -17,7 +17,6 @@ from lithicrivers.model.model import RenderedData, Viewport
 from lithicrivers.model.vector import VectorN
 from lithicrivers.settings import (
     DEFAULT_PLAYER_POSITION,
-    DEFAULT_SIZE_RADIUS,
     DEFAULT_VIEWPORT,
 )
 from lithicrivers.textutil import COLOR_MANAGER, get_color_for_item, get_color_for_tile
@@ -484,26 +483,25 @@ def generate_tile(
     choices: Optional[list[Tile]] = None,
     weights: Optional[list[int]] = None,
     current_location: VectorN = None,
+    world_seed: Optional[int] = None,
 ) -> Tile:
-    if choices is None:
-        choices = [Tiles.tree(), Tiles.dirt(), Tiles.gold_ore()]
-
-    if weights is None:
-        weights = [5, 100, 1]
-
-    # for now, generate these stubs for other z values
+    """
+    Generate a tile using perlin noise for infinite world generation.
+    This function is called lazily when a tile is accessed but doesn't exist.
+    """
+    # Import here to avoid circular imports
+    from lithicrivers.worldgen import SeededWorldGenerator
+    from lithicrivers.settings import DEFAULT_SEED
+    
+    # Use provided seed or default seed
+    seed = world_seed if world_seed is not None else DEFAULT_SEED
+    generator = SeededWorldGenerator(seed)
+    
     if current_location:
-        if current_location.z > 0:
-            # we are in da sky
-            return Tiles.cloud()
-
-        elif current_location.z < 0:
-            # we are underground
-            return weighted_choice(
-                [1, 0.2, 0.05], [Tiles.bedrock(), Tiles.dirt(), Tiles.gold_ore()]
-            )
-
-    return weighted_choice(weights, choices)
+        return generator.generate_tile_for_position(current_location)
+    else:
+        # Fallback for edge cases
+        return Tiles.dirt()
 
 
 class Tiles:
@@ -641,54 +639,17 @@ class World:
     A world contains world data and manages the world state.
     """
 
-    def get_height(self):
-        return self.size.y
+    # Removed get_height and get_width methods - no longer relevant for infinite world
 
-    def get_width(self):
-        return self.size.x
-
-    @staticmethod
-    def gen_random_world_data(
-        radius: VectorN,
-        gen_function=generate_tile,
-        gf_args=None,
-        gf_kwargs=None,
-        seed: Optional[int] = None,
-    ) -> WorldData:
-        """
-        Generate world data.
-
-        Note gen_function MUST accept *args and **kwargs.
-        """
-
-        if gf_kwargs is None:
-            gf_kwargs = {}
-
-        if gf_args is None:
-            gf_args = []
-
-        resultworld = WorldData()
-
-        # Always use seeded world generation for consistent structure placement
-        from lithicrivers.worldgen import generate_world_with_seed
-        from lithicrivers.settings import DEFAULT_SEED
-
-        # Use provided seed or default seed for consistency
-        if seed is None:
-            seed = DEFAULT_SEED
-
-        world_data = generate_world_with_seed(radius, seed)
-        resultworld.tile_data = world_data
-
-        return resultworld
+    # Removed gen_random_world_data method - no longer needed for infinite world
 
     def __init__(
-        self, name="Gaia", size=DEFAULT_SIZE_RADIUS, seed: Optional[int] = None
+        self, name="Gaia", seed: Optional[int] = None
     ):
-        self.size = size
         self.name = name
         self.seed = seed
-        self.data = World.gen_random_world_data(size, seed=seed)
+        # Start with empty world data - everything will be generated lazily
+        self.data = WorldData()
         self.gametick = 0
 
         # Add some starter entities
@@ -716,7 +677,7 @@ class World:
         tile = self.data.get_tile(pos)
         if tile is None:
             # Generate tile on-demand if it doesn't exist
-            tile = generate_tile(current_location=pos)
+            tile = generate_tile(current_location=pos, world_seed=self.seed)
             self.data.set_tile(pos, tile)
         return tile
 

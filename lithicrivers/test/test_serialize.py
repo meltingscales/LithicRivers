@@ -25,7 +25,8 @@ class TestSerialize(unittest.TestCase):
             )
             some_tile.description = "Wow serialize test!!"
 
-            wd = World.gen_random_world_data(radius=VectorN(5, 5, 5))
+            # Create empty world data for infinite world
+            wd = WorldData()
             wd.set_tile(some_pos, some_tile)
             # make a world and edit a random block
 

@@ -21,16 +21,10 @@ else:
 
 # Load world settings based on environment
 if os.environ.get("TESTING") == "1":
-    DEFAULT_SIZE_RADIUS = config_manager.get_vector_setting(
-        "world", "DEFAULT_SIZE_RADIUS", "testing"
-    )
     DEFAULT_PLAYER_POSITION = config_manager.get_vector_setting(
         "world", "DEFAULT_PLAYER_POSITION", "testing"
     )
 else:
-    DEFAULT_SIZE_RADIUS = config_manager.get_vector_setting(
-        "world", "DEFAULT_SIZE_RADIUS", "production"
-    )
     DEFAULT_PLAYER_POSITION = config_manager.get_vector_setting(
         "world", "DEFAULT_PLAYER_POSITION", "production"
     )

@@ -23,6 +23,10 @@ help: ## Show this help message
 	@echo "  test                 Run all tests (with TERM detection)"
 	@echo "  test-quick           Run quick tests only"
 	@echo ""
+	@echo "🔍 DEMO"
+	@echo "------"
+	@echo "  demo                 Run demo"
+	@echo ""
 	@echo "🎮 GAME"
 	@echo "------"
 	@echo "  run                  Run the game"
@@ -83,6 +87,9 @@ test-lcov: ## Generate LCOV coverage report
 	TESTING=1 $(UV_CMD) run coverage run -m unittest discover lithicrivers
 	$(UV_CMD) run coverage lcov -o coverage/lcov.info
 	@echo "✅ LCOV report generated!"
+
+demo: ## Run all demos
+	$(UV_CMD) run python -m lithicrivers.demo.perlin_test
 
 # Game
 run: ## Run the game
@@ -150,7 +157,7 @@ clean: ## Clean build artifacts
 	@echo "🧹 Cleaning build artifacts..."
 	rm -rf build/ dist/ *.egg-info/ .coverage htmlcov/ coverage/
 	rm -f *.log
-	rm coverage.lcov
+	rm -f coverage.lcov
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 	find . -type f -name "*.pyc" -delete 2>/dev/null || true
 	rm -rf .pytest_cache/ .mypy_cache/ .ruff_cache/

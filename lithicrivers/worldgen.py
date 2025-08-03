@@ -3,6 +3,7 @@ Seeded world generation for deterministic world creation.
 This module provides seeded randomness for reproducible world generation.
 """
 
+import math
 import random
 from dataclasses import dataclass
 from typing import Any, Optional
@@ -28,6 +29,105 @@ class WorldSeed:
         return str(self)
 
 
+class PerlinNoise:
+    """
+    A simple seeded perlin noise implementation for terrain generation.
+    This provides smooth, continuous noise that's deterministic based on seed.
+    """
+    
+    def __init__(self, seed: int):
+        """Initialize perlin noise with a seed."""
+        self.seed = seed
+        self.rng = random.Random(seed)
+        # Generate a permutation table for noise
+        self.permutation = list(range(256))
+        self.rng.shuffle(self.permutation)
+        self.permutation *= 2  # Duplicate for wrapping
+    
+    def _fade(self, t: float) -> float:
+        """Fade function for smooth interpolation."""
+        return t * t * t * (t * (t * 6 - 15) + 10)
+    
+    def _lerp(self, t: float, a: float, b: float) -> float:
+        """Linear interpolation."""
+        return a + t * (b - a)
+    
+    def _grad(self, hash_val: int, x: float) -> float:
+        """Gradient function."""
+        return (hash_val & 1) * x
+    
+    def noise_1d(self, x: float) -> float:
+        """Generate 1D perlin noise."""
+        # Find the unit grid cell containing the point
+        xi = int(x) & 255
+        xf = x - int(x)
+        
+        # Compute fade curves for each of x
+        u = self._fade(xf)
+        
+        # Hash coordinates of the 2 square corners
+        A = self.permutation[xi]
+        AA = self.permutation[A]
+        
+        # Add blended results from 2 corners of 1D cube
+        return self._lerp(u, self._grad(AA, xf), self._grad(AA, xf - 1))
+    
+    def noise_2d(self, x: float, y: float) -> float:
+        """Generate 2D perlin noise."""
+        # Find the unit grid cell containing the point
+        xi = int(x) & 255
+        yi = int(y) & 255
+        xf = x - int(x)
+        yf = y - int(y)
+        
+        # Compute fade curves for each of x, y
+        u = self._fade(xf)
+        v = self._fade(yf)
+        
+        # Hash coordinates of the 4 square corners
+        A = self.permutation[xi] + yi
+        AA = self.permutation[A]
+        AB = self.permutation[A + 1]
+        B = self.permutation[xi + 1] + yi
+        BA = self.permutation[B]
+        BB = self.permutation[B + 1]
+        
+        # Add blended results from 4 corners of 2D cube
+        return self._lerp(v, self._lerp(u, self._grad(AA, xf, yf), self._grad(BA, xf - 1, yf)),
+                         self._lerp(u, self._grad(AB, xf, yf - 1), self._grad(BB, xf - 1, yf - 1)))
+    
+    def _grad(self, hash_val: int, x: float, y: float) -> float:
+        """2D gradient function."""
+        # Convert low 4 bits of hash code into 12 simple gradient directions
+        h = hash_val & 15
+        u = x if h < 8 else y
+        v = y if h < 4 else (x if h == 12 or h == 14 else 0)
+        return (u if (h & 1) == 0 else -u) + (v if (h & 2) == 0 else -v)
+    
+    def octave_noise_2d(self, x: float, y: float, octaves: int = 4, persistence: float = 0.5, scale: float = 1.0) -> float:
+        """
+        Generate octave noise (fractal noise) for more natural terrain.
+        
+        Args:
+            x, y: Coordinates
+            octaves: Number of noise layers to combine
+            persistence: How much each octave contributes (0.5 = half amplitude each octave)
+            scale: Overall scale of the noise
+        """
+        total = 0
+        frequency = scale
+        amplitude = 1.0
+        max_value = 0
+        
+        for _ in range(octaves):
+            total += self.noise_2d(x * frequency, y * frequency) * amplitude
+            max_value += amplitude
+            amplitude *= persistence
+            frequency *= 2
+        
+        return total / max_value
+
+
 class SeededWorldGenerator:
     """
     World generator that uses seeded randomness for deterministic generation.
@@ -46,6 +146,7 @@ class SeededWorldGenerator:
 
         self.seed = WorldSeed(seed)
         self.rng = random.Random(seed)
+        self.perlin = PerlinNoise(seed)
         self.structure_manager = create_structure_manager()
 
     def get_seed(self) -> WorldSeed:
@@ -56,6 +157,7 @@ class SeededWorldGenerator:
         """Set a new seed for the generator."""
         self.seed = WorldSeed(seed)
         self.rng = random.Random(seed)
+        self.perlin = PerlinNoise(seed)
 
     def seeded_weighted_choice(
         self, weights: list[float], choices: list[Any], context: str = ""
@@ -92,7 +194,7 @@ class SeededWorldGenerator:
 
     def generate_tile_for_position(self, position: VectorN) -> Tile:
         """
-        Generate a tile for a specific position using seeded randomness.
+        Generate a tile for a specific position using perlin noise and seeded randomness.
 
         Args:
             position: The position to generate a tile for
@@ -101,23 +203,50 @@ class SeededWorldGenerator:
             The generated tile
         """
         # Use position-based context for consistent generation
-        # This ensures the same position always generates the same tile
         position_context = f"pos_{position.x}_{position.y}_{position.z}"
 
-        # Generate based on height (z-coordinate)
+        # Generate terrain using perlin noise
         if position.z > 0:
             # Sky level - always clouds
             return Tiles.cloud()
         elif position.z < 0:
-            # Underground - weighted choice between bedrock, dirt, and rare items
-            weights = [1, 0.2, 0.05]
-            choices = [Tiles.bedrock(), Tiles.dirt(), Tiles.gold_ore()]
-            return self.seeded_weighted_choice(weights, choices, position_context)
+            # Underground - use perlin noise for cave systems and ore distribution
+            # Scale noise to create larger cave systems
+            cave_noise = self.perlin.octave_noise_2d(position.x * 0.1, position.y * 0.1, octaves=3, scale=1.0)
+            ore_noise = self.perlin.octave_noise_2d(position.x * 0.05, position.y * 0.05, octaves=2, scale=0.5)
+            
+            # Create cave systems
+            if cave_noise > 0.1:
+                return Tiles.empty()  # Cave
+            elif ore_noise > 0.2:
+                return Tiles.gold_ore()  # Ore vein
+            else:
+                return Tiles.bedrock()  # Solid rock
         else:
-            # Surface level - weighted choice between trees, dirt, and rare items
-            weights = [5, 100, 1]
-            choices = [Tiles.tree(), Tiles.dirt(), Tiles.gold_ore()]
-            return self.seeded_weighted_choice(weights, choices, position_context)
+            # Surface level - use perlin noise for terrain features
+            # Scale noise to create larger terrain features
+            terrain_noise = self.perlin.octave_noise_2d(position.x * 0.02, position.y * 0.02, octaves=4, scale=0.1)
+            tree_noise = self.perlin.octave_noise_2d(position.x * 0.1, position.y * 0.1, octaves=2, scale=1.0)
+            
+            # Create varied terrain
+            if terrain_noise > 0.1:
+                # Higher elevation - more trees
+                if tree_noise > 0.0:
+                    return Tiles.tree()
+                else:
+                    return Tiles.dirt()
+            elif terrain_noise < -0.05:
+                # Lower elevation - sparse vegetation
+                if tree_noise > 0.1:
+                    return Tiles.tree()
+                else:
+                    return Tiles.dirt()
+            else:
+                # Medium elevation - balanced
+                if tree_noise > 0.0:
+                    return Tiles.tree()
+                else:
+                    return Tiles.dirt()
 
     def generate_world_data(self, radius: VectorN) -> dict[str, Tile]:
         """
