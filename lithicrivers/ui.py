@@ -605,15 +605,42 @@ class DevKeystrokesPage(Frame):
         # Add a big text box that contains a running log of the last 10 keystrokes and their int codes as well as ascii-printable representations (if they can be printed)
 
         self.textBoxKeystrokes = Label("keystrokes", height=20)
+        self.logKeystrokes = list()
 
         layout1.add_widget(self.textBoxKeystrokes)
 
-        self.textBoxKeystrokes.text = "Press a key and it'll show up here."
+        self.render_log()
 
         buttons = TabButtons(self)
         self.add_layout(buttons)
 
         self.fix()
+
+    def render_log(self):
+        self.textBoxKeystrokes.text = '\n'.join(self.logKeystrokes)
+
+    def append_to_log(self,m:str):
+        if len(self.logKeystrokes) > 10:
+            del self.logKeystrokes[0]
+
+        self.logKeystrokes.append(m)
+
+    def update_keystroke(self, event: Union[KeyboardEvent,MouseEvent]):
+
+        if isinstance(event, MouseEvent):
+            pass #TODO: For now, we're ignoring MouseEvent.
+
+        if isinstance(event, KeyboardEvent):
+            event:KeyboardEvent
+
+            key_code = event.key_code
+
+            # try to get ascii representation and remove whitespace
+            ascii_rep = chr(key_code)
+
+            self.append_to_log(f"test {key_code} {ascii_rep}")
+            self.render_log()
+            self.fix()
 
 
 class DevPopupPage(Frame):
@@ -1265,14 +1292,15 @@ def demo(screen: Screen, scene: Scene, game: Game):
         # Declare active_popup as global so we can access it
         global active_popup
 
-        da_scene: Scene = screen.current_scene
-        da_effects: list[Effect] = da_scene.effects
+        current_scene: Scene = screen.current_scene
+        current_effects: list[Effect] = current_scene.effects
 
-        if len(da_effects) <= 0:
+        if len(current_effects) <= 0:
             logging.debug("No effects ;_;")
             return
 
-        maybe_world_map: WorldMap = da_effects[0]
+        # This is the topmost effect. It may or may not be the world map. We need to find that out first.
+        maybe_world_map: WorldMap = current_effects[0]
 
         # Check for terminal resize
         nonlocal last_screen_width, last_screen_height
@@ -1287,9 +1315,11 @@ def demo(screen: Screen, scene: Scene, game: Game):
             if isinstance(maybe_world_map, WorldMap):
                 maybe_world_map.handle_terminal_resize(screen)
 
+        # TODO: Why do we ignore all non-KeyboardEvent objects? This is going to need to be removed if we ever want to handle mouse inputs natively.
         if not isinstance(event, KeyboardEvent):
             # print("not keyboard event, ignoring... - {}".format(event))
             return
+
         event: KeyboardEvent
 
         # Check for ESC key to close popups
@@ -1332,6 +1362,14 @@ def demo(screen: Screen, scene: Scene, game: Game):
             logging.info(f"Error in popup handling: {e}")
             active_popup = None
 
+
+        if isinstance(maybe_world_map, DevKeystrokesPage):
+            # We want to display the KeyboardEvent on the DevKeystrokesPage
+            maybe_world_map: DevKeystrokesPage
+
+            maybe_world_map.update_keystroke(event)
+
+        # TODO: This is a pretty gross way of handling this. We should have a second handler function that just dispatches the event to a specific panel.
         if maybe_world_map.title.strip() != "World Map":
             logging.info("Not supposed to handle " + maybe_world_map.title)
             # Clear any active popup when switching to non-World Maps
