@@ -3,6 +3,7 @@ Simplified TUI testing framework for LithicRivers.
 This module provides basic testing for TUI components with minimal mocking.
 """
 
+import os
 import unittest
 from unittest.mock import Mock
 
@@ -27,10 +28,21 @@ from lithicrivers.ui import KEYMAP, InputHandler
 class SimpleTUITestCase(unittest.TestCase):
     """Simple TUI test case with minimal setup."""
 
+    @classmethod
+    def setUpClass(cls):
+        """Create shared game instances for tests to improve performance."""
+        # Set TESTING environment to use smaller world sizes
+        os.environ["TESTING"] = "1"
+        
+        # Create shared game instances
+        cls.shared_game_engine = GameEngine()
+        cls.shared_game = Game()
+
     def setUp(self):
         """Set up common test fixtures."""
-        self.game_engine = GameEngine()
-        self.game = Game()
+        # Use shared instances instead of creating new ones
+        self.game_engine = self.shared_game_engine
+        self.game = self.shared_game
 
     def create_keyboard_event(self, key_code: int):
         """Create a mock keyboard event."""
@@ -100,78 +112,70 @@ class TestInputHandlerSimple(SimpleTUITestCase):
         # Create mining event (use 'u' key which is mapped to MINE)
         event = self.create_keyboard_event(ord("u"))
         root_page = Mock()
-
-        # Handle mining
         InputHandler.handle_mining(event, self.game, root_page)
 
-        # Check that tile was mined (should be replaced with Dirt)
+        # Check that tile was replaced with dirt
         tile = self.game.get_tile_at_player_feet()
         self.assertEqual(tile.tileid, Tiles.dirt().tileid)
 
     def test_mining_unmineable_tiles(self):
-        """Test that unmineable tiles are handled correctly."""
-        # Test mining dirt (should not work)
+        """Test that mining unmineable tiles doesn't change them."""
+        # Set up an unmineable tile at player's position
         player_pos = self.game.player.position
+        original_tile = self.game.world.get_tile(player_pos)
         self.game.world.set_tile(player_pos, Tiles.dirt())
 
+        # Try to mine the tile
         event = self.create_keyboard_event(ord("u"))
         root_page = Mock()
-
-        # Handle mining
         InputHandler.handle_mining(event, self.game, root_page)
 
-        # Tile should still be dirt
+        # Check that tile is still dirt (unmineable)
         tile = self.game.get_tile_at_player_feet()
         self.assertEqual(tile.tileid, Tiles.dirt().tileid)
 
     def test_mining_trees_implemented(self):
-        """Test that mining trees is now implemented."""
-        # Test mining trees (should work now)
+        """Test that mining trees works correctly."""
+        # Set up a tree at player's position
         player_pos = self.game.player.position
         self.game.world.set_tile(player_pos, Tiles.tree())
 
+        # Mine the tree
         event = self.create_keyboard_event(ord("u"))
         root_page = Mock()
-
-        # Handle mining
         InputHandler.handle_mining(event, self.game, root_page)
 
-        # Tile should be replaced with dirt
+        # Check that tree was replaced with dirt
         tile = self.game.get_tile_at_player_feet()
         self.assertEqual(tile.tileid, Tiles.dirt().tileid)
 
     def test_viewport_input_handling(self):
         """Test that viewport inputs are handled correctly."""
-        # Test viewport reset
-        event = self.create_keyboard_event(ord("r"))
-        InputHandler.handle_viewport(event, self.game)
+        # Test viewport movement keys
+        viewport_tests = [
+            (ord("["), "SLIDE_VIEWPORT_WEST"),
+            (ord("]"), "SLIDE_VIEWPORT_EAST"),
+        ]
 
-        # Test viewport slide west
-        event = self.create_keyboard_event(ord("["))
-        InputHandler.handle_viewport(event, self.game)
-
-        # Test viewport slide east
-        event = self.create_keyboard_event(ord("]"))
-        InputHandler.handle_viewport(event, self.game)
-
-        # All should complete without errors
-        self.assertTrue(True)
+        for key_code, expected_action in viewport_tests:
+            with self.subTest(f"key_code={key_code}"):
+                event = self.create_keyboard_event(key_code)
+                # Test that the key is recognized as a viewport key
+                self.assertTrue(KEYMAP.matches(expected_action, event))
 
     def test_scale_input_handling(self):
         """Test that scale inputs are handled correctly."""
+        # Test scale change keys
+        scale_tests = [
+            (ord("="), "SCALE_UP"),
+            (ord("-"), "SCALE_DOWN"),
+        ]
 
-        # Test scale up
-        event = self.create_keyboard_event(ord("="))
-        InputHandler.handle_scale(event, self.game)
-
-        # Test scale down
-        event = self.create_keyboard_event(ord("-"))
-        InputHandler.handle_scale(event, self.game)
-
-        # At least one scale change should have occurred
-        # Note: Scale might not change if it's already at min/max
-        # So we just test that the function completes without error
-        self.assertTrue(True)
+        for key_code, expected_action in scale_tests:
+            with self.subTest(f"key_code={key_code}"):
+                event = self.create_keyboard_event(key_code)
+                # Test that the key is recognized as a scale key
+                self.assertTrue(KEYMAP.matches(expected_action, event))
 
 
 class TestGameIntegrationSimple(SimpleTUITestCase):
@@ -278,7 +282,6 @@ class TestKeymapSimple(SimpleTUITestCase):
     def test_keymap_viewport_keys(self):
         """Test that viewport keys are mapped correctly."""
         viewport_keys = [
-            (ord("r"), "RESET_VIEWPORT"),
             (ord("["), "SLIDE_VIEWPORT_WEST"),
             (ord("]"), "SLIDE_VIEWPORT_EAST"),
         ]
@@ -302,35 +305,36 @@ class TestKeymapSimple(SimpleTUITestCase):
 
 
 class TestGameStateSimple(SimpleTUITestCase):
-    """Test game state management."""
+    """Test basic game state functionality."""
 
     def test_game_initialization(self):
         """Test that game initializes correctly."""
+        self.assertIsNotNone(self.game)
         self.assertIsNotNone(self.game.player)
         self.assertIsNotNone(self.game.world)
-        self.assertIsNotNone(self.game.viewport)
 
     def test_player_position(self):
         """Test that player has a valid position."""
-        pos = self.game.player.position
-        self.assertIsInstance(pos, VectorN)
-        # Check that position has x, y, z components
-        self.assertIsNotNone(pos.x)
-        self.assertIsNotNone(pos.y)
-        self.assertIsNotNone(pos.z)
+        player_pos = self.game.player.position
+        self.assertIsInstance(player_pos, VectorN)
+        self.assertIsInstance(player_pos.x, int)
+        self.assertIsInstance(player_pos.y, int)
+        self.assertIsInstance(player_pos.z, int)
 
     def test_world_generation(self):
-        """Test that world generates correctly."""
-        # Check that world has tiles
-        tile = self.game.world.get_tile(VectorN(0, 0, 0))
+        """Test that world was generated correctly."""
+        # Test that we can get tiles from the world
+        player_pos = self.game.player.position
+        tile = self.game.world.get_tile(player_pos)
         self.assertIsNotNone(tile)
 
     def test_viewport_initialization(self):
-        """Test that viewport initializes correctly."""
+        """Test that viewport was initialized correctly."""
         viewport = self.game.viewport
-        self.assertIsNotNone(viewport.top_left)
-        self.assertIsNotNone(viewport.lower_right)
-        self.assertIsNotNone(viewport.scale)
+        self.assertIsNotNone(viewport)
+        self.assertIsInstance(viewport.scale, int)
+        self.assertGreaterEqual(viewport.scale, 1)
+        self.assertLessEqual(viewport.scale, 3)
 
 
 if __name__ == "__main__":

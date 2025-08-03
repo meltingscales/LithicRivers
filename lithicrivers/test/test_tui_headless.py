@@ -30,6 +30,16 @@ from lithicrivers.ui import GameWidget, HelpPage, InputHandler, RootPage
 class HeadlessTUITestCase(unittest.TestCase):
     """Base class for headless TUI tests."""
 
+    @classmethod
+    def setUpClass(cls):
+        """Create shared game instances for tests to improve performance."""
+        # Set TESTING environment to use smaller world sizes
+        os.environ["TESTING"] = "1"
+        
+        # Create shared game instances
+        cls.shared_game_engine = GameEngine()
+        cls.shared_game = Game()
+
     def setUp(self):
         """Set up common test fixtures."""
         # Skip tests if TERM environment variable is not set
@@ -38,8 +48,9 @@ class HeadlessTUITestCase(unittest.TestCase):
                 "TERM environment variable not set - skipping terminal-dependent tests"
             )
 
-        self.game_engine = GameEngine()
-        self.game = Game()
+        # Use shared instances instead of creating new ones
+        self.game_engine = self.shared_game_engine
+        self.game = self.shared_game
         self.screen = None
 
     def create_headless_screen(self, width: int = 80, height: int = 24):

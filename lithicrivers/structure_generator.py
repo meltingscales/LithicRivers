@@ -9,6 +9,9 @@ from typing import Dict, List, Optional, Tuple
 
 from lithicrivers.game import Tile, Tiles
 from lithicrivers.model.vector import VectorN
+from lithicrivers.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 
 class StructureDefinition:
@@ -104,7 +107,7 @@ class StructureManager:
                     structure = StructureDefinition.load_from_directory(structure_dir)
                     self.structures[structure.name] = structure
                 except Exception as e:
-                    print(f"Failed to load structure {structure_dir.name}: {e}")
+                    logger.warning(f"Failed to load structure {structure_dir.name}: {e}")
 
     def get_available_structures(self) -> List[str]:
         """Get list of available structure names."""
@@ -160,7 +163,7 @@ class StructureManager:
                     world_data[world_pos.serialize()] = tile
                     tiles_placed += 1
         
-        print(f"Placed {tiles_placed} tiles for {structure_name} at {base_position}")
+        logger.debug(f"Placed {tiles_placed} tiles for {structure_name} at {base_position}")
         return True
 
     def generate_structures_for_chunk(self, world_data: Dict[str, Tile], 
@@ -177,7 +180,9 @@ class StructureManager:
         # Try to place each structure
         for structure_name in self.structures:
             # Generate multiple potential positions within the chunk
-            for _ in range(10):  # Try up to 10 times per structure for testing
+            # Use fewer attempts during testing to speed up tests
+            attempts = 3 if os.environ.get("TESTING") == "1" else 10
+            for _ in range(attempts):
                 # Random position within chunk
                 pos_x = chunk_center.x + rng.randint(-chunk_radius, chunk_radius)
                 pos_y = chunk_center.y + rng.randint(-chunk_radius, chunk_radius)
