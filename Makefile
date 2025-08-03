@@ -1,5 +1,14 @@
 .PHONY: help install test build run clean lint format log-monitor
 
+# NixOS uv detection and path fixing
+# Check if we're on NixOS and use system uv if available
+ifeq ($(shell test -f /etc/os-release && grep -q "ID=nixos" /etc/os-release && echo "nixos"),nixos)
+    # On NixOS, prefer system uv over user uv
+    UV_CMD := $(shell if [ -f /run/current-system/sw/bin/uv ]; then echo "/run/current-system/sw/bin/uv"; else echo "uv"; fi)
+else
+    UV_CMD := uv
+endif
+
 # Default target
 help: ## Show this help message
 	@echo "LithicRivers - Simplified Makefile"
@@ -42,49 +51,49 @@ help: ## Show this help message
 
 # Setup
 install: ## Install dependencies
-	uv sync --extra dev
+	$(UV_CMD) sync --extra dev
 
 # Testing (consolidated)
 test: ## Run all tests with smart detection
 	@echo "🧪 Running comprehensive test suite..."
 	@echo "📊 Running unit tests with coverage..."
-	TESTING=1 uv run coverage run -m unittest discover lithicrivers
+	TESTING=1 $(UV_CMD) run coverage run -m unittest discover lithicrivers
 	@echo "🎮 Running TUI tests (with TERM detection)..."
 	@if [ -z "$$TERM" ]; then \
 		echo "⚠️  TERM not set - running mock-based tests only"; \
-		uv run python -m unittest lithicrivers.test.test_tui_simple; \
-		uv run python -m unittest lithicrivers.test.test_tui_advanced; \
+		$(UV_CMD) run python -m unittest lithicrivers.test.test_tui_simple; \
+		$(UV_CMD) run python -m unittest lithicrivers.test.test_tui_advanced; \
 	else \
 		echo "✅ TERM detected - running all TUI tests"; \
-		uv run python -m unittest lithicrivers.test.test_tui_simple; \
-		uv run python -m unittest lithicrivers.test.test_tui_advanced; \
-		uv run python -m unittest lithicrivers.test.test_tui_headless; \
-		uv run python -m unittest lithicrivers.test.test_tui_visual; \
+		$(UV_CMD) run python -m unittest lithicrivers.test.test_tui_simple; \
+		$(UV_CMD) run python -m unittest lithicrivers.test.test_tui_advanced; \
+		$(UV_CMD) run python -m unittest lithicrivers.test.test_tui_headless; \
+		$(UV_CMD) run python -m unittest lithicrivers.test.test_tui_visual; \
 	fi
 	@echo "✅ All tests completed!"
 
 test-quick: ## Run quick tests only
 	@echo "⚡ Running quick tests..."
-	TESTING=1 uv run coverage run -m unittest discover lithicrivers
-	uv run python -m unittest lithicrivers.test.test_tui_simple
+	TESTING=1 $(UV_CMD) run coverage run -m unittest discover lithicrivers
+	$(UV_CMD) run python -m unittest lithicrivers.test.test_tui_simple
 	@echo "✅ Quick tests completed!"
 
 test-lcov: ## Generate LCOV coverage report
 	@echo "📊 Generating LCOV coverage report..."
-	TESTING=1 uv run coverage run -m unittest discover lithicrivers
-	uv run coverage lcov -o coverage/lcov.info
+	TESTING=1 $(UV_CMD) run coverage run -m unittest discover lithicrivers
+	$(UV_CMD) run coverage lcov -o coverage/lcov.info
 	@echo "✅ LCOV report generated!"
 
 # Game
 run: ## Run the game
-	uv run python -m lithicrivers
+	$(UV_CMD) run python -m lithicrivers
 
 run-debug: ## Run the game with remote debugging enabled
 	@echo "🐛 Starting game with remote debugging..."
 	@echo "📝 In PyCharm: Run -> Attach to Process -> Select this Python process"
 	@echo "🔗 Or use: Run -> Edit Configurations -> + -> Python Debug Server"
 	@echo "🌐 Debug server will be available on localhost:5678"
-	PYTHONPATH=. uv run python -m lithicrivers --debug
+	PYTHONPATH=. $(UV_CMD) run python -m lithicrivers --debug
 
 debug-attach: ## Show instructions for attaching to running process
 	@echo "🔗 PyCharm Remote Debugging Instructions"
@@ -125,16 +134,16 @@ log-monitor: ## Monitor game logs in real-time
 
 # Building
 build: ## Build executable
-	uv run pyinstaller lithicrivers.spec
+	$(UV_CMD) run pyinstaller lithicrivers.spec
 
 # Code quality
 lint: ## Run linting
-	uv run ruff check lithicrivers/
-	uv run mypy lithicrivers/
+	$(UV_CMD) run ruff check lithicrivers/
+	$(UV_CMD) run mypy lithicrivers/
 
 format: ## Format code
-	uv run ruff format lithicrivers/
-	uv run ruff check --fix lithicrivers/
+	$(UV_CMD) run ruff format lithicrivers/
+	$(UV_CMD) run ruff check --fix lithicrivers/
 
 # Cleanup
 clean: ## Clean build artifacts

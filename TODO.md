@@ -173,6 +173,7 @@
 
 ## MVP for steam release (2026)
 
+- unit tests are slow as hell, fix that
 - perlin noise worldgen
 - block placement, push boxes, and fluids
 - basic crafting and a body repair/modular body feature with a damaged android body
