@@ -167,9 +167,11 @@ def _detect_numlock_issue(event: KeyboardEvent) -> bool:
 
 def _show_numlock_warning(world_map):
     """Show a warning popup about numlock being off."""
-    warning_text = """⚠️  NUMLOCK WARNING ⚠️
+    warning_text = """  NUMLOCK WARNING 
 
 Your NumLock key appears to be turned OFF. This can cause issues with movement controls.
+
+This message will only show once per game session.
 
 When NumLock is OFF:
 • Numpad 8 becomes Up Arrow
@@ -179,7 +181,7 @@ When NumLock is OFF:
 • And so on...
 
 To fix this:
-1. Press your NumLock key to turn it ON
+1. Press your NumLock key to turn it ON and click OK to continue.
 2. The numpad keys should then work normally for movement
 
 You can still use Q/E for up/down movement regardless of NumLock state."""
@@ -194,7 +196,7 @@ You can still use Q/E for up/down movement regardless of NumLock state."""
 
     popup = PopUpDialog(
         world_map._screen,
-        "NumLock Warning",
+        warning_text,
         ["OK"],
         warning_callback,
     )
