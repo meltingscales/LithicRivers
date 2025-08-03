@@ -110,7 +110,7 @@ class NPC(Entity, SpriteRenderable):
         self.sprite_sheet = [
             sprite,  # 1x1
             f"{sprite}{sprite}\n{sprite}{sprite}",  # 2x2
-            f"{sprite}{sprite}{sprite}\n{sprite}{sprite}{sprite}\n{sprite}{sprite}{sprite}"  # 3x3
+            f"{sprite}{sprite}{sprite}\n{sprite}{sprite}{sprite}"  # 3x3
         ]
         self._setup_default_conversation()
 
@@ -421,6 +421,9 @@ class Tile(SpriteRenderable):
         if other is None:
             return False
         return self.tileid == other.tileid
+    
+    def __hash__(self):
+        return hash(self.tileid)
 
     def calc_drop(self):
         return weighted_choice_dict(self.drops)
@@ -586,52 +589,237 @@ class Tiles:
         )
 
 
-class WorldData:
+class TilePalette:
+    """
+    Efficient storage for tile types using integer IDs.
+    Similar to Minecraft's block palette system.
+    """
+    def __init__(self):
+        self.tile_to_id = {}  # Tile -> int
+        self.id_to_tile = {}  # int -> Tile
+        self.next_id = 0
+        self._empty_tile = None
+    
+    def get_empty_tile(self) -> Tile:
+        """Get the empty tile (ID 0) - used for ungenerated areas."""
+        if self._empty_tile is None:
+            self._empty_tile = Tiles.empty()
+        return self._empty_tile
+    
+    def get_id(self, tile: Tile) -> int:
+        """Get the integer ID for a tile, creating it if needed."""
+        if tile is None:
+            return 0  # Empty tile is always ID 0
+        
+        if tile not in self.tile_to_id:
+            self.tile_to_id[tile] = self.next_id
+            self.id_to_tile[self.next_id] = tile
+            self.next_id += 1
+        return self.tile_to_id[tile]
+    
+    def get_tile(self, tile_id: int) -> Tile:
+        """Get the tile for a given integer ID."""
+        if tile_id == 0:
+            return self.get_empty_tile()
+        return self.id_to_tile.get(tile_id, self.get_empty_tile())
+    
+    def __len__(self) -> int:
+        """Number of unique tile types in the palette."""
+        return len(self.tile_to_id)
+
+
+class Chunk:
+    """
+    A 3D chunk of the world, storing tile data efficiently.
+    Similar to Minecraft's chunk system.
+    """
+    def __init__(self, size: int = 16):
+        self.size = size
+        self.palette = TilePalette()
+        # 3D array of tile IDs (integers)
+        self.blocks = [[[0] * size for _ in range(size)] for _ in range(size)]
+        self.is_generated = False
+    
+    def get_local_pos(self, world_pos: VectorN) -> tuple[int, int, int]:
+        """Convert world position to local chunk position."""
+        return (world_pos.x % self.size,
+                world_pos.y % self.size, 
+                world_pos.z % self.size)
+    
+    def get_tile(self, local_pos: tuple[int, int, int]) -> Tile:
+        """Get tile at local position within this chunk."""
+        tile_id = self.blocks[local_pos[0]][local_pos[1]][local_pos[2]]
+        return self.palette.get_tile(tile_id)
+    
+    def set_tile(self, local_pos: tuple[int, int, int], tile: Tile) -> None:
+        """Set tile at local position within this chunk."""
+        tile_id = self.palette.get_id(tile)
+        self.blocks[local_pos[0]][local_pos[1]][local_pos[2]] = tile_id
+    
+    def is_empty(self) -> bool:
+        """Check if chunk is completely empty (all blocks are ID 0)."""
+        for x in range(self.size):
+            for y in range(self.size):
+                for z in range(self.size):
+                    if self.blocks[x][y][z] != 0:
+                        return False
+        return True
+
+
+class ChunkedWorldData:
+    """
+    Efficient world data storage using chunked 3D arrays.
+    Similar to Minecraft's world storage system.
+    """
+    def __init__(self, chunk_size: int = 16):
+        self.chunk_size = chunk_size
+        self.chunks = {}  # (chunk_x, chunk_y, chunk_z) -> Chunk
+        self.entity_data = {}  # Keep entity storage simple for now
+        self._tile_cache = {}  # Cache for frequently accessed tiles
+        self._cache_size = 1000  # Max cache size
+    
+    def get_chunk_key(self, pos: VectorN) -> tuple[int, int, int]:
+        """Get chunk coordinates from world position."""
+        return (pos.x // self.chunk_size, 
+                pos.y // self.chunk_size, 
+                pos.z // self.chunk_size)
+    
+    def get_chunk(self, chunk_key: tuple[int, int, int]) -> Chunk:
+        """Get or create a chunk."""
+        if chunk_key not in self.chunks:
+            self.chunks[chunk_key] = Chunk(self.chunk_size)
+        return self.chunks[chunk_key]
+    
+    def get_tile(self, pos: VectorN) -> Union[Tile, None]:
+        """Get tile at world position."""
+        # Check cache first
+        pos_key = (pos.x, pos.y, pos.z)
+        if pos_key in self._tile_cache:
+            return self._tile_cache[pos_key]
+        
+        # Get chunk and local position
+        chunk_key = self.get_chunk_key(pos)
+        chunk = self.get_chunk(chunk_key)
+        local_pos = chunk.get_local_pos(pos)
+        
+        # Get tile from chunk
+        tile = chunk.get_tile(local_pos)
+        
+        # Cache the result (but limit cache size)
+        if len(self._tile_cache) < self._cache_size:
+            self._tile_cache[pos_key] = tile
+        
+        return tile if tile != chunk.palette.get_empty_tile() else None
+    
+    def set_tile(self, pos: VectorN, tile: Tile) -> None:
+        """Set tile at world position."""
+        chunk_key = self.get_chunk_key(pos)
+        chunk = self.get_chunk(chunk_key)
+        local_pos = chunk.get_local_pos(pos)
+        
+        chunk.set_tile(local_pos, tile)
+        
+        # Update cache
+        pos_key = (pos.x, pos.y, pos.z)
+        self._tile_cache[pos_key] = tile
+    
+    def clear_cache(self) -> None:
+        """Clear the tile cache."""
+        self._tile_cache.clear()
+    
+    def get_chunk_stats(self) -> dict:
+        """Get statistics about chunk usage."""
+        total_chunks = len(self.chunks)
+        empty_chunks = sum(1 for chunk in self.chunks.values() if chunk.is_empty())
+        total_tiles = sum(len(chunk.palette) for chunk in self.chunks.values())
+        
+        return {
+            'total_chunks': total_chunks,
+            'empty_chunks': empty_chunks,
+            'used_chunks': total_chunks - empty_chunks,
+            'total_tile_types': total_tiles,
+            'cache_size': len(self._tile_cache)
+        }
+    
     def serialize(self, filepath: Path) -> Path:
+        """Serialize the chunked world data."""
         with open(filepath, "wb") as fh:
             pickle.dump(self, fh)
-
         return filepath
-
+    
     @staticmethod
     def deserialize(filepath: Path):
+        """Deserialize the chunked world data."""
         with open(filepath, "rb") as fh:
             return pickle.load(fh)
+    
+    def __getitem__(self, *item: int):
+        return self.get_tile(VectorN(*item))
+    
+    def __setitem__(self, *item: int):
+        self.set_tile(VectorN(*item))
+    
+    def __iter__(self):
+        """Iterate over all tiles in all chunks."""
+        for chunk_key, chunk in self.chunks.items():
+            for x in range(self.chunk_size):
+                for y in range(self.chunk_size):
+                    for z in range(self.chunk_size):
+                        tile = chunk.get_tile((x, y, z))
+                        if tile != chunk.palette.get_empty_tile():
+                            world_x = chunk_key[0] * self.chunk_size + x
+                            world_y = chunk_key[1] * self.chunk_size + y
+                            world_z = chunk_key[2] * self.chunk_size + z
+                            pos = VectorN(world_x, world_y, world_z)
+                            yield (pos.serialize(), tile)
 
+
+# Keep the old WorldData for backward compatibility during transition
+class WorldData:
+    """
+    Legacy WorldData class - now wraps ChunkedWorldData for compatibility.
+    """
     def __init__(
         self,
         tile_data: Optional[dict[str, Tile]] = None,
         entity_data: Optional[dict[str, list[Entity]]] = None,
     ):
-        self.tile_data = tile_data
-        if not self.tile_data:
-            self.tile_data = {VectorN(0, 0, 0).serialize(): Tiles.dirt()}
-
-        self.entity_data = entity_data
-        if not self.entity_data:
-            self.entity_data = {
-                VectorN(0, 0, 0).serialize(): [Entities.stumbling_sheep()]
-            }
-
-    def set_tile(self, pos: VectorN, t: Tile):
-        self.tile_data[pos.serialize()] = t
-
+        # Initialize the new chunked storage
+        self.chunked_data = ChunkedWorldData()
+        
+        # Convert old tile_data if provided
+        if tile_data:
+            for pos_str, tile in tile_data.items():
+                pos = VectorN.deserialize(pos_str)
+                self.chunked_data.set_tile(pos, tile)
+        
+        # Keep entity data simple for now
+        self.entity_data = entity_data or {}
+    
     def get_tile(self, pos: VectorN) -> Union[Tile, None]:
-        p = pos.serialize()
-
-        if p in self.tile_data:
-            return self.tile_data[p]
-
-        return None
-
+        return self.chunked_data.get_tile(pos)
+    
+    def set_tile(self, pos: VectorN, tile: Tile):
+        self.chunked_data.set_tile(pos, tile)
+    
+    def serialize(self, filepath: Path) -> Path:
+        return self.chunked_data.serialize(filepath)
+    
+    @staticmethod
+    def deserialize(filepath: Path):
+        chunked_data = ChunkedWorldData.deserialize(filepath)
+        world_data = WorldData()
+        world_data.chunked_data = chunked_data
+        return world_data
+    
     def __getitem__(self, *item: int):
-        return self.get_tile(VectorN(*item))
-
+        return self.chunked_data.get_tile(VectorN(*item))
+    
     def __setitem__(self, *item: int):
-        self.set_tile(VectorN(*item))
-
+        self.chunked_data.set_tile(VectorN(*item))
+    
     def __iter__(self):
-        yield from self.tile_data.items()
+        yield from self.chunked_data.__iter__()
 
 
 class World:

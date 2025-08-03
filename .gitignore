@@ -17,6 +17,13 @@ coverage/
 .run/
 htmlcov/
 
-
-profile_cpu.svg
+# profiling
 *.speedscope
+profile_cpu.svg
+
+# other
+*.pyc
+*.pyo
+*.pyd
+*.pyw
+*.pyz
