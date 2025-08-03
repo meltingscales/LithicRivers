@@ -12,6 +12,7 @@ Usage:
 import json
 import sys
 import platform
+import logging
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -23,6 +24,17 @@ except ImportError:
     print("Install with: pip install asciimatics")
     sys.exit(1)
 
+# Set up file-based logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('keychord_capture.log'),
+    ]
+)
+logger = logging.getLogger(__name__)
+
+TESTING_LIMIT_CAPTURE=True
 
 class KeychordCapture:
     def __init__(self):
@@ -77,8 +89,12 @@ class KeychordCapture:
     
     def start_capture(self, screen: Screen):
         """Start the interactive capture process."""
+        logger.info("🎯 start_capture() called!")
+        
         prompts = self.get_keychord_prompts()
         total_prompts = len(prompts)
+        
+        logger.info(f"📋 Got {total_prompts} prompts to capture")
         
         screen.clear()
         screen.print_at("Platform Keychord Capture Tool", 0, 0)
@@ -99,10 +115,12 @@ class KeychordCapture:
                 break
 
             # for testing - remove later.
-            if(i == 3):
+            if(TESTING_LIMIT_CAPTURE and (i == 3)):
+                logger.info("🧪 Test mode: Breaking after 3 keys")
                 break
         
         # Save results
+        logger.info(f"💾 Saving {len(self.captured_keychords)} captured keychords...")
         self._save_results()
     
     def _capture_single_keychord(self, screen: Screen, prompt: str, current: int, total: int) -> bool:
@@ -120,7 +138,7 @@ class KeychordCapture:
         
         screen.print_at(f"Please press: {prompt}", 0, 3)
         screen.print_at("Press the key combination now...", 0, 4)
-        screen.print_at("(Press ESC to skip this key)", 0, 5)
+        screen.print_at("(Press ESC to add the current sequence to the keychord)", 0, 5)
         screen.print_at("(Press ESC at start to exit)", 0, 6)
         
         # Add capitalization hint for uppercase letters
@@ -150,14 +168,7 @@ class KeychordCapture:
         
         # Show confirmation
         screen.print_at(f"Captured: {prompt} -> {sequence}", 0, 15)
-        screen.print_at("Press any key to continue...", 0, 16)
         screen.refresh()
-        
-        # Wait for confirmation
-        while True:
-            event = screen.get_event()
-            if event and hasattr(event, 'key_code'):
-                break
         
         return True
     
@@ -173,8 +184,8 @@ class KeychordCapture:
                 
                 # Handle special cases
                 if keycode == 27 or keycode == -1:  # ESC (different terminals use different codes)
-                    if sequence:  # ESC pressed during sequence
-                        return []  # Skip this key
+                    if sequence:  # ESC pressed during sequence, meaning we want to use the current sequence    
+                        return sequence  # Return the current sequence
                     else:  # ESC pressed at start
                         return None  # Exit
                 
@@ -191,8 +202,10 @@ class KeychordCapture:
     
     def _save_results(self):
         """Save captured keychords to JSON file."""
+        logger.info(f"🔍 Debug: _save_results() called with {len(self.captured_keychords)} keychords")
+        
         if not self.captured_keychords:
-            print("No keychords captured.")
+            logger.error("❌ No keychords captured.")
             return
         
         # Create filename based on platform
@@ -204,34 +217,50 @@ class KeychordCapture:
         config_dir.mkdir(exist_ok=True)
         output_path = config_dir / filename
         
-        with open(output_path, 'w') as f:
-            json.dump(self.captured_keychords, f, indent=2, sort_keys=True)
+        logger.info(f"📁 Saving to: {output_path}")
         
-        print(f"\nKeychords saved to: {output_path}")
-        print(f"Total keychords captured: {len(self.captured_keychords)}")
-        
-        # Show summary
-        print("\nCaptured keychords:")
-        for key, sequence in sorted(self.captured_keychords.items()):
-            print(f"  {key}: {sequence}")
+        try:
+            with open(output_path, 'w') as f:
+                json.dump(self.captured_keychords, f, indent=2, sort_keys=True)
+            
+            logger.info(f"✅ Keychords saved to: {output_path}")
+            logger.info(f"📊 Total keychords captured: {len(self.captured_keychords)}")
+            
+            # Show summary
+            logger.info("📋 Captured keychords:")
+            for key, sequence in sorted(self.captured_keychords.items()):
+                logger.info(f"  {key}: {sequence}")
+        except Exception as e:
+            logger.error(f"❌ Error saving keychords: {e}")
 
 
 def main():
     """Main entry point."""
-    print("Platform Keychord Capture Tool")
-    print("=" * 40)
-    print(f"Platform: {platform.system()} {platform.release()}")
-    print("This tool will prompt you to press various keys and key combinations.")
-    print("The results will be saved to a platform-specific JSON file.")
-    print()
+    logger.info("Platform Keychord Capture Tool")
+    logger.info("=" * 40)
+    logger.info(f"Platform: {platform.system()} {platform.release()}")
+    logger.info("This tool will prompt you to press various keys and key combinations.")
+    logger.info("The results will be saved to a platform-specific JSON file.")
+    logger.info("")
     
     try:
+        logger.info("🔧 Creating KeychordCapture instance...")
         capture = KeychordCapture()
-        Screen.wrapper(capture.start_capture)
+        logger.info("🎮 Starting asciimatics screen wrapper...")
+        
+        # Create a wrapper function that calls our capture method
+        def demo(screen):
+            logger.info("🎯 Demo function called!")
+            capture.start_capture(screen)
+        
+        Screen.wrapper(demo)
+        logger.info("✅ Screen wrapper completed.")
     except KeyboardInterrupt:
-        print("\nCapture interrupted by user.")
+        logger.info("Capture interrupted by user.")
     except Exception as e:
-        print(f"\nError during capture: {e}")
+        logger.error(f"❌ Error during capture: {e}")
+        import traceback
+        traceback.print_exc()
         return 1
     
     return 0
