@@ -11,6 +11,7 @@ added_files = [
     # ('potemkeys/pelleds.jpg', './'),
     # ('LICENSE', './'),
     ('README.md', './'),
+    ("VERSION", "./"),
 ]
 
 a = Analysis(['lithicrivers/__main__.py'],

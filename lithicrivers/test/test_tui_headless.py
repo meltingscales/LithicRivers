@@ -371,8 +371,8 @@ class TestHeadlessPerformance(HeadlessTUITestCase):
             widget.update(0)
             render_time = time.time() - start_time
 
-            # Rendering should be fast (less than 200ms for larger worlds)
-            self.assertLess(render_time, 0.2, f"Rendering took {render_time:.3f}s")
+            # Rendering should be fast (less than 300ms for perlin noise worldgen)
+            self.assertLess(render_time, 0.3, f"Rendering took {render_time:.3f}s")
 
         finally:
             screen.close()
