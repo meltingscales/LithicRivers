@@ -198,8 +198,10 @@
 ## John feedback
 
 escape should close the help menu
+- ESC is not an ASCII character. I need to fundamentally change how `keybinds.json` is structured and just use int keycodes.
+- I also need to make a debug panel that shows a history of keystrokes both as int keycodes (`KeyboardEvent` object property) and also their ASCII representations.
 
-resizing the window should not crash the game
+resizing the window should not crash the game (It doesn't do this on Ubuntu. Does it do this on NixOS? Or only on large screens?)
 
 the entity selection list text is too generic
 
