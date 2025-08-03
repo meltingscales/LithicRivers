@@ -4,6 +4,9 @@ This module provides basic testing for TUI components with minimal mocking.
 """
 
 import os
+# Set TESTING environment BEFORE importing any game modules
+os.environ["TESTING"] = "1"
+
 import unittest
 from unittest.mock import Mock
 
@@ -32,7 +35,7 @@ class SimpleTUITestCase(unittest.TestCase):
     def setUpClass(cls):
         """Create shared game instances for tests to improve performance."""
         # Set TESTING environment to use smaller world sizes
-        os.environ["TESTING"] = "1"
+        # os.environ["TESTING"] = "1" # This line is now redundant as it's set at the top
         
         # Create shared game instances
         cls.shared_game_engine = GameEngine()

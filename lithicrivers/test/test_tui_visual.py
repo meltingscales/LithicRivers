@@ -4,6 +4,9 @@ This module provides visual regression testing for TUI components.
 """
 
 import os
+# Set TESTING environment BEFORE importing any game modules
+os.environ["TESTING"] = "1"
+
 import unittest
 
 from lithicrivers.game import Game
@@ -16,9 +19,6 @@ class VisualTUITestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """Create shared game instances for tests to improve performance."""
-        # Set TESTING environment to use smaller world sizes
-        os.environ["TESTING"] = "1"
-        
         # Create shared game instances
         cls.shared_game_engine = GameEngine()
         cls.shared_game = Game()
