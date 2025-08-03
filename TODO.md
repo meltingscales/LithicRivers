@@ -182,5 +182,31 @@
 
 
 ## steam key giveaway list:
-skomor123
-noahnogueras@gmail.com
+- skomor123
+- noahnogueras@gmail.com
+
+## John feedback
+
+help page looks retarded, why are the movement keys randomly sorted
+
+escape should close the help menu
+
+zoom should work with the numpad
+
+actually add perlin noise
+
+what about gaussian noise (idk)
+
+resizing the window should not crash the game
+
+the entity selection list text is too generic
+
+oak doesn't fucking look like a tree
+
+root page is a stupid world map name 
+
+num lock warning
+
+message log init lag bug
+
+root page should be the first option
