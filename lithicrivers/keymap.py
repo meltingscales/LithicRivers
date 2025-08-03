@@ -1,6 +1,6 @@
 import itertools
 import logging
-from typing import Dict, List, Union
+from typing import Dict, FrozenSet, List, Union
 
 from asciimatics.event import KeyboardEvent
 
@@ -26,8 +26,6 @@ class Keymap:
     """Keymap class that loads keybinds from JSON configuration."""
 
     def __init__(self):
-        # Cache for valid key names
-        self._get_valid_key_names_cache = None
 
         # Load keybinds from config
         self._load_keybinds()
@@ -38,21 +36,14 @@ class Keymap:
 
     def get_movement_vector(self, ke: KeyboardEvent) -> Union[None, VectorN]:
         """Get the movement vector for a keyboard event."""
-
-        # self.MOVE_NORTHWEST is a list of strings, by the way.
-        # TODO simplify this.
-
-        if chr(ke.key_code) in self.MOVE_NORTHWEST: return VEC_NORTHWEST
-        if chr(ke.key_code) in self.MOVE_NORTH: return VEC_NORTH
-        if chr(ke.key_code) in self.MOVE_NORTHEAST: return VEC_NORTHEAST
-        if chr(ke.key_code) in self.MOVE_WEST: return VEC_WEST
-        if chr(ke.key_code) in self.WAIT: return VEC_ZERO
-        if chr(ke.key_code) in self.MOVE_EAST: return VEC_EAST
-        if chr(ke.key_code) in self.MOVE_SOUTHWEST: return VEC_SOUTHWEST
-        if chr(ke.key_code) in self.MOVE_SOUTH: return VEC_SOUTH
-        if chr(ke.key_code) in self.MOVE_SOUTHEAST: return VEC_SOUTHEAST
-        if chr(ke.key_code) in self.MOVE_UP: return VEC_UP
-        if chr(ke.key_code) in self.MOVE_DOWN: return VEC_DOWN
+        
+        key_char = chr(ke.key_code)
+        
+        # Check each movement key list and return the corresponding vector
+        for key_list, vector in self.MOVEMENT_MAPPING.items():
+            if key_char in key_list:
+                return vector
+                
         return None
 
     def _load_keybinds(self):
@@ -84,6 +75,21 @@ class Keymap:
             self.MOVE_DOWN,
         ]
 
+        # Create a mapping of movement key lists to their corresponding vectors
+        self.MOVEMENT_MAPPING: Dict[FrozenSet[str], VectorN] = {
+            self.MOVE_NORTHWEST: VEC_NORTHWEST,
+            self.MOVE_NORTH: VEC_NORTH,
+            self.MOVE_NORTHEAST: VEC_NORTHEAST,
+            self.MOVE_WEST: VEC_WEST,
+            self.WAIT: VEC_ZERO,
+            self.MOVE_EAST: VEC_EAST,
+            self.MOVE_SOUTHWEST: VEC_SOUTHWEST,
+            self.MOVE_SOUTH: VEC_SOUTH,
+            self.MOVE_SOUTHEAST: VEC_SOUTHEAST,
+            self.MOVE_UP: VEC_UP,
+            self.MOVE_DOWN: VEC_DOWN,
+        }
+
         # Viewport keys
         self.RESET_VIEWPORT = config_manager.get_keybind("viewport", "RESET_VIEWPORT")
         self.SLIDE_VIEWPORT_WEST = config_manager.get_keybind(
@@ -106,26 +112,6 @@ class Keymap:
         """Reload keybinds from config files."""
         config_manager.keybinds = config_manager._load_keybinds()
         self._load_keybinds()
-
-
-    def get_valid_key_names(self) -> list[str]:
-        """Get list of valid key names."""
-        if self._get_valid_key_names_cache is None:
-            all_names = dir(self)
-            filtered_names = [
-                name
-                for name in all_names
-                if (
-                    (not name.startswith("__"))
-                    and (isinstance(name, str))  # name must be string
-                    and (
-                        isinstance(self.__getattribute__(name), str)
-                    )  # self.[name] must be string
-                )
-            ]
-            self._get_valid_key_names_cache = filtered_names
-
-        return self._get_valid_key_names_cache
 
     def generate_categorized_key_guide(self) -> str:
         """Generate a categorized keybind list sorted by category."""

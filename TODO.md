@@ -179,8 +179,6 @@
 - procedural dungeons
 - body modularity means dynamic walk and break speeds, so tick rate needs to be larger than 1, perhaps 200 or so.
 
-
-
 ## steam key giveaway list:
 - skomor123
 - noahnogueras@gmail.com

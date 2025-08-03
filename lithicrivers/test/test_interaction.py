@@ -17,7 +17,7 @@ class TestInteractionSystem(unittest.TestCase):
     def test_interact_keybind(self):
         """Test that the interact keybind is properly configured."""
         self.assertIsNotNone(KEYMAP.INTERACT)
-        self.assertEqual(KEYMAP.INTERACT, "i")
+        self.assertEqual(KEYMAP.INTERACT, frozenset(["i"]))
 
     def test_adjacent_entities_detection(self):
         """Test that adjacent entities are properly detected."""

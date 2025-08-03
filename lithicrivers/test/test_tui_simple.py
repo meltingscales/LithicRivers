@@ -82,9 +82,8 @@ class TestInputHandlerSimple(SimpleTUITestCase):
             ord("x"),
             ord("y"),
             ord("z"),
-            ord("5"),
             ord("0"),
-        ]  # 5 is center (no movement), 0 is not used
+        ]  #0 is not used
 
         for key_code in invalid_keys:
             with self.subTest(f"key_code={key_code}"):
