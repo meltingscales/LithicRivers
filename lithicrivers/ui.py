@@ -36,7 +36,7 @@ class TabButtons(Layout):
     def __init__(self, frame, active_tab_idx: int, game: Game = None):
         # Create buttons list based on developer mode
         buttons = [
-            Button("Root Page", self._safe_scene_change("RootPage")),
+            Button("World Map", self._safe_scene_change("WorldMap")),
             Button("Help", self._safe_scene_change("HelpPage")),
             Button("Message Log", self._safe_scene_change("MessageLogPage")),
         ]
@@ -329,12 +329,12 @@ class GameWidget(asciimatics.widgets.Widget):
         self._game = new_value
 
 
-class RootPage(Frame):
+class WorldMap(Frame):
     __slots__ = ["game"]
 
     def __init__(self, screen, game: Game):
         super().__init__(
-            screen, screen.height, screen.width, can_scroll=True, title="Root Page"
+            screen, screen.height, screen.width, can_scroll=True, title="World Map"
         )
 
         # Use more flexible column layout - game widget gets more space
@@ -960,7 +960,7 @@ class InputHandler:
         return None
 
     @staticmethod
-    def handle_mining(event: KeyboardEvent, game: Game, root_page: RootPage):
+    def handle_mining(event: KeyboardEvent, game: Game, world_map: WorldMap):
         # TODO: clean up state... :P why do we pass all these as args?
 
         if not KEYMAP.matches("MINE", event):
@@ -979,58 +979,58 @@ class InputHandler:
             game.set_tile_at_player_feet(Tiles.dirt())
             game.log_mining("tree", dropped_items)
             game.increment_tick()
-            root_page.update_status_label()
+            world_map.update_status_label()
         elif tile_under == Tiles.gold_ore():
             dropped_item = tile_under.calc_drop()
             game.player.inventory.add_item(dropped_item)
             game.set_tile_at_player_feet(Tiles.dirt())
             game.log_mining("gold ore", [dropped_item.name])
             game.increment_tick()
-            root_page.update_status_label()
+            world_map.update_status_label()
 
     @classmethod
     def handle_viewport(
-        cls, event: KeyboardEvent, game: Game, root_page: RootPage = None
+        cls, event: KeyboardEvent, game: Game, world_map: WorldMap = None
     ):
         if KEYMAP.matches("RESET_VIEWPORT", event):
             game.reset_viewport()
-            if root_page:
-                root_page.update_status_label()
+            if world_map:
+                world_map.update_status_label()
 
         if KEYMAP.matches("SLIDE_VIEWPORT_WEST", event):
             game.viewport.slide_left()
-            if root_page:
-                root_page.update_status_label()
+            if world_map:
+                world_map.update_status_label()
 
         if KEYMAP.matches("SLIDE_VIEWPORT_EAST", event):
             game.viewport.slide_right()
-            if root_page:
-                root_page.update_status_label()
+            if world_map:
+                world_map.update_status_label()
 
         if KEYMAP.matches("TOGGLE_VIEWPORT", event):
             # Toggle viewport visibility by setting a flag
             if not hasattr(game, "viewport_visible"):
                 game.viewport_visible = True
             game.viewport_visible = not game.viewport_visible
-            if root_page:
-                root_page.update_status_label()
+            if world_map:
+                world_map.update_status_label()
 
     @classmethod
-    def handle_scale(cls, event, game, root_page: RootPage = None):
+    def handle_scale(cls, event, game, world_map: WorldMap = None):
         if KEYMAP.matches("SCALE_DOWN", event):
             game.viewport.rescale_down(1)
             game.reset_viewport()
-            if root_page:
-                root_page.update_status_label()
+            if world_map:
+                world_map.update_status_label()
 
         if KEYMAP.matches("SCALE_UP", event):
             game.viewport.rescale_up(1)
             game.reset_viewport()
-            if root_page:
-                root_page.update_status_label()
+            if world_map:
+                world_map.update_status_label()
 
     @classmethod
-    def handle_interaction(cls, event: KeyboardEvent, game: Game, root_page: RootPage):
+    def handle_interaction(cls, event: KeyboardEvent, game: Game, world_map: WorldMap):
         """Handle interaction with adjacent entities."""
         if not KEYMAP.matches("INTERACT", event):
             return
@@ -1042,16 +1042,16 @@ class InputHandler:
             return
 
         # Show interaction popup for entities
-        cls._show_interaction_popup(game, adjacent_entities, root_page)
+        cls._show_interaction_popup(game, adjacent_entities, world_map)
 
     @classmethod
-    def _start_npc_conversation(cls, game: Game, npc: NPC, root_page: RootPage):
+    def _start_npc_conversation(cls, game: Game, npc: NPC, world_map: WorldMap):
         """Start a conversation with an NPC."""
-        cls._show_npc_conversation(game, npc, "greeting", root_page)
+        cls._show_npc_conversation(game, npc, "greeting", world_map)
 
     @classmethod
     def _show_npc_conversation(
-        cls, game: Game, npc: NPC, topic: str, root_page: RootPage
+        cls, game: Game, npc: NPC, topic: str, world_map: WorldMap
     ):
         """Show an NPC conversation for a specific topic."""
         conversation = npc.get_conversation(topic)
@@ -1091,7 +1091,7 @@ class InputHandler:
                     )
                     # Clear the current popup first
                     active_popup = None
-                    cls._show_npc_conversation(game, npc, next_topic, root_page)
+                    cls._show_npc_conversation(game, npc, next_topic, world_map)
                 else:
                     # No next topic or same topic, close the conversation
                     logging.debug(
@@ -1110,7 +1110,7 @@ class InputHandler:
             f"NPC conversation: creating popup with text: '{conversation['text'][:50]}...'"
         )
         popup = PopUpDialog(
-            root_page._screen,
+            world_map._screen,
             conversation["text"],
             conversation["options"],
             conversation_callback,
@@ -1120,14 +1120,14 @@ class InputHandler:
         active_popup = popup
         logging.debug("NPC conversation: popup created, adding to scene")
         # Add the popup to the current scene
-        root_page._screen.current_scene.add_effect(popup)
+        world_map._screen.current_scene.add_effect(popup)
 
     @classmethod
     def _show_interaction_popup(
         cls,
         game: Game,
         adjacent_entities: list[tuple[str, VectorN, str]],
-        root_page: RootPage,
+        world_map: WorldMap,
     ):
         """Show interaction popup for entities."""
         # Create entity options for the popup
@@ -1141,7 +1141,7 @@ class InputHandler:
                 chosen_entity = adjacent_entities[selected_option]
                 name, pos, color = chosen_entity
                 cls._handle_entity_interaction(
-                    game, name, pos, color, root_page
+                    game, name, pos, color, world_map
                 )
 
             global active_popup
@@ -1151,7 +1151,7 @@ class InputHandler:
         from asciimatics.widgets import PopUpDialog
 
         popup = PopUpDialog(
-            root_page._screen,
+            world_map._screen,
             f"Found {len(adjacent_entities)} entities nearby:",
             entity_options,
             popup_callback,
@@ -1160,11 +1160,11 @@ class InputHandler:
         global active_popup
         active_popup = popup
         # Add the popup to the current scene
-        root_page._screen.current_scene.add_effect(popup)
+        world_map._screen.current_scene.add_effect(popup)
 
     @classmethod
     def _handle_entity_interaction(
-        cls, game: Game, name: str, pos: VectorN, _color: str, root_page: RootPage
+        cls, game: Game, name: str, pos: VectorN, _color: str, world_map: WorldMap
     ):
         """Handle interaction with a specific entity."""
         entity = game.world.get_entity(pos)
@@ -1174,21 +1174,21 @@ class InputHandler:
             interaction_text = entity.interact()
             game.log_interaction(name, interaction_text)
             game.increment_tick()
-            cls._show_interaction_result(name, interaction_text, root_page)
+            cls._show_interaction_result(name, interaction_text, world_map)
         elif hasattr(entity, "get_conversation"):
             # For NPCs, start conversation
             game.log_interaction(name, "Started conversation")
             game.increment_tick()
-            cls._start_npc_conversation(game, entity, root_page)
+            cls._start_npc_conversation(game, entity, world_map)
         else:
             # Default interaction
             default_text = f"You interact with {name}."
             game.log_interaction(name, default_text)
             game.increment_tick()
-            cls._show_interaction_result(name, default_text, root_page)
+            cls._show_interaction_result(name, default_text, world_map)
 
     @classmethod
-    def _show_interaction_result(cls, name: str, text: str, root_page: RootPage):
+    def _show_interaction_result(cls, name: str, text: str, world_map: WorldMap):
         """Show the result of an interaction."""
 
         def result_callback(_selected_option):
@@ -1200,7 +1200,7 @@ class InputHandler:
         from asciimatics.widgets import PopUpDialog
 
         popup = PopUpDialog(
-            root_page._screen,
+            world_map._screen,
             f"Interacting with {name}\n\n{text}",
             ["OK"],
             result_callback,
@@ -1209,7 +1209,7 @@ class InputHandler:
         global active_popup
         active_popup = popup
         # Add the popup to the current scene
-        root_page._screen.current_scene.add_effect(popup)
+        world_map._screen.current_scene.add_effect(popup)
 
 
 def demo(screen: Screen, scene: Scene, game: Game):
@@ -1221,7 +1221,7 @@ def demo(screen: Screen, scene: Scene, game: Game):
     active_popup = None  # Initialize to None
 
     scenes = [
-        Scene([RootPage(screen, game)], -1, name="RootPage"),
+        Scene([WorldMap(screen, game)], -1, name="WorldMap"),
         Scene([HelpPage(screen, game)], -1, name="HelpPage"),
         Scene([MessageLogPage(screen, game)], -1, name="MessageLogPage"),
         Scene([ExtraPage(screen)], -1, name="ExtraPage"),
@@ -1248,7 +1248,7 @@ def demo(screen: Screen, scene: Scene, game: Game):
             logging.debug("No effects ;_;")
             return
 
-        maybe_root_page: RootPage = da_effects[0]
+        maybe_world_map: WorldMap = da_effects[0]
 
         # Check for terminal resize
         nonlocal last_screen_width, last_screen_height
@@ -1260,8 +1260,8 @@ def demo(screen: Screen, scene: Scene, game: Game):
             last_screen_height = screen.height
 
             # Recalculate viewport for new screen size
-            if isinstance(maybe_root_page, RootPage):
-                maybe_root_page.handle_terminal_resize(screen)
+            if isinstance(maybe_world_map, WorldMap):
+                maybe_world_map.handle_terminal_resize(screen)
 
         if not isinstance(event, KeyboardEvent):
             # print("not keyboard event, ignoring... - {}".format(event))
@@ -1308,9 +1308,9 @@ def demo(screen: Screen, scene: Scene, game: Game):
             logging.info(f"Error in popup handling: {e}")
             active_popup = None
 
-        if maybe_root_page.title.strip() != "Root Page":
-            logging.info("Not supposed to handle " + maybe_root_page.title)
-            # Clear any active popup when switching to non-Root pages
+        if maybe_world_map.title.strip() != "World Map":
+            logging.info("Not supposed to handle " + maybe_world_map.title)
+            # Clear any active popup when switching to non-World Maps
             try:
                 if active_popup is not None:
                     try:
@@ -1329,17 +1329,17 @@ def demo(screen: Screen, scene: Scene, game: Game):
                 active_popup = None
             return
 
-        root_page = maybe_root_page
+        world_map = maybe_world_map
 
         move_vec = InputHandler.handle_movement(event)
         if move_vec:
-            root_page.game.move_player(move_vec)
+            world_map.game.move_player(move_vec)
 
             # display pos
-            root_page.labelPosition.text = game.render_pretty_player_position()
+            world_map.labelPosition.text = game.render_pretty_player_position()
 
             # Update status label immediately
-            root_page.update_status_label()
+            world_map.update_status_label()
 
             # move the viewport with the player
             if game.player_outside_viewport(wiggle=VIEWPORT_WIGGLE):
@@ -1349,18 +1349,18 @@ def demo(screen: Screen, scene: Scene, game: Game):
                 if game.player_outside_viewport(wiggle=VIEWPORT_WIGGLE):
                     game.reset_viewport()
 
-        InputHandler.handle_viewport(event, root_page.game, root_page)
-        InputHandler.handle_scale(event, root_page.game, root_page)
-        InputHandler.handle_interaction(event, root_page.game, root_page)
+        InputHandler.handle_viewport(event, world_map.game, world_map)
+        InputHandler.handle_scale(event, world_map.game, world_map)
+        InputHandler.handle_interaction(event, world_map.game, world_map)
 
-        InputHandler.handle_mining(event, root_page.game, root_page)
-        root_page.labelInventory.text = root_page.game.player.inventory.summary()
+        InputHandler.handle_mining(event, world_map.game, world_map)
+        world_map.labelInventory.text = world_map.game.player.inventory.summary()
 
         # after we mine
-        root_page.labelFeet.text = str(root_page.game.get_tile_at_player_feet())
+        world_map.labelFeet.text = str(world_map.game.get_tile_at_player_feet())
 
         # update viewport display
-        root_page.labelViewport.text = str(root_page.game.viewport.render_pretty())
+        world_map.labelViewport.text = str(world_map.game.viewport.render_pretty())
 
     screen.set_title(f"~~-[ {GAME_NAME} ]-~~")
     screen.play(

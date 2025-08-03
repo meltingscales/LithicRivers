@@ -202,8 +202,6 @@ resizing the window should not crash the game
 
 the entity selection list text is too generic
 
-root page is a stupid world map name 
-
 num lock warning
 
 message log init lag bug
