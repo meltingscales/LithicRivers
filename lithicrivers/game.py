@@ -140,8 +140,11 @@ class ElderOak(NPC):
         super().__init__("Elder Oak", position, sprite="N", color="cyan")
         self.sprite_sheet = [
             "N",  # 1x1
-            "NN\nNN",  # 2x2 - Simple 2x2 tree
-            " N \nNNN\n N "  # 3x3 - Tree with trunk and branches
+            " /\n"\
+            "/|",  # 2x2 - Simple 2x2 tree
+            "` /\n"\
+            "`/|\n"\
+            "/||"  # 3x3 - Tree with trunk and branches
         ]
         self._setup_default_conversation()
 
