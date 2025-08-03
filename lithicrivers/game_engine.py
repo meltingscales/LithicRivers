@@ -161,16 +161,6 @@ class GameEngine:
         action = SetTileAction(position, tile)
         return self.apply_action(action)
 
-    def render_viewport(self, viewport: Optional[Viewport] = None) -> RenderedData:
-        """Render the current game state within the viewport."""
-        viewport = viewport or self.state.viewport
-
-        # This would integrate with your existing rendering logic
-        # For now, return a placeholder
-        from lithicrivers.game import generate_sprite_repeat
-
-        return RenderedData(render_data=[[generate_sprite_repeat("?", 1)]], scale=1)
-
     def save_state(self, filepath: Path) -> Path:
         """Save the current game state to a file."""
         import pickle

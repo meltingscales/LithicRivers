@@ -12,7 +12,7 @@ from asciimatics.screen import Screen
 from lithicrivers.game import Game
 from lithicrivers.logging_config import setup_logging, get_logger
 from lithicrivers.model.model import StopGameError
-from lithicrivers.settings import GAME_NAME, LOGFILENAME
+from lithicrivers.settings import GAME_NAME, LOGFILENAME, DEFAULT_SEED
 from lithicrivers.ui import demo
 
 # Setup logging
@@ -34,7 +34,7 @@ if __name__ == "__main__":
             print("⚠️  pydevd not installed. Install with: pip install pydevd")
             print("   Or use: uv add pydevd")
     
-    GAME = Game()
+    GAME = Game(seed=DEFAULT_SEED)
 
     print(f"Welcome to {GAME_NAME}.\nSee '{LOGFILENAME}' for logs.")
 

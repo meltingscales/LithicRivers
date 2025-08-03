@@ -10,6 +10,7 @@ os.environ["TESTING"] = "1"
 import unittest
 
 from lithicrivers.game import Game
+from lithicrivers.settings import DEFAULT_SEED
 from lithicrivers.game_engine import GameEngine
 
 
@@ -21,7 +22,7 @@ class VisualTUITestCase(unittest.TestCase):
         """Create shared game instances for tests to improve performance."""
         # Create shared game instances
         cls.shared_game_engine = GameEngine()
-        cls.shared_game = Game()
+        cls.shared_game = Game(seed=DEFAULT_SEED)
 
     def setUp(self):
         """Set up common test fixtures."""

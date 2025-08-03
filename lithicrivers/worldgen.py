@@ -194,15 +194,13 @@ class SeededWorldGenerator:
     Similar to Minecraft's world generation system.
     """
 
-    def __init__(self, seed: Optional[int] = None):
+    def __init__(self, seed: int):
         """
         Initialize the world generator with a seed.
 
         Args:
-            seed: The seed for deterministic generation. If None, uses a random seed.
+            seed: The seed for deterministic generation.
         """
-        if seed is None:
-            seed = random.randint(0, 2**32 - 1)
 
         self.seed = WorldSeed(seed)
         self.rng = random.Random(seed)
@@ -419,12 +417,12 @@ class SeededWorldGenerator:
                     )
 
 
-def create_world_generator(seed: Optional[int] = None) -> SeededWorldGenerator:
+def create_world_generator(seed: int) -> SeededWorldGenerator:
     """
     Create a new world generator with the given seed.
 
     Args:
-        seed: The seed for deterministic generation. If None, uses a random seed.
+        seed: The seed for deterministic generation.
 
     Returns:
         A new SeededWorldGenerator instance
@@ -433,14 +431,14 @@ def create_world_generator(seed: Optional[int] = None) -> SeededWorldGenerator:
 
 
 def generate_world_with_seed(
-    radius: VectorN, seed: Optional[int] = None
+    radius: VectorN, seed: int
 ) -> dict[str, Tile]:
     """
     Generate world data with a specific seed.
 
     Args:
         radius: The radius of the world to generate
-        seed: The seed for deterministic generation. If None, uses a random seed.
+        seed: The seed for deterministic generation.
 
     Returns:
         Dictionary mapping position strings to tiles

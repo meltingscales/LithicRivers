@@ -12,6 +12,7 @@ from lithicrivers.worldgen import (
     create_world_generator,
     generate_world_with_seed,
 )
+from lithicrivers.settings import DEFAULT_SEED
 
 
 class TestWorldSeed(unittest.TestCase):
@@ -38,8 +39,8 @@ class TestSeededWorldGenerator(unittest.TestCase):
         self.assertEqual(generator.get_seed().seed, 42)
 
     def test_generator_creation_without_seed(self):
-        """Test creating a generator without a seed (should generate random seed)."""
-        generator = SeededWorldGenerator()
+        """Test creating a generator without a seed (should use default seed)."""
+        generator = SeededWorldGenerator(DEFAULT_SEED)
         seed = generator.get_seed()
         self.assertIsInstance(seed.seed, int)
         self.assertGreaterEqual(seed.seed, 0)

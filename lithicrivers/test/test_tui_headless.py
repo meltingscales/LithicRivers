@@ -24,7 +24,9 @@ from lithicrivers.constants import (
     VEC_SOUTHWEST,
     VEC_WEST,
 )
-from lithicrivers.game import Game, Tiles
+from lithicrivers.game import Game
+from lithicrivers.settings import DEFAULT_SEED
+from lithicrivers.game import Tiles
 from lithicrivers.game_engine import GameEngine
 from lithicrivers.model.vector import VectorN
 from lithicrivers.ui import GameWidget, HelpPage, InputHandler, WorldMap
@@ -38,7 +40,7 @@ class HeadlessTUITestCase(unittest.TestCase):
         """Create shared game instances for tests to improve performance."""
         # Create shared game instances
         cls.shared_game_engine = GameEngine()
-        cls.shared_game = Game()
+        cls.shared_game = Game(seed=DEFAULT_SEED)
 
     def setUp(self):
         """Set up common test fixtures."""
