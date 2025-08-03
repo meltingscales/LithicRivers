@@ -99,6 +99,8 @@ COLOR_MANAGER = ColorManager()
 def presenting(text) -> str:
     return f"~ {text} ~"
 
+def spaced_list(items: list[str]) -> str:
+    return " ".join(items)
 
 def render_tuple(tups: list[T], places=2) -> str:
     fstr = ""

@@ -32,19 +32,12 @@ from lithicrivers.textutil import get_color_for_ui_element, list_label, presenti
 if TYPE_CHECKING:
     from asciimatics.effects import Effect
 
-# class MainGameFrame(Layout):
-#     def __init__(self, frame, active_tab_idx, game: Game = None):
-#         cols = [1]
-#
-#         raise NotImplementedError("lazy!")
-
-
 class TabButtons(Layout):
-    def __init__(self, frame, active_tab_idx, game: Game = None):
+    def __init__(self, frame, active_tab_idx: int, game: Game = None):
         # Create buttons list based on developer mode
         buttons = [
-            Button("Help", self._safe_scene_change("HelpPage")),
             Button("Root Page", self._safe_scene_change("RootPage")),
+            Button("Help", self._safe_scene_change("HelpPage")),
             Button("Message Log", self._safe_scene_change("MessageLogPage")),
         ]
 
@@ -52,7 +45,7 @@ class TabButtons(Layout):
         if DEVELOPER_MODE:
             buttons.append(Button("Test Popups", self._safe_scene_change("ExtraPage")))
 
-        buttons.append(Button("Quit", raise_fn(StopGameError, "Game stopping :P")))
+        buttons.append(Button("Quit", raise_fn(StopGameError, "Goodbye!")))
 
         # Create columns based on number of buttons
         cols = [1] * len(buttons)
@@ -67,8 +60,6 @@ class TabButtons(Layout):
 
         for i, button in enumerate(buttons):
             self.add_widget(button, i)
-
-        buttons[active_tab_idx].disabled = True
 
     def _safe_scene_change(self, scene_name):
         """Safely change scenes, preventing change if popup is active."""
@@ -211,9 +202,6 @@ class GameWidget(asciimatics.widgets.Widget):
         self._align = align
 
         self._frame: Frame
-
-        # print("we need {} height...".format(self.required_height(0, 0)))
-        # print(self.game.viewport)
 
     def required_height(self, _offset, _width):
         # Account for scale: each tile takes up scale characters vertically
@@ -965,14 +953,9 @@ class InputHandler:
         :return: Vector the input resolves to.
         """
 
-        # First check for numpad movement
-        if KEYMAP.matches_numpad(keyboard_event):
-            return KEYMAP.get_numpad_movement_vector(keyboard_event)
-
-        # Then check for regular character movement
-        dat_key = KEYMAP.char_from_keyboard_event(keyboard_event)
-        if dat_key in KEYMAP.MOVEMENT_VECTOR_MAP:
-            return KEYMAP.MOVEMENT_VECTOR_MAP[dat_key]
+        # check for movement key
+        if KEYMAP.matches_movement_key(keyboard_event):
+            return KEYMAP.get_movement_vector(keyboard_event)
 
         return None
 
