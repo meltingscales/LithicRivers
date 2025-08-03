@@ -42,6 +42,7 @@ class KeychordCapture:
         self.current_sequence: List[int] = []
         self.recording = False
         self.current_prompt = ""
+        self._load_existing_keychords()
         
     def get_keychord_prompts(self) -> List[str]:
         """Define the key combinations to capture."""
@@ -87,6 +88,24 @@ class KeychordCapture:
         
         return prompts
     
+    def _load_existing_keychords(self):
+        """Load existing keychords from the platform-specific JSON file."""
+        platform_name = platform.system().lower()
+        filename = f"keychords.{platform_name}.json"
+        config_dir = Path("config")
+        existing_file = config_dir / filename
+        
+        if existing_file.exists():
+            try:
+                with open(existing_file, 'r') as f:
+                    existing_data = json.load(f)
+                    self.captured_keychords.update(existing_data)
+                    logger.info(f"📂 Loaded {len(existing_data)} existing keychords from {existing_file}")
+            except Exception as e:
+                logger.warning(f"⚠️ Could not load existing keychords from {existing_file}: {e}")
+        else:
+            logger.info(f"📂 No existing keychord file found at {existing_file}")
+    
     def start_capture(self, screen: Screen):
         """Start the interactive capture process."""
         logger.info("🎯 start_capture() called!")
@@ -110,17 +129,29 @@ class KeychordCapture:
                 break
         
         # Capture each keychord
+        captured_count = 0
+        skipped_count = 0
+        
         for i, prompt in enumerate(prompts):
-            if not self._capture_single_keychord(screen, prompt, i + 1, total_prompts):
+            # Skip if already captured
+            if prompt in self.captured_keychords:
+                skipped_count += 1
+                logger.info(f"⏭️ Skipping '{prompt}' - already captured as {self.captured_keychords[prompt]}")
+                continue
+                
+            if not self._capture_single_keychord(screen, prompt, i + 1 - skipped_count, total_prompts - skipped_count):
                 break
 
+            captured_count += 1
+
             # for testing - remove later.
-            if(TESTING_LIMIT_CAPTURE and (i == 3)):
+            if(TESTING_LIMIT_CAPTURE and (captured_count == 3)):
                 logger.info("🧪 Test mode: Breaking after 3 keys")
                 break
         
         # Save results
         logger.info(f"💾 Saving {len(self.captured_keychords)} captured keychords...")
+        logger.info(f"📊 Captured: {captured_count}, Skipped: {skipped_count}")
         self._save_results()
     
     def _capture_single_keychord(self, screen: Screen, prompt: str, current: int, total: int) -> bool:
