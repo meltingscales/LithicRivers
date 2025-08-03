@@ -638,6 +638,8 @@ class DevKeystrokesPage(Frame):
             # try to get ascii representation and remove whitespace
             try:
                 ascii_rep = chr(key_code)
+                if ascii_rep.strip() == "":
+                    ascii_rep = f"0x{key_code:02x}"
             except ValueError:
                 ascii_rep = f"0x{key_code:02x}"
 
@@ -1322,8 +1324,13 @@ def demo(screen: Screen, scene: Scene, game: Game):
         if not isinstance(event, KeyboardEvent):
             # print("not keyboard event, ignoring... - {}".format(event))
             return
-
         event: KeyboardEvent
+
+        # We want to display the KeyboardEvent on the DevKeystrokesPage
+        if isinstance(maybe_world_map, DevKeystrokesPage):
+            maybe_world_map: DevKeystrokesPage
+            maybe_world_map.update_keystroke(event)
+            return
 
         # Check for ESC key to close popups
         # TODO do not hardcode this, rework the keymap to accept keycode integer sequences and not just ascii characters.
@@ -1365,13 +1372,6 @@ def demo(screen: Screen, scene: Scene, game: Game):
         except Exception as e:
             logging.info(f"Error in popup handling: {e}")
             active_popup = None
-
-
-        if isinstance(maybe_world_map, DevKeystrokesPage):
-            # We want to display the KeyboardEvent on the DevKeystrokesPage
-            maybe_world_map: DevKeystrokesPage
-
-            maybe_world_map.update_keystroke(event)
 
         # TODO: This is a pretty gross way of handling this. We should have a second handler function that just dispatches the event to a specific panel.
         if maybe_world_map.title.strip() != "World Map":

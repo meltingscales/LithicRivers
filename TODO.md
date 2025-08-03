@@ -185,7 +185,6 @@
 
 ## MVP for steam release (2026)
 
-
 - handle_event is a huge method, a bit gross
 - make sure that Y less than 0 generates unique terrain, currently it seems static. maybe Y isn't getting used in the perlin noise gen?
 - block placement, push boxes, and fluids
@@ -211,6 +210,19 @@ ESC seems to input fine, but is delayed. I think this might be a consequence of 
 
 - ESC is not an ASCII character. I need to fundamentally change how `keybinds.json` is structured and just use int keycodes.
 - I also need to make a debug panel that shows a history of keystrokes both as int keycodes (`KeyboardEvent` object property) and also their ASCII representations.
+
+...
+
+I think I'd like to use a platform-specific keymap file that lets me associate a list of integers with a specific key or key-chord. For example:
+
+    keychords.ubuntu.json:
+    [
+    "CTRL-NUMPAD-5": [-1,91,69],
+    "a": [97],
+    ...
+    ]
+
+Since this is hard to test fully automatically, I'd like to use a separate script that prompts the user to type many specific chords, and saves the results to a JSON file. I can just run this once per platform and then use it later. Just work on this "generate_platform_keychords.py" script and start with uppercase, lowercase, and the function keys for now. It should be a standalone script.
 
 ### the rest
 
