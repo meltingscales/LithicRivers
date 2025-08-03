@@ -4,6 +4,9 @@ This module provides comprehensive testing for TUI components using realistic mo
 """
 
 import os
+# Set TESTING environment BEFORE importing any game modules
+os.environ["TESTING"] = "1"
+
 import unittest
 from typing import Any, Optional
 from unittest.mock import Mock

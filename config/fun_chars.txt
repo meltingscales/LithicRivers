@@ -1,0 +1,36 @@
+Unicode Box Drawing (╬╠╣╦╩╨╤╧╪) for structure detail.
+
+─ │ ┌ ┐ └ ┘ ├ ┤ ┬ ┴ ┼
+╔ ╗ ╚ ╝ ╠ ╣ ╦ ╩ ╬ ╭ ╮ ╯ ╰
+
+Braille patterns (⠿⠛⠟⠹) for shading/dithering effects.
+
+⠁⠂⠄⠈⠐⠠⠤⠦⠶⠷⠿
+⡀⡄⡆⡇⣀⣄⣆⣇⣿
+
+Block Elements (█▓▒░) for smooth gradients in a TUI.
+
+▀ ▄ ◼ ◻ ▪ ▫ ■ □ ▉ ▊ ▋ ▌ ▍ ▎ ▏
+
+
+Symbols (⚙⚒⚔✦☢⚡) for equipment, hazards, or UI accents.
+
+✖ ✚ ➤ ➢ ➣ ➤ ➜ ➠ ➳ ➵
+☰ ☱ ☲ ☳ ☴ ☵ ☶ ☷   ← ↑ → ↓
+☢ ☣ ☠ ⚠ ⚡ ✦ ✧ ★ ☆ ✪ ✫
+⚙ ⚒ ⚔ ⛏ 🛠 🗡 🛡
+
+Geometric Shapes (◈◆◇⬢⬣◌) for items/points of interest.
+
+● ○ ◉ ◎ ◍ ⬤ ◯
+◆ ◇ ◈ ✦ ✧
+⬢ ⬣ ⬡ ⬠
+
+Arrows, Lines & Connectors
+For flowcharts, wiring diagrams, or decorative links:
+
+→ ⇒ ➔ ➤ ⟶ ⟹
+← ⇐ ⟵ ⟸
+↑ ⇑ ⟰
+↓ ⇓ ⟱
+↔ ⇔ ↕ ↷ ↶
