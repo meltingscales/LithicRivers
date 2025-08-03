@@ -1,5 +1,8 @@
 import itertools
+import json
 import logging
+import platform
+from pathlib import Path
 from typing import Dict, FrozenSet, List, Union
 
 from asciimatics.event import KeyboardEvent
@@ -29,20 +32,35 @@ class Keymap:
 
         # Load keybinds from config
         self._load_keybinds()
+        
+        # Load platform-specific keychords
+        self._load_keychords()
 
     def matches_movement_key(self, ke: KeyboardEvent) -> bool:
         """Check if the keyboard event is a movement key."""
-        return chr(ke.key_code) in list(itertools.chain(*self.MOVEMENT_KEYS)) 
+        keycode = ke.key_code
+        
+        # Check each movement key against the keychords
+        for key_list in self.MOVEMENT_KEYS:
+            for key_name in key_list:
+                if key_name in self.keychords:
+                    keychord = self.keychords[key_name]
+                    if keychord and keycode in keychord:
+                        return True
+        return False
 
     def get_movement_vector(self, ke: KeyboardEvent) -> Union[None, VectorN]:
         """Get the movement vector for a keyboard event."""
         
-        key_char = chr(ke.key_code)
+        keycode = ke.key_code
         
         # Check each movement key list and return the corresponding vector
         for key_list, vector in self.MOVEMENT_MAPPING.items():
-            if key_char in key_list:
-                return vector
+            for key_name in key_list:
+                if key_name in self.keychords:
+                    keychord = self.keychords[key_name]
+                    if keychord and keycode in keychord:
+                        return vector
                 
         return None
 
@@ -107,6 +125,42 @@ class Keymap:
         # Action keys
         self.MINE = config_manager.get_keybind("action", "MINE")
         self.INTERACT = config_manager.get_keybind("action", "INTERACT")
+
+    def _load_keychords(self):
+        """Load platform-specific keychords from JSON file."""
+        platform_name = platform.system().lower()
+        
+        # Detect OS type
+        os_type = "unknown"
+        try:
+            with open("/etc/os-release", "r") as f:
+                for line in f:
+                    if line.startswith("ID="):
+                        os_type = line.split("=")[1].strip().strip('"')
+                        break
+        except FileNotFoundError:
+            # Fallback for systems without /etc/os-release
+            if platform_name == "linux":
+                os_type = "linux"
+            elif platform_name == "darwin":
+                os_type = "macos"
+            elif platform_name == "windows":
+                os_type = "windows"
+        
+        filename = f"keychords.{platform_name}.{os_type}.json"
+        config_dir = Path("config")
+        keychords_file = config_dir / filename
+        
+        self.keychords = {}
+        if keychords_file.exists():
+            try:
+                with open(keychords_file, 'r') as f:
+                    self.keychords = json.load(f)
+                logging.info(f"Loaded {len(self.keychords)} keychords from {keychords_file}")
+            except Exception as e:
+                logging.warning(f"Could not load keychords from {keychords_file}: {e}")
+        else:
+            logging.warning(f"No keychords file found at {keychords_file}")
 
     def reload_keybinds(self):
         """Reload keybinds from config files."""
@@ -180,8 +234,15 @@ class Keymap:
                 f"No key named {key_name} found.\nValid keys: {dir(self)}"
             ) from err
 
-        ke_char = self.char_from_keyboard_event(ke)
-        return ke_char in [k.lower() for k in key]
+        keycode = ke.key_code
+        
+        # Check each key name in the key list against the keychords
+        for key_name_str in key:
+            if key_name_str in self.keychords:
+                keychord = self.keychords[key_name_str]
+                if keychord and keycode in keychord:
+                    return True
+        return False
 
     def update_keybind(self, key_name: str, value: str):
         """Update a keybind and save to config file."""
