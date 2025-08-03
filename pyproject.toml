@@ -26,6 +26,7 @@ dev = [
     "mypy",
     "pre-commit",
     "pydevd",
+    "py-spy",
 ]
 
 [build-system]
@@ -124,4 +125,9 @@ addopts = [
     "--cov-report=term-missing",
     "--cov-report=html",
     "--cov-report=lcov",
+]
+
+[dependency-groups]
+dev = [
+    "py-spy>=0.4.1",
 ]
