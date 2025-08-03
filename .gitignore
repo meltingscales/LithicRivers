@@ -16,3 +16,7 @@ dist/
 coverage/
 .run/
 htmlcov/
+
+
+profile_cpu.svg
+*.speedscope

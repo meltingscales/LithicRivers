@@ -7,11 +7,10 @@ block_cipher = None
 
 # from https://stackoverflow.com/questions/7674790/bundling-data-files-with-pyinstaller-onefile
 added_files = [
-    # ('potemkeys/potemkeysoptions.jsonc', './'),
-    # ('potemkeys/pelleds.jpg', './'),
-    # ('LICENSE', './'),
     ('README.md', './'),
     ("VERSION", "./"),
+    # include license
+    ("LICENSE", "./")
 ]
 
 a = Analysis(['lithicrivers/__main__.py'],

@@ -91,6 +91,8 @@
 
 # eventually todo
 
+- should I use cython to speed up worldgen? Does that cause some lag when objects get passed between python and c? Does threading cause issues or add lag?
+
 - print logo briefly when game boots (config/logo.txt)
 - print boot log briefly when game boots (config/boot_message.dat), making sure to add corruption. Make sure to print it slowly. Create a custom UI element to do this. Also, add a "SKIP_INTRO" env var to skip this for development purposes.
 
