@@ -482,29 +482,7 @@ def weighted_choice_dict(dict_weight: dict[float, T]) -> T:
     return weighted_choice(weights, choices)
 
 
-def generate_tile(
-    choices: Optional[list[Tile]] = None,
-    weights: Optional[list[int]] = None,
-    current_location: VectorN = None,
-    world_seed: Optional[int] = None,
-) -> Tile:
-    """
-    Generate a tile using perlin noise for infinite world generation.
-    This function is called lazily when a tile is accessed but doesn't exist.
-    """
-    # Import here to avoid circular imports
-    from lithicrivers.worldgen import SeededWorldGenerator
-    from lithicrivers.settings import DEFAULT_SEED
-    
-    # Use provided seed or default seed
-    seed = world_seed if world_seed is not None else DEFAULT_SEED
-    generator = SeededWorldGenerator(seed)
-    
-    if current_location:
-        return generator.generate_tile_for_position(current_location)
-    else:
-        # Fallback for edge cases
-        return Tiles.dirt()
+
 
 
 class Tiles:
@@ -795,6 +773,10 @@ class World:
         self.data = ChunkedWorldData()
         self.gametick = 0
 
+        # Create ONE generator that will be reused
+        from lithicrivers.worldgen import SeededWorldGenerator
+        self.generator = SeededWorldGenerator(seed)
+
         # Add some starter entities
         self.entities = list()
         self._add_starter_entities()
@@ -819,8 +801,8 @@ class World:
     def get_tile(self, pos: VectorN):
         tile = self.data.get_tile(pos)
         if tile is None:
-            # Generate tile on-demand if it doesn't exist
-            tile = generate_tile(current_location=pos, world_seed=self.seed)
+            # Use the stored generator instead of creating a new one
+            tile = self.generator.generate_tile_for_position(pos)
             self.data.set_tile(pos, tile)
         return tile
     
@@ -834,10 +816,8 @@ class World:
         # Get player position (assuming player is at origin for now)
         player_pos = VectorN(0, 0, 0)  # TODO: Get actual player position
         
-        # Create a world generator and pre-generate chunks
-        from lithicrivers.worldgen import SeededWorldGenerator
-        generator = SeededWorldGenerator(self.seed)
-        generator.pre_generate_chunks_around(player_pos, radius)
+        # Use the stored generator instead of creating a new one
+        self.generator.pre_generate_chunks_around(player_pos, radius)
 
     def set_tile(self, pos: VectorN, tile: Tile):
         self.data.set_tile(pos, tile)
