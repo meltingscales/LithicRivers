@@ -34,6 +34,10 @@ help: ## Show this help message
 	@echo "  debug-attach         Show PyCharm debugging instructions"
 	@echo "  log-monitor          Monitor game logs in real-time"
 	@echo ""
+	@echo "📊 PERFORMANCE TESTING"
+	@echo "---------------------"
+	@echo "  profile-speedscope   Generate speedscope CPU profiling report"
+	@echo ""
 	@echo "🔨 BUILDING"
 	@echo "----------"
 	@echo "  build                Build executable"
@@ -101,6 +105,15 @@ run-debug: ## Run the game with remote debugging enabled
 	@echo "🔗 Or use: Run -> Edit Configurations -> + -> Python Debug Server"
 	@echo "🌐 Debug server will be available on localhost:5678"
 	PYTHONPATH=. $(UV_CMD) run python -m lithicrivers --debug
+
+# Performance Testing
+profile-speedscope: ## Generate speedscope CPU profiling report
+	@echo "📊 Generating speedscope CPU profiling report..."
+	@echo "📄 This will create a detailed speedscope report of CPU usage"
+	@echo "🎮 Make sure the game is running in another terminal first"
+	@echo "💡 Run 'make run' in another terminal, then run this command"
+	$(UV_CMD) run py-spy record --format speedscope --output profile_report.speedscope --duration 30 -- python -m lithicrivers
+	@echo "Visit https://www.speedscope.app/ to view the report"
 
 debug-attach: ## Show instructions for attaching to running process
 	@echo "🔗 PyCharm Remote Debugging Instructions"
