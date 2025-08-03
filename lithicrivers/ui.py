@@ -743,6 +743,12 @@ class MessageLogPage(Frame):
         # Initialize the message display immediately
         self.update_messages()
 
+    def reset(self):
+        """Reset the frame and ensure message display is properly initialized."""
+        super().reset()
+        # Force update of messages when frame is reset/shown
+        self.update_messages()
+
     def update_messages(self):
         """Update the message display with current messages."""
         if not self.game or not self.game.message_log:
