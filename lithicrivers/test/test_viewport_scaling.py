@@ -1,6 +1,7 @@
 import unittest
 
 from lithicrivers.game import Game
+from lithicrivers.settings import DEFAULT_SEED
 from lithicrivers.ui import GameWidget
 
 
@@ -9,7 +10,7 @@ class TestViewportScaling(unittest.TestCase):
 
     def setUp(self):
         """Set up test fixtures."""
-        self.game = Game()
+        self.game = Game(seed=DEFAULT_SEED)
 
     def test_viewport_scaling_dimensions(self):
         """Test that viewport dimensions account for scale correctly."""

@@ -765,7 +765,7 @@ class World:
 
 
     def __init__(
-        self, name="Gaia", seed: Optional[int] = None
+        self, seed: int, name="Gaia"
     ):
         self.name = name
         self.seed = seed
@@ -858,10 +858,10 @@ class World:
 class Game:
     def __init__(
         self,
+        seed: int,
         player: Player = None,
         world: World = None,
         viewport: Viewport = DEFAULT_VIEWPORT,
-        seed: Optional[int] = None,
     ):
         # Create a copy of the viewport to avoid shared state between tests
         if viewport is DEFAULT_VIEWPORT:

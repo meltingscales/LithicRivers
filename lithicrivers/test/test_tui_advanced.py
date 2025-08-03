@@ -29,6 +29,7 @@ from lithicrivers.game import Game, Tiles
 from lithicrivers.game_engine import GameEngine
 from lithicrivers.model.vector import VectorN
 from lithicrivers.ui import GameWidget, HelpPage, InputHandler, WorldMap
+from lithicrivers.settings import DEFAULT_SEED
 
 
 class AdvancedMockScreen:
@@ -164,7 +165,7 @@ class AdvancedUITestCase(unittest.TestCase):
             )
 
         self.game_engine = GameEngine()
-        self.game = Game()
+        self.game = Game(seed=DEFAULT_SEED)
         self.mock_screen = AdvancedMockScreen(80, 24)
         self.mock_frame = MockFrame(self.mock_screen)
         self.mock_canvas = self.mock_screen.canvas

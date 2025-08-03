@@ -72,6 +72,8 @@ class ConfigManager:
                 "GAME_NAME": "LithicRivers",
                 "LOGFILENAME": "LithicRivers.log",
                 "LOGGINGLEVEL": "INFO",
+                "DEVELOPER_MODE": True,
+                "DEFAULT_SEED": 4669201609
             },
             "world": {
                 "DEFAULT_SIZE_RADIUS": {
