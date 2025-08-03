@@ -100,7 +100,7 @@
 
 - plant growth that's self limiting and based on nearby blocks, but allows for farming manually or by automated means
 
-- interface for blind people to play the game, modular command lookup and help system. actually test it with popular screen readers.
+- interface for blind people to play the game, modular command lookup and help system. actually test it with popular screen readers. Make sure that it can be set via a command-line flag LITHICRIVERS_BLIND_MODE=1
 
 - a world map system like Qud that allows fast travel, and make the map tiles an average of the cells in a current chunk: a nuked chunk actually looks like a wasteland on the global map
 

@@ -680,6 +680,21 @@ class World:
             tile = generate_tile(current_location=pos, world_seed=self.seed)
             self.data.set_tile(pos, tile)
         return tile
+    
+    def pre_generate_around_player(self, radius: int = 2) -> None:
+        """
+        Pre-generate chunks around the player position in background threads.
+        
+        Args:
+            radius: Number of chunks to generate in each direction
+        """
+        # Get player position (assuming player is at origin for now)
+        player_pos = VectorN(0, 0, 0)  # TODO: Get actual player position
+        
+        # Create a world generator and pre-generate chunks
+        from lithicrivers.worldgen import SeededWorldGenerator
+        generator = SeededWorldGenerator(self.seed)
+        generator.pre_generate_chunks_around(player_pos, radius)
 
     def set_tile(self, pos: VectorN, tile: Tile):
         self.data.set_tile(pos, tile)

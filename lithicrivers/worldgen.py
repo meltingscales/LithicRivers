@@ -5,8 +5,11 @@ This module provides seeded randomness for reproducible world generation.
 
 import math
 import random
+import threading
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any, Dict, Optional, Tuple
 
 from lithicrivers.logging_config import get_logger
 
@@ -27,6 +30,63 @@ class WorldSeed:
 
     def __repr__(self) -> str:
         return str(self)
+
+
+class ChunkCache:
+    """Thread-safe cache for pre-generated chunks."""
+    
+    def __init__(self, max_chunks: int = 100):
+        self.max_chunks = max_chunks
+        self.cache: Dict[Tuple[int, int, int], Dict[str, Tile]] = {}
+        self.lock = threading.RLock()
+    
+    def get_chunk_key(self, pos: VectorN) -> Tuple[int, int, int]:
+        """Get chunk coordinates for a position."""
+        chunk_size = 16
+        chunk_x = pos.x // chunk_size
+        chunk_y = pos.y // chunk_size
+        chunk_z = pos.z // chunk_size
+        return (chunk_x, chunk_y, chunk_z)
+    
+    def get_tile(self, pos: VectorN) -> Optional[Tile]:
+        """Get a tile from cache if available."""
+        with self.lock:
+            chunk_key = self.get_chunk_key(pos)
+            if chunk_key in self.cache:
+                pos_str = pos.serialize()
+                return self.cache[chunk_key].get(pos_str)
+        return None
+    
+    def set_tile(self, pos: VectorN, tile: Tile) -> None:
+        """Set a tile in cache."""
+        with self.lock:
+            chunk_key = self.get_chunk_key(pos)
+            if chunk_key not in self.cache:
+                self.cache[chunk_key] = {}
+            self.cache[chunk_key][pos.serialize()] = tile
+            
+            # Evict oldest chunks if cache is full
+            if len(self.cache) > self.max_chunks:
+                oldest_key = next(iter(self.cache))
+                del self.cache[oldest_key]
+    
+    def pre_generate_chunk(self, chunk_x: int, chunk_y: int, chunk_z: int, generator: 'SeededWorldGenerator') -> None:
+        """Pre-generate a chunk in background."""
+        chunk_size = 16
+        start_x = chunk_x * chunk_size
+        start_y = chunk_y * chunk_size
+        start_z = chunk_z * chunk_size
+        
+        chunk_data = {}
+        for x in range(start_x, start_x + chunk_size):
+            for y in range(start_y, start_y + chunk_size):
+                for z in range(start_z, start_z + chunk_size):
+                    pos = VectorN(x, y, z)
+                    tile = generator.generate_tile_for_position(pos)
+                    chunk_data[pos.serialize()] = tile
+        
+        with self.lock:
+            self.cache[(chunk_x, chunk_y, chunk_z)] = chunk_data
 
 
 class PerlinNoise:
@@ -148,6 +208,7 @@ class SeededWorldGenerator:
         self.rng = random.Random(seed)
         self.perlin = PerlinNoise(seed)
         self.structure_manager = create_structure_manager()
+        self.chunk_cache = ChunkCache()
 
     def get_seed(self) -> WorldSeed:
         """Get the current world seed."""
@@ -202,6 +263,21 @@ class SeededWorldGenerator:
         Returns:
             The generated tile
         """
+        # Check cache first
+        cached_tile = self.chunk_cache.get_tile(position)
+        if cached_tile is not None:
+            return cached_tile
+        
+        # Generate tile if not in cache
+        tile = self._generate_tile_at_position(position)
+        
+        # Cache the tile
+        self.chunk_cache.set_tile(position, tile)
+        
+        return tile
+    
+    def _generate_tile_at_position(self, position: VectorN) -> Tile:
+        """Internal method to generate a tile at a specific position."""
         # Use position-based context for consistent generation
         position_context = f"pos_{position.x}_{position.y}_{position.z}"
 
@@ -247,6 +323,40 @@ class SeededWorldGenerator:
                     return Tiles.tree()
                 else:
                     return Tiles.dirt()
+    
+    def pre_generate_chunks_around(self, center_pos: VectorN, radius: int = 2) -> None:
+        """
+        Pre-generate chunks around a center position in background threads.
+        
+        Args:
+            center_pos: The center position to generate chunks around
+            radius: Number of chunks to generate in each direction
+        """
+        chunk_size = 16
+        center_chunk_x = center_pos.x // chunk_size
+        center_chunk_y = center_pos.y // chunk_size
+        center_chunk_z = center_pos.z // chunk_size
+        
+        # Create thread pool for background generation
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            futures = []
+            
+            # Generate chunks in a cube around the center
+            for chunk_x in range(center_chunk_x - radius, center_chunk_x + radius + 1):
+                for chunk_y in range(center_chunk_y - radius, center_chunk_y + radius + 1):
+                    for chunk_z in range(center_chunk_z - radius, center_chunk_z + radius + 1):
+                        future = executor.submit(
+                            self.chunk_cache.pre_generate_chunk,
+                            chunk_x, chunk_y, chunk_z, self
+                        )
+                        futures.append(future)
+            
+            # Wait for all chunks to be generated
+            for future in as_completed(futures):
+                try:
+                    future.result()
+                except Exception as e:
+                    logger.warning(f"Failed to pre-generate chunk: {e}")
 
     def generate_world_data(self, radius: VectorN) -> dict[str, Tile]:
         """
