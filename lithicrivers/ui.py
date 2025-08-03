@@ -33,7 +33,7 @@ if TYPE_CHECKING:
     from asciimatics.effects import Effect
 
 class TabButtons(Layout):
-    def __init__(self, frame, active_tab_idx: int, game: Game = None):
+    def __init__(self, frame, game: Game = None):
         # Create buttons list based on developer mode
         buttons = [
             Button("World Map", self._safe_scene_change("WorldMap")),
@@ -43,7 +43,8 @@ class TabButtons(Layout):
 
         # Add Test Popups button only if developer mode is enabled
         if DEVELOPER_MODE:
-            buttons.append(Button("Test Popups", self._safe_scene_change("ExtraPage")))
+            buttons.append(Button("Test Popups", self._safe_scene_change("DevPopupPage")))
+            buttons.append(Button("Test Keystrokes", self._safe_scene_change("DevKeystrokesPage")))
 
         buttons.append(Button("Quit", raise_fn(StopGameError, "Goodbye!")))
 
@@ -387,7 +388,7 @@ class WorldMap(Frame):
         self.widgetGame = GameWidget(name="widgetGame", game=self.game)
         layout1.add_widget(self.widgetGame, column=0)
 
-        layout_buttons = TabButtons(self, 1)
+        layout_buttons = TabButtons(self)
         self.add_layout(layout_buttons)
         self.fix()
 
@@ -496,7 +497,6 @@ class HelpPage(Frame):
         self.add_layout(layout1)
         # add your widgets here
 
-        helptxt = ""
         helptxt = (
             f"Hello! Welcome to {GAME_NAME}. Below are keys.\n"
             "By the way, game UI nav is arrow keys + space or enter.\n"
@@ -516,7 +516,7 @@ class HelpPage(Frame):
 
         layout1.add_widget(help_label)
 
-        layout2 = TabButtons(self, 0)
+        layout2 = TabButtons(self)
         self.add_layout(layout2)
         self.fix()
 
@@ -543,7 +543,7 @@ class MessageLogPage(Frame):
         layout1.add_widget(self.message_display)
 
         # Create tab buttons
-        layout2 = TabButtons(self, 2)
+        layout2 = TabButtons(self)
         self.add_layout(layout2)
 
         self.fix()
@@ -593,7 +593,30 @@ class MessageLogPage(Frame):
         self.update_messages()
 
 
-class ExtraPage(Frame):
+class DevKeystrokesPage(Frame):
+    def __init__(self, screen):
+        super().__init__(
+            screen, screen.height, screen.width, can_scroll=False, title="Test Keystrokes"
+        )
+
+        layout1 = Layout([1], fill_frame=True)
+        self.add_layout(layout1)
+
+        # Add a big text box that contains a running log of the last 10 keystrokes and their int codes as well as ascii-printable representations (if they can be printed)
+
+        self.textBoxKeystrokes = Label("keystrokes", height=20)
+
+        layout1.add_widget(self.textBoxKeystrokes)
+
+        self.textBoxKeystrokes.text = "Press a key and it'll show up here."
+
+        buttons = TabButtons(self)
+        self.add_layout(buttons)
+
+        self.fix()
+
+
+class DevPopupPage(Frame):
     def __init__(self, screen):
         super().__init__(
             screen, screen.height, screen.width, can_scroll=False, title="Test Popups"
@@ -715,7 +738,7 @@ class ExtraPage(Frame):
         )
         layout1.add_widget(info_label)
 
-        layout2 = TabButtons(self, 3)
+        layout2 = TabButtons(self)
         self.add_layout(layout2)
         self.fix()
 
@@ -1224,7 +1247,8 @@ def demo(screen: Screen, scene: Scene, game: Game):
         Scene([WorldMap(screen, game)], -1, name="WorldMap"),
         Scene([HelpPage(screen, game)], -1, name="HelpPage"),
         Scene([MessageLogPage(screen, game)], -1, name="MessageLogPage"),
-        Scene([ExtraPage(screen)], -1, name="ExtraPage"),
+        Scene([DevPopupPage(screen)], -1, name="DevPopupPage"),
+        Scene([DevKeystrokesPage(screen)], -1, name="DevKeystrokesPage"),
     ]
 
     # Add dialog scenes that will be created dynamically
