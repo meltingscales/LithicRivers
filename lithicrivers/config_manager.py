@@ -62,7 +62,8 @@ class ConfigManager:
                 "INTERACT": ["i"]
             },
             "ui": {
-                "CLOSE_HELP_MENU": ["ESCAPE"]
+                "CLOSE_HELP_MENU": ["ESCAPE"],
+                "OPEN_COMMAND_MENU": ["/"]
             }
         }
 

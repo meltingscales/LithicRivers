@@ -32,6 +32,42 @@ from lithicrivers.textutil import get_color_for_ui_element, list_label, presenti
 if TYPE_CHECKING:
     from asciimatics.effects import Effect
 
+
+def _generate_entity_selection_message(adjacent_entities: list[tuple[str, VectorN, str]]) -> str:
+    """Generate a more specific message for entity selection based on entity types."""
+    if not adjacent_entities:
+        return "No entities nearby."
+    
+    # Count entity types
+    entity_counts = {}
+    for name, _, _ in adjacent_entities:
+        entity_counts[name] = entity_counts.get(name, 0) + 1
+    
+    # Generate specific message based on entity types
+    if len(entity_counts) == 1:
+        entity_name = list(entity_counts.keys())[0]
+        count = entity_counts[entity_name]
+        if count == 1:
+            return f"Found a {entity_name} nearby:"
+        else:
+            return f"Found {count} {entity_name}s nearby:"
+    else:
+        # Multiple different entity types
+        entity_list = []
+        for name, count in entity_counts.items():
+            if count == 1:
+                entity_list.append(f"a {name}")
+            else:
+                entity_list.append(f"{count} {name}s")
+        
+        if len(entity_list) == 2:
+            return f"Found {entity_list[0]} and {entity_list[1]} nearby:"
+        else:
+            # Join with commas and "and" for the last item
+            all_but_last = ", ".join(entity_list[:-1])
+            return f"Found {all_but_last}, and {entity_list[-1]} nearby:"
+
+
 class TabButtons(Layout):
     def __init__(self, frame, game: Game = None):
         # Create buttons list based on developer mode
@@ -907,7 +943,7 @@ class EntitySelectionPopup(Frame):
 
         # Add header
         header = Label(
-            f"Found {len(adjacent_entities)} entities nearby:", name="header"
+            _generate_entity_selection_message(adjacent_entities), name="header"
         )
         layout.add_widget(header)
 
@@ -1220,7 +1256,7 @@ class InputHandler:
 
         popup = PopUpDialog(
             world_map._screen,
-            f"Found {len(adjacent_entities)} entities nearby:",
+            _generate_entity_selection_message(adjacent_entities),
             entity_options,
             popup_callback,
         )

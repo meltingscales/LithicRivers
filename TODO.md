@@ -91,6 +91,8 @@
 
 # eventually todo
 
+- nixos term resize causes crash, but not ubuntu. TODO test windows.
+
 - should I use cython to speed up worldgen? Does that cause some lag when objects get passed between python and c? Does threading cause issues or add lag?
 
 - print logo briefly when game boots (config/logo.txt)
@@ -194,10 +196,6 @@
 - noahnogueras@gmail.com
 
 ## John feedback
-
-resizing the window should not crash the game (It doesn't do this on Ubuntu. Does it do this on NixOS? Or only on large screens?)
-
-the entity selection list text is too generic
 
 num lock warning
 
