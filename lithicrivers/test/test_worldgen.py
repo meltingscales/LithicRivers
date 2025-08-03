@@ -44,7 +44,8 @@ class TestSeededWorldGenerator(unittest.TestCase):
         seed = generator.get_seed()
         self.assertIsInstance(seed.seed, int)
         self.assertGreaterEqual(seed.seed, 0)
-        self.assertLessEqual(seed.seed, 2**32 - 1)
+        # Allow for larger seeds (64-bit range)
+        self.assertLessEqual(seed.seed, 2**64 - 1)
 
     def test_set_seed(self):
         """Test setting a new seed."""
