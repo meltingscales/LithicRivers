@@ -639,6 +639,8 @@ class DevKeystrokesPage(Frame):
     def update_keystroke(self, event: Union[KeyboardEvent,MouseEvent]):
 
         if isinstance(event, MouseEvent):
+
+            self.append_to_log(f"mouse event TODO process it: {repr(event)}")
             pass #TODO: For now, we're ignoring MouseEvent.
 
         if isinstance(event, KeyboardEvent):
@@ -1316,7 +1318,7 @@ def demo(screen: Screen, scene: Scene, game: Game):
             return
 
         # This is the topmost effect. It may or may not be the world map. We need to find that out first.
-        maybe_world_map: WorldMap = current_effects[0]
+        current_effect: WorldMap = current_effects[0]
 
         # Check for terminal resize
         nonlocal last_screen_width, last_screen_height
@@ -1328,8 +1330,8 @@ def demo(screen: Screen, scene: Scene, game: Game):
             last_screen_height = screen.height
 
             # Recalculate viewport for new screen size
-            if isinstance(maybe_world_map, WorldMap):
-                maybe_world_map.handle_terminal_resize(screen)
+            if isinstance(current_effect, WorldMap):
+                current_effect.handle_terminal_resize(screen)
 
         # TODO: Why do we ignore all non-KeyboardEvent objects? This is going to need to be removed if we ever want to handle mouse inputs natively.
         if not isinstance(event, KeyboardEvent):
@@ -1338,14 +1340,13 @@ def demo(screen: Screen, scene: Scene, game: Game):
         event: KeyboardEvent
 
         # We want to display the KeyboardEvent on the DevKeystrokesPage
-        if isinstance(maybe_world_map, DevKeystrokesPage):
-            maybe_world_map: DevKeystrokesPage
-            maybe_world_map.update_keystroke(event)
+        if isinstance(current_effect, DevKeystrokesPage):
+            current_effect: DevKeystrokesPage
+            current_effect.update_keystroke(event)
             return
 
         # Check for ESC key to close popups
-        # TODO do not hardcode this, rework the keymap to accept keycode integer sequences and not just ascii characters.
-        if KEYMAP.matches("CLOSE_HELP_MENU", event):  # ESC key
+        if KEYMAP.matches("CLOSE_HELP_MENU", event):
             try:
                 if active_popup is not None:
                     # Remove the popup from the current scene
@@ -1385,8 +1386,8 @@ def demo(screen: Screen, scene: Scene, game: Game):
             active_popup = None
 
         # TODO: This is a pretty gross way of handling this. We should have a second handler function that just dispatches the event to a specific panel.
-        if maybe_world_map.title.strip() != "World Map":
-            logging.info("Not supposed to handle " + maybe_world_map.title)
+        if current_effect.title.strip() != "World Map":
+            logging.info("Not supposed to handle " + current_effect.title)
             # Clear any active popup when switching to non-World Maps
             try:
                 if active_popup is not None:
@@ -1406,7 +1407,7 @@ def demo(screen: Screen, scene: Scene, game: Game):
                 active_popup = None
             return
 
-        world_map = maybe_world_map
+        world_map = current_effect
 
         move_vec = InputHandler.handle_movement(event)
         if move_vec:

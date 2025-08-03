@@ -195,10 +195,6 @@
 
 ## John feedback
 
-### escape should close the help menu ✅
-
-### the rest
-
 resizing the window should not crash the game (It doesn't do this on Ubuntu. Does it do this on NixOS? Or only on large screens?)
 
 the entity selection list text is too generic
