@@ -34,7 +34,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-TESTING_LIMIT_CAPTURE=True
+TESTING_LIMIT_CAPTURE=False
 
 class KeychordCapture:
     def __init__(self):
