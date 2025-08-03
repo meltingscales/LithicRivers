@@ -194,9 +194,3 @@
 ## steam key giveaway list:
 - skomor123
 - noahnogueras@gmail.com
-
-## John feedback
-
-~~num lock warning~~ ✅ COMPLETED
-
-message log init lag bug
