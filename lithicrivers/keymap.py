@@ -1,18 +1,11 @@
+import itertools
 import logging
-from typing import Union
+from typing import Dict, List, Union
 
 from asciimatics.event import KeyboardEvent
 
 from lithicrivers.config_manager import config_manager
 from lithicrivers.constants import (
-    NUMPAD_1,
-    NUMPAD_2,
-    NUMPAD_3,
-    NUMPAD_4,
-    NUMPAD_6,
-    NUMPAD_7,
-    NUMPAD_8,
-    NUMPAD_9,
     VEC_DOWN,
     VEC_EAST,
     VEC_NORTH,
@@ -23,8 +16,10 @@ from lithicrivers.constants import (
     VEC_SOUTHWEST,
     VEC_UP,
     VEC_WEST,
+    VEC_ZERO,
 )
-from lithicrivers.textutil import associated
+from lithicrivers.model.vector import VectorN
+from lithicrivers.textutil import associated, spaced_list
 
 
 class Keymap:
@@ -37,27 +32,57 @@ class Keymap:
         # Load keybinds from config
         self._load_keybinds()
 
-        # Build numpad movement vector map
-        self.NUMPAD_MOVEMENT_VECTOR_MAP = {
-            NUMPAD_8: VEC_NORTH,
-            NUMPAD_2: VEC_SOUTH,
-            NUMPAD_4: VEC_WEST,
-            NUMPAD_6: VEC_EAST,
-            NUMPAD_7: VEC_NORTHWEST,
-            NUMPAD_9: VEC_NORTHEAST,
-            NUMPAD_1: VEC_SOUTHWEST,
-            NUMPAD_3: VEC_SOUTHEAST,
-        }
+    def matches_movement_key(self, ke: KeyboardEvent) -> bool:
+        """Check if the keyboard event is a movement key."""
+        return chr(ke.key_code) in list(itertools.chain(*self.MOVEMENT_KEYS)) 
+
+    def get_movement_vector(self, ke: KeyboardEvent) -> Union[None, VectorN]:
+        """Get the movement vector for a keyboard event."""
+
+        # self.MOVE_NORTHWEST is a list of strings, by the way.
+        # TODO simplify this.
+
+        if chr(ke.key_code) in self.MOVE_NORTHWEST: return VEC_NORTHWEST
+        if chr(ke.key_code) in self.MOVE_NORTH: return VEC_NORTH
+        if chr(ke.key_code) in self.MOVE_NORTHEAST: return VEC_NORTHEAST
+        if chr(ke.key_code) in self.MOVE_WEST: return VEC_WEST
+        if chr(ke.key_code) in self.WAIT: return VEC_ZERO
+        if chr(ke.key_code) in self.MOVE_EAST: return VEC_EAST
+        if chr(ke.key_code) in self.MOVE_SOUTHWEST: return VEC_SOUTHWEST
+        if chr(ke.key_code) in self.MOVE_SOUTH: return VEC_SOUTH
+        if chr(ke.key_code) in self.MOVE_SOUTHEAST: return VEC_SOUTHEAST
+        if chr(ke.key_code) in self.MOVE_UP: return VEC_UP
+        if chr(ke.key_code) in self.MOVE_DOWN: return VEC_DOWN
+        return None
 
     def _load_keybinds(self):
         """Load keybinds from config manager."""
         # Movement keys
         self.MOVE_NORTH = config_manager.get_keybind("movement", "MOVE_NORTH")
+        self.MOVE_NORTHWEST = config_manager.get_keybind("movement", "MOVE_NORTHWEST")
+        self.MOVE_NORTHEAST = config_manager.get_keybind("movement", "MOVE_NORTHEAST")
         self.MOVE_WEST = config_manager.get_keybind("movement", "MOVE_WEST")
         self.MOVE_SOUTH = config_manager.get_keybind("movement", "MOVE_SOUTH")
+        self.MOVE_SOUTHWEST = config_manager.get_keybind("movement", "MOVE_SOUTHWEST")
+        self.MOVE_SOUTHEAST = config_manager.get_keybind("movement", "MOVE_SOUTHEAST")
         self.MOVE_EAST = config_manager.get_keybind("movement", "MOVE_EAST")
         self.MOVE_UP = config_manager.get_keybind("movement", "MOVE_UP")
         self.MOVE_DOWN = config_manager.get_keybind("movement", "MOVE_DOWN")
+        self.WAIT = config_manager.get_keybind("movement", "WAIT")
+
+        self.MOVEMENT_KEYS = [
+            self.MOVE_NORTHWEST,
+            self.MOVE_NORTH,
+            self.MOVE_NORTHEAST,
+            self.MOVE_WEST,
+            self.WAIT,
+            self.MOVE_EAST,
+            self.MOVE_SOUTHWEST,
+            self.MOVE_SOUTH,
+            self.MOVE_SOUTHEAST,
+            self.MOVE_UP,
+            self.MOVE_DOWN,
+        ]
 
         # Viewport keys
         self.RESET_VIEWPORT = config_manager.get_keybind("viewport", "RESET_VIEWPORT")
@@ -77,44 +102,11 @@ class Keymap:
         self.MINE = config_manager.get_keybind("action", "MINE")
         self.INTERACT = config_manager.get_keybind("action", "INTERACT")
 
-        # Build movement vector map with both character and numpad support
-        self.MOVEMENT_VECTOR_MAP = {}
-
-        # Add character-based movement
-        if self.MOVE_NORTH and self.MOVE_NORTH.isalpha():
-            self.MOVEMENT_VECTOR_MAP[self.MOVE_NORTH] = VEC_NORTH
-        if self.MOVE_WEST and self.MOVE_WEST.isalpha():
-            self.MOVEMENT_VECTOR_MAP[self.MOVE_WEST] = VEC_WEST
-        if self.MOVE_SOUTH and self.MOVE_SOUTH.isalpha():
-            self.MOVEMENT_VECTOR_MAP[self.MOVE_SOUTH] = VEC_SOUTH
-        if self.MOVE_EAST and self.MOVE_EAST.isalpha():
-            self.MOVEMENT_VECTOR_MAP[self.MOVE_EAST] = VEC_EAST
-        if self.MOVE_UP and self.MOVE_UP.isalpha():
-            self.MOVEMENT_VECTOR_MAP[self.MOVE_UP] = VEC_UP
-        if self.MOVE_DOWN and self.MOVE_DOWN.isalpha():
-            self.MOVEMENT_VECTOR_MAP[self.MOVE_DOWN] = VEC_DOWN
-
     def reload_keybinds(self):
         """Reload keybinds from config files."""
         config_manager.keybinds = config_manager._load_keybinds()
         self._load_keybinds()
 
-        # Rebuild movement vector map
-        self.MOVEMENT_VECTOR_MAP = {}
-
-        # Add character-based movement
-        if self.MOVE_NORTH and self.MOVE_NORTH.isalpha():
-            self.MOVEMENT_VECTOR_MAP[self.MOVE_NORTH] = VEC_NORTH
-        if self.MOVE_WEST and self.MOVE_WEST.isalpha():
-            self.MOVEMENT_VECTOR_MAP[self.MOVE_WEST] = VEC_WEST
-        if self.MOVE_SOUTH and self.MOVE_SOUTH.isalpha():
-            self.MOVEMENT_VECTOR_MAP[self.MOVE_SOUTH] = VEC_SOUTH
-        if self.MOVE_EAST and self.MOVE_EAST.isalpha():
-            self.MOVEMENT_VECTOR_MAP[self.MOVE_EAST] = VEC_EAST
-        if self.MOVE_UP and self.MOVE_UP.isalpha():
-            self.MOVEMENT_VECTOR_MAP[self.MOVE_UP] = VEC_UP
-        if self.MOVE_DOWN and self.MOVE_DOWN.isalpha():
-            self.MOVEMENT_VECTOR_MAP[self.MOVE_DOWN] = VEC_DOWN
 
     def get_valid_key_names(self) -> list[str]:
         """Get list of valid key names."""
@@ -135,14 +127,11 @@ class Keymap:
 
         return self._get_valid_key_names_cache
 
-    def generate_key_guide(self) -> str:
-        """Generate human readable guide for keys."""
-        retstr = ""
-        keynames = self.get_valid_key_names()
+    def generate_categorized_key_guide(self) -> str:
+        """Generate a categorized keybind list sorted by category."""
 
-        for keyname in keynames:
-            retstr += associated(self.__getattribute__(keyname), keyname)
-            retstr += "\n"
+        # Generate categorized output
+        retstr = ""
 
         # Add numpad movement keys
         retstr += "\n=== NUMPAD MOVEMENT ===\n"
@@ -151,45 +140,25 @@ class Keymap:
         retstr += "   W   E        4   6\n"
         retstr += "  SW S SE       1 2 3\n"
 
-        return retstr
+        # Add viewport keys
+        retstr += "\n=== VIEWPORT ===\n"
+        retstr += "Actions:      Keys:\n"
+        retstr += "  RESET          {}\n".format(spaced_list(self.RESET_VIEWPORT))
+        retstr += "  SLIDE WEST     {}\n".format(spaced_list(self.SLIDE_VIEWPORT_WEST))
+        retstr += "  SLIDE EAST     {}\n".format(spaced_list(self.SLIDE_VIEWPORT_EAST))
+        retstr += "  TOGGLE         {}\n".format(spaced_list(self.TOGGLE_VIEWPORT))
 
-    def generate_categorized_key_guide(self) -> str:
-        """Generate a categorized keybind list sorted by category."""
-        # Group keybinds by category
-        categories = {}
-        keynames = self.get_valid_key_names()
+        # Add scale keys
+        retstr += "\n=== SCALE ===\n"
+        retstr += "Actions:      Keys:\n"
+        retstr += "  SCALE UP       {}\n".format(spaced_list(self.SCALE_UP))
+        retstr += "  SCALE DOWN     {}\n".format(spaced_list(self.SCALE_DOWN))
 
-        for keyname in keynames:
-            category = self._get_category_for_key(keyname)
-            if category not in categories:
-                categories[category] = []
-            categories[category].append(keyname)
-
-        # Generate categorized output
-        retstr = ""
-
-        # Define category order and display names
-        category_order = [
-            ("movement", "MOVEMENT"),
-            ("viewport", "VIEWPORT"),
-            ("scale", "SCALE"),
-            ("action", "ACTIONS"),
-        ]
-
-        for category, display_name in category_order:
-            if category in categories:
-                retstr += f"\n=== {display_name} ===\n"
-                # Sort keys within category for consistent display
-                for keyname in sorted(categories[category]):
-                    retstr += associated(self.__getattribute__(keyname), keyname)
-                    retstr += "\n"
-
-        # Add numpad movement keys at the end
-        retstr += "\n=== NUMPAD MOVEMENT ===\n"
-        retstr += "Directions:      Keys:\n"
-        retstr += "  NW N NE       7 8 9\n"
-        retstr += "   W   E        4   6\n"
-        retstr += "  SW S SE       1 2 3\n"
+        # Add action keys
+        retstr += "\n=== ACTIONS ===\n"
+        retstr += "Actions:      Keys:\n"
+        retstr += "  MINE           {}\n".format(spaced_list(self.MINE))
+        retstr += "  INTERACT       {}\n".format(spaced_list(self.INTERACT))
 
         return retstr
 
@@ -225,26 +194,8 @@ class Keymap:
                 f"No key named {key_name} found.\nValid keys: {dir(self)}"
             ) from err
 
-        ke_char = Keymap.char_from_keyboard_event(ke)
-        return ke_char == key.lower()
-
-    def matches_numpad(self, ke: KeyboardEvent) -> bool:
-        """
-        Check if the keyboard event is a numpad movement key.
-        :param ke: KeyboardEvent.
-        :return: boolean
-        """
-        key_code = Keymap.key_code_from_keyboard_event(ke)
-        return key_code in self.NUMPAD_MOVEMENT_VECTOR_MAP
-
-    def get_numpad_movement_vector(self, ke: KeyboardEvent):
-        """
-        Get movement vector for numpad key.
-        :param ke: KeyboardEvent.
-        :return: VectorN or None
-        """
-        key_code = Keymap.key_code_from_keyboard_event(ke)
-        return self.NUMPAD_MOVEMENT_VECTOR_MAP.get(key_code)
+        ke_char = self.char_from_keyboard_event(ke)
+        return ke_char in [k.lower() for k in key]
 
     def update_keybind(self, key_name: str, value: str):
         """Update a keybind and save to config file."""
@@ -254,31 +205,6 @@ class Keymap:
             config_manager.update_keybind(category, key_name, value)
             # Reload keybinds to reflect changes
             self.reload_keybinds()
-
-    def _get_category_for_key(self, key_name: str) -> str:
-        """Get the category for a given key name."""
-        category_mapping = {
-            # Movement keys
-            "MOVE_NORTH": "movement",
-            "MOVE_WEST": "movement",
-            "MOVE_SOUTH": "movement",
-            "MOVE_EAST": "movement",
-            "MOVE_UP": "movement",
-            "MOVE_DOWN": "movement",
-            # Viewport keys
-            "RESET_VIEWPORT": "viewport",
-            "SLIDE_VIEWPORT_WEST": "viewport",
-            "SLIDE_VIEWPORT_EAST": "viewport",
-            "TOGGLE_VIEWPORT": "viewport",
-            # Scale keys
-            "SCALE_UP": "scale",
-            "SCALE_DOWN": "scale",
-            # Action keys
-            "MINE": "action",
-            "INTERACT": "action",
-        }
-        return category_mapping.get(key_name, "")
-
 
 # Global keymap instance
 KEYMAP = Keymap()

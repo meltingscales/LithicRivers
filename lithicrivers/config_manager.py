@@ -2,7 +2,7 @@ import json
 import logging
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, List, Union
 
 from lithicrivers.model.vector import VectorN
 
@@ -35,20 +35,32 @@ class ConfigManager:
         """Load keybinds from JSON file or create default if file doesn't exist."""
         default_keybinds = {
             "movement": {
-                "MOVE_NORTH": "8",  # Numpad 8
-                "MOVE_WEST": "4",  # Numpad 4
-                "MOVE_SOUTH": "2",  # Numpad 2
-                "MOVE_EAST": "6",  # Numpad 6
-                "MOVE_UP": "q",  # Keep Q for up
-                "MOVE_DOWN": "e",  # Keep E for down
+                "MOVE_NORTHWEST": "7",
+                "MOVE_NORTH": "8",
+                "MOVE_NORTHEAST": "9",
+                "MOVE_WEST": "4",
+                "WAIT": "5",
+                "MOVE_EAST": "6",
+                "MOVE_SOUTHWEST": "1",
+                "MOVE_SOUTH": "2",
+                "MOVE_SOUTHEAST": "3",
+                "MOVE_UP": "q",
+                "MOVE_DOWN": "e"
             },
             "viewport": {
                 "RESET_VIEWPORT": "r",
                 "SLIDE_VIEWPORT_WEST": "[",
                 "SLIDE_VIEWPORT_EAST": "]",
+                "TOGGLE_VIEWPORT": "v"
             },
-            "scale": {"SCALE_UP": "=", "SCALE_DOWN": "-"},
-            "action": {"MINE": "u"},
+            "scale": {
+                "SCALE_UP": ["=", "+"],
+                "SCALE_DOWN": "-"
+            },
+            "action": {
+                "MINE": "u",
+                "INTERACT": "i"
+            }
         }
 
         return self._load_json_file(self.keybinds_file, default_keybinds)
@@ -96,9 +108,12 @@ class ConfigManager:
             )
             return default_data
 
-    def get_keybind(self, category: str, key_name: str) -> str:
+    def get_keybind(self, category: str, key_name: str) -> List[str]:
         """Get a keybind value."""
-        return self.keybinds.get(category, {}).get(key_name, "")
+        return_value = self.keybinds.get(category, {}).get(key_name, [])
+        if isinstance(return_value, str):
+            return [return_value]
+        return return_value
 
     def get_setting(self, category: str, key: str) -> Any:
         """Get a setting value."""
@@ -129,7 +144,7 @@ class ConfigManager:
         except OSError as e:
             logging.error(f"Error saving settings: {e}")
 
-    def update_keybind(self, category: str, key_name: str, value: str):
+    def update_keybind(self, category: str, key_name: str, value: List[str]):
         """Update a keybind value."""
         if category not in self.keybinds:
             self.keybinds[category] = {}
