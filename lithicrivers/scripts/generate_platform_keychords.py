@@ -88,10 +88,33 @@ class KeychordCapture:
         
         return prompts
     
+    def _get_platform_info(self):
+        """Get platform name and OS type for filename."""
+        platform_name = platform.system().lower()
+        
+        # Detect OS type
+        os_type = "unknown"
+        try:
+            with open("/etc/os-release", "r") as f:
+                for line in f:
+                    if line.startswith("ID="):
+                        os_type = line.split("=")[1].strip().strip('"')
+                        break
+        except FileNotFoundError:
+            # Fallback for systems without /etc/os-release
+            if platform_name == "linux":
+                os_type = "linux"
+            elif platform_name == "darwin":
+                os_type = "macos"
+            elif platform_name == "windows":
+                os_type = "windows"
+        
+        return platform_name, os_type
+    
     def _load_existing_keychords(self):
         """Load existing keychords from the platform-specific JSON file."""
-        platform_name = platform.system().lower()
-        filename = f"keychords.{platform_name}.json"
+        platform_name, os_type = self._get_platform_info()
+        filename = f"keychords.{platform_name}.{os_type}.json"
         config_dir = Path("config")
         existing_file = config_dir / filename
         
@@ -240,9 +263,9 @@ class KeychordCapture:
             logger.error("❌ No keychords captured.")
             return
         
-        # Create filename based on platform
-        platform_name = platform.system().lower()
-        filename = f"keychords.{platform_name}.json"
+        # Create filename based on platform and OS type
+        platform_name, os_type = self._get_platform_info()
+        filename = f"keychords.{platform_name}.{os_type}.json"
         
         # Save to config directory
         config_dir = Path("config")
@@ -270,7 +293,22 @@ def main():
     """Main entry point."""
     logger.info("Platform Keychord Capture Tool")
     logger.info("=" * 40)
+    
+    # Get platform info
+    platform_name = platform.system().lower()
+    try:
+        with open("/etc/os-release", "r") as f:
+            for line in f:
+                if line.startswith("ID="):
+                    os_type = line.split("=")[1].strip().strip('"')
+                    break
+            else:
+                os_type = "unknown"
+    except FileNotFoundError:
+        os_type = "unknown"
+    
     logger.info(f"Platform: {platform.system()} {platform.release()}")
+    logger.info(f"OS Type: {os_type}")
     logger.info("This tool will prompt you to press various keys and key combinations.")
     logger.info("The results will be saved to a platform-specific JSON file.")
     logger.info("")
