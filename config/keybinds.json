@@ -1,29 +1,29 @@
 {
   "movement": {
-    "MOVE_NORTHWEST": "7",
-    "MOVE_NORTH": "8",
-    "MOVE_NORTHEAST": "9",
-    "MOVE_WEST": "4",
-    "WAIT": "5",
-    "MOVE_EAST": "6",
-    "MOVE_SOUTHWEST": "1",
-    "MOVE_SOUTH": "2",
-    "MOVE_SOUTHEAST": "3",
-    "MOVE_UP": "q",
-    "MOVE_DOWN": "e"
+    "MOVE_NORTHWEST": ["NUMPAD_7"],
+    "MOVE_NORTH": ["NUMPAD_8"],
+    "MOVE_NORTHEAST": ["NUMPAD_9"],
+    "MOVE_WEST": ["NUMPAD_4"],
+    "WAIT": ["NUMPAD_5"],
+    "MOVE_EAST": ["NUMPAD_6"],
+    "MOVE_SOUTHWEST": ["NUMPAD_1"],
+    "MOVE_SOUTH": ["NUMPAD_2"],
+    "MOVE_SOUTHEAST": ["NUMPAD_3"],
+    "MOVE_UP": ["q"],
+    "MOVE_DOWN": ["e"]
   },
   "viewport": {
-    "RESET_VIEWPORT": "r",
-    "SLIDE_VIEWPORT_WEST": "[",
-    "SLIDE_VIEWPORT_EAST": "]",
-    "TOGGLE_VIEWPORT": "v"
+    "RESET_VIEWPORT": ["r"],
+    "SLIDE_VIEWPORT_WEST": ["["],
+    "SLIDE_VIEWPORT_EAST": ["]"],
+    "TOGGLE_VIEWPORT": ["v"]
   },
   "scale": {
     "SCALE_UP": ["=", "+"],
-    "SCALE_DOWN": "-"
+    "SCALE_DOWN": ["-"]
   },
   "action": {
-    "MINE": "u",
-    "INTERACT": "i"
+    "MINE": ["u"],
+    "INTERACT": ["i"]
   }
 }
