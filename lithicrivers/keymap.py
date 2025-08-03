@@ -126,6 +126,9 @@ class Keymap:
         self.MINE = config_manager.get_keybind("action", "MINE")
         self.INTERACT = config_manager.get_keybind("action", "INTERACT")
 
+        # UI keys
+        self.CLOSE_HELP_MENU = config_manager.get_keybind("ui", "CLOSE_HELP_MENU")
+
     def _load_keychords(self):
         """Load platform-specific keychords from JSON file."""
         platform_name = platform.system().lower()
