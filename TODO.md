@@ -195,7 +195,7 @@
 
 ## John feedback
 
-### escape should close the help menu
+### escape should close the help menu ✅
 
 ### the rest
 

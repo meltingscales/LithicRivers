@@ -493,6 +493,7 @@ class HelpPage(Frame):
         super().__init__(
             screen, screen.height, screen.width, can_scroll=False, title="Help"
         )
+        self.game = game
         layout1 = Layout([1], fill_frame=True)
         self.add_layout(layout1)
         # add your widgets here
@@ -501,6 +502,7 @@ class HelpPage(Frame):
             f"Hello! Welcome to {GAME_NAME}. Below are keys.\n"
             "By the way, game UI nav is arrow keys + space or enter.\n"
             "You can also use the mouse! Left click works!\n"
+            "Press ESC to return to the game.\n"
             "Enjoy!\n"
             "\n"
             f"Your character's appearance: {presenting(game.player.render_sprite(1))}\n"
@@ -519,6 +521,15 @@ class HelpPage(Frame):
         layout2 = TabButtons(self)
         self.add_layout(layout2)
         self.fix()
+
+    def process_event(self, event):
+        """Handle events for the help page, including ESC to close."""
+        # Check for ESC key to close help menu using keymap
+        if hasattr(event, 'key_code') and KEYMAP.matches("CLOSE_HELP_MENU", event):
+            raise NextScene("WorldMap")
+        
+        # Let the parent class handle other events
+        return super().process_event(event)
 
 
 class MessageLogPage(Frame):
@@ -1334,7 +1345,7 @@ def demo(screen: Screen, scene: Scene, game: Game):
 
         # Check for ESC key to close popups
         # TODO do not hardcode this, rework the keymap to accept keycode integer sequences and not just ascii characters.
-        if event.key_code == 27:  # ESC key
+        if KEYMAP.matches("CLOSE_HELP_MENU", event):  # ESC key
             try:
                 if active_popup is not None:
                     # Remove the popup from the current scene

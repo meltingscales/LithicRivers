@@ -27,6 +27,6 @@
     "INTERACT": ["i"]
   },
   "ui": {
-    "CLOSE_HELP_MENU": ["ESC"]
+    "CLOSE_HELP_MENU": ["ESCAPE"]
   }
 }
