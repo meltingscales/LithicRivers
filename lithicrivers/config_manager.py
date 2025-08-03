@@ -84,6 +84,7 @@ class ConfigManager:
                 },
             },
             "viewport": {"VIEWPORT_RADIUS": [8, 8, 0], "VIEWPORT_WIGGLE": 2},
+            "performance": {"MAX_CPU_THREADS": 64},
         }
 
         return self._load_json_file(self.settings_file, default_settings)
