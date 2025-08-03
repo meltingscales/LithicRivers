@@ -133,8 +133,8 @@ class KeychordCapture:
         skipped_count = 0
         
         for i, prompt in enumerate(prompts):
-            # Skip if already captured
-            if prompt in self.captured_keychords:
+            # Skip if already captured (but allow re-capturing if marked as not working)
+            if prompt in self.captured_keychords and self.captured_keychords[prompt] is not None:
                 skipped_count += 1
                 logger.info(f"⏭️ Skipping '{prompt}' - already captured as {self.captured_keychords[prompt]}")
                 continue
@@ -171,15 +171,16 @@ class KeychordCapture:
         screen.print_at("Press the key combination now...", 0, 4)
         screen.print_at("(Press ESC to add the current sequence to the keychord)", 0, 5)
         screen.print_at("(Press ESC at start to exit)", 0, 6)
+        screen.print_at("💡 If a key doesn't work, press ESC to skip, then edit the JSON manually", 0, 7)
         
         # Add capitalization hint for uppercase letters
         if prompt.isupper() and len(prompt) == 1:
-            screen.print_at("💡 Hint: Press SHIFT + the letter for uppercase", 0, 7)
+            screen.print_at("💡 Hint: Press SHIFT + the letter for uppercase", 0, 8)
         
         # Show previously captured sequences
         if self.captured_keychords:
-            screen.print_at("Recently captured:", 0, 9)
-            y_offset = 10
+            screen.print_at("Recently captured:", 0, 10)
+            y_offset = 11
             for key, sequence in list(self.captured_keychords.items())[-5:]:
                 screen.print_at(f"  {key}: {sequence}", 0, y_offset)
                 y_offset += 1
@@ -225,7 +226,7 @@ class KeychordCapture:
                 
                 # Display current sequence
                 screen.print_at(f"Sequence: {sequence}", 0, 10)
-                screen.print_at("Press another key to add it, or press ESC (and wait) to finish...", 0, 11)
+                screen.print_at("Press another key to add it, or press ESC to finish...", 0, 11)
                 screen.refresh()
             else:
                 # No event, just continue waiting
@@ -272,6 +273,9 @@ def main():
     logger.info(f"Platform: {platform.system()} {platform.release()}")
     logger.info("This tool will prompt you to press various keys and key combinations.")
     logger.info("The results will be saved to a platform-specific JSON file.")
+    logger.info("")
+    logger.info("💡 For keys that don't work (like F11), press ESC to skip them.")
+    logger.info("   Then manually edit the JSON file to add: \"F11\": null")
     logger.info("")
     
     try:
