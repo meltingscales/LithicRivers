@@ -185,11 +185,7 @@
 
 ## John feedback
 
-help page looks retarded, why are the movement keys randomly sorted
-
 escape should close the help menu
-
-zoom should work with the numpad
 
 actually add perlin noise
 
@@ -199,12 +195,8 @@ resizing the window should not crash the game
 
 the entity selection list text is too generic
 
-oak doesn't fucking look like a tree
-
 root page is a stupid world map name 
 
 num lock warning
 
 message log init lag bug
-
-root page should be the first option
