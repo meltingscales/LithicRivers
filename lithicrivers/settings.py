@@ -1,5 +1,6 @@
 import logging
 import os
+import multiprocessing
 
 from lithicrivers.config_manager import config_manager
 from lithicrivers.model.model import Viewport
@@ -37,6 +38,35 @@ VIEWPORT_WIGGLE = config_manager.get_setting("viewport", "VIEWPORT_WIGGLE")
 DEFAULT_VIEWPORT = Viewport.generate_centered(
     DEFAULT_PLAYER_POSITION, radius=VIEWPORT_RADIUS
 )
+
+# CPU thread detection and configuration
+def get_max_cpu_threads():
+    """Get the maximum number of CPU threads to use."""
+    # Try environment variable first
+    env_threads = os.environ.get("MAX_CPU_THREADS")
+    if env_threads:
+        try:
+            return int(env_threads)
+        except ValueError:
+            pass
+    
+    # Try to get from config
+    try:
+        config_threads = config_manager.get_setting("performance", "MAX_CPU_THREADS")
+        if config_threads:
+            return int(config_threads)
+    except:
+        pass
+    
+    # Auto-detect CPU count, default to 64 if detection fails
+    try:
+        cpu_count = multiprocessing.cpu_count()
+        # Use 75% of available cores to avoid overwhelming the system
+        return max(1, min(cpu_count, int(cpu_count * 0.75)))
+    except:
+        return 64
+
+MAX_CPU_THREADS = get_max_cpu_threads()
 
 # Create global keymap instance
 KEYMAP = Keymap()

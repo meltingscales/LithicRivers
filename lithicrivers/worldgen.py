@@ -338,7 +338,8 @@ class SeededWorldGenerator:
         center_chunk_z = center_pos.z // chunk_size
         
         # Create thread pool for background generation
-        with ThreadPoolExecutor(max_workers=4) as executor:
+        from lithicrivers.settings import MAX_CPU_THREADS
+        with ThreadPoolExecutor(max_workers=MAX_CPU_THREADS) as executor:
             futures = []
             
             # Generate chunks in a cube around the center
