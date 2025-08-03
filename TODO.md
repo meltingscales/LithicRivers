@@ -199,9 +199,20 @@
 
 ## John feedback
 
-escape should close the help menu
+### escape should close the help menu
+
+- This is a consequence of how terminal emulators work on different platforms. On Ubuntu, you can detect SHIFT-<key> and ALT-<key>, but not CTRL-<key>. I need to test this behavior on windows.
+
+Ubuntu: 
+CTRL does nothing initially until a second chord is pressed, then it sends `-1`.
+SHIFT and a key just sends one specific int.
+ALT and a key either sends one specific int, or two ints. 
+ESC seems to input fine, but is delayed. I think this might be a consequence of how the Ubuntu terminal emulator works. If I run this without a GUI, I wonder if I get different behavior. EDIT: In a bare shell, it seems to function exactly the same as the Ubuntu GNOME terminal emulator.
+
 - ESC is not an ASCII character. I need to fundamentally change how `keybinds.json` is structured and just use int keycodes.
 - I also need to make a debug panel that shows a history of keystrokes both as int keycodes (`KeyboardEvent` object property) and also their ASCII representations.
+
+### the rest
 
 resizing the window should not crash the game (It doesn't do this on Ubuntu. Does it do this on NixOS? Or only on large screens?)
 

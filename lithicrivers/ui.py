@@ -636,7 +636,10 @@ class DevKeystrokesPage(Frame):
             key_code = event.key_code
 
             # try to get ascii representation and remove whitespace
-            ascii_rep = chr(key_code)
+            try:
+                ascii_rep = chr(key_code)
+            except ValueError:
+                ascii_rep = f"0x{key_code:02x}"
 
             self.append_to_log(f"test {key_code} {ascii_rep}")
             self.render_log()
@@ -1323,6 +1326,7 @@ def demo(screen: Screen, scene: Scene, game: Game):
         event: KeyboardEvent
 
         # Check for ESC key to close popups
+        # TODO do not hardcode this, rework the keymap to accept keycode integer sequences and not just ascii characters.
         if event.key_code == 27:  # ESC key
             try:
                 if active_popup is not None:
