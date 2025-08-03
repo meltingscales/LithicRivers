@@ -2,7 +2,7 @@ import os.path
 import unittest
 from pathlib import Path
 
-from lithicrivers.game import Tiles, World, WorldData, weighted_choice
+from lithicrivers.game import Tiles, World, ChunkedWorldData, weighted_choice
 from lithicrivers.model.vector import VectorN
 
 filename = Path("testWorld.lithicriversworlddata")
@@ -26,7 +26,7 @@ class TestSerialize(unittest.TestCase):
             some_tile.description = "Wow serialize test!!"
 
             # Create empty world data for infinite world
-            wd = WorldData()
+            wd = ChunkedWorldData()
             wd.set_tile(some_pos, some_tile)
             # make a world and edit a random block
 
@@ -37,7 +37,7 @@ class TestSerialize(unittest.TestCase):
             wd.serialize(filename)
 
             # deserialize it
-            unser_wd = WorldData.deserialize(filename)
+            unser_wd = ChunkedWorldData.deserialize(filename)
 
             # assert the block we changed exists
             self.assertEqual(unser_wd.get_tile(some_pos), some_tile)
