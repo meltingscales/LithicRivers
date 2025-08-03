@@ -34,6 +34,10 @@ help: ## Show this help message
 	@echo "  debug-attach         Show PyCharm debugging instructions"
 	@echo "  log-monitor          Monitor game logs in real-time"
 	@echo ""
+	@echo "🔧 DEVELOPMENT TOOLS"
+	@echo "-------------------"
+	@echo "  generate-keychords   Generate platform-specific keychord mappings"
+	@echo ""
 	@echo "📊 PERFORMANCE TESTING"
 	@echo "---------------------"
 	@echo "  profile-speedscope   Generate speedscope CPU profiling report"
@@ -94,6 +98,14 @@ test-lcov: ## Generate LCOV coverage report
 
 demo: ## Run all demos
 	$(UV_CMD) run python -m lithicrivers.demo.perlin_test
+
+# Development tools
+generate-keychords: ## Generate platform-specific keychord mappings
+	@echo "🔧 Generating platform-specific keychord mappings..."
+	@echo "📝 This will prompt you to press various keys and key combinations."
+	@echo "💾 Results will be saved to config/keychords.{platform}.json"
+	@echo ""
+	$(UV_CMD) run python lithicrivers/scripts/generate_platform_keychords.py
 
 # Game
 run: ## Run the game
