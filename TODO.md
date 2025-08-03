@@ -197,6 +197,6 @@
 
 ## John feedback
 
-num lock warning
+~~num lock warning~~ ✅ COMPLETED
 
 message log init lag bug
