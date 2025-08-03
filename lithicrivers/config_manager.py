@@ -2,7 +2,7 @@ import json
 import logging
 import sys
 from pathlib import Path
-from typing import Any, List, Union
+from typing import Any, FrozenSet, List, Union
 
 from lithicrivers.model.vector import VectorN
 
@@ -108,12 +108,12 @@ class ConfigManager:
             )
             return default_data
 
-    def get_keybind(self, category: str, key_name: str) -> List[str]:
+    def get_keybind(self, category: str, key_name: str) -> FrozenSet[str]:
         """Get a keybind value."""
-        return_value = self.keybinds.get(category, {}).get(key_name, [])
-        if isinstance(return_value, str):
-            return [return_value]
-        return return_value
+        return_value = self.keybinds.get(category, {}).get(key_name, frozenset())
+
+        # convert to frozenset as it may be a list of strings
+        return frozenset(return_value)
 
     def get_setting(self, category: str, key: str) -> Any:
         """Get a setting value."""
