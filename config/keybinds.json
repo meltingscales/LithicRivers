@@ -25,5 +25,8 @@
   "action": {
     "MINE": ["u"],
     "INTERACT": ["i"]
+  },
+  "ui": {
+    "CLOSE_HELP_MENU": ["ESC"]
   }
 }

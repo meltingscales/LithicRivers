@@ -54,3 +54,7 @@ Currently we support:
 - https://github.com/meysam81/notable-newts
 - https://github.com/JnyJny/GameOfLife
 - https://github.com/VedantKhairnar/The-Maze-Runner
+
+## Related issues
+
+- Feature: ESC key handling versus SHIFT-NUMPAD5, etc? #395 https://github.com/peterbrittain/asciimatics/issues/395

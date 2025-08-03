@@ -136,11 +136,8 @@
 
 - relics and techmagic system
 
-- heavy rewards for learning automation but not required to finish the game at all. you can choose to play it as a factory builder, or you can choose to play it as a hack and slash dungeon crawler.
+- heavy rewards for learning automation but not required to finish the game at all. you can choose to pla- make sure that Y less than 0 generates unique terrain, currently it seems static. maybe Y isn't getting used in the perlin noise gen?
 
-- procedurally generated dungeons that ARE NOT just structures, but similar to how the original rogue generated dungeons
-
-- a couple main questlines that reward different play styles
 
 - 10 to 20 static, main questlines NPCs, buildings, items, and dungeons
 
@@ -199,30 +196,6 @@
 ## John feedback
 
 ### escape should close the help menu
-
-- This is a consequence of how terminal emulators work on different platforms. On Ubuntu, you can detect SHIFT-<key> and ALT-<key>, but not CTRL-<key>. I need to test this behavior on windows.
-
-Ubuntu: 
-CTRL does nothing initially until a second chord is pressed, then it sends `-1`.
-SHIFT and a key just sends one specific int.
-ALT and a key either sends one specific int, or two ints. 
-ESC seems to input fine, but is delayed. I think this might be a consequence of how the Ubuntu terminal emulator works. If I run this without a GUI, I wonder if I get different behavior. EDIT: In a bare shell, it seems to function exactly the same as the Ubuntu GNOME terminal emulator.
-
-- ESC is not an ASCII character. I need to fundamentally change how `keybinds.json` is structured and just use int keycodes.
-- I also need to make a debug panel that shows a history of keystrokes both as int keycodes (`KeyboardEvent` object property) and also their ASCII representations.
-
-...
-
-I think I'd like to use a platform-specific keymap file that lets me associate a list of integers with a specific key or key-chord. For example:
-
-    keychords.ubuntu.json:
-    [
-    "CTRL-NUMPAD-5": [-1,91,69],
-    "a": [97],
-    ...
-    ]
-
-Since this is hard to test fully automatically, I'd like to use a separate script that prompts the user to type many specific chords, and saves the results to a JSON file. I can just run this once per platform and then use it later. Just work on this "generate_platform_keychords.py" script and start with uppercase, lowercase, and the function keys for now. It should be a standalone script.
 
 ### the rest
 

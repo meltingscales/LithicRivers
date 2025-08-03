@@ -112,8 +112,8 @@ class PerlinNoise:
         """Linear interpolation."""
         return a + t * (b - a)
     
-    def _grad(self, hash_val: int, x: float) -> float:
-        """Gradient function."""
+    def _grad_1d(self, hash_val: int, x: float) -> float:
+        """1D gradient function."""
         return (hash_val & 1) * x
     
     def noise_1d(self, x: float) -> float:
@@ -130,7 +130,7 @@ class PerlinNoise:
         AA = self.permutation[A]
         
         # Add blended results from 2 corners of 1D cube
-        return self._lerp(u, self._grad(AA, xf), self._grad(AA, xf - 1))
+        return self._lerp(u, self._grad_1d(AA, xf), self._grad_1d(AA, xf - 1))
     
     def noise_2d(self, x: float, y: float) -> float:
         """Generate 2D perlin noise."""
@@ -153,10 +153,10 @@ class PerlinNoise:
         BB = self.permutation[B + 1]
         
         # Add blended results from 4 corners of 2D cube
-        return self._lerp(v, self._lerp(u, self._grad(AA, xf, yf), self._grad(BA, xf - 1, yf)),
-                         self._lerp(u, self._grad(AB, xf, yf - 1), self._grad(BB, xf - 1, yf - 1)))
+        return self._lerp(v, self._lerp(u, self._grad_2d(AA, xf, yf), self._grad_2d(BA, xf - 1, yf)),
+                         self._lerp(u, self._grad_2d(AB, xf, yf - 1), self._grad_2d(BB, xf - 1, yf - 1)))
     
-    def _grad(self, hash_val: int, x: float, y: float) -> float:
+    def _grad_2d(self, hash_val: int, x: float, y: float) -> float:
         """2D gradient function."""
         # Convert low 4 bits of hash code into 12 simple gradient directions
         h = hash_val & 15
@@ -286,13 +286,28 @@ class SeededWorldGenerator:
         elif position.z < 0:
             # Underground - use perlin noise for cave systems and ore distribution
             # Scale noise to create larger cave systems
+            # Include Z coordinate in noise generation for depth variation
             cave_noise = self.perlin.octave_noise_2d(position.x * 0.1, position.y * 0.1, octaves=3, scale=1.0)
             ore_noise = self.perlin.octave_noise_2d(position.x * 0.05, position.y * 0.05, octaves=2, scale=0.5)
+            # Add depth-based variation using Z coordinate
+            # Create a separate noise function for depth to avoid vertical striping
+            depth_perlin = PerlinNoise(self.seed.seed + abs(position.z) * 1000)  # Different seed for each Z level
+            depth_noise = depth_perlin.octave_noise_2d(position.x * 0.05, position.y * 0.05, octaves=3, scale=1.0)
             
-            # Create cave systems
-            if cave_noise > 0.1:
+            # Create cave systems with depth variation
+            # Combine cave noise with depth noise for more varied underground terrain
+            # Use a more balanced approach to reduce striping
+            combined_cave_noise = (cave_noise * 0.7 + depth_noise * 0.3)
+            
+            # Add direct Z-based variation for more dramatic depth differences
+            # Deeper levels have more caves and less ore, but with reasonable limits
+            depth_factor = min(abs(position.z) * 0.02, 0.3)  # Cap the depth factor to prevent massive voids
+            adjusted_cave_threshold = 0.15 - depth_factor  # Lower threshold for deeper levels, but less aggressive
+            adjusted_ore_threshold = 0.2 + depth_factor  # Higher threshold for deeper levels
+            
+            if combined_cave_noise > adjusted_cave_threshold:
                 return Tiles.empty()  # Cave
-            elif ore_noise > 0.2:
+            elif ore_noise > adjusted_ore_threshold:
                 return Tiles.gold_ore()  # Ore vein
             else:
                 return Tiles.bedrock()  # Solid rock
