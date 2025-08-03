@@ -110,7 +110,7 @@ class NPC(Entity, SpriteRenderable):
         self.sprite_sheet = [
             sprite,  # 1x1
             f"{sprite}{sprite}\n{sprite}{sprite}",  # 2x2
-            f"{sprite}{sprite}{sprite}\n{sprite}{sprite}{sprite}"  # 3x3
+            f"{sprite}{sprite}{sprite}\n{sprite}{sprite}{sprite}\n{sprite}{sprite}{sprite}"  # 3x3
         ]
         self._setup_default_conversation()
 
