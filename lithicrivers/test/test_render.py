@@ -119,7 +119,7 @@ class RenderStuff(unittest.TestCase):
         from unittest.mock import Mock
 
         from lithicrivers.game import Game
-        from lithicrivers.ui import RootPage
+        from lithicrivers.ui import WorldMap
 
         # Create a mock screen with different sizes
         def create_mock_screen(width, height):
@@ -131,7 +131,7 @@ class RenderStuff(unittest.TestCase):
         # Test small screen (80x24)
         small_screen = create_mock_screen(80, 24)
         game = Game()
-        RootPage(small_screen, game)
+        WorldMap(small_screen, game)
 
         # Check that viewport was adjusted for small screen
         # Small screen should have smaller viewport than large screen
@@ -141,7 +141,7 @@ class RenderStuff(unittest.TestCase):
         # Test large screen (160x48)
         large_screen = create_mock_screen(160, 48)
         game_large = Game()
-        RootPage(large_screen, game_large)
+        WorldMap(large_screen, game_large)
 
         # Check that viewport was adjusted for large screen
         # Large screen should have larger viewport
@@ -156,7 +156,7 @@ class RenderStuff(unittest.TestCase):
         # Even with a very small screen, viewport should be at least 5x5
         tiny_screen = create_mock_screen(40, 12)
         game_tiny = Game()
-        RootPage(tiny_screen, game_tiny)
+        WorldMap(tiny_screen, game_tiny)
 
         tiny_viewport_width = game_tiny.viewport.get_width()
         tiny_viewport_height = game_tiny.viewport.get_height()

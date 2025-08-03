@@ -114,8 +114,8 @@ class TestInputHandlerSimple(SimpleTUITestCase):
 
         # Create mining event (use 'u' key which is mapped to MINE)
         event = self.create_keyboard_event(ord("u"))
-        root_page = Mock()
-        InputHandler.handle_mining(event, self.game, root_page)
+        world_map = Mock()
+        InputHandler.handle_mining(event, self.game, world_map)
 
         # Check that tile was replaced with dirt
         tile = self.game.get_tile_at_player_feet()
@@ -130,8 +130,8 @@ class TestInputHandlerSimple(SimpleTUITestCase):
 
         # Try to mine the tile
         event = self.create_keyboard_event(ord("u"))
-        root_page = Mock()
-        InputHandler.handle_mining(event, self.game, root_page)
+        world_map = Mock()
+        InputHandler.handle_mining(event, self.game, world_map)
 
         # Check that tile is still dirt (unmineable)
         tile = self.game.get_tile_at_player_feet()
@@ -145,8 +145,8 @@ class TestInputHandlerSimple(SimpleTUITestCase):
 
         # Mine the tree
         event = self.create_keyboard_event(ord("u"))
-        root_page = Mock()
-        InputHandler.handle_mining(event, self.game, root_page)
+        world_map = Mock()
+        InputHandler.handle_mining(event, self.game, world_map)
 
         # Check that tree was replaced with dirt
         tile = self.game.get_tile_at_player_feet()
@@ -204,8 +204,8 @@ class TestGameIntegrationSimple(SimpleTUITestCase):
 
         # Mine the tile
         event = self.create_keyboard_event(ord("u"))
-        root_page = Mock()
-        InputHandler.handle_mining(event, self.game, root_page)
+        world_map = Mock()
+        InputHandler.handle_mining(event, self.game, world_map)
 
         # Check that tile was replaced
         tile = self.game.get_tile_at_player_feet()

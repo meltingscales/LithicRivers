@@ -28,7 +28,7 @@ from lithicrivers.constants import (
 from lithicrivers.game import Game, Tiles
 from lithicrivers.game_engine import GameEngine
 from lithicrivers.model.vector import VectorN
-from lithicrivers.ui import GameWidget, HelpPage, InputHandler, RootPage
+from lithicrivers.ui import GameWidget, HelpPage, InputHandler, WorldMap
 
 
 class AdvancedMockScreen:
@@ -311,10 +311,10 @@ class TestInputHandlerAdvanced(AdvancedUITestCase):
 
         # Create mining event (use 'u' key which is mapped to MINE)
         event = self.create_keyboard_event(ord("u"))
-        root_page = Mock()
+        world_map = Mock()
 
         # Handle mining
-        InputHandler.handle_mining(event, self.game, root_page)
+        InputHandler.handle_mining(event, self.game, world_map)
 
         # Check that tile was mined (should be replaced with Dirt)
         tile = self.game.get_tile_at_player_feet()
@@ -349,17 +349,17 @@ class TestInputHandlerAdvanced(AdvancedUITestCase):
 
 
 class TestPageComponents(AdvancedUITestCase):
-    """Test the page components (RootPage, HelpPage, etc.)."""
+    """Test the page components (WorldMap, HelpPage, etc.)."""
 
-    def test_root_page_creation(self):
-        """Test that RootPage can be created and rendered."""
+    def test_world_map_creation(self):
+        """Test that WorldMap can be created and rendered."""
         # Skip this test for now as the mock framework doesn't properly detect widgets
-        self.skipTest("Mock framework doesn't properly detect widgets in RootPage")
+        self.skipTest("Mock framework doesn't properly detect widgets in WorldMap")
 
-        root_page = RootPage(self.mock_screen, self.game)
+        world_map = WorldMap(self.mock_screen, self.game)
 
         # Check that the page has the expected widgets
-        game_widgets = [w for w in root_page.get_widgets() if isinstance(w, GameWidget)]
+        game_widgets = [w for w in world_map.get_widgets() if isinstance(w, GameWidget)]
         self.assertEqual(len(game_widgets), 1)
 
     def test_help_page_creation(self):
@@ -380,11 +380,11 @@ class TestPageComponents(AdvancedUITestCase):
     def test_page_navigation(self):
         """Test that pages can navigate between each other."""
         # Create pages
-        root_page = RootPage(self.mock_screen, self.game)
+        world_map = WorldMap(self.mock_screen, self.game)
         help_page = HelpPage(self.mock_screen, self.game)
 
         # Add pages to screen
-        self.mock_screen.add_scene("RootPage", root_page)
+        self.mock_screen.add_scene("WorldMap", world_map)
         self.mock_screen.add_scene("HelpPage", help_page)
 
         # Test navigation
@@ -397,7 +397,7 @@ class TestUIIntegration(AdvancedUITestCase):
 
     def test_complete_game_flow(self):
         """Test a complete game flow with movement and mining."""
-        root_page = RootPage(self.mock_screen, self.game)
+        world_map = WorldMap(self.mock_screen, self.game)
 
         # Simulate player movement
         movement_event = self.create_keyboard_event(ord("6"))  # Move east (numpad 6)
@@ -407,7 +407,7 @@ class TestUIIntegration(AdvancedUITestCase):
 
         # Simulate mining
         mining_event = self.create_keyboard_event(ord("u"))
-        InputHandler.handle_mining(mining_event, self.game, root_page)
+        InputHandler.handle_mining(mining_event, self.game, world_map)
 
         # Check game state - player should have moved east from initial position
         initial_pos = VectorN(0, 0, 0)  # In testing mode, player starts at (0,0,0)
@@ -420,7 +420,7 @@ class TestUIIntegration(AdvancedUITestCase):
 
     def test_ui_responsiveness(self):
         """Test that UI responds to various input events."""
-        root_page = RootPage(self.mock_screen, self.game)
+        world_map = WorldMap(self.mock_screen, self.game)
 
         # Test various input events
         events = [
@@ -459,7 +459,7 @@ class TestUIIntegration(AdvancedUITestCase):
                     result = InputHandler.handle_movement(event)
                     self.assertIsNotNone(result)
                 elif key_code == ord(" "):
-                    InputHandler.handle_mining(event, self.game, root_page)
+                    InputHandler.handle_mining(event, self.game, world_map)
                 elif key_code in [ord("i"), ord("k"), ord("j"), ord("l")]:
                     InputHandler.handle_viewport(event, self.game)
                 elif key_code in [ord("="), ord("-")]:

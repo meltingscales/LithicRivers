@@ -27,7 +27,7 @@ from lithicrivers.constants import (
 from lithicrivers.game import Game, Tiles
 from lithicrivers.game_engine import GameEngine
 from lithicrivers.model.vector import VectorN
-from lithicrivers.ui import GameWidget, HelpPage, InputHandler, RootPage
+from lithicrivers.ui import GameWidget, HelpPage, InputHandler, WorldMap
 
 
 class HeadlessTUITestCase(unittest.TestCase):
@@ -176,10 +176,10 @@ class TestHeadlessInputHandler(HeadlessTUITestCase):
 
         # Create mining event
         event = self.create_keyboard_event(ord("u"))  # Mining key
-        root_page = Mock()
+        world_map = Mock()
 
         # Handle mining
-        InputHandler.handle_mining(event, self.game, root_page)
+        InputHandler.handle_mining(event, self.game, world_map)
 
         # Check that tile was mined (Tree should become Dirt)
         tile = self.game.get_tile_at_player_feet()
@@ -211,13 +211,13 @@ class TestHeadlessInputHandler(HeadlessTUITestCase):
 class TestHeadlessPages(HeadlessTUITestCase):
     """Test page components in headless mode."""
 
-    def test_root_page_headless(self):
-        """Test RootPage in headless mode."""
+    def test_world_map_headless(self):
+        """Test WorldMap in headless mode."""
         screen = self.create_headless_screen()
 
         try:
-            # Create root page
-            page = RootPage(screen, self.game)
+            # Create world map
+            page = WorldMap(screen, self.game)
 
             # Check that page has layouts (which contain widgets)
             self.assertGreater(len(page._layouts), 0)
@@ -264,8 +264,8 @@ class TestHeadlessIntegration(HeadlessTUITestCase):
         screen = self.create_headless_screen()
 
         try:
-            # Create root page
-            root_page = RootPage(screen, self.game)
+            # Create world map
+            world_map = WorldMap(screen, self.game)
 
             # Simulate player movement
             movement_event = self.create_keyboard_event(ord("6"))  # Move east
@@ -275,7 +275,7 @@ class TestHeadlessIntegration(HeadlessTUITestCase):
 
             # Simulate mining
             mining_event = self.create_keyboard_event(ord("u"))
-            InputHandler.handle_mining(mining_event, self.game, root_page)
+            InputHandler.handle_mining(mining_event, self.game, world_map)
 
             # Check game state - player should have moved east from initial position
             initial_pos = VectorN(0, 0, 0)  # In testing mode, player starts at (0,0,0)
@@ -294,7 +294,7 @@ class TestHeadlessIntegration(HeadlessTUITestCase):
         screen = self.create_headless_screen()
 
         try:
-            root_page = RootPage(screen, self.game)
+            world_map = WorldMap(screen, self.game)
 
             # Test various input events
             events = [
@@ -333,7 +333,7 @@ class TestHeadlessIntegration(HeadlessTUITestCase):
                         result = InputHandler.handle_movement(event)
                         self.assertIsNotNone(result)
                     elif key_code == ord(" "):
-                        InputHandler.handle_mining(event, self.game, root_page)
+                        InputHandler.handle_mining(event, self.game, world_map)
                     elif key_code in [ord("i"), ord("k"), ord("j"), ord("l")]:
                         InputHandler.handle_viewport(event, self.game)
                     elif key_code in [ord("="), ord("-")]:

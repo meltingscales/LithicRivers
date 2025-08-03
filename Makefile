@@ -150,6 +150,7 @@ clean: ## Clean build artifacts
 	@echo "🧹 Cleaning build artifacts..."
 	rm -rf build/ dist/ *.egg-info/ .coverage htmlcov/ coverage/
 	rm -f *.log
+	rm coverage.lcov
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 	find . -type f -name "*.pyc" -delete 2>/dev/null || true
 	rm -rf .pytest_cache/ .mypy_cache/ .ruff_cache/
