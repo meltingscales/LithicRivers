@@ -35,6 +35,62 @@ from lithicrivers.textutil import get_color_for_ui_element, list_label, presenti
 if TYPE_CHECKING:
     from asciimatics.effects import Effect
 
+# Global popup manager instance
+_popup_manager = None
+
+def get_popup_manager():
+    """Get the global popup manager instance."""
+    global _popup_manager
+    return _popup_manager
+
+def set_popup_manager(manager):
+    """Set the global popup manager instance."""
+    global _popup_manager
+    _popup_manager = manager
+
+def _show_numlock_warning(world_map):
+    """Show a warning popup about numlock being off."""
+    warning_text = """  NUMLOCK WARNING 
+
+Your NumLock key appears to be turned OFF. This can cause issues with movement controls.
+
+This message will only show once per game session.
+
+When NumLock is OFF:
+• Numpad 8 becomes Up Arrow
+• Numpad 2 becomes Down Arrow  
+• Numpad 4 becomes Left Arrow
+• Numpad 6 becomes Right Arrow
+• And so on...
+
+To fix this:
+1. Press your NumLock key to turn it ON and click OK to continue.
+2. The numpad keys should then work normally for movement
+
+You can still use Q/E for up/down movement regardless of NumLock state."""
+
+    def warning_callback(_selected_option):
+        # Just close the warning popup
+        popup_manager = get_popup_manager()
+        if popup_manager:
+            popup_manager.set_active_popup(None)
+
+    # Create and show the warning popup
+    from asciimatics.widgets import PopUpDialog
+
+    popup = PopUpDialog(
+        world_map._screen,
+        warning_text,
+        ["OK"],
+        warning_callback,
+    )
+    # Track the active popup using popup manager
+    popup_manager = get_popup_manager()
+    if popup_manager:
+        popup_manager.set_active_popup(popup)
+    # Add the popup to the current scene
+    world_map._screen.current_scene.add_effect(popup)
+
 
 def get_numlock_state() -> bool:
     """Get the current numlock state using platform-specific APIs."""
@@ -165,54 +221,6 @@ def _detect_numlock_issue(event: KeyboardEvent) -> bool:
     return event.key_code in numlock_off_codes
 
 
-def _show_numlock_warning(world_map):
-    """Show a warning popup about numlock being off."""
-    warning_text = """  NUMLOCK WARNING 
-
-Your NumLock key appears to be turned OFF. This can cause issues with movement controls.
-
-This message will only show once per game session.
-
-When NumLock is OFF:
-• Numpad 8 becomes Up Arrow
-• Numpad 2 becomes Down Arrow  
-• Numpad 4 becomes Left Arrow
-• Numpad 6 becomes Right Arrow
-• And so on...
-
-To fix this:
-1. Press your NumLock key to turn it ON and click OK to continue.
-2. The numpad keys should then work normally for movement
-
-You can still use Q/E for up/down movement regardless of NumLock state."""
-
-    def warning_callback(_selected_option):
-        # Just close the warning popup
-        global active_popup
-        active_popup = None
-
-    # Create and show the warning popup
-    from asciimatics.widgets import PopUpDialog
-
-    popup = PopUpDialog(
-        world_map._screen,
-        warning_text,
-        ["OK"],
-        warning_callback,
-    )
-    # Track the active popup globally
-    global active_popup
-    active_popup = popup
-    # Add the popup to the current scene
-    world_map._screen.current_scene.add_effect(popup)
-
-
-
-
-
-
-
-
 class TabButtons(Layout):
     def __init__(self, frame, game: Game = None):
         # Create buttons list based on developer mode
@@ -249,20 +257,20 @@ class TabButtons(Layout):
         def safe_change():
             # Check if there's an active popup
             try:
-                global active_popup
-                if active_popup is not None:
+                popup_manager = get_popup_manager()
+                if popup_manager and popup_manager.is_popup_active():
                     # Clear the popup before changing scenes
                     try:
                         if (
-                            hasattr(active_popup, "_screen")
-                            and active_popup._screen.current_scene
+                            hasattr(popup_manager.get_active_popup(), "_screen")
+                            and popup_manager.get_active_popup()._screen.current_scene
                         ):
-                            active_popup._screen.current_scene.remove_effect(
-                                active_popup
+                            popup_manager.get_active_popup()._screen.current_scene.remove_effect(
+                                popup_manager.get_active_popup()
                             )
                     except Exception:
                         pass
-                    active_popup = None
+                    popup_manager.set_active_popup(None)
             except NameError:
                 # active_popup not defined, safe to proceed
                 pass
@@ -864,8 +872,9 @@ class DevPopupPage(Frame):
 
             def callback(result):
                 print(f"Simple dialog result: {result}")
-                global active_popup
-                active_popup = None
+                popup_manager = get_popup_manager()
+                if popup_manager:
+                    popup_manager.set_active_popup(None)
 
             # Use asciimatics PopUpDialog for simple dialog
             from asciimatics.widgets import PopUpDialog
@@ -876,9 +885,10 @@ class DevPopupPage(Frame):
                 ["OK"],
                 callback,
             )
-            # Track the active popup globally
-            global active_popup
-            active_popup = popup
+            # Track the active popup using popup manager
+            popup_manager = get_popup_manager()
+            if popup_manager:
+                popup_manager.set_active_popup(popup)
             # Add the popup to the current scene
             screen.current_scene.add_effect(popup)
 
@@ -887,8 +897,9 @@ class DevPopupPage(Frame):
 
             def callback(result):
                 print(f"Options dialog result: {result}")
-                global active_popup
-                active_popup = None
+                popup_manager = get_popup_manager()
+                if popup_manager:
+                    popup_manager.set_active_popup(None)
 
             # Use asciimatics PopUpDialog for options dialog
             from asciimatics.widgets import PopUpDialog
@@ -899,9 +910,10 @@ class DevPopupPage(Frame):
                 ["Option 1", "Option 2", "Option 3", "Option 4"],
                 callback,
             )
-            # Track the active popup globally
-            global active_popup
-            active_popup = popup
+            # Track the active popup using popup manager
+            popup_manager = get_popup_manager()
+            if popup_manager:
+                popup_manager.set_active_popup(popup)
             # Add the popup to the current scene
             screen.current_scene.add_effect(popup)
 
@@ -910,8 +922,9 @@ class DevPopupPage(Frame):
 
             def callback(result):
                 print(f"Large dialog result: {result}")
-                global active_popup
-                active_popup = None
+                popup_manager = get_popup_manager()
+                if popup_manager:
+                    popup_manager.set_active_popup(None)
 
             # Use asciimatics PopUpDialog for large dialog
             from asciimatics.widgets import PopUpDialog
@@ -926,9 +939,10 @@ class DevPopupPage(Frame):
                 ["Continue", "Cancel"],
                 callback,
             )
-            # Track the active popup globally
-            global active_popup
-            active_popup = popup
+            # Track the active popup using popup manager
+            popup_manager = get_popup_manager()
+            if popup_manager:
+                popup_manager.set_active_popup(popup)
             # Add the popup to the current scene
             screen.current_scene.add_effect(popup)
 
@@ -938,8 +952,9 @@ class DevPopupPage(Frame):
 
             def callback(result):
                 print(f"Popup dialog result: {result}")
-                global active_popup
-                active_popup = None
+                popup_manager = get_popup_manager()
+                if popup_manager:
+                    popup_manager.set_active_popup(None)
 
             # Create a popup dialog using asciimatics PopUpDialog
             popup = PopUpDialog(
@@ -950,9 +965,10 @@ class DevPopupPage(Frame):
                 ["OK", "Cancel"],
                 callback,
             )
-            # Track the active popup globally
-            global active_popup
-            active_popup = popup
+            # Track the active popup using popup manager
+            popup_manager = get_popup_manager()
+            if popup_manager:
+                popup_manager.set_active_popup(popup)
             # Add the popup to the current scene
             screen.current_scene.add_effect(popup)
 
@@ -1318,7 +1334,7 @@ class InputHandler:
         game.log_dialog(npc.name, conversation["text"])
 
         def conversation_callback(selected_option):
-            global active_popup
+            popup_manager = get_popup_manager()
             logging.debug(f"NPC conversation callback called with: '{selected_option}'")
             if selected_option is not None:
                 # Handle the selected option - PopUpDialog returns the index, so we need to get the actual text
@@ -1345,18 +1361,18 @@ class InputHandler:
                         f"NPC conversation: continuing to topic '{next_topic}'"
                     )
                     # Clear the current popup first
-                    active_popup = None
+                    popup_manager.set_active_popup(None)
                     cls._show_npc_conversation(game, npc, next_topic, world_map)
                 else:
                     # No next topic or same topic, close the conversation
                     logging.debug(
                         f"NPC conversation: closing - next_topic='{next_topic}', current_topic='{topic}'"
                     )
-                    active_popup = None
+                    popup_manager.set_active_popup(None)
             else:
                 # No option selected, close the conversation
                 logging.debug("NPC conversation: no option selected, closing")
-                active_popup = None
+                popup_manager.set_active_popup(None)
 
         # Show the conversation in a popup
         from asciimatics.widgets import PopUpDialog
@@ -1370,9 +1386,10 @@ class InputHandler:
             conversation["options"],
             conversation_callback,
         )
-        # Track the active popup globally
-        global active_popup
-        active_popup = popup
+        # Track the active popup using popup manager
+        popup_manager = get_popup_manager()
+        if popup_manager:
+            popup_manager.set_active_popup(popup)
         logging.debug("NPC conversation: popup created, adding to scene")
         # Add the popup to the current scene
         world_map._screen.current_scene.add_effect(popup)
@@ -1399,8 +1416,9 @@ class InputHandler:
                     game, name, pos, color, world_map
                 )
 
-            global active_popup
-            active_popup = None
+            popup_manager = get_popup_manager()
+            if popup_manager:
+                popup_manager.set_active_popup(None)
 
         # Create and show the popup
         from asciimatics.widgets import PopUpDialog
@@ -1411,9 +1429,10 @@ class InputHandler:
             entity_options,
             popup_callback,
         )
-        # Track the active popup globally
-        global active_popup
-        active_popup = popup
+        # Track the active popup using popup manager
+        popup_manager = get_popup_manager()
+        if popup_manager:
+            popup_manager.set_active_popup(popup)
         # Add the popup to the current scene
         world_map._screen.current_scene.add_effect(popup)
 
@@ -1448,8 +1467,9 @@ class InputHandler:
 
         def result_callback(_selected_option):
             # Just close the result popup
-            global active_popup
-            active_popup = None
+            popup_manager = get_popup_manager()
+            if popup_manager:
+                popup_manager.set_active_popup(None)
 
         # Create and show the result popup
         from asciimatics.widgets import PopUpDialog
@@ -1460,20 +1480,124 @@ class InputHandler:
             ["OK"],
             result_callback,
         )
-        # Track the active popup globally
-        global active_popup
-        active_popup = popup
+        # Track the active popup using popup manager
+        popup_manager = get_popup_manager()
+        if popup_manager:
+            popup_manager.set_active_popup(popup)
         # Add the popup to the current scene
         world_map._screen.current_scene.add_effect(popup)
+
+
+class PopupManager:
+    """Manages popup dialogs and their lifecycle."""
+    
+    def __init__(self):
+        self.active_popup = None
+        self.numlock_warning_shown = False
+    
+    def set_active_popup(self, popup):
+        """Set the currently active popup."""
+        self.active_popup = popup
+    
+    def get_active_popup(self):
+        """Get the currently active popup."""
+        return self.active_popup
+    
+    def is_popup_active(self):
+        """Check if there's an active popup."""
+        return self.active_popup is not None
+    
+    def close_active_popup(self, screen):
+        """Close the currently active popup."""
+        if self.active_popup is not None:
+            try:
+                if (
+                    hasattr(self.active_popup, "_screen")
+                    and self.active_popup._screen.current_scene
+                ):
+                    self.active_popup._screen.current_scene.remove_effect(self.active_popup)
+            except Exception as e:
+                logging.info(f"Error closing popup: {e}")
+            finally:
+                self.active_popup = None
+    
+    def handle_esc_key(self, screen):
+        """Handle ESC key press to close active popup."""
+        if self.active_popup is not None:
+            self.close_active_popup(screen)
+            return True
+        return False
+    
+    def handle_popup_event(self, event, screen):
+        """Handle events for the active popup."""
+        if self.active_popup is not None:
+            # Check if popup is still in the current scene
+            if self.active_popup not in screen.current_scene.effects:
+                # Popup was removed from scene, clear it
+                self.active_popup = None
+                return None  # No popup to handle
+            
+            # Let the popup handle the event
+            try:
+                result = self.active_popup.process_event(event)
+                if result is None:  # Event was handled by popup
+                    return False  # Event was handled, don't continue processing
+                return None  # Event was not handled by popup, continue processing
+            except Exception as e:
+                # Popup had an error, clear it
+                logging.info(f"Popup error: {e}")
+                self.active_popup = None
+                return None  # No popup to handle
+        return None  # No active popup
+    
+    def clear_popup_on_page_switch(self, screen):
+        """Clear any active popup when switching to non-World Map pages."""
+        if self.active_popup is not None:
+            try:
+                if (
+                    hasattr(self.active_popup, "_screen")
+                    and self.active_popup._screen.current_scene
+                ):
+                    self.active_popup._screen.current_scene.remove_effect(self.active_popup)
+            except Exception:
+                pass
+            self.active_popup = None
+    
+    def handle_numlock_warning(self, world_map, screen):
+        """Handle numlock warning logic."""
+        # Check numlock state during first interaction (proactive detection)
+        if not self.numlock_warning_shown and not get_numlock_state():
+            # Show warning immediately if numlock is off
+            _show_numlock_warning(world_map)
+            self.numlock_warning_shown = True
+            return True  # Don't process movement until user acknowledges warning
+        
+        # Check if numlock has been toggled on (state changed from off to on)
+        if self.active_popup is not None and get_numlock_state():
+            # Close the popup if numlock is now on
+            self.close_active_popup(screen)
+            return True  # Process the movement after closing popup
+        
+        return False
+    
+    def check_numlock_issue(self, event, world_map):
+        """Check for numlock issues and show warning if needed."""
+        if _detect_numlock_issue(event):
+            # Only show warning if no popup is currently active and warning hasn't been shown
+            if self.active_popup is None and not self.numlock_warning_shown:
+                _show_numlock_warning(world_map)
+                self.numlock_warning_shown = True
+            return True  # Don't process movement when numlock is off
+        return False
 
 
 def demo(screen: Screen, scene: Scene, game: Game):
     # Create a global variable to store the current dialog
     global current_dialog_scene
 
-    # Global variable to track active popups
-    global active_popup
-    active_popup = None  # Initialize to None
+    # Create popup manager to handle all popup-related logic
+    popup_manager = PopupManager()
+    set_popup_manager(popup_manager)  # Set the global instance
     
     # Global variable to track if numlock warning has been shown
     global numlock_warning_shown
@@ -1500,11 +1624,6 @@ def demo(screen: Screen, scene: Scene, game: Game):
     last_screen_height = screen.height
 
     def handle_event(event: Union[KeyboardEvent, MouseEvent]):
-        # Declare active_popup as global so we can access it
-        global active_popup
-        # Declare numlock_warning_shown as global so we can access it
-        global numlock_warning_shown
-
         current_scene: Scene = screen.current_scene
         current_effects: list[Effect] = current_scene.effects
 
@@ -1542,93 +1661,29 @@ def demo(screen: Screen, scene: Scene, game: Game):
 
         # Check for ESC key to close popups
         if KEYMAP.matches("CLOSE_HELP_MENU", event):
-            try:
-                if active_popup is not None:
-                    # Remove the popup from the current scene
-                    if (
-                        hasattr(active_popup, "_screen")
-                        and active_popup._screen.current_scene
-                    ):
-                        active_popup._screen.current_scene.remove_effect(active_popup)
-                    active_popup = None
-                    return
-            except Exception as e:
-                logging.info(f"Error handling ESC key: {e}")
-                active_popup = None
+            if popup_manager.handle_esc_key(screen):
                 return
 
-        # Check if there's an active popup that should handle the event first
-        try:
-            if active_popup is not None:
-                # Check if popup is still in the current scene
-                if active_popup not in screen.current_scene.effects:
-                    # Popup was removed from scene, clear it
-                    active_popup = None
-                    return
-
-                # Let the popup handle the event
-                try:
-                    result = active_popup.process_event(event)
-                    if result is None:  # Event was handled by popup
-                        return
-                except Exception as e:
-                    # Popup had an error, clear it
-                    logging.info(f"Popup error: {e}")
-                    active_popup = None
-                    return
-        except Exception as e:
-            logging.info(f"Error in popup handling: {e}")
-            active_popup = None
+        # Handle popup events
+        popup_result = popup_manager.handle_popup_event(event, screen)
+        if popup_result is False:  # Event was handled by popup and should not continue
+            return
 
         # TODO: This is a pretty gross way of handling this. We should have a second handler function that just dispatches the event to a specific panel.
         if current_effect.title.strip() != "World Map":
             logging.info("Not supposed to handle " + current_effect.title)
             # Clear any active popup when switching to non-World Maps
-            try:
-                if active_popup is not None:
-                    try:
-                        if (
-                            hasattr(active_popup, "_screen")
-                            and active_popup._screen.current_scene
-                        ):
-                            active_popup._screen.current_scene.remove_effect(
-                                active_popup
-                            )
-                    except Exception:
-                        pass
-                    active_popup = None
-            except Exception as e:
-                logging.info(f"Error clearing popup on page switch: {e}")
-                active_popup = None
+            popup_manager.clear_popup_on_page_switch(screen)
             return
 
         world_map = current_effect
 
-        # Check numlock state during first interaction (proactive detection)
-        if not numlock_warning_shown and not get_numlock_state():
-            # Show warning immediately if numlock is off
-            _show_numlock_warning(world_map)
-            numlock_warning_shown = True
+        # Handle numlock warning logic
+        if popup_manager.handle_numlock_warning(world_map, screen):
             return  # Don't process movement until user acknowledges warning
-
-        # Check if numlock has been toggled on (state changed from off to on)
-        if active_popup is not None and get_numlock_state():
-            # Close the popup if numlock is now on
-            try:
-                if hasattr(active_popup, "_screen") and active_popup._screen.current_scene:
-                    active_popup._screen.current_scene.remove_effect(active_popup)
-                active_popup = None
-            except Exception as e:
-                logging.info(f"Error closing numlock popup: {e}")
-                active_popup = None
-            return  # Process the movement after closing popup
         
         # Check for numlock issues before handling movement (fallback detection)
-        if _detect_numlock_issue(event):
-            # Only show warning if no popup is currently active and warning hasn't been shown
-            if active_popup is None and not numlock_warning_shown:
-                _show_numlock_warning(world_map)
-                numlock_warning_shown = True
+        if popup_manager.check_numlock_issue(event, world_map):
             return  # Don't process movement when numlock is off
 
         move_vec = InputHandler.handle_movement(event)
