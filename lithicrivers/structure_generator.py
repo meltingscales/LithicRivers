@@ -192,19 +192,29 @@ class StructureManager:
                 self.place_structure(structure_name, world_data, base_pos, rng)
 
 
+# Global singleton instance
+_global_structure_manager = None
+
 def create_structure_manager(structures_dir: Optional[Path] = None) -> StructureManager:
     """
-    Create a structure manager with the default structures directory.
+    Get or create the singleton structure manager instance.
     
     Args:
-        structures_dir: Optional custom structures directory
+        structures_dir: Optional custom structures directory.
+                      Only used on first creation.
         
     Returns:
-        A new StructureManager instance
+        The singleton StructureManager instance
     """
-    if structures_dir is None:
-        # Use the default structures directory
-        current_dir = Path(__file__).parent
-        structures_dir = current_dir / "data" / "structures"
+    global _global_structure_manager
     
-    return StructureManager(structures_dir) 
+    if _global_structure_manager is None:
+        if structures_dir is None:
+            # Use the default structures directory
+            current_dir = Path(__file__).parent
+            structures_dir = current_dir / "data" / "structures"
+        
+        _global_structure_manager = StructureManager(structures_dir)
+        logger.info("Created singleton StructureManager instance")
+    
+    return _global_structure_manager 
