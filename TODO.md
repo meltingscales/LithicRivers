@@ -180,9 +180,11 @@
 
 - give me suggestions for different biomes. I'd like a "Lithic River" biome to be an underground biome with molten lava and lots of ores...like the name of the game.
 
+- john feedback: what about gaussian noise (idk) **Gaussian Noise for Resource Distribution**: Implement Gaussian noise for ore deposits, cave systems, and rare resources. Unlike Perlin noise which creates smooth patterns, Gaussian noise creates scattered, realistic resource distribution. Use for: ore deposits (Gold, Iron), cave entrances, rare artifacts, atmospheric effects (acid rain, radiation storms). Combine with existing Perlin noise - Perlin for terrain/biomes, Gaussian for resources/events.
+
+
 ## MVP for steam release (2026)
 
-- perlin noise worldgen
 - block placement, push boxes, and fluids
 - basic crafting and a body repair/modular body feature with a damaged android body
 - procedural dungeons
@@ -195,10 +197,6 @@
 ## John feedback
 
 escape should close the help menu
-
-actually add perlin noise
-
-what about gaussian noise (idk)
 
 resizing the window should not crash the game
 
