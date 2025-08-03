@@ -1,6 +1,6 @@
 import unittest
 
-from lithicrivers.game import Game, Tiles, WorldData, generate_sprite_repeat
+from lithicrivers.game import Game, Tiles, ChunkedWorldData, generate_sprite_repeat
 from lithicrivers.model.model import RenderedData, Viewport
 from lithicrivers.model.vector import VectorN
 
@@ -61,14 +61,15 @@ class RenderStuff(unittest.TestCase):
 
     def test_render_game(self):
         some_game = Game()
-        some_game.world = WorldData(
-            tile_data={
-                "0,0,0": Tiles.dirt(),
-                "1,0,0": Tiles.gold_ore(),
-                "0,1,0": Tiles.dirt(),
-                "1,1,0": Tiles.dirt(),
-            }
-        )
+        world_data = ChunkedWorldData()
+        
+        # Set tiles individually
+        world_data.set_tile(VectorN(0, 0, 0), Tiles.dirt())
+        world_data.set_tile(VectorN(1, 0, 0), Tiles.gold_ore())
+        world_data.set_tile(VectorN(0, 1, 0), Tiles.dirt())
+        world_data.set_tile(VectorN(1, 1, 0), Tiles.dirt())
+        
+        some_game.world.data = world_data
 
         # Move player out of the viewport so tiles are visible
         some_game.player.position = VectorN(5, 5, 0)

@@ -595,7 +595,7 @@ class TilePalette:
     Similar to Minecraft's block palette system.
     """
     def __init__(self):
-        self.tile_to_id = {}  # Tile -> int
+        self.tile_to_id = {}  # tileid -> int
         self.id_to_tile = {}  # int -> Tile
         self.next_id = 0
         self._empty_tile = None
@@ -611,11 +611,14 @@ class TilePalette:
         if tile is None:
             return 0  # Empty tile is always ID 0
         
-        if tile not in self.tile_to_id:
-            self.tile_to_id[tile] = self.next_id
+        # Use tileid as the key instead of the Tile object to avoid hash issues
+        tile_key = tile.tileid if hasattr(tile, 'tileid') else str(tile)
+        
+        if tile_key not in self.tile_to_id:
+            self.tile_to_id[tile_key] = self.next_id
             self.id_to_tile[self.next_id] = tile
             self.next_id += 1
-        return self.tile_to_id[tile]
+        return self.tile_to_id[tile_key]
     
     def get_tile(self, tile_id: int) -> Tile:
         """Get the tile for a given integer ID."""
@@ -674,7 +677,7 @@ class ChunkedWorldData:
     def __init__(self, chunk_size: int = 16):
         self.chunk_size = chunk_size
         self.chunks = {}  # (chunk_x, chunk_y, chunk_z) -> Chunk
-        self.entity_data = {}  # Keep entity storage simple for now
+        self.entity_data = {}  # Entity storage
         self._tile_cache = {}  # Cache for frequently accessed tiles
         self._cache_size = 1000  # Max cache size
     
@@ -774,52 +777,7 @@ class ChunkedWorldData:
                             yield (pos.serialize(), tile)
 
 
-# Keep the old WorldData for backward compatibility during transition
-class WorldData:
-    """
-    Legacy WorldData class - now wraps ChunkedWorldData for compatibility.
-    """
-    def __init__(
-        self,
-        tile_data: Optional[dict[str, Tile]] = None,
-        entity_data: Optional[dict[str, list[Entity]]] = None,
-    ):
-        # Initialize the new chunked storage
-        self.chunked_data = ChunkedWorldData()
-        
-        # Convert old tile_data if provided
-        if tile_data:
-            for pos_str, tile in tile_data.items():
-                pos = VectorN.deserialize(pos_str)
-                self.chunked_data.set_tile(pos, tile)
-        
-        # Keep entity data simple for now
-        self.entity_data = entity_data or {}
-    
-    def get_tile(self, pos: VectorN) -> Union[Tile, None]:
-        return self.chunked_data.get_tile(pos)
-    
-    def set_tile(self, pos: VectorN, tile: Tile):
-        self.chunked_data.set_tile(pos, tile)
-    
-    def serialize(self, filepath: Path) -> Path:
-        return self.chunked_data.serialize(filepath)
-    
-    @staticmethod
-    def deserialize(filepath: Path):
-        chunked_data = ChunkedWorldData.deserialize(filepath)
-        world_data = WorldData()
-        world_data.chunked_data = chunked_data
-        return world_data
-    
-    def __getitem__(self, *item: int):
-        return self.chunked_data.get_tile(VectorN(*item))
-    
-    def __setitem__(self, *item: int):
-        self.chunked_data.set_tile(VectorN(*item))
-    
-    def __iter__(self):
-        yield from self.chunked_data.__iter__()
+
 
 
 class World:
@@ -827,9 +785,6 @@ class World:
     A world contains world data and manages the world state.
     """
 
-    # Removed get_height and get_width methods - no longer relevant for infinite world
-
-    # Removed gen_random_world_data method - no longer needed for infinite world
 
     def __init__(
         self, name="Gaia", seed: Optional[int] = None
@@ -837,7 +792,7 @@ class World:
         self.name = name
         self.seed = seed
         # Start with empty world data - everything will be generated lazily
-        self.data = WorldData()
+        self.data = ChunkedWorldData()
         self.gametick = 0
 
         # Add some starter entities
