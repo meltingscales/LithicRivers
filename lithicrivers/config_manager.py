@@ -10,7 +10,7 @@ from lithicrivers.model.vector import VectorN
 class ConfigManager:
     """Manages loading and saving of configuration files (keybinds and settings)."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.config_dir = self._get_config_directory()
         self.keybinds_file = self.config_dir / "keybinds.json"
         self.settings_file = self.config_dir / "settings.json"
@@ -126,7 +126,7 @@ class ConfigManager:
 
         return VectorN(*coords)
 
-    def save_keybinds(self):
+    def save_keybinds(self) -> None:
         """Save current keybinds to file."""
         try:
             with open(self.keybinds_file, "w") as f:
@@ -134,7 +134,7 @@ class ConfigManager:
         except OSError as e:
             logging.error(f"Error saving keybinds: {e}")
 
-    def save_settings(self):
+    def save_settings(self) -> None:
         """Save current settings to file."""
         try:
             with open(self.settings_file, "w") as f:
@@ -142,14 +142,14 @@ class ConfigManager:
         except OSError as e:
             logging.error(f"Error saving settings: {e}")
 
-    def update_keybind(self, category: str, key_name: str, value: list[str]):
+    def update_keybind(self, category: str, key_name: str, value: list[str]) -> None:
         """Update a keybind value."""
         if category not in self.keybinds:
             self.keybinds[category] = {}
         self.keybinds[category][key_name] = value
         self.save_keybinds()
 
-    def update_setting(self, category: str, key: str, value: Any):
+    def update_setting(self, category: str, key: str, value: Any) -> None:
         """Update a setting value."""
         if category not in self.settings:
             self.settings[category] = {}

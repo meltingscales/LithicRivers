@@ -41,7 +41,7 @@ DEFAULT_VIEWPORT = Viewport.generate_centered(
 
 
 # CPU thread detection and configuration
-def get_max_cpu_threads():
+def get_max_cpu_threads() -> int:
     """Get the maximum number of CPU threads to use."""
     # Try environment variable first
     env_threads = os.environ.get("MAX_CPU_THREADS")

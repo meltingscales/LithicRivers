@@ -22,7 +22,7 @@ from lithicrivers.settings import (
 from lithicrivers.textutil import COLOR_MANAGER, get_color_for_item, get_color_for_tile
 
 
-def generate_sprite_repeat(char, scale: int = 1):
+def generate_sprite_repeat(char: str, scale: int = 1) -> str:
     normalized_scale = scale - 1
 
     if normalized_scale == 0:
@@ -38,7 +38,7 @@ def generate_sprite_repeat(char, scale: int = 1):
 
 
 class SpriteRenderable:
-    def __init__(self, sprite_sheet):
+    def __init__(self, sprite_sheet: list[str]):
         self.sprite_sheet = sprite_sheet
         if not sprite_sheet:
             self.sprite_sheet = ["?", "??\n??", "???\n???\n???"]
@@ -70,27 +70,27 @@ class Entity:
         self.health: int = 100
         self.stamina: int = 100
 
-    def tick(self):
+    def tick(self) -> None:
         """Called each game tick. Override in subclasses."""
         pass
 
-    def move(self, vec: VectorN):
+    def move(self, vec: VectorN) -> None:
         self.position += vec
 
     def calc_offset(self, vec: VectorN) -> VectorN:
         """Where would I move, if I did move?"""
         return self.position + vec
 
-    def move_north(self):
+    def move_north(self) -> None:
         self.move(VEC_NORTH)
 
-    def move_south(self):
+    def move_south(self) -> None:
         self.move(VEC_SOUTH)
 
-    def move_west(self):
+    def move_west(self) -> None:
         self.move(VEC_WEST)
 
-    def move_east(self):
+    def move_east(self) -> None:
         self.move(VEC_EAST)
 
 
@@ -112,7 +112,7 @@ class NPC(Entity, SpriteRenderable):
         ]
         self._setup_default_conversation()
 
-    def _setup_default_conversation(self):
+    def _setup_default_conversation(self) -> None:
         self.conversations = {
             "greeting": {
                 "text": f"Hello, I am {self.name}.",
@@ -143,7 +143,7 @@ class ElderOak(NPC):
         ]
         self._setup_default_conversation()
 
-    def _setup_default_conversation(self):
+    def _setup_default_conversation(self) -> None:
         self.conversations = {
             "greeting": {
                 "text": f"Hello, traveler! I am {self.name}. Welcome to LithicRivers!",
@@ -214,7 +214,7 @@ class InteractiveEntity(Entity, SpriteRenderable):
         # Use the SpriteRenderable's render_sprite method
         return super().render_sprite(scale)
 
-    def interact(self):
+    def interact(self) -> str:
         """Handle interaction with this entity."""
         return self.interaction_text
 
@@ -264,7 +264,7 @@ class StumblingSheep(InteractiveEntity):
         )
         self.sprite_sheet = ["S", "@@\n,,", "@w@\n###\n| |"]
 
-    def tick(self):
+    def tick(self) -> None:
         """Called each game tick. 50% chance to move in a random direction."""
         if random.random() < 0.5:
             # Choose a random direction
@@ -275,19 +275,19 @@ class StumblingSheep(InteractiveEntity):
 
 class Entities:
     @staticmethod
-    def stumbling_sheep(position=VectorN(0, 0, 0)):
+    def stumbling_sheep(position: VectorN = VectorN(0, 0, 0)) -> "StumblingSheep":
         return StumblingSheep(position)
 
     @staticmethod
-    def starter_npc(position=VectorN(5, 5, 0)):
+    def starter_npc(position: VectorN = VectorN(5, 5, 0)) -> "ElderOak":
         return ElderOak(position)
 
     @staticmethod
-    def test_entity1(position=VectorN(6, 5, 0)):
+    def test_entity1(position: VectorN = VectorN(6, 5, 0)) -> "CrystalShard":
         return CrystalShard(position)
 
     @staticmethod
-    def test_entity2(position=VectorN(5, 6, 0)):
+    def test_entity2(position: VectorN = VectorN(5, 6, 0)) -> "AncientRelic":
         return AncientRelic(position)
 
 
@@ -297,32 +297,32 @@ class Items:
     """
 
     @staticmethod
-    def rock():
+    def rock() -> "Item":
         return Item("Rock", sprite_sheet=["*"])
 
     @staticmethod
-    def gold_nugget():
+    def gold_nugget() -> "Item":
         return Item("Gold Nugget", sprite_sheet=["c"])
 
     @staticmethod
-    def stick():
+    def stick() -> "Item":
         return Item("Stick", sprite_sheet=["\\"])
 
     @staticmethod
-    def diamond():
+    def diamond() -> "Item":
         return Item("Diamond", sprite_sheet=["d"])
 
     @staticmethod
-    def log():
+    def log() -> "Item":
         return Item("Log", sprite_sheet=["|"])
 
     @staticmethod
-    def acorn():
+    def acorn() -> "Item":
         return Item("Acorn", sprite_sheet=["o"])
 
 
 class Item(SpriteRenderable):
-    def __init__(self, name, sprite_sheet: Optional[list[str]] = None):
+    def __init__(self, name: str, sprite_sheet: Optional[list[str]] = None):
         SpriteRenderable.__init__(self, sprite_sheet)
         self.name = name
 
@@ -334,10 +334,10 @@ class Inventory:
 
         self.itemsdata = items
 
-    def add_item(self, item):
+    def add_item(self, item: "Item") -> None:
         self.itemsdata.append(item)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"<Inventory numItems={len(self.itemsdata)} summary={self.summary()}>"
 
     def count_items(self) -> dict[str, int]:
@@ -394,7 +394,7 @@ class Player(Entity, SpriteRenderable):
 
         self.inventory = Inventory([Item("Cookie", ["o"])])
 
-    def tick(self):
+    def tick(self) -> None:
         """Called each game tick. Override when I add poison damage, for example."""
         pass
 
@@ -412,21 +412,21 @@ class Tile(SpriteRenderable):
         self.description = desc
         self.drops = drops
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"<Tile '{self.tileid}': [{self.render_sprite(1)}]>"
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if other is None:
             return False
         return self.tileid == other.tileid
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.tileid)
 
-    def calc_drop(self):
+    def calc_drop(self) -> "Item":
         return weighted_choice_dict(self.drops)
 
-    def calc_tree_drops(self):
+    def calc_tree_drops(self) -> list["Item"]:
         """
         Special drop calculation for trees that guarantees 1-3 acorns.
         90% chance of exactly 1 acorn, 10% chance of 2-3 acorns.
@@ -486,7 +486,7 @@ class Tiles:
     """
 
     @staticmethod
-    def dirt():
+    def dirt() -> "Tile":
         return Tile(
             "Dirt",
             sprite_sheet=[",", ",.\n.,", ",.,\n.,.\n,.,"],
@@ -494,7 +494,7 @@ class Tiles:
         )
 
     @staticmethod
-    def tree():
+    def tree() -> "Tile":
         return Tile(
             "Tree",
             sprite_sheet=["t", "/\\\n||", "/|\\\n;|;\n/|\\\n"],
@@ -502,7 +502,7 @@ class Tiles:
         )
 
     @staticmethod
-    def gold_ore():
+    def gold_ore() -> "Tile":
         return Tile(
             "Gold Ore",
             sprite_sheet=["?", "??\n??", "???\n???\n???"],
@@ -510,19 +510,19 @@ class Tiles:
         )
 
     @staticmethod
-    def cloud():
+    def cloud() -> "Tile":
         return Tile("Cloud", sprite_sheet=["~", "~o\noo", ".~~\n~~o\n~oo"])
 
     @staticmethod
-    def bedrock():
+    def bedrock() -> "Tile":
         return Tile("Bedrock", sprite_sheet=["#", "|/\n/|", "|,/\n/|\\\n|/|"])
 
     @staticmethod
-    def empty():
+    def empty() -> "Tile":
         return Tile("Empty", sprite_sheet=[" ", "  \n  "])
 
     @staticmethod
-    def iron_scrap():
+    def iron_scrap() -> "Tile":
         return Tile(
             "Iron Scrap",
             sprite_sheet=["=", "==\n==", "===\n===\n==="],
@@ -530,7 +530,7 @@ class Tiles:
         )
 
     @staticmethod
-    def bone_block():
+    def bone_block() -> "Tile":
         return Tile(
             "Bone Block",
             sprite_sheet=["|", "||\n||", "|||\n|||\n|||"],
@@ -538,7 +538,7 @@ class Tiles:
         )
 
     @staticmethod
-    def door():
+    def door() -> "Tile":
         return Tile(
             "Door",
             sprite_sheet=["D", "DD\nDD", "DDD\nDDD\nDDD"],
@@ -546,7 +546,7 @@ class Tiles:
         )
 
     @staticmethod
-    def scrap_electronics():
+    def scrap_electronics() -> "Tile":
         return Tile(
             "Scrap Electronics",
             sprite_sheet=["e", "ee\nee", "eee\neee\neee"],
@@ -554,7 +554,7 @@ class Tiles:
         )
 
     @staticmethod
-    def treasure():
+    def treasure() -> "Tile":
         return Tile(
             "Buried Treasure",
             sprite_sheet=["$", "$$\n$$", "$$$\n$$$\n$$$"],
@@ -568,7 +568,7 @@ class TilePalette:
     Similar to Minecraft's block palette system.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.tile_to_id = {}  # tileid -> int
         self.id_to_tile = {}  # int -> Tile
         self.next_id = 0
