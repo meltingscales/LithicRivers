@@ -1789,7 +1789,26 @@ class InputHandler:
         cls, game: Game, name: str, pos: VectorN, _color: str, world_map: WorldMap
     ) -> None:
         """Handle interaction with a specific entity."""
-        entity = game.world.get_entity(pos)
+        entities = game.world.get_entities(pos)
+        
+        # Find the specific entity by name (in case there are multiple entities)
+        entity = None
+        for e in entities:
+            if e.name == name:
+                entity = e
+                break
+        
+        # If not found by name, use the first entity
+        if entity is None and entities:
+            entity = entities[0]
+
+        if entity is None:
+            # No entity found
+            default_text = f"You interact with {name}."
+            game.log_interaction(name, default_text)
+            game.increment_tick()
+            cls._show_interaction_result(name, default_text, world_map)
+            return
 
         if hasattr(entity, "interact"):
             # For interactive entities, show their interaction text
