@@ -7,7 +7,7 @@ import logging
 import os
 import platform
 import subprocess
-from typing import TYPE_CHECKING, Callable, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Callable, Optional, Union
 
 import asciimatics.widgets
 from asciimatics.event import KeyboardEvent, MouseEvent
@@ -425,7 +425,7 @@ class GameWidget(asciimatics.widgets.Widget):
 
     # noinspection PyTypeHints
     def update(self, _frame_no: int) -> None:
-        self._frame.canvas  # type: Canvas
+        self._frame.canvas: Canvas
 
         content = ""
 
@@ -892,16 +892,14 @@ class InventoryPage(Frame):
             return
 
         # Format inventory items
-        inventory_list_options: List[Tuple] = list()
-        i = 0
-        for item in inventory.itemsdata:
+        inventory_list_options: list[tuple] = []
+        for i, item in enumerate(inventory.itemsdata):
             inventory_list_options.append(
                 (
                     item.name,
                     i,
                 )
             )
-            i += 1
 
         self.inventory_list._options = inventory_list_options
 
