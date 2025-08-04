@@ -1,10 +1,10 @@
 import logging
-import os
 import multiprocessing
+import os
 
 from lithicrivers.config_manager import config_manager
-from lithicrivers.model.model import Viewport
 from lithicrivers.keymap import Keymap
+from lithicrivers.model.model import Viewport
 
 # Load settings from config manager
 GAME_NAME = config_manager.get_setting("game", "GAME_NAME")
@@ -39,6 +39,7 @@ DEFAULT_VIEWPORT = Viewport.generate_centered(
     DEFAULT_PLAYER_POSITION, radius=VIEWPORT_RADIUS
 )
 
+
 # CPU thread detection and configuration
 def get_max_cpu_threads():
     """Get the maximum number of CPU threads to use."""
@@ -49,7 +50,7 @@ def get_max_cpu_threads():
             return int(env_threads)
         except ValueError:
             pass
-    
+
     # Try to get from config
     try:
         config_threads = config_manager.get_setting("performance", "MAX_CPU_THREADS")
@@ -57,7 +58,7 @@ def get_max_cpu_threads():
             return int(config_threads)
     except:
         pass
-    
+
     # Auto-detect CPU count, default to 64 if detection fails
     try:
         cpu_count = multiprocessing.cpu_count()
@@ -65,6 +66,7 @@ def get_max_cpu_threads():
         return max(1, min(cpu_count, int(cpu_count * 0.75)))
     except:
         return 64
+
 
 MAX_CPU_THREADS = get_max_cpu_threads()
 

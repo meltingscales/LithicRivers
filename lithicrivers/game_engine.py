@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Optional, Protocol
 
-from lithicrivers.model.model import RenderedData, Viewport
+from lithicrivers.model.model import Viewport
 from lithicrivers.model.vector import VectorN
 from lithicrivers.settings import DEFAULT_PLAYER_POSITION, DEFAULT_VIEWPORT
 

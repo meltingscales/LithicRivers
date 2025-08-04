@@ -105,13 +105,17 @@ def corrupt_text(text, corruption_rate=0.01):
     """
     # Glitch symbols have a higher probability than standard printable characters
     glitch_symbols = list("█▓▒░#%@*&$<>/\\=+-~^?!")
-    normal_chars = [c for c in string.printable if not c.isspace() and c not in glitch_symbols]
-    corruption_pool = glitch_symbols * 6 + normal_chars  # Bias toward glitch symbols 6:1
+    normal_chars = [
+        c for c in string.printable if not c.isspace() and c not in glitch_symbols
+    ]
+    corruption_pool = (
+        glitch_symbols * 6 + normal_chars
+    )  # Bias toward glitch symbols 6:1
 
     corrupted_chars = []
 
     for char in text:
-        if char in '\n\r':
+        if char in "\n\r":
             # Preserve newlines exactly
             corrupted_chars.append(char)
         elif random.random() < corruption_rate:
@@ -119,14 +123,16 @@ def corrupt_text(text, corruption_rate=0.01):
         else:
             corrupted_chars.append(char)
 
-    return ''.join(corrupted_chars)
+    return "".join(corrupted_chars)
 
 
 def presenting(text) -> str:
     return f"~ {text} ~"
 
+
 def spaced_list(items: list[str]) -> str:
     return " ".join(items)
+
 
 def render_tuple(tups: list[T], places=2) -> str:
     fstr = ""

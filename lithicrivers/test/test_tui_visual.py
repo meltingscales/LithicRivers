@@ -4,14 +4,15 @@ This module provides visual regression testing for TUI components.
 """
 
 import os
+
 # Set TESTING environment BEFORE importing any game modules
 os.environ["TESTING"] = "1"
 
 import unittest
 
 from lithicrivers.game import Game
-from lithicrivers.settings import DEFAULT_SEED
 from lithicrivers.game_engine import GameEngine
+from lithicrivers.settings import DEFAULT_SEED
 
 
 class VisualTUITestCase(unittest.TestCase):

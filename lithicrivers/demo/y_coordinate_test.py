@@ -1,5 +1,5 @@
-from lithicrivers.worldgen import SeededWorldGenerator
 from lithicrivers.model.vector import VectorN
+from lithicrivers.worldgen import SeededWorldGenerator
 
 # Create a world generator with a fixed seed
 generator = SeededWorldGenerator(seed=42)
@@ -37,4 +37,4 @@ z_coord = -1  # Underground
 for x in range(-10, 11):
     pos = VectorN(x, y_coord, z_coord)
     tile = generator.generate_tile_for_position(pos)
-    print(f"Position ({x}, {y_coord}, {z_coord}) -> {tile}") 
+    print(f"Position ({x}, {y_coord}, {z_coord}) -> {tile}")

@@ -94,8 +94,6 @@ class Entity:
         self.move(VEC_EAST)
 
 
-
-
 class NPC(Entity, SpriteRenderable):
     """A non-player character that can have conversations."""
 
@@ -110,7 +108,7 @@ class NPC(Entity, SpriteRenderable):
         self.sprite_sheet = [
             sprite,  # 1x1
             f"{sprite}{sprite}\n{sprite}{sprite}",  # 2x2
-            f"{sprite}{sprite}{sprite}\n{sprite}{sprite}{sprite}\n{sprite}{sprite}{sprite}"  # 3x3
+            f"{sprite}{sprite}{sprite}\n{sprite}{sprite}{sprite}\n{sprite}{sprite}{sprite}",  # 3x3
         ]
         self._setup_default_conversation()
 
@@ -134,16 +132,14 @@ class NPC(Entity, SpriteRenderable):
             return "goodbye"
         return "greeting"
 
+
 class ElderOak(NPC):
     def __init__(self, position: VectorN):
         super().__init__("Elder Oak", position, sprite="N", color="cyan")
         self.sprite_sheet = [
             "N",  # 1x1
-            " /\n"\
-            "/|",  # 2x2 - Simple 2x2 tree
-            "` /\n"\
-            "`/|\n"\
-            "/||"  # 3x3 - Tree with trunk and branches
+            " /\n/|",  # 2x2 - Simple 2x2 tree
+            "` /\n`/|\n/||",  # 3x3 - Tree with trunk and branches
         ]
         self._setup_default_conversation()
 
@@ -178,9 +174,7 @@ class ElderOak(NPC):
     def handle_response(self, response: str, topic: str = "greeting"):
         if response == "Tell me about this world":
             return "about_world"
-        elif response == "What can you do?":
-            return "about_mining"
-        elif response == "Tell me more about mining":
+        elif response == "What can you do?" or response == "Tell me more about mining":
             return "about_mining"
         elif response == "What about building?":
             return "about_building"
@@ -190,6 +184,7 @@ class ElderOak(NPC):
             return "goodbye"
         else:
             return "greeting"
+
 
 class InteractiveEntity(Entity, SpriteRenderable):
     """An entity that can be interacted with."""
@@ -206,12 +201,12 @@ class InteractiveEntity(Entity, SpriteRenderable):
         self.sprite = sprite
         self.color = color
         self.interaction_text = interaction_text
-        
+
         # Default sprite sheet for all interactive entities
         self.sprite_sheet = [
             sprite,  # 1x1
             f"{sprite}{sprite}\n{sprite}{sprite}",  # 2x2
-            f"{sprite}{sprite}{sprite}\n{sprite}{sprite}{sprite}\n{sprite}{sprite}{sprite}"  # 3x3
+            f"{sprite}{sprite}{sprite}\n{sprite}{sprite}{sprite}\n{sprite}{sprite}{sprite}",  # 3x3
         ]
 
     def render_sprite(self, scale: int = 1) -> str:
@@ -236,8 +231,9 @@ class CrystalShard(InteractiveEntity):
         self.sprite_sheet = [
             "C",  # 1x1
             "CC\nCC",  # 2x2 - Simple 2x2 crystal
-            " C \nCCC\n C "  # 3x3 - Crystal with facets
+            " C \nCCC\n C ",  # 3x3 - Crystal with facets
         ]
+
 
 class AncientRelic(InteractiveEntity):
     def __init__(self, position: VectorN):
@@ -251,21 +247,23 @@ class AncientRelic(InteractiveEntity):
         self.sprite_sheet = [
             "R",  # 1x1
             "RR\nRR",  # 2x2 - Simple 2x2 relic
-            " R \nRRR\n R "  # 3x3 - Relic with ornate details
+            " R \nRRR\n R ",  # 3x3 - Relic with ornate details
         ]
 
 
 class StumblingSheep(InteractiveEntity):
     """A sheep that stumbles around randomly."""
-    
+
     def __init__(self, position: VectorN):
-        super().__init__("Stumbling Sheep", position, sprite="S", color="white", interaction_text="You pet the sheep. It looks at you like this: -w-")
-        self.sprite_sheet = [
-            "S",
-            "@@\n,,",
-            "@w@\n###\n| |"
-        ]
-    
+        super().__init__(
+            "Stumbling Sheep",
+            position,
+            sprite="S",
+            color="white",
+            interaction_text="You pet the sheep. It looks at you like this: -w-",
+        )
+        self.sprite_sheet = ["S", "@@\n,,", "@w@\n###\n| |"]
+
     def tick(self):
         """Called each game tick. 50% chance to move in a random direction."""
         if random.random() < 0.5:
@@ -273,7 +271,6 @@ class StumblingSheep(InteractiveEntity):
             directions = [VEC_NORTH, VEC_SOUTH, VEC_EAST, VEC_WEST]
             random_direction = random.choice(directions)
             self.move(random_direction)
-    
 
 
 class Entities:
@@ -401,6 +398,7 @@ class Player(Entity, SpriteRenderable):
         """Called each game tick. Override when I add poison damage, for example."""
         pass
 
+
 class Tile(SpriteRenderable):
     def __init__(
         self,
@@ -421,7 +419,7 @@ class Tile(SpriteRenderable):
         if other is None:
             return False
         return self.tileid == other.tileid
-    
+
     def __hash__(self):
         return hash(self.tileid)
 
@@ -480,9 +478,6 @@ def weighted_choice_dict(dict_weight: dict[float, T]) -> T:
         weights.append(k)
         choices.append(v)
     return weighted_choice(weights, choices)
-
-
-
 
 
 class Tiles:
@@ -572,38 +567,39 @@ class TilePalette:
     Efficient storage for tile types using integer IDs.
     Similar to Minecraft's block palette system.
     """
+
     def __init__(self):
         self.tile_to_id = {}  # tileid -> int
         self.id_to_tile = {}  # int -> Tile
         self.next_id = 0
         self._empty_tile = None
-    
+
     def get_empty_tile(self) -> Tile:
         """Get the empty tile (ID 0) - used for ungenerated areas."""
         if self._empty_tile is None:
             self._empty_tile = Tiles.empty()
         return self._empty_tile
-    
+
     def get_id(self, tile: Tile) -> int:
         """Get the integer ID for a tile, creating it if needed."""
         if tile is None:
             return 0  # Empty tile is always ID 0
-        
+
         # Use tileid as the key instead of the Tile object to avoid hash issues
-        tile_key = tile.tileid if hasattr(tile, 'tileid') else str(tile)
-        
+        tile_key = tile.tileid if hasattr(tile, "tileid") else str(tile)
+
         if tile_key not in self.tile_to_id:
             self.tile_to_id[tile_key] = self.next_id
             self.id_to_tile[self.next_id] = tile
             self.next_id += 1
         return self.tile_to_id[tile_key]
-    
+
     def get_tile(self, tile_id: int) -> Tile:
         """Get the tile for a given integer ID."""
         if tile_id == 0:
             return self.get_empty_tile()
         return self.id_to_tile.get(tile_id, self.get_empty_tile())
-    
+
     def __len__(self) -> int:
         """Number of unique tile types in the palette."""
         return len(self.tile_to_id)
@@ -614,29 +610,32 @@ class Chunk:
     A 3D chunk of the world, storing tile data efficiently.
     Similar to Minecraft's chunk system.
     """
+
     def __init__(self, size: int = 16):
         self.size = size
         self.palette = TilePalette()
         # 3D array of tile IDs (integers)
         self.blocks = [[[0] * size for _ in range(size)] for _ in range(size)]
         self.is_generated = False
-    
+
     def get_local_pos(self, world_pos: VectorN) -> tuple[int, int, int]:
         """Convert world position to local chunk position."""
-        return (world_pos.x % self.size,
-                world_pos.y % self.size, 
-                world_pos.z % self.size)
-    
+        return (
+            world_pos.x % self.size,
+            world_pos.y % self.size,
+            world_pos.z % self.size,
+        )
+
     def get_tile(self, local_pos: tuple[int, int, int]) -> Tile:
         """Get tile at local position within this chunk."""
         tile_id = self.blocks[local_pos[0]][local_pos[1]][local_pos[2]]
         return self.palette.get_tile(tile_id)
-    
+
     def set_tile(self, local_pos: tuple[int, int, int], tile: Tile) -> None:
         """Set tile at local position within this chunk."""
         tile_id = self.palette.get_id(tile)
         self.blocks[local_pos[0]][local_pos[1]][local_pos[2]] = tile_id
-    
+
     def is_empty(self) -> bool:
         """Check if chunk is completely empty (all blocks are ID 0)."""
         for x in range(self.size):
@@ -652,94 +651,97 @@ class ChunkedWorldData:
     Efficient world data storage using chunked 3D arrays.
     Similar to Minecraft's world storage system.
     """
+
     def __init__(self, chunk_size: int = 16):
         self.chunk_size = chunk_size
         self.chunks = {}  # (chunk_x, chunk_y, chunk_z) -> Chunk
         self.entity_data = {}  # Entity storage
         self._tile_cache = {}  # Cache for frequently accessed tiles
         self._cache_size = 1000  # Max cache size
-    
+
     def get_chunk_key(self, pos: VectorN) -> tuple[int, int, int]:
         """Get chunk coordinates from world position."""
-        return (pos.x // self.chunk_size, 
-                pos.y // self.chunk_size, 
-                pos.z // self.chunk_size)
-    
+        return (
+            pos.x // self.chunk_size,
+            pos.y // self.chunk_size,
+            pos.z // self.chunk_size,
+        )
+
     def get_chunk(self, chunk_key: tuple[int, int, int]) -> Chunk:
         """Get or create a chunk."""
         if chunk_key not in self.chunks:
             self.chunks[chunk_key] = Chunk(self.chunk_size)
         return self.chunks[chunk_key]
-    
+
     def get_tile(self, pos: VectorN) -> Union[Tile, None]:
         """Get tile at world position."""
         # Check cache first
         pos_key = (pos.x, pos.y, pos.z)
         if pos_key in self._tile_cache:
             return self._tile_cache[pos_key]
-        
+
         # Get chunk and local position
         chunk_key = self.get_chunk_key(pos)
         chunk = self.get_chunk(chunk_key)
         local_pos = chunk.get_local_pos(pos)
-        
+
         # Get tile from chunk
         tile = chunk.get_tile(local_pos)
-        
+
         # Cache the result (but limit cache size)
         if len(self._tile_cache) < self._cache_size:
             self._tile_cache[pos_key] = tile
-        
+
         return tile if tile != chunk.palette.get_empty_tile() else None
-    
+
     def set_tile(self, pos: VectorN, tile: Tile) -> None:
         """Set tile at world position."""
         chunk_key = self.get_chunk_key(pos)
         chunk = self.get_chunk(chunk_key)
         local_pos = chunk.get_local_pos(pos)
-        
+
         chunk.set_tile(local_pos, tile)
-        
+
         # Update cache
         pos_key = (pos.x, pos.y, pos.z)
         self._tile_cache[pos_key] = tile
-    
+
     def clear_cache(self) -> None:
         """Clear the tile cache."""
         self._tile_cache.clear()
-    
+
     def get_chunk_stats(self) -> dict:
         """Get statistics about chunk usage."""
         total_chunks = len(self.chunks)
         empty_chunks = sum(1 for chunk in self.chunks.values() if chunk.is_empty())
         total_tiles = sum(len(chunk.palette) for chunk in self.chunks.values())
-        
+
         return {
-            'total_chunks': total_chunks,
-            'empty_chunks': empty_chunks,
-            'used_chunks': total_chunks - empty_chunks,
-            'total_tile_types': total_tiles,
-            'cache_size': len(self._tile_cache)
+            "total_chunks": total_chunks,
+            "empty_chunks": empty_chunks,
+            "used_chunks": total_chunks - empty_chunks,
+            "total_tile_types": total_tiles,
+            "cache_size": len(self._tile_cache),
         }
-    
+
     def serialize(self, filepath: Path) -> Path:
         """Serialize the chunked world data."""
         with open(filepath, "wb") as fh:
             pickle.dump(self, fh)
         return filepath
-    
+
     @staticmethod
     def deserialize(filepath: Path):
         """Deserialize the chunked world data."""
         with open(filepath, "rb") as fh:
             return pickle.load(fh)
-    
+
     def __getitem__(self, *item: int):
         return self.get_tile(VectorN(*item))
-    
+
     def __setitem__(self, *item: int):
         self.set_tile(VectorN(*item))
-    
+
     def __iter__(self):
         """Iterate over all tiles in all chunks."""
         for chunk_key, chunk in self.chunks.items():
@@ -755,18 +757,12 @@ class ChunkedWorldData:
                             yield (pos.serialize(), tile)
 
 
-
-
-
 class World:
     """
     A world contains world data and manages the world state.
     """
 
-
-    def __init__(
-        self, seed: int, name="Gaia"
-    ):
+    def __init__(self, seed: int, name="Gaia"):
         self.name = name
         self.seed = seed
         # Start with empty world data - everything will be generated lazily
@@ -775,10 +771,11 @@ class World:
 
         # Create ONE generator that will be reused
         from lithicrivers.worldgen import SeededWorldGenerator
+
         self.generator = SeededWorldGenerator(seed)
 
         # Add some starter entities
-        self.entities = list()
+        self.entities = []
         self._add_starter_entities()
 
     def _add_starter_entities(self):
@@ -792,7 +789,7 @@ class World:
         entity2 = Entities.test_entity2()
         self.entities.append(entity1)
         self.entities.append(entity2)
-        
+
         # Add StumblingSheep 2 blocks north of player spawn
         sheep_position = DEFAULT_PLAYER_POSITION + (VEC_NORTH * 2)
         sheep = Entities.stumbling_sheep(sheep_position)
@@ -805,17 +802,17 @@ class World:
             tile = self.generator.generate_tile_for_position(pos)
             self.data.set_tile(pos, tile)
         return tile
-    
+
     def pre_generate_around_player(self, radius: int = 2) -> None:
         """
         Pre-generate chunks around the player position in background threads.
-        
+
         Args:
             radius: Number of chunks to generate in each direction
         """
         # Get player position (assuming player is at origin for now)
         player_pos = VectorN(0, 0, 0)  # TODO: Get actual player position
-        
+
         # Use the stored generator instead of creating a new one
         self.generator.pre_generate_chunks_around(player_pos, radius)
 
@@ -1060,7 +1057,7 @@ class Game:
         """Process ticks for all entities that have a tick method."""
         # Get all entities in the world
         for entity in self.world.get_all_entities():
-            if hasattr(entity, 'tick') and callable(getattr(entity, 'tick')):
+            if hasattr(entity, "tick") and callable(entity.tick):
                 entity.tick()
 
 

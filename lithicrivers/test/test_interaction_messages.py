@@ -1,8 +1,8 @@
 import unittest
 
 from lithicrivers.game import Game
-from lithicrivers.settings import DEFAULT_SEED
 from lithicrivers.model.vector import VectorN
+from lithicrivers.settings import DEFAULT_SEED
 
 
 class TestInteractionMessages(unittest.TestCase):

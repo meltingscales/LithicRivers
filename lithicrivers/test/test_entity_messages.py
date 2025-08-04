@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import unittest
+
 from lithicrivers.model.vector import VectorN
 from lithicrivers.ui import _generate_entity_selection_message
 
@@ -23,7 +24,7 @@ class TestEntityMessages(unittest.TestCase):
         """Test with multiple of the same entity."""
         entities = [
             ("Stumbling Sheep", VectorN(0, 0, 0), "white"),
-            ("Stumbling Sheep", VectorN(1, 0, 0), "white")
+            ("Stumbling Sheep", VectorN(1, 0, 0), "white"),
         ]
         result = _generate_entity_selection_message(entities)
         self.assertEqual(result, "Found 2 Stumbling Sheeps nearby:")
@@ -32,7 +33,7 @@ class TestEntityMessages(unittest.TestCase):
         """Test with two different entities."""
         entities = [
             ("Crystal Shard", VectorN(0, 0, 0), "blue"),
-            ("Ancient Relic", VectorN(1, 0, 0), "red")
+            ("Ancient Relic", VectorN(1, 0, 0), "red"),
         ]
         result = _generate_entity_selection_message(entities)
         self.assertEqual(result, "Found a Crystal Shard and a Ancient Relic nearby:")
@@ -42,21 +43,23 @@ class TestEntityMessages(unittest.TestCase):
         entities = [
             ("Crystal Shard", VectorN(0, 0, 0), "blue"),
             ("Ancient Relic", VectorN(1, 0, 0), "red"),
-            ("Elder Oak", VectorN(0, 1, 0), "cyan")
+            ("Elder Oak", VectorN(0, 1, 0), "cyan"),
         ]
         result = _generate_entity_selection_message(entities)
-        self.assertEqual(result, "Found a Crystal Shard, a Ancient Relic, and a Elder Oak nearby:")
+        self.assertEqual(
+            result, "Found a Crystal Shard, a Ancient Relic, and a Elder Oak nearby:"
+        )
 
     def test_mixed_quantities(self):
         """Test with mixed quantities of different entities."""
         entities = [
             ("Crystal Shard", VectorN(0, 0, 0), "blue"),
             ("Crystal Shard", VectorN(1, 0, 0), "blue"),
-            ("Ancient Relic", VectorN(0, 1, 0), "red")
+            ("Ancient Relic", VectorN(0, 1, 0), "red"),
         ]
         result = _generate_entity_selection_message(entities)
         self.assertEqual(result, "Found 2 Crystal Shards and a Ancient Relic nearby:")
 
 
 if __name__ == "__main__":
-    unittest.main() 
+    unittest.main()

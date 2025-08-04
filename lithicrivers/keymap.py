@@ -1,9 +1,8 @@
-import itertools
 import json
 import logging
 import platform
 from pathlib import Path
-from typing import Dict, FrozenSet, List, Union
+from typing import Union
 
 from asciimatics.event import KeyboardEvent
 
@@ -22,24 +21,23 @@ from lithicrivers.constants import (
     VEC_ZERO,
 )
 from lithicrivers.model.vector import VectorN
-from lithicrivers.textutil import associated, spaced_list
+from lithicrivers.textutil import spaced_list
 
 
 class Keymap:
     """Keymap class that loads keybinds from JSON configuration."""
 
     def __init__(self):
-
         # Load keybinds from config
         self._load_keybinds()
-        
+
         # Load platform-specific keychords
         self._load_keychords()
 
     def matches_movement_key(self, ke: KeyboardEvent) -> bool:
         """Check if the keyboard event is a movement key."""
         keycode = ke.key_code
-        
+
         # Check each movement key against the keychords
         for key_list in self.MOVEMENT_KEYS:
             for key_name in key_list:
@@ -51,9 +49,9 @@ class Keymap:
 
     def get_movement_vector(self, ke: KeyboardEvent) -> Union[None, VectorN]:
         """Get the movement vector for a keyboard event."""
-        
+
         keycode = ke.key_code
-        
+
         # Check each movement key list and return the corresponding vector
         for key_list, vector in self.MOVEMENT_MAPPING.items():
             for key_name in key_list:
@@ -61,7 +59,7 @@ class Keymap:
                     keychord = self.keychords[key_name]
                     if keychord and keycode in keychord:
                         return vector
-                
+
         return None
 
     def _load_keybinds(self):
@@ -94,7 +92,7 @@ class Keymap:
         ]
 
         # Create a mapping of movement key lists to their corresponding vectors
-        self.MOVEMENT_MAPPING: Dict[FrozenSet[str], VectorN] = {
+        self.MOVEMENT_MAPPING: dict[frozenset[str], VectorN] = {
             self.MOVE_NORTHWEST: VEC_NORTHWEST,
             self.MOVE_NORTH: VEC_NORTH,
             self.MOVE_NORTHEAST: VEC_NORTHEAST,
@@ -132,11 +130,11 @@ class Keymap:
     def _load_keychords(self):
         """Load platform-specific keychords from JSON file."""
         platform_name = platform.system().lower()
-        
+
         # Detect OS type
         os_type = "unknown"
         try:
-            with open("/etc/os-release", "r") as f:
+            with open("/etc/os-release") as f:
                 for line in f:
                     if line.startswith("ID="):
                         os_type = line.split("=")[1].strip().strip('"')
@@ -149,17 +147,19 @@ class Keymap:
                 os_type = "macos"
             elif platform_name == "windows":
                 os_type = "windows"
-        
+
         filename = f"keychords.{platform_name}.{os_type}.json"
         config_dir = Path("config")
         keychords_file = config_dir / filename
-        
+
         self.keychords = {}
         if keychords_file.exists():
             try:
-                with open(keychords_file, 'r') as f:
+                with open(keychords_file) as f:
                     self.keychords = json.load(f)
-                logging.info(f"Loaded {len(self.keychords)} keychords from {keychords_file}")
+                logging.info(
+                    f"Loaded {len(self.keychords)} keychords from {keychords_file}"
+                )
             except Exception as e:
                 logging.warning(f"Could not load keychords from {keychords_file}: {e}")
         else:
@@ -186,22 +186,22 @@ class Keymap:
         # Add viewport keys
         retstr += "\n=== VIEWPORT ===\n"
         retstr += "Actions:      Keys:\n"
-        retstr += "  RESET          {}\n".format(spaced_list(self.RESET_VIEWPORT))
-        retstr += "  SLIDE WEST     {}\n".format(spaced_list(self.SLIDE_VIEWPORT_WEST))
-        retstr += "  SLIDE EAST     {}\n".format(spaced_list(self.SLIDE_VIEWPORT_EAST))
-        retstr += "  TOGGLE         {}\n".format(spaced_list(self.TOGGLE_VIEWPORT))
+        retstr += f"  RESET          {spaced_list(self.RESET_VIEWPORT)}\n"
+        retstr += f"  SLIDE WEST     {spaced_list(self.SLIDE_VIEWPORT_WEST)}\n"
+        retstr += f"  SLIDE EAST     {spaced_list(self.SLIDE_VIEWPORT_EAST)}\n"
+        retstr += f"  TOGGLE         {spaced_list(self.TOGGLE_VIEWPORT)}\n"
 
         # Add scale keys
         retstr += "\n=== SCALE ===\n"
         retstr += "Actions:      Keys:\n"
-        retstr += "  SCALE UP       {}\n".format(spaced_list(self.SCALE_UP))
-        retstr += "  SCALE DOWN     {}\n".format(spaced_list(self.SCALE_DOWN))
+        retstr += f"  SCALE UP       {spaced_list(self.SCALE_UP)}\n"
+        retstr += f"  SCALE DOWN     {spaced_list(self.SCALE_DOWN)}\n"
 
         # Add action keys
         retstr += "\n=== ACTIONS ===\n"
         retstr += "Actions:      Keys:\n"
-        retstr += "  MINE           {}\n".format(spaced_list(self.MINE))
-        retstr += "  INTERACT       {}\n".format(spaced_list(self.INTERACT))
+        retstr += f"  MINE           {spaced_list(self.MINE)}\n"
+        retstr += f"  INTERACT       {spaced_list(self.INTERACT)}\n"
 
         return retstr
 
@@ -238,7 +238,7 @@ class Keymap:
             ) from err
 
         keycode = ke.key_code
-        
+
         # Check each key name in the key list against the keychords
         for key_name_str in key:
             if key_name_str in self.keychords:
@@ -255,6 +255,7 @@ class Keymap:
             config_manager.update_keybind(category, key_name, value)
             # Reload keybinds to reflect changes
             self.reload_keybinds()
+
 
 # Global keymap instance
 KEYMAP = Keymap()

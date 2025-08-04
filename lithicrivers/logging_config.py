@@ -5,6 +5,8 @@ Copyright (c) 2024 Henry Post. All rights reserved.
 
 import logging
 import os.path
+from typing import Optional
+
 from lithicrivers.settings import LOGFILENAME, LOGGINGLEVEL
 
 
@@ -20,12 +22,12 @@ def setup_logging():
 
     # Configure basic logging
     logging.basicConfig(
-        filename=LOGFILENAME, 
+        filename=LOGFILENAME,
         level=LOGGINGLEVEL,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
 
-def get_logger(name: str = None) -> logging.Logger:
+def get_logger(name: Optional[str] = None) -> logging.Logger:
     """Get a logger instance with the given name."""
-    return logging.getLogger(name) 
+    return logging.getLogger(name)

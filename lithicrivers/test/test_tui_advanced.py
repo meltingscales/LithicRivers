@@ -4,6 +4,7 @@ This module provides comprehensive testing for TUI components using realistic mo
 """
 
 import os
+
 # Set TESTING environment BEFORE importing any game modules
 os.environ["TESTING"] = "1"
 
@@ -28,8 +29,8 @@ from lithicrivers.constants import (
 from lithicrivers.game import Game, Tiles
 from lithicrivers.game_engine import GameEngine
 from lithicrivers.model.vector import VectorN
-from lithicrivers.ui import GameWidget, HelpPage, InputHandler, WorldMap
 from lithicrivers.settings import DEFAULT_SEED
+from lithicrivers.ui import GameWidget, HelpPage, InputHandler, WorldMap
 
 
 class AdvancedMockScreen:
