@@ -19,6 +19,7 @@ from lithicrivers.model.vector import VectorN
 from lithicrivers.settings import (
     DEFAULT_PLAYER_POSITION,
     DEFAULT_VIEWPORT,
+    DEFAULT_PLAYER_NAME,
 )
 from lithicrivers.textutil import get_color_for_item, get_color_for_tile
 
@@ -374,7 +375,7 @@ class Inventory:
 
 
 class Player(Entity, SpriteRenderable):
-    def __init__(self, name="Inigo Montoya"):
+    def __init__(self, name):
         Entity.__init__(self, name=name, position=DEFAULT_PLAYER_POSITION)
         SpriteRenderable.__init__(self, ["$", "[]\n%%", "_o_\n/|\\\n/_\\"])
 
@@ -866,7 +867,7 @@ class Game:
             self.viewport = viewport
 
         if player is None:
-            player = Player()
+            player = Player(name=DEFAULT_PLAYER_NAME)
 
         if world is None:
             world = World(seed=seed)
