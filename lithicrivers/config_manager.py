@@ -56,6 +56,11 @@ class ConfigManager:
             "scale": {"SCALE_UP": ["=", "+"], "SCALE_DOWN": ["-"]},
             "action": {"MINE": ["u"], "INTERACT": ["i"]},
             "ui": {"CLOSE_HELP_MENU": ["ESCAPE"], "OPEN_COMMAND_MENU": ["/"]},
+            "inventory": {
+                "DROP_ITEM": ["d"],
+                "DESTROY_ITEM": ["x"],
+                "CHEAT_DUPLICATE_ITEM": ["."],
+            },
         }
 
         return self._load_json_file(self.keybinds_file, default_keybinds)

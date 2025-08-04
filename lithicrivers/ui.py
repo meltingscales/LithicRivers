@@ -26,7 +26,7 @@ from asciimatics.widgets import (
 )
 
 from lithicrivers.colors import COLOR_MANAGER
-from lithicrivers.game import NPC, Game, Item, Tile, Tiles, ItemArtRenderable
+from lithicrivers.game import NPC, Game, Item, ItemArtRenderable, Tile, Tiles
 from lithicrivers.keymap import KEYMAP
 from lithicrivers.model.model import RenderedData, StopGameError, Viewport
 from lithicrivers.model.vector import VectorN
@@ -833,7 +833,9 @@ class InventoryPage(Frame):
         self.game = game
 
         # Create main layout with three columns: Inventory (left), Crafting (middle), Selected Item (right)
-        main_layout = Layout([50, 30, 20], fill_frame=True)  # 50% inventory, 30% crafting, 20% selected item
+        main_layout = Layout(
+            [50, 30, 20], fill_frame=True
+        )  # 50% inventory, 30% crafting, 20% selected item
         self.add_layout(main_layout)
 
         # === INVENTORY SECTION (Left Column) ===
@@ -867,18 +869,23 @@ class InventoryPage(Frame):
         # Selected item header
         self.selected_item: Item = None
 
-        self.selected_item_header = Label("SELECTED ITEM", height=1, name="selected_item_header")
+        self.selected_item_header = Label(
+            "SELECTED ITEM", height=1, name="selected_item_header"
+        )
         main_layout.add_widget(self.selected_item_header, column=2)
 
         self.button_drop_selected_item = Button("(d)rop", self.drop_selected_item)
         main_layout.add_widget(self.button_drop_selected_item, column=2)
 
-        self.button_destroy_selected_item = Button("(x) destroy", self.destroy_selected_item)
+        self.button_destroy_selected_item = Button(
+            "(x) destroy", self.destroy_selected_item
+        )
         main_layout.add_widget(self.button_destroy_selected_item, column=2)
-        
-        self.button_cheat_duplicate_selected_item = Button(("(.) duplicate"), self.cheat_duplicate_selected_item)
-        main_layout.add_widget(self.button_cheat_duplicate_selected_item, column=2)
 
+        self.button_cheat_duplicate_selected_item = Button(
+            ("(.) duplicate"), self.cheat_duplicate_selected_item
+        )
+        main_layout.add_widget(self.button_cheat_duplicate_selected_item, column=2)
 
         # Selected item ASCII art (12x8)
         self.selected_item_art = Label(
@@ -902,12 +909,62 @@ class InventoryPage(Frame):
 
         self.fix()
 
-    def drop_selected_item(self)->None:
-        raise NotImplemented()
-    def destroy_selected_item(self)->None:
-        raise NotImplemented()
-    def cheat_duplicate_selected_item(self)->None:
-        raise NotImplemented()
+    def drop_selected_item(self) -> None:
+        """Drop the selected item from inventory."""
+        if not self.selected_item or not self.game or not self.game.player:
+            return
+
+        # Remove item from inventory
+        self.game.player.inventory.itemsdata.remove(self.selected_item)
+
+        # Place the item at the player's feet
+        raise NotImplementedError("dropping items todo :)")
+        
+        # Log the action
+        self.game.log_pickup(f"Dropped {self.selected_item.name}")
+        self.game.increment_tick()
+        
+        # Clear selection and update displays
+        self.selected_item = None
+        self.update_inventory_display()
+        self.update_selected_item()
+
+    def destroy_selected_item(self) -> None:
+        """Destroy the selected item from inventory."""
+        if not self.selected_item or not self.game or not self.game.player:
+            return
+
+        # Remove item from inventory
+        self.game.player.inventory.itemsdata.remove(self.selected_item)
+        
+        # Log the action
+        self.game.log_info(f"Destroyed {self.selected_item.name}")
+        self.game.increment_tick()
+        
+        # Clear selection and update displays
+        self.selected_item = None
+        self.update_inventory_display()
+        self.update_selected_item()
+
+    def cheat_duplicate_selected_item(self) -> None:
+        """Duplicate the selected item (cheat function)."""
+        if not self.selected_item or not self.game or not self.game.player:
+            return
+
+        # Create a copy of the item and add to inventory
+        # For now, create a new Item with the same name and sprite sheet
+        duplicated_item = Item(
+            self.selected_item.name, 
+            self.selected_item.sprite_sheet.copy() if self.selected_item.sprite_sheet else None
+        )
+        self.game.player.inventory.add_item(duplicated_item)
+        
+        # Log the action
+        self.game.log_info(f"Duplicated {self.selected_item.name}")
+        self.game.increment_tick()
+        
+        # Update displays
+        self.update_inventory_display()
 
     def update_selected_item(self) -> None:
         """Update the selected item panel with details of the selected item."""
@@ -918,9 +975,11 @@ class InventoryPage(Frame):
         selected_index = self.inventory_list.value
         inventory = self.game.player.inventory
 
-        if (selected_index is None or 
-            not inventory.itemsdata or 
-            selected_index >= len(inventory.itemsdata)):
+        if (
+            selected_index is None
+            or not inventory.itemsdata
+            or selected_index >= len(inventory.itemsdata)
+        ):
             # No item selected or invalid selection
             self.selected_item_art.text = ItemArtRenderable.blank_item()
             self.selected_item_details.text = (
@@ -931,21 +990,21 @@ class InventoryPage(Frame):
 
         # Get the selected item
         self.selected_item = inventory.itemsdata[selected_index]
-        
+
         # Update ASCII art (dummy art for now)
         self.selected_item_art.text = ItemArtRenderable.missing_texture_item()
-        
+
         # Format item details
         item_details = f"Name: {self.selected_item.name}\n"
         item_details += f"Type: {getattr(self.selected_item, 'type', 'Unknown')}\n"
         item_details += f"Value: {getattr(self.selected_item, 'value', 'Unknown')}\n"
         item_details += f"Description: {getattr(self.selected_item, 'description', 'No description available.')}\n\n"
-        
+
         # Add any additional item properties
-        for attr in ['weight', 'durability', 'rarity']:
+        for attr in ["weight", "durability", "rarity"]:
             if hasattr(self.selected_item, attr):
                 item_details += f"{attr.title()}: {getattr(self.selected_item, attr)}\n"
-        
+
         self.selected_item_details.text = item_details
 
     def update_inventory_display(self) -> None:
