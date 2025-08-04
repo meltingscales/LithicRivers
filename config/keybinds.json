@@ -29,5 +29,10 @@
   "ui": {
     "CLOSE_HELP_MENU": ["ESCAPE"],
     "OPEN_COMMAND_MENU": ["/"]
+  },
+  "inventory": {
+    "DROP_ITEM": ["d"],
+    "DESTROY_ITEM": ["x"],
+    "CHEAT_DUPLICATE_ITEM": ["."]
   }
 }

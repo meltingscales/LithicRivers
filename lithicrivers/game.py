@@ -17,9 +17,9 @@ from lithicrivers.model.generictype import T
 from lithicrivers.model.model import RenderedData, Viewport
 from lithicrivers.model.vector import VectorN
 from lithicrivers.settings import (
+    DEFAULT_PLAYER_NAME,
     DEFAULT_PLAYER_POSITION,
     DEFAULT_VIEWPORT,
-    DEFAULT_PLAYER_NAME,
 )
 from lithicrivers.textutil import get_color_for_item, get_color_for_tile
 
