@@ -19,10 +19,10 @@ except ImportError:
 class SteamAPI:
     """Steam API integration class for LithicRivers."""
 
-    def __init__(self):
-        """Initialize the Steam API client."""
+    def __init__(self) -> None:
+        """Initialize the Steam API."""
         self.client = None
-        self.is_connected = False
+        self.user_info = None
 
         if not STEAM_AVAILABLE:
             raise ImportError(
