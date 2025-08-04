@@ -41,9 +41,13 @@ class ChunkCache:
     def get_chunk_key(self, pos: VectorN) -> tuple[int, int, int]:
         """Get chunk coordinates for a position."""
         chunk_size = 16
-        chunk_x = pos.x // chunk_size
-        chunk_y = pos.y // chunk_size
-        chunk_z = pos.z // chunk_size
+        # Handle None values safely
+        pos_x = pos.x if pos.x is not None else 0
+        pos_y = pos.y if pos.y is not None else 0
+        pos_z = pos.z if pos.z is not None else 0
+        chunk_x = pos_x // chunk_size
+        chunk_y = pos_y // chunk_size
+        chunk_z = pos_z // chunk_size
         return (chunk_x, chunk_y, chunk_z)
 
     def get_tile(self, pos: VectorN) -> Optional[Tile]:
@@ -160,9 +164,7 @@ class PerlinNoise:
         return self._lerp(
             v,
             self._lerp(u, self._grad_2d(aa, xf, yf), self._grad_2d(ba, xf - 1, yf)),
-            self._lerp(
-                u, self._grad_2d(ab, xf, yf - 1), self._grad_2d(bb, xf - 1, yf - 1)
-            ),
+            self._lerp(u, self._grad_2d(ab, xf, yf - 1), self._grad_2d(bb, xf - 1, yf - 1)),
         )
 
     def _grad_2d(self, hash_val: int, x: float, y: float) -> float:
@@ -182,18 +184,19 @@ class PerlinNoise:
         scale: float = 1.0,
     ) -> float:
         """
-        Generate octave noise (fractal noise) for more natural terrain.
+        Generate octave noise by combining multiple noise frequencies.
 
         Args:
-            x, y: Coordinates
-            octaves: Number of noise layers to combine
+            x: X coordinate
+            y: Y coordinate
+            octaves: Number of octaves to combine
             persistence: How much each octave contributes (0.5 = half amplitude each octave)
             scale: Overall scale of the noise
         """
-        total = 0
+        total = 0.0
         frequency = scale
         amplitude = 1.0
-        max_value = 0
+        max_value = 0.0
 
         for _ in range(octaves):
             total += self.noise_2d(x * frequency, y * frequency) * amplitude
@@ -293,28 +296,32 @@ class SeededWorldGenerator:
     def _generate_tile_at_position(self, position: VectorN) -> Tile:
         """Internal method to generate a tile at a specific position."""
         # Use position-based context for consistent generation
+        # Handle None values safely
+        pos_x = position.x if position.x is not None else 0
+        pos_y = position.y if position.y is not None else 0
+        pos_z = position.z if position.z is not None else 0
 
         # Generate terrain using perlin noise
-        if position.z > 0:
+        if pos_z > 0:
             # Sky level - always clouds
             return Tiles.cloud()
-        elif position.z < 0:
+        elif pos_z < 0:
             # Underground - use perlin noise for cave systems and ore distribution
             # Scale noise to create larger cave systems
             # Include Z coordinate in noise generation for depth variation
             cave_noise = self.perlin.octave_noise_2d(
-                position.x * 0.1, position.y * 0.1, octaves=3, scale=1.0
+                pos_x * 0.1, pos_y * 0.1, octaves=3, scale=1.0
             )
             ore_noise = self.perlin.octave_noise_2d(
-                position.x * 0.05, position.y * 0.05, octaves=2, scale=0.5
+                pos_x * 0.05, pos_y * 0.05, octaves=2, scale=0.5
             )
             # Add depth-based variation using Z coordinate
             # Create a separate noise function for depth to avoid vertical striping
             depth_perlin = PerlinNoise(
-                self.seed.seed + abs(position.z) * 1000
+                self.seed.seed + abs(pos_z) * 1000
             )  # Different seed for each Z level
             depth_noise = depth_perlin.octave_noise_2d(
-                position.x * 0.05, position.y * 0.05, octaves=3, scale=1.0
+                pos_x * 0.05, pos_y * 0.05, octaves=3, scale=1.0
             )
 
             # Create cave systems with depth variation
@@ -325,7 +332,7 @@ class SeededWorldGenerator:
             # Add direct Z-based variation for more dramatic depth differences
             # Deeper levels have more caves and less ore, but with reasonable limits
             depth_factor = min(
-                abs(position.z) * 0.02, 0.3
+                abs(pos_z) * 0.02, 0.3
             )  # Cap the depth factor to prevent massive voids
             adjusted_cave_threshold = (
                 0.15 - depth_factor
@@ -344,10 +351,10 @@ class SeededWorldGenerator:
             # Surface level - use perlin noise for terrain features
             # Scale noise to create larger terrain features
             terrain_noise = self.perlin.octave_noise_2d(
-                position.x * 0.02, position.y * 0.02, octaves=4, scale=0.1
+                pos_x * 0.02, pos_y * 0.02, octaves=4, scale=0.1
             )
             tree_noise = self.perlin.octave_noise_2d(
-                position.x * 0.1, position.y * 0.1, octaves=2, scale=1.0
+                pos_x * 0.1, pos_y * 0.1, octaves=2, scale=1.0
             )
 
             # Create varied terrain
@@ -379,9 +386,13 @@ class SeededWorldGenerator:
             radius: Number of chunks to generate in each direction
         """
         chunk_size = 16
-        center_chunk_x = center_pos.x // chunk_size
-        center_chunk_y = center_pos.y // chunk_size
-        center_chunk_z = center_pos.z // chunk_size
+        # Handle None values safely
+        center_x = center_pos.x if center_pos.x is not None else 0
+        center_y = center_pos.y if center_pos.y is not None else 0
+        center_z = center_pos.z if center_pos.z is not None else 0
+        center_chunk_x = center_x // chunk_size
+        center_chunk_y = center_y // chunk_size
+        center_chunk_z = center_z // chunk_size
 
         # Create thread pool for background generation
         from lithicrivers.settings import MAX_CPU_THREADS
@@ -425,10 +436,15 @@ class SeededWorldGenerator:
         """
         world_data = {}
 
+        # Handle None values safely
+        radius_x = radius.x if radius.x is not None else 0
+        radius_y = radius.y if radius.y is not None else 0
+        radius_z = radius.z if radius.z is not None else 0
+
         # First, generate basic terrain
-        for z in range(-radius.z, radius.z):
-            for y in range(-radius.y, radius.y):
-                for x in range(-radius.x, radius.x):
+        for z in range(-radius_z, radius_z):
+            for y in range(-radius_y, radius_y):
+                for x in range(-radius_x, radius_x):
                     pos = VectorN(x, y, z)
                     tile = self.generate_tile_for_position(pos)
                     world_data[pos.serialize()] = tile
@@ -459,10 +475,15 @@ class SeededWorldGenerator:
         # Generate structures in chunks for better distribution
         chunk_size = 16  # 16x16 chunks
 
-        for chunk_z in range(-radius.z // chunk_size, radius.z // chunk_size + 1):
-            for chunk_y in range(-radius.y // chunk_size, radius.y // chunk_size + 1):
+        # Handle None values safely
+        radius_x = radius.x if radius.x is not None else 0
+        radius_y = radius.y if radius.y is not None else 0
+        radius_z = radius.z if radius.z is not None else 0
+
+        for chunk_z in range(-radius_z // chunk_size, radius_z // chunk_size + 1):
+            for chunk_y in range(-radius_y // chunk_size, radius_y // chunk_size + 1):
                 for chunk_x in range(
-                    -radius.x // chunk_size, radius.x // chunk_size + 1
+                    -radius_x // chunk_size, radius_x // chunk_size + 1
                 ):
                     chunk_center = VectorN(
                         chunk_x * chunk_size, chunk_y * chunk_size, chunk_z * chunk_size
@@ -472,6 +493,7 @@ class SeededWorldGenerator:
                     chunk_seed = hash((self.seed.seed, chunk_x, chunk_y, chunk_z))
                     chunk_rng = random.Random(chunk_seed)
 
+                    # Generate structures in this chunk
                     self.structure_manager.generate_structures_for_chunk(
                         world_data, chunk_center, chunk_size // 2, chunk_rng
                     )
@@ -482,7 +504,7 @@ def create_world_generator(seed: int) -> SeededWorldGenerator:
     Create a new world generator with the given seed.
 
     Args:
-        seed: The seed for deterministic generation.
+        seed: The seed for deterministic generation
 
     Returns:
         A new SeededWorldGenerator instance
@@ -492,11 +514,11 @@ def create_world_generator(seed: int) -> SeededWorldGenerator:
 
 def generate_world_with_seed(radius: VectorN, seed: int) -> dict[str, Tile]:
     """
-    Generate world data with a specific seed.
+    Generate a complete world with the given radius and seed.
 
     Args:
         radius: The radius of the world to generate
-        seed: The seed for deterministic generation.
+        seed: The seed for deterministic generation
 
     Returns:
         Dictionary mapping position strings to tiles
