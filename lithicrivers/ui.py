@@ -39,19 +39,19 @@ if TYPE_CHECKING:
 _popup_manager = None
 
 
-def get_popup_manager():
+def get_popup_manager() -> Optional["PopupManager"]:
     """Get the global popup manager instance."""
     global _popup_manager
     return _popup_manager
 
 
-def set_popup_manager(manager):
+def set_popup_manager(manager: "PopupManager") -> None:
     """Set the global popup manager instance."""
     global _popup_manager
     _popup_manager = manager
 
 
-def _show_numlock_warning(world_map):
+def _show_numlock_warning(world_map: "WorldMap") -> None:
     """Show a warning popup about numlock being off."""
     warning_text = """  NUMLOCK WARNING
 
@@ -72,7 +72,7 @@ To fix this:
 
 You can still use Q/E for up/down movement regardless of NumLock state."""
 
-    def warning_callback(_selected_option):
+    def warning_callback(_selected_option) -> None:
         # Just close the warning popup
         popup_manager = get_popup_manager()
         if popup_manager:
@@ -233,7 +233,7 @@ def _detect_numlock_issue(event: KeyboardEvent) -> bool:
 
 
 class TabButtons(Layout):
-    def __init__(self, frame, game: Game = None):
+    def __init__(self, frame: Frame, game: Optional[Game] = None) -> None:
         # Create buttons list based on developer mode
         buttons = [
             Button("World Map", self._safe_scene_change("WorldMap")),
@@ -268,10 +268,10 @@ class TabButtons(Layout):
         for i, button in enumerate(buttons):
             self.add_widget(button, i)
 
-    def _safe_scene_change(self, scene_name):
+    def _safe_scene_change(self, scene_name: str) -> Callable[[], None]:
         """Safely change scenes, preventing change if popup is active."""
 
-        def safe_change():
+        def safe_change() -> None:
             # Check if there's an active popup
             try:
                 popup_manager = get_popup_manager()
@@ -325,11 +325,11 @@ class HeaderLabel(asciimatics.widgets.Widget):
         self._align = align
         self.header = header
 
-    def process_event(self, event) -> Union[KeyboardEvent, MouseEvent]:
+    def process_event(self, event: Union[KeyboardEvent, MouseEvent]) -> Union[KeyboardEvent, MouseEvent]:
         # Labels have no user interactions
         return event
 
-    def update(self, _frame_no):
+    def update(self, _frame_no: int) -> None:
         self._frame.canvas: Canvas
 
         header_prefix = list_label(self.header)
@@ -381,18 +381,18 @@ class HeaderLabel(asciimatics.widgets.Widget):
         return self._required_height
 
     @property
-    def text(self):
+    def text(self) -> str:
         """
         The current text for this Label.
         """
         return self._text
 
     @text.setter
-    def text(self, new_value):
+    def text(self, new_value: str) -> None:
         self._text = new_value
 
     @property
-    def value(self):
+    def value(self) -> None:
         """
         The current value for this Label.
         """
@@ -421,7 +421,7 @@ class GameWidget(asciimatics.widgets.Widget):
         return self.game.viewport.get_width() * self.game.viewport.scale
 
     # noinspection PyTypeHints
-    def update(self, _frame_no: int):
+    def update(self, _frame_no: int) -> None:
         self._frame.canvas: Canvas
 
         content = ""
@@ -446,7 +446,7 @@ class GameWidget(asciimatics.widgets.Widget):
             header_color[2],
         )
 
-    def _render_colored_world(self, rendered_data: RenderedData):
+    def _render_colored_world(self, rendered_data: RenderedData) -> None:
         """Render the world with proper colors."""
         start_y = self._y + 1  # Start after the header
 
@@ -482,7 +482,7 @@ class GameWidget(asciimatics.widgets.Widget):
 
     def _render_colored_row(
         self, content: str, colors: list[tuple[int, int, int]], y_pos: int
-    ):
+    ) -> None:
         """Render a row with individual character colors."""
         x_pos = self._x
 
@@ -505,34 +505,34 @@ class GameWidget(asciimatics.widgets.Widget):
     def reset(self) -> None:
         pass
 
-    def process_event(self, event) -> Union[KeyboardEvent, MouseEvent]:
+    def process_event(self, event: Union[KeyboardEvent, MouseEvent]) -> Union[KeyboardEvent, MouseEvent]:
         # this widget has no user interactions
         return event
 
     @property
-    def text(self):
+    def text(self) -> str:
         """
         The current text for this Label.
         """
         return self._text
 
     @text.setter
-    def text(self, new_value):
+    def text(self, new_value: str) -> None:
         self._text = new_value
 
     @property
-    def value(self):
+    def value(self) -> None:
         """
         The current value for this Label.
         """
         return self._value
 
     @property
-    def game(self):
+    def game(self) -> Game:
         return self._game
 
     @game.setter
-    def game(self, new_value):
+    def game(self, new_value: Game) -> None:
         self._game = new_value
 
 
@@ -695,7 +695,7 @@ class WorldMap(Frame):
 
 
 class HelpPage(Frame):
-    def __init__(self, screen, game: Game):
+    def __init__(self, screen, game: Game) -> None:
         super().__init__(
             screen, screen.height, screen.width, can_scroll=False, title="Help"
         )
@@ -728,7 +728,7 @@ class HelpPage(Frame):
         self.add_layout(layout2)
         self.fix()
 
-    def process_event(self, event) -> Union[KeyboardEvent, MouseEvent]:
+    def process_event(self, event: Union[KeyboardEvent, MouseEvent]) -> Union[KeyboardEvent, MouseEvent]:
         """Handle events for the help page, including ESC to close."""
         # Check for ESC key to close help menu using keymap
         if hasattr(event, "key_code") and KEYMAP.matches("CLOSE_HELP_MENU", event):
@@ -917,7 +917,7 @@ class BodyPage(Frame):
 
 
 class DevKeystrokesPage(Frame):
-    def __init__(self, screen):
+    def __init__(self, screen) -> None:
         super().__init__(
             screen,
             screen.height,
@@ -958,7 +958,7 @@ class DevKeystrokesPage(Frame):
             pass  # TODO: For now, we're ignoring MouseEvent.
 
         if isinstance(event, KeyboardEvent):
-            event: KeyboardEvent
+            # event: KeyboardEvent  # This line was causing a redefinition error
 
             key_code = event.key_code
 
@@ -976,7 +976,7 @@ class DevKeystrokesPage(Frame):
 
 
 class DevPopupPage(Frame):
-    def __init__(self, screen):
+    def __init__(self, screen) -> None:
         super().__init__(
             screen, screen.height, screen.width, can_scroll=False, title="Test Popups"
         )
@@ -1300,7 +1300,7 @@ class EntitySelectionPopup(Frame):
 class InteractionResultPopup(Frame):
     """A popup to show the result of an interaction."""
 
-    def __init__(self, screen, title: str, content: str):
+    def __init__(self, screen, title: str, content: str) -> None:
         # Calculate popup size
         max_width = min(70, screen.width - 4)
         lines = _split_text(content, max_width - 4, 10)
@@ -1764,7 +1764,7 @@ class SceneEventRouter:
 class PopupManager:
     """Manages popup dialogs and their lifecycle."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.active_popup = None
         self.numlock_warning_shown = False
 
