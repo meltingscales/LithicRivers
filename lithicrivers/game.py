@@ -358,6 +358,16 @@ class Items:
         return Item("Acorn", sprite_sheet=["o"])
 
 
+class DroppedItem(Entity, SpriteRenderable):
+    """An item that has been dropped in the world."""
+    
+    def __init__(self, item: "Item", position: VectorN):
+        Entity.__init__(self, item.name, position)
+        SpriteRenderable.__init__(self, item.sprite_sheet)
+        self.item = item  # Store the actual item object
+        self.color = "yellow"  # Default color for dropped items
+
+
 class Item(ItemArtRenderable, SpriteRenderable):
     def __init__(self, name: str, sprite_sheet: Optional[list[str]] = None):
         SpriteRenderable.__init__(self, sprite_sheet)

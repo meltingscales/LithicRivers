@@ -918,7 +918,13 @@ class InventoryPage(Frame):
         self.game.player.inventory.itemsdata.remove(self.selected_item)
 
         # Place the item at the player's feet
-        raise NotImplementedError("dropping items todo :)")
+        # Create a DroppedItem entity at the player's position
+        from lithicrivers.game import DroppedItem
+        dropped_item_entity = DroppedItem(
+            self.selected_item,
+            self.game.player.position
+        )
+        self.game.world.add_entity(dropped_item_entity)
         
         # Log the action
         self.game.log_pickup(f"Dropped {self.selected_item.name}")
