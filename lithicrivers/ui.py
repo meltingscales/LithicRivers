@@ -598,7 +598,7 @@ class WorldMap(Frame):
         self.add_layout(layout_buttons)
         self.fix()
 
-    def update(self, frame_no):
+    def update(self, frame_no: int) -> None:
         """Update the status label with current player information."""
         # Call parent update first
         super().update(frame_no)
@@ -618,7 +618,7 @@ class WorldMap(Frame):
         bar = filled * filled_length + empty * empty_length
         return f"{bar} {current}/{maximum}"
 
-    def update_status_label(self):
+    def update_status_label(self) -> None:
         """Update the status label with current player information."""
         if hasattr(self, "statusLabel") and self.game:
             player = self.game.player
@@ -640,7 +640,7 @@ class WorldMap(Frame):
             # Join with separators
             self.statusLabel.text = " | ".join(status_parts)
 
-    def _adjust_viewport_for_screen(self, screen):
+    def _adjust_viewport_for_screen(self, screen) -> None:
         """Adjust viewport size based on available screen space."""
         # Calculate available space for the game widget
         screen_width = screen.width
@@ -687,7 +687,7 @@ class WorldMap(Frame):
         )
         self.game.viewport = new_viewport
 
-    def handle_terminal_resize(self, screen):
+    def handle_terminal_resize(self, screen) -> None:
         """Handle terminal resize by recalculating viewport size."""
         self._adjust_viewport_for_screen(screen)
         # Update viewport display
@@ -728,7 +728,7 @@ class HelpPage(Frame):
         self.add_layout(layout2)
         self.fix()
 
-    def process_event(self, event):
+    def process_event(self, event) -> Union[KeyboardEvent, MouseEvent]:
         """Handle events for the help page, including ESC to close."""
         # Check for ESC key to close help menu using keymap
         if hasattr(event, "key_code") and KEYMAP.matches("CLOSE_HELP_MENU", event):
@@ -812,7 +812,7 @@ class MessageLogPage(Frame):
         # Join all messages with newlines
         self.message_display.text = "\n".join(formatted_messages)
 
-    def update(self, frame_no):
+    def update(self, frame_no: int) -> None:
         """Update the frame, refreshing messages."""
         super().update(frame_no)
         self.update_messages()
@@ -1963,7 +1963,7 @@ def _raise(ex) -> None:
     raise ex
 
 
-def raise_fn(clazz: any, name: str):
+def raise_fn(clazz: type, name: str):
     """
     bruh, why?
     """
