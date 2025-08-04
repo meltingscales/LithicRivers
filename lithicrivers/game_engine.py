@@ -193,7 +193,7 @@ class Inventory:
 
     def count_items(self) -> dict[str, int]:
         """Count items by name."""
-        counts = {}
+        counts: dict[str, int] = {}
         for item in self.items:
             counts[item.name] = counts.get(item.name, 0) + 1
         return counts
