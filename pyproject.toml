@@ -114,6 +114,11 @@ warn_unused_ignores = true
 warn_no_return = true
 warn_unreachable = true
 strict_equality = true
+exclude = [
+    "lithicrivers/test/.*",
+    ".*test_.*",
+    ".*_test.*",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["lithicrivers/test"]
