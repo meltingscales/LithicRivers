@@ -4,6 +4,7 @@ Structure generation system for placing predefined structures in the world.
 
 import json
 import os
+import random
 from pathlib import Path
 from typing import Optional
 
@@ -105,7 +106,7 @@ class StructureManager:
         self.structures: dict[str, StructureDefinition] = {}
         self._load_structures()
 
-    def _load_structures(self):
+    def _load_structures(self) -> None:
         """Load all structure definitions from the structures directory."""
         if not self.structures_dir.exists():
             return
@@ -129,7 +130,7 @@ class StructureManager:
         structure_name: str,
         world_data: dict[str, Tile],
         base_position: VectorN,
-        rng,
+        rng: random.Random,
     ) -> bool:
         """
         Place a structure at the given position in the world.
@@ -153,9 +154,11 @@ class StructureManager:
             return False
 
         # Check if base position is within the allowed y-layer range
+        # Handle None values safely
+        base_z = base_position.z if base_position.z is not None else 0
         if not (
             structure.y_layer_gen_range[0]
-            <= base_position.z
+            <= base_z
             <= structure.y_layer_gen_range[1]
         ):
             return False
@@ -169,11 +172,15 @@ class StructureManager:
                     if char == ".":
                         continue  # Skip empty spaces
 
-                    # Calculate world position
+                    # Calculate world position - handle None values safely
+                    base_x = base_position.x if base_position.x is not None else 0
+                    base_y = base_position.y if base_position.y is not None else 0
+                    base_z = base_position.z if base_position.z is not None else 0
+
                     world_pos = VectorN(
-                        base_position.x + char_idx,
-                        base_position.y + line_idx,
-                        base_position.z + layer_idx,
+                        base_x + char_idx,
+                        base_y + line_idx,
+                        base_z + layer_idx,
                     )
 
                     # Get the tile for this character
@@ -189,7 +196,11 @@ class StructureManager:
         return True
 
     def generate_structures_for_chunk(
-        self, world_data: dict[str, Tile], chunk_center: VectorN, chunk_radius: int, rng
+        self,
+        world_data: dict[str, Tile],
+        chunk_center: VectorN,
+        chunk_radius: int,
+        rng: random.Random
     ) -> None:
         """
         Generate structures for a chunk of the world.
@@ -206,10 +217,14 @@ class StructureManager:
             # Use fewer attempts during testing to speed up tests
             attempts = 3 if os.environ.get("TESTING") == "1" else 10
             for _ in range(attempts):
-                # Random position within chunk
-                pos_x = chunk_center.x + rng.randint(-chunk_radius, chunk_radius)
-                pos_y = chunk_center.y + rng.randint(-chunk_radius, chunk_radius)
-                pos_z = chunk_center.z + rng.randint(-chunk_radius, chunk_radius)
+                # Random position within chunk - handle None values safely
+                center_x = chunk_center.x if chunk_center.x is not None else 0
+                center_y = chunk_center.y if chunk_center.y is not None else 0
+                center_z = chunk_center.z if chunk_center.z is not None else 0
+
+                pos_x = center_x + rng.randint(-chunk_radius, chunk_radius)
+                pos_y = center_y + rng.randint(-chunk_radius, chunk_radius)
+                pos_z = center_z + rng.randint(-chunk_radius, chunk_radius)
 
                 base_pos = VectorN(pos_x, pos_y, pos_z)
                 self.place_structure(structure_name, world_data, base_pos, rng)
