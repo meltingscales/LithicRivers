@@ -221,7 +221,12 @@ class Keymap:
     @staticmethod
     def key_code_from_keyboard_event(ke: KeyboardEvent) -> Optional[int]:
         """Extract key code from keyboard event for special keys like numpad."""
-        return ke.key_code
+        key_code = ke.key_code
+        if isinstance(key_code, int):
+            return key_code
+        else:
+            logging.warning(f"Invalid key_code type: {type(key_code)}")
+            return None
 
     def matches(self, key_name: str, ke: KeyboardEvent) -> bool:
         """
