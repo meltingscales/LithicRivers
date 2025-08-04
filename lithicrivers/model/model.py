@@ -64,12 +64,17 @@ class RenderedData:
         # constructor flexibility
         if isinstance(render_data, str):
             render_data = [[render_data]]
-        elif isinstance(render_data, list) and len(render_data) > 0 and isinstance(render_data[0], str):
+        elif (
+            isinstance(render_data, list)
+            and len(render_data) > 0
+            and isinstance(render_data[0], str)
+        ):
             render_data = [render_data]
 
         # At this point, render_data should be list[list[str]]
         # Use explicit type casting to help mypy
         from typing import cast
+
         self.render_data = cast("list[list[str]]", render_data)
         self.scale = scale
 
@@ -121,7 +126,9 @@ class Viewport:
         self.scale = scale
 
     @staticmethod
-    def generate_centered(center: VectorN, radius: VectorN, scale: int = 1) -> "Viewport":
+    def generate_centered(
+        center: VectorN, radius: VectorN, scale: int = 1
+    ) -> "Viewport":
         """Generate a Viewport centered on `center` with `radius` as its lower and upper bounds.
         It doubles from `radius`."""
         return Viewport((center - radius), (center + radius), scale=scale)
@@ -149,8 +156,12 @@ class Viewport:
         self.top_left = VectorN(0, 0)
 
         # Handle None values safely
-        original_size_x = self.original_size.x if self.original_size.x is not None else 0
-        original_size_y = self.original_size.y if self.original_size.y is not None else 0
+        original_size_x = (
+            self.original_size.x if self.original_size.x is not None else 0
+        )
+        original_size_y = (
+            self.original_size.y if self.original_size.y is not None else 0
+        )
 
         self.lower_right = VectorN(
             math.floor(factor * float(original_size_x)),

@@ -164,7 +164,9 @@ class PerlinNoise:
         return self._lerp(
             v,
             self._lerp(u, self._grad_2d(aa, xf, yf), self._grad_2d(ba, xf - 1, yf)),
-            self._lerp(u, self._grad_2d(ab, xf, yf - 1), self._grad_2d(bb, xf - 1, yf - 1)),
+            self._lerp(
+                u, self._grad_2d(ab, xf, yf - 1), self._grad_2d(bb, xf - 1, yf - 1)
+            ),
         )
 
     def _grad_2d(self, hash_val: int, x: float, y: float) -> float:

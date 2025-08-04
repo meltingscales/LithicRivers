@@ -157,9 +157,7 @@ class StructureManager:
         # Handle None values safely
         base_z = base_position.z if base_position.z is not None else 0
         if not (
-            structure.y_layer_gen_range[0]
-            <= base_z
-            <= structure.y_layer_gen_range[1]
+            structure.y_layer_gen_range[0] <= base_z <= structure.y_layer_gen_range[1]
         ):
             return False
 
@@ -200,7 +198,7 @@ class StructureManager:
         world_data: dict[str, Tile],
         chunk_center: VectorN,
         chunk_radius: int,
-        rng: random.Random
+        rng: random.Random,
     ) -> None:
         """
         Generate structures for a chunk of the world.

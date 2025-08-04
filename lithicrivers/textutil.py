@@ -50,7 +50,9 @@ def spaced_list(items: list[str]) -> str:
     return " ".join(items)
 
 
-def render_tuple(tups: list[Union[int, float, tuple[Union[int, float], ...]]], places: int = 2) -> str:
+def render_tuple(
+    tups: list[Union[int, float, tuple[Union[int, float], ...]]], places: int = 2
+) -> str:
     fstr = ""
     for i, tup in enumerate(tups):
         fstr += "("

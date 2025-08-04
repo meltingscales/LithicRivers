@@ -7,7 +7,7 @@ import logging
 import os
 import platform
 import subprocess
-from typing import TYPE_CHECKING, Callable, Optional, Union
+from typing import TYPE_CHECKING, Callable, List, Optional, Tuple, Union
 
 import asciimatics.widgets
 from asciimatics.event import KeyboardEvent, MouseEvent
@@ -25,13 +25,13 @@ from asciimatics.widgets import (
     _split_text,
 )
 
+from lithicrivers.colors import COLOR_MANAGER
 from lithicrivers.game import NPC, Game, Tile, Tiles
 from lithicrivers.keymap import KEYMAP
 from lithicrivers.model.model import RenderedData, StopGameError, Viewport
 from lithicrivers.model.vector import VectorN
 from lithicrivers.settings import DEVELOPER_MODE, GAME_NAME, VIEWPORT_WIGGLE
 from lithicrivers.textutil import list_label, presenting
-from lithicrivers.colors import COLOR_MANAGER
 
 if TYPE_CHECKING:
     from asciimatics.effects import Effect
@@ -326,7 +326,9 @@ class HeaderLabel(asciimatics.widgets.Widget):
         self._align = align
         self.header = header
 
-    def process_event(self, event: Union[KeyboardEvent, MouseEvent]) -> Union[KeyboardEvent, MouseEvent]:
+    def process_event(
+        self, event: Union[KeyboardEvent, MouseEvent]
+    ) -> Union[KeyboardEvent, MouseEvent]:
         # Labels have no user interactions
         return event
 
@@ -423,7 +425,7 @@ class GameWidget(asciimatics.widgets.Widget):
 
     # noinspection PyTypeHints
     def update(self, _frame_no: int) -> None:
-        self._frame.canvas # type: Canvas
+        self._frame.canvas  # type: Canvas
 
         content = ""
 
@@ -506,7 +508,9 @@ class GameWidget(asciimatics.widgets.Widget):
     def reset(self) -> None:
         pass
 
-    def process_event(self, event: Union[KeyboardEvent, MouseEvent]) -> Union[KeyboardEvent, MouseEvent]:
+    def process_event(
+        self, event: Union[KeyboardEvent, MouseEvent]
+    ) -> Union[KeyboardEvent, MouseEvent]:
         # this widget has no user interactions
         return event
 
@@ -729,7 +733,9 @@ class HelpPage(Frame):
         self.add_layout(layout2)
         self.fix()
 
-    def process_event(self, event: Union[KeyboardEvent, MouseEvent]) -> Union[KeyboardEvent, MouseEvent]:
+    def process_event(
+        self, event: Union[KeyboardEvent, MouseEvent]
+    ) -> Union[KeyboardEvent, MouseEvent]:
         """Handle events for the help page, including ESC to close."""
         # Check for ESC key to close help menu using keymap
         if hasattr(event, "key_code") and KEYMAP.matches("CLOSE_HELP_MENU", event):
@@ -835,11 +841,12 @@ class InventoryPage(Frame):
         self.inventory_header = Label("INVENTORY", height=1, name="inventory_header")
         main_layout.add_widget(self.inventory_header, column=0)
 
-        # Inventory items list (scrollable)
-        self.inventory_list = Label(
-            "No items in inventory.\n\nItems will appear here when you pick them up.",
-            height=screen.height - 8,  # Leave room for headers and tab buttons
+        # Inventory items list
+        self.inventory_list = RadioButtons(
+            [("Option 1", 1), ("Option 2", 2), ("Option 3", 3)],
+            label="A Longer Selection:",
             name="inventory_list",
+            on_change=self.update_selected_item,
         )
         main_layout.add_widget(self.inventory_list, column=0)
 
@@ -862,6 +869,13 @@ class InventoryPage(Frame):
 
         self.fix()
 
+    def update_selected_item(self, *args, **kwargs) -> None:
+        """Update the inventory panel with an item that was selected."""
+        logging.info("TODO implement update_selected_item")
+        logging.info(args)
+        logging.info(kwargs)
+        pass
+
     def update_inventory_display(self) -> None:
         """Update the inventory display with current items."""
         if not self.game or not self.game.player:
@@ -869,15 +883,22 @@ class InventoryPage(Frame):
 
         inventory = self.game.player.inventory
         if not inventory.itemsdata:
-            self.inventory_list.text = "No items in inventory.\n\nItems will appear here when you pick them up."
+            self.inventory_list._options = [
+                (
+                    "No items in inventory. Items will appear here when you pick them up.",
+                    1,
+                ),
+            ]
             return
 
         # Format inventory items
-        lines = []
+        inventory_list_options: List[Tuple] = list()
+        i = 0
         for item in inventory.itemsdata:
-            lines.append(f"• {item.name}")
+            inventory_list_options.append((item.name, i,))
+            i += 1
 
-        self.inventory_list.text = "\n".join(lines)
+        self.inventory_list._options = inventory_list_options
 
     def update_crafting_display(self) -> None:
         """Update the crafting display with available recipes."""
@@ -1407,7 +1428,9 @@ class InputHandler:
                 world_map.update_status_label()
 
     @classmethod
-    def handle_scale(cls, event: KeyboardEvent, game: Game, world_map: Optional[WorldMap] = None) -> None:
+    def handle_scale(
+        cls, event: KeyboardEvent, game: Game, world_map: Optional[WorldMap] = None
+    ) -> None:
         if KEYMAP.matches("SCALE_DOWN", event):
             game.viewport.rescale_down(1)
             game.reset_viewport()
@@ -1421,7 +1444,9 @@ class InputHandler:
                 world_map.update_status_label()
 
     @classmethod
-    def handle_interaction(cls, event: KeyboardEvent, game: Game, world_map: WorldMap) -> None:
+    def handle_interaction(
+        cls, event: KeyboardEvent, game: Game, world_map: WorldMap
+    ) -> None:
         """Handle interaction with adjacent entities."""
         if not KEYMAP.matches("INTERACT", event):
             return
@@ -1579,7 +1604,9 @@ class InputHandler:
             cls._show_interaction_result(name, default_text, world_map)
 
     @classmethod
-    def _show_interaction_result(cls, name: str, text: str, world_map: WorldMap) -> None:
+    def _show_interaction_result(
+        cls, name: str, text: str, world_map: WorldMap
+    ) -> None:
         """Show the result of an interaction."""
 
         def result_callback(_selected_option) -> None:
@@ -1608,7 +1635,9 @@ class InputHandler:
 class SceneEventHandler:
     """Base class for scene-specific event handlers."""
 
-    def handle_event(self, event: Union[KeyboardEvent, MouseEvent], screen, popup_manager) -> bool:
+    def handle_event(
+        self, event: Union[KeyboardEvent, MouseEvent], screen, popup_manager
+    ) -> bool:
         """Handle events for this scene type. Override in subclasses."""
         return False  # Event not handled
 
@@ -1616,7 +1645,9 @@ class SceneEventHandler:
 class WorldMapEventHandler(SceneEventHandler):
     """Handles events for the WorldMap scene."""
 
-    def handle_event(self, event: Union[KeyboardEvent, MouseEvent], screen, popup_manager, world_map) -> bool:
+    def handle_event(
+        self, event: Union[KeyboardEvent, MouseEvent], screen, popup_manager, world_map
+    ) -> bool:
         """Handle events for the WorldMap scene."""
         # Handle numlock warning logic
         if popup_manager.handle_numlock_warning(world_map, screen):
@@ -1686,7 +1717,9 @@ class WorldMapEventHandler(SceneEventHandler):
 class DevKeystrokesPageEventHandler(SceneEventHandler):
     """Handles events for the DevKeystrokesPage scene."""
 
-    def handle_event(self, event: Union[KeyboardEvent, MouseEvent], screen, popup_manager, page) -> bool:
+    def handle_event(
+        self, event: Union[KeyboardEvent, MouseEvent], screen, popup_manager, page
+    ) -> bool:
         """Handle events for the DevKeystrokesPage scene."""
         page.update_keystroke(event)
         return True  # Event was handled
@@ -1695,7 +1728,9 @@ class DevKeystrokesPageEventHandler(SceneEventHandler):
 class HelpPageEventHandler(SceneEventHandler):
     """Handles events for the HelpPage scene."""
 
-    def handle_event(self, event: Union[KeyboardEvent, MouseEvent], screen, popup_manager, page) -> bool:
+    def handle_event(
+        self, event: Union[KeyboardEvent, MouseEvent], screen, popup_manager, page
+    ) -> bool:
         """Handle events for the HelpPage scene."""
         # Help page handles its own events via process_event
         return False  # Let the page handle it normally
@@ -1704,7 +1739,9 @@ class HelpPageEventHandler(SceneEventHandler):
 class MessageLogPageEventHandler(SceneEventHandler):
     """Handles events for the MessageLogPage scene."""
 
-    def handle_event(self, event: Union[KeyboardEvent, MouseEvent], screen, popup_manager, page) -> bool:
+    def handle_event(
+        self, event: Union[KeyboardEvent, MouseEvent], screen, popup_manager, page
+    ) -> bool:
         """Handle events for the MessageLogPage scene."""
         # Message log page handles its own events via process_event
         return False  # Let the page handle it normally
@@ -1713,7 +1750,9 @@ class MessageLogPageEventHandler(SceneEventHandler):
 class DevPopupPageEventHandler(SceneEventHandler):
     """Handles events for the DevPopupPage scene."""
 
-    def handle_event(self, event: Union[KeyboardEvent, MouseEvent], screen, popup_manager, page) -> bool:
+    def handle_event(
+        self, event: Union[KeyboardEvent, MouseEvent], screen, popup_manager, page
+    ) -> bool:
         """Handle events for the DevPopupPage scene."""
         # Dev popup page handles its own events via process_event
         return False  # Let the page handle it normally
@@ -1722,7 +1761,9 @@ class DevPopupPageEventHandler(SceneEventHandler):
 class InventoryPageEventHandler(SceneEventHandler):
     """Handles events for the InventoryPage scene."""
 
-    def handle_event(self, event: Union[KeyboardEvent, MouseEvent], screen, popup_manager, page) -> bool:
+    def handle_event(
+        self, event: Union[KeyboardEvent, MouseEvent], screen, popup_manager, page
+    ) -> bool:
         """Handle events for the InventoryPage scene."""
         # Inventory page handles its own events via process_event
         return False  # Let the page handle it normally
@@ -1731,7 +1772,9 @@ class InventoryPageEventHandler(SceneEventHandler):
 class BodyPageEventHandler(SceneEventHandler):
     """Handles events for the BodyPage scene."""
 
-    def handle_event(self, event: Union[KeyboardEvent, MouseEvent], screen, popup_manager, page) -> bool:
+    def handle_event(
+        self, event: Union[KeyboardEvent, MouseEvent], screen, popup_manager, page
+    ) -> bool:
         """Handle events for the BodyPage scene."""
         # Body page handles its own events via process_event
         return False  # Let the page handle it normally
@@ -1751,7 +1794,13 @@ class SceneEventRouter:
             BodyPage: BodyPageEventHandler(),
         }
 
-    def route_event(self, event: Union[KeyboardEvent, MouseEvent], current_effect, screen, popup_manager) -> bool:
+    def route_event(
+        self,
+        event: Union[KeyboardEvent, MouseEvent],
+        current_effect,
+        screen,
+        popup_manager,
+    ) -> bool:
         """Route an event to the appropriate scene handler."""
         # Get the appropriate handler based on the effect's class
         handler = self.handlers.get(type(current_effect))
@@ -1804,7 +1853,9 @@ class PopupManager:
             return True
         return False
 
-    def handle_popup_event(self, event: Union[KeyboardEvent, MouseEvent], screen) -> Optional[bool]:
+    def handle_popup_event(
+        self, event: Union[KeyboardEvent, MouseEvent], screen
+    ) -> Optional[bool]:
         """Handle events for the active popup."""
         if self.active_popup is not None:
             # Check if popup is still in the current scene

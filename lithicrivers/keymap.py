@@ -269,10 +269,15 @@ class Keymap:
                 "MOVE_SOUTHEAST",
                 "WAIT",
             ],
-            "viewport": ["RESET_VIEWPORT", "SLIDE_VIEWPORT_WEST", "SLIDE_VIEWPORT_EAST", "TOGGLE_VIEWPORT"],
+            "viewport": [
+                "RESET_VIEWPORT",
+                "SLIDE_VIEWPORT_WEST",
+                "SLIDE_VIEWPORT_EAST",
+                "TOGGLE_VIEWPORT",
+            ],
             "scale": ["SCALE_UP", "SCALE_DOWN"],
             "action": ["MINE", "INTERACT"],
-            "ui": ["CLOSE_HELP_MENU"]
+            "ui": ["CLOSE_HELP_MENU"],
         }
 
         for category, keys in categories.items():
