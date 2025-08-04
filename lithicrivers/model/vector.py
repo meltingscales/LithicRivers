@@ -8,7 +8,7 @@ class VectorN:
 
     dim_pos_map: ClassVar[dict[str, int]] = {"x": 0, "y": 1, "z": 2, "w": 3}
 
-    def __init__(self, *dimvals: int):
+    def __init__(self, *dimvals: Any):
         # Handle different input types
         if len(dimvals) == 1 and not isinstance(dimvals[0], int):
             # Single non-int argument - try to deserialize
@@ -28,21 +28,18 @@ class VectorN:
                 raise ValueError(f"Cannot create VectorN from {type(obj)}")
         else:
             # Direct int arguments
-            self.dimension_values = dimvals
+            self.dimension_values = tuple(int(x) for x in dimvals)
 
-        self.x, self.y, self.z, self.w = (
-            None,
-            None,
-            None,
-            None,
-        )
+        # Initialize x, y, z, w to None first
+        self.x = None
+        self.y = None
+        self.z = None
+        self.w = None
 
-        # set x,y,z, etc
+        # set x,y,z, etc based on available dimensions
         for dim_name, dim_idx in self.dim_pos_map.items():
             if dim_idx < len(self.dimension_values):
                 self.__setattr__(dim_name, self.dimension_values[dim_idx])
-            else:
-                self.__setattr__(dim_name, None)
 
     def trim(self, new_size: int) -> "VectorN":
         """Trim VectorN down to smaller size."""
@@ -127,20 +124,22 @@ class VectorN:
                 f"Currently only implemented for 2d! Cannot determine if {self} is within {vec1} and {vec2}"
             )
 
+        # Get coordinates, handling None values
+        px = self.x if self.x is not None else 0
+        py = self.y if self.y is not None else 0
+        x1 = vec1.x if vec1.x is not None else 0
+        x2 = vec2.x if vec2.x is not None else 0
+        y1 = vec1.y if vec1.y is not None else 0
+        y2 = vec2.y if vec2.y is not None else 0
+
         # if our two points are flipped, flip em again :P
-        if (vec1.x >= vec2.x) or (vec1.y >= vec2.y):
+        if (x1 >= x2) or (y1 >= y2):
             vec2, vec1 = vec1, vec2
-
-        px = self.x
-        py = self.y
-        x1 = vec1.x
-        x2 = vec2.x
-        y1 = vec1.y
-        y2 = vec2.y
-
-        # Check for None values
-        if px is None or py is None or x1 is None or x2 is None or y1 is None or y2 is None:
-            return False
+            # Update coordinates after flipping
+            x1 = vec1.x if vec1.x is not None else 0
+            x2 = vec2.x if vec2.x is not None else 0
+            y1 = vec1.y if vec1.y is not None else 0
+            y2 = vec2.y if vec2.y is not None else 0
 
         # YOINK from https://www.programming-idioms.org/idiom/178/check-if-point-is-inside-rectangle/2615/python
         # Assuming that x1 < x2 and y1 < y2...
@@ -158,20 +157,17 @@ class VectorN:
     def deserialize(obj: Union[str, list, tuple]) -> "VectorN":
         if isinstance(obj, VectorN):
             return obj
-
-        if isinstance(obj, list):
+        elif isinstance(obj, list):
             return VectorN(*obj)
-
-        if isinstance(obj, str):
+        elif isinstance(obj, str):
             obj = obj.strip()
             tokens = obj.split(",")
             ints = [int(x.strip()) for x in tokens]
             return VectorN(*ints)
-
-        if isinstance(obj, tuple):
+        elif isinstance(obj, tuple):
             return VectorN(*obj)
-
-        raise ValueError(f"Cannot deserialize object of type {type(obj)}")
+        else:
+            raise ValueError(f"Cannot deserialize object of type {type(obj)}")
 
     def as_short_string(self) -> str:
         return ",".join(str(x) for x in self.dimension_values)
