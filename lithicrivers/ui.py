@@ -1442,7 +1442,7 @@ class InputHandler:
     @classmethod
     def _show_npc_conversation(
         cls, game: Game, npc: NPC, topic: str, world_map: WorldMap
-    ):
+    ) -> None:
         """Show an NPC conversation for a specific topic."""
         conversation = npc.get_conversation(topic)
         logging.debug(
@@ -1772,7 +1772,7 @@ class PopupManager:
         """Set the currently active popup."""
         self.active_popup = popup
 
-    def get_active_popup(self):
+    def get_active_popup(self) -> Optional[Frame]:
         """Get the currently active popup."""
         return self.active_popup
 
