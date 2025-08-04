@@ -26,7 +26,7 @@ from asciimatics.widgets import (
 )
 
 from lithicrivers.colors import COLOR_MANAGER
-from lithicrivers.game import NPC, Game, Tile, Tiles, ItemArtRenderable
+from lithicrivers.game import NPC, Game, Item, Tile, Tiles, ItemArtRenderable
 from lithicrivers.keymap import KEYMAP
 from lithicrivers.model.model import RenderedData, StopGameError, Viewport
 from lithicrivers.model.vector import VectorN
@@ -865,8 +865,20 @@ class InventoryPage(Frame):
 
         # === SELECTED ITEM SECTION (Right Column) ===
         # Selected item header
+        self.selected_item: Item = None
+
         self.selected_item_header = Label("SELECTED ITEM", height=1, name="selected_item_header")
         main_layout.add_widget(self.selected_item_header, column=2)
+
+        self.button_drop_selected_item = Button("(d)rop", self.drop_selected_item)
+        main_layout.add_widget(self.button_drop_selected_item, column=2)
+
+        self.button_destroy_selected_item = Button("(x) destroy", self.destroy_selected_item)
+        main_layout.add_widget(self.button_destroy_selected_item, column=2)
+        
+        self.button_cheat_duplicate_selected_item = Button(("(.) duplicate"), self.cheat_duplicate_selected_item)
+        main_layout.add_widget(self.button_cheat_duplicate_selected_item, column=2)
+
 
         # Selected item ASCII art (12x8)
         self.selected_item_art = Label(
@@ -890,7 +902,14 @@ class InventoryPage(Frame):
 
         self.fix()
 
-    def update_selected_item(self, *args, **kwargs) -> None:
+    def drop_selected_item(self)->None:
+        raise NotImplemented()
+    def destroy_selected_item(self)->None:
+        raise NotImplemented()
+    def cheat_duplicate_selected_item(self)->None:
+        raise NotImplemented()
+
+    def update_selected_item(self) -> None:
         """Update the selected item panel with details of the selected item."""
         if not self.game or not self.game.player:
             return
@@ -906,26 +925,26 @@ class InventoryPage(Frame):
             self.selected_item_art.text = ItemArtRenderable.blank_item()
             self.selected_item_details.text = (
                 "No item selected.\n\n"
-                "Select an item from the inventory to see its details here."
+                "Select aself.n item from the inventory to see its details here."
             )
             return
 
         # Get the selected item
-        selected_item = inventory.itemsdata[selected_index]
+        self.selected_item = inventory.itemsdata[selected_index]
         
         # Update ASCII art (dummy art for now)
         self.selected_item_art.text = ItemArtRenderable.missing_texture_item()
         
         # Format item details
-        item_details = f"Name: {selected_item.name}\n"
-        item_details += f"Type: {getattr(selected_item, 'type', 'Unknown')}\n"
-        item_details += f"Value: {getattr(selected_item, 'value', 'Unknown')}\n"
-        item_details += f"Description: {getattr(selected_item, 'description', 'No description available.')}\n\n"
+        item_details = f"Name: {self.selected_item.name}\n"
+        item_details += f"Type: {getattr(self.selected_item, 'type', 'Unknown')}\n"
+        item_details += f"Value: {getattr(self.selected_item, 'value', 'Unknown')}\n"
+        item_details += f"Description: {getattr(self.selected_item, 'description', 'No description available.')}\n\n"
         
         # Add any additional item properties
         for attr in ['weight', 'durability', 'rarity']:
-            if hasattr(selected_item, attr):
-                item_details += f"{attr.title()}: {getattr(selected_item, attr)}\n"
+            if hasattr(self.selected_item, attr):
+                item_details += f"{attr.title()}: {getattr(self.selected_item, attr)}\n"
         
         self.selected_item_details.text = item_details
 
