@@ -4,7 +4,8 @@
     "LOGFILENAME": "LithicRivers.log",
     "LOGGINGLEVEL": "INFO",
     "DEVELOPER_MODE": true,
-    "DEFAULT_SEED": 4669201609
+    "DEFAULT_SEED": 4669201609,
+    "DEFAULT_PLAYER_NAME": "Inigo Montoya"
   },
   "world": {
     "DEFAULT_SIZE_RADIUS": {

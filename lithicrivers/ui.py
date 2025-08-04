@@ -844,7 +844,7 @@ class InventoryPage(Frame):
         # Inventory items list
         self.inventory_list = RadioButtons(
             [("Option 1", 1), ("Option 2", 2), ("Option 3", 3)],
-            label="A Longer Selection:",
+            label="Item Choices",
             name="inventory_list",
             on_change=self.update_selected_item,
         )
