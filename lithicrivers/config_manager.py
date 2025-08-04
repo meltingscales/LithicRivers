@@ -93,7 +93,12 @@ class ConfigManager:
         try:
             if file_path.exists():
                 with open(file_path) as f:
-                    return json.load(f)
+                    data = json.load(f)
+                    if isinstance(data, dict):
+                        return data
+                    else:
+                        logging.warning(f"Invalid config file format: {file_path}")
+                        return default_data
             else:
                 # Create default file
                 with open(file_path, "w") as f:

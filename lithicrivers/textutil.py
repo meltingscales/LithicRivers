@@ -1,12 +1,15 @@
 """
-This util exists to unify TUI styles and make the game look + feel cohesive.
+Text utilities for formatting and displaying game information.
 """
 
 import random
 import string
 from enum import Enum
+from typing import Union
 
-from lithicrivers.model.generictype import T
+# Remove the circular import
+# from lithicrivers.logging_config import get_logger
+# logger = get_logger(__name__)
 
 
 class ColorScheme(Enum):
@@ -59,17 +62,17 @@ class ColorScheme(Enum):
 
 
 class ColorManager:
-    """Manages color schemes and provides color utilities."""
+    """Manages color schemes for different game elements."""
 
     def __init__(self) -> None:
-        self.schemes = {scheme.name: scheme.value for scheme in ColorScheme}
+        self.color_schemes = {scheme.name: scheme.value for scheme in ColorScheme}
 
     def get_color(self, scheme_name: str) -> tuple[int, int, int]:
         """Get color tuple for a scheme name."""
-        return self.schemes.get(scheme_name.upper(), ColorScheme.DEFAULT.value)
+        return self.color_schemes.get(scheme_name, ColorScheme.DEFAULT.value)
 
     def get_tile_color(self, tile_id: str) -> tuple[int, int, int]:
-        """Get color for a specific tile type."""
+        """Get color tuple for a tile type."""
         tile_colors = {
             "Dirt": ColorScheme.DIRT.value,
             "Tree": ColorScheme.TREE.value,
@@ -81,7 +84,7 @@ class ColorManager:
         return tile_colors.get(tile_id, ColorScheme.DEFAULT.value)
 
     def get_item_color(self, item_name: str) -> tuple[int, int, int]:
-        """Get color for a specific item type."""
+        """Get color tuple for an item type."""
         item_colors = {
             "Rock": ColorScheme.ROCK.value,
             "Gold Nugget": ColorScheme.GOLD.value,
@@ -134,7 +137,7 @@ def spaced_list(items: list[str]) -> str:
     return " ".join(items)
 
 
-def render_tuple(tups: list[T], places: int = 2) -> str:
+def render_tuple(tups: list[Union[int, float, tuple[Union[int, float], ...]]], places: int = 2) -> str:
     fstr = ""
     for i, tup in enumerate(tups):
         fstr += "("
