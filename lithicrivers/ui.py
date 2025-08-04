@@ -895,7 +895,12 @@ class InventoryPage(Frame):
         inventory_list_options: List[Tuple] = list()
         i = 0
         for item in inventory.itemsdata:
-            inventory_list_options.append((item.name, i,))
+            inventory_list_options.append(
+                (
+                    item.name,
+                    i,
+                )
+            )
             i += 1
 
         self.inventory_list._options = inventory_list_options
