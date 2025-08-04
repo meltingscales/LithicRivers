@@ -56,7 +56,7 @@ def get_max_cpu_threads():
         config_threads = config_manager.get_setting("performance", "MAX_CPU_THREADS")
         if config_threads:
             return int(config_threads)
-    except:
+    except (ValueError, TypeError):
         pass
 
     # Auto-detect CPU count, default to 64 if detection fails
@@ -64,7 +64,7 @@ def get_max_cpu_threads():
         cpu_count = multiprocessing.cpu_count()
         # Use 75% of available cores to avoid overwhelming the system
         return max(1, min(cpu_count, int(cpu_count * 0.75)))
-    except:
+    except (OSError, NotImplementedError):
         return 64
 
 

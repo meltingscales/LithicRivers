@@ -17,7 +17,6 @@ from pathlib import Path
 from typing import Optional
 
 try:
-    from asciimatics.event import KeyboardEvent
     from asciimatics.screen import Screen
 except ImportError:
     print("Error: asciimatics not installed")

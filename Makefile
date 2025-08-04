@@ -92,7 +92,7 @@ test-quick: ## Run quick tests only
 
 test-lcov: ## Generate LCOV coverage report
 	@echo "📊 Generating LCOV coverage report..."
-	TESTING=1 $(UV_CMD) run coverage run -m unittest discover lithicrivers
+	TESTING=1 $(UV_CMD) run coverage run  -m unittest discover lithicrivers
 	$(UV_CMD) run coverage lcov -o coverage/lcov.info
 	@echo "✅ LCOV report generated!"
 
@@ -169,7 +169,7 @@ build: ## Build executable
 	$(UV_CMD) run pyinstaller lithicrivers.spec
 
 # Code quality
-lint: ## Run linting
+lint: ## Run linting and type checking
 	$(UV_CMD) run ruff check lithicrivers/
 	$(UV_CMD) run mypy lithicrivers/
 

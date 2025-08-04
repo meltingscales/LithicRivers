@@ -92,6 +92,7 @@
 # eventually todo
 
 - nixos term resize causes crash, but not ubuntu. TODO test windows.
+- Fix ubuntu numlock warning anomaly
 
 - should I use cython to speed up worldgen? Does that cause some lag when objects get passed between python and c? Does threading cause issues or add lag?
 
