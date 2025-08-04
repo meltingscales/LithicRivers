@@ -832,8 +832,8 @@ class InventoryPage(Frame):
         )
         self.game = game
 
-        # Create main layout with two columns: Inventory (left) and Crafting (right)
-        main_layout = Layout([60, 40], fill_frame=True)  # 60% inventory, 40% crafting
+        # Create main layout with three columns: Inventory (left), Crafting (middle), Selected Item (right)
+        main_layout = Layout([50, 30, 20], fill_frame=True)  # 50% inventory, 30% crafting, 20% selected item
         self.add_layout(main_layout)
 
         # === INVENTORY SECTION (Left Column) ===
@@ -850,7 +850,7 @@ class InventoryPage(Frame):
         )
         main_layout.add_widget(self.inventory_list, column=0)
 
-        # === CRAFTING SECTION (Right Column) ===
+        # === CRAFTING SECTION (Middle Column) ===
         # Crafting header
         self.crafting_header = Label("CRAFTING", height=1, name="crafting_header")
         main_layout.add_widget(self.crafting_header, column=1)
@@ -863,6 +863,19 @@ class InventoryPage(Frame):
         )
         main_layout.add_widget(self.crafting_list, column=1)
 
+        # === SELECTED ITEM SECTION (Right Column) ===
+        # Selected item header
+        self.selected_item_header = Label("SELECTED ITEM", height=1, name="selected_item_header")
+        main_layout.add_widget(self.selected_item_header, column=2)
+
+        # Selected item details
+        self.selected_item_details = Label(
+            "No item selected.\n\nSelect an item from the inventory to see its details here.",
+            height=screen.height - 8,  # Leave room for headers and tab buttons
+            name="selected_item_details",
+        )
+        main_layout.add_widget(self.selected_item_details, column=2)
+
         # Create tab buttons
         layout2 = TabButtons(self)
         self.add_layout(layout2)
@@ -870,11 +883,39 @@ class InventoryPage(Frame):
         self.fix()
 
     def update_selected_item(self, *args, **kwargs) -> None:
-        """Update the inventory panel with an item that was selected."""
-        logging.info("TODO implement update_selected_item")
-        logging.info(args)
-        logging.info(kwargs)
-        pass
+        """Update the selected item panel with details of the selected item."""
+        if not self.game or not self.game.player:
+            return
+
+        # Get the selected item index from the radio buttons
+        selected_index = self.inventory_list.value
+        inventory = self.game.player.inventory
+
+        if (selected_index is None or 
+            not inventory.itemsdata or 
+            selected_index >= len(inventory.itemsdata)):
+            # No item selected or invalid selection
+            self.selected_item_details.text = (
+                "No item selected.\n\n"
+                "Select an item from the inventory to see its details here."
+            )
+            return
+
+        # Get the selected item
+        selected_item = inventory.itemsdata[selected_index]
+        
+        # Format item details
+        item_details = f"Name: {selected_item.name}\n"
+        item_details += f"Type: {getattr(selected_item, 'type', 'Unknown')}\n"
+        item_details += f"Value: {getattr(selected_item, 'value', 'Unknown')}\n"
+        item_details += f"Description: {getattr(selected_item, 'description', 'No description available.')}\n\n"
+        
+        # Add any additional item properties
+        for attr in ['weight', 'durability', 'rarity']:
+            if hasattr(selected_item, attr):
+                item_details += f"{attr.title()}: {getattr(selected_item, attr)}\n"
+        
+        self.selected_item_details.text = item_details
 
     def update_inventory_display(self) -> None:
         """Update the inventory display with current items."""
@@ -913,6 +954,7 @@ class InventoryPage(Frame):
         super().reset()
         self.update_inventory_display()
         self.update_crafting_display()
+        self.update_selected_item()  # Update selected item panel
 
 
 class BodyPage(Frame):
