@@ -39,7 +39,7 @@ class GameState:
             inventory=self.inventory.copy(),
         )
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         """Compare two game states for equality."""
         if not isinstance(other, GameState):
             return False
@@ -198,7 +198,7 @@ class Inventory:
             counts[item.name] = counts.get(item.name, 0) + 1
         return counts
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         """Compare two inventories for equality."""
         if not isinstance(other, Inventory):
             return False
