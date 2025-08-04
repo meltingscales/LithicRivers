@@ -198,7 +198,7 @@ class Inventory:
             counts[item.name] = counts.get(item.name, 0) + 1
         return counts
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: object) -> bool:
         """Compare two inventories for equality."""
         if not isinstance(other, Inventory):
             return False

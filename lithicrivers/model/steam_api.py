@@ -4,6 +4,8 @@ Steam API integration for LithicRivers.
 This module provides integration with Valve's Steam API using the steam[client] package.
 """
 
+from typing import Any, Optional
+
 try:
     import steam.client
     import steam.guard
@@ -27,7 +29,7 @@ class SteamAPI:
                 "Steam API not available. Install with 'pip install steam[client]'"
             )
 
-    def connect(self):
+    def connect(self) -> bool:
         """Connect to Steam API."""
         if not STEAM_AVAILABLE:
             return False
@@ -41,18 +43,18 @@ class SteamAPI:
             self.is_connected = False
             return False
 
-    def disconnect(self):
+    def disconnect(self) -> None:
         """Disconnect from Steam API."""
         if self.client:
             self.client.close()
             self.client = None
         self.is_connected = False
 
-    def is_available(self):
+    def is_available(self) -> bool:
         """Check if Steam API is available."""
         return STEAM_AVAILABLE
 
-    def get_user_info(self):
+    def get_user_info(self) -> Optional[dict[str, Any]]:
         """Get current user information if connected."""
         if not self.is_connected or not self.client:
             return None
@@ -71,7 +73,7 @@ class SteamAPI:
 steam_api = None
 
 
-def get_steam_api():
+def get_steam_api() -> Optional[SteamAPI]:
     """Get the global Steam API instance."""
     global steam_api
     if steam_api is None:
@@ -82,7 +84,7 @@ def get_steam_api():
     return steam_api
 
 
-def initialize_steam():
+def initialize_steam() -> bool:
     """Initialize Steam API connection."""
     api = get_steam_api()
     if api:
@@ -90,7 +92,7 @@ def initialize_steam():
     return False
 
 
-def cleanup_steam():
+def cleanup_steam() -> None:
     """Clean up Steam API connection."""
     global steam_api
     if steam_api:
