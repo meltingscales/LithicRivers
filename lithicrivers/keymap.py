@@ -2,7 +2,7 @@ import json
 import logging
 import platform
 from pathlib import Path
-from typing import Union
+from typing import Optional
 
 from asciimatics.event import KeyboardEvent
 
@@ -47,7 +47,7 @@ class Keymap:
                         return True
         return False
 
-    def get_movement_vector(self, ke: KeyboardEvent) -> Union[None, VectorN]:
+    def get_movement_vector(self, ke: KeyboardEvent) -> Optional[VectorN]:
         """Get the movement vector for a keyboard event."""
 
         keycode = ke.key_code
@@ -186,27 +186,27 @@ class Keymap:
         # Add viewport keys
         retstr += "\n=== VIEWPORT ===\n"
         retstr += "Actions:      Keys:\n"
-        retstr += f"  RESET          {spaced_list(self.RESET_VIEWPORT)}\n"
-        retstr += f"  SLIDE WEST     {spaced_list(self.SLIDE_VIEWPORT_WEST)}\n"
-        retstr += f"  SLIDE EAST     {spaced_list(self.SLIDE_VIEWPORT_EAST)}\n"
-        retstr += f"  TOGGLE         {spaced_list(self.TOGGLE_VIEWPORT)}\n"
+        retstr += f"  RESET          {spaced_list(list(self.RESET_VIEWPORT))}\n"
+        retstr += f"  SLIDE WEST     {spaced_list(list(self.SLIDE_VIEWPORT_WEST))}\n"
+        retstr += f"  SLIDE EAST     {spaced_list(list(self.SLIDE_VIEWPORT_EAST))}\n"
+        retstr += f"  TOGGLE         {spaced_list(list(self.TOGGLE_VIEWPORT))}\n"
 
         # Add scale keys
         retstr += "\n=== SCALE ===\n"
         retstr += "Actions:      Keys:\n"
-        retstr += f"  SCALE UP       {spaced_list(self.SCALE_UP)}\n"
-        retstr += f"  SCALE DOWN     {spaced_list(self.SCALE_DOWN)}\n"
+        retstr += f"  SCALE UP       {spaced_list(list(self.SCALE_UP))}\n"
+        retstr += f"  SCALE DOWN     {spaced_list(list(self.SCALE_DOWN))}\n"
 
         # Add action keys
         retstr += "\n=== ACTIONS ===\n"
         retstr += "Actions:      Keys:\n"
-        retstr += f"  MINE           {spaced_list(self.MINE)}\n"
-        retstr += f"  INTERACT       {spaced_list(self.INTERACT)}\n"
+        retstr += f"  MINE           {spaced_list(list(self.MINE))}\n"
+        retstr += f"  INTERACT       {spaced_list(list(self.INTERACT))}\n"
 
         return retstr
 
     @staticmethod
-    def char_from_keyboard_event(ke: KeyboardEvent) -> Union[None, str]:
+    def char_from_keyboard_event(ke: KeyboardEvent) -> Optional[str]:
         """Extract character from keyboard event."""
         try:
             ke_char = chr(ke.key_code).lower()
@@ -219,7 +219,7 @@ class Keymap:
             return None
 
     @staticmethod
-    def key_code_from_keyboard_event(ke: KeyboardEvent) -> Union[None, int]:
+    def key_code_from_keyboard_event(ke: KeyboardEvent) -> Optional[int]:
         """Extract key code from keyboard event for special keys like numpad."""
         return ke.key_code
 
@@ -247,12 +247,42 @@ class Keymap:
                     return True
         return False
 
+    def _get_category_for_key(self, key_name: str) -> Optional[str]:
+        """Determine the category for a given key name."""
+        # Define key categories
+        categories = {
+            "movement": [
+                "MOVE_NORTH",
+                "MOVE_SOUTH",
+                "MOVE_EAST",
+                "MOVE_WEST",
+                "MOVE_UP",
+                "MOVE_DOWN",
+                "MOVE_NORTHWEST",
+                "MOVE_NORTHEAST",
+                "MOVE_SOUTHWEST",
+                "MOVE_SOUTHEAST",
+                "WAIT",
+            ],
+            "viewport": ["RESET_VIEWPORT", "SLIDE_VIEWPORT_WEST", "SLIDE_VIEWPORT_EAST", "TOGGLE_VIEWPORT"],
+            "scale": ["SCALE_UP", "SCALE_DOWN"],
+            "action": ["MINE", "INTERACT"],
+            "ui": ["CLOSE_HELP_MENU"]
+        }
+
+        for category, keys in categories.items():
+            if key_name in keys:
+                return category
+        return None
+
     def update_keybind(self, key_name: str, value: str) -> None:
         """Update a keybind and save to config file."""
         # Determine category based on key name
         category = self._get_category_for_key(key_name)
         if category:
-            config_manager.update_keybind(category, key_name, value)
+            # Convert single string to list for config manager
+            value_list = [value] if isinstance(value, str) else value
+            config_manager.update_keybind(category, key_name, value_list)
             # Reload keybinds to reflect changes
             self.reload_keybinds()
 
