@@ -50,6 +50,8 @@ help: ## Show this help message
 	@echo "---------------"
 	@echo "  lint                 Run linting"
 	@echo "  format               Format code"
+	@echo "  security             Run security checks"
+	@echo "  security-deps        Run dependency security checks (requires login)"
 	@echo ""
 	@echo "🧹 CLEANUP"
 	@echo "---------"
@@ -176,6 +178,19 @@ lint: ## Run linting and type checking
 format: ## Format code
 	$(UV_CMD) run ruff format lithicrivers/
 	$(UV_CMD) run ruff check --fix lithicrivers/
+
+security: ## Run security checks
+	@echo "🔒 Running security checks..."
+	@echo "🔍 Running static security analysis..."
+	$(UV_CMD) run bandit -r lithicrivers/ -f json -o security-report.json || true
+	@echo "📊 Security analysis complete. Check security-report.json for details."
+	@echo "✅ Security checks completed!"
+
+security-deps: ## Run dependency security checks (requires Safety CLI login)
+	@echo "🔒 Running dependency security checks..."
+	@echo "📦 Checking dependencies for vulnerabilities..."
+	$(UV_CMD) run safety scan
+	@echo "✅ Dependency security checks completed!"
 
 # Cleanup
 clean: ## Clean build artifacts
