@@ -65,6 +65,41 @@ class SpriteRenderable:
         return self.sprite_sheet[normalized_scale]
 
 
+class ItemArtRenderable:
+    """Extend this class if you want to be able to render item art."""
+
+    def __init__(self, item_art: str):
+        self.item_art = item_art
+
+    @staticmethod
+    def blank_item() -> str:
+        """Return a 12x8 blank (all spaces) ASCII art string."""
+        return (
+            "            \n"
+            "            \n"
+            "            \n"
+            "            \n"
+            "            \n"
+            "            \n"
+            "            \n"
+            "            "
+        )
+
+    @staticmethod
+    def missing_texture_item() -> str:
+        """Return a 12x8 'missing texture' ASCII art string."""
+        return (
+            "  ╭────────╮  \n"
+            "  │████████│  \n"
+            "  │████████│  \n"
+            "  │███??███│  \n"
+            "  │███??███│  \n"
+            "  │████████│  \n"
+            "  │████████│  \n"
+            "  ╰────────╯  "
+        )
+
+
 class Entity:
     def __init__(self, name: str, position: VectorN):
         self.name: str = name
@@ -323,7 +358,7 @@ class Items:
         return Item("Acorn", sprite_sheet=["o"])
 
 
-class Item(SpriteRenderable):
+class Item(ItemArtRenderable, SpriteRenderable):
     def __init__(self, name: str, sprite_sheet: Optional[list[str]] = None):
         SpriteRenderable.__init__(self, sprite_sheet)
         self.name = name

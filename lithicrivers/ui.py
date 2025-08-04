@@ -26,7 +26,7 @@ from asciimatics.widgets import (
 )
 
 from lithicrivers.colors import COLOR_MANAGER
-from lithicrivers.game import NPC, Game, Tile, Tiles
+from lithicrivers.game import NPC, Game, Tile, Tiles, ItemArtRenderable
 from lithicrivers.keymap import KEYMAP
 from lithicrivers.model.model import RenderedData, StopGameError, Viewport
 from lithicrivers.model.vector import VectorN
@@ -870,14 +870,7 @@ class InventoryPage(Frame):
 
         # Selected item ASCII art (12x8)
         self.selected_item_art = Label(
-            "            \n"
-            "            \n"
-            "            \n"
-            "            \n"
-            "            \n"
-            "            \n"
-            "            \n"
-            "            ",
+            ItemArtRenderable.blank_item(),
             height=8,
             name="selected_item_art",
         )
@@ -910,16 +903,7 @@ class InventoryPage(Frame):
             not inventory.itemsdata or 
             selected_index >= len(inventory.itemsdata)):
             # No item selected or invalid selection
-            self.selected_item_art.text = (
-                "            \n"
-                "            \n"
-                "            \n"
-                "            \n"
-                "            \n"
-                "            \n"
-                "            \n"
-                "            "
-            )
+            self.selected_item_art.text = ItemArtRenderable.blank_item()
             self.selected_item_details.text = (
                 "No item selected.\n\n"
                 "Select an item from the inventory to see its details here."
@@ -930,16 +914,7 @@ class InventoryPage(Frame):
         selected_item = inventory.itemsdata[selected_index]
         
         # Update ASCII art (dummy art for now)
-        self.selected_item_art.text = (
-            "  ╭────────╮  \n"
-            "  │████████│  \n"
-            "  │████████│  \n"
-            "  │███??███│  \n"
-            "  │███??███│  \n"
-            "  │████████│  \n"
-            "  │████████│  \n"
-            "  ╰────────╯  "
-        )
+        self.selected_item_art.text = ItemArtRenderable.missing_texture_item()
         
         # Format item details
         item_details = f"Name: {selected_item.name}\n"
