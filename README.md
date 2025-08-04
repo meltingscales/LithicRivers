@@ -58,3 +58,4 @@ Currently we support:
 ## Related issues
 
 - Feature: ESC key handling versus SHIFT-NUMPAD5, etc? #395 https://github.com/peterbrittain/asciimatics/issues/395
+- ESC delay: https://asciimatics.readthedocs.io/en/stable/troubleshooting.html#there-s-a-big-delay-when-i-press-escape

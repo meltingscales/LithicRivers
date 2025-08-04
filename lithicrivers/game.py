@@ -11,6 +11,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional, Union
 
+from lithicrivers.colors import COLOR_MANAGER
 from lithicrivers.constants import VEC_EAST, VEC_NORTH, VEC_SOUTH, VEC_WEST
 from lithicrivers.model.generictype import T
 from lithicrivers.model.model import RenderedData, Viewport
@@ -20,7 +21,6 @@ from lithicrivers.settings import (
     DEFAULT_VIEWPORT,
 )
 from lithicrivers.textutil import get_color_for_item, get_color_for_tile
-from lithicrivers.colors import COLOR_MANAGER
 
 
 def generate_sprite_repeat(char: str, scale: int = 1) -> str:

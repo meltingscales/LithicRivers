@@ -118,7 +118,9 @@ class VectorN:
 
         raise KeyError(f"Invalid key: {item}")
 
-    def inside_bounding_rect(self, vec1: "VectorN", vec2: "VectorN", wiggle: int = 0) -> bool:
+    def inside_bounding_rect(
+        self, vec1: "VectorN", vec2: "VectorN", wiggle: int = 0
+    ) -> bool:
         if not (self.dimension_order() == 2):
             raise Exception(
                 f"Currently only implemented for 2d! Cannot determine if {self} is within {vec1} and {vec2}"
