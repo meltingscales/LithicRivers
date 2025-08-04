@@ -768,13 +768,13 @@ class MessageLogPage(Frame):
         # Initialize the message display immediately
         self.update_messages()
 
-    def reset(self):
+    def reset(self) -> None:
         """Reset the frame and ensure message display is properly initialized."""
         super().reset()
         # Force update of messages when frame is reset/shown
         self.update_messages()
 
-    def update_messages(self):
+    def update_messages(self) -> None:
         """Update the message display with current messages."""
         if not self.game or not self.game.message_log:
             return
@@ -861,7 +861,7 @@ class InventoryPage(Frame):
 
         self.fix()
 
-    def update_inventory_display(self):
+    def update_inventory_display(self) -> None:
         """Update the inventory display with current items."""
         if not self.game or not self.game.player:
             return
@@ -878,12 +878,12 @@ class InventoryPage(Frame):
 
         self.inventory_list.text = "\n".join(lines)
 
-    def update_crafting_display(self):
+    def update_crafting_display(self) -> None:
         """Update the crafting display with available recipes."""
         # TODO: Implement when crafting system is added
         self.crafting_list.text = "No recipes available.\n\nCrafting recipes will appear here as you discover them."
 
-    def reset(self):
+    def reset(self) -> None:
         """Reset the frame and update displays."""
         super().reset()
         self.update_inventory_display()
@@ -943,16 +943,16 @@ class DevKeystrokesPage(Frame):
 
         self.fix()
 
-    def render_log(self):
+    def render_log(self) -> None:
         self.textBoxKeystrokes.text = "\n".join(self.logKeystrokes)
 
-    def append_to_log(self, m: str):
+    def append_to_log(self, m: str) -> None:
         if len(self.logKeystrokes) > 10:
             del self.logKeystrokes[0]
 
         self.logKeystrokes.append(m)
 
-    def update_keystroke(self, event: Union[KeyboardEvent, MouseEvent]):
+    def update_keystroke(self, event: Union[KeyboardEvent, MouseEvent]) -> None:
         if isinstance(event, MouseEvent):
             self.append_to_log(f"mouse event TODO process it: {event!r}")
             pass  # TODO: For now, we're ignoring MouseEvent.
@@ -1171,7 +1171,7 @@ class DialogBox(Frame):
 
         button_layout.add_widget(Button("Cancel", self._on_cancel), 1)
 
-    def _on_select(self):
+    def _on_select(self) -> None:
         """Handle option selection."""
         if self.options_widget and self.callback:
             selected = self.options_widget.value
@@ -1179,17 +1179,17 @@ class DialogBox(Frame):
                 self.callback(self.options[selected])
         self._close()
 
-    def _on_ok(self):
+    def _on_ok(self) -> None:
         """Handle OK button."""
         if self.callback:
             self.callback(None)
         self._close()
 
-    def _on_cancel(self):
+    def _on_cancel(self) -> None:
         """Handle Cancel button."""
         self._close()
 
-    def _close(self):
+    def _close(self) -> None:
         """Close the dialog."""
         # Remove this dialog from the current scene
         if hasattr(self, "_screen") and self._screen.current_scene:
@@ -1248,7 +1248,7 @@ class EntitySelectionPopup(Frame):
         button_layout.add_widget(Button("Interact", self._on_interact), 0)
         button_layout.add_widget(Button("Cancel", self._on_cancel), 1)
 
-    def _on_interact(self):
+    def _on_interact(self) -> None:
         """Handle entity selection and interaction."""
         selected = self.entity_widget.value
         if 0 <= selected < len(self.adjacent_entities):
@@ -1256,11 +1256,11 @@ class EntitySelectionPopup(Frame):
             self._handle_interaction(name, pos, color)
         self._close()
 
-    def _on_cancel(self):
+    def _on_cancel(self) -> None:
         """Handle cancel."""
         self._close()
 
-    def _handle_interaction(self, name: str, pos: VectorN, _color: str):
+    def _handle_interaction(self, name: str, pos: VectorN, _color: str) -> None:
         """Handle the actual interaction."""
         # Get the entity
         entity = self.game.world.get_entity(pos)
@@ -1276,21 +1276,21 @@ class EntitySelectionPopup(Frame):
             # Default interaction
             self._show_interaction_result(name, f"You interact with {name}.")
 
-    def _show_interaction_result(self, name: str, text: str):
+    def _show_interaction_result(self, name: str, text: str) -> None:
         """Show the result of an interaction."""
         # Create a result popup
         InteractionResultPopup(self.screen, f"Interacting with {name}", text)
         # For now, just show the result in the message area
         # TODO: Implement proper result popup display
 
-    def _start_npc_conversation(self, npc):
+    def _start_npc_conversation(self, npc) -> None:
         """Start a conversation with an NPC."""
         npc.get_conversation()
         # For now, just show the conversation in the message area
         # TODO: Implement proper conversation dialog
         pass
 
-    def _close(self):
+    def _close(self) -> None:
         """Close the popup and return to the game."""
         # Remove this popup from the current scene
         if hasattr(self, "_screen") and self._screen.current_scene:
@@ -1324,11 +1324,11 @@ class InteractionResultPopup(Frame):
 
         button_layout.add_widget(Button("OK", self._on_ok), 0)
 
-    def _on_ok(self):
+    def _on_ok(self) -> None:
         """Handle OK button."""
         self._close()
 
-    def _close(self):
+    def _close(self) -> None:
         """Close the popup."""
         # Remove this popup from the current scene
         if hasattr(self, "_screen") and self._screen.current_scene:
@@ -1350,7 +1350,7 @@ class InputHandler:
         return None
 
     @staticmethod
-    def handle_mining(event: KeyboardEvent, game: Game, world_map: WorldMap):
+    def handle_mining(event: KeyboardEvent, game: Game, world_map: WorldMap) -> None:
         # TODO: clean up state... :P why do we pass all these as args?
 
         if not KEYMAP.matches("MINE", event):
@@ -1381,7 +1381,7 @@ class InputHandler:
     @classmethod
     def handle_viewport(
         cls, event: KeyboardEvent, game: Game, world_map: WorldMap = None
-    ):
+    ) -> None:
         if KEYMAP.matches("RESET_VIEWPORT", event):
             game.reset_viewport()
             if world_map:
@@ -1406,7 +1406,7 @@ class InputHandler:
                 world_map.update_status_label()
 
     @classmethod
-    def handle_scale(cls, event, game, world_map: WorldMap = None):
+    def handle_scale(cls, event, game, world_map: WorldMap = None) -> None:
         if KEYMAP.matches("SCALE_DOWN", event):
             game.viewport.rescale_down(1)
             game.reset_viewport()
@@ -1420,7 +1420,7 @@ class InputHandler:
                 world_map.update_status_label()
 
     @classmethod
-    def handle_interaction(cls, event: KeyboardEvent, game: Game, world_map: WorldMap):
+    def handle_interaction(cls, event: KeyboardEvent, game: Game, world_map: WorldMap) -> None:
         """Handle interaction with adjacent entities."""
         if not KEYMAP.matches("INTERACT", event):
             return
@@ -1435,7 +1435,7 @@ class InputHandler:
         cls._show_interaction_popup(game, adjacent_entities, world_map)
 
     @classmethod
-    def _start_npc_conversation(cls, game: Game, npc: NPC, world_map: WorldMap):
+    def _start_npc_conversation(cls, game: Game, npc: NPC, world_map: WorldMap) -> None:
         """Start a conversation with an NPC."""
         cls._show_npc_conversation(game, npc, "greeting", world_map)
 
@@ -1519,7 +1519,7 @@ class InputHandler:
         game: Game,
         adjacent_entities: list[tuple[str, VectorN, str]],
         world_map: WorldMap,
-    ):
+    ) -> None:
         """Show interaction popup for entities."""
         # Create entity options for the popup
         entity_options = [f"{name} ({color})" for name, pos, color in adjacent_entities]
@@ -1555,7 +1555,7 @@ class InputHandler:
     @classmethod
     def _handle_entity_interaction(
         cls, game: Game, name: str, pos: VectorN, _color: str, world_map: WorldMap
-    ):
+    ) -> None:
         """Handle interaction with a specific entity."""
         entity = game.world.get_entity(pos)
 
@@ -1578,7 +1578,7 @@ class InputHandler:
             cls._show_interaction_result(name, default_text, world_map)
 
     @classmethod
-    def _show_interaction_result(cls, name: str, text: str, world_map: WorldMap):
+    def _show_interaction_result(cls, name: str, text: str, world_map: WorldMap) -> None:
         """Show the result of an interaction."""
 
         def result_callback(_selected_option):
@@ -1607,7 +1607,7 @@ class InputHandler:
 class SceneEventHandler:
     """Base class for scene-specific event handlers."""
 
-    def handle_event(self, event, screen, popup_manager):
+    def handle_event(self, event, screen, popup_manager) -> bool:
         """Handle events for this scene type. Override in subclasses."""
         return False  # Event not handled
 
@@ -1615,7 +1615,7 @@ class SceneEventHandler:
 class WorldMapEventHandler(SceneEventHandler):
     """Handles events for the WorldMap scene."""
 
-    def handle_event(self, event, screen, popup_manager, world_map):
+    def handle_event(self, event, screen, popup_manager, world_map) -> bool:
         """Handle events for the WorldMap scene."""
         # Handle numlock warning logic
         if popup_manager.handle_numlock_warning(world_map, screen):
@@ -1685,7 +1685,7 @@ class WorldMapEventHandler(SceneEventHandler):
 class DevKeystrokesPageEventHandler(SceneEventHandler):
     """Handles events for the DevKeystrokesPage scene."""
 
-    def handle_event(self, event, screen, popup_manager, page):
+    def handle_event(self, event, screen, popup_manager, page) -> bool:
         """Handle events for the DevKeystrokesPage scene."""
         page.update_keystroke(event)
         return True  # Event was handled
@@ -1694,7 +1694,7 @@ class DevKeystrokesPageEventHandler(SceneEventHandler):
 class HelpPageEventHandler(SceneEventHandler):
     """Handles events for the HelpPage scene."""
 
-    def handle_event(self, event, screen, popup_manager, page):
+    def handle_event(self, event, screen, popup_manager, page) -> bool:
         """Handle events for the HelpPage scene."""
         # Help page handles its own events via process_event
         return False  # Let the page handle it normally
@@ -1703,7 +1703,7 @@ class HelpPageEventHandler(SceneEventHandler):
 class MessageLogPageEventHandler(SceneEventHandler):
     """Handles events for the MessageLogPage scene."""
 
-    def handle_event(self, event, screen, popup_manager, page):
+    def handle_event(self, event, screen, popup_manager, page) -> bool:
         """Handle events for the MessageLogPage scene."""
         # Message log page handles its own events via process_event
         return False  # Let the page handle it normally
@@ -1712,7 +1712,7 @@ class MessageLogPageEventHandler(SceneEventHandler):
 class DevPopupPageEventHandler(SceneEventHandler):
     """Handles events for the DevPopupPage scene."""
 
-    def handle_event(self, event, screen, popup_manager, page):
+    def handle_event(self, event, screen, popup_manager, page) -> bool:
         """Handle events for the DevPopupPage scene."""
         # Dev popup page handles its own events via process_event
         return False  # Let the page handle it normally
@@ -1721,7 +1721,7 @@ class DevPopupPageEventHandler(SceneEventHandler):
 class InventoryPageEventHandler(SceneEventHandler):
     """Handles events for the InventoryPage scene."""
 
-    def handle_event(self, event, screen, popup_manager, page):
+    def handle_event(self, event, screen, popup_manager, page) -> bool:
         """Handle events for the InventoryPage scene."""
         # Inventory page handles its own events via process_event
         return False  # Let the page handle it normally
@@ -1730,7 +1730,7 @@ class InventoryPageEventHandler(SceneEventHandler):
 class BodyPageEventHandler(SceneEventHandler):
     """Handles events for the BodyPage scene."""
 
-    def handle_event(self, event, screen, popup_manager, page):
+    def handle_event(self, event, screen, popup_manager, page) -> bool:
         """Handle events for the BodyPage scene."""
         # Body page handles its own events via process_event
         return False  # Let the page handle it normally
@@ -1739,7 +1739,7 @@ class BodyPageEventHandler(SceneEventHandler):
 class SceneEventRouter:
     """Routes events to appropriate scene handlers."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.handlers = {
             WorldMap: WorldMapEventHandler(),
             HelpPage: HelpPageEventHandler(),
@@ -1750,7 +1750,7 @@ class SceneEventRouter:
             BodyPage: BodyPageEventHandler(),
         }
 
-    def route_event(self, event, current_effect, screen, popup_manager):
+    def route_event(self, event, current_effect, screen, popup_manager) -> bool:
         """Route an event to the appropriate scene handler."""
         # Get the appropriate handler based on the effect's class
         handler = self.handlers.get(type(current_effect))
@@ -1768,7 +1768,7 @@ class PopupManager:
         self.active_popup = None
         self.numlock_warning_shown = False
 
-    def set_active_popup(self, popup):
+    def set_active_popup(self, popup) -> None:
         """Set the currently active popup."""
         self.active_popup = popup
 
@@ -1776,11 +1776,11 @@ class PopupManager:
         """Get the currently active popup."""
         return self.active_popup
 
-    def is_popup_active(self):
+    def is_popup_active(self) -> bool:
         """Check if there's an active popup."""
         return self.active_popup is not None
 
-    def close_active_popup(self, screen):
+    def close_active_popup(self, screen) -> None:
         """Close the currently active popup."""
         if self.active_popup is not None:
             try:
@@ -1796,7 +1796,7 @@ class PopupManager:
             finally:
                 self.active_popup = None
 
-    def handle_esc_key(self, screen):
+    def handle_esc_key(self, screen) -> bool:
         """Handle ESC key press to close active popup."""
         if self.active_popup is not None:
             self.close_active_popup(screen)
@@ -1825,7 +1825,7 @@ class PopupManager:
                 return None  # No popup to handle
         return None  # No active popup
 
-    def clear_popup_on_page_switch(self, screen):
+    def clear_popup_on_page_switch(self, screen) -> None:
         """Clear any active popup when switching to non-World Map pages."""
         if self.active_popup is not None:
             try:
@@ -1840,7 +1840,7 @@ class PopupManager:
                 pass
             self.active_popup = None
 
-    def handle_numlock_warning(self, world_map, screen):
+    def handle_numlock_warning(self, world_map, screen) -> bool:
         """Handle numlock warning logic."""
         # Check numlock state during first interaction (proactive detection)
         if not self.numlock_warning_shown and not get_numlock_state():
@@ -1857,7 +1857,7 @@ class PopupManager:
 
         return False
 
-    def check_numlock_issue(self, event, world_map):
+    def check_numlock_issue(self, event, world_map) -> bool:
         """Check for numlock issues and show warning if needed."""
         if _detect_numlock_issue(event):
             # Only show warning if no popup is currently active and warning hasn't been shown
@@ -1868,7 +1868,7 @@ class PopupManager:
         return False
 
 
-def demo(screen: Screen, scene: Scene, game: Game):
+def demo(screen: Screen, scene: Scene, game: Game) -> None:
     # Create a global variable to store the current dialog
     global current_dialog_scene
 
@@ -1903,7 +1903,7 @@ def demo(screen: Screen, scene: Scene, game: Game):
     last_screen_width = screen.width
     last_screen_height = screen.height
 
-    def handle_event(event: Union[KeyboardEvent, MouseEvent]):
+    def handle_event(event: Union[KeyboardEvent, MouseEvent]) -> None:
         current_scene: Scene = screen.current_scene
         current_effects: list[Effect] = current_scene.effects
 
@@ -1958,7 +1958,7 @@ def demo(screen: Screen, scene: Scene, game: Game):
     )
 
 
-def _raise(ex):
+def _raise(ex) -> None:
     """Because we can't use raise in lambda for some reason..."""
     raise ex
 
@@ -1968,7 +1968,7 @@ def raise_fn(clazz: any, name: str):
     bruh, why?
     """
 
-    def raise_next_scene(arg=name):
+    def raise_next_scene(arg=name) -> None:
         raise clazz(arg)
 
     return raise_next_scene
