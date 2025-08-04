@@ -93,6 +93,9 @@
 
 - nixos term resize causes crash, but not ubuntu. TODO test windows.
 - Fix ubuntu numlock warning anomaly
+- generate ubuntu keychords manually as they were lazily copied from nixos
+
+- add the ability to play music in the game
 
 - should I use cython to speed up worldgen? Does that cause some lag when objects get passed between python and c? Does threading cause issues or add lag?
 
