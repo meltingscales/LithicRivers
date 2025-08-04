@@ -101,13 +101,12 @@ class TestNumlockWarning(unittest.TestCase):
         mock_system.return_value = "Linux"
 
         # Mock headless environment (no DISPLAY)
-        with patch.dict("os.environ", {}, clear=True):
-            # Mock subprocess.run to fail (simulating headless)
-            with patch(
-                "subprocess.run", side_effect=subprocess.TimeoutExpired("xset", 1)
-            ):
-                result = get_numlock_state()
-                self.assertTrue(result)  # Should assume numlock is on in headless
+        with (
+            patch.dict("os.environ", {}, clear=True),
+            patch("subprocess.run", side_effect=subprocess.TimeoutExpired("xset", 1)),
+        ):
+            result = get_numlock_state()
+            self.assertTrue(result)  # Should assume numlock is on in headless
 
     @patch("platform.system")
     def test_get_numlock_state_linux_setleds_fallback(self, mock_system):

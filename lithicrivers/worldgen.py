@@ -9,12 +9,12 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from typing import Any, Optional
 
-from lithicrivers.logging_config import get_logger
-
-logger = get_logger(__name__)
 from lithicrivers.game import Tile, Tiles
+from lithicrivers.logging_config import get_logger
 from lithicrivers.model.vector import VectorN
 from lithicrivers.structure_generator import create_structure_manager
+
+logger = get_logger(__name__)
 
 
 @dataclass
@@ -130,11 +130,11 @@ class PerlinNoise:
         u = self._fade(xf)
 
         # Hash coordinates of the 2 square corners
-        A = self.permutation[xi]
-        AA = self.permutation[A]
+        a = self.permutation[xi]
+        aa = self.permutation[a]
 
         # Add blended results from 2 corners of 1D cube
-        return self._lerp(u, self._grad_1d(AA, xf), self._grad_1d(AA, xf - 1))
+        return self._lerp(u, self._grad_1d(aa, xf), self._grad_1d(aa, xf - 1))
 
     def noise_2d(self, x: float, y: float) -> float:
         """Generate 2D perlin noise."""
@@ -149,19 +149,19 @@ class PerlinNoise:
         v = self._fade(yf)
 
         # Hash coordinates of the 4 square corners
-        A = self.permutation[xi] + yi
-        AA = self.permutation[A]
-        AB = self.permutation[A + 1]
-        B = self.permutation[xi + 1] + yi
-        BA = self.permutation[B]
-        BB = self.permutation[B + 1]
+        a = self.permutation[xi] + yi
+        aa = self.permutation[a]
+        ab = self.permutation[a + 1]
+        b = self.permutation[xi + 1] + yi
+        ba = self.permutation[b]
+        bb = self.permutation[b + 1]
 
         # Add blended results from 4 corners of 2D cube
         return self._lerp(
             v,
-            self._lerp(u, self._grad_2d(AA, xf, yf), self._grad_2d(BA, xf - 1, yf)),
+            self._lerp(u, self._grad_2d(aa, xf, yf), self._grad_2d(ba, xf - 1, yf)),
             self._lerp(
-                u, self._grad_2d(AB, xf, yf - 1), self._grad_2d(BB, xf - 1, yf - 1)
+                u, self._grad_2d(ab, xf, yf - 1), self._grad_2d(bb, xf - 1, yf - 1)
             ),
         )
 

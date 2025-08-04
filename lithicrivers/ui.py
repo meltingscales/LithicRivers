@@ -116,9 +116,9 @@ def _get_numlock_state_windows() -> bool:
     try:
         import ctypes
 
-        hllDll = ctypes.WinDLL("User32.dll")
-        VK_NUMLOCK = 0x90
-        return bool(hllDll.GetKeyState(VK_NUMLOCK) & 0x0001)
+        hll_dll = ctypes.WinDLL("User32.dll")
+        vk_numlock = 0x90
+        return bool(hll_dll.GetKeyState(vk_numlock) & 0x0001)
     except Exception as e:
         logging.debug(f"Windows numlock detection failed: {e}")
         return True
@@ -1934,9 +1934,10 @@ def demo(screen: Screen, scene: Scene, game: Game):
         event: KeyboardEvent
 
         # Check for ESC key to close popups
-        if KEYMAP.matches("CLOSE_HELP_MENU", event):
-            if popup_manager.handle_esc_key(screen):
-                return
+        if KEYMAP.matches("CLOSE_HELP_MENU", event) and popup_manager.handle_esc_key(
+            screen
+        ):
+            return
 
         # Handle popup events
         popup_result = popup_manager.handle_popup_event(event, screen)
