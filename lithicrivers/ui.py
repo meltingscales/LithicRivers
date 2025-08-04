@@ -325,7 +325,7 @@ class HeaderLabel(asciimatics.widgets.Widget):
         self._align = align
         self.header = header
 
-    def process_event(self, event):
+    def process_event(self, event) -> Union[KeyboardEvent, MouseEvent]:
         # Labels have no user interactions
         return event
 
@@ -373,10 +373,10 @@ class HeaderLabel(asciimatics.widgets.Widget):
             content_color[2],
         )
 
-    def reset(self):
+    def reset(self) -> None:
         pass
 
-    def required_height(self, _offset, _width):
+    def required_height(self, _offset: int, _width: int) -> int:
         # Allow one line for text and a blank spacer before it.
         return self._required_height
 
@@ -410,13 +410,13 @@ class GameWidget(asciimatics.widgets.Widget):
 
         self._frame: Frame
 
-    def required_height(self, _offset, _width):
+    def required_height(self, _offset: int, _width: int) -> int:
         # Account for scale: each tile takes up scale characters vertically
         return (
             self.game.viewport.get_height() * self.game.viewport.scale + 2
         )  # +2 for our random text shit
 
-    def required_width(self, _offset, _width):
+    def required_width(self, _offset: int, _width: int) -> int:
         # Account for scale: each tile takes up scale characters horizontally
         return self.game.viewport.get_width() * self.game.viewport.scale
 
@@ -502,10 +502,10 @@ class GameWidget(asciimatics.widgets.Widget):
                 char, x_pos + i, y_pos, color[0], color[1], color[2]
             )
 
-    def reset(self):
+    def reset(self) -> None:
         pass
 
-    def process_event(self, event):
+    def process_event(self, event) -> Union[KeyboardEvent, MouseEvent]:
         # this widget has no user interactions
         return event
 
@@ -739,7 +739,7 @@ class HelpPage(Frame):
 
 
 class MessageLogPage(Frame):
-    def __init__(self, screen, game: Game = None):
+    def __init__(self, screen, game: Optional[Game] = None):
         super().__init__(
             screen, screen.height, screen.width, can_scroll=False, title="Message Log"
         )
@@ -819,7 +819,7 @@ class MessageLogPage(Frame):
 
 
 class InventoryPage(Frame):
-    def __init__(self, screen, game: Game = None):
+    def __init__(self, screen, game: Optional[Game] = None):
         super().__init__(
             screen, screen.height, screen.width, can_scroll=False, title="Inventory"
         )
@@ -891,7 +891,7 @@ class InventoryPage(Frame):
 
 
 class BodyPage(Frame):
-    def __init__(self, screen, game: Game = None):
+    def __init__(self, screen, game: Optional[Game] = None):
         super().__init__(
             screen, screen.height, screen.width, can_scroll=False, title="Body"
         )
@@ -986,10 +986,10 @@ class DevPopupPage(Frame):
         # Add test popup buttons
         from asciimatics.widgets import Button, Label
 
-        def test_simple_dialog():
+        def test_simple_dialog() -> None:
             """Test a simple dialog without options."""
 
-            def callback(result):
+            def callback(result) -> None:
                 print(f"Simple dialog result: {result}")
                 popup_manager = get_popup_manager()
                 if popup_manager:
@@ -1011,10 +1011,10 @@ class DevPopupPage(Frame):
             # Add the popup to the current scene
             screen.current_scene.add_effect(popup)
 
-        def test_options_dialog():
+        def test_options_dialog() -> None:
             """Test a dialog with options."""
 
-            def callback(result):
+            def callback(result) -> None:
                 print(f"Options dialog result: {result}")
                 popup_manager = get_popup_manager()
                 if popup_manager:
@@ -1036,10 +1036,10 @@ class DevPopupPage(Frame):
             # Add the popup to the current scene
             screen.current_scene.add_effect(popup)
 
-        def test_large_dialog():
+        def test_large_dialog() -> None:
             """Test a large dialog with lots of content."""
 
-            def callback(result):
+            def callback(result) -> None:
                 print(f"Large dialog result: {result}")
                 popup_manager = get_popup_manager()
                 if popup_manager:
@@ -1065,11 +1065,11 @@ class DevPopupPage(Frame):
             # Add the popup to the current scene
             screen.current_scene.add_effect(popup)
 
-        def test_popup_box():
+        def test_popup_box() -> None:
             """Test asciimatics PopUpDialog."""
             from asciimatics.widgets import PopUpDialog
 
-            def callback(result):
+            def callback(result) -> None:
                 print(f"Popup dialog result: {result}")
                 popup_manager = get_popup_manager()
                 if popup_manager:
@@ -1120,7 +1120,7 @@ class DialogBox(Frame):
         content: str,
         options: Optional[list[str]] = None,
         callback: Optional[Callable] = None,
-        game: Game = None,
+        game: Optional[Game] = None,
     ):
         # Calculate dialog size based on content
         max_width = min(80, screen.width - 4)
@@ -1283,7 +1283,7 @@ class EntitySelectionPopup(Frame):
         # For now, just show the result in the message area
         # TODO: Implement proper result popup display
 
-    def _start_npc_conversation(self, npc) -> None:
+    def _start_npc_conversation(self, npc: NPC) -> None:
         """Start a conversation with an NPC."""
         npc.get_conversation()
         # For now, just show the conversation in the message area
@@ -1380,7 +1380,7 @@ class InputHandler:
 
     @classmethod
     def handle_viewport(
-        cls, event: KeyboardEvent, game: Game, world_map: WorldMap = None
+        cls, event: KeyboardEvent, game: Game, world_map: Optional[WorldMap] = None
     ) -> None:
         if KEYMAP.matches("RESET_VIEWPORT", event):
             game.reset_viewport()
@@ -1406,7 +1406,7 @@ class InputHandler:
                 world_map.update_status_label()
 
     @classmethod
-    def handle_scale(cls, event, game, world_map: WorldMap = None) -> None:
+    def handle_scale(cls, event: KeyboardEvent, game: Game, world_map: Optional[WorldMap] = None) -> None:
         if KEYMAP.matches("SCALE_DOWN", event):
             game.viewport.rescale_down(1)
             game.reset_viewport()
@@ -1452,7 +1452,7 @@ class InputHandler:
         # Log the NPC's conversation text
         game.log_dialog(npc.name, conversation["text"])
 
-        def conversation_callback(selected_option):
+        def conversation_callback(selected_option) -> None:
             popup_manager = get_popup_manager()
             logging.debug(f"NPC conversation callback called with: '{selected_option}'")
             if selected_option is not None:
@@ -1524,7 +1524,7 @@ class InputHandler:
         # Create entity options for the popup
         entity_options = [f"{name} ({color})" for name, pos, color in adjacent_entities]
 
-        def popup_callback(selected_option: int):
+        def popup_callback(selected_option: int) -> None:
             """Handle the selected option."""
             if selected_option is not None:
                 # Find the selected entity
@@ -1581,7 +1581,7 @@ class InputHandler:
     def _show_interaction_result(cls, name: str, text: str, world_map: WorldMap) -> None:
         """Show the result of an interaction."""
 
-        def result_callback(_selected_option):
+        def result_callback(_selected_option) -> None:
             # Just close the result popup
             popup_manager = get_popup_manager()
             if popup_manager:
@@ -1607,7 +1607,7 @@ class InputHandler:
 class SceneEventHandler:
     """Base class for scene-specific event handlers."""
 
-    def handle_event(self, event, screen, popup_manager) -> bool:
+    def handle_event(self, event: Union[KeyboardEvent, MouseEvent], screen, popup_manager) -> bool:
         """Handle events for this scene type. Override in subclasses."""
         return False  # Event not handled
 
@@ -1615,7 +1615,7 @@ class SceneEventHandler:
 class WorldMapEventHandler(SceneEventHandler):
     """Handles events for the WorldMap scene."""
 
-    def handle_event(self, event, screen, popup_manager, world_map) -> bool:
+    def handle_event(self, event: Union[KeyboardEvent, MouseEvent], screen, popup_manager, world_map) -> bool:
         """Handle events for the WorldMap scene."""
         # Handle numlock warning logic
         if popup_manager.handle_numlock_warning(world_map, screen):
@@ -1685,7 +1685,7 @@ class WorldMapEventHandler(SceneEventHandler):
 class DevKeystrokesPageEventHandler(SceneEventHandler):
     """Handles events for the DevKeystrokesPage scene."""
 
-    def handle_event(self, event, screen, popup_manager, page) -> bool:
+    def handle_event(self, event: Union[KeyboardEvent, MouseEvent], screen, popup_manager, page) -> bool:
         """Handle events for the DevKeystrokesPage scene."""
         page.update_keystroke(event)
         return True  # Event was handled
@@ -1694,7 +1694,7 @@ class DevKeystrokesPageEventHandler(SceneEventHandler):
 class HelpPageEventHandler(SceneEventHandler):
     """Handles events for the HelpPage scene."""
 
-    def handle_event(self, event, screen, popup_manager, page) -> bool:
+    def handle_event(self, event: Union[KeyboardEvent, MouseEvent], screen, popup_manager, page) -> bool:
         """Handle events for the HelpPage scene."""
         # Help page handles its own events via process_event
         return False  # Let the page handle it normally
@@ -1703,7 +1703,7 @@ class HelpPageEventHandler(SceneEventHandler):
 class MessageLogPageEventHandler(SceneEventHandler):
     """Handles events for the MessageLogPage scene."""
 
-    def handle_event(self, event, screen, popup_manager, page) -> bool:
+    def handle_event(self, event: Union[KeyboardEvent, MouseEvent], screen, popup_manager, page) -> bool:
         """Handle events for the MessageLogPage scene."""
         # Message log page handles its own events via process_event
         return False  # Let the page handle it normally
@@ -1712,7 +1712,7 @@ class MessageLogPageEventHandler(SceneEventHandler):
 class DevPopupPageEventHandler(SceneEventHandler):
     """Handles events for the DevPopupPage scene."""
 
-    def handle_event(self, event, screen, popup_manager, page) -> bool:
+    def handle_event(self, event: Union[KeyboardEvent, MouseEvent], screen, popup_manager, page) -> bool:
         """Handle events for the DevPopupPage scene."""
         # Dev popup page handles its own events via process_event
         return False  # Let the page handle it normally
@@ -1721,7 +1721,7 @@ class DevPopupPageEventHandler(SceneEventHandler):
 class InventoryPageEventHandler(SceneEventHandler):
     """Handles events for the InventoryPage scene."""
 
-    def handle_event(self, event, screen, popup_manager, page) -> bool:
+    def handle_event(self, event: Union[KeyboardEvent, MouseEvent], screen, popup_manager, page) -> bool:
         """Handle events for the InventoryPage scene."""
         # Inventory page handles its own events via process_event
         return False  # Let the page handle it normally
@@ -1730,7 +1730,7 @@ class InventoryPageEventHandler(SceneEventHandler):
 class BodyPageEventHandler(SceneEventHandler):
     """Handles events for the BodyPage scene."""
 
-    def handle_event(self, event, screen, popup_manager, page) -> bool:
+    def handle_event(self, event: Union[KeyboardEvent, MouseEvent], screen, popup_manager, page) -> bool:
         """Handle events for the BodyPage scene."""
         # Body page handles its own events via process_event
         return False  # Let the page handle it normally
@@ -1750,7 +1750,7 @@ class SceneEventRouter:
             BodyPage: BodyPageEventHandler(),
         }
 
-    def route_event(self, event, current_effect, screen, popup_manager) -> bool:
+    def route_event(self, event: Union[KeyboardEvent, MouseEvent], current_effect, screen, popup_manager) -> bool:
         """Route an event to the appropriate scene handler."""
         # Get the appropriate handler based on the effect's class
         handler = self.handlers.get(type(current_effect))
@@ -1768,7 +1768,7 @@ class PopupManager:
         self.active_popup = None
         self.numlock_warning_shown = False
 
-    def set_active_popup(self, popup) -> None:
+    def set_active_popup(self, popup: Optional[Frame]) -> None:
         """Set the currently active popup."""
         self.active_popup = popup
 
@@ -1803,7 +1803,7 @@ class PopupManager:
             return True
         return False
 
-    def handle_popup_event(self, event, screen):
+    def handle_popup_event(self, event: Union[KeyboardEvent, MouseEvent], screen) -> Optional[bool]:
         """Handle events for the active popup."""
         if self.active_popup is not None:
             # Check if popup is still in the current scene
@@ -1857,7 +1857,7 @@ class PopupManager:
 
         return False
 
-    def check_numlock_issue(self, event, world_map) -> bool:
+    def check_numlock_issue(self, event: KeyboardEvent, world_map) -> bool:
         """Check for numlock issues and show warning if needed."""
         if _detect_numlock_issue(event):
             # Only show warning if no popup is currently active and warning hasn't been shown
@@ -1931,7 +1931,7 @@ def demo(screen: Screen, scene: Scene, game: Game) -> None:
         if not isinstance(event, KeyboardEvent):
             # print("not keyboard event, ignoring... - {}".format(event))
             return
-        event: KeyboardEvent
+        # event: KeyboardEvent  # This line was causing a redefinition error
 
         # Check for ESC key to close popups
         if KEYMAP.matches("CLOSE_HELP_MENU", event) and popup_manager.handle_esc_key(
@@ -1963,7 +1963,7 @@ def _raise(ex) -> None:
     raise ex
 
 
-def raise_fn(clazz: type, name: str):
+def raise_fn(clazz: type, name: str) -> Callable[[], None]:
     """
     bruh, why?
     """
