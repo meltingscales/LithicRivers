@@ -228,6 +228,8 @@ class TabButtons(Layout):
             Button("World Map", self._safe_scene_change("WorldMap")),
             Button("Help", self._safe_scene_change("HelpPage")),
             Button("Message Log", self._safe_scene_change("MessageLogPage")),
+            Button("Inventory", self._safe_scene_change("InventoryPage")),
+            Button("Body", self._safe_scene_change("BodyPage")),
         ]
 
         # Add Test Popups button only if developer mode is enabled
@@ -797,6 +799,58 @@ class MessageLogPage(Frame):
         """Update the frame, refreshing messages."""
         super().update(frame_no)
         self.update_messages()
+
+
+class InventoryPage(Frame):
+    def __init__(self, screen, game: Game = None):
+        super().__init__(
+            screen, screen.height, screen.width, can_scroll=False, title="Inventory"
+        )
+        self.game = game
+
+        # Create main layout
+        layout1 = Layout([1], fill_frame=True)
+        self.add_layout(layout1)
+
+        # Add dummy label for now
+        self.inventory_label = Label(
+            "Inventory Panel - Coming Soon!\n\nThis is where you'll be able to view and manipulate your inventory items.",
+            height=screen.height - 4,  # Leave room for tab buttons
+            name="inventory_label",
+        )
+        layout1.add_widget(self.inventory_label)
+
+        # Create tab buttons
+        layout2 = TabButtons(self)
+        self.add_layout(layout2)
+
+        self.fix()
+
+
+class BodyPage(Frame):
+    def __init__(self, screen, game: Game = None):
+        super().__init__(
+            screen, screen.height, screen.width, can_scroll=False, title="Body"
+        )
+        self.game = game
+
+        # Create main layout
+        layout1 = Layout([1], fill_frame=True)
+        self.add_layout(layout1)
+
+        # Add dummy label for now
+        self.body_label = Label(
+            "Body Panel - Coming Soon!\n\nThis is where you'll be able to view and modify your android body parts.",
+            height=screen.height - 4,  # Leave room for tab buttons
+            name="body_label",
+        )
+        layout1.add_widget(self.body_label)
+
+        # Create tab buttons
+        layout2 = TabButtons(self)
+        self.add_layout(layout2)
+
+        self.fix()
 
 
 class DevKeystrokesPage(Frame):
@@ -1599,6 +1653,24 @@ class DevPopupPageEventHandler(SceneEventHandler):
         return False  # Let the page handle it normally
 
 
+class InventoryPageEventHandler(SceneEventHandler):
+    """Handles events for the InventoryPage scene."""
+    
+    def handle_event(self, event, screen, popup_manager, page):
+        """Handle events for the InventoryPage scene."""
+        # Inventory page handles its own events via process_event
+        return False  # Let the page handle it normally
+
+
+class BodyPageEventHandler(SceneEventHandler):
+    """Handles events for the BodyPage scene."""
+    
+    def handle_event(self, event, screen, popup_manager, page):
+        """Handle events for the BodyPage scene."""
+        # Body page handles its own events via process_event
+        return False  # Let the page handle it normally
+
+
 class SceneEventRouter:
     """Routes events to appropriate scene handlers."""
     
@@ -1609,6 +1681,8 @@ class SceneEventRouter:
             MessageLogPage: MessageLogPageEventHandler(),
             DevPopupPage: DevPopupPageEventHandler(),
             DevKeystrokesPage: DevKeystrokesPageEventHandler(),
+            InventoryPage: InventoryPageEventHandler(),
+            BodyPage: BodyPageEventHandler(),
         }
     
     def route_event(self, event, current_effect, screen, popup_manager):
@@ -1748,6 +1822,8 @@ def demo(screen: Screen, scene: Scene, game: Game):
         Scene([MessageLogPage(screen, game)], -1, name="MessageLogPage"),
         Scene([DevPopupPage(screen)], -1, name="DevPopupPage"),
         Scene([DevKeystrokesPage(screen)], -1, name="DevKeystrokesPage"),
+        Scene([InventoryPage(screen, game)], -1, name="InventoryPage"),
+        Scene([BodyPage(screen, game)], -1, name="BodyPage"),
     ]
 
     # Add dialog scenes that will be created dynamically
