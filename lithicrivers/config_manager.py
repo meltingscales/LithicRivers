@@ -2,7 +2,7 @@ import json
 import logging
 import sys
 from pathlib import Path
-from typing import Any, FrozenSet, List, Union
+from typing import Any
 
 from lithicrivers.model.vector import VectorN
 
@@ -45,26 +45,17 @@ class ConfigManager:
                 "MOVE_SOUTH": ["NUMPAD_2"],
                 "MOVE_SOUTHEAST": ["NUMPAD_3"],
                 "MOVE_UP": ["q"],
-                "MOVE_DOWN": ["e"]
+                "MOVE_DOWN": ["e"],
             },
             "viewport": {
                 "RESET_VIEWPORT": ["r"],
                 "SLIDE_VIEWPORT_WEST": ["["],
                 "SLIDE_VIEWPORT_EAST": ["]"],
-                "TOGGLE_VIEWPORT": ["v"]
+                "TOGGLE_VIEWPORT": ["v"],
             },
-            "scale": {
-                "SCALE_UP": ["=", "+"],
-                "SCALE_DOWN": ["-"]
-            },
-            "action": {
-                "MINE": ["u"],
-                "INTERACT": ["i"]
-            },
-            "ui": {
-                "CLOSE_HELP_MENU": ["ESCAPE"],
-                "OPEN_COMMAND_MENU": ["/"]
-            }
+            "scale": {"SCALE_UP": ["=", "+"], "SCALE_DOWN": ["-"]},
+            "action": {"MINE": ["u"], "INTERACT": ["i"]},
+            "ui": {"CLOSE_HELP_MENU": ["ESCAPE"], "OPEN_COMMAND_MENU": ["/"]},
         }
 
         return self._load_json_file(self.keybinds_file, default_keybinds)
@@ -77,7 +68,7 @@ class ConfigManager:
                 "LOGFILENAME": "LithicRivers.log",
                 "LOGGINGLEVEL": "INFO",
                 "DEVELOPER_MODE": True,
-                "DEFAULT_SEED": 4669201609
+                "DEFAULT_SEED": 4669201609,
             },
             "world": {
                 "DEFAULT_SIZE_RADIUS": {
@@ -115,7 +106,7 @@ class ConfigManager:
             )
             return default_data
 
-    def get_keybind(self, category: str, key_name: str) -> FrozenSet[str]:
+    def get_keybind(self, category: str, key_name: str) -> frozenset[str]:
         """Get a keybind value."""
         return_value = self.keybinds.get(category, {}).get(key_name, frozenset())
 
@@ -151,7 +142,7 @@ class ConfigManager:
         except OSError as e:
             logging.error(f"Error saving settings: {e}")
 
-    def update_keybind(self, category: str, key_name: str, value: List[str]):
+    def update_keybind(self, category: str, key_name: str, value: list[str]):
         """Update a keybind value."""
         if category not in self.keybinds:
             self.keybinds[category] = {}

@@ -4,10 +4,10 @@ Copyright (c) 2024 Henry Post. All rights reserved.
 """
 
 import logging
-from typing import TYPE_CHECKING, Callable, Optional, Union
+import os
 import platform
 import subprocess
-import os
+from typing import TYPE_CHECKING, Callable, Optional, Union
 
 import asciimatics.widgets
 from asciimatics.event import KeyboardEvent, MouseEvent
@@ -38,19 +38,22 @@ if TYPE_CHECKING:
 # Global popup manager instance
 _popup_manager = None
 
+
 def get_popup_manager():
     """Get the global popup manager instance."""
     global _popup_manager
     return _popup_manager
+
 
 def set_popup_manager(manager):
     """Set the global popup manager instance."""
     global _popup_manager
     _popup_manager = manager
 
+
 def _show_numlock_warning(world_map):
     """Show a warning popup about numlock being off."""
-    warning_text = """  NUMLOCK WARNING 
+    warning_text = """  NUMLOCK WARNING
 
 Your NumLock key appears to be turned OFF. This can cause issues with movement controls.
 
@@ -58,7 +61,7 @@ This message will only show once per game session.
 
 When NumLock is OFF:
 • Numpad 8 becomes Up Arrow
-• Numpad 2 becomes Down Arrow  
+• Numpad 2 becomes Down Arrow
 • Numpad 4 becomes Left Arrow
 • Numpad 6 becomes Right Arrow
 • And so on...
@@ -112,6 +115,7 @@ def _get_numlock_state_windows() -> bool:
     """Get numlock state on Windows using the Windows API."""
     try:
         import ctypes
+
         hllDll = ctypes.WinDLL("User32.dll")
         VK_NUMLOCK = 0x90
         return bool(hllDll.GetKeyState(VK_NUMLOCK) & 0x0001)
@@ -125,44 +129,40 @@ def _get_numlock_state_linux() -> bool:
     try:
         # Try to use xset first (most portable)
         result = subprocess.run(
-            ["xset", "q"], 
-            capture_output=True, 
-            text=True, 
-            timeout=1
+            ["xset", "q"], capture_output=True, text=True, timeout=1
         )
         if result.returncode == 0:
             # Look for "Num Lock: on" or "Num Lock: off" in the output
             # xset output can have variable spacing, so use more robust matching
             output = result.stdout.lower()
             import re
+
             if re.search(r"num lock:\s*on", output):
                 return True
             elif re.search(r"num lock:\s*off", output):
                 return False
-        
+
         # If xset fails, try to check if we're in a headless environment
         # In headless environments, assume numlock is on (safe default)
-        if not os.environ.get('DISPLAY'):
+        if not os.environ.get("DISPLAY"):
             return True
-            
+
         # Try to use setleds as another fallback
         try:
             result = subprocess.run(
-                ["setleds", "-L"], 
-                capture_output=True, 
-                text=True, 
-                timeout=1
+                ["setleds", "-L"], capture_output=True, text=True, timeout=1
             )
             if result.returncode == 0:
                 output = result.stdout.lower()
                 import re
+
                 if re.search(r"num lock:\s*on", output):
                     return True
                 elif re.search(r"num lock:\s*off", output):
                     return False
         except (subprocess.TimeoutExpired, FileNotFoundError):
             pass
-            
+
         # If all methods fail, assume numlock is on (safe default)
         return True
     except Exception as e:
@@ -170,19 +170,21 @@ def _get_numlock_state_linux() -> bool:
         return True
 
 
-def _generate_entity_selection_message(adjacent_entities: list[tuple[str, VectorN, str]]) -> str:
+def _generate_entity_selection_message(
+    adjacent_entities: list[tuple[str, VectorN, str]],
+) -> str:
     """Generate a more specific message for entity selection based on entity types."""
     if not adjacent_entities:
         return "No entities nearby."
-    
+
     # Count entity types
     entity_counts = {}
     for name, _, _ in adjacent_entities:
         entity_counts[name] = entity_counts.get(name, 0) + 1
-    
+
     # Generate specific message based on entity types
     if len(entity_counts) == 1:
-        entity_name = list(entity_counts.keys())[0]
+        entity_name = next(iter(entity_counts.keys()))
         count = entity_counts[entity_name]
         if count == 1:
             return f"Found a {entity_name} nearby:"
@@ -196,7 +198,7 @@ def _generate_entity_selection_message(adjacent_entities: list[tuple[str, Vector
                 entity_list.append(f"a {name}")
             else:
                 entity_list.append(f"{count} {name}s")
-        
+
         if len(entity_list) == 2:
             return f"Found {entity_list[0]} and {entity_list[1]} nearby:"
         else:
@@ -209,15 +211,24 @@ def _detect_numlock_issue(event: KeyboardEvent) -> bool:
     """Detect if numlock is off by checking if numpad keys are sending unexpected codes."""
     # When numlock is off, numpad keys send different key codes:
     # Numpad 8 (normally 56) becomes UP_ARROW (-204)
-    # Numpad 2 (normally 50) becomes DOWN_ARROW (-205) 
+    # Numpad 2 (normally 50) becomes DOWN_ARROW (-205)
     # Numpad 4 (normally 52) becomes LEFT_ARROW (-206)
     # Numpad 6 (normally 54) becomes RIGHT_ARROW (-207)
     # Numpad 7 (normally 55) becomes HOME (-208)
     # Numpad 9 (normally 57) becomes PAGE_UP (-209)
     # Numpad 1 (normally 49) becomes END (-210)
     # Numpad 3 (normally 51) becomes PAGE_DOWN (-211)
-    
-    numlock_off_codes = [-204, -205, -206, -207, -208, -209, -210, -211]  # Arrow keys, home, end, page up/down
+
+    numlock_off_codes = [
+        -204,
+        -205,
+        -206,
+        -207,
+        -208,
+        -209,
+        -210,
+        -211,
+    ]  # Arrow keys, home, end, page up/down
     return event.key_code in numlock_off_codes
 
 
@@ -234,8 +245,12 @@ class TabButtons(Layout):
 
         # Add Test Popups button only if developer mode is enabled
         if DEVELOPER_MODE:
-            buttons.append(Button("Test Popups", self._safe_scene_change("DevPopupPage")))
-            buttons.append(Button("Test Keystrokes", self._safe_scene_change("DevKeystrokesPage")))
+            buttons.append(
+                Button("Test Popups", self._safe_scene_change("DevPopupPage"))
+            )
+            buttons.append(
+                Button("Test Keystrokes", self._safe_scene_change("DevKeystrokesPage"))
+            )
 
         buttons.append(Button("Quit", raise_fn(StopGameError, "Goodbye!")))
 
@@ -716,9 +731,9 @@ class HelpPage(Frame):
     def process_event(self, event):
         """Handle events for the help page, including ESC to close."""
         # Check for ESC key to close help menu using keymap
-        if hasattr(event, 'key_code') and KEYMAP.matches("CLOSE_HELP_MENU", event):
+        if hasattr(event, "key_code") and KEYMAP.matches("CLOSE_HELP_MENU", event):
             raise NextScene("WorldMap")
-        
+
         # Let the parent class handle other events
         return super().process_event(event)
 
@@ -749,7 +764,7 @@ class MessageLogPage(Frame):
         self.add_layout(layout2)
 
         self.fix()
-        
+
         # Initialize the message display immediately
         self.update_messages()
 
@@ -777,7 +792,9 @@ class MessageLogPage(Frame):
         formatted_messages = []
         for msg in messages:
             timestamp = msg["timestamp"]
-            gametick = msg.get("gametick", 0)  # Get gametick, default to 0 for backward compatibility
+            gametick = msg.get(
+                "gametick", 0
+            )  # Get gametick, default to 0 for backward compatibility
             message_type = msg["type"]
             message = msg["message"]
 
@@ -814,35 +831,27 @@ class InventoryPage(Frame):
 
         # === INVENTORY SECTION (Left Column) ===
         # Inventory header
-        self.inventory_header = Label(
-            "INVENTORY",
-            height=1,
-            name="inventory_header"
-        )
+        self.inventory_header = Label("INVENTORY", height=1, name="inventory_header")
         main_layout.add_widget(self.inventory_header, column=0)
 
         # Inventory items list (scrollable)
         self.inventory_list = Label(
             "No items in inventory.\n\nItems will appear here when you pick them up.",
             height=screen.height - 8,  # Leave room for headers and tab buttons
-            name="inventory_list"
+            name="inventory_list",
         )
         main_layout.add_widget(self.inventory_list, column=0)
 
         # === CRAFTING SECTION (Right Column) ===
         # Crafting header
-        self.crafting_header = Label(
-            "CRAFTING",
-            height=1,
-            name="crafting_header"
-        )
+        self.crafting_header = Label("CRAFTING", height=1, name="crafting_header")
         main_layout.add_widget(self.crafting_header, column=1)
 
         # Crafting recipes list
         self.crafting_list = Label(
             "No recipes available.\n\nCrafting recipes will appear here as you discover them.",
             height=screen.height - 8,  # Leave room for headers and tab buttons
-            name="crafting_list"
+            name="crafting_list",
         )
         main_layout.add_widget(self.crafting_list, column=1)
 
@@ -866,7 +875,7 @@ class InventoryPage(Frame):
         lines = []
         for item in inventory.itemsdata:
             lines.append(f"• {item.name}")
-        
+
         self.inventory_list.text = "\n".join(lines)
 
     def update_crafting_display(self):
@@ -910,7 +919,11 @@ class BodyPage(Frame):
 class DevKeystrokesPage(Frame):
     def __init__(self, screen):
         super().__init__(
-            screen, screen.height, screen.width, can_scroll=False, title="Test Keystrokes"
+            screen,
+            screen.height,
+            screen.width,
+            can_scroll=False,
+            title="Test Keystrokes",
         )
 
         layout1 = Layout([1], fill_frame=True)
@@ -919,7 +932,7 @@ class DevKeystrokesPage(Frame):
         # Add a big text box that contains a running log of the last 10 keystrokes and their int codes as well as ascii-printable representations (if they can be printed)
 
         self.textBoxKeystrokes = Label("keystrokes", height=20)
-        self.logKeystrokes = list()
+        self.logKeystrokes = []
 
         layout1.add_widget(self.textBoxKeystrokes)
 
@@ -931,23 +944,21 @@ class DevKeystrokesPage(Frame):
         self.fix()
 
     def render_log(self):
-        self.textBoxKeystrokes.text = '\n'.join(self.logKeystrokes)
+        self.textBoxKeystrokes.text = "\n".join(self.logKeystrokes)
 
-    def append_to_log(self,m:str):
+    def append_to_log(self, m: str):
         if len(self.logKeystrokes) > 10:
             del self.logKeystrokes[0]
 
         self.logKeystrokes.append(m)
 
-    def update_keystroke(self, event: Union[KeyboardEvent,MouseEvent]):
-
+    def update_keystroke(self, event: Union[KeyboardEvent, MouseEvent]):
         if isinstance(event, MouseEvent):
-
-            self.append_to_log(f"mouse event TODO process it: {repr(event)}")
-            pass #TODO: For now, we're ignoring MouseEvent.
+            self.append_to_log(f"mouse event TODO process it: {event!r}")
+            pass  # TODO: For now, we're ignoring MouseEvent.
 
         if isinstance(event, KeyboardEvent):
-            event:KeyboardEvent
+            event: KeyboardEvent
 
             key_code = event.key_code
 
@@ -1516,13 +1527,10 @@ class InputHandler:
         def popup_callback(selected_option: int):
             """Handle the selected option."""
             if selected_option is not None:
-
                 # Find the selected entity
                 chosen_entity = adjacent_entities[selected_option]
                 name, pos, color = chosen_entity
-                cls._handle_entity_interaction(
-                    game, name, pos, color, world_map
-                )
+                cls._handle_entity_interaction(game, name, pos, color, world_map)
 
             popup_manager = get_popup_manager()
             if popup_manager:
@@ -1598,7 +1606,7 @@ class InputHandler:
 
 class SceneEventHandler:
     """Base class for scene-specific event handlers."""
-    
+
     def handle_event(self, event, screen, popup_manager):
         """Handle events for this scene type. Override in subclasses."""
         return False  # Event not handled
@@ -1606,13 +1614,13 @@ class SceneEventHandler:
 
 class WorldMapEventHandler(SceneEventHandler):
     """Handles events for the WorldMap scene."""
-    
+
     def handle_event(self, event, screen, popup_manager, world_map):
         """Handle events for the WorldMap scene."""
         # Handle numlock warning logic
         if popup_manager.handle_numlock_warning(world_map, screen):
             return True  # Don't process movement until user acknowledges warning
-        
+
         # Check for numlock issues before handling movement (fallback detection)
         if popup_manager.check_numlock_issue(event, world_map):
             return True  # Don't process movement when numlock is off
@@ -1626,7 +1634,9 @@ class WorldMapEventHandler(SceneEventHandler):
             world_map.game.move_player(move_vec)
 
             # display pos
-            world_map.labelPosition.text = world_map.game.render_pretty_player_position()
+            world_map.labelPosition.text = (
+                world_map.game.render_pretty_player_position()
+            )
 
             # Update status label immediately
             world_map.update_status_label()
@@ -1638,42 +1648,43 @@ class WorldMapEventHandler(SceneEventHandler):
                 # still outside? Something's wrong, let's reset the viewport...
                 if world_map.game.player_outside_viewport(wiggle=VIEWPORT_WIGGLE):
                     world_map.game.reset_viewport()
-            
+
             event_handled = True
 
         # Handle other input types - check if they match the expected keys
-        if (KEYMAP.matches("RESET_VIEWPORT", event) or 
-            KEYMAP.matches("SLIDE_VIEWPORT_WEST", event) or
-            KEYMAP.matches("SLIDE_VIEWPORT_EAST", event) or
-            KEYMAP.matches("TOGGLE_VIEWPORT", event)):
+        if (
+            KEYMAP.matches("RESET_VIEWPORT", event)
+            or KEYMAP.matches("SLIDE_VIEWPORT_WEST", event)
+            or KEYMAP.matches("SLIDE_VIEWPORT_EAST", event)
+            or KEYMAP.matches("TOGGLE_VIEWPORT", event)
+        ):
             InputHandler.handle_viewport(event, world_map.game, world_map)
             event_handled = True
-            
-        if (KEYMAP.matches("SCALE_DOWN", event) or 
-            KEYMAP.matches("SCALE_UP", event)):
+
+        if KEYMAP.matches("SCALE_DOWN", event) or KEYMAP.matches("SCALE_UP", event):
             InputHandler.handle_scale(event, world_map.game, world_map)
             event_handled = True
-            
+
         if KEYMAP.matches("INTERACT", event):
             InputHandler.handle_interaction(event, world_map.game, world_map)
             event_handled = True
-            
+
         if KEYMAP.matches("MINE", event):
             InputHandler.handle_mining(event, world_map.game, world_map)
             event_handled = True
-        
+
         # Update UI elements if any event was handled
         if event_handled:
             world_map.labelInventory.text = world_map.game.player.inventory.summary()
             world_map.labelFeet.text = str(world_map.game.get_tile_at_player_feet())
             world_map.labelViewport.text = str(world_map.game.viewport.render_pretty())
-        
+
         return event_handled  # Only return True if an event was actually handled
 
 
 class DevKeystrokesPageEventHandler(SceneEventHandler):
     """Handles events for the DevKeystrokesPage scene."""
-    
+
     def handle_event(self, event, screen, popup_manager, page):
         """Handle events for the DevKeystrokesPage scene."""
         page.update_keystroke(event)
@@ -1682,7 +1693,7 @@ class DevKeystrokesPageEventHandler(SceneEventHandler):
 
 class HelpPageEventHandler(SceneEventHandler):
     """Handles events for the HelpPage scene."""
-    
+
     def handle_event(self, event, screen, popup_manager, page):
         """Handle events for the HelpPage scene."""
         # Help page handles its own events via process_event
@@ -1691,7 +1702,7 @@ class HelpPageEventHandler(SceneEventHandler):
 
 class MessageLogPageEventHandler(SceneEventHandler):
     """Handles events for the MessageLogPage scene."""
-    
+
     def handle_event(self, event, screen, popup_manager, page):
         """Handle events for the MessageLogPage scene."""
         # Message log page handles its own events via process_event
@@ -1700,7 +1711,7 @@ class MessageLogPageEventHandler(SceneEventHandler):
 
 class DevPopupPageEventHandler(SceneEventHandler):
     """Handles events for the DevPopupPage scene."""
-    
+
     def handle_event(self, event, screen, popup_manager, page):
         """Handle events for the DevPopupPage scene."""
         # Dev popup page handles its own events via process_event
@@ -1709,7 +1720,7 @@ class DevPopupPageEventHandler(SceneEventHandler):
 
 class InventoryPageEventHandler(SceneEventHandler):
     """Handles events for the InventoryPage scene."""
-    
+
     def handle_event(self, event, screen, popup_manager, page):
         """Handle events for the InventoryPage scene."""
         # Inventory page handles its own events via process_event
@@ -1718,7 +1729,7 @@ class InventoryPageEventHandler(SceneEventHandler):
 
 class BodyPageEventHandler(SceneEventHandler):
     """Handles events for the BodyPage scene."""
-    
+
     def handle_event(self, event, screen, popup_manager, page):
         """Handle events for the BodyPage scene."""
         # Body page handles its own events via process_event
@@ -1727,7 +1738,7 @@ class BodyPageEventHandler(SceneEventHandler):
 
 class SceneEventRouter:
     """Routes events to appropriate scene handlers."""
-    
+
     def __init__(self):
         self.handlers = {
             WorldMap: WorldMapEventHandler(),
@@ -1738,37 +1749,37 @@ class SceneEventRouter:
             InventoryPage: InventoryPageEventHandler(),
             BodyPage: BodyPageEventHandler(),
         }
-    
+
     def route_event(self, event, current_effect, screen, popup_manager):
         """Route an event to the appropriate scene handler."""
         # Get the appropriate handler based on the effect's class
         handler = self.handlers.get(type(current_effect))
         if handler:
             return handler.handle_event(event, screen, popup_manager, current_effect)
-        
+
         # Default: let the effect handle it normally
         return False
 
 
 class PopupManager:
     """Manages popup dialogs and their lifecycle."""
-    
+
     def __init__(self):
         self.active_popup = None
         self.numlock_warning_shown = False
-    
+
     def set_active_popup(self, popup):
         """Set the currently active popup."""
         self.active_popup = popup
-    
+
     def get_active_popup(self):
         """Get the currently active popup."""
         return self.active_popup
-    
+
     def is_popup_active(self):
         """Check if there's an active popup."""
         return self.active_popup is not None
-    
+
     def close_active_popup(self, screen):
         """Close the currently active popup."""
         if self.active_popup is not None:
@@ -1777,19 +1788,21 @@ class PopupManager:
                     hasattr(self.active_popup, "_screen")
                     and self.active_popup._screen.current_scene
                 ):
-                    self.active_popup._screen.current_scene.remove_effect(self.active_popup)
+                    self.active_popup._screen.current_scene.remove_effect(
+                        self.active_popup
+                    )
             except Exception as e:
                 logging.info(f"Error closing popup: {e}")
             finally:
                 self.active_popup = None
-    
+
     def handle_esc_key(self, screen):
         """Handle ESC key press to close active popup."""
         if self.active_popup is not None:
             self.close_active_popup(screen)
             return True
         return False
-    
+
     def handle_popup_event(self, event, screen):
         """Handle events for the active popup."""
         if self.active_popup is not None:
@@ -1798,7 +1811,7 @@ class PopupManager:
                 # Popup was removed from scene, clear it
                 self.active_popup = None
                 return None  # No popup to handle
-            
+
             # Let the popup handle the event
             try:
                 result = self.active_popup.process_event(event)
@@ -1811,7 +1824,7 @@ class PopupManager:
                 self.active_popup = None
                 return None  # No popup to handle
         return None  # No active popup
-    
+
     def clear_popup_on_page_switch(self, screen):
         """Clear any active popup when switching to non-World Map pages."""
         if self.active_popup is not None:
@@ -1820,11 +1833,13 @@ class PopupManager:
                     hasattr(self.active_popup, "_screen")
                     and self.active_popup._screen.current_scene
                 ):
-                    self.active_popup._screen.current_scene.remove_effect(self.active_popup)
+                    self.active_popup._screen.current_scene.remove_effect(
+                        self.active_popup
+                    )
             except Exception:
                 pass
             self.active_popup = None
-    
+
     def handle_numlock_warning(self, world_map, screen):
         """Handle numlock warning logic."""
         # Check numlock state during first interaction (proactive detection)
@@ -1833,15 +1848,15 @@ class PopupManager:
             _show_numlock_warning(world_map)
             self.numlock_warning_shown = True
             return True  # Don't process movement until user acknowledges warning
-        
+
         # Check if numlock has been toggled on (state changed from off to on)
         if self.active_popup is not None and get_numlock_state():
             # Close the popup if numlock is now on
             self.close_active_popup(screen)
             return True  # Process the movement after closing popup
-        
+
         return False
-    
+
     def check_numlock_issue(self, event, world_map):
         """Check for numlock issues and show warning if needed."""
         if _detect_numlock_issue(event):
@@ -1860,16 +1875,14 @@ def demo(screen: Screen, scene: Scene, game: Game):
     # Create popup manager to handle all popup-related logic
     popup_manager = PopupManager()
     set_popup_manager(popup_manager)  # Set the global instance
-    
+
     # Create scene event router
     scene_router = SceneEventRouter()
-    
+
     # Global variable to track if numlock warning has been shown
     global numlock_warning_shown
     numlock_warning_shown = False  # Initialize to False
-    
 
-    
     scenes = [
         Scene([WorldMap(screen, game)], -1, name="WorldMap"),
         Scene([HelpPage(screen, game)], -1, name="HelpPage"),

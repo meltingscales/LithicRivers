@@ -1,8 +1,8 @@
 import unittest
 
 from lithicrivers.game import NPC, Entities, Game, InteractiveEntity
-from lithicrivers.settings import DEFAULT_SEED
 from lithicrivers.model.vector import VectorN
+from lithicrivers.settings import DEFAULT_SEED
 
 
 class TestDialogSystem(unittest.TestCase):

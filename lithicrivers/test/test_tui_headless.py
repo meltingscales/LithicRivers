@@ -4,6 +4,7 @@ This module provides testing for TUI components in headless mode.
 """
 
 import os
+
 # Set TESTING environment BEFORE importing any game modules
 os.environ["TESTING"] = "1"
 
@@ -24,11 +25,10 @@ from lithicrivers.constants import (
     VEC_SOUTHWEST,
     VEC_WEST,
 )
-from lithicrivers.game import Game
-from lithicrivers.settings import DEFAULT_SEED
-from lithicrivers.game import Tiles
+from lithicrivers.game import Game, Tiles
 from lithicrivers.game_engine import GameEngine
 from lithicrivers.model.vector import VectorN
+from lithicrivers.settings import DEFAULT_SEED
 from lithicrivers.ui import GameWidget, HelpPage, InputHandler, WorldMap
 
 

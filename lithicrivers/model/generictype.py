@@ -6,4 +6,4 @@ Copyright (c) 2024 Henry Post. All rights reserved.
 from typing import TypeVar
 
 # Generic type parameter for weighted choice functions
-T = TypeVar('T') 
+T = TypeVar("T")

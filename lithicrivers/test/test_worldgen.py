@@ -4,15 +4,15 @@ Tests for seeded world generation functionality.
 
 import unittest
 
-from lithicrivers.game import Tile, Tiles
+from lithicrivers.game import Tile
 from lithicrivers.model.vector import VectorN
+from lithicrivers.settings import DEFAULT_SEED
 from lithicrivers.worldgen import (
     SeededWorldGenerator,
     WorldSeed,
     create_world_generator,
     generate_world_with_seed,
 )
-from lithicrivers.settings import DEFAULT_SEED
 
 
 class TestWorldSeed(unittest.TestCase):
@@ -165,17 +165,27 @@ class TestWorldGenerationFunctions(unittest.TestCase):
 
         # Verify that structures are present (should have more tiles than just terrain)
         terrain_only_count = (2 * radius.x) * (2 * radius.y) * (2 * radius.z)
-        self.assertGreater(len(world_data1), terrain_only_count, 
-                          "World should contain structures in addition to terrain")
+        self.assertGreater(
+            len(world_data1),
+            terrain_only_count,
+            "World should contain structures in addition to terrain",
+        )
 
         # Check for specific structure tiles (iron_scrap, bone_block, etc.)
         structure_tiles = []
         for tile in world_data1.values():
-            if tile.tileid in ["Iron Scrap", "Bone Block", "Door", "Scrap Electronics", "Treasure"]:
+            if tile.tileid in [
+                "Iron Scrap",
+                "Bone Block",
+                "Door",
+                "Scrap Electronics",
+                "Treasure",
+            ]:
                 structure_tiles.append(tile.tileid)
-        
-        self.assertGreater(len(structure_tiles), 0, 
-                          "World should contain structure tiles")
+
+        self.assertGreater(
+            len(structure_tiles), 0, "World should contain structure tiles"
+        )
 
     def test_structure_placement_deterministic(self):
         """Test that structure placement is deterministic across multiple generations."""
@@ -198,15 +208,33 @@ class TestWorldGenerationFunctions(unittest.TestCase):
         structure_positions3 = []
 
         for pos_str, tile in world_data1.items():
-            if tile.tileid in ["Iron Scrap", "Bone Block", "Door", "Scrap Electronics", "Treasure"]:
+            if tile.tileid in [
+                "Iron Scrap",
+                "Bone Block",
+                "Door",
+                "Scrap Electronics",
+                "Treasure",
+            ]:
                 structure_positions1.append(pos_str)
 
         for pos_str, tile in world_data2.items():
-            if tile.tileid in ["Iron Scrap", "Bone Block", "Door", "Scrap Electronics", "Treasure"]:
+            if tile.tileid in [
+                "Iron Scrap",
+                "Bone Block",
+                "Door",
+                "Scrap Electronics",
+                "Treasure",
+            ]:
                 structure_positions2.append(pos_str)
 
         for pos_str, tile in world_data3.items():
-            if tile.tileid in ["Iron Scrap", "Bone Block", "Door", "Scrap Electronics", "Treasure"]:
+            if tile.tileid in [
+                "Iron Scrap",
+                "Bone Block",
+                "Door",
+                "Scrap Electronics",
+                "Treasure",
+            ]:
                 structure_positions3.append(pos_str)
 
         # Structure positions should be identical across all generations
@@ -232,7 +260,7 @@ class TestIntegrationWithGame(unittest.TestCase):
     def setUpClass(cls):
         """Create shared world data for tests to improve performance."""
         from lithicrivers.game import World
-        
+
         # Create shared world data with smaller radius for faster testing
         cls.shared_world1 = World(seed=42)
         cls.shared_world2 = World(seed=42)
@@ -240,7 +268,6 @@ class TestIntegrationWithGame(unittest.TestCase):
 
     def test_world_creation_with_seed(self):
         """Test creating a World with a seed."""
-        from lithicrivers.game import World
 
         # Use shared world data instead of creating new ones
         world1 = self.shared_world1
@@ -252,11 +279,12 @@ class TestIntegrationWithGame(unittest.TestCase):
         for pos in test_positions:
             tile1 = world1.get_tile(pos)
             tile2 = world2.get_tile(pos)
-            self.assertEqual(tile1.tileid, tile2.tileid, f"Tiles at {pos} should be identical")
+            self.assertEqual(
+                tile1.tileid, tile2.tileid, f"Tiles at {pos} should be identical"
+            )
 
     def test_world_creation_different_seeds(self):
         """Test that different seeds produce different worlds."""
-        from lithicrivers.game import World
 
         # Use shared world data instead of creating new ones
         world1 = self.shared_world1
@@ -264,7 +292,12 @@ class TestIntegrationWithGame(unittest.TestCase):
 
         # Different seeds should produce different worlds
         # Compare tile data by checking specific positions that are more likely to differ
-        test_positions = [VectorN(7, 13, 0), VectorN(-7, -13, 0), VectorN(25, 25, 0), VectorN(-25, -25, 0)]
+        test_positions = [
+            VectorN(7, 13, 0),
+            VectorN(-7, -13, 0),
+            VectorN(25, 25, 0),
+            VectorN(-25, -25, 0),
+        ]
         differences_found = False
         for pos in test_positions:
             tile1 = world1.get_tile(pos)
@@ -272,7 +305,9 @@ class TestIntegrationWithGame(unittest.TestCase):
             if tile1.tileid != tile2.tileid:
                 differences_found = True
                 break
-        self.assertTrue(differences_found, "Different seeds should produce different worlds")
+        self.assertTrue(
+            differences_found, "Different seeds should produce different worlds"
+        )
 
     def test_game_creation_with_seed(self):
         """Test creating a Game with a seed."""
@@ -289,11 +324,18 @@ class TestIntegrationWithGame(unittest.TestCase):
         for pos in test_positions:
             tile1 = game1.world.get_tile(pos)
             tile2 = game2.world.get_tile(pos)
-            self.assertEqual(tile1.tileid, tile2.tileid, f"Tiles at {pos} should be identical")
+            self.assertEqual(
+                tile1.tileid, tile2.tileid, f"Tiles at {pos} should be identical"
+            )
 
         # Different seeds should produce different games
         # Use positions that are more likely to differ
-        test_positions_diff = [VectorN(7, 13, 0), VectorN(-7, -13, 0), VectorN(25, 25, 0), VectorN(-25, -25, 0)]
+        test_positions_diff = [
+            VectorN(7, 13, 0),
+            VectorN(-7, -13, 0),
+            VectorN(25, 25, 0),
+            VectorN(-25, -25, 0),
+        ]
         differences_found = False
         for pos in test_positions_diff:
             tile1 = game1.world.get_tile(pos)
@@ -301,7 +343,9 @@ class TestIntegrationWithGame(unittest.TestCase):
             if tile1.tileid != tile3.tileid:
                 differences_found = True
                 break
-        self.assertTrue(differences_found, "Different seeds should produce different games")
+        self.assertTrue(
+            differences_found, "Different seeds should produce different games"
+        )
 
     def test_game_engine_with_seed(self):
         """Test creating a GameEngine with a seed."""

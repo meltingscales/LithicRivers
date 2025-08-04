@@ -4,6 +4,7 @@ This module provides basic testing for TUI components with minimal mocking.
 """
 
 import os
+
 # Set TESTING environment BEFORE importing any game modules
 os.environ["TESTING"] = "1"
 
@@ -22,11 +23,10 @@ from lithicrivers.constants import (
     VEC_UP,
     VEC_WEST,
 )
-from lithicrivers.game import Game
-from lithicrivers.settings import DEFAULT_SEED
-from lithicrivers.game import Tiles
+from lithicrivers.game import Game, Tiles
 from lithicrivers.game_engine import GameEngine
 from lithicrivers.model.vector import VectorN
+from lithicrivers.settings import DEFAULT_SEED
 from lithicrivers.ui import KEYMAP, InputHandler
 
 
@@ -38,7 +38,7 @@ class SimpleTUITestCase(unittest.TestCase):
         """Create shared game instances for tests to improve performance."""
         # Set TESTING environment to use smaller world sizes
         # os.environ["TESTING"] = "1" # This line is now redundant as it's set at the top
-        
+
         # Create shared game instances
         cls.shared_game_engine = GameEngine()
         cls.shared_game = Game(seed=DEFAULT_SEED)
@@ -100,7 +100,7 @@ class TestInputHandlerSimple(SimpleTUITestCase):
             ord("y"),
             ord("z"),
             ord("0"),
-        ]  #0 is not used
+        ]  # 0 is not used
 
         for key_code in invalid_keys:
             with self.subTest(f"key_code={key_code}"):
@@ -127,7 +127,7 @@ class TestInputHandlerSimple(SimpleTUITestCase):
         """Test that mining unmineable tiles doesn't change them."""
         # Set up an unmineable tile at player's position
         player_pos = self.game.player.position
-        original_tile = self.game.world.get_tile(player_pos)
+        self.game.world.get_tile(player_pos)
         self.game.world.set_tile(player_pos, Tiles.dirt())
 
         # Try to mine the tile
