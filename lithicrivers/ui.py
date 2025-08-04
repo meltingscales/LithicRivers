@@ -868,10 +868,25 @@ class InventoryPage(Frame):
         self.selected_item_header = Label("SELECTED ITEM", height=1, name="selected_item_header")
         main_layout.add_widget(self.selected_item_header, column=2)
 
+        # Selected item ASCII art (12x8)
+        self.selected_item_art = Label(
+            "            \n"
+            "            \n"
+            "            \n"
+            "            \n"
+            "            \n"
+            "            \n"
+            "            \n"
+            "            ",
+            height=8,
+            name="selected_item_art",
+        )
+        main_layout.add_widget(self.selected_item_art, column=2)
+
         # Selected item details
         self.selected_item_details = Label(
             "No item selected.\n\nSelect an item from the inventory to see its details here.",
-            height=screen.height - 8,  # Leave room for headers and tab buttons
+            height=screen.height - 16,  # Leave room for headers, art, and tab buttons
             name="selected_item_details",
         )
         main_layout.add_widget(self.selected_item_details, column=2)
@@ -895,6 +910,16 @@ class InventoryPage(Frame):
             not inventory.itemsdata or 
             selected_index >= len(inventory.itemsdata)):
             # No item selected or invalid selection
+            self.selected_item_art.text = (
+                "            \n"
+                "            \n"
+                "            \n"
+                "            \n"
+                "            \n"
+                "            \n"
+                "            \n"
+                "            "
+            )
             self.selected_item_details.text = (
                 "No item selected.\n\n"
                 "Select an item from the inventory to see its details here."
@@ -903,6 +928,18 @@ class InventoryPage(Frame):
 
         # Get the selected item
         selected_item = inventory.itemsdata[selected_index]
+        
+        # Update ASCII art (dummy art for now)
+        self.selected_item_art.text = (
+            "  ╭────────╮  \n"
+            "  │████████│  \n"
+            "  │████████│  \n"
+            "  │███??███│  \n"
+            "  │███??███│  \n"
+            "  │████████│  \n"
+            "  │████████│  \n"
+            "  ╰────────╯  "
+        )
         
         # Format item details
         item_details = f"Name: {selected_item.name}\n"
