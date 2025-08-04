@@ -27,6 +27,8 @@ dev = [
     "pre-commit",
     "pydevd",
     "py-spy",
+    "bandit[toml]",
+    "safety",
 ]
 
 [build-system]
@@ -131,3 +133,8 @@ addopts = [
 dev = [
     "py-spy>=0.4.1",
 ]
+
+[tool.bandit]
+exclude_dirs = ["tests", "test", "lithicrivers/test"]
+skips = ["B101", "B601"]  # Skip assert_used and hardcoded_password
+targets = ["lithicrivers"]

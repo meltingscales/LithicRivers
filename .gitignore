@@ -21,6 +21,10 @@ htmlcov/
 *.speedscope
 profile_cpu.svg
 
+# security
+security-report.json
+security-report.html
+
 # other
 *.pyc
 *.pyo
