@@ -422,7 +422,7 @@ class GameWidget(asciimatics.widgets.Widget):
 
     # noinspection PyTypeHints
     def update(self, _frame_no: int) -> None:
-        self._frame.canvas: Canvas
+        self._frame.canvas # type: Canvas
 
         content = ""
 
