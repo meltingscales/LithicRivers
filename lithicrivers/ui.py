@@ -808,23 +808,77 @@ class InventoryPage(Frame):
         )
         self.game = game
 
-        # Create main layout
-        layout1 = Layout([1], fill_frame=True)
-        self.add_layout(layout1)
+        # Create main layout with two columns: Inventory (left) and Crafting (right)
+        main_layout = Layout([60, 40], fill_frame=True)  # 60% inventory, 40% crafting
+        self.add_layout(main_layout)
 
-        # Add dummy label for now
-        self.inventory_label = Label(
-            "Inventory Panel - Coming Soon!\n\nThis is where you'll be able to view and manipulate your inventory items.",
-            height=screen.height - 4,  # Leave room for tab buttons
-            name="inventory_label",
+        # === INVENTORY SECTION (Left Column) ===
+        # Inventory header
+        self.inventory_header = Label(
+            "INVENTORY",
+            height=1,
+            name="inventory_header"
         )
-        layout1.add_widget(self.inventory_label)
+        main_layout.add_widget(self.inventory_header, column=0)
+
+        # Inventory items list (scrollable)
+        self.inventory_list = Label(
+            "No items in inventory.\n\nItems will appear here when you pick them up.",
+            height=screen.height - 8,  # Leave room for headers and tab buttons
+            name="inventory_list"
+        )
+        main_layout.add_widget(self.inventory_list, column=0)
+
+        # === CRAFTING SECTION (Right Column) ===
+        # Crafting header
+        self.crafting_header = Label(
+            "CRAFTING",
+            height=1,
+            name="crafting_header"
+        )
+        main_layout.add_widget(self.crafting_header, column=1)
+
+        # Crafting recipes list
+        self.crafting_list = Label(
+            "No recipes available.\n\nCrafting recipes will appear here as you discover them.",
+            height=screen.height - 8,  # Leave room for headers and tab buttons
+            name="crafting_list"
+        )
+        main_layout.add_widget(self.crafting_list, column=1)
 
         # Create tab buttons
         layout2 = TabButtons(self)
         self.add_layout(layout2)
 
         self.fix()
+
+    def update_inventory_display(self):
+        """Update the inventory display with current items."""
+        if not self.game or not self.game.player:
+            return
+
+        inventory = self.game.player.inventory
+        if not inventory.itemsdata:
+            self.inventory_list.text = "No items in inventory.\n\nItems will appear here when you pick them up."
+            return
+
+        # Format inventory items
+        lines = []
+        for item in inventory.itemsdata:
+            lines.append(f"• {item.name}")
+        
+        self.inventory_list.text = "\n".join(lines)
+
+    def update_crafting_display(self):
+        """Update the crafting display with available recipes."""
+        # TODO: Implement when crafting system is added
+        self.crafting_list.text = "No recipes available.\n\nCrafting recipes will appear here as you discover them."
+
+    def reset(self):
+        """Reset the frame and update displays."""
+        super().reset()
+        self.update_inventory_display()
+        self.update_crafting_display()
 
 
 class BodyPage(Frame):
