@@ -9,14 +9,26 @@ class VectorN:
     dim_pos_map: ClassVar[dict[str, int]] = {"x": 0, "y": 1, "z": 2, "w": 3}
 
     def __init__(self, *dimvals: int):
-        # we're probably being passed a string, a list, or a VectorN object
-        if not isinstance(dimvals, tuple):
-            dimvals = VectorN.deserialize(dimvals).as_tuple()
-
-        subelt = dimvals[0]
-        # why is it nested? who knows :P
-        if isinstance(subelt, tuple):
-            dimvals = subelt
+        # Handle different input types
+        if len(dimvals) == 1 and not isinstance(dimvals[0], int):
+            # Single non-int argument - try to deserialize
+            obj = dimvals[0]
+            if isinstance(obj, VectorN):
+                # Copy from existing VectorN
+                self.dimension_values: tuple[int, ...] = obj.dimension_values
+            elif isinstance(obj, (list, tuple)):
+                # Convert list/tuple to ints
+                self.dimension_values = tuple(int(x) for x in obj)
+            elif isinstance(obj, str):
+                # Parse string
+                obj = obj.strip()
+                tokens = obj.split(",")
+                self.dimension_values = tuple(int(x.strip()) for x in tokens)
+            else:
+                raise ValueError(f"Cannot create VectorN from {type(obj)}")
+        else:
+            # Direct int arguments
+            self.dimension_values = dimvals
 
         self.x, self.y, self.z, self.w = (
             None,
@@ -24,7 +36,6 @@ class VectorN:
             None,
             None,
         )
-        self.dimension_values = dimvals
 
         # set x,y,z, etc
         for dim_name, dim_idx in self.dim_pos_map.items():
@@ -105,7 +116,7 @@ class VectorN:
                 )
 
         # indexing us like `self['y']`
-        if item in self.dim_pos_map:
+        if isinstance(item, str) and item in self.dim_pos_map:
             return self.dimension_values[self.dim_pos_map[item]]
 
         raise KeyError(f"Invalid key: {item}")
@@ -156,6 +167,9 @@ class VectorN:
             tokens = obj.split(",")
             ints = [int(x.strip()) for x in tokens]
             return VectorN(*ints)
+
+        if isinstance(obj, tuple):
+            return VectorN(*obj)
 
         raise ValueError(f"Cannot deserialize object of type {type(obj)}")
 
