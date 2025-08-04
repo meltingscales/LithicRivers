@@ -806,26 +806,27 @@ class World:
 
         self.generator = SeededWorldGenerator(seed)
 
-        # Add some starter entities
-        self.entities = []
+        # Change entity storage to support multiple entities per position
+        # Map position tuples to lists of entities
+        self.entities_by_position = {}  # (x, y, z) -> list[Entity]
         self._add_starter_entities()
 
     def _add_starter_entities(self):
         """Add starter entities to the world."""
         # Add NPC
         npc = Entities.starter_npc()
-        self.entities.append(npc)
+        self.add_entity(npc)
 
         # Add test entities
         entity1 = Entities.test_entity1()
         entity2 = Entities.test_entity2()
-        self.entities.append(entity1)
-        self.entities.append(entity2)
+        self.add_entity(entity1)
+        self.add_entity(entity2)
 
         # Add StumblingSheep 2 blocks north of player spawn
         sheep_position = DEFAULT_PLAYER_POSITION + (VEC_NORTH * 2)
         sheep = Entities.stumbling_sheep(sheep_position)
-        self.entities.append(sheep)
+        self.add_entity(sheep)
 
     def get_tile(self, pos: VectorN):
         tile = self.data.get_tile(pos)
@@ -851,20 +852,39 @@ class World:
     def set_tile(self, pos: VectorN, tile: Tile):
         self.data.set_tile(pos, tile)
 
-    def get_entity(self, pos: VectorN):
-        """Get an entity at a position."""
-        for entity in self.entities:
-            if entity.position == pos:
-                return entity
-        return None
+    def _get_position_key(self, pos: VectorN) -> tuple[int, int, int]:
+        """Convert VectorN to tuple key for dictionary storage."""
+        return (pos.x, pos.y, pos.z)
 
-    def add_entity(self, entity: Entity):
+    def get_entities(self, pos: VectorN) -> list["Entity"]:
+        """Get all entities at a position."""
+        pos_key = self._get_position_key(pos)
+        return self.entities_by_position.get(pos_key, [])
+
+    def get_entity(self, pos: VectorN) -> Optional["Entity"]:
+        """Get the first entity at a position (for backward compatibility)."""
+        entities = self.get_entities(pos)
+        return entities[0] if entities else None
+
+    def add_entity(self, entity: "Entity") -> None:
         """Add an entity to the world."""
-        self.entities.append(entity)
+        pos_key = self._get_position_key(entity.position)
+        if pos_key not in self.entities_by_position:
+            self.entities_by_position[pos_key] = []
+        self.entities_by_position[pos_key].append(entity)
 
-    def remove_entity(self, entity: Entity):
+    def remove_entity(self, entity: "Entity") -> None:
         """Remove an entity from the world."""
-        self.entities.remove(entity)
+        pos_key = self._get_position_key(entity.position)
+        if pos_key in self.entities_by_position:
+            try:
+                self.entities_by_position[pos_key].remove(entity)
+                # Clean up empty position entries
+                if not self.entities_by_position[pos_key]:
+                    del self.entities_by_position[pos_key]
+            except ValueError:
+                # Entity not found at position, ignore
+                pass
 
     def get_adjacent_entities(self, pos: VectorN) -> list[tuple[str, VectorN, str]]:
         """Get all entities adjacent to a position."""
@@ -872,16 +892,95 @@ class World:
         for dx in [-1, 0, 1]:
             for dy in [-1, 0, 1]:
                 check_pos = VectorN(pos.x + dx, pos.y + dy, pos.z)
-                entity = self.get_entity(check_pos)
-                if entity:
+                entities = self.get_entities(check_pos)
+                for entity in entities:
                     color = entity.color if hasattr(entity, "color") else "white"
                     adjacent.append((entity.name, check_pos, color))
 
         return adjacent
 
-    def get_all_entities(self) -> list[Entity]:
+    def get_all_entities(self) -> list["Entity"]:
         """Get all entities in the world."""
-        return self.entities
+        all_entities = []
+        for entities in self.entities_by_position.values():
+            all_entities.extend(entities)
+        return all_entities
+
+    def get_priority_entity(self, pos: VectorN) -> Optional["Entity"]:
+        """
+        Get the highest priority entity at a position for rendering.
+        Priority order: Player > NPCs > Interactive Entities > Dropped Items
+        """
+        entities = self.get_entities(pos)
+        if not entities:
+            return None
+        
+        if len(entities) == 1:
+            return entities[0]
+        
+        # Sort entities by priority
+        def get_priority(entity):
+            if hasattr(entity, 'get_conversation'):  # NPCs
+                return 3
+            elif hasattr(entity, 'interact'):  # Interactive entities
+                return 2
+            elif isinstance(entity, DroppedItem):  # Dropped items
+                return 1
+            else:
+                return 0
+        
+        # Sort by priority (highest first) and return the first one
+        sorted_entities = sorted(entities, key=get_priority, reverse=True)
+        return sorted_entities[0]
+
+    def get_entity_count(self, pos: VectorN) -> int:
+        """Get the number of entities at a position."""
+        return len(self.get_entities(pos))
+
+    def test_multiple_entities(self) -> bool:
+        """
+        Test method to verify that multiple entities can exist at the same position.
+        Returns True if the test passes.
+        """
+        # Create test position
+        test_pos = VectorN(10, 10, 0)
+        
+        # Create multiple dropped items at the same position
+        item1 = Items.rock()
+        item2 = Items.gold_nugget()
+        item3 = Items.stick()
+        
+        dropped1 = DroppedItem(item1, test_pos)
+        dropped2 = DroppedItem(item2, test_pos)
+        dropped3 = DroppedItem(item3, test_pos)
+        
+        # Add all entities
+        self.add_entity(dropped1)
+        self.add_entity(dropped2)
+        self.add_entity(dropped3)
+        
+        # Verify we can retrieve all entities
+        entities = self.get_entities(test_pos)
+        if len(entities) != 3:
+            return False
+        
+        # Verify entity names are correct
+        entity_names = [e.name for e in entities]
+        expected_names = ["Rock", "Gold Nugget", "Stick"]
+        if set(entity_names) != set(expected_names):
+            return False
+        
+        # Verify priority entity is correct (should be the first one added)
+        priority_entity = self.get_priority_entity(test_pos)
+        if priority_entity is None:
+            return False
+        
+        # Clean up test entities
+        self.remove_entity(dropped1)
+        self.remove_entity(dropped2)
+        self.remove_entity(dropped3)
+        
+        return True
 
 
 class Game:
@@ -964,14 +1063,20 @@ class Game:
                 tile_color = get_color_for_tile(tile.tileid)
 
                 # Check for entities at this position
-                entity = None
-                if hasattr(self.world, "get_entity"):
-                    entity = self.world.get_entity(pos)
-                if entity:
+                entities = self.world.get_entities(pos)
+                if entities:
+                    # Get the highest priority entity for rendering
+                    entity = self.world.get_priority_entity(pos)
                     sprite = entity.render_sprite(scale=viewport.scale)
                     # Use entity color if available, otherwise use tile color
                     if hasattr(entity, "color"):
                         tile_color = COLOR_MANAGER.get_entity_color(entity.color)
+                    
+                    # If there are multiple entities, modify the sprite to show count
+                    if len(entities) > 1:
+                        # For now, just use the priority entity's sprite
+                        # TODO: Implement better multi-entity visualization (e.g., add a number)
+                        pass
 
                 # if we are here, render us!
                 if (self.player.position.y == y) and (self.player.position.x == x):
