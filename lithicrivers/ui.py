@@ -52,6 +52,66 @@ def set_popup_manager(manager: "PopupManager") -> None:
     _popup_manager = manager
 
 
+def generate_button_text_with_keybind(base_text: str, keybind_name: str) -> str:
+    """
+    Generate button text with highlighted keybind character.
+    
+    Args:
+        base_text: The base text for the button (e.g., "drop", "destroy")
+        keybind_name: The keybind name to look up (e.g., "DROP_ITEM", "DESTROY_ITEM")
+    
+    Returns:
+        Button text with highlighted character, e.g., "(d)rop" or "(x) destroy"
+    """
+    # Get the keybind from KEYMAP
+    keybind = getattr(KEYMAP, keybind_name, frozenset())
+    
+    if not keybind:
+        # If no keybind found, return base text as-is
+        return base_text
+    
+    # Get the first key from the keybind (assuming single key for now)
+    key = next(iter(keybind), None)
+    
+    if not key:
+        return base_text
+    
+    # Handle special keys that don't have single character representation
+    special_key_mapping = {
+        "ESCAPE": "ESC",
+        "ENTER": "↵",
+        "SPACE": "␣",
+        "TAB": "⇥",
+        "BACKSPACE": "⌫",
+        "DELETE": "⌦",
+        "INSERT": "INS",
+        "HOME": "⌂",
+        "END": "↘",
+        "PAGE_UP": "⇑",
+        "PAGE_DOWN": "⇓",
+        "F1": "F1", "F2": "F2", "F3": "F3", "F4": "F4",
+        "F5": "F5", "F6": "F6", "F7": "F7", "F8": "F8",
+        "F9": "F9", "F10": "F10", "F11": "F11", "F12": "F12",
+    }
+    
+    # Use special mapping if available, otherwise use the key as-is
+    display_key = special_key_mapping.get(key, key)
+    
+    # For single character keys, try to find them in the base text
+    if len(display_key) == 1:
+        # Check if the key is already in the base text (case insensitive)
+        key_lower = display_key.lower()
+        text_lower = base_text.lower()
+        pos = text_lower.find(key_lower)
+        
+        if pos != -1:
+            # Insert parentheses around the key
+            return base_text[:pos] + f"({display_key})" + base_text[pos + len(display_key):]
+    
+    # If key not found in text or is a special key, prepend it
+    return f"({display_key}) {base_text}"
+
+
 def _show_numlock_warning(world_map: "WorldMap") -> None:
     """Show a warning popup about numlock being off."""
     warning_text = """  NUMLOCK WARNING
@@ -874,16 +934,21 @@ class InventoryPage(Frame):
         )
         main_layout.add_widget(self.selected_item_header, column=2)
 
-        self.button_drop_selected_item = Button("(d)rop", self.drop_selected_item)
+        self.button_drop_selected_item = Button(
+            generate_button_text_with_keybind("drop", "DROP_ITEM"), 
+            self.drop_selected_item
+        )
         main_layout.add_widget(self.button_drop_selected_item, column=2)
 
         self.button_destroy_selected_item = Button(
-            "(x) destroy", self.destroy_selected_item
+            generate_button_text_with_keybind("destroy", "DESTROY_ITEM"),
+            self.destroy_selected_item
         )
         main_layout.add_widget(self.button_destroy_selected_item, column=2)
 
         self.button_cheat_duplicate_selected_item = Button(
-            ("(.) duplicate"), self.cheat_duplicate_selected_item
+            generate_button_text_with_keybind("duplicate", "CHEAT_DUPLICATE_ITEM"),
+            self.cheat_duplicate_selected_item
         )
         main_layout.add_widget(self.button_cheat_duplicate_selected_item, column=2)
 
