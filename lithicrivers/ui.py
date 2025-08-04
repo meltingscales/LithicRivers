@@ -1488,6 +1488,140 @@ class InputHandler:
         world_map._screen.current_scene.add_effect(popup)
 
 
+class SceneEventHandler:
+    """Base class for scene-specific event handlers."""
+    
+    def handle_event(self, event, screen, popup_manager):
+        """Handle events for this scene type. Override in subclasses."""
+        return False  # Event not handled
+
+
+class WorldMapEventHandler(SceneEventHandler):
+    """Handles events for the WorldMap scene."""
+    
+    def handle_event(self, event, screen, popup_manager, world_map):
+        """Handle events for the WorldMap scene."""
+        # Handle numlock warning logic
+        if popup_manager.handle_numlock_warning(world_map, screen):
+            return True  # Don't process movement until user acknowledges warning
+        
+        # Check for numlock issues before handling movement (fallback detection)
+        if popup_manager.check_numlock_issue(event, world_map):
+            return True  # Don't process movement when numlock is off
+
+        # Track if any handler processed the event
+        event_handled = False
+
+        # Handle movement
+        move_vec = InputHandler.handle_movement(event)
+        if move_vec:
+            world_map.game.move_player(move_vec)
+
+            # display pos
+            world_map.labelPosition.text = world_map.game.render_pretty_player_position()
+
+            # Update status label immediately
+            world_map.update_status_label()
+
+            # move the viewport with the player
+            if world_map.game.player_outside_viewport(wiggle=VIEWPORT_WIGGLE):
+                world_map.game.viewport.slide(move_vec)
+
+                # still outside? Something's wrong, let's reset the viewport...
+                if world_map.game.player_outside_viewport(wiggle=VIEWPORT_WIGGLE):
+                    world_map.game.reset_viewport()
+            
+            event_handled = True
+
+        # Handle other input types - check if they match the expected keys
+        if (KEYMAP.matches("RESET_VIEWPORT", event) or 
+            KEYMAP.matches("SLIDE_VIEWPORT_WEST", event) or
+            KEYMAP.matches("SLIDE_VIEWPORT_EAST", event) or
+            KEYMAP.matches("TOGGLE_VIEWPORT", event)):
+            InputHandler.handle_viewport(event, world_map.game, world_map)
+            event_handled = True
+            
+        if (KEYMAP.matches("SCALE_DOWN", event) or 
+            KEYMAP.matches("SCALE_UP", event)):
+            InputHandler.handle_scale(event, world_map.game, world_map)
+            event_handled = True
+            
+        if KEYMAP.matches("INTERACT", event):
+            InputHandler.handle_interaction(event, world_map.game, world_map)
+            event_handled = True
+            
+        if KEYMAP.matches("MINE", event):
+            InputHandler.handle_mining(event, world_map.game, world_map)
+            event_handled = True
+        
+        # Update UI elements if any event was handled
+        if event_handled:
+            world_map.labelInventory.text = world_map.game.player.inventory.summary()
+            world_map.labelFeet.text = str(world_map.game.get_tile_at_player_feet())
+            world_map.labelViewport.text = str(world_map.game.viewport.render_pretty())
+        
+        return event_handled  # Only return True if an event was actually handled
+
+
+class DevKeystrokesPageEventHandler(SceneEventHandler):
+    """Handles events for the DevKeystrokesPage scene."""
+    
+    def handle_event(self, event, screen, popup_manager, page):
+        """Handle events for the DevKeystrokesPage scene."""
+        page.update_keystroke(event)
+        return True  # Event was handled
+
+
+class HelpPageEventHandler(SceneEventHandler):
+    """Handles events for the HelpPage scene."""
+    
+    def handle_event(self, event, screen, popup_manager, page):
+        """Handle events for the HelpPage scene."""
+        # Help page handles its own events via process_event
+        return False  # Let the page handle it normally
+
+
+class MessageLogPageEventHandler(SceneEventHandler):
+    """Handles events for the MessageLogPage scene."""
+    
+    def handle_event(self, event, screen, popup_manager, page):
+        """Handle events for the MessageLogPage scene."""
+        # Message log page handles its own events via process_event
+        return False  # Let the page handle it normally
+
+
+class DevPopupPageEventHandler(SceneEventHandler):
+    """Handles events for the DevPopupPage scene."""
+    
+    def handle_event(self, event, screen, popup_manager, page):
+        """Handle events for the DevPopupPage scene."""
+        # Dev popup page handles its own events via process_event
+        return False  # Let the page handle it normally
+
+
+class SceneEventRouter:
+    """Routes events to appropriate scene handlers."""
+    
+    def __init__(self):
+        self.handlers = {
+            WorldMap: WorldMapEventHandler(),
+            HelpPage: HelpPageEventHandler(),
+            MessageLogPage: MessageLogPageEventHandler(),
+            DevPopupPage: DevPopupPageEventHandler(),
+            DevKeystrokesPage: DevKeystrokesPageEventHandler(),
+        }
+    
+    def route_event(self, event, current_effect, screen, popup_manager):
+        """Route an event to the appropriate scene handler."""
+        # Get the appropriate handler based on the effect's class
+        handler = self.handlers.get(type(current_effect))
+        if handler:
+            return handler.handle_event(event, screen, popup_manager, current_effect)
+        
+        # Default: let the effect handle it normally
+        return False
+
+
 class PopupManager:
     """Manages popup dialogs and their lifecycle."""
     
@@ -1599,6 +1733,9 @@ def demo(screen: Screen, scene: Scene, game: Game):
     popup_manager = PopupManager()
     set_popup_manager(popup_manager)  # Set the global instance
     
+    # Create scene event router
+    scene_router = SceneEventRouter()
+    
     # Global variable to track if numlock warning has been shown
     global numlock_warning_shown
     numlock_warning_shown = False  # Initialize to False
@@ -1653,12 +1790,6 @@ def demo(screen: Screen, scene: Scene, game: Game):
             return
         event: KeyboardEvent
 
-        # We want to display the KeyboardEvent on the DevKeystrokesPage
-        if isinstance(current_effect, DevKeystrokesPage):
-            current_effect: DevKeystrokesPage
-            current_effect.update_keystroke(event)
-            return
-
         # Check for ESC key to close popups
         if KEYMAP.matches("CLOSE_HELP_MENU", event):
             if popup_manager.handle_esc_key(screen):
@@ -1669,53 +1800,9 @@ def demo(screen: Screen, scene: Scene, game: Game):
         if popup_result is False:  # Event was handled by popup and should not continue
             return
 
-        # TODO: This is a pretty gross way of handling this. We should have a second handler function that just dispatches the event to a specific panel.
-        if current_effect.title.strip() != "World Map":
-            logging.info("Not supposed to handle " + current_effect.title)
-            # Clear any active popup when switching to non-World Maps
-            popup_manager.clear_popup_on_page_switch(screen)
-            return
-
-        world_map = current_effect
-
-        # Handle numlock warning logic
-        if popup_manager.handle_numlock_warning(world_map, screen):
-            return  # Don't process movement until user acknowledges warning
-        
-        # Check for numlock issues before handling movement (fallback detection)
-        if popup_manager.check_numlock_issue(event, world_map):
-            return  # Don't process movement when numlock is off
-
-        move_vec = InputHandler.handle_movement(event)
-        if move_vec:
-            world_map.game.move_player(move_vec)
-
-            # display pos
-            world_map.labelPosition.text = game.render_pretty_player_position()
-
-            # Update status label immediately
-            world_map.update_status_label()
-
-            # move the viewport with the player
-            if game.player_outside_viewport(wiggle=VIEWPORT_WIGGLE):
-                game.viewport.slide(move_vec)
-
-                # still outside? Something's wrong, let's reset the viewport...
-                if game.player_outside_viewport(wiggle=VIEWPORT_WIGGLE):
-                    game.reset_viewport()
-
-        InputHandler.handle_viewport(event, world_map.game, world_map)
-        InputHandler.handle_scale(event, world_map.game, world_map)
-        InputHandler.handle_interaction(event, world_map.game, world_map)
-
-        InputHandler.handle_mining(event, world_map.game, world_map)
-        world_map.labelInventory.text = world_map.game.player.inventory.summary()
-
-        # after we mine
-        world_map.labelFeet.text = str(world_map.game.get_tile_at_player_feet())
-
-        # update viewport display
-        world_map.labelViewport.text = str(world_map.game.viewport.render_pretty())
+        # Route the event to the appropriate scene handler
+        if scene_router.route_event(event, current_effect, screen, popup_manager):
+            return  # Event was handled by the scene handler
 
     screen.set_title(f"~~-[ {GAME_NAME} ]-~~")
     screen.play(
