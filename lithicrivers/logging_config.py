@@ -10,7 +10,7 @@ from typing import Optional
 from lithicrivers.settings import LOGFILENAME, LOGGINGLEVEL
 
 
-def setup_logging():
+def setup_logging() -> None:
     """Configure logging for the application."""
     # Add custom log levels for verbose debugging
     logging.addLevelName(5, "SILLY")

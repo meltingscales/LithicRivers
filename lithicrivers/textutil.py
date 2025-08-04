@@ -61,7 +61,7 @@ class ColorScheme(Enum):
 class ColorManager:
     """Manages color schemes and provides color utilities."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.schemes = {scheme.name: scheme.value for scheme in ColorScheme}
 
     def get_color(self, scheme_name: str) -> tuple[int, int, int]:
@@ -98,7 +98,7 @@ class ColorManager:
 COLOR_MANAGER = ColorManager()
 
 
-def corrupt_text(text, corruption_rate=0.01):
+def corrupt_text(text: str, corruption_rate: float = 0.01) -> str:
     """
     Randomly replaces characters in text with a random glitchy ASCII symbol
     at a given corruption rate, preserving newlines exactly.
@@ -126,7 +126,7 @@ def corrupt_text(text, corruption_rate=0.01):
     return "".join(corrupted_chars)
 
 
-def presenting(text) -> str:
+def presenting(text: str) -> str:
     return f"~ {text} ~"
 
 
@@ -134,7 +134,7 @@ def spaced_list(items: list[str]) -> str:
     return " ".join(items)
 
 
-def render_tuple(tups: list[T], places=2) -> str:
+def render_tuple(tups: list[T], places: int = 2) -> str:
     fstr = ""
     for i, tup in enumerate(tups):
         fstr += "("
@@ -181,11 +181,11 @@ def get_color_for_ui_element(element_type: str) -> tuple[int, int, int]:
     return COLOR_MANAGER.get_color(element_type)
 
 
-def list_label(text, width=5, align=">") -> str:
+def list_label(text: str, width: int = 5, align: str = ">") -> str:
     """Format a list label."""
     return "-[{:{}{}s}]: ".format(text, align, width)
 
 
-def emphasizing(text) -> str:
+def emphasizing(text: str) -> str:
     """Format emphasized text."""
     return f"[ {text} ]"

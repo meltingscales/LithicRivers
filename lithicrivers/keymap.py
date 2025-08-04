@@ -27,7 +27,7 @@ from lithicrivers.textutil import spaced_list
 class Keymap:
     """Keymap class that loads keybinds from JSON configuration."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         # Load keybinds from config
         self._load_keybinds()
 
@@ -62,7 +62,7 @@ class Keymap:
 
         return None
 
-    def _load_keybinds(self):
+    def _load_keybinds(self) -> None:
         """Load keybinds from config manager."""
         # Movement keys
         self.MOVE_NORTH = config_manager.get_keybind("movement", "MOVE_NORTH")
@@ -127,7 +127,7 @@ class Keymap:
         # UI keys
         self.CLOSE_HELP_MENU = config_manager.get_keybind("ui", "CLOSE_HELP_MENU")
 
-    def _load_keychords(self):
+    def _load_keychords(self) -> None:
         """Load platform-specific keychords from JSON file."""
         platform_name = platform.system().lower()
 
@@ -165,7 +165,7 @@ class Keymap:
         else:
             logging.warning(f"No keychords file found at {keychords_file}")
 
-    def reload_keybinds(self):
+    def reload_keybinds(self) -> None:
         """Reload keybinds from config files."""
         config_manager.keybinds = config_manager._load_keybinds()
         self._load_keybinds()
@@ -247,7 +247,7 @@ class Keymap:
                     return True
         return False
 
-    def update_keybind(self, key_name: str, value: str):
+    def update_keybind(self, key_name: str, value: str) -> None:
         """Update a keybind and save to config file."""
         # Determine category based on key name
         category = self._get_category_for_key(key_name)
