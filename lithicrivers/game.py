@@ -19,7 +19,8 @@ from lithicrivers.settings import (
     DEFAULT_PLAYER_POSITION,
     DEFAULT_VIEWPORT,
 )
-from lithicrivers.textutil import COLOR_MANAGER, get_color_for_item, get_color_for_tile
+from lithicrivers.textutil import get_color_for_item, get_color_for_tile
+from lithicrivers.colors import COLOR_MANAGER
 
 
 def generate_sprite_repeat(char: str, scale: int = 1) -> str:
@@ -366,25 +367,10 @@ class Inventory:
         for k, v in self.count_items().items():
             # Get color for this item
             item_color = get_color_for_item(k)
-            color_name = self._get_color_name(item_color)
+            color_name = COLOR_MANAGER.get_color_name(item_color)
             s += f"{k}={v} ({color_name}), "
 
         return s[0 : len(s) - 2] if s else "Empty"
-
-    def _get_color_name(self, color: tuple[int, int, int]) -> str:
-        """Get a human-readable name for a color."""
-        color_names = {
-            (1, 0, 0): "red",
-            (2, 0, 0): "green",
-            (3, 0, 0): "yellow",
-            (4, 0, 0): "blue",
-            (5, 0, 0): "magenta",
-            (6, 0, 0): "cyan",
-            (7, 0, 0): "white",
-            (8, 0, 0): "gray",
-            (0, 0, 0): "black",
-        }
-        return color_names.get(color, "default")
 
 
 class Player(Entity, SpriteRenderable):
@@ -939,16 +925,7 @@ class Game:
                     sprite = entity.render_sprite(scale=viewport.scale)
                     # Use entity color if available, otherwise use tile color
                     if hasattr(entity, "color"):
-                        if entity.color == "cyan":
-                            tile_color = (6, 0, 0)  # Cyan
-                        elif entity.color == "blue":
-                            tile_color = (4, 0, 0)  # Blue
-                        elif entity.color == "red":
-                            tile_color = (1, 0, 0)  # Red
-                        elif entity.color == "yellow":
-                            tile_color = (3, 0, 0)  # Yellow
-                        else:
-                            tile_color = (7, 0, 0)  # White
+                        tile_color = COLOR_MANAGER.get_entity_color(entity.color)
 
                 # if we are here, render us!
                 if (self.player.position.y == y) and (self.player.position.x == x):

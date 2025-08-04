@@ -30,7 +30,8 @@ from lithicrivers.keymap import KEYMAP
 from lithicrivers.model.model import RenderedData, StopGameError, Viewport
 from lithicrivers.model.vector import VectorN
 from lithicrivers.settings import DEVELOPER_MODE, GAME_NAME, VIEWPORT_WIGGLE
-from lithicrivers.textutil import get_color_for_ui_element, list_label, presenting
+from lithicrivers.textutil import list_label, presenting
+from lithicrivers.colors import COLOR_MANAGER
 
 if TYPE_CHECKING:
     from asciimatics.effects import Effect
@@ -335,23 +336,23 @@ class HeaderLabel(asciimatics.widgets.Widget):
         header_prefix = list_label(self.header)
 
         # Get colors for header and content
-        header_color = get_color_for_ui_element("TITLE")
+        header_color = COLOR_MANAGER.get_ui_color("TITLE")
 
         # Determine content color based on message type
         if self._text.startswith("[ERROR]"):
-            content_color = get_color_for_ui_element("ERROR")
+            content_color = COLOR_MANAGER.get_ui_color("ERROR")
         elif self._text.startswith("[SUCCESS]"):
-            content_color = get_color_for_ui_element("SUCCESS")
+            content_color = COLOR_MANAGER.get_ui_color("SUCCESS")
         elif self._text.startswith("[WARNING]"):
-            content_color = get_color_for_ui_element("WARNING")
+            content_color = COLOR_MANAGER.get_ui_color("WARNING")
         elif self._text.startswith("[INFO]"):
-            content_color = get_color_for_ui_element("INFO")
+            content_color = COLOR_MANAGER.get_ui_color("INFO")
         elif self._text.startswith("[RARE]"):
-            content_color = get_color_for_ui_element("RARE")
+            content_color = COLOR_MANAGER.get_ui_color("RARE")
         elif self._text.startswith("[VALUABLE]"):
-            content_color = get_color_for_ui_element("VALUABLE")
+            content_color = COLOR_MANAGER.get_ui_color("VALUABLE")
         else:
-            content_color = get_color_for_ui_element("LABEL")
+            content_color = COLOR_MANAGER.get_ui_color("LABEL")
 
         # Render header with title color
         self._frame.canvas.paint(
@@ -436,7 +437,7 @@ class GameWidget(asciimatics.widgets.Widget):
         # If viewport is hidden, render nothing at all
 
         # Render the header
-        header_color = get_color_for_ui_element("HEADER")
+        header_color = COLOR_MANAGER.get_ui_color("HEADER")
         self._frame.canvas.paint(
             f"{content:{self._align}{self._w}}",
             self._x,
@@ -495,7 +496,7 @@ class GameWidget(asciimatics.widgets.Widget):
             if i < len(clamped_colors):
                 color = clamped_colors[i]
             else:
-                color = get_color_for_ui_element("DEFAULT")
+                color = COLOR_MANAGER.get_ui_color("DEFAULT")
 
             # Paint each character with its color
             self._frame.canvas.paint(
