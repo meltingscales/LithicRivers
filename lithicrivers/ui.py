@@ -1906,8 +1906,23 @@ class InventoryPageEventHandler(SceneEventHandler):
         self, event: Union[KeyboardEvent, MouseEvent], screen, popup_manager, page
     ) -> bool:
         """Handle events for the InventoryPage scene."""
-        # Inventory page handles its own events via process_event
-        return False  # Let the page handle it normally
+        # Track if any handler processed the event
+        event_handled = False
+
+        # Handle inventory action keys
+        if KEYMAP.matches("DROP_ITEM", event):
+            page.drop_selected_item()
+            event_handled = True
+
+        if KEYMAP.matches("DESTROY_ITEM", event):
+            page.destroy_selected_item()
+            event_handled = True
+
+        if KEYMAP.matches("CHEAT_DUPLICATE_ITEM", event):
+            page.cheat_duplicate_selected_item()
+            event_handled = True
+
+        return event_handled  # Only return True if an event was actually handled
 
 
 class BodyPageEventHandler(SceneEventHandler):
