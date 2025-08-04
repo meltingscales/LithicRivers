@@ -184,8 +184,6 @@
 
 ## MVP for steam release (2026)
 
-- handle_event is a huge method, a bit gross
-- make sure that Y less than 0 generates unique terrain, currently it seems static. maybe Y isn't getting used in the perlin noise gen?
 - block placement, push boxes, and fluids
 - basic crafting and a body repair/modular body feature with a damaged android body
 - procedural dungeons
