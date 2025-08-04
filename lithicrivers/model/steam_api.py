@@ -66,6 +66,7 @@ class SteamAPI:
                 "online": self.client.user.online,
             }
         except Exception:
+            # Return None on any exception
             return None
 
 
@@ -76,12 +77,15 @@ steam_api = None
 def get_steam_api() -> Optional[SteamAPI]:
     """Get the global Steam API instance."""
     global steam_api
-    if steam_api is None:
-        try:
-            steam_api = SteamAPI()
-        except ImportError:
-            steam_api = None
-    return steam_api
+    if steam_api is not None:
+        return steam_api
+
+    try:
+        steam_api = SteamAPI()
+        return steam_api
+    except ImportError:
+        steam_api = None
+        return None
 
 
 def initialize_steam() -> bool:
