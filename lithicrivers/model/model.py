@@ -1,5 +1,5 @@
 import math
-from typing import Optional
+from typing import Any, Optional
 
 from lithicrivers.constants import VEC_EAST, VEC_WEST
 from lithicrivers.model.vector import VectorN
@@ -57,18 +57,20 @@ class RenderedData:
 
     def __init__(
         self,
-        render_data: list[list[str]],
+        render_data: Any,
         scale: int = 1,
         color_data: Optional[list[list[tuple[int, int, int]]]] = None,
     ):
         # constructor flexibility
         if isinstance(render_data, str):
             render_data = [[render_data]]
-
-        if isinstance(render_data[0], str):
+        elif isinstance(render_data, list) and len(render_data) > 0 and isinstance(render_data[0], str):
             render_data = [render_data]
 
-        self.render_data = render_data
+        # At this point, render_data should be list[list[str]]
+        # Use explicit type casting to help mypy
+        from typing import cast
+        self.render_data = cast("list[list[str]]", render_data)
         self.scale = scale
 
         # Initialize color data if not provided
@@ -102,28 +104,6 @@ class RenderedData:
         if 0 <= y < len(self.color_data) and 0 <= x < len(self.color_data[y]):
             return self.color_data[y][x]
         return COLOR_MANAGER.get_color("DEFAULT")
-
-    @staticmethod
-    def from_string(string: str, scale: int = 1, eol: str = "\n") -> "RenderedData":
-        raise NotImplementedError("Lazy!")
-
-        # This code is unreachable due to the raise above, but keeping for reference
-        split = string.split(eol)
-        ret = []
-
-        for i in range(0, len(split)):
-            tok = split[i]
-            (
-                []
-                for _ in range(
-                    0,
-                )
-            )
-            for stripe_idx in range(0, scale):
-                stripe = tok[0:stripe_idx]
-                print(stripe)
-
-        return ret
 
 
 class Viewport:
@@ -227,7 +207,12 @@ class Viewport:
         return str(self)
 
     def render_pretty(self) -> str:
-        return f"<{self.scale}> [{render_tuple(self.get_size().as_list())}] ({render_tuple(self.top_left.trim(2).as_list())}, {render_tuple(self.lower_right.trim(2).as_list())}) "
+        size_list = self.get_size().as_list()
+        # Convert to the expected type for render_tuple
+        size_tuple = tuple(size_list)
+        left_list = self.top_left.trim(2).as_list()
+        right_list = self.lower_right.trim(2).as_list()
+        return f"<{self.scale}> [{render_tuple([size_tuple])}] ({render_tuple([tuple(left_list)])}, {render_tuple([tuple(right_list)])}) "
 
     def copy(self) -> "Viewport":
         """Create a copy of this viewport."""
