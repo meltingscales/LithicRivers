@@ -37,7 +37,7 @@ TESTING_LIMIT_CAPTURE = False
 
 
 class KeychordCapture:
-    def __init__(self):
+    def __init__(self) -> None:
         self.captured_keychords: dict[str, list[int]] = {}
         self.current_sequence: list[int] = []
         self.recording = False
@@ -112,7 +112,7 @@ class KeychordCapture:
 
         return prompts
 
-    def _get_platform_info(self):
+    def _get_platform_info(self) -> tuple[str, str]:
         """Get platform name and OS type for filename."""
         platform_name = platform.system().lower()
 
@@ -135,7 +135,7 @@ class KeychordCapture:
 
         return platform_name, os_type
 
-    def _load_existing_keychords(self):
+    def _load_existing_keychords(self) -> None:
         """Load existing keychords from the platform-specific JSON file."""
         platform_name, os_type = self._get_platform_info()
         filename = f"keychords.{platform_name}.{os_type}.json"
@@ -157,7 +157,7 @@ class KeychordCapture:
         else:
             logger.info(f"📂 No existing keychord file found at {existing_file}")
 
-    def start_capture(self, screen: Screen):
+    def start_capture(self, screen: Screen) -> None:
         """Start the interactive capture process."""
         logger.info("🎯 start_capture() called!")
 
@@ -259,7 +259,8 @@ class KeychordCapture:
         elif sequence == []:
             return True  # Skip this key
 
-        # Store the result
+        # Store the result - sequence is guaranteed to be list[int] at this point
+        assert sequence is not None  # For mypy
         self.captured_keychords[prompt] = sequence
 
         # Show confirmation
@@ -270,7 +271,7 @@ class KeychordCapture:
 
     def _capture_sequence(self, screen: Screen) -> Optional[list[int]]:
         """Capture a key sequence from user input."""
-        sequence = []
+        sequence: list[int] = []
 
         while True:
             event = screen.get_event()
@@ -294,11 +295,9 @@ class KeychordCapture:
                     "Press another key to add it, or press ESC to finish...", 0, 11
                 )
                 screen.refresh()
-            else:
-                # No event, just continue waiting
-                pass
+            # No event, just continue waiting
 
-    def _save_results(self):
+    def _save_results(self) -> None:
         """Save captured keychords to JSON file."""
         logger.info(
             f"🔍 Debug: _save_results() called with {len(self.captured_keychords)} keychords"
@@ -334,7 +333,7 @@ class KeychordCapture:
             logger.error(f"❌ Error saving keychords: {e}")
 
 
-def main():
+def main() -> int:
     """Main entry point."""
     logger.info("Platform Keychord Capture Tool")
     logger.info("=" * 40)
@@ -367,7 +366,7 @@ def main():
         logger.info("🎮 Starting asciimatics screen wrapper...")
 
         # Create a wrapper function that calls our capture method
-        def demo(screen):
+        def demo(screen: Screen) -> None:
             logger.info("🎯 Demo function called!")
             capture.start_capture(screen)
 
