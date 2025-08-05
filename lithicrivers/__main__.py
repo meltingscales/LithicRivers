@@ -56,6 +56,8 @@ if __name__ == "__main__":
     print("Game is no longer running :3c")
     print("Goodbye!")
 
+    GAME.shutdown()
+
     exit(0)
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
