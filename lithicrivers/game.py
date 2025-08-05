@@ -1212,7 +1212,40 @@ class World(EntityListener):
         # Initialize fluid manager
         self.fluid_manager = FluidManager(self)
         
+        # Generate forced structures during world initialization
+        self._generate_forced_structures()
+        
         self._add_starter_entities()
+
+    def _generate_forced_structures(self) -> None:
+        """Generate forced structures (ship and dungeon) during world initialization."""
+        # Force a ship to spawn at (20, 20, 0)
+        forced_ship_pos = VectorN(20, 20, 0)
+        print(f"FORCING SHIP TO SPAWN AT {forced_ship_pos}")  # Debug output
+        
+        # Generate a small world around the ship to place it
+        ship_radius = VectorN(25, 25, 2)
+        ship_world_data = self.generator.generate_world_data(ship_radius)
+        
+        # Apply the ship world data to our chunked world
+        for pos_str, tile in ship_world_data.items():
+            pos_parts = pos_str.split(',')
+            world_pos = VectorN(int(pos_parts[0]), int(pos_parts[1]), int(pos_parts[2]))
+            self.data.set_tile(world_pos, tile)
+        
+        # Force a procedural dungeon to spawn at (50, 50, -3)
+        forced_dungeon_pos = VectorN(50, 50, -3)
+        print(f"FORCING UNDERGROUND FACILITY TO SPAWN AT {forced_dungeon_pos}")  # Debug output
+        
+        # Generate a small world around the dungeon to place it
+        dungeon_radius = VectorN(55, 55, 5)
+        dungeon_world_data = self.generator.generate_world_data(dungeon_radius)
+        
+        # Apply the dungeon world data to our chunked world
+        for pos_str, tile in dungeon_world_data.items():
+            pos_parts = pos_str.split(',')
+            world_pos = VectorN(int(pos_parts[0]), int(pos_parts[1]), int(pos_parts[2]))
+            self.data.set_tile(world_pos, tile)
 
     def on_entity_moved(self, event: EntityMovedEvent) -> None:
         """Handle entity movement events."""
