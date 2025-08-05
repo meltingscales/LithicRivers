@@ -471,7 +471,7 @@ class SeededWorldGenerator:
         forced_ship_pos = VectorN(20, 20, 0)
         logger.info(f"FORCING SHIP TO SPAWN AT {forced_ship_pos}")  # Debug output
         self.structure_manager.place_structure(
-            "small_ship", world_data, forced_ship_pos, self.rng
+            "small_ship", world_data, forced_ship_pos, self.rng, force_placement=True
         )
 
         # Generate structures in chunks for better distribution

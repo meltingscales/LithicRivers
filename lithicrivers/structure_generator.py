@@ -131,6 +131,7 @@ class StructureManager:
         world_data: dict[str, Tile],
         base_position: VectorN,
         rng: random.Random,
+        force_placement: bool = False,
     ) -> bool:
         """
         Place a structure at the given position in the world.
@@ -140,6 +141,7 @@ class StructureManager:
             world_data: World data dictionary
             base_position: Base position to place the structure
             rng: Random number generator for consistency
+            force_placement: If True, bypass random chance check
 
         Returns:
             True if structure was placed successfully, False otherwise
@@ -149,8 +151,8 @@ class StructureManager:
 
         structure = self.structures[structure_name]
 
-        # Check if we should generate this structure based on chance
-        if rng.random() > structure.gen_chance:
+        # Check if we should generate this structure based on chance (unless forced)
+        if not force_placement and rng.random() > structure.gen_chance:
             return False
 
         # Check if base position is within the allowed y-layer range
