@@ -58,7 +58,7 @@ class TestTickRateSystem(unittest.TestCase):
         """Test that entity speed affects how often entities tick."""
         from lithicrivers.game import StumblingSheep
         
-        # Create a sheep with speed 2.0
+        # Create a sheep with speed 0.2
         sheep = StumblingSheep(VectorN(0, 0, 0))
         self.game.world.add_entity(sheep)
         
@@ -73,13 +73,13 @@ class TestTickRateSystem(unittest.TestCase):
         sheep.tick = mock_tick
         
         # Tick the game multiple times
-        for _ in range(10):
+        for _ in range(100):
             self.game.increment_tick()
         
-        # Verify that sheep only ticked at the expected intervals (every 5 ticks for speed 2.0)
-        # The sheep should tick at frames 5 and 10 (not 0 and 5) because the first tick at 0
+        # Verify that sheep only ticked at the expected intervals (every 50 ticks for speed 0.2)
+        # The sheep should tick at frames 50 and 100 (not 0 and 50) because the first tick at 0
         # might not trigger the sheep's movement due to the random check
-        expected_ticks = [5, 10]  # Should tick at frames 5 and 10
+        expected_ticks = [50, 100]  # Should tick at frames 50 and 100
         self.assertEqual(tick_calls, expected_ticks)
 
     def test_move_player_uses_tick_cost_system(self):

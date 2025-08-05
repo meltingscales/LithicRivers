@@ -398,6 +398,14 @@ class Items:
     def acorn() -> "Item":
         return Item("Acorn", sprite_sheet=["o"])
 
+    @staticmethod
+    def iron_scrap() -> "Item":
+        return Item("Iron Scrap", sprite_sheet=["="])
+
+    @staticmethod
+    def scrap_electronics() -> "Item":
+        return Item("Scrap Electronics", sprite_sheet=["e"])
+
 
 class DroppedItem(Entity, SpriteRenderable):
     """An item that has been dropped in the world."""
@@ -470,6 +478,9 @@ class Player(Entity, SpriteRenderable):
         
         # Apply body modifiers to base stats
         self._update_stats_from_body()
+        
+        # Add debug items for body repairs
+        self._add_debug_repair_items()
 
     def _update_stats_from_body(self) -> None:
         """Update player stats based on body condition."""
@@ -479,6 +490,34 @@ class Player(Entity, SpriteRenderable):
         # Apply modifiers to base stats (100 each)
         self.health = max(1, 100 + health_modifier)
         self.stamina = max(1, 100 + stamina_modifier)
+
+    def _add_debug_repair_items(self) -> None:
+        """Add double the necessary items to repair all body parts for debug purposes."""
+        repair_requirements = self.body.get_repair_requirements()
+        
+        # Count total items needed
+        total_items_needed = {}
+        for part_type, costs in repair_requirements.items():
+            for item_name, amount in costs.items():
+                if item_name in total_items_needed:
+                    total_items_needed[item_name] += amount
+                else:
+                    total_items_needed[item_name] = amount
+        
+        # Add double the required items to inventory
+        for item_name, amount in total_items_needed.items():
+            # Create the item based on name
+            if item_name == "iron_scrap":
+                item = Items.iron_scrap()
+            elif item_name == "scrap_electronics":
+                item = Items.scrap_electronics()
+            else:
+                # Fallback for unknown items
+                item = Item(item_name, ["?"])
+            
+            # Add double the amount needed
+            for _ in range(amount * 2):
+                self.inventory.add_item(item)
 
     def get_walk_speed_modifier(self) -> float:
         """Get the player's walk speed modifier based on body condition."""
@@ -642,7 +681,7 @@ class Tiles:
         return Tile(
             "Iron Scrap",
             sprite_sheet=["=", "==\n==", "===\n===\n==="],
-            drops={0.8: Items.rock(), 0.2: Items.gold_nugget()},
+            drops={0.8: Items.iron_scrap(), 0.2: Items.gold_nugget()},
         )
 
     @staticmethod
@@ -666,7 +705,7 @@ class Tiles:
         return Tile(
             "Scrap Electronics",
             sprite_sheet=["e", "ee\nee", "eee\neee\neee"],
-            drops={0.6: Items.rock(), 0.4: Items.gold_nugget()},
+            drops={0.6: Items.scrap_electronics(), 0.4: Items.gold_nugget()},
         )
 
     @staticmethod
