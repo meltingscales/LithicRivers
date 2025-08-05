@@ -69,8 +69,9 @@ class SpriteLoader:
             with open(sprites_file, 'r') as f:
                 content = f.read().strip()
                 lines = content.split('\n')
-                # Remove empty lines and strip whitespace
-                lines = [line.strip() for line in lines if line.strip()]
+
+                # Note that we do not strip whitespace because we want to preserve 
+                # spaces if they're part of the artwork.
                 
                 # Group lines into sprites by scale
                 # Format: line[0] for scale 1, lines[1:2] for scale 2, lines[3:5] for scale 3

@@ -1,0 +1,10 @@
+{
+    "name": "Ancient Relic",
+    "color": "red",
+    "description": "An ancient relic covered in mysterious runes",
+    "sprites": [
+        "R",
+        "RR\nRR",
+        " R \nRRR\n R "
+    ]
+} 
