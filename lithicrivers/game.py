@@ -375,13 +375,11 @@ class Fluid(Entity, SpriteRenderable):
         """Render the fluid sprite."""
         sprites = self.get_sprites()
         if self.fluid_type not in sprites:
-            # Return a fallback sprite if fluid type not found
-            return "?"
+            raise ValueError(f"Fluid type '{self.fluid_type}' not found in sprite data. Available types: {list(sprites.keys())}")
         
         sprite_list = sprites[self.fluid_type]
         if scale <= 0 or scale > len(sprite_list):
-            # Return a fallback sprite if scale is out of bounds
-            return "?"
+            raise ValueError(f"Scale {scale} is out of bounds for fluid '{self.fluid_type}'. Valid range: 1-{len(sprite_list)}")
         
         return sprite_list[scale-1]
 
@@ -397,15 +395,8 @@ class Fluid(Entity, SpriteRenderable):
             # Use external sprite data
             return {self.fluid_type: sprite_data.sprites}
         
-        # Fallback to hardcoded sprites if external data not found
-        fluid_sprites = {
-            "water": ["~", "~~\n~~", "~~~\n~~~\n~~~"],
-            "lava": ["=", "==\n==", "===\n===\n==="],
-            "acid": ["*", "**\n**", "***\n***\n***"],
-            "oil": ["o", "oo\noo", "ooo\nooo\nooo"],
-            "blood": ["%", "%%\n%%", "%%%\n%%%\n%%%"],
-        }
-        return fluid_sprites
+        # No fallback - throw exception if external data not found
+        raise ValueError(f"External sprite data not found for fluid type '{self.fluid_type}' in 'fluids' category")
     
     def get_color(self) -> str:
         """Get the color for this fluid."""
@@ -419,15 +410,8 @@ class Fluid(Entity, SpriteRenderable):
             # Use external sprite data
             return sprite_data.color
         
-        # Fallback to hardcoded colors if external data not found
-        fluid_colors = {
-            "water": "blue",
-            "lava": "red",
-            "acid": "green",
-            "oil": "yellow",
-            "blood": "red",
-        }
-        return fluid_colors.get(self.fluid_type, "blue")
+        # No fallback - throw exception if external data not found
+        raise ValueError(f"External sprite data not found for fluid type '{self.fluid_type}' in 'fluids' category")
     
     def tick(self) -> None:
         """Process fluid physics each tick."""
