@@ -24,7 +24,8 @@
   },
   "action": {
     "MINE": ["u"],
-    "INTERACT": ["i"]
+    "INTERACT": ["i"],
+    "PICKUP_ITEMS": ["g"]
   },
   "ui": {
     "CLOSE_HELP_MENU": ["ESCAPE"],

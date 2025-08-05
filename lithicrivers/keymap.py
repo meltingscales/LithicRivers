@@ -123,6 +123,7 @@ class Keymap:
         # Action keys
         self.MINE = config_manager.get_keybind("action", "MINE")
         self.INTERACT = config_manager.get_keybind("action", "INTERACT")
+        self.PICKUP_ITEMS = config_manager.get_keybind("action", "PICKUP_ITEMS")
 
         # UI keys
         self.CLOSE_HELP_MENU = config_manager.get_keybind("ui", "CLOSE_HELP_MENU")
