@@ -96,6 +96,10 @@ class VectorN:
             return False
         return self.dimension_values == other.dimension_values
 
+    def __hash__(self) -> int:
+        """Make VectorN hashable for use as dictionary keys and in sets."""
+        return hash(self.dimension_values)
+
     def __str__(self) -> str:
         return f"<Vec{self.dimension_order()} {self.dimension_values}>"
 
