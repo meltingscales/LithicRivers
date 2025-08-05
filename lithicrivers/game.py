@@ -373,10 +373,31 @@ class Fluid(Entity, SpriteRenderable):
 
     def render_sprite(self, scale: int = 1) -> str:
         """Render the fluid sprite."""
-        return self.get_sprites()[self.fluid_type][scale-1]
+        sprites = self.get_sprites()
+        if self.fluid_type not in sprites:
+            # Return a fallback sprite if fluid type not found
+            return "?"
+        
+        sprite_list = sprites[self.fluid_type]
+        if scale <= 0 or scale > len(sprite_list):
+            # Return a fallback sprite if scale is out of bounds
+            return "?"
+        
+        return sprite_list[scale-1]
 
     def get_sprites(self) -> dict[str, list[str]]:
         """Get all possible sprite representations of this fluid (for different scales, 1x1, 2x2, 3x3, etc.)"""
+        # Try to load from external sprite data first
+        from lithicrivers.sprite_loader import get_sprite_loader
+        
+        sprite_loader = get_sprite_loader()
+        sprite_data = sprite_loader.load_sprite(self.fluid_type, "fluids")
+        
+        if sprite_data:
+            # Use external sprite data
+            return {self.fluid_type: sprite_data.sprites}
+        
+        # Fallback to hardcoded sprites if external data not found
         fluid_sprites = {
             "water": ["~", "~~\n~~", "~~~\n~~~\n~~~"],
             "lava": ["=", "==\n==", "===\n===\n==="],
@@ -388,6 +409,17 @@ class Fluid(Entity, SpriteRenderable):
     
     def get_color(self) -> str:
         """Get the color for this fluid."""
+        # Try to load from external sprite data first
+        from lithicrivers.sprite_loader import get_sprite_loader
+        
+        sprite_loader = get_sprite_loader()
+        sprite_data = sprite_loader.load_sprite(self.fluid_type, "fluids")
+        
+        if sprite_data:
+            # Use external sprite data
+            return sprite_data.color
+        
+        # Fallback to hardcoded colors if external data not found
         fluid_colors = {
             "water": "blue",
             "lava": "red",

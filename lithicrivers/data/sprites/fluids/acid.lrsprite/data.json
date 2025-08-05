@@ -1,0 +1,6 @@
+{
+  "name": "acid",
+  "color": "green",
+  "description": "Corrosive acid",
+  "scales": [1, 2, 3]
+} 
