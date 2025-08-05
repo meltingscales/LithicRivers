@@ -1278,7 +1278,40 @@ class World(EntityListener):
             # Use the stored generator instead of creating a new one
             tile = self.generator.generate_tile_for_position(pos)
             self.data.set_tile(pos, tile)
+            
+            # Check if we should generate structures around this position
+            # Only do this occasionally to avoid performance issues
+            if not hasattr(self, '_last_structure_check'):
+                # First time - always generate structures
+                self._last_structure_check = True
+                self._generate_structures_around(pos)
+            elif pos.x % 16 == 0 and pos.y % 16 == 0:  # Check every 16 tiles
+                self._generate_structures_around(pos)
         return tile
+    
+    def _generate_structures_around(self, pos: VectorN) -> None:
+        """Generate structures around a position."""
+        # Generate structures in a small area around the position
+        radius = VectorN(4, 4, 1)  # Small radius for performance
+        world_data = {}
+        
+        # Generate basic terrain first
+        for z in range(pos.z - radius.z, pos.z + radius.z):
+            for y in range(pos.y - radius.y, pos.y + radius.y):
+                for x in range(pos.x - radius.x, pos.x + radius.x):
+                    check_pos = VectorN(x, y, z)
+                    if self.data.get_tile(check_pos) is None:
+                        tile = self.generator.generate_tile_for_position(check_pos)
+                        world_data[check_pos.serialize()] = tile
+        
+        # Generate structures
+        self.generator._generate_structures(world_data, radius)
+        
+        # Apply the generated world data to our chunked world
+        for pos_str, tile in world_data.items():
+            pos_parts = pos_str.split(',')
+            world_pos = VectorN(int(pos_parts[0]), int(pos_parts[1]), int(pos_parts[2]))
+            self.data.set_tile(world_pos, tile)
 
     def pre_generate_around_player(self, radius: int = 2) -> None:
         """
