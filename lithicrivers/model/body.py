@@ -253,12 +253,19 @@ class Body:
         """Get the speed modifier for a specific action."""
         if action_type == "walk":
             return self.get_total_walk_speed_modifier()
-        elif action_type == "mine":
+        elif action_type in ["mine", "break"]:
             return self.get_total_break_speed_modifier()
         elif action_type == "craft":
             return self.get_total_break_speed_modifier()
         elif action_type == "push":
             return self.get_total_break_speed_modifier()
+        elif action_type in ["interact", "inventory", "pickup"]:
+            # These actions are quick and don't require much body capability
+            # But they can still be affected by severe body damage
+            walk_speed = self.get_total_walk_speed_modifier()
+            break_speed = self.get_total_break_speed_modifier()
+            # Use the better of the two speeds, but cap at 1.0
+            return min(1.0, max(walk_speed, break_speed))
         else:
             return 1.0
     

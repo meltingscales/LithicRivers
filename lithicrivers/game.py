@@ -338,6 +338,7 @@ class StumblingSheep(InteractiveEntity):
             interaction_text="You pet the sheep. It looks at you like this: -w-",
         )
         self.sprite_sheet = ["S", "@@\n,,", "@w@\n###\n| |"]
+        self.speed = 0.2  # Sheep moves at 0.2x speed (tick every 5 frames)
 
     def tick(self) -> None:
         """Called each game tick. 50% chance to move in a random direction."""
@@ -1226,7 +1227,10 @@ class Game:
             return
 
         self.player.move(vec)
-        self.increment_tick()
+        # Use action tick cost system instead of just incrementing by 1
+        tick_cost = self.get_action_tick_cost("walk")
+        for _ in range(tick_cost):
+            self.increment_tick()
 
     def player_outside_viewport(self, wiggle=0):
         return not self.player_inside_2d_viewport(wiggle=wiggle)
@@ -1323,8 +1327,22 @@ class Game:
         """Get how many ticks an action should cost based on body condition."""
         speed_modifier = self.player.get_action_speed(action_type)
         
-        # Base cost is 1 tick, but impaired actions cost more ticks
-        base_cost = 1
+        # Define base costs for different action types
+        base_costs = {
+            "walk": 200,      # Walking is the baseline action
+            "break": 300,      # Mining/breaking takes longer than walking
+            "mine": 300,       # Alias for break
+            "craft": 400,      # Crafting takes even longer
+            "push": 250,       # Pushing objects takes some time
+            "inventory": 50,   # Quick inventory operations
+            "interact": 100,   # Quick interactions
+            "pickup": 75,      # Quick pickup operations
+        }
+        
+        # Get base cost for this action type, default to walk cost
+        base_cost = base_costs.get(action_type, base_costs["walk"])
+        
+        # Adjust cost based on body condition
         if speed_modifier < 0.5:
             return max(1, int(base_cost / speed_modifier))  # More ticks for slower actions
         else:
@@ -1335,7 +1353,15 @@ class Game:
         # Get all entities in the world
         for entity in self.world.get_all_entities():
             if hasattr(entity, "tick") and callable(entity.tick):
-                entity.tick()
+                # Check if entity has a speed attribute and should tick this frame
+                if hasattr(entity, "speed"):
+                    # Entity speed affects how often it ticks
+                    # Higher speed = more frequent ticks
+                    if self.gametick % max(1, int(10 / entity.speed)) == 0:
+                        entity.tick()
+                else:
+                    # Default behavior for entities without speed attribute
+                    entity.tick()
 
 
 class MessageLog:
