@@ -6,7 +6,7 @@ Similar to the structure loader but for sprites.
 import json
 import logging
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ class SpriteLoader:
         self.data_path = data_path
         self._sprite_cache: Dict[str, SpriteData] = {}
     
-    def load_sprite(self, sprite_name: str, category: str = "fluids") -> Optional[SpriteData]:
+    def load_sprite(self, sprite_name: str, category: str = "fluids") -> SpriteData:
         """Load a sprite from external files."""
         cache_key = f"{category}/{sprite_name}"
         
@@ -47,15 +47,14 @@ class SpriteLoader:
         sprite_path = self.data_path / category / f"{sprite_name}.lrsprite"
         
         if not sprite_path.exists():
-            logger.warning(f"Sprite not found: {sprite_path}")
-            return None
+            available_sprites = self.get_available_sprites(category)
+            raise ValueError(f"Sprite '{sprite_name}' not found in '{category}' category. Available sprites: {available_sprites}")
         
         try:
             # Load metadata
             data_file = sprite_path / "data.json"
             if not data_file.exists():
-                logger.error(f"Missing data.json for sprite: {sprite_path}")
-                return None
+                raise ValueError(f"Missing data.json for sprite: {sprite_path}")
             
             with open(data_file, 'r') as f:
                 metadata = json.load(f)
@@ -63,8 +62,7 @@ class SpriteLoader:
             # Load sprite data
             sprites_file = sprite_path / "sprites.txt"
             if not sprites_file.exists():
-                logger.error(f"Missing sprites.txt for sprite: {sprite_path}")
-                return None
+                raise ValueError(f"Missing sprites.txt for sprite: {sprite_path}")
             
             with open(sprites_file, 'r') as f:
                 content = f.read().strip()
@@ -104,7 +102,7 @@ class SpriteLoader:
             
         except Exception as e:
             logger.error(f"Failed to load sprite {sprite_name}: {e}")
-            return None
+            raise ValueError(f"Failed to load sprite '{sprite_name}' from '{category}' category: {e}")
     
     def get_available_sprites(self, category: str = "fluids") -> List[str]:
         """Get list of available sprites in a category."""
