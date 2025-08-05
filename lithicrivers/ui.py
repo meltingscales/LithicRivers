@@ -707,6 +707,24 @@ class WorldMap(Frame):
             # Join with separators
             self.statusLabel.text = " | ".join(status_parts)
 
+    def update_all_ui_elements(self) -> None:
+        """Update all UI elements with current game state."""
+        if hasattr(self, "game") and self.game:
+            # Update status label
+            self.update_status_label()
+            
+            # Update inventory display
+            if hasattr(self, "labelInventory"):
+                self.labelInventory.text = self.game.player.inventory.summary()
+            
+            # Update tile under feet display
+            if hasattr(self, "labelFeet"):
+                self.labelFeet.text = str(self.game.get_tile_at_player_feet())
+            
+            # Update viewport display
+            if hasattr(self, "labelViewport"):
+                self.labelViewport.text = str(self.game.viewport.render_pretty())
+
     def _adjust_viewport_for_screen(self, screen) -> None:
         """Adjust viewport size based on available screen space."""
         # Calculate available space for the game widget
@@ -1947,7 +1965,7 @@ class InputHandler:
         if picked_up_items:
             game.log_pickup(f"Picked up: {', '.join(picked_up_items)}")
             game.increment_tick()
-            world_map.update_status_label()
+            world_map.update_all_ui_elements()
         
         # Close popup
         popup_manager = get_popup_manager()
@@ -1967,7 +1985,7 @@ class InputHandler:
         # Log the action
         game.log_pickup(f"Picked up {name}")
         game.increment_tick()
-        world_map.update_status_label()
+        world_map.update_all_ui_elements()
         
         # Close popup
         popup_manager = get_popup_manager()
@@ -2054,9 +2072,7 @@ class WorldMapEventHandler(SceneEventHandler):
 
         # Update UI elements if any event was handled
         if event_handled:
-            world_map.labelInventory.text = world_map.game.player.inventory.summary()
-            world_map.labelFeet.text = str(world_map.game.get_tile_at_player_feet())
-            world_map.labelViewport.text = str(world_map.game.viewport.render_pretty())
+            world_map.update_all_ui_elements()
 
         return event_handled  # Only return True if an event was actually handled
 
