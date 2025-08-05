@@ -191,8 +191,11 @@
 - ✅ **COMPLETED**: Body modularity system with damaged android body
 - ✅ **COMPLETED**: Dynamic walk and break speeds based on body condition
 - ✅ **COMPLETED**: Higher tick rate system (200+) for granular speed control
+- in progress: make tick rate occur relative to player (each walk action should cost around 200 ticks, etc. Make sure other entities like StumblingSheep have `speed` that is reasonable and affects them too.)
+- in progress: visualize body parts in the body panel with a custom asciimatics class that extends Frame...
+- in progress: start with necessary items to repair body parts for debug purposes
 - 🔄 **IN PROGRESS**: Block placement with body-based restrictions
-- 🔄 **IN PROGRESS**: Push boxes that require functional arms
+- 🔄 **IN PROGRESS**: Push boxes that require certain body parts
 - 🔄 **IN PROGRESS**: Basic crafting system for body repairs
 - 🔄 **IN PROGRESS**: Procedural dungeons
 - 🔄 **IN PROGRESS**: Fluids system
