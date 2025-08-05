@@ -477,8 +477,9 @@ class SeededWorldGenerator:
         )
 
         # Force a procedural dungeon to spawn below the starting area
-        # Place underground facility at 25,25,-3 which should be accessible from the surface
-        forced_dungeon_pos = VectorN(25, 25, -3)
+        # Place underground facility at 50,50,-3 which should be accessible from the surface
+        # Using a position that won't conflict with chunk-based generation
+        forced_dungeon_pos = VectorN(50, 50, -3)
         logger.info(f"FORCING UNDERGROUND FACILITY TO SPAWN AT {forced_dungeon_pos}")  # Debug output
         self.procedural_generator.generate_dungeon(
             DungeonType.UNDERGROUND_FACILITY, forced_dungeon_pos, world_data, self.rng, force_placement=True
