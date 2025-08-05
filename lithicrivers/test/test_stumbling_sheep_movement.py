@@ -24,21 +24,18 @@ class TestStumblingSheepMovement(unittest.TestCase):
         sheep = StumblingSheep(VectorN(0, 0, 0))
         self.assertEqual(sheep.name, "Stumbling Sheep")
         self.assertEqual(sheep.position, VectorN(0, 0, 0))
-        self.assertIsNone(sheep.world)  # Should be None initially
+        # Sheep no longer has world attribute - uses event system instead
 
     def test_stumbling_sheep_world_assignment(self):
-        """Test that StumblingSheep gets world reference during tick."""
+        """Test that StumblingSheep is properly registered with world."""
         sheep = StumblingSheep(VectorN(0, 0, 0))
         self.world.add_entity(sheep)
         
-        # Process ticks to assign world reference
-        self.game.process_entity_ticks()
-        
-        # Check that the sheep has a world reference
-        self.assertEqual(sheep.world, self.world)
+        # Check that the sheep is registered as a listener
+        self.assertIn(self.world, sheep._listeners)
 
     def test_stumbling_sheep_movement_with_world(self):
-        """Test that StumblingSheep moves correctly using world's move_entity."""
+        """Test that StumblingSheep moves correctly using event system."""
         sheep = StumblingSheep(VectorN(0, 0, 0))
         self.world.add_entity(sheep)
         
@@ -50,7 +47,6 @@ class TestStumblingSheepMovement(unittest.TestCase):
         with patch('random.random', return_value=0.1):  # Always < 0.5
             with patch('random.choice', return_value=VectorN(1, 0, 0)):  # Move east
                 # Process tick
-                sheep.world = self.world  # Set world reference
                 sheep.tick()
         
         # Verify sheep moved to new position
@@ -62,9 +58,9 @@ class TestStumblingSheepMovement(unittest.TestCase):
         self.assertNotIn(sheep, entities_at_old)
 
     def test_stumbling_sheep_movement_without_world(self):
-        """Test that StumblingSheep falls back to direct movement when no world."""
+        """Test that StumblingSheep moves correctly even without world listeners."""
         sheep = StumblingSheep(VectorN(0, 0, 0))
-        sheep.world = None  # No world reference
+        # Don't add to world - test standalone movement
         
         # Mock random to always return True (so sheep always moves)
         with patch('random.random', return_value=0.1):  # Always < 0.5

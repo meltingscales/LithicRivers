@@ -9,7 +9,7 @@ import pprint
 import random
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional, Union, Protocol, TypeVar, Callable
 
 from lithicrivers.colors import COLOR_MANAGER
 from lithicrivers.constants import VEC_EAST, VEC_NORTH, VEC_SOUTH, VEC_WEST
@@ -22,6 +22,24 @@ from lithicrivers.settings import (
     DEFAULT_VIEWPORT,
 )
 from lithicrivers.textutil import get_color_for_item, get_color_for_tile
+
+# Event system for entity movement
+class EntityEvent:
+    """Base class for entity events."""
+    pass
+
+class EntityMovedEvent(EntityEvent):
+    """Event fired when an entity moves."""
+    def __init__(self, entity: "Entity", old_position: VectorN, new_position: VectorN):
+        self.entity = entity
+        self.old_position = old_position
+        self.new_position = new_position
+
+class EntityListener:
+    """Interface for objects that listen to entity events."""
+    def on_entity_moved(self, event: EntityMovedEvent) -> None:
+        """Called when an entity moves."""
+        pass
 
 
 def generate_sprite_repeat(char: str, scale: int = 1) -> str:
@@ -106,13 +124,32 @@ class Entity:
         self.position: VectorN = position
         self.health: int = 100
         self.stamina: int = 100
+        self._listeners: list[EntityListener] = []
+
+    def add_listener(self, listener: EntityListener) -> None:
+        """Add an event listener."""
+        self._listeners.append(listener)
+
+    def remove_listener(self, listener: EntityListener) -> None:
+        """Remove an event listener."""
+        if listener in self._listeners:
+            self._listeners.remove(listener)
+
+    def _notify_moved(self, old_position: VectorN, new_position: VectorN) -> None:
+        """Notify listeners of movement."""
+        event = EntityMovedEvent(self, old_position, new_position)
+        for listener in self._listeners:
+            listener.on_entity_moved(event)
 
     def tick(self) -> None:
         """Called each game tick. Override in subclasses."""
         pass
 
     def move(self, vec: VectorN) -> None:
+        """Move the entity and notify listeners."""
+        old_position = self.position
         self.position += vec
+        self._notify_moved(old_position, self.position)
 
     def calc_offset(self, vec: VectorN) -> VectorN:
         """Where would I move, if I did move?"""
@@ -300,7 +337,6 @@ class StumblingSheep(InteractiveEntity):
             interaction_text="You pet the sheep. It looks at you like this: -w-",
         )
         self.sprite_sheet = ["S", "@@\n,,", "@w@\n###\n| |"]
-        self.world = None  # Will be set by the game during tick processing
 
     def tick(self) -> None:
         """Called each game tick. 50% chance to move in a random direction."""
@@ -309,15 +345,8 @@ class StumblingSheep(InteractiveEntity):
             directions = [VEC_NORTH, VEC_SOUTH, VEC_EAST, VEC_WEST]
             random_direction = random.choice(directions)
             
-            # Calculate new position
-            new_position = self.calc_offset(random_direction)
-            
-            # Use world's move_entity method if available
-            if hasattr(self, 'world') and self.world:
-                self.world.move_entity(self, new_position)
-            else:
-                # Fallback to direct movement
-                self.move(random_direction)
+            # Simply move - the world will be notified via events
+            self.move(random_direction)
 
 
 class Entities:
@@ -799,7 +828,7 @@ class ChunkedWorldData:
                             yield (pos.serialize(), tile)
 
 
-class World:
+class World(EntityListener):
     """
     A world contains world data and manages the world state.
     """
@@ -820,6 +849,26 @@ class World:
         # Map position tuples to lists of entities
         self.entities_by_position = {}  # (x, y, z) -> list[Entity]
         self._add_starter_entities()
+
+    def on_entity_moved(self, event: EntityMovedEvent) -> None:
+        """Handle entity movement events."""
+        # Remove from old position
+        old_pos_key = self._get_position_key(event.old_position)
+        if old_pos_key in self.entities_by_position:
+            try:
+                self.entities_by_position[old_pos_key].remove(event.entity)
+                # Clean up empty position entries
+                if not self.entities_by_position[old_pos_key]:
+                    del self.entities_by_position[old_pos_key]
+            except ValueError:
+                # Entity not found at position, ignore
+                pass
+        
+        # Add to new position
+        new_pos_key = self._get_position_key(event.new_position)
+        if new_pos_key not in self.entities_by_position:
+            self.entities_by_position[new_pos_key] = []
+        self.entities_by_position[new_pos_key].append(event.entity)
 
     def _add_starter_entities(self):
         """Add starter entities to the world."""
@@ -882,6 +931,9 @@ class World:
         if pos_key not in self.entities_by_position:
             self.entities_by_position[pos_key] = []
         self.entities_by_position[pos_key].append(entity)
+        
+        # Register as listener for movement events
+        entity.add_listener(self)
 
     def remove_entity(self, entity: "Entity") -> None:
         """Remove an entity from the world."""
@@ -895,6 +947,9 @@ class World:
             except ValueError:
                 # Entity not found at position, ignore
                 pass
+        
+        # Unregister as listener
+        entity.remove_listener(self)
 
     def move_entity(self, entity: "Entity", new_position: VectorN) -> None:
         """Move an entity from its current position to a new position."""
@@ -1207,9 +1262,6 @@ class Game:
         # Get all entities in the world
         for entity in self.world.get_all_entities():
             if hasattr(entity, "tick") and callable(entity.tick):
-                # Pass the world reference to entities that need it
-                if hasattr(entity, "world"):
-                    entity.world = self.world
                 entity.tick()
 
 
