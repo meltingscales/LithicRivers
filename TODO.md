@@ -192,12 +192,14 @@
 - ✅ **COMPLETED**: Dynamic walk and break speeds based on body condition
 - ✅ **COMPLETED**: Higher tick rate system (200+) for granular speed control
 - in progress: visualize body parts in the body panel with a custom asciimatics class that extends Frame...
+- in progress: UI elements that let you select and repair body parts, and backend code that actually repairs the body part for a material cost.
 - ✅ **COMPLETED**: Start with double the necessary items to repair body parts for debug purposes
 - 🔄 **IN PROGRESS**: Block placement with body-based restrictions
 - 🔄 **IN PROGRESS**: Push boxes that require certain body parts
 - 🔄 **IN PROGRESS**: Basic crafting system for body repairs
 - 🔄 **IN PROGRESS**: Procedural dungeons
-- 🔄 **IN PROGRESS**: Fluids system
+- ✅ **COMPLETED**: Fluids system
+- in progress: steam API integration
 
 ## steam key giveaway list:
 - skomor123

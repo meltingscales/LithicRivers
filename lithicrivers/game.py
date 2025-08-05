@@ -331,24 +331,206 @@ class StumblingSheep(InteractiveEntity):
 
     def __init__(self, position: VectorN):
         super().__init__(
-            "Stumbling Sheep",
-            position,
+            name="Stumbling Sheep",
+            position=position,
             sprite="S",
             color="white",
-            interaction_text="You pet the sheep. It looks at you like this: -w-",
+            interaction_text="The sheep stumbles around aimlessly, occasionally making confused noises.",
         )
         self.sprite_sheet = ["S", "@@\n,,", "@w@\n###\n| |"]
         self.speed = 0.2  # Sheep moves at 0.2x speed (tick every 5 frames)
 
     def tick(self) -> None:
-        """Called each game tick. 50% chance to move in a random direction."""
-        if random.random() < 0.5:
-            # Choose a random direction
+        """Move randomly every few ticks."""
+        import random
+        
+        # Use deterministic randomness based on world seed and tick
+        # This ensures the same behavior for the same seed
+        random.seed(f"sheep_{self.position.serialize()}_{self.game.gametick if hasattr(self, 'game') else 0}")
+        
+        if random.random() < 0.1:  # 10% chance to move each tick
             directions = [VEC_NORTH, VEC_SOUTH, VEC_EAST, VEC_WEST]
-            random_direction = random.choice(directions)
+            direction = random.choice(directions)
+            self.move(direction)
+
+
+class Fluid(Entity, SpriteRenderable):
+    """
+    A fluid entity that can flow and spread across the world.
+    Fluids don't replace blocks but exist as separate entities.
+    """
+    
+    def __init__(self, fluid_type: str, position: VectorN, amount: float = 1.0, viscosity: float = 1.0):
+        super().__init__(name=f"{fluid_type}_fluid", position=position)
+        self.fluid_type = fluid_type
+        self.amount = amount  # Amount of fluid (0.0 to 1.0)
+        self.viscosity = viscosity  # How slowly the fluid flows (higher = slower)
+        self.max_amount = 1.0  # Maximum amount per tile
+        self.spread_threshold = 0.8  # Amount at which fluid starts spreading
+        # Initialize sprite sheet after fluid_type is set
+        SpriteRenderable.__init__(self, [self.get_sprite()])
+        
+    def get_sprite(self) -> str:
+        """Get the sprite representation of this fluid."""
+        fluid_sprites = {
+            "water": "~",
+            "lava": "=",
+            "acid": "*",
+            "oil": "o",
+            "blood": "%",
+        }
+        return fluid_sprites.get(self.fluid_type, "~")
+    
+    def get_color(self) -> str:
+        """Get the color for this fluid."""
+        fluid_colors = {
+            "water": "blue",
+            "lava": "red",
+            "acid": "green",
+            "oil": "yellow",
+            "blood": "red",
+        }
+        return fluid_colors.get(self.fluid_type, "blue")
+    
+    def tick(self) -> None:
+        """Process fluid physics each tick."""
+        # Fluid physics are handled by FluidManager
+        pass
+    
+    def copy(self) -> "Fluid":
+        """Create a copy of this fluid."""
+        return Fluid(self.fluid_type, self.position, self.amount, self.viscosity)
+
+
+class FluidManager:
+    """
+    Manages fluid physics and spreading across the world.
+    All fluid calculations are deterministic based on world seed and tick.
+    """
+    
+    def __init__(self, world: "World"):
+        self.world = world
+        self.fluids: dict[str, Fluid] = {}  # position_key -> Fluid
+        self.flow_directions = [
+            VectorN(0, -1, 0),  # Down (gravity)
+            VectorN(-1, 0, 0),  # Left
+            VectorN(1, 0, 0),   # Right
+            VectorN(0, 0, -1),  # Back
+            VectorN(0, 0, 1),   # Forward
+        ]
+    
+    def add_fluid(self, fluid: Fluid) -> None:
+        """Add a fluid to the manager."""
+        pos_key = self._get_position_key(fluid.position)
+        if pos_key in self.fluids:
+            # Merge with existing fluid
+            existing = self.fluids[pos_key]
+            if existing.fluid_type == fluid.fluid_type:
+                total_amount = existing.amount + fluid.amount
+                if total_amount <= existing.max_amount:
+                    existing.amount = total_amount
+                else:
+                    # Overflow - create new fluid entities
+                    existing.amount = existing.max_amount
+                    overflow = total_amount - existing.max_amount
+                    if overflow > 0:
+                        # Create overflow fluid that will spread
+                        overflow_fluid = Fluid(fluid.fluid_type, fluid.position, overflow, fluid.viscosity)
+                        self.fluids[pos_key] = overflow_fluid
+        else:
+            self.fluids[pos_key] = fluid
+    
+    def remove_fluid(self, position: VectorN) -> None:
+        """Remove fluid from a position."""
+        pos_key = self._get_position_key(position)
+        if pos_key in self.fluids:
+            del self.fluids[pos_key]
+    
+    def get_fluid(self, position: VectorN) -> Optional[Fluid]:
+        """Get fluid at a position."""
+        pos_key = self._get_position_key(position)
+        return self.fluids.get(pos_key)
+    
+    def process_fluids(self, gametick: int) -> None:
+        """Process all fluid physics for a given tick."""
+        # Use deterministic randomness based on world seed and tick
+        import random
+        random.seed(f"fluids_{self.world.seed}_{gametick}")
+        
+        # Create a copy of fluids to avoid modifying during iteration
+        fluids_to_process = list(self.fluids.items())
+        
+        for pos_key, fluid in fluids_to_process:
+            if fluid.amount <= 0:
+                # Remove empty fluids
+                del self.fluids[pos_key]
+                continue
             
-            # Simply move - the world will be notified via events
-            self.move(random_direction)
+            # Check if fluid should spread
+            if fluid.amount >= fluid.spread_threshold:
+                self._spread_fluid(fluid, gametick)
+    
+    def _spread_fluid(self, fluid: Fluid, gametick: int) -> None:
+        """Spread fluid to adjacent tiles based on physics."""
+        import random
+        
+        # Use deterministic randomness for this specific fluid
+        random.seed(f"fluid_spread_{fluid.position.serialize()}_{gametick}")
+        
+        # Calculate how much to spread
+        spread_amount = fluid.amount - fluid.spread_threshold
+        fluid.amount = fluid.spread_threshold
+        
+        # Try to spread to adjacent positions
+        valid_targets = []
+        
+        for direction in self.flow_directions:
+            target_pos = fluid.position + direction
+            target_tile = self.world.get_tile(target_pos)
+            
+            # Check if target position can hold fluid
+            if self._can_hold_fluid(target_pos, target_tile):
+                valid_targets.append(target_pos)
+        
+        if not valid_targets:
+            return
+        
+        # Distribute fluid among valid targets
+        amount_per_target = spread_amount / len(valid_targets)
+        
+        for target_pos in valid_targets:
+            # Create new fluid at target position
+            new_fluid = Fluid(fluid.fluid_type, target_pos, amount_per_target, fluid.viscosity)
+            self.add_fluid(new_fluid)
+    
+    def _can_hold_fluid(self, position: VectorN, tile: Optional["Tile"]) -> bool:
+        """Check if a position can hold fluid."""
+        if tile is None:
+            return True  # Empty space can hold fluid
+        
+        # Check if tile is solid (can't hold fluid)
+        solid_tiles = ["bedrock", "door"]
+        if tile.tileid.lower() in solid_tiles:
+            return False
+        
+        # Check if there's already too much fluid at this position
+        existing_fluid = self.get_fluid(position)
+        if existing_fluid and existing_fluid.amount >= existing_fluid.max_amount:
+            return False
+        
+        return True
+    
+    def _get_position_key(self, pos: VectorN) -> str:
+        """Get a string key for a position."""
+        return pos.serialize()
+    
+    def get_all_fluids(self) -> list[Fluid]:
+        """Get all fluids in the manager."""
+        return list(self.fluids.values())
+    
+    def clear(self) -> None:
+        """Clear all fluids."""
+        self.fluids.clear()
 
 
 class Entities:
@@ -367,6 +549,26 @@ class Entities:
     @staticmethod
     def test_entity2(position: VectorN = VectorN(5, 6, 0)) -> "AncientRelic":
         return AncientRelic(position)
+    
+    @staticmethod
+    def water(position: VectorN = VectorN(0, 0, 0), amount: float = 1.0) -> "Fluid":
+        return Fluid("water", position, amount, viscosity=1.0)
+    
+    @staticmethod
+    def lava(position: VectorN = VectorN(0, 0, 0), amount: float = 1.0) -> "Fluid":
+        return Fluid("lava", position, amount, viscosity=2.0)  # Lava flows slower
+    
+    @staticmethod
+    def acid(position: VectorN = VectorN(0, 0, 0), amount: float = 1.0) -> "Fluid":
+        return Fluid("acid", position, amount, viscosity=1.5)
+    
+    @staticmethod
+    def oil(position: VectorN = VectorN(0, 0, 0), amount: float = 1.0) -> "Fluid":
+        return Fluid("oil", position, amount, viscosity=0.5)  # Oil flows faster
+    
+    @staticmethod
+    def blood(position: VectorN = VectorN(0, 0, 0), amount: float = 1.0) -> "Fluid":
+        return Fluid("blood", position, amount, viscosity=1.2)
 
 
 class Items:
@@ -932,6 +1134,10 @@ class World(EntityListener):
         # Change entity storage to support multiple entities per position
         # Map position tuples to lists of entities
         self.entities_by_position = {}  # (x, y, z) -> list[Entity]
+        
+        # Initialize fluid manager
+        self.fluid_manager = FluidManager(self)
+        
         self._add_starter_entities()
 
     def on_entity_moved(self, event: EntityMovedEvent) -> None:
@@ -970,6 +1176,27 @@ class World(EntityListener):
         sheep_position = DEFAULT_PLAYER_POSITION + (VEC_NORTH * 2)
         sheep = Entities.stumbling_sheep(sheep_position)
         self.add_entity(sheep)
+        
+        # Add some test fluids to demonstrate the system
+        # Water pool near the player
+        water_pos = DEFAULT_PLAYER_POSITION + VectorN(3, 0, 0)
+        water = Entities.water(water_pos, amount=1.0)
+        self.fluid_manager.add_fluid(water)
+        
+        # Lava pool further away
+        lava_pos = DEFAULT_PLAYER_POSITION + VectorN(-3, -1, 0)
+        lava = Entities.lava(lava_pos, amount=1.0)
+        self.fluid_manager.add_fluid(lava)
+        
+        # Acid pool
+        acid_pos = DEFAULT_PLAYER_POSITION + VectorN(0, 2, 0)
+        acid = Entities.acid(acid_pos, amount=1.0)
+        self.fluid_manager.add_fluid(acid)
+
+        # BIG oil pool further away
+        oil_pos = DEFAULT_PLAYER_POSITION + VectorN(0, -10, 0)
+        oil = Entities.oil(oil_pos, amount=10.0)
+        self.fluid_manager.add_fluid(oil)
 
     def get_tile(self, pos: VectorN):
         tile = self.data.get_tile(pos)
@@ -1237,6 +1464,14 @@ class Game:
                         # For now, just use the priority entity's sprite
                         # TODO: Implement better multi-entity visualization (e.g., add a number)
                         pass
+                
+                # Check for fluids at this position (render on top of tiles but under entities)
+                fluid = self.world.fluid_manager.get_fluid(pos)
+                if fluid:
+                    # Only render fluid if there's no entity at this position
+                    if not entities:
+                        sprite = fluid.get_sprite()
+                        tile_color = COLOR_MANAGER.get_color(fluid.get_color())
 
                 # if we are here, render us!
                 if (self.player.position.y == y) and (self.player.position.x == x):
@@ -1343,6 +1578,8 @@ class Game:
         """Increment the game tick counter."""
         self.gametick += 1
         self.process_entity_ticks()
+        # Process fluid physics
+        self.world.fluid_manager.process_fluids(self.gametick)
 
     def get_tick_rate(self) -> int:
         """Get the current tick rate based on player body condition."""
