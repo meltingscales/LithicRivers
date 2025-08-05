@@ -16,13 +16,13 @@ class TestForcedDungeon(unittest.TestCase):
         generator = create_world_generator(42)
         
         # Generate a world large enough to include the forced dungeon
-        # The forced dungeon is at (25, 25, -3), so we need radius at least 30
-        radius = VectorN(30, 30, 5)  # Large enough to include the dungeon
+        # The forced dungeon is at (50, 50, -3), so we need radius at least 55
+        radius = VectorN(55, 55, 5)  # Large enough to include the dungeon
         world_data = generator.generate_world_data(radius)
         
         # Check that the forced dungeon position has been modified
-        # The forced dungeon should be at (25, 25, -3)
-        forced_pos = VectorN(25, 25, -3)
+        # The forced dungeon should be at (50, 50, -3)
+        forced_pos = VectorN(50, 50, -3)
         forced_pos_str = forced_pos.serialize()
         
 
@@ -32,8 +32,8 @@ class TestForcedDungeon(unittest.TestCase):
         dungeon_tiles_found = 0
         
         # Check a small area around the forced dungeon position
-        for x in range(20, 30):
-            for y in range(20, 30):
+        for x in range(45, 55):
+            for y in range(45, 55):
                 for z in range(-5, -1):
                     pos = VectorN(x, y, z)
                     pos_str = pos.serialize()
@@ -55,7 +55,7 @@ class TestForcedDungeon(unittest.TestCase):
         generator1 = create_world_generator(12345)
         generator2 = create_world_generator(12345)
         
-        radius = VectorN(30, 30, 5)
+        radius = VectorN(55, 55, 5)
         world_data1 = generator1.generate_world_data(radius)
         world_data2 = generator2.generate_world_data(radius)
         
@@ -67,8 +67,8 @@ class TestForcedDungeon(unittest.TestCase):
         dungeon_tiles1 = 0
         dungeon_tiles2 = 0
         
-        for x in range(20, 30):
-            for y in range(20, 30):
+        for x in range(45, 55):
+            for y in range(45, 55):
                 for z in range(-5, -1):
                     pos = VectorN(x, y, z)
                     pos_str = pos.serialize()
