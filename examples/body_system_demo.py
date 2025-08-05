@@ -12,40 +12,40 @@ from lithicrivers.game import Player
 
 def demo_body_system():
     """Demonstrate the body modularity system."""
-    print("🤖 LITHICRIVERS BODY MODULARITY SYSTEM DEMO")
+    print("LITHICRIVERS BODY MODULARITY SYSTEM DEMO")
     print("=" * 50)
     
     # Create a player with the default damaged android body
     player = Player("Damaged Android")
     
-    print(f"\n👤 Player: {player.name}")
-    print(f"❤️  Health: {player.health}")
-    print(f"⚡ Stamina: {player.stamina}")
+    print(f"\nPlayer: {player.name}")
+    print(f"[*] Health: {player.health}")
+    print(f"[*] Stamina: {player.stamina}")
     
     # Show body status
-    print(f"\n🔧 BODY STATUS:")
+    print(f"\nBODY STATUS:")
     print(player.get_body_status_summary())
     
     # Show movement penalties
-    print(f"\n🚶 MOVEMENT PENALTIES:")
+    print(f"\nMOVEMENT PENALTIES:")
     print(f"   {player.get_movement_penalty_description()}")
     
     # Show speed modifiers
-    print(f"\n⚡ SPEED MODIFIERS:")
+    print(f"\nSPEED MODIFIERS:")
     print(f"   Walk Speed: {player.get_walk_speed_modifier():.2f}")
     print(f"   Break Speed: {player.get_break_speed_modifier():.2f}")
     
     # Show action capabilities
-    print(f"\n🎯 ACTION CAPABILITIES:")
+    print(f"\nACTION CAPABILITIES:")
     actions = ["walk", "mine", "craft", "push", "interact"]
     for action in actions:
         can_do = player.can_perform_action(action)
         speed = player.get_action_speed(action)
-        status = "✅" if can_do else "❌"
+        status = "[OK]" if can_do else "[X]"
         print(f"   {action.upper():8} {status} (speed: {speed:.2f})")
     
     # Show repair requirements
-    print(f"\n🔧 REPAIR REQUIREMENTS:")
+    print(f"\nREPAIR REQUIREMENTS:")
     requirements = player.body.get_repair_requirements()
     if requirements:
         for part_type, costs in requirements.items():
@@ -56,7 +56,7 @@ def demo_body_system():
         print("   No repairs needed!")
     
     # Demonstrate body part effects
-    print(f"\n🧪 DEMONSTRATING BODY PART EFFECTS:")
+    print(f"\nDEMONSTRATING BODY PART EFFECTS:")
     
     # Test with different body configurations
     test_configs = [
@@ -75,7 +75,7 @@ def demo_body_system():
     ]
     
     for config_name, changes in test_configs:
-        print(f"\n   📊 {config_name}:")
+        print(f"\n   {config_name}:")
         
         # Apply changes to a copy
         test_body = Body()
@@ -96,14 +96,14 @@ def demo_body_system():
         
         print(f"      Possible Actions: {', '.join(possible_actions)}")
     
-    print(f"\n🎮 GAMEPLAY IMPLICATIONS:")
+    print(f"\nGAMEPLAY IMPLICATIONS:")
     print("   • Damaged body parts reduce movement and action speeds")
     print("   • Missing body parts prevent certain actions entirely")
     print("   • Players must repair their body to improve performance")
     print("   • Higher tick rates (200+) allow for more granular speed control")
     print("   • Body condition affects mining, crafting, and movement")
     
-    print(f"\n🎯 NEXT STEPS FOR MVP:")
+    print(f"\nNEXT STEPS FOR MVP:")
     print("   • Implement block placement with body-based restrictions")
     print("   • Add push boxes that require functional arms")
     print("   • Create crafting system for body repairs")

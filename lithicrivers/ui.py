@@ -1174,30 +1174,30 @@ class BodyPage(Frame):
         
         # Build the body status display
         lines = []
-        lines.append("🤖 ANDROID BODY STATUS")
+        lines.append("ANDROID BODY STATUS")
         lines.append("=" * 40)
         lines.append("")
         
         # Basic stats
-        lines.append(f"❤️  Health: {player.health}")
-        lines.append(f"⚡ Stamina: {player.stamina}")
+        lines.append(f"[*] Health: {player.health}")
+        lines.append(f"[*] Stamina: {player.stamina}")
         lines.append("")
         
         # Body parts status
-        lines.append("🔧 BODY PARTS:")
+        lines.append("BODY PARTS:")
         body_summary = player.get_body_status_summary()
         for line in body_summary.split('\n'):
             lines.append(f"   {line}")
         lines.append("")
         
         # Movement and action status
-        lines.append("🚶 MOVEMENT STATUS:")
+        lines.append("MOVEMENT STATUS:")
         penalty_desc = player.get_movement_penalty_description()
         lines.append(f"   {penalty_desc}")
         lines.append("")
         
         # Speed modifiers
-        lines.append("⚡ SPEED MODIFIERS:")
+        lines.append("SPEED MODIFIERS:")
         walk_speed = player.get_walk_speed_modifier()
         break_speed = player.get_break_speed_modifier()
         lines.append(f"   Walk Speed: {walk_speed:.2f}")
@@ -1205,17 +1205,17 @@ class BodyPage(Frame):
         lines.append("")
         
         # Action capabilities
-        lines.append("🎯 ACTION CAPABILITIES:")
+        lines.append("ACTION CAPABILITIES:")
         actions = ["walk", "mine", "craft", "push", "interact"]
         for action in actions:
             can_do = player.can_perform_action(action)
             speed = player.get_action_speed(action)
-            status = "✅" if can_do else "❌"
+            status = "[OK]" if can_do else "[X]"
             lines.append(f"   {action.upper():8} {status} (speed: {speed:.2f})")
         lines.append("")
         
         # Repair requirements
-        lines.append("🔧 REPAIR REQUIREMENTS:")
+        lines.append("REPAIR REQUIREMENTS:")
         requirements = player.body.get_repair_requirements()
         if requirements:
             for part_type, costs in requirements.items():
@@ -1227,7 +1227,7 @@ class BodyPage(Frame):
         lines.append("")
         
         # Basic descriptions
-        lines.append("📝 BODY DESCRIPTIONS:")
+        lines.append("BODY DESCRIPTIONS:")
         for part_type, part in player.body.parts.items():
             part_name = part.name
             description = part.description

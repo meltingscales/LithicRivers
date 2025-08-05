@@ -275,11 +275,11 @@ class Body:
         status_lines = []
         for part_type, part in self.parts.items():
             state_icon = {
-                BodyPartState.MISSING: "❌",
-                BodyPartState.DAMAGED: "⚠️",
-                BodyPartState.FUNCTIONAL: "✅",
-                BodyPartState.ENHANCED: "⚡"
-            }.get(part.state, "❓")
+                BodyPartState.MISSING: "[X]",
+                BodyPartState.DAMAGED: "[!]",
+                BodyPartState.FUNCTIONAL: "[OK]",
+                BodyPartState.ENHANCED: "[*]"
+            }.get(part.state, "[?]")
             
             status_lines.append(f"{state_icon} {part.name}: {part.state.value}")
         
