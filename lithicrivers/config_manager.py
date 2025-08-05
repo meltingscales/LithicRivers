@@ -12,12 +12,12 @@ class ConfigManager:
 
     def __init__(self) -> None:
         self.config_dir = self._get_config_directory()
-        self.keybinds_file = self.config_dir / "keybinds.json"
-        self.settings_file = self.config_dir / "settings.json"
+        self.config_file = self.config_dir / "lithicrivers-config.json"
 
         # Load configurations
-        self.keybinds = self._load_keybinds()
-        self.settings = self._load_settings()
+        self.config = self._load_config()
+        self.keybinds = self.config.get("keybinds", {})
+        self.settings = self.config.get("settings", {})
 
     def _get_config_directory(self) -> Path:
         """Get the configuration directory, creating it if it doesn't exist."""
@@ -31,65 +31,63 @@ class ConfigManager:
         config_dir.mkdir(exist_ok=True)
         return config_dir
 
-    def _load_keybinds(self) -> dict[str, Any]:
-        """Load keybinds from JSON file or create default if file doesn't exist."""
-        default_keybinds = {
-            "movement": {
-                "MOVE_NORTHWEST": ["NUMPAD_7"],
-                "MOVE_NORTH": ["NUMPAD_8"],
-                "MOVE_NORTHEAST": ["NUMPAD_9"],
-                "MOVE_WEST": ["NUMPAD_4"],
-                "WAIT": ["NUMPAD_5"],
-                "MOVE_EAST": ["NUMPAD_6"],
-                "MOVE_SOUTHWEST": ["NUMPAD_1"],
-                "MOVE_SOUTH": ["NUMPAD_2"],
-                "MOVE_SOUTHEAST": ["NUMPAD_3"],
-                "MOVE_UP": ["q"],
-                "MOVE_DOWN": ["e"],
+    def _load_config(self) -> dict[str, Any]:
+        """Load configuration from JSON file or create default if file doesn't exist."""
+        default_config = {
+            "keybinds": {
+                "movement": {
+                    "MOVE_NORTHWEST": ["NUMPAD_7"],
+                    "MOVE_NORTH": ["NUMPAD_8"],
+                    "MOVE_NORTHEAST": ["NUMPAD_9"],
+                    "MOVE_WEST": ["NUMPAD_4"],
+                    "WAIT": ["NUMPAD_5"],
+                    "MOVE_EAST": ["NUMPAD_6"],
+                    "MOVE_SOUTHWEST": ["NUMPAD_1"],
+                    "MOVE_SOUTH": ["NUMPAD_2"],
+                    "MOVE_SOUTHEAST": ["NUMPAD_3"],
+                    "MOVE_UP": ["q"],
+                    "MOVE_DOWN": ["e"],
+                },
+                "viewport": {
+                    "RESET_VIEWPORT": ["r"],
+                    "SLIDE_VIEWPORT_WEST": ["["],
+                    "SLIDE_VIEWPORT_EAST": ["]"],
+                    "TOGGLE_VIEWPORT": ["v"],
+                },
+                "scale": {"SCALE_UP": ["=", "+"], "SCALE_DOWN": ["-"]},
+                "action": {"MINE": ["u"], "INTERACT": ["i"], "PICKUP_ITEMS": ["g"]},
+                "ui": {"CLOSE_HELP_MENU": ["ESCAPE"], "OPEN_COMMAND_MENU": ["/"]},
+                "inventory": {
+                    "DROP_ITEM": ["d"],
+                    "DESTROY_ITEM": ["x"],
+                    "CHEAT_DUPLICATE_ITEM": ["."],
+                },
             },
-            "viewport": {
-                "RESET_VIEWPORT": ["r"],
-                "SLIDE_VIEWPORT_WEST": ["["],
-                "SLIDE_VIEWPORT_EAST": ["]"],
-                "TOGGLE_VIEWPORT": ["v"],
-            },
-            "scale": {"SCALE_UP": ["=", "+"], "SCALE_DOWN": ["-"]},
-            "action": {"MINE": ["u"], "INTERACT": ["i"], "PICKUP_ITEMS": ["g"]},
-            "ui": {"CLOSE_HELP_MENU": ["ESCAPE"], "OPEN_COMMAND_MENU": ["/"]},
-            "inventory": {
-                "DROP_ITEM": ["d"],
-                "DESTROY_ITEM": ["x"],
-                "CHEAT_DUPLICATE_ITEM": ["."],
+            "settings": {
+                "game": {
+                    "GAME_NAME": "LithicRivers",
+                    "LOGFILENAME": "LithicRivers.log",
+                    "LOGGINGLEVEL": "INFO",
+                    "DEVELOPER_MODE": True,
+                    "DEFAULT_SEED": 4669201609,
+                    "DEFAULT_PLAYER_NAME": "Inigo Montoya",
+                },
+                "world": {
+                    "DEFAULT_SIZE_RADIUS": {
+                        "production": [50, 50, 3],
+                        "testing": [3, 3, 1],
+                    },
+                    "DEFAULT_PLAYER_POSITION": {
+                        "production": [25, 25, 0],
+                        "testing": [0, 0, 0],
+                    },
+                },
+                "viewport": {"VIEWPORT_RADIUS": [8, 8, 0], "VIEWPORT_WIGGLE": 2},
+                "performance": {"MAX_CPU_THREADS": 64},
             },
         }
 
-        return self._load_json_file(self.keybinds_file, default_keybinds)
-
-    def _load_settings(self) -> dict[str, Any]:
-        """Load settings from JSON file or create default if file doesn't exist."""
-        default_settings = {
-            "game": {
-                "GAME_NAME": "LithicRivers",
-                "LOGFILENAME": "LithicRivers.log",
-                "LOGGINGLEVEL": "INFO",
-                "DEVELOPER_MODE": True,
-                "DEFAULT_SEED": 4669201609,
-            },
-            "world": {
-                "DEFAULT_SIZE_RADIUS": {
-                    "production": [50, 50, 3],
-                    "testing": [5, 5, 1],
-                },
-                "DEFAULT_PLAYER_POSITION": {
-                    "production": [25, 25, 0],
-                    "testing": [0, 0, 0],
-                },
-            },
-            "viewport": {"VIEWPORT_RADIUS": [8, 8, 0], "VIEWPORT_WIGGLE": 2},
-            "performance": {"MAX_CPU_THREADS": 64},
-        }
-
-        return self._load_json_file(self.settings_file, default_settings)
+        return self._load_json_file(self.config_file, default_config)
 
     def _load_json_file(
         self, file_path: Path, default_data: dict[str, Any]
@@ -136,21 +134,25 @@ class ConfigManager:
 
         return VectorN(*coords)
 
+    def save_config(self) -> None:
+        """Save current configuration to file."""
+        try:
+            # Update the config dict with current keybinds and settings
+            self.config["keybinds"] = self.keybinds
+            self.config["settings"] = self.settings
+            
+            with open(self.config_file, "w") as f:
+                json.dump(self.config, f, indent=2)
+        except OSError as e:
+            logging.error(f"Error saving config: {e}")
+
     def save_keybinds(self) -> None:
         """Save current keybinds to file."""
-        try:
-            with open(self.keybinds_file, "w") as f:
-                json.dump(self.keybinds, f, indent=2)
-        except OSError as e:
-            logging.error(f"Error saving keybinds: {e}")
+        self.save_config()
 
     def save_settings(self) -> None:
         """Save current settings to file."""
-        try:
-            with open(self.settings_file, "w") as f:
-                json.dump(self.settings, f, indent=2)
-        except OSError as e:
-            logging.error(f"Error saving settings: {e}")
+        self.save_config()
 
     def update_keybind(self, category: str, key_name: str, value: list[str]) -> None:
         """Update a keybind value."""
