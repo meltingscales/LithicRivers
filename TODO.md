@@ -200,6 +200,7 @@
 - 🔄 **IN PROGRESS**: Procedural dungeons v2: Overhaul this and just copy the algorithm from https://www.gamedeveloper.com/programming/procedural-dungeon-generation-algorithm
 - ✅ **COMPLETED**: Fluids system
 - in progress: steam API integration
+- in progress: find out why GAME.shutdown() doesn't seem to work
 - COMPLETED: make structures generate upon new areas being loaded, not just in a small radius once. if a structure causes un-generated areas to be referenced, just generate them like normal. (Bug idea: Could rarely cause a cascade of world generation? I think some minecraft mods have this problem.)
 
 ## steam key giveaway list:

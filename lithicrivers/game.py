@@ -1095,7 +1095,8 @@ class ChunkedWorldData:
         self.world_generator = world_generator  # Reference to world generator for structure generation
         self._generated_chunks = set()  # Track which chunks have had structures generated
         self._chunk_generation_lock = threading.Lock()  # Lock for thread-safe chunk generation
-        self._thread_pool = ThreadPoolExecutor(max_workers=4)  # Thread pool for chunk generation
+        from lithicrivers.settings import MAX_CPU_THREADS
+        self._thread_pool = ThreadPoolExecutor(max_workers=MAX_CPU_THREADS)  # Thread pool for chunk generation
 
     def get_chunk_key(self, pos: VectorN) -> tuple[int, int, int]:
         """Get chunk coordinates from world position."""
@@ -1262,7 +1263,7 @@ class ChunkedWorldData:
     def shutdown(self) -> None:
         """Shutdown the thread pool and clean up resources."""
         if hasattr(self, '_thread_pool'):
-            self._thread_pool.shutdown(wait=True)
+            self._thread_pool.shutdown(wait=False)
 
     def get_chunk_stats(self) -> dict:
         """Get statistics about chunk usage."""
@@ -1658,6 +1659,10 @@ class Game:
         self.message_log.add_message(
             "Welcome to LithicRivers! Your adventures will be logged here.", "info"
         )
+
+    def shutdown(self) -> None:
+        """Shutdown the game."""
+        self.world.data.shutdown()
 
     def get_tile_at_player_feet(self) -> Tile:
         return self.world.get_tile(self.player.position)
