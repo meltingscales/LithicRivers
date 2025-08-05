@@ -26,7 +26,7 @@ from asciimatics.widgets import (
 )
 
 from lithicrivers.colors import COLOR_MANAGER
-from lithicrivers.game import NPC, Game, Item, ItemArtRenderable, Tile, Tiles
+from lithicrivers.game import NPC, Game, Item, ItemArtRenderable, Tile, Tiles, DroppedItem
 from lithicrivers.keymap import KEYMAP
 from lithicrivers.model.model import RenderedData, StopGameError, Viewport
 from lithicrivers.model.vector import VectorN
@@ -1661,6 +1661,38 @@ class InputHandler:
         cls._show_interaction_popup(game, adjacent_entities, world_map)
 
     @classmethod
+    def handle_pickup_items(
+        cls, event: KeyboardEvent, game: Game, world_map: WorldMap
+    ) -> None:
+        """Handle picking up items from adjacent positions."""
+        if not KEYMAP.matches("PICKUP_ITEMS", event):
+            return
+
+        # Get adjacent entities and filter for DroppedItem entities only
+        dropped_items = []
+
+        # Check all adjacent positions for dropped items
+        for dx in [-1, 0, 1]:
+            for dy in [-1, 0, 1]:
+                check_pos = VectorN(game.player.position.x + dx, game.player.position.y + dy, game.player.position.z)
+                entities = game.world.get_entities(check_pos)
+                
+                for entity in entities:
+                    # Check if this is a DroppedItem
+                    if hasattr(entity, 'item') and hasattr(entity, 'name'):
+                        # This is a DroppedItem entity
+                        color = entity.color if hasattr(entity, "color") else "white"
+                        dropped_items.append((entity.name, check_pos, color, entity))
+
+        if not dropped_items:
+            # No items to pick up
+            game.log_info("No items to pick up nearby.")
+            return
+
+        # Show pickup popup for items
+        cls._show_pickup_popup(game, dropped_items, world_map)
+
+    @classmethod
     def _start_npc_conversation(cls, game: Game, npc: NPC, world_map: WorldMap) -> None:
         """Start a conversation with an NPC."""
         cls._show_npc_conversation(game, npc, "greeting", world_map)
@@ -1844,6 +1876,104 @@ class InputHandler:
         # Add the popup to the current scene
         world_map._screen.current_scene.add_effect(popup)
 
+    @classmethod
+    def _show_pickup_popup(
+        cls,
+        game: Game,
+        dropped_items: list[tuple[str, VectorN, str, "DroppedItem"]],
+        world_map: WorldMap,
+    ) -> None:
+        """Show a popup for picking up items."""
+        # Generate the message for the popup
+        message = cls._generate_pickup_message(dropped_items)
+        options = ["Pick Up All"] + [f"Pick Up {name}" for name, _, _, _ in dropped_items] + ["Cancel"]
+
+        def popup_callback(selected_option: int) -> None:
+            if selected_option == 0:
+                # Pick up all items
+                cls._handle_pickup_all_items(game, dropped_items, world_map)
+            elif selected_option == len(dropped_items) + 1:
+                # Cancel
+                popup_manager = get_popup_manager()
+                if popup_manager:
+                    popup_manager.set_active_popup(None)
+            else:
+                # Pick up specific item (selected_option - 1 because of "Pick Up All" option)
+                item_index = selected_option - 1
+                if 0 <= item_index < len(dropped_items):
+                    name, pos, color, entity = dropped_items[item_index]
+                    cls._handle_item_pickup(game, name, pos, entity, world_map)
+
+        # Create and show the popup
+        popup = VerticalPopUpDialog(
+            world_map._screen,
+            message,
+            options,
+            popup_callback,
+        )
+        # Track the active popup using popup manager
+        popup_manager = get_popup_manager()
+        if popup_manager:
+            popup_manager.set_active_popup(popup)
+        # Add the popup to the current scene
+        world_map._screen.current_scene.add_effect(popup)
+
+    @classmethod
+    def _generate_pickup_message(
+        cls, dropped_items: list[tuple[str, VectorN, str, "DroppedItem"]]
+    ) -> str:
+        """Generate a message for the pickup popup."""
+        message = "Items nearby:\n\n"
+        for name, pos, color, entity in dropped_items:
+            message += f"• {name} at ({pos.x}, {pos.y}, {pos.z})\n"
+        message += "\nSelect an option:"
+        return message
+
+    @classmethod
+    def _handle_pickup_all_items(
+        cls, game: Game, dropped_items: list[tuple[str, VectorN, str, "DroppedItem"]], world_map: WorldMap
+    ) -> None:
+        """Handle picking up all items."""
+        picked_up_items = []
+        
+        for name, pos, color, entity in dropped_items:
+            # Add item to inventory
+            game.player.inventory.add_item(entity.item)
+            # Remove entity from world
+            game.world.remove_entity(entity)
+            picked_up_items.append(name)
+        
+        # Log the action
+        if picked_up_items:
+            game.log_pickup(f"Picked up: {', '.join(picked_up_items)}")
+            game.increment_tick()
+            world_map.update_status_label()
+        
+        # Close popup
+        popup_manager = get_popup_manager()
+        if popup_manager:
+            popup_manager.set_active_popup(None)
+
+    @classmethod
+    def _handle_item_pickup(
+        cls, game: Game, name: str, pos: VectorN, entity: "DroppedItem", world_map: WorldMap
+    ) -> None:
+        """Handle picking up a specific item."""
+        # Add item to inventory
+        game.player.inventory.add_item(entity.item)
+        # Remove entity from world
+        game.world.remove_entity(entity)
+        
+        # Log the action
+        game.log_pickup(f"Picked up {name}")
+        game.increment_tick()
+        world_map.update_status_label()
+        
+        # Close popup
+        popup_manager = get_popup_manager()
+        if popup_manager:
+            popup_manager.set_active_popup(None)
+
 
 class SceneEventHandler:
     """Base class for scene-specific event handlers."""
@@ -1916,6 +2046,10 @@ class WorldMapEventHandler(SceneEventHandler):
 
         if KEYMAP.matches("MINE", event):
             InputHandler.handle_mining(event, world_map.game, world_map)
+            event_handled = True
+
+        if KEYMAP.matches("PICKUP_ITEMS", event):
+            InputHandler.handle_pickup_items(event, world_map.game, world_map)
             event_handled = True
 
         # Update UI elements if any event was handled

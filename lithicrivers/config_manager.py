@@ -54,7 +54,7 @@ class ConfigManager:
                 "TOGGLE_VIEWPORT": ["v"],
             },
             "scale": {"SCALE_UP": ["=", "+"], "SCALE_DOWN": ["-"]},
-            "action": {"MINE": ["u"], "INTERACT": ["i"]},
+            "action": {"MINE": ["u"], "INTERACT": ["i"], "PICKUP_ITEMS": ["g"]},
             "ui": {"CLOSE_HELP_MENU": ["ESCAPE"], "OPEN_COMMAND_MENU": ["/"]},
             "inventory": {
                 "DROP_ITEM": ["d"],
