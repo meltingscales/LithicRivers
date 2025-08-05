@@ -126,7 +126,8 @@ profile-speedscope: ## Generate speedscope CPU profiling report
 	@echo "📄 This will create a detailed speedscope report of CPU usage"
 	@echo "🎮 Make sure the game is running in another terminal first"
 	@echo "💡 Run 'make run' in another terminal, then run this command"
-	$(UV_CMD) run py-spy record --format speedscope --output profile_report.speedscope --duration 30 --gil -- python -m lithicrivers
+	@echo "⏱️  Profiling will continue until you stop it with Ctrl+C"
+	$(UV_CMD) run py-spy record --format speedscope --output profile_report.speedscope --gil -- python -m lithicrivers
 	@echo "Visit https://www.speedscope.app/ to view the report"
 
 debug-attach: ## Show instructions for attaching to running process

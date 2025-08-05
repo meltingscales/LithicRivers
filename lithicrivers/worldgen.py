@@ -413,11 +413,10 @@ class SeededWorldGenerator:
                         center_chunk_z - radius, center_chunk_z + radius + 1
                     ):
                         future = executor.submit(
-                            self.chunk_cache.pre_generate_chunk,
+                            self._generate_complete_chunk,
                             chunk_x,
                             chunk_y,
                             chunk_z,
-                            self,
                         )
                         futures.append(future)
 
@@ -427,6 +426,48 @@ class SeededWorldGenerator:
                     future.result()
                 except Exception as e:
                     logger.warning(f"Failed to pre-generate chunk: {e}")
+
+    def _generate_complete_chunk(self, chunk_x: int, chunk_y: int, chunk_z: int) -> None:
+        """
+        Generate a complete chunk including terrain and structures in a single thread.
+        
+        Args:
+            chunk_x: Chunk X coordinate
+            chunk_y: Chunk Y coordinate  
+            chunk_z: Chunk Z coordinate
+        """
+        chunk_size = 16
+        start_x = chunk_x * chunk_size
+        start_y = chunk_y * chunk_size
+        start_z = chunk_z * chunk_size
+
+        # Generate terrain for the entire chunk
+        chunk_data = {}
+        for x in range(start_x, start_x + chunk_size):
+            for y in range(start_y, start_y + chunk_size):
+                for z in range(start_z, start_z + chunk_size):
+                    pos = VectorN(x, y, z)
+                    tile = self.generate_tile_for_position(pos)
+                    chunk_data[pos.serialize()] = tile
+
+        # Generate structures for this chunk
+        chunk_center = VectorN(start_x, start_y, start_z)
+        chunk_seed = hash((self.seed.seed, chunk_x, chunk_y, chunk_z))
+        chunk_rng = random.Random(chunk_seed)
+        
+        # Generate structures in this chunk
+        self.structure_manager.generate_structures_for_chunk(
+            chunk_data, chunk_center, chunk_size // 2, chunk_rng
+        )
+        
+        # Generate procedural dungeons in this chunk
+        self.procedural_generator.generate_dungeons_for_chunk(
+            chunk_data, chunk_center, chunk_size // 2, chunk_rng
+        )
+
+        # Store the complete chunk data
+        with self.chunk_cache.lock:
+            self.chunk_cache.cache[(chunk_x, chunk_y, chunk_z)] = chunk_data
 
     def generate_world_data(self, radius: VectorN) -> dict[str, Tile]:
         """
