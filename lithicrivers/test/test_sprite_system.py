@@ -94,20 +94,46 @@ class TestSpriteLoader(unittest.TestCase):
     
     def test_load_sprite_not_found(self):
         """Test loading non-existent sprite."""
-        sprite_data = self.sprite_loader.load_sprite("nonexistent", "fluids")
-        self.assertIsNone(sprite_data)
+        with self.assertRaises(ValueError) as context:
+            self.sprite_loader.load_sprite("nonexistent", "fluids")
+        
+        # Check that the error message includes available sprites
+        error_message = str(context.exception)
+        self.assertIn("nonexistent", error_message)
+        self.assertIn("fluids", error_message)
+        self.assertIn("Available sprites", error_message)
     
     def test_load_sprite_missing_data_json(self):
         """Test loading sprite with missing data.json."""
-        os.remove(self.test_sprite_dir / "data.json")
-        sprite_data = self.sprite_loader.load_sprite("test", "fluids")
-        self.assertIsNone(sprite_data)
+        # Create a sprite directory without data.json
+        sprite_dir = Path(self.temp_dir) / "fluids" / "missing_data.lrsprite"
+        sprite_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Create sprites.txt but no data.json
+        with open(sprite_dir / "sprites.txt", "w") as f:
+            f.write("~\n~~\n~~")
+        
+        with self.assertRaises(ValueError) as context:
+            self.sprite_loader.load_sprite("missing_data", "fluids")
+        
+        error_message = str(context.exception)
+        self.assertIn("Missing data.json", error_message)
     
     def test_load_sprite_missing_sprites_txt(self):
         """Test loading sprite with missing sprites.txt."""
-        os.remove(self.test_sprite_dir / "sprites.txt")
-        sprite_data = self.sprite_loader.load_sprite("test", "fluids")
-        self.assertIsNone(sprite_data)
+        # Create a sprite directory without sprites.txt
+        sprite_dir = Path(self.temp_dir) / "fluids" / "missing_sprites.lrsprite"
+        sprite_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Create data.json but no sprites.txt
+        with open(sprite_dir / "data.json", "w") as f:
+            f.write('{"name": "missing_sprites", "color": "blue", "description": "test"}')
+        
+        with self.assertRaises(ValueError) as context:
+            self.sprite_loader.load_sprite("missing_sprites", "fluids")
+        
+        error_message = str(context.exception)
+        self.assertIn("Missing sprites.txt", error_message)
     
     def test_sprite_caching(self):
         """Test that sprites are cached."""
@@ -235,13 +261,13 @@ class TestFluidSpriteRendering(unittest.TestCase):
         """Test rendering at invalid scales."""
         water = Entities.water(VectorN(0, 0, 0))
         
-        # Test scale 0 (should return fallback)
-        sprite_0 = water.render_sprite(0)
-        self.assertEqual(sprite_0, "?")
+        # Test scale 0 (should throw exception)
+        with self.assertRaises(ValueError):
+            water.render_sprite(0)
         
-        # Test scale 4 (should return fallback)
-        sprite_4 = water.render_sprite(4)
-        self.assertEqual(sprite_4, "?")
+        # Test scale 4 (should throw exception)
+        with self.assertRaises(ValueError):
+            water.render_sprite(4)
     
     def test_fluid_colors(self):
         """Test that fluids have correct colors."""
@@ -280,15 +306,11 @@ class TestSpriteSystemIntegration(unittest.TestCase):
             self.assertEqual(sprite_data.name, sprite_name)
     
     def test_fallback_to_hardcoded(self):
-        """Test fallback to hardcoded sprites when external files are missing."""
+        """Test that non-existent sprites throw exceptions."""
         # Create a fluid with a non-existent sprite type
-        # This should fall back to hardcoded sprites
-        fluid = Fluid("nonexistent", VectorN(0, 0, 0))
-        
-        # Should still render something (fallback)
-        sprite = fluid.render_sprite(1)
-        self.assertIsInstance(sprite, str)
-        self.assertEqual(sprite, "?")  # Should return fallback sprite
+        # This should throw an exception since we no longer have fallbacks
+        with self.assertRaises(ValueError):
+            Fluid("nonexistent", VectorN(0, 0, 0))
 
 
 def run_sprite_system_tests():

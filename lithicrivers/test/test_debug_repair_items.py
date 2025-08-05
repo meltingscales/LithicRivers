@@ -56,12 +56,16 @@ class TestDebugRepairItems(unittest.TestCase):
         # Test iron_scrap item
         iron_scrap = Items.iron_scrap()
         self.assertEqual(iron_scrap.name, "Iron Scrap")
-        self.assertEqual(iron_scrap.sprite_sheet, ["="])
+        # Now expects multi-scale sprites from external files
+        self.assertIsInstance(iron_scrap.sprite_sheet, list)
+        self.assertGreater(len(iron_scrap.sprite_sheet), 0)
         
         # Test scrap_electronics item
         scrap_electronics = Items.scrap_electronics()
         self.assertEqual(scrap_electronics.name, "Scrap Electronics")
-        self.assertEqual(scrap_electronics.sprite_sheet, ["e"])
+        # Now expects multi-scale sprites from external files
+        self.assertIsInstance(scrap_electronics.sprite_sheet, list)
+        self.assertGreater(len(scrap_electronics.sprite_sheet), 0)
 
     def test_tile_drops_updated(self):
         """Test that tile drops are updated to include the correct items."""
