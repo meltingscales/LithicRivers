@@ -247,7 +247,7 @@ class ProceduralStructureGenerator:
         # Initialize with walls
         for x in range(size):
             for y in range(size):
-                layout[VectorN(x, y, 0)] = "X"
+                layout[VectorN(x, y, 0)] = "W"
         
         # Generate rooms
         rooms = []
@@ -459,6 +459,7 @@ class ProceduralStructureGenerator:
         tile_mappings = {
             ".": "empty",
             "X": "bedrock",
+            "W": "iron_scrap",
             "O": "gold_ore",
             "T": "treasure",
             "E": "scrap_electronics",
@@ -481,6 +482,8 @@ class ProceduralStructureGenerator:
                 tile = Tiles.empty()
             elif tile_name == "bedrock":
                 tile = Tiles.bedrock()
+            elif tile_name == "iron_scrap":
+                tile = Tiles.iron_scrap()
             elif tile_name == "gold_ore":
                 tile = Tiles.gold_ore()
             elif tile_name == "treasure":
