@@ -995,25 +995,26 @@ class InventoryPage(Frame):
         self.fix()
 
     def drop_selected_item(self) -> None:
-        """Drop the selected item from inventory."""
+        """Drop the selected item from inventory to the world."""
         if not self.selected_item or not self.game or not self.game.player:
             return
 
         # Remove item from inventory
         self.game.player.inventory.itemsdata.remove(self.selected_item)
-
-        # Place the item at the player's feet
+        
         # Create a DroppedItem entity at the player's position
-        from lithicrivers.game import DroppedItem
         dropped_item_entity = DroppedItem(
-            self.selected_item,
+            self.selected_item, 
             self.game.player.position
         )
         self.game.world.add_entity(dropped_item_entity)
         
         # Log the action
         self.game.log_pickup(f"Dropped {self.selected_item.name}")
-        self.game.increment_tick()
+        # Use action tick cost system for inventory operations (lower cost)
+        tick_cost = self.game.get_action_tick_cost("inventory")
+        for _ in range(tick_cost):
+            self.game.increment_tick()
         
         # Clear selection and update displays
         self.selected_item = None
@@ -1030,7 +1031,10 @@ class InventoryPage(Frame):
         
         # Log the action
         self.game.log_info(f"Destroyed {self.selected_item.name}")
-        self.game.increment_tick()
+        # Use action tick cost system for inventory operations (lower cost)
+        tick_cost = self.game.get_action_tick_cost("inventory")
+        for _ in range(tick_cost):
+            self.game.increment_tick()
         
         # Clear selection and update displays
         self.selected_item = None
@@ -1052,7 +1056,10 @@ class InventoryPage(Frame):
         
         # Log the action
         self.game.log_info(f"Duplicated {self.selected_item.name}")
-        self.game.increment_tick()
+        # Use action tick cost system for inventory operations (lower cost)
+        tick_cost = self.game.get_action_tick_cost("inventory")
+        for _ in range(tick_cost):
+            self.game.increment_tick()
         
         # Update displays
         self.update_inventory_display()
@@ -1680,14 +1687,20 @@ class InputHandler:
                 dropped_items.append(item.name)
             game.set_tile_at_player_feet(Tiles.dirt())
             game.log_mining("tree", dropped_items)
-            game.increment_tick()
+            # Use action tick cost system instead of just incrementing by 1
+            tick_cost = game.get_action_tick_cost("break")
+            for _ in range(tick_cost):
+                game.increment_tick()
             world_map.update_all_ui_elements()
         elif tile_under == Tiles.gold_ore():
             dropped_item = tile_under.calc_drop()
             game.player.inventory.add_item(dropped_item)
             game.set_tile_at_player_feet(Tiles.dirt())
             game.log_mining("gold ore", [dropped_item.name])
-            game.increment_tick()
+            # Use action tick cost system instead of just incrementing by 1
+            tick_cost = game.get_action_tick_cost("break")
+            for _ in range(tick_cost):
+                game.increment_tick()
             world_map.update_all_ui_elements()
 
     @classmethod
@@ -1918,7 +1931,10 @@ class InputHandler:
             # No entity found
             default_text = f"You interact with {name}."
             game.log_interaction(name, default_text)
-            game.increment_tick()
+            # Use action tick cost system for interaction operations (lower cost)
+            tick_cost = game.get_action_tick_cost("interact")
+            for _ in range(tick_cost):
+                game.increment_tick()
             cls._show_interaction_result(name, default_text, world_map)
             return
 
@@ -1926,18 +1942,27 @@ class InputHandler:
             # For interactive entities, show their interaction text
             interaction_text = entity.interact()
             game.log_interaction(name, interaction_text)
-            game.increment_tick()
+            # Use action tick cost system for interaction operations (lower cost)
+            tick_cost = game.get_action_tick_cost("interact")
+            for _ in range(tick_cost):
+                game.increment_tick()
             cls._show_interaction_result(name, interaction_text, world_map)
         elif hasattr(entity, "get_conversation"):
             # For NPCs, start conversation
             game.log_interaction(name, "Started conversation")
-            game.increment_tick()
+            # Use action tick cost system for interaction operations (lower cost)
+            tick_cost = game.get_action_tick_cost("interact")
+            for _ in range(tick_cost):
+                game.increment_tick()
             cls._start_npc_conversation(game, entity, world_map)
         else:
             # Default interaction
             default_text = f"You interact with {name}."
             game.log_interaction(name, default_text)
-            game.increment_tick()
+            # Use action tick cost system for interaction operations (lower cost)
+            tick_cost = game.get_action_tick_cost("interact")
+            for _ in range(tick_cost):
+                game.increment_tick()
             cls._show_interaction_result(name, default_text, world_map)
 
     @classmethod
@@ -2036,7 +2061,10 @@ class InputHandler:
         # Log the action
         if picked_up_items:
             game.log_pickup(f"Picked up: {', '.join(picked_up_items)}")
-            game.increment_tick()
+            # Use action tick cost system for pickup operations (lower cost)
+            tick_cost = game.get_action_tick_cost("pickup")
+            for _ in range(tick_cost):
+                game.increment_tick()
             world_map.update_all_ui_elements()
         
         # Close popup
@@ -2056,7 +2084,10 @@ class InputHandler:
         
         # Log the action
         game.log_pickup(f"Picked up {name}")
-        game.increment_tick()
+        # Use action tick cost system for pickup operations (lower cost)
+        tick_cost = game.get_action_tick_cost("pickup")
+        for _ in range(tick_cost):
+            game.increment_tick()
         world_map.update_all_ui_elements()
         
         # Close popup

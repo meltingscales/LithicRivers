@@ -84,8 +84,10 @@ class TestStumblingSheepMovement(unittest.TestCase):
         # Mock random to always return True (so sheep always moves)
         with patch('random.random', return_value=0.1):  # Always < 0.5
             with patch('random.choice', return_value=VectorN(1, 0, 0)):  # Move east
-                # Process game tick (which processes entity ticks)
-                self.game.increment_tick()
+                # Process game ticks until sheep moves (sheep has speed 2.0, so ticks every 5 frames)
+                # We need to tick exactly 5 times to ensure sheep gets one tick opportunity
+                for _ in range(5):  # Tick 5 times to ensure sheep gets a chance to move
+                    self.game.increment_tick()
         
         # Verify sheep moved to new position
         entities_at_new = self.world.get_entities(VectorN(1, 0, 0))
