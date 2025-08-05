@@ -185,17 +185,9 @@ class NPC(Entity, SpriteRenderable):
         sprite_loader = get_sprite_loader()
         sprite_data = sprite_loader.load_sprite(name.lower().replace(" ", "_"), "entities")
         
-        if sprite_data:
-            # Use external sprite data
-            self.sprite_sheet = sprite_data.sprites
-            self.color = sprite_data.color
-        else:
-            # Fallback to generated sprites if external data not found
-            self.sprite_sheet = [
-                sprite,  # 1x1
-                f"{sprite}{sprite}\n{sprite}{sprite}",  # 2x2
-                f"{sprite}{sprite}{sprite}\n{sprite}{sprite}{sprite}\n{sprite}{sprite}{sprite}",  # 3x3
-            ]
+        # Use external sprite data
+        self.sprite_sheet = sprite_data.sprites
+        self.color = sprite_data.color
         self._setup_default_conversation()
 
     def _setup_default_conversation(self) -> None:
@@ -298,17 +290,9 @@ class InteractiveEntity(Entity, SpriteRenderable):
         sprite_loader = get_sprite_loader()
         sprite_data = sprite_loader.load_sprite(name.lower().replace(" ", "_"), "entities")
         
-        if sprite_data:
-            # Use external sprite data
-            self.sprite_sheet = sprite_data.sprites
-            self.color = sprite_data.color
-        else:
-            # Fallback to generated sprites if external data not found
-            self.sprite_sheet = [
-                sprite,  # 1x1
-                f"{sprite}{sprite}\n{sprite}{sprite}",  # 2x2
-                f"{sprite}{sprite}{sprite}\n{sprite}{sprite}{sprite}\n{sprite}{sprite}{sprite}",  # 3x3
-            ]
+        # Use external sprite data
+        self.sprite_sheet = sprite_data.sprites
+        self.color = sprite_data.color
 
 
 class CrystalShard(InteractiveEntity):
@@ -326,17 +310,9 @@ class CrystalShard(InteractiveEntity):
         sprite_loader = get_sprite_loader()
         sprite_data = sprite_loader.load_sprite("crystal_shard", "entities")
         
-        if sprite_data:
-            # Use external sprite data
-            self.sprite_sheet = sprite_data.sprites
-            self.color = sprite_data.color
-        else:
-            # Fallback to generated sprites if external data not found
-            self.sprite_sheet = [
-                "C",  # 1x1
-                "CC\nCC",  # 2x2 - Simple 2x2 crystal
-                " C \nCCC\n C ",  # 3x3 - Crystal with facets
-            ]
+        # Use external sprite data
+        self.sprite_sheet = sprite_data.sprites
+        self.color = sprite_data.color
 
 
 class AncientRelic(InteractiveEntity):
@@ -354,17 +330,9 @@ class AncientRelic(InteractiveEntity):
         sprite_loader = get_sprite_loader()
         sprite_data = sprite_loader.load_sprite("ancient_relic", "entities")
         
-        if sprite_data:
-            # Use external sprite data
-            self.sprite_sheet = sprite_data.sprites
-            self.color = sprite_data.color
-        else:
-            # Fallback to generated sprites if external data not found
-            self.sprite_sheet = [
-                "R",  # 1x1
-                "RR\nRR",  # 2x2 - Simple 2x2 relic
-                " R \nRRR\n R ",  # 3x3 - Relic with ornate details
-            ]
+        # Use external sprite data
+        self.sprite_sheet = sprite_data.sprites
+        self.color = sprite_data.color
 
 
 class StumblingSheep(InteractiveEntity):
@@ -384,13 +352,9 @@ class StumblingSheep(InteractiveEntity):
         sprite_loader = get_sprite_loader()
         sprite_data = sprite_loader.load_sprite("stumbling_sheep", "entities")
         
-        if sprite_data:
-            # Use external sprite data
-            self.sprite_sheet = sprite_data.sprites
-            self.color = sprite_data.color
-        else:
-            # Fallback to generated sprites if external data not found
-            self.sprite_sheet = ["S", "@@\n,,", "@w@\n###\n| |"]
+        # Use external sprite data
+        self.sprite_sheet = sprite_data.sprites
+        self.color = sprite_data.color
         self.speed = 0.2  # Sheep moves at 0.2x speed (tick every 5 frames)
 
     def tick(self) -> None:
@@ -701,10 +665,7 @@ class Item(ItemArtRenderable, SpriteRenderable):
             
             sprite_loader = get_sprite_loader()
             sprite_data = sprite_loader.load_sprite(name.lower().replace(" ", "_"), "items")
-            
-            if sprite_data:
-                # Use external sprite data
-                sprite_sheet = sprite_data.sprites
+            sprite_sheet = sprite_data.sprites
         
         SpriteRenderable.__init__(self, sprite_sheet)
         self.name = name
@@ -765,12 +726,8 @@ class Player(Entity, SpriteRenderable):
         sprite_loader = get_sprite_loader()
         sprite_data = sprite_loader.load_sprite("player", "entities")
         
-        if sprite_data:
-            # Use external sprite data
-            SpriteRenderable.__init__(self, sprite_data.sprites)
-        else:
-            # Fallback to generated sprites if external data not found
-            SpriteRenderable.__init__(self, ["$", "[]\n%%", "_o_\n/|\\\n/_\\"])
+        # Use external sprite data
+        SpriteRenderable.__init__(self, sprite_data.sprites)
 
         self.inventory = Inventory([Item("Cookie", ["o"])])
         self.body = Body()  # Initialize with damaged android body
@@ -867,10 +824,7 @@ class Tile(SpriteRenderable):
             
             sprite_loader = get_sprite_loader()
             sprite_data = sprite_loader.load_sprite(tileid.lower().replace(" ", "_"), "tiles")
-            
-            if sprite_data:
-                # Use external sprite data
-                sprite_sheet = sprite_data.sprites
+            sprite_sheet = sprite_data.sprites
         
         SpriteRenderable.__init__(self, sprite_sheet)
         self.tileid = tileid
