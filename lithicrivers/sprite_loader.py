@@ -65,7 +65,7 @@ class SpriteLoader:
                 raise ValueError(f"Missing sprites.txt for sprite: {sprite_path}")
             
             with open(sprites_file, 'r') as f:
-                content = f.read().strip()
+                content = f.read()
                 lines = content.split('\n')
 
                 # Note that we do not strip whitespace because we want to preserve 
@@ -89,6 +89,9 @@ class SpriteLoader:
                     # Fallback if not enough lines
                     sprites = lines
             
+            # Validate sprite dimensions
+            self._validate_sprite_dimensions(sprites, sprite_name, category)
+            
             # Create sprite data
             sprite_data = SpriteData(
                 name=metadata.get("name", sprite_name),
@@ -103,6 +106,38 @@ class SpriteLoader:
         except Exception as e:
             logger.error(f"Failed to load sprite {sprite_name}: {e}")
             raise ValueError(f"Failed to load sprite '{sprite_name}' from '{category}' category: {e}")
+    
+    def _validate_sprite_dimensions(self, sprites: List[str], sprite_name: str, category: str) -> None:
+        """Validate that all sprites are square and not empty."""
+        if not sprites:
+            raise ValueError(f"Sprite '{sprite_name}' in '{category}' category has no sprites")
+        
+        # Check each sprite for proper dimensions
+        for i, sprite in enumerate(sprites):
+            if not sprite:
+                raise ValueError(f"Sprite '{sprite_name}' in '{category}' category has empty sprite at scale {i+1}")
+            
+            lines = sprite.split('\n')
+            if not lines:
+                raise ValueError(f"Sprite '{sprite_name}' in '{category}' category has empty sprite at scale {i+1}")
+            
+            # Check that all lines have the same width
+            line_lengths = [len(line) for line in lines]
+            if len(set(line_lengths)) > 1:
+                raise ValueError(
+                    f"Sprite '{sprite_name}' in '{category}' category has inconsistent line lengths at scale {i+1}. "
+                    f"All lines must have the same width for square sprites."
+                )
+            
+            # Check that width equals height (square)
+            width = line_lengths[0] if line_lengths else 0
+            height = len(lines)
+            
+            if width != height:
+                raise ValueError(
+                    f"Sprite '{sprite_name}' in '{category}' category is not square at scale {i+1}. "
+                    f"Width: {width}, Height: {height}. Sprites must be square."
+                )
     
     def get_available_sprites(self, category: str = "fluids") -> List[str]:
         """Get list of available sprites in a category."""
