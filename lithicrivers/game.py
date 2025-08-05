@@ -16,6 +16,7 @@ from lithicrivers.constants import VEC_EAST, VEC_NORTH, VEC_SOUTH, VEC_WEST
 from lithicrivers.model.generictype import T
 from lithicrivers.model.model import RenderedData, Viewport
 from lithicrivers.model.vector import VectorN
+from lithicrivers.model.body import Body, BodyPartState
 from lithicrivers.settings import (
     DEFAULT_PLAYER_NAME,
     DEFAULT_PLAYER_POSITION,
@@ -464,6 +465,49 @@ class Player(Entity, SpriteRenderable):
         SpriteRenderable.__init__(self, ["$", "[]\n%%", "_o_\n/|\\\n/_\\"])
 
         self.inventory = Inventory([Item("Cookie", ["o"])])
+        self.body = Body()  # Initialize with damaged android body
+        
+        # Apply body modifiers to base stats
+        self._update_stats_from_body()
+
+    def _update_stats_from_body(self) -> None:
+        """Update player stats based on body condition."""
+        health_modifier = self.body.get_total_health_modifier()
+        stamina_modifier = self.body.get_total_stamina_modifier()
+        
+        # Apply modifiers to base stats (100 each)
+        self.health = max(1, 100 + health_modifier)
+        self.stamina = max(1, 100 + stamina_modifier)
+
+    def get_walk_speed_modifier(self) -> float:
+        """Get the player's walk speed modifier based on body condition."""
+        return self.body.get_total_walk_speed_modifier()
+
+    def get_break_speed_modifier(self) -> float:
+        """Get the player's break speed modifier based on body condition."""
+        return self.body.get_total_break_speed_modifier()
+
+    def can_perform_action(self, action_type: str) -> bool:
+        """Check if the player can perform a specific action based on body condition."""
+        return self.body.can_perform_action(action_type)
+
+    def get_action_speed(self, action_type: str) -> float:
+        """Get the speed modifier for a specific action."""
+        return self.body.get_action_speed(action_type)
+
+    def get_body_status_summary(self) -> str:
+        """Get a summary of the player's body condition."""
+        return self.body.get_body_status_summary()
+
+    def get_movement_penalty_description(self) -> str:
+        """Get a description of current movement penalties."""
+        return self.body.get_movement_penalty_description()
+
+    def repair_body_part(self, part_type: str) -> bool:
+        """Attempt to repair a body part. Returns True if successful."""
+        # This will be implemented when we add crafting
+        # For now, just return False
+        return False
 
     def tick(self) -> None:
         """Called each game tick. Override when I add poison damage, for example."""
@@ -1256,6 +1300,35 @@ class Game:
         """Increment the game tick counter."""
         self.gametick += 1
         self.process_entity_ticks()
+
+    def get_tick_rate(self) -> int:
+        """Get the current tick rate based on player body condition."""
+        # Base tick rate is 200, but can be modified by body condition
+        base_rate = 200
+        walk_speed = self.player.get_walk_speed_modifier()
+        break_speed = self.player.get_break_speed_modifier()
+        
+        # Average the speed modifiers to get overall performance
+        avg_speed = (walk_speed + break_speed) / 2.0
+        
+        # Adjust tick rate based on performance (slower body = faster ticks for more granular control)
+        if avg_speed < 0.5:
+            return int(base_rate * 2)  # 400 ticks for severely impaired
+        elif avg_speed < 0.8:
+            return int(base_rate * 1.5)  # 300 ticks for impaired
+        else:
+            return base_rate  # 200 ticks for normal operation
+
+    def get_action_tick_cost(self, action_type: str) -> int:
+        """Get how many ticks an action should cost based on body condition."""
+        speed_modifier = self.player.get_action_speed(action_type)
+        
+        # Base cost is 1 tick, but impaired actions cost more ticks
+        base_cost = 1
+        if speed_modifier < 0.5:
+            return max(1, int(base_cost / speed_modifier))  # More ticks for slower actions
+        else:
+            return base_cost
 
     def process_entity_ticks(self):
         """Process ticks for all entities that have a tick method."""

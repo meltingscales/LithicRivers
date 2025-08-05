@@ -1149,9 +1149,9 @@ class BodyPage(Frame):
         layout1 = Layout([1], fill_frame=True)
         self.add_layout(layout1)
 
-        # Add dummy label for now
+        # Add body status label
         self.body_label = Label(
-            "Body Panel - Coming Soon!\n\nThis is where you'll be able to view and modify your android body parts.",
+            "Loading body status...",
             height=screen.height - 4,  # Leave room for tab buttons
             name="body_label",
         )
@@ -1161,7 +1161,79 @@ class BodyPage(Frame):
         layout2 = TabButtons(self)
         self.add_layout(layout2)
 
+        self.update_body_display()
         self.fix()
+
+    def update_body_display(self) -> None:
+        """Update the body display with current player status."""
+        if not self.game or not self.game.player:
+            self.body_label.text = "No player data available."
+            return
+
+        player = self.game.player
+        
+        # Build the body status display
+        lines = []
+        lines.append("🤖 ANDROID BODY STATUS")
+        lines.append("=" * 40)
+        lines.append("")
+        
+        # Basic stats
+        lines.append(f"❤️  Health: {player.health}")
+        lines.append(f"⚡ Stamina: {player.stamina}")
+        lines.append("")
+        
+        # Body parts status
+        lines.append("🔧 BODY PARTS:")
+        body_summary = player.get_body_status_summary()
+        for line in body_summary.split('\n'):
+            lines.append(f"   {line}")
+        lines.append("")
+        
+        # Movement and action status
+        lines.append("🚶 MOVEMENT STATUS:")
+        penalty_desc = player.get_movement_penalty_description()
+        lines.append(f"   {penalty_desc}")
+        lines.append("")
+        
+        # Speed modifiers
+        lines.append("⚡ SPEED MODIFIERS:")
+        walk_speed = player.get_walk_speed_modifier()
+        break_speed = player.get_break_speed_modifier()
+        lines.append(f"   Walk Speed: {walk_speed:.2f}")
+        lines.append(f"   Break Speed: {break_speed:.2f}")
+        lines.append("")
+        
+        # Action capabilities
+        lines.append("🎯 ACTION CAPABILITIES:")
+        actions = ["walk", "mine", "craft", "push", "interact"]
+        for action in actions:
+            can_do = player.can_perform_action(action)
+            speed = player.get_action_speed(action)
+            status = "✅" if can_do else "❌"
+            lines.append(f"   {action.upper():8} {status} (speed: {speed:.2f})")
+        lines.append("")
+        
+        # Repair requirements
+        lines.append("🔧 REPAIR REQUIREMENTS:")
+        requirements = player.body.get_repair_requirements()
+        if requirements:
+            for part_type, costs in requirements.items():
+                part_name = part_type.value.replace("_", " ").title()
+                cost_str = ", ".join([f"{amt} {item}" for item, amt in costs.items()])
+                lines.append(f"   {part_name}: {cost_str}")
+        else:
+            lines.append("   No repairs needed!")
+        lines.append("")
+        
+        # Basic descriptions
+        lines.append("📝 BODY DESCRIPTIONS:")
+        for part_type, part in player.body.parts.items():
+            part_name = part.name
+            description = part.description
+            lines.append(f"   {part_name}: {description}")
+        
+        self.body_label.text = "\n".join(lines)
 
 
 class DevKeystrokesPage(Frame):

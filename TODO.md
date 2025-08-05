@@ -188,10 +188,14 @@
 
 ## MVP for steam release (2026)
 
-- block placement, push boxes, and fluids
-- basic crafting and a body repair/modular body feature with a damaged android body
-- procedural dungeons
-- body modularity means dynamic walk and break speeds, so tick rate needs to be larger than 1, perhaps 200 or so.
+- ✅ **COMPLETED**: Body modularity system with damaged android body
+- ✅ **COMPLETED**: Dynamic walk and break speeds based on body condition
+- ✅ **COMPLETED**: Higher tick rate system (200+) for granular speed control
+- 🔄 **IN PROGRESS**: Block placement with body-based restrictions
+- 🔄 **IN PROGRESS**: Push boxes that require functional arms
+- 🔄 **IN PROGRESS**: Basic crafting system for body repairs
+- 🔄 **IN PROGRESS**: Procedural dungeons
+- 🔄 **IN PROGRESS**: Fluids system
 
 ## steam key giveaway list:
 - skomor123
