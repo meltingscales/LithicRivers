@@ -26,6 +26,8 @@ class GameState:
     world_data: dict[str, "Tile"] = field(default_factory=dict)
     entities: list["Entity"] = field(default_factory=list)
     inventory: "Inventory" = field(default_factory=lambda: Inventory())
+    gametick: int = 0
+    tick_rate: int = 200  # Higher tick rate for more granular timing
 
     def copy(self) -> "GameState":
         """Create a deep copy of the game state."""
@@ -37,6 +39,8 @@ class GameState:
             world_data=self.world_data.copy(),
             entities=[entity.copy() for entity in self.entities],
             inventory=self.inventory.copy(),
+            gametick=self.gametick,
+            tick_rate=self.tick_rate,
         )
 
     def __eq__(self, other: object) -> bool:
@@ -51,6 +55,8 @@ class GameState:
             and self.world_data == other.world_data
             and self.entities == other.entities
             and self.inventory == other.inventory
+            and self.gametick == other.gametick
+            and self.tick_rate == other.tick_rate
         )
 
 
@@ -113,6 +119,28 @@ class SetTileAction:
         return new_state
 
 
+@dataclass
+class IncrementTickAction:
+    """Action to increment the game tick counter."""
+
+    def apply(self, state: GameState) -> GameState:
+        new_state = state.copy()
+        new_state.gametick += 1
+        return new_state
+
+
+@dataclass
+class SetTickRateAction:
+    """Action to set the game tick rate."""
+
+    tick_rate: int
+
+    def apply(self, state: GameState) -> GameState:
+        new_state = state.copy()
+        new_state.tick_rate = max(1, self.tick_rate)  # Ensure minimum tick rate of 1
+        return new_state
+
+
 class GameEngine:
     """
     Core game engine that manages game state and applies actions.
@@ -160,6 +188,24 @@ class GameEngine:
         """Set a tile at the specified position."""
         action = SetTileAction(position, tile)
         return self.apply_action(action)
+
+    def increment_tick(self) -> GameState:
+        """Increment the game tick counter."""
+        action = IncrementTickAction()
+        return self.apply_action(action)
+
+    def set_tick_rate(self, tick_rate: int) -> GameState:
+        """Set the game tick rate."""
+        action = SetTickRateAction(tick_rate)
+        return self.apply_action(action)
+
+    def get_current_tick(self) -> int:
+        """Get the current game tick."""
+        return self.state.gametick
+
+    def get_tick_rate(self) -> int:
+        """Get the current tick rate."""
+        return self.state.tick_rate
 
     def save_state(self, filepath: Path) -> Path:
         """Save the current game state to a file."""
