@@ -1,0 +1,10 @@
+{
+    "name": "Crystal Shard",
+    "color": "blue",
+    "description": "A glowing crystal shard that pulses with energy",
+    "sprites": [
+        "C",
+        "CC\nCC",
+        " C \nCCC\n C "
+    ]
+} 

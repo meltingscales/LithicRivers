@@ -179,12 +179,23 @@ class NPC(Entity, SpriteRenderable):
         self.sprite = sprite
         self.color = color
         self.conversations = {}
-        # Default sprite sheet for all NPCs
-        self.sprite_sheet = [
-            sprite,  # 1x1
-            f"{sprite}{sprite}\n{sprite}{sprite}",  # 2x2
-            f"{sprite}{sprite}{sprite}\n{sprite}{sprite}{sprite}\n{sprite}{sprite}{sprite}",  # 3x3
-        ]
+        # Load sprites from external data
+        from lithicrivers.sprite_loader import get_sprite_loader
+        
+        sprite_loader = get_sprite_loader()
+        sprite_data = sprite_loader.load_sprite(name.lower().replace(" ", "_"), "entities")
+        
+        if sprite_data:
+            # Use external sprite data
+            self.sprite_sheet = sprite_data.sprites
+            self.color = sprite_data.color
+        else:
+            # Fallback to generated sprites if external data not found
+            self.sprite_sheet = [
+                sprite,  # 1x1
+                f"{sprite}{sprite}\n{sprite}{sprite}",  # 2x2
+                f"{sprite}{sprite}{sprite}\n{sprite}{sprite}{sprite}\n{sprite}{sprite}{sprite}",  # 3x3
+            ]
         self._setup_default_conversation()
 
     def _setup_default_conversation(self) -> None:
@@ -211,11 +222,15 @@ class NPC(Entity, SpriteRenderable):
 class ElderOak(NPC):
     def __init__(self, position: VectorN):
         super().__init__("Elder Oak", position, sprite="N", color="cyan")
-        self.sprite_sheet = [
-            "N",  # 1x1
-            " /\n/|",  # 2x2 - Simple 2x2 tree
-            "` /\n`/|\n/||",  # 3x3 - Tree with trunk and branches
-        ]
+        # Load sprites from external data
+        from lithicrivers.sprite_loader import get_sprite_loader
+        
+        sprite_loader = get_sprite_loader()
+        sprite_data = sprite_loader.load_sprite("elder_oak", "entities")
+        
+        # Use external sprite data
+        self.sprite_sheet = sprite_data.sprites
+        self.color = sprite_data.color
         self._setup_default_conversation()
 
     def _setup_default_conversation(self) -> None:
@@ -277,21 +292,23 @@ class InteractiveEntity(Entity, SpriteRenderable):
         self.color = color
         self.interaction_text = interaction_text
 
-        # Default sprite sheet for all interactive entities
-        self.sprite_sheet = [
-            sprite,  # 1x1
-            f"{sprite}{sprite}\n{sprite}{sprite}",  # 2x2
-            f"{sprite}{sprite}{sprite}\n{sprite}{sprite}{sprite}\n{sprite}{sprite}{sprite}",  # 3x3
-        ]
-
-    def render_sprite(self, scale: int = 1) -> str:
-        """Render the entity sprite."""
-        # Use the SpriteRenderable's render_sprite method
-        return super().render_sprite(scale)
-
-    def interact(self) -> str:
-        """Handle interaction with this entity."""
-        return self.interaction_text
+        # Load sprites from external data
+        from lithicrivers.sprite_loader import get_sprite_loader
+        
+        sprite_loader = get_sprite_loader()
+        sprite_data = sprite_loader.load_sprite(name.lower().replace(" ", "_"), "entities")
+        
+        if sprite_data:
+            # Use external sprite data
+            self.sprite_sheet = sprite_data.sprites
+            self.color = sprite_data.color
+        else:
+            # Fallback to generated sprites if external data not found
+            self.sprite_sheet = [
+                sprite,  # 1x1
+                f"{sprite}{sprite}\n{sprite}{sprite}",  # 2x2
+                f"{sprite}{sprite}{sprite}\n{sprite}{sprite}{sprite}\n{sprite}{sprite}{sprite}",  # 3x3
+            ]
 
 
 class CrystalShard(InteractiveEntity):
@@ -303,11 +320,23 @@ class CrystalShard(InteractiveEntity):
             color="blue",
             interaction_text="This crystal shard glows with a soft blue light. It seems to pulse with energy.",
         )
-        self.sprite_sheet = [
-            "C",  # 1x1
-            "CC\nCC",  # 2x2 - Simple 2x2 crystal
-            " C \nCCC\n C ",  # 3x3 - Crystal with facets
-        ]
+        # Load sprites from external data
+        from lithicrivers.sprite_loader import get_sprite_loader
+        
+        sprite_loader = get_sprite_loader()
+        sprite_data = sprite_loader.load_sprite("crystal_shard", "entities")
+        
+        if sprite_data:
+            # Use external sprite data
+            self.sprite_sheet = sprite_data.sprites
+            self.color = sprite_data.color
+        else:
+            # Fallback to generated sprites if external data not found
+            self.sprite_sheet = [
+                "C",  # 1x1
+                "CC\nCC",  # 2x2 - Simple 2x2 crystal
+                " C \nCCC\n C ",  # 3x3 - Crystal with facets
+            ]
 
 
 class AncientRelic(InteractiveEntity):
@@ -319,11 +348,23 @@ class AncientRelic(InteractiveEntity):
             color="red",
             interaction_text="This ancient relic is covered in mysterious runes. It radiates warmth.",
         )
-        self.sprite_sheet = [
-            "R",  # 1x1
-            "RR\nRR",  # 2x2 - Simple 2x2 relic
-            " R \nRRR\n R ",  # 3x3 - Relic with ornate details
-        ]
+        # Load sprites from external data
+        from lithicrivers.sprite_loader import get_sprite_loader
+        
+        sprite_loader = get_sprite_loader()
+        sprite_data = sprite_loader.load_sprite("ancient_relic", "entities")
+        
+        if sprite_data:
+            # Use external sprite data
+            self.sprite_sheet = sprite_data.sprites
+            self.color = sprite_data.color
+        else:
+            # Fallback to generated sprites if external data not found
+            self.sprite_sheet = [
+                "R",  # 1x1
+                "RR\nRR",  # 2x2 - Simple 2x2 relic
+                " R \nRRR\n R ",  # 3x3 - Relic with ornate details
+            ]
 
 
 class StumblingSheep(InteractiveEntity):
@@ -337,7 +378,19 @@ class StumblingSheep(InteractiveEntity):
             color="white",
             interaction_text="The sheep stumbles around aimlessly, occasionally making confused noises.",
         )
-        self.sprite_sheet = ["S", "@@\n,,", "@w@\n###\n| |"]
+        # Load sprites from external data
+        from lithicrivers.sprite_loader import get_sprite_loader
+        
+        sprite_loader = get_sprite_loader()
+        sprite_data = sprite_loader.load_sprite("stumbling_sheep", "entities")
+        
+        if sprite_data:
+            # Use external sprite data
+            self.sprite_sheet = sprite_data.sprites
+            self.color = sprite_data.color
+        else:
+            # Fallback to generated sprites if external data not found
+            self.sprite_sheet = ["S", "@@\n,,", "@w@\n###\n| |"]
         self.speed = 0.2  # Sheep moves at 0.2x speed (tick every 5 frames)
 
     def tick(self) -> None:
@@ -599,35 +652,35 @@ class Items:
 
     @staticmethod
     def rock() -> "Item":
-        return Item("Rock", sprite_sheet=["*"])
+        return Item("Rock")
 
     @staticmethod
     def gold_nugget() -> "Item":
-        return Item("Gold Nugget", sprite_sheet=["c"])
+        return Item("Gold Nugget")
 
     @staticmethod
     def stick() -> "Item":
-        return Item("Stick", sprite_sheet=["\\"])
+        return Item("Stick")
 
     @staticmethod
     def diamond() -> "Item":
-        return Item("Diamond", sprite_sheet=["d"])
+        return Item("Diamond")
 
     @staticmethod
     def log() -> "Item":
-        return Item("Log", sprite_sheet=["|"])
+        return Item("Log")
 
     @staticmethod
     def acorn() -> "Item":
-        return Item("Acorn", sprite_sheet=["o"])
+        return Item("Acorn")
 
     @staticmethod
     def iron_scrap() -> "Item":
-        return Item("Iron Scrap", sprite_sheet=["="])
+        return Item("Iron Scrap")
 
     @staticmethod
     def scrap_electronics() -> "Item":
-        return Item("Scrap Electronics", sprite_sheet=["e"])
+        return Item("Scrap Electronics")
 
 
 class DroppedItem(Entity, SpriteRenderable):
@@ -642,6 +695,17 @@ class DroppedItem(Entity, SpriteRenderable):
 
 class Item(ItemArtRenderable, SpriteRenderable):
     def __init__(self, name: str, sprite_sheet: Optional[list[str]] = None):
+        # Load sprites from external data if not provided
+        if sprite_sheet is None:
+            from lithicrivers.sprite_loader import get_sprite_loader
+            
+            sprite_loader = get_sprite_loader()
+            sprite_data = sprite_loader.load_sprite(name.lower().replace(" ", "_"), "items")
+            
+            if sprite_data:
+                # Use external sprite data
+                sprite_sheet = sprite_data.sprites
+        
         SpriteRenderable.__init__(self, sprite_sheet)
         self.name = name
 
@@ -694,7 +758,19 @@ class Inventory:
 class Player(Entity, SpriteRenderable):
     def __init__(self, name):
         Entity.__init__(self, name=name, position=DEFAULT_PLAYER_POSITION)
-        SpriteRenderable.__init__(self, ["$", "[]\n%%", "_o_\n/|\\\n/_\\"])
+        
+        # Load sprites from external data
+        from lithicrivers.sprite_loader import get_sprite_loader
+        
+        sprite_loader = get_sprite_loader()
+        sprite_data = sprite_loader.load_sprite("player", "entities")
+        
+        if sprite_data:
+            # Use external sprite data
+            SpriteRenderable.__init__(self, sprite_data.sprites)
+        else:
+            # Fallback to generated sprites if external data not found
+            SpriteRenderable.__init__(self, ["$", "[]\n%%", "_o_\n/|\\\n/_\\"])
 
         self.inventory = Inventory([Item("Cookie", ["o"])])
         self.body = Body()  # Initialize with damaged android body
@@ -785,6 +861,17 @@ class Tile(SpriteRenderable):
         sprite_sheet: Optional[list[str]] = None,
         drops: Optional[dict[float, Item]] = None,
     ):
+        # Load sprites from external data if not provided
+        if sprite_sheet is None:
+            from lithicrivers.sprite_loader import get_sprite_loader
+            
+            sprite_loader = get_sprite_loader()
+            sprite_data = sprite_loader.load_sprite(tileid.lower().replace(" ", "_"), "tiles")
+            
+            if sprite_data:
+                # Use external sprite data
+                sprite_sheet = sprite_data.sprites
+        
         SpriteRenderable.__init__(self, sprite_sheet)
         self.tileid = tileid
         self.description = desc
@@ -867,7 +954,6 @@ class Tiles:
     def dirt() -> "Tile":
         return Tile(
             "Dirt",
-            sprite_sheet=[",", ",.\n.,", ",.,\n.,.\n,.,"],
             drops={0.99: Items.rock(), 0.01: Items.gold_nugget()},
         )
 
@@ -875,7 +961,6 @@ class Tiles:
     def tree() -> "Tile":
         return Tile(
             "Tree",
-            sprite_sheet=["t", "/\\\n||", "/|\\\n;|;\n/|\\\n"],
             drops={0.50: Items.stick(), 0.30: Items.log(), 0.20: Items.acorn()},
         )
 
@@ -883,27 +968,25 @@ class Tiles:
     def gold_ore() -> "Tile":
         return Tile(
             "Gold Ore",
-            sprite_sheet=["?", "??\n??", "???\n???\n???"],
             drops={0.9: Items.gold_nugget(), 0.1: Items.diamond()},
         )
 
     @staticmethod
     def cloud() -> "Tile":
-        return Tile("Cloud", sprite_sheet=["~", "~o\noo", ".~~\n~~o\n~oo"])
+        return Tile("Cloud")
 
     @staticmethod
     def bedrock() -> "Tile":
-        return Tile("Bedrock", sprite_sheet=["#", "|/\n/|", "|,/\n/|\\\n|/|"])
+        return Tile("Bedrock")
 
     @staticmethod
     def empty() -> "Tile":
-        return Tile("Empty", sprite_sheet=[" ", "  \n  "])
+        return Tile("Empty")
 
     @staticmethod
     def iron_scrap() -> "Tile":
         return Tile(
             "Iron Scrap",
-            sprite_sheet=["=", "==\n==", "===\n===\n==="],
             drops={0.8: Items.iron_scrap(), 0.2: Items.gold_nugget()},
         )
 
@@ -911,7 +994,6 @@ class Tiles:
     def bone_block() -> "Tile":
         return Tile(
             "Bone Block",
-            sprite_sheet=["|", "||\n||", "|||\n|||\n|||"],
             drops={0.7: Items.rock(), 0.3: Items.gold_nugget()},
         )
 
@@ -919,7 +1001,6 @@ class Tiles:
     def door() -> "Tile":
         return Tile(
             "Door",
-            sprite_sheet=["D", "DD\nDD", "DDD\nDDD\nDDD"],
             drops={0.5: Items.rock()},
         )
 
@@ -927,7 +1008,6 @@ class Tiles:
     def scrap_electronics() -> "Tile":
         return Tile(
             "Scrap Electronics",
-            sprite_sheet=["e", "ee\nee", "eee\neee\neee"],
             drops={0.6: Items.scrap_electronics(), 0.4: Items.gold_nugget()},
         )
 
@@ -935,7 +1015,6 @@ class Tiles:
     def treasure() -> "Tile":
         return Tile(
             "Buried Treasure",
-            sprite_sheet=["$", "$$\n$$", "$$$\n$$$\n$$$"],
             drops={0.3: Items.gold_nugget(), 0.7: Items.diamond()},
         )
 
