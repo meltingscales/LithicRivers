@@ -417,11 +417,11 @@ class FluidManager:
         self.world = world
         self.fluids: dict[str, Fluid] = {}  # position_key -> Fluid
         self.flow_directions = [
-            VectorN(0, -1, 0),  # Down (gravity)
+            VectorN(0, 0, 1),   # Down (gravity) - deeper into earth
             VectorN(-1, 0, 0),  # Left
             VectorN(1, 0, 0),   # Right
-            VectorN(0, 0, -1),  # Back
-            VectorN(0, 0, 1),   # Forward
+            VectorN(0, -1, 0),  # North
+            VectorN(0, 1, 0),   # South
         ]
     
     def add_fluid(self, fluid: Fluid) -> None:
@@ -557,23 +557,23 @@ class Entities:
     
     @staticmethod
     def water(position: VectorN = VectorN(0, 0, 0), amount: float = 1.0) -> "Fluid":
-        return Fluid("water", position, amount, viscosity=1.0)
+        return Fluid("water", position, amount, viscosity=100.0)
     
     @staticmethod
     def lava(position: VectorN = VectorN(0, 0, 0), amount: float = 1.0) -> "Fluid":
-        return Fluid("lava", position, amount, viscosity=2.0)  # Lava flows slower
+        return Fluid("lava", position, amount, viscosity=200.0)  # Lava flows slower
     
     @staticmethod
     def acid(position: VectorN = VectorN(0, 0, 0), amount: float = 1.0) -> "Fluid":
-        return Fluid("acid", position, amount, viscosity=1.5)
+        return Fluid("acid", position, amount, viscosity=150.0)
     
     @staticmethod
     def oil(position: VectorN = VectorN(0, 0, 0), amount: float = 1.0) -> "Fluid":
-        return Fluid("oil", position, amount, viscosity=0.5)  # Oil flows faster
+        return Fluid("oil", position, amount, viscosity=50.0)  # Oil flows faster
     
     @staticmethod
     def blood(position: VectorN = VectorN(0, 0, 0), amount: float = 1.0) -> "Fluid":
-        return Fluid("blood", position, amount, viscosity=1.2)
+        return Fluid("blood", position, amount, viscosity=120.0)
 
 
 class Items:
@@ -1200,7 +1200,7 @@ class World(EntityListener):
 
         # BIG oil pool further away
         oil_pos = DEFAULT_PLAYER_POSITION + VectorN(0, -10, 0)
-        oil = Entities.oil(oil_pos, amount=10.0)
+        oil = Entities.oil(oil_pos, amount=100.0)
         self.fluid_manager.add_fluid(oil)
 
     def get_tile(self, pos: VectorN):
