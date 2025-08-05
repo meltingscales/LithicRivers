@@ -13,6 +13,7 @@ from lithicrivers.game import Tile, Tiles
 from lithicrivers.logging_config import get_logger
 from lithicrivers.model.vector import VectorN
 from lithicrivers.structure_generator import create_structure_manager
+from lithicrivers.procedural_dungeon_generator import create_procedural_generator, DungeonType
 
 logger = get_logger(__name__)
 
@@ -227,6 +228,7 @@ class SeededWorldGenerator:
         self.rng = random.Random(seed)
         self.perlin = PerlinNoise(seed)
         self.structure_manager = create_structure_manager()
+        self.procedural_generator = create_procedural_generator()
         self.chunk_cache = ChunkCache()
 
     def get_seed(self) -> WorldSeed:
@@ -474,6 +476,14 @@ class SeededWorldGenerator:
             "small_ship", world_data, forced_ship_pos, self.rng, force_placement=True
         )
 
+        # Force a procedural dungeon to spawn below the starting area
+        # Place underground facility at 25,25,-3 which should be accessible from the surface
+        forced_dungeon_pos = VectorN(25, 25, -3)
+        logger.info(f"FORCING UNDERGROUND FACILITY TO SPAWN AT {forced_dungeon_pos}")  # Debug output
+        self.procedural_generator.generate_dungeon(
+            DungeonType.UNDERGROUND_FACILITY, forced_dungeon_pos, world_data, self.rng, force_placement=True
+        )
+
         # Generate structures in chunks for better distribution
         chunk_size = 16  # 16x16 chunks
 
@@ -497,6 +507,11 @@ class SeededWorldGenerator:
 
                     # Generate structures in this chunk
                     self.structure_manager.generate_structures_for_chunk(
+                        world_data, chunk_center, chunk_size // 2, chunk_rng
+                    )
+                    
+                    # Generate procedural dungeons in this chunk
+                    self.procedural_generator.generate_dungeons_for_chunk(
                         world_data, chunk_center, chunk_size // 2, chunk_rng
                     )
 
