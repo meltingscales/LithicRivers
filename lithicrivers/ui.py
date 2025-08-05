@@ -1609,14 +1609,14 @@ class InputHandler:
             game.set_tile_at_player_feet(Tiles.dirt())
             game.log_mining("tree", dropped_items)
             game.increment_tick()
-            world_map.update_status_label()
+            world_map.update_all_ui_elements()
         elif tile_under == Tiles.gold_ore():
             dropped_item = tile_under.calc_drop()
             game.player.inventory.add_item(dropped_item)
             game.set_tile_at_player_feet(Tiles.dirt())
             game.log_mining("gold ore", [dropped_item.name])
             game.increment_tick()
-            world_map.update_status_label()
+            world_map.update_all_ui_elements()
 
     @classmethod
     def handle_viewport(
@@ -1625,17 +1625,17 @@ class InputHandler:
         if KEYMAP.matches("RESET_VIEWPORT", event):
             game.reset_viewport()
             if world_map:
-                world_map.update_status_label()
+                world_map.update_all_ui_elements()
 
         if KEYMAP.matches("SLIDE_VIEWPORT_WEST", event):
             game.viewport.slide_left()
             if world_map:
-                world_map.update_status_label()
+                world_map.update_all_ui_elements()
 
         if KEYMAP.matches("SLIDE_VIEWPORT_EAST", event):
             game.viewport.slide_right()
             if world_map:
-                world_map.update_status_label()
+                world_map.update_all_ui_elements()
 
         if KEYMAP.matches("TOGGLE_VIEWPORT", event):
             # Toggle viewport visibility by setting a flag
@@ -1643,7 +1643,7 @@ class InputHandler:
                 game.viewport_visible = True
             game.viewport_visible = not game.viewport_visible
             if world_map:
-                world_map.update_status_label()
+                world_map.update_all_ui_elements()
 
     @classmethod
     def handle_scale(
@@ -1653,13 +1653,13 @@ class InputHandler:
             game.viewport.rescale_down(1)
             game.reset_viewport()
             if world_map:
-                world_map.update_status_label()
+                world_map.update_all_ui_elements()
 
         if KEYMAP.matches("SCALE_UP", event):
             game.viewport.rescale_up(1)
             game.reset_viewport()
             if world_map:
-                world_map.update_status_label()
+                world_map.update_all_ui_elements()
 
     @classmethod
     def handle_interaction(
