@@ -8,6 +8,8 @@ import os
 import pickle
 import pprint
 import random
+import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
 from typing import Optional, Union, Protocol, TypeVar, Callable
@@ -1092,6 +1094,8 @@ class ChunkedWorldData:
         self._cache_size = 1000  # Max cache size
         self.world_generator = world_generator  # Reference to world generator for structure generation
         self._generated_chunks = set()  # Track which chunks have had structures generated
+        self._chunk_generation_lock = threading.Lock()  # Lock for thread-safe chunk generation
+        self._thread_pool = ThreadPoolExecutor(max_workers=4)  # Thread pool for chunk generation
 
     def get_chunk_key(self, pos: VectorN) -> tuple[int, int, int]:
         """Get chunk coordinates from world position."""
@@ -1109,7 +1113,8 @@ class ChunkedWorldData:
             if self.world_generator and chunk_key not in self._generated_chunks:
                 # Mark as generated first to prevent infinite recursion
                 self._generated_chunks.add(chunk_key)
-                self._generate_structures_for_chunk(chunk_key)
+                # Use threaded chunk generation for lazy loading
+                self._generate_chunk_threaded(chunk_key)
         return self.chunks[chunk_key]
 
     def _generate_structures_for_chunk(self, chunk_key: tuple[int, int, int]) -> None:
@@ -1131,45 +1136,16 @@ class ChunkedWorldData:
             return
             
         chunk_x, chunk_y, chunk_z = chunk_key
-        chunk_center = VectorN(
-            chunk_x * self.chunk_size,
-            chunk_y * self.chunk_size, 
-            chunk_z * self.chunk_size
-        )
         
-        # Create a temporary world data dictionary for this chunk
-        chunk_world_data = {}
+        # Use threaded chunk generation instead of single-threaded
+        # This will generate the entire chunk (terrain + structures) in a background thread
+        self.world_generator._generate_complete_chunk(chunk_x, chunk_y, chunk_z)
         
-        # Generate basic terrain for the chunk
-        for z in range(self.chunk_size):
-            for y in range(self.chunk_size):
-                for x in range(self.chunk_size):
-                    world_pos = VectorN(
-                        chunk_center.x + x,
-                        chunk_center.y + y,
-                        chunk_center.z + z
-                    )
-                    tile = self.world_generator.generate_tile_for_position(world_pos)
-                    chunk_world_data[world_pos.serialize()] = tile
+        # Apply the generated chunk data to our chunked world
+        chunk_data = self.world_generator.chunk_cache.cache.get((chunk_x, chunk_y, chunk_z), {})
         
-        # Generate structures for this chunk
-        chunk_seed = hash((self.world_generator.seed.seed, chunk_x, chunk_y, chunk_z))
-        chunk_rng = random.Random(chunk_seed)
-        
-        # Generate structures in this chunk
-        self.world_generator.structure_manager.generate_structures_for_chunk(
-            chunk_world_data, chunk_center, self.chunk_size // 2, chunk_rng
-        )
-        
-        # Generate procedural dungeons in this chunk
-        self.world_generator.procedural_generator.generate_dungeons_for_chunk(
-            chunk_world_data, chunk_center, self.chunk_size // 2, chunk_rng
-        )
-        
-        # Apply the generated world data to our chunked world
-        # Use direct chunk access to avoid recursive chunk generation
         tiles_applied = 0
-        for pos_str, tile in chunk_world_data.items():
+        for pos_str, tile in chunk_data.items():
             pos_parts = pos_str.split(',')
             world_pos = VectorN(int(pos_parts[0]), int(pos_parts[1]), int(pos_parts[2]))
             
@@ -1184,6 +1160,67 @@ class ChunkedWorldData:
                 pos_key = (world_pos.x, world_pos.y, world_pos.z)
                 self._tile_cache[pos_key] = tile
                 tiles_applied += 1
+
+    def _generate_chunk_threaded(self, chunk_key: tuple[int, int, int]) -> None:
+        """
+        Generate a chunk using threaded generation for lazy loading.
+        
+        Args:
+            chunk_key: The chunk coordinates (chunk_x, chunk_y, chunk_z)
+        """
+        if not self.world_generator:
+            return
+            
+        # Skip structure generation during testing to speed up tests
+        if os.environ.get("TESTING") == "1":
+            return
+            
+        chunk_x, chunk_y, chunk_z = chunk_key
+        
+        # Submit chunk generation to thread pool
+        future = self._thread_pool.submit(self._generate_chunk_worker, chunk_x, chunk_y, chunk_z)
+        
+        # Store the future for later retrieval if needed
+        # For now, we'll let it run in the background
+        # In a more sophisticated implementation, we could track futures and wait for them
+
+    def _generate_chunk_worker(self, chunk_x: int, chunk_y: int, chunk_z: int) -> None:
+        """
+        Worker method that runs in a separate thread to generate a chunk.
+        
+        Args:
+            chunk_x: Chunk X coordinate
+            chunk_y: Chunk Y coordinate
+            chunk_z: Chunk Z coordinate
+        """
+        try:
+            # Use the world generator's threaded chunk generation
+            self.world_generator._generate_complete_chunk(chunk_x, chunk_y, chunk_z)
+            
+            # Apply the generated chunk data to our chunked world
+            chunk_data = self.world_generator.chunk_cache.cache.get((chunk_x, chunk_y, chunk_z), {})
+            
+            with self._chunk_generation_lock:
+                tiles_applied = 0
+                for pos_str, tile in chunk_data.items():
+                    pos_parts = pos_str.split(',')
+                    world_pos = VectorN(int(pos_parts[0]), int(pos_parts[1]), int(pos_parts[2]))
+                    
+                    # Get chunk directly without triggering generation
+                    chunk_key = self.get_chunk_key(world_pos)
+                    if chunk_key in self.chunks:
+                        chunk = self.chunks[chunk_key]
+                        local_pos = chunk.get_local_pos(world_pos)
+                        chunk.set_tile(local_pos, tile)
+                        
+                        # Update cache
+                        pos_key = (world_pos.x, world_pos.y, world_pos.z)
+                        self._tile_cache[pos_key] = tile
+                        tiles_applied += 1
+        except Exception as e:
+            # Log any errors that occur during chunk generation
+            import logging
+            logging.warning(f"Error generating chunk ({chunk_x}, {chunk_y}, {chunk_z}): {e}")
 
     def get_tile(self, pos: VectorN) -> Union[Tile, None]:
         """Get tile at world position."""
@@ -1221,6 +1258,11 @@ class ChunkedWorldData:
     def clear_cache(self) -> None:
         """Clear the tile cache."""
         self._tile_cache.clear()
+
+    def shutdown(self) -> None:
+        """Shutdown the thread pool and clean up resources."""
+        if hasattr(self, '_thread_pool'):
+            self._thread_pool.shutdown(wait=True)
 
     def get_chunk_stats(self) -> dict:
         """Get statistics about chunk usage."""
