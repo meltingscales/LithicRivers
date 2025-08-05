@@ -368,18 +368,23 @@ class Fluid(Entity, SpriteRenderable):
         self.max_amount = 1.0  # Maximum amount per tile
         self.spread_threshold = 0.8  # Amount at which fluid starts spreading
         # Initialize sprite sheet after fluid_type is set
-        SpriteRenderable.__init__(self, [self.get_sprite()])
+        SpriteRenderable.__init__(self, self.get_sprites())
         
-    def get_sprite(self) -> str:
-        """Get the sprite representation of this fluid."""
+
+    def render_sprite(self, scale: int = 1) -> str:
+        """Render the fluid sprite."""
+        return self.get_sprites()[self.fluid_type][scale-1]
+
+    def get_sprites(self) -> dict[str, list[str]]:
+        """Get all possible sprite representations of this fluid (for different scales, 1x1, 2x2, 3x3, etc.)"""
         fluid_sprites = {
-            "water": "~",
-            "lava": "=",
-            "acid": "*",
-            "oil": "o",
-            "blood": "%",
+            "water": ["~", "~~\n~~", "~~~\n~~~\n~~~"],
+            "lava": ["=", "==\n==", "===\n===\n==="],
+            "acid": ["*", "**\n**", "***\n***\n***"],
+            "oil": ["o", "oo\noo", "ooo\nooo\nooo"],
+            "blood": ["%", "%%\n%%", "%%%\n%%%\n%%%"],
         }
-        return fluid_sprites.get(self.fluid_type, "~")
+        return fluid_sprites
     
     def get_color(self) -> str:
         """Get the color for this fluid."""
@@ -1470,7 +1475,7 @@ class Game:
                 if fluid:
                     # Only render fluid if there's no entity at this position
                     if not entities:
-                        sprite = fluid.get_sprite()
+                        sprite = fluid.render_sprite(scale=viewport.scale)
                         tile_color = COLOR_MANAGER.get_color(fluid.get_color())
 
                 # if we are here, render us!
