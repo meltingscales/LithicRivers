@@ -200,6 +200,7 @@
 - 🔄 **IN PROGRESS**: Procedural dungeons
 - ✅ **COMPLETED**: Fluids system
 - in progress: steam API integration
+- fix the fact that structures have stopped generating
 
 ## steam key giveaway list:
 - skomor123
