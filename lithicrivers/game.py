@@ -4,6 +4,7 @@ Copyright (c) 2024 Henry Post. All rights reserved.
 """
 
 import logging
+import os
 import pickle
 import pprint
 import random
@@ -1083,12 +1084,14 @@ class ChunkedWorldData:
     Similar to Minecraft's world storage system.
     """
 
-    def __init__(self, chunk_size: int = 16):
+    def __init__(self, chunk_size: int = 16, world_generator=None):
         self.chunk_size = chunk_size
         self.chunks = {}  # (chunk_x, chunk_y, chunk_z) -> Chunk
         self.entity_data = {}  # Entity storage
         self._tile_cache = {}  # Cache for frequently accessed tiles
         self._cache_size = 1000  # Max cache size
+        self.world_generator = world_generator  # Reference to world generator for structure generation
+        self._generated_chunks = set()  # Track which chunks have had structures generated
 
     def get_chunk_key(self, pos: VectorN) -> tuple[int, int, int]:
         """Get chunk coordinates from world position."""
@@ -1102,7 +1105,85 @@ class ChunkedWorldData:
         """Get or create a chunk."""
         if chunk_key not in self.chunks:
             self.chunks[chunk_key] = Chunk(self.chunk_size)
+            # Generate structures for this chunk if it's the first time
+            if self.world_generator and chunk_key not in self._generated_chunks:
+                # Mark as generated first to prevent infinite recursion
+                self._generated_chunks.add(chunk_key)
+                self._generate_structures_for_chunk(chunk_key)
         return self.chunks[chunk_key]
+
+    def _generate_structures_for_chunk(self, chunk_key: tuple[int, int, int]) -> None:
+        """
+        Generate procedural structures for a specific chunk when it's first loaded.
+        
+        This method handles the procedural generation of structures (both predefined
+        structures and procedural dungeons) when new chunks are loaded. This is
+        separate from the forced structures generated for quests and story content.
+        
+        Args:
+            chunk_key: The chunk coordinates (chunk_x, chunk_y, chunk_z)
+        """
+        if not self.world_generator:
+            return
+            
+        # Skip structure generation during testing to speed up tests
+        if os.environ.get("TESTING") == "1":
+            return
+            
+        chunk_x, chunk_y, chunk_z = chunk_key
+        chunk_center = VectorN(
+            chunk_x * self.chunk_size,
+            chunk_y * self.chunk_size, 
+            chunk_z * self.chunk_size
+        )
+        
+        # Create a temporary world data dictionary for this chunk
+        chunk_world_data = {}
+        
+        # Generate basic terrain for the chunk
+        for z in range(self.chunk_size):
+            for y in range(self.chunk_size):
+                for x in range(self.chunk_size):
+                    world_pos = VectorN(
+                        chunk_center.x + x,
+                        chunk_center.y + y,
+                        chunk_center.z + z
+                    )
+                    tile = self.world_generator.generate_tile_for_position(world_pos)
+                    chunk_world_data[world_pos.serialize()] = tile
+        
+        # Generate structures for this chunk
+        chunk_seed = hash((self.world_generator.seed.seed, chunk_x, chunk_y, chunk_z))
+        chunk_rng = random.Random(chunk_seed)
+        
+        # Generate structures in this chunk
+        self.world_generator.structure_manager.generate_structures_for_chunk(
+            chunk_world_data, chunk_center, self.chunk_size // 2, chunk_rng
+        )
+        
+        # Generate procedural dungeons in this chunk
+        self.world_generator.procedural_generator.generate_dungeons_for_chunk(
+            chunk_world_data, chunk_center, self.chunk_size // 2, chunk_rng
+        )
+        
+        # Apply the generated world data to our chunked world
+        # Use direct chunk access to avoid recursive chunk generation
+        tiles_applied = 0
+        for pos_str, tile in chunk_world_data.items():
+            pos_parts = pos_str.split(',')
+            world_pos = VectorN(int(pos_parts[0]), int(pos_parts[1]), int(pos_parts[2]))
+            
+            # Get chunk directly without triggering generation
+            chunk_key = self.get_chunk_key(world_pos)
+            if chunk_key in self.chunks:
+                chunk = self.chunks[chunk_key]
+                local_pos = chunk.get_local_pos(world_pos)
+                chunk.set_tile(local_pos, tile)
+                
+                # Update cache
+                pos_key = (world_pos.x, world_pos.y, world_pos.z)
+                self._tile_cache[pos_key] = tile
+                tiles_applied += 1
 
     def get_tile(self, pos: VectorN) -> Union[Tile, None]:
         """Get tile at world position."""
@@ -1196,14 +1277,16 @@ class World(EntityListener):
     def __init__(self, seed: int, name="Gaia"):
         self.name = name
         self.seed = seed
-        # Start with empty world data - everything will be generated lazily
-        self.data = ChunkedWorldData()
-        self.gametick = 0
-
+        
         # Create ONE generator that will be reused
         from lithicrivers.worldgen import SeededWorldGenerator
 
         self.generator = SeededWorldGenerator(seed)
+        
+        # Start with empty world data - everything will be generated lazily
+        # Pass the generator so structures can be generated when chunks are loaded
+        self.data = ChunkedWorldData(world_generator=self.generator)
+        self.gametick = 0
 
         # Change entity storage to support multiple entities per position
         # Map position tuples to lists of entities
@@ -1212,14 +1295,24 @@ class World(EntityListener):
         # Initialize fluid manager
         self.fluid_manager = FluidManager(self)
         
-        # Generate forced structures during world initialization
-        self._generate_forced_structures()
-        
         self._add_starter_entities()
+        
+        # Generate forced structures for quests and main story content
+        self._generate_forced_structures()
 
     def _generate_forced_structures(self) -> None:
-        """Generate forced structures (ship and dungeon) during world initialization."""
-        # Force a ship to spawn at (20, 20, 0)
+        """
+        Generate forced structures for quests and main story content.
+        
+        This method creates specific structures at predetermined locations that are
+        essential for the game's narrative and quest progression. These structures
+        are generated during world initialization and are separate from the procedural
+        structure generation that happens when chunks are loaded.
+        
+        Note: This is different from the procedural structure generation that happens
+        when chunks are loaded. This method is for story-critical structures only.
+        """
+        # Force a ship to spawn at (20, 20, 0) - Main story location
         forced_ship_pos = VectorN(20, 20, 0)
         print(f"FORCING SHIP TO SPAWN AT {forced_ship_pos}")  # Debug output
         
@@ -1233,7 +1326,7 @@ class World(EntityListener):
             world_pos = VectorN(int(pos_parts[0]), int(pos_parts[1]), int(pos_parts[2]))
             self.data.set_tile(world_pos, tile)
         
-        # Force a procedural dungeon to spawn at (50, 50, -3)
+        # Force a procedural dungeon to spawn at (50, 50, -3) - Quest location
         forced_dungeon_pos = VectorN(50, 50, -3)
         print(f"FORCING UNDERGROUND FACILITY TO SPAWN AT {forced_dungeon_pos}")  # Debug output
         
