@@ -300,6 +300,7 @@ class StumblingSheep(InteractiveEntity):
             interaction_text="You pet the sheep. It looks at you like this: -w-",
         )
         self.sprite_sheet = ["S", "@@\n,,", "@w@\n###\n| |"]
+        self.world = None  # Will be set by the game during tick processing
 
     def tick(self) -> None:
         """Called each game tick. 50% chance to move in a random direction."""
@@ -307,7 +308,16 @@ class StumblingSheep(InteractiveEntity):
             # Choose a random direction
             directions = [VEC_NORTH, VEC_SOUTH, VEC_EAST, VEC_WEST]
             random_direction = random.choice(directions)
-            self.move(random_direction)
+            
+            # Calculate new position
+            new_position = self.calc_offset(random_direction)
+            
+            # Use world's move_entity method if available
+            if hasattr(self, 'world') and self.world:
+                self.world.move_entity(self, new_position)
+            else:
+                # Fallback to direct movement
+                self.move(random_direction)
 
 
 class Entities:
@@ -886,6 +896,17 @@ class World:
                 # Entity not found at position, ignore
                 pass
 
+    def move_entity(self, entity: "Entity", new_position: VectorN) -> None:
+        """Move an entity from its current position to a new position."""
+        # Remove from old position
+        self.remove_entity(entity)
+        
+        # Update entity's position
+        entity.position = new_position
+        
+        # Add to new position
+        self.add_entity(entity)
+
     def get_adjacent_entities(self, pos: VectorN) -> list[tuple[str, VectorN, str]]:
         """Get all entities adjacent to a position."""
         adjacent = []
@@ -1186,6 +1207,9 @@ class Game:
         # Get all entities in the world
         for entity in self.world.get_all_entities():
             if hasattr(entity, "tick") and callable(entity.tick):
+                # Pass the world reference to entities that need it
+                if hasattr(entity, "world"):
+                    entity.world = self.world
                 entity.tick()
 
 
