@@ -4,9 +4,10 @@ from lithicrivers.game import ChunkedWorldData, Game, Tiles, generate_sprite_rep
 from lithicrivers.model.model import RenderedData, Viewport
 from lithicrivers.model.vector import VectorN
 from lithicrivers.settings import DEFAULT_SEED
+from lithicrivers.test.test_fixtures import OptimizedTestCase
 
 
-class RenderStuff(unittest.TestCase):
+class RenderStuff(OptimizedTestCase):
     def testgenerate_sprite_repeat(self):
         self.assertEqual("?", generate_sprite_repeat("?", 1))
 
@@ -61,7 +62,7 @@ class RenderStuff(unittest.TestCase):
         )
 
     def test_render_game(self):
-        some_game = Game(seed=DEFAULT_SEED)
+        some_game = self.get_game(seed=DEFAULT_SEED)
         world_data = ChunkedWorldData()
 
         # Set tiles individually
@@ -132,7 +133,7 @@ class RenderStuff(unittest.TestCase):
 
         # Test small screen (80x24)
         small_screen = create_mock_screen(80, 24)
-        game = Game(seed=DEFAULT_SEED)
+        game = self.get_game(seed=DEFAULT_SEED)
         WorldMap(small_screen, game)
 
         # Check that viewport was adjusted for small screen
@@ -142,7 +143,7 @@ class RenderStuff(unittest.TestCase):
 
         # Test large screen (160x48)
         large_screen = create_mock_screen(160, 48)
-        game_large = Game(seed=DEFAULT_SEED)
+        game_large = self.get_game(seed=DEFAULT_SEED)
         WorldMap(large_screen, game_large)
 
         # Check that viewport was adjusted for large screen
@@ -157,7 +158,7 @@ class RenderStuff(unittest.TestCase):
         # Test that viewport respects minimum size
         # Even with a very small screen, viewport should be at least 5x5
         tiny_screen = create_mock_screen(40, 12)
-        game_tiny = Game(seed=DEFAULT_SEED)
+        game_tiny = self.get_game(seed=DEFAULT_SEED)
         WorldMap(tiny_screen, game_tiny)
 
         tiny_viewport_width = game_tiny.viewport.get_width()
@@ -173,7 +174,7 @@ class RenderStuff(unittest.TestCase):
         from lithicrivers.model.vector import VectorN
 
         # Create a game with a small initial world
-        game = Game(seed=DEFAULT_SEED)
+        game = self.get_game(seed=DEFAULT_SEED)
 
         # Test accessing a tile far outside the initial world area
         far_position = VectorN(1000, 1000, 0)

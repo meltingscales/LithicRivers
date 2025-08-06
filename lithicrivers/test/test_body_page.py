@@ -8,20 +8,23 @@ from unittest.mock import Mock, MagicMock
 from lithicrivers.ui import BodyPage
 from lithicrivers.game import Game, Player
 from lithicrivers.settings import DEFAULT_SEED
+from lithicrivers.test.test_fixtures import OptimizedTestCase
 
 
-class TestBodyPage:
+@pytest.fixture
+def game():
+    return Game(seed=DEFAULT_SEED)
+
+
+class TestBodyPage(OptimizedTestCase):
     """Test the BodyPage UI component."""
 
-    def test_body_page_creation(self):
+    def test_body_page_creation(self, game):
         """Test that BodyPage can be created without errors."""
         # Mock screen
         mock_screen = Mock()
         mock_screen.height = 20
         mock_screen.width = 80
-        
-        # Create game with player
-        game = Game(seed=DEFAULT_SEED)
         
         # Create BodyPage
         body_page = BodyPage(mock_screen, game)
@@ -44,15 +47,12 @@ class TestBodyPage:
         assert body_page is not None
         assert body_page.game is None
 
-    def test_body_page_display_content(self):
+    def test_body_page_display_content(self, game):
         """Test that BodyPage displays body information correctly."""
         # Mock screen
         mock_screen = Mock()
         mock_screen.height = 20
         mock_screen.width = 80
-        
-        # Create game with player
-        game = Game(seed=DEFAULT_SEED)
         
         # Create BodyPage
         body_page = BodyPage(mock_screen, game)
@@ -72,15 +72,13 @@ class TestBodyPage:
         assert "REPAIR REQUIREMENTS:" in body_page.body_label.text
         assert "BODY DESCRIPTIONS:" in body_page.body_label.text
 
-    def test_body_page_player_data(self):
+    def test_body_page_player_data(self, game):
         """Test that BodyPage shows correct player data."""
         # Mock screen
         mock_screen = Mock()
         mock_screen.height = 20
         mock_screen.width = 80
         
-        # Create game with player
-        game = Game(seed=DEFAULT_SEED)
         player = game.player
         
         # Create BodyPage

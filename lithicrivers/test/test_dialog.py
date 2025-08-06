@@ -3,14 +3,15 @@ import unittest
 from lithicrivers.game import NPC, Entities, Game, InteractiveEntity
 from lithicrivers.model.vector import VectorN
 from lithicrivers.settings import DEFAULT_SEED
+from lithicrivers.test.test_fixtures import OptimizedTestCase
 
 
-class TestDialogSystem(unittest.TestCase):
+class TestDialogSystem(OptimizedTestCase):
     """Test the dialog and interaction system."""
 
     def setUp(self):
         """Set up test fixtures."""
-        self.game = Game(seed=DEFAULT_SEED)
+        self.game = self.get_game(seed=DEFAULT_SEED)
 
     def test_npc_creation(self):
         """Test that NPCs can be created with conversations."""

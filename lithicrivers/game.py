@@ -129,6 +129,20 @@ class Entity:
         self.health: int = 100
         self.stamina: int = 100
         self._listeners: list[EntityListener] = []
+    
+    def __getstate__(self):
+        """Custom pickle serialization that excludes listeners."""
+        state = self.__dict__.copy()
+        # Remove listeners - they'll be re-established when the world is loaded
+        state['_listeners'] = []
+        return state
+    
+    def __setstate__(self, state):
+        """Custom pickle deserialization that initializes empty listeners."""
+        self.__dict__.update(state)
+        # Ensure listeners list exists (will be populated by World after loading)
+        if '_listeners' not in self.__dict__:
+            self._listeners = []
 
     def add_listener(self, listener: EntityListener) -> None:
         """Add an event listener."""
@@ -1098,6 +1112,47 @@ class ChunkedWorldData:
         from lithicrivers.settings import MAX_CPU_THREADS
         self._thread_pool = ThreadPoolExecutor(max_workers=MAX_CPU_THREADS)  # Thread pool for chunk generation
 
+    def __deepcopy__(self, memo):
+        """
+        Custom deepcopy implementation that handles threading primitives properly.
+        """
+        import copy
+        from lithicrivers.worldgen import SeededWorldGenerator
+        
+        # Create new ChunkedWorldData with same parameters
+        cloned_data = ChunkedWorldData.__new__(ChunkedWorldData)
+        cloned_data.chunk_size = self.chunk_size
+        cloned_data._cache_size = self._cache_size
+        
+        # Create a new world generator with the same seed instead of deep copying
+        if self.world_generator:
+            cloned_data.world_generator = SeededWorldGenerator(self.world_generator.seed.seed)
+        else:
+            cloned_data.world_generator = None
+        
+        # Deep copy chunks
+        cloned_data.chunks = copy.deepcopy(self.chunks, memo)
+        
+        # Deep copy other data structures
+        cloned_data.entity_data = copy.deepcopy(self.entity_data, memo)
+        cloned_data._tile_cache = copy.deepcopy(self._tile_cache, memo)
+        cloned_data._generated_chunks = copy.deepcopy(self._generated_chunks, memo)
+        
+        # Create new threading primitives (can't be copied)
+        cloned_data._chunk_generation_lock = threading.Lock()
+        from lithicrivers.settings import MAX_CPU_THREADS
+        cloned_data._thread_pool = ThreadPoolExecutor(max_workers=MAX_CPU_THREADS)
+        
+        return cloned_data
+
+    def clone(self) -> "ChunkedWorldData":
+        """
+        Create a deep copy of this ChunkedWorldData for testing purposes.
+        This is more efficient than regenerating all chunks from scratch.
+        """
+        import copy
+        return copy.deepcopy(self)
+
     def get_chunk_key(self, pos: VectorN) -> tuple[int, int, int]:
         """Get chunk coordinates from world position."""
         return (
@@ -1345,6 +1400,42 @@ class World(EntityListener):
         
         # Generate forced structures for quests and main story content
         self._generate_forced_structures()
+
+    def clone(self) -> "World":
+        """
+        Create a deep copy of this World for testing purposes.
+        This is more efficient than creating a new world from scratch.
+        """
+        import copy
+        cloned_world = copy.deepcopy(self)
+        # Re-establish entity listeners after cloning
+        cloned_world._reestablish_entity_listeners()
+        return cloned_world
+    
+    def _reestablish_entity_listeners(self) -> None:
+        """Re-establish entity listeners after deserialization or cloning."""
+        # Clear existing listeners and re-add the world as a listener to all entities
+        for entities in self.entities_by_position.values():
+            for entity in entities:
+                entity._listeners.clear()
+                entity.add_listener(self)
+    
+    def __getstate__(self):
+        """Custom pickle serialization that handles threading primitives."""
+        state = self.__dict__.copy()
+        # Don't serialize the generator - we'll recreate it on load
+        if 'generator' in state:
+            del state['generator']
+        return state
+    
+    def __setstate__(self, state):
+        """Custom pickle deserialization that recreates threading primitives."""
+        self.__dict__.update(state)
+        # Recreate the world generator with the same seed
+        from lithicrivers.worldgen import SeededWorldGenerator
+        self.generator = SeededWorldGenerator(self.seed)
+        # Re-establish entity listeners
+        self._reestablish_entity_listeners()
 
     def _generate_forced_structures(self) -> None:
         """

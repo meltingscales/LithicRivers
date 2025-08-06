@@ -7,6 +7,7 @@ import unittest
 from lithicrivers.game import Tile
 from lithicrivers.model.vector import VectorN
 from lithicrivers.settings import DEFAULT_SEED
+from lithicrivers.test.test_fixtures import OptimizedTestCase
 from lithicrivers.worldgen import (
     SeededWorldGenerator,
     WorldSeed,
@@ -253,25 +254,17 @@ class TestWorldGenerationFunctions(unittest.TestCase):
         self.assertNotEqual(world_data1, world_data2)
 
 
-class TestIntegrationWithGame(unittest.TestCase):
+class TestIntegrationWithGame(OptimizedTestCase):
     """Test integration with the existing game classes."""
 
-    @classmethod
-    def setUpClass(cls):
-        """Create shared world data for tests to improve performance."""
-        from lithicrivers.game import World
-
-        # Create shared world data with smaller radius for faster testing
-        cls.shared_world1 = World(seed=42)
-        cls.shared_world2 = World(seed=42)
-        cls.shared_world3 = World(seed=12345)
+    # No need for setUpClass anymore - using shared fixtures
 
     def test_world_creation_with_seed(self):
         """Test creating a World with a seed."""
 
-        # Use shared world data instead of creating new ones
-        world1 = self.shared_world1
-        world2 = self.shared_world2
+        # Use shared fixtures instead of creating new ones
+        world1 = self.get_world(seed=42)
+        world2 = self.get_world(seed=42)
 
         # Same seed should produce identical worlds
         # Compare tile data by checking specific positions
@@ -286,9 +279,9 @@ class TestIntegrationWithGame(unittest.TestCase):
     def test_world_creation_different_seeds(self):
         """Test that different seeds produce different worlds."""
 
-        # Use shared world data instead of creating new ones
-        world1 = self.shared_world1
-        world2 = self.shared_world3
+        # Use shared fixtures instead of creating new ones
+        world1 = self.get_world(seed=42)
+        world2 = self.get_world(seed=12345)
 
         # Different seeds should produce different worlds
         # Compare tile data by checking specific positions that are more likely to differ
@@ -311,12 +304,11 @@ class TestIntegrationWithGame(unittest.TestCase):
 
     def test_game_creation_with_seed(self):
         """Test creating a Game with a seed."""
-        from lithicrivers.game import Game
-
-        # Create games with smaller world radius for faster testing
-        game1 = Game(seed=42)
-        game2 = Game(seed=42)
-        game3 = Game(seed=12345)
+        
+        # Use shared fixtures instead of creating new games
+        game1 = self.get_game(seed=42)
+        game2 = self.get_game(seed=42)
+        game3 = self.get_game(seed=12345)
 
         # Same seed should produce identical games
         # Compare tile data by checking specific positions
@@ -349,12 +341,11 @@ class TestIntegrationWithGame(unittest.TestCase):
 
     def test_game_engine_with_seed(self):
         """Test creating a GameEngine with a seed."""
-        from lithicrivers.game_engine import GameEngine
-
-        # Create game engines with smaller world radius for faster testing
-        engine1 = GameEngine(seed=42)
-        engine2 = GameEngine(seed=42)
-        engine3 = GameEngine(seed=12345)
+        
+        # Use shared fixtures instead of creating new engines
+        engine1 = self.get_engine(seed=42)
+        engine2 = self.get_engine(seed=42)
+        engine3 = self.get_engine(seed=12345)
 
         # Same seed should produce identical game engines
         self.assertEqual(engine1.seed, engine2.seed)

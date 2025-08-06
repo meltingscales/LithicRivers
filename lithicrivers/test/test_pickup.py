@@ -11,14 +11,15 @@ from lithicrivers.game import Game, DroppedItem, Items
 from lithicrivers.keymap import KEYMAP
 from lithicrivers.model.vector import VectorN
 from lithicrivers.settings import DEFAULT_SEED
+from lithicrivers.test.test_fixtures import OptimizedTestCase
 
 
-class TestPickupSystem(unittest.TestCase):
+class TestPickupSystem(OptimizedTestCase):
     """Test the pickup items system."""
 
     def setUp(self):
         """Set up test fixtures."""
-        self.game = Game(seed=DEFAULT_SEED)
+        self.game = self.get_game(seed=DEFAULT_SEED)
 
     def test_pickup_keybind(self):
         """Test that the pickup keybind is properly configured."""

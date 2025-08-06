@@ -2,15 +2,16 @@ import unittest
 
 from lithicrivers.game import Game
 from lithicrivers.settings import DEFAULT_SEED
+from lithicrivers.test.test_fixtures import OptimizedTestCase
 from lithicrivers.ui import GameWidget
 
 
-class TestViewportScaling(unittest.TestCase):
-    """Test that viewport scaling works correctly without overflow."""
+class TestViewportScaling(OptimizedTestCase):
+    """Test the viewport scaling system."""
 
     def setUp(self):
         """Set up test fixtures."""
-        self.game = Game(seed=DEFAULT_SEED)
+        self.game = self.get_game(seed=DEFAULT_SEED)
 
     def test_viewport_scaling_dimensions(self):
         """Test that viewport dimensions account for scale correctly."""

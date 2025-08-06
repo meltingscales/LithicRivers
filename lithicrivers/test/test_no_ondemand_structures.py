@@ -6,15 +6,16 @@ import unittest
 from lithicrivers.worldgen import create_world_generator
 from lithicrivers.model.vector import VectorN
 from lithicrivers.game import World
+from lithicrivers.test.test_fixtures import OptimizedTestCase
 
 
-class TestNoOnDemandStructures(unittest.TestCase):
+class TestNoOnDemandStructures(OptimizedTestCase):
     """Test that structures are not generated on-demand."""
     
     def test_structures_only_generated_during_worldgen(self):
         """Test that accessing tiles doesn't trigger structure generation."""
         # Create a world with a small radius to avoid the forced structures
-        world = World(seed=42)
+        world = self.get_world(seed=42, read_only=False)
         
         # Access a tile that should only have basic terrain
         # Use a position far from the forced structures (ship at 20,20,0 and dungeon at 50,50,-3)
