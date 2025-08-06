@@ -187,6 +187,8 @@
 
 - GPU-accelerated worldgen: Option to use GPU for Perlin noise/worldgen calculations while maintaining determinism (compute shaders with fixed-point math or controlled floating-point precision)
 
+- perlin noise map caching: brainstorm on potential speedup. find way to invalidate when worldgen algorithm changes.
+
 ## MVP for steam release (2026)
 
 - ✅ **COMPLETED**: Body modularity system with damaged android body
