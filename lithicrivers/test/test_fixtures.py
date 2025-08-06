@@ -129,9 +129,9 @@ class OptimizedTestCase(unittest.TestCase):
         super().setUpClass()
         cls.fixtures = SharedTestFixtures()
     
-    def get_world(self, seed: int = DEFAULT_SEED, read_only: bool = True) -> World:
+    def get_world(self, seed: int = DEFAULT_SEED) -> World:
         """Get a world for testing."""
-        return self.fixtures.get_world(seed, read_only)
+        return self.fixtures.get_world(seed)
     
     def get_game(self, seed: int = DEFAULT_SEED) -> Game:
         """Get a cloned game for testing."""
