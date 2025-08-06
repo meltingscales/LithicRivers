@@ -193,6 +193,7 @@
 
 ## MVP for steam release (2026)
 
+- fix pickle vulnerability, rce
 - ✅ **COMPLETED**: Body modularity system with damaged android body
 - ✅ **COMPLETED**: Dynamic walk and break speeds based on body condition
 - ✅ **COMPLETED**: Higher tick rate system (200+) for granular speed control
