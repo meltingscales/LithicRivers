@@ -3,10 +3,9 @@ Test the StumblingSheep movement functionality.
 Copyright (c) 2024 Henry Post. All rights reserved.
 """
 
-import unittest
 from unittest.mock import patch, MagicMock
 
-from lithicrivers.game import Game, StumblingSheep, World
+from lithicrivers.game import Game, StumblingSheep
 from lithicrivers.model.vector import VectorN
 from lithicrivers.settings import DEFAULT_SEED
 from lithicrivers.test.test_fixtures import OptimizedTestCase
@@ -20,7 +19,6 @@ class TestStumblingSheepMovement(OptimizedTestCase):
         self.game = self.get_game(seed=DEFAULT_SEED)
         import random
         random._test_mode = True  # Enable test mode for deterministic mocking
-        self.world = self.game.world
 
     def tearDown(self):
         """Clean up test fixtures."""
@@ -38,18 +36,18 @@ class TestStumblingSheepMovement(OptimizedTestCase):
     def test_stumbling_sheep_world_assignment(self):
         """Test that StumblingSheep is properly registered with world."""
         sheep = StumblingSheep(VectorN(0, 0, 0))
-        self.world.add_entity(sheep)
+        self.game.world.add_entity(sheep)
         
         # Check that the sheep is registered as a listener
-        self.assertIn(self.world, sheep._listeners)
+        self.assertIn(self.game.world, sheep._listeners)
 
     def test_stumbling_sheep_movement_with_world(self):
         """Test that StumblingSheep moves correctly using event system."""
         sheep = StumblingSheep(VectorN(0, 0, 0))
-        self.world.add_entity(sheep)
+        self.game.world.add_entity(sheep)
         
         # Verify sheep is at initial position
-        entities_at_start = self.world.get_entities(VectorN(0, 0, 0))
+        entities_at_start = self.game.world.get_entities(VectorN(0, 0, 0))
         self.assertIn(sheep, entities_at_start)
         
         # Mock random to always return True (so sheep always moves)
@@ -59,11 +57,11 @@ class TestStumblingSheepMovement(OptimizedTestCase):
                 self.game.process_entity_ticks()
         
         # Verify sheep moved to new position
-        entities_at_new = self.world.get_entities(VectorN(1, 0, 0))
+        entities_at_new = self.game.world.get_entities(VectorN(1, 0, 0))
         self.assertIn(sheep, entities_at_new)
         
         # Verify sheep is no longer at old position
-        entities_at_old = self.world.get_entities(VectorN(0, 0, 0))
+        entities_at_old = self.game.world.get_entities(VectorN(0, 0, 0))
         self.assertNotIn(sheep, entities_at_old)
 
     def test_stumbling_sheep_movement_without_world(self):
@@ -84,10 +82,10 @@ class TestStumblingSheepMovement(OptimizedTestCase):
         """Test that StumblingSheep moves during game tick processing."""
         # Create sheep and add to world
         sheep = StumblingSheep(VectorN(0, 0, 0))
-        self.world.add_entity(sheep)
+        self.game.world.add_entity(sheep)
         
         # Verify sheep is at initial position
-        entities_at_start = self.world.get_entities(VectorN(0, 0, 0))
+        entities_at_start = self.game.world.get_entities(VectorN(0, 0, 0))
         self.assertIn(sheep, entities_at_start)
         
         # Mock random to always return True (so sheep always moves)
@@ -97,13 +95,9 @@ class TestStumblingSheepMovement(OptimizedTestCase):
                 sheep.tick()
         
         # Verify sheep moved to new position
-        entities_at_new = self.world.get_entities(VectorN(1, 0, 0))
+        entities_at_new = self.game.world.get_entities(VectorN(1, 0, 0))
         self.assertIn(sheep, entities_at_new)
         
         # Verify sheep is no longer at old position
-        entities_at_old = self.world.get_entities(VectorN(0, 0, 0))
+        entities_at_old = self.game.world.get_entities(VectorN(0, 0, 0))
         self.assertNotIn(sheep, entities_at_old)
-
-
-if __name__ == "__main__":
-    unittest.main() 
