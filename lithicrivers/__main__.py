@@ -54,7 +54,7 @@ if __name__ == "__main__":
             # Screen rendering stops and re-starts if we get a ResizeScreenError since we're in a while loop...
 
     print("Game is no longer running :3c")
-    print("Goodbye!")
+    print("Goodbye! Please wait for worldgen thread pool to shut down.")
 
     GAME.shutdown()
 
