@@ -1100,7 +1100,10 @@ class ChunkedWorldData:
     Similar to Minecraft's world storage system.
     """
 
-    def __init__(self, chunk_size: int = 16, world_generator=None):
+    def __init__(self, chunk_size: int = None, world_generator=None):
+        from lithicrivers.settings import CHUNK_SIZE
+        if chunk_size is None:
+            chunk_size = CHUNK_SIZE
         self.chunk_size = chunk_size
         self.chunks = {}  # (chunk_x, chunk_y, chunk_z) -> Chunk
         self.entity_data = {}  # Entity storage
@@ -1543,21 +1546,6 @@ class World(EntityListener):
             self.data.set_tile(pos, tile)
         return tile
     
-
-
-    def pre_generate_around_player(self, radius: int = 2) -> None:
-        """
-        Pre-generate chunks around the player position in background threads.
-
-        Args:
-            radius: Number of chunks to generate in each direction
-        """
-        # Get player position (assuming player is at origin for now)
-        player_pos = VectorN(0, 0, 0)  # TODO: Get actual player position
-
-        # Use the stored generator instead of creating a new one
-        self.generator.pre_generate_chunks_around(player_pos, radius)
-
     def set_tile(self, pos: VectorN, tile: Tile):
         self.data.set_tile(pos, tile)
 

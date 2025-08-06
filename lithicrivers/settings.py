@@ -35,6 +35,9 @@ else:
 VIEWPORT_RADIUS = config_manager.get_vector_setting("viewport", "VIEWPORT_RADIUS")
 VIEWPORT_WIGGLE = config_manager.get_setting("viewport", "VIEWPORT_WIGGLE")
 
+# Load world generation settings
+CHUNK_SIZE = config_manager.get_setting("worldgen", "CHUNK_SIZE")
+
 # Create default viewport
 DEFAULT_VIEWPORT = Viewport.generate_centered(
     DEFAULT_PLAYER_POSITION, radius=VIEWPORT_RADIUS
