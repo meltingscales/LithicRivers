@@ -9,16 +9,17 @@ from unittest.mock import patch, MagicMock
 from lithicrivers.game import Game, StumblingSheep, World
 from lithicrivers.model.vector import VectorN
 from lithicrivers.settings import DEFAULT_SEED
+from lithicrivers.test.test_fixtures import OptimizedTestCase
 
 
-class TestStumblingSheepMovement(unittest.TestCase):
-    """Test the StumblingSheep movement system."""
+class TestStumblingSheepMovement(OptimizedTestCase):
+    """Test the stumbling sheep movement system."""
 
     def setUp(self):
         """Set up test fixtures."""
+        self.game = self.get_game(seed=DEFAULT_SEED)
         import random
         random._test_mode = True  # Enable test mode for deterministic mocking
-        self.game = Game(seed=DEFAULT_SEED)
         self.world = self.game.world
 
     def tearDown(self):

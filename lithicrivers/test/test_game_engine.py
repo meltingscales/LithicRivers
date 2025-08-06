@@ -19,6 +19,7 @@ from lithicrivers.game_engine import (
     SetTileAction,
 )
 from lithicrivers.model.vector import VectorN
+from lithicrivers.test.test_fixtures import OptimizedTestCase
 
 
 class TestGameState(unittest.TestCase):
@@ -124,12 +125,12 @@ class TestGameActions(unittest.TestCase):
         self.assertEqual(new_state.player_position, VectorN(5, 4, 0))
 
 
-class TestGameEngine(unittest.TestCase):
+class TestGameEngine(OptimizedTestCase):
     """Test the main GameEngine class."""
 
     def setUp(self):
         """Set up a test game engine."""
-        self.engine = GameEngine()
+        self.engine = self.get_engine()
 
     def test_game_engine_initialization(self):
         """Test that the game engine initializes correctly."""

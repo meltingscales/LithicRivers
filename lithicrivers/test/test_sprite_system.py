@@ -17,13 +17,15 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from lithicrivers.sprite_loader import SpriteData, SpriteLoader, get_sprite_loader
 from lithicrivers.game import Fluid, Entities, VectorN, Game
+from lithicrivers.test.test_fixtures import OptimizedTestCase
 
 
-class TestSpriteData(unittest.TestCase):
-    """Test the SpriteData class."""
-    
+class TestSpriteSystem(OptimizedTestCase):
+    """Test the sprite system."""
+
     def setUp(self):
-        """Set up test data."""
+        """Set up test fixtures."""
+        self.game = self.get_game(seed=42)
         self.sprites = ["~", "~~\n~~", "~~~\n~~~\n~~~"]
         self.sprite_data = SpriteData("water", "blue", "Flowing water", self.sprites)
     

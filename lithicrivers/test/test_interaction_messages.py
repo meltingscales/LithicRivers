@@ -3,14 +3,15 @@ import unittest
 from lithicrivers.game import Game
 from lithicrivers.model.vector import VectorN
 from lithicrivers.settings import DEFAULT_SEED
+from lithicrivers.test.test_fixtures import OptimizedTestCase
 
 
-class TestInteractionMessages(unittest.TestCase):
-    """Test that interaction messages are displayed correctly."""
+class TestInteractionMessages(OptimizedTestCase):
+    """Test the interaction message system."""
 
     def setUp(self):
         """Set up test fixtures."""
-        self.game = Game(seed=DEFAULT_SEED)
+        self.game = self.get_game(seed=DEFAULT_SEED)
 
     def test_npc_interaction_message(self):
         """Test that NPC interaction shows the correct message."""

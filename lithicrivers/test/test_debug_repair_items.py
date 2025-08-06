@@ -6,15 +6,17 @@ Copyright (c) 2024 Henry Post. All rights reserved.
 import unittest
 
 from lithicrivers.game import Game, Items
+from lithicrivers.model.vector import VectorN
 from lithicrivers.settings import DEFAULT_SEED
+from lithicrivers.test.test_fixtures import OptimizedTestCase
 
 
-class TestDebugRepairItems(unittest.TestCase):
+class TestDebugRepairItems(OptimizedTestCase):
     """Test the debug repair items system."""
 
     def setUp(self):
         """Set up test fixtures."""
-        self.game = Game(seed=DEFAULT_SEED)
+        self.game = self.get_game(seed=DEFAULT_SEED)
 
     def test_debug_repair_items_are_added(self):
         """Test that debug repair items are added to the player's inventory."""

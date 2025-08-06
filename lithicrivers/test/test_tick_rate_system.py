@@ -9,14 +9,15 @@ from unittest.mock import patch, MagicMock
 from lithicrivers.game import Game, Player
 from lithicrivers.model.vector import VectorN
 from lithicrivers.settings import DEFAULT_SEED
+from lithicrivers.test.test_fixtures import OptimizedTestCase
 
 
-class TestTickRateSystem(unittest.TestCase):
+class TestTickRateSystem(OptimizedTestCase):
     """Test the tick rate system."""
 
     def setUp(self):
         """Set up test fixtures."""
-        self.game = Game(seed=DEFAULT_SEED)
+        self.game = self.get_game(seed=DEFAULT_SEED)
 
     def test_action_tick_costs(self):
         """Test that different actions have appropriate tick costs."""
