@@ -1263,7 +1263,10 @@ class ChunkedWorldData:
     def shutdown(self) -> None:
         """Shutdown the thread pool and clean up resources."""
         if hasattr(self, '_thread_pool'):
-            self._thread_pool.shutdown(wait=False)
+            # Shutdown the thread pool and wait for all threads to complete
+            # This prevents the game from hanging due to background threads
+            self._thread_pool.shutdown(wait=True)
+            print("Thread pool shutdown complete.")
 
     def get_chunk_stats(self) -> dict:
         """Get statistics about chunk usage."""
