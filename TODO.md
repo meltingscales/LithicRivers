@@ -185,6 +185,7 @@
 
 - john feedback: what about gaussian noise (idk) **Gaussian Noise for Resource Distribution**: Implement Gaussian noise for ore deposits, cave systems, and rare resources. Unlike Perlin noise which creates smooth patterns, Gaussian noise creates scattered, realistic resource distribution. Use for: ore deposits (Gold, Iron), cave entrances, rare artifacts, atmospheric effects (acid rain, radiation storms). Combine with existing Perlin noise - Perlin for terrain/biomes, Gaussian for resources/events.
 
+- GPU-accelerated worldgen: Option to use GPU for Perlin noise/worldgen calculations while maintaining determinism (compute shaders with fixed-point math or controlled floating-point precision)
 
 ## MVP for steam release (2026)
 
@@ -200,9 +201,10 @@
 - 🔄 **IN PROGRESS**: Procedural dungeons v2: Overhaul this and just copy the algorithm from https://www.gamedeveloper.com/programming/procedural-dungeon-generation-algorithm
 - ✅ **COMPLETED**: Fluids system
 - in progress: steam API integration
-- in progress: find out why GAME.shutdown() doesn't seem to work. It should kill threads that cause the game to hang after "Quit" is clicked, but it doesn't.
-- Remove threading from the individual block generation code, but keep the threading in the chunk generation code. The overhead to schedule a thread just to gen 1 block doesn't make sense, but it does make sense for chunks.
-- COMPLETED: make structures generate upon new areas being loaded, not just in a small radius once. if a structure causes un-generated areas to be referenced, just generate them like normal. (Bug idea: Could rarely cause a cascade of world generation? I think some minecraft mods have this problem.)
+
+- save/load system
+- save/load UI with a list of saved games
+- snapshots feature that saves on quit, on save, and every 1,000,000 ticks in `lithicrivers-saves/snapshots/` to make sure players don't lose progress due to bugs or accidents
 
 ## steam key giveaway list:
 - skomor123
