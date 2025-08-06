@@ -2,7 +2,6 @@
 Test that the forced underground facility spawns correctly.
 """
 
-import unittest
 from lithicrivers.worldgen import create_world_generator
 from lithicrivers.model.vector import VectorN
 from lithicrivers.test.test_fixtures import OptimizedTestCase

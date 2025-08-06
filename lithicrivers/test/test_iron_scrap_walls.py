@@ -2,16 +2,15 @@
 Test that underground facilities use iron scrap walls.
 """
 
-import unittest
 import random
 from lithicrivers.procedural_dungeon_generator import (
     ProceduralStructureGenerator,
     DungeonType
 )
 from lithicrivers.model.vector import VectorN
+from lithicrivers.test.test_fixtures import OptimizedTestCase
 
-
-class TestIronScrapWalls(unittest.TestCase):
+class TestIronScrapWalls(OptimizedTestCase):
     """Test that underground facilities use iron scrap walls."""
     
     def test_underground_facility_uses_iron_scrap_walls(self):

@@ -30,17 +30,11 @@ from lithicrivers.game_engine import GameEngine
 from lithicrivers.model.vector import VectorN
 from lithicrivers.settings import DEFAULT_SEED
 from lithicrivers.ui import GameWidget, HelpPage, InputHandler, WorldMap
+from lithicrivers.test.test_fixtures import OptimizedTestCase
 
 
-class HeadlessTUITestCase(unittest.TestCase):
+class HeadlessTUITestCase(OptimizedTestCase):
     """Base class for headless TUI tests."""
-
-    @classmethod
-    def setUpClass(cls):
-        """Create shared game instances for tests to improve performance."""
-        # Create shared game instances
-        cls.shared_game_engine = GameEngine()
-        cls.shared_game = Game(seed=DEFAULT_SEED)
 
     def setUp(self):
         """Set up common test fixtures."""
@@ -51,8 +45,8 @@ class HeadlessTUITestCase(unittest.TestCase):
             )
 
         # Use shared instances instead of creating new ones
-        self.game_engine = self.shared_game_engine
-        self.game = self.shared_game
+        self.game_engine = self.get_game_engine()
+        self.game = self.get_game()
         self.screen = None
 
     def create_headless_screen(self, width: int = 80, height: int = 24):

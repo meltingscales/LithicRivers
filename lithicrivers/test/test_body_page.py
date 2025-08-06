@@ -11,15 +11,14 @@ from lithicrivers.settings import DEFAULT_SEED
 from lithicrivers.test.test_fixtures import OptimizedTestCase
 
 
-@pytest.fixture
-def game():
-    return Game(seed=DEFAULT_SEED)
-
-
 class TestBodyPage(OptimizedTestCase):
     """Test the BodyPage UI component."""
 
-    def test_body_page_creation(self, game):
+    def setUp(self):
+        super().setUp()
+        self.shared_game = self.get_game()
+
+    def test_body_page_creation(self):
         """Test that BodyPage can be created without errors."""
         # Mock screen
         mock_screen = Mock()
@@ -27,11 +26,11 @@ class TestBodyPage(OptimizedTestCase):
         mock_screen.width = 80
         
         # Create BodyPage
-        body_page = BodyPage(mock_screen, game)
+        body_page = BodyPage(mock_screen, self.shared_game)
         
         # Verify it was created successfully
         assert body_page is not None
-        assert body_page.game == game
+        assert body_page.game == self.shared_game
 
     def test_body_page_without_game(self):
         """Test that BodyPage handles missing game gracefully."""
@@ -47,7 +46,7 @@ class TestBodyPage(OptimizedTestCase):
         assert body_page is not None
         assert body_page.game is None
 
-    def test_body_page_display_content(self, game):
+    def test_body_page_display_content(self):
         """Test that BodyPage displays body information correctly."""
         # Mock screen
         mock_screen = Mock()
@@ -55,7 +54,7 @@ class TestBodyPage(OptimizedTestCase):
         mock_screen.width = 80
         
         # Create BodyPage
-        body_page = BodyPage(mock_screen, game)
+        body_page = BodyPage(mock_screen, self.shared_game)
         
         # Update the display
         body_page.update_body_display()
@@ -72,17 +71,17 @@ class TestBodyPage(OptimizedTestCase):
         assert "REPAIR REQUIREMENTS:" in body_page.body_label.text
         assert "BODY DESCRIPTIONS:" in body_page.body_label.text
 
-    def test_body_page_player_data(self, game):
+    def test_body_page_player_data(self):
         """Test that BodyPage shows correct player data."""
         # Mock screen
         mock_screen = Mock()
         mock_screen.height = 20
         mock_screen.width = 80
         
-        player = game.player
+        player = self.shared_game.player
         
         # Create BodyPage
-        body_page = BodyPage(mock_screen, game)
+        body_page = BodyPage(mock_screen, self.shared_game)
         
         # Update the display
         body_page.update_body_display()
@@ -108,11 +107,8 @@ class TestBodyPage(OptimizedTestCase):
         mock_screen.height = 20
         mock_screen.width = 80
         
-        # Create game with player
-        game = Game(seed=DEFAULT_SEED)
-        
         # Create BodyPage
-        body_page = BodyPage(mock_screen, game)
+        body_page = BodyPage(mock_screen, self.shared_game)
         
         # Update the display
         body_page.update_body_display()
@@ -129,11 +125,8 @@ class TestBodyPage(OptimizedTestCase):
         mock_screen.height = 20
         mock_screen.width = 80
         
-        # Create game with player
-        game = Game(seed=DEFAULT_SEED)
-        
         # Create BodyPage
-        body_page = BodyPage(mock_screen, game)
+        body_page = BodyPage(mock_screen, self.shared_game)
         
         # Update the display
         body_page.update_body_display()
@@ -152,11 +145,8 @@ class TestBodyPage(OptimizedTestCase):
         mock_screen.height = 20
         mock_screen.width = 80
         
-        # Create game with player
-        game = Game(seed=DEFAULT_SEED)
-        
         # Create BodyPage
-        body_page = BodyPage(mock_screen, game)
+        body_page = BodyPage(mock_screen, self.shared_game)
         
         # Update the display
         body_page.update_body_display()

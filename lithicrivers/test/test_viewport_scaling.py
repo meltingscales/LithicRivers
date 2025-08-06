@@ -1,6 +1,3 @@
-import unittest
-
-from lithicrivers.game import Game
 from lithicrivers.settings import DEFAULT_SEED
 from lithicrivers.test.test_fixtures import OptimizedTestCase
 from lithicrivers.ui import GameWidget

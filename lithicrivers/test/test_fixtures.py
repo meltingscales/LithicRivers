@@ -8,7 +8,7 @@ from typing import Optional
 
 from lithicrivers.game import World, Game
 from lithicrivers.game_engine import GameEngine
-
+from lithicrivers.settings import DEFAULT_SEED
 
 class SharedTestFixtures:
     """
@@ -33,9 +33,7 @@ class SharedTestFixtures:
         import time
         start_time = time.time()
         print("🏗️  Initializing shared test fixtures...")
-        
-        # Import DEFAULT_SEED for optimization
-        from lithicrivers.settings import DEFAULT_SEED
+
         
         # Define seeds to pre-generate (most commonly used in tests)
         self.pregenerated_seeds = [DEFAULT_SEED]

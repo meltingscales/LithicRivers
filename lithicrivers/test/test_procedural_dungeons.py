@@ -4,12 +4,9 @@ Tests for procedural dungeon generation.
 
 import pytest
 import random
-from unittest.mock import Mock
-
 from lithicrivers.procedural_dungeon_generator import (
     ProceduralStructureGenerator,
     DungeonType,
-    DungeonConfig,
     create_procedural_generator
 )
 from lithicrivers.model.vector import VectorN

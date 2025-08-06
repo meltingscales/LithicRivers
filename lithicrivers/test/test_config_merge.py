@@ -3,16 +3,14 @@ Test the merged configuration system.
 Copyright (c) 2024 Henry Post. All rights reserved.
 """
 
-import unittest
 import tempfile
 import json
-import os
 from pathlib import Path
 
 from lithicrivers.config_manager import ConfigManager
 
 
-class TestConfigMerge(unittest.TestCase):
+class TestConfigMerge(OptimizedTestCase):
     """Test the merged configuration system."""
 
     def setUp(self):

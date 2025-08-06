@@ -1,12 +1,9 @@
-#!/usr/bin/env python3
-
-import unittest
-
 from lithicrivers.model.vector import VectorN
 from lithicrivers.ui import _generate_entity_selection_message
+from lithicrivers.test.test_fixtures import OptimizedTestCase
 
 
-class TestEntityMessages(unittest.TestCase):
+class TestEntityMessages(OptimizedTestCase):
     """Test the entity selection message generation."""
 
     def test_empty_entities(self):
@@ -59,7 +56,3 @@ class TestEntityMessages(unittest.TestCase):
         ]
         result = _generate_entity_selection_message(entities)
         self.assertEqual(result, "Found 2 Crystal Shards and a Ancient Relic nearby:")
-
-
-if __name__ == "__main__":
-    unittest.main()

@@ -2,8 +2,6 @@
 Tests for seeded world generation functionality.
 """
 
-import unittest
-
 from lithicrivers.game import Tile
 from lithicrivers.model.vector import VectorN
 from lithicrivers.settings import DEFAULT_SEED
@@ -16,7 +14,7 @@ from lithicrivers.worldgen import (
 )
 
 
-class TestWorldSeed(unittest.TestCase):
+class TestWorldSeed(OptimizedTestCase):
     """Test the WorldSeed class."""
 
     def test_world_seed_creation(self):
@@ -31,7 +29,7 @@ class TestWorldSeed(unittest.TestCase):
         self.assertEqual(repr(seed), "WorldSeed(12345)")
 
 
-class TestSeededWorldGenerator(unittest.TestCase):
+class TestSeededWorldGenerator(OptimizedTestCase):
     """Test the SeededWorldGenerator class."""
 
     def test_generator_creation_with_seed(self):
@@ -127,7 +125,7 @@ class TestSeededWorldGenerator(unittest.TestCase):
             self.assertIsInstance(tile, Tile)
 
 
-class TestWorldGenerationFunctions(unittest.TestCase):
+class TestWorldGenerationFunctions(OptimizedTestCase):
     """Test the world generation functions."""
 
     def test_create_world_generator(self):
@@ -354,7 +352,3 @@ class TestIntegrationWithGame(OptimizedTestCase):
         # Different seeds should produce different game engines
         self.assertEqual(engine1.seed, 42)
         self.assertEqual(engine3.seed, 12345)
-
-
-if __name__ == "__main__":
-    unittest.main()
