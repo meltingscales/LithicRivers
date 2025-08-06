@@ -204,6 +204,7 @@
 - 🔄 **IN PROGRESS**: Basic crafting system for body repairs
 - 🔄 **IN PROGRESS**: Procedural dungeons v2: Overhaul this and just copy the algorithm from https://www.gamedeveloper.com/programming/procedural-dungeon-generation-algorithm
 - ✅ **COMPLETED**: Fluids system
+- fix unit test singleton thingy by actually implementing saving system and using that instead of a memory-based cache. save the test worlds to a temp directory `lithicrivers-test-saves/` and delete them after tests finish with the `Makefile`.
 - in progress: steam API integration
 - todo: changing chunk size seems to affect structure generation. fix this.
 
