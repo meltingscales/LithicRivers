@@ -1,13 +1,8 @@
-import unittest
-
-from asciimatics.event import KeyboardEvent
-
-from lithicrivers.game import Game
 from lithicrivers.keymap import KEYMAP
 from lithicrivers.model.vector import VectorN
 from lithicrivers.settings import DEFAULT_SEED
 from lithicrivers.test.test_fixtures import OptimizedTestCase
-
+from asciimatics import KeyboardEvent
 
 class TestInteractionSystem(OptimizedTestCase):
     """Test the interaction system."""
@@ -93,7 +88,3 @@ class TestInteractionSystem(OptimizedTestCase):
 
         next_conv = npc.get_conversation(next_topic)
         self.assertIn("endless possibilities", next_conv["text"])
-
-
-if __name__ == "__main__":
-    unittest.main()

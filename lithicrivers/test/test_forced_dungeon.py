@@ -54,12 +54,12 @@ class TestForcedDungeon(OptimizedTestCase):
         """Test that the forced dungeon spawns deterministically with the same seed."""
         # Use shared fixtures for much faster test execution
         # This will use cached worlds instead of generating from scratch
-        world1 = self.get_world(12345)
-        world2 = self.get_world(12345)
+        world1 = self.get_world(42)
+        world2 = self.get_world(42)
         
         # Generate smaller worlds for comparison (900 tiles vs 121,000!)
-        generator1 = create_world_generator(12345)
-        generator2 = create_world_generator(12345)
+        generator1 = create_world_generator(42)
+        generator2 = create_world_generator(42)
         radius = VectorN(10, 10, 2)  # Much smaller for faster testing
         world_data1 = generator1.generate_world_data(radius)
         world_data2 = generator2.generate_world_data(radius)

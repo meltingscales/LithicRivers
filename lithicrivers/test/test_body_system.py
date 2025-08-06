@@ -2,10 +2,9 @@
 Tests for the body modularity system.
 Copyright (c) 2024 HenryFBP. All rights reserved.
 """
-
-import pytest
 from lithicrivers.model.body import Body, BodyPart, BodyPartState, BodyPartType
 from lithicrivers.game import Player
+from lithicrivers.test.test_fixtures import OptimizedTestCase
 
 
 class TestBodySystem(OptimizedTestCase):

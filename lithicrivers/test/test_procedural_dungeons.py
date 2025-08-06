@@ -2,7 +2,6 @@
 Tests for procedural dungeon generation.
 """
 
-import pytest
 import random
 from lithicrivers.procedural_dungeon_generator import (
     ProceduralStructureGenerator,
@@ -108,7 +107,3 @@ class TestProceduralDungeonGenerator:
         
         # Should have generated some dungeons
         assert len(world_data) >= 0  # May or may not generate based on chance
-
-
-if __name__ == "__main__":
-    pytest.main([__file__]) 

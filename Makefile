@@ -212,6 +212,7 @@ clean: ## Clean build artifacts
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 	find . -type f -name "*.pyc" -delete 2>/dev/null || true
 	rm -rf .pytest_cache/ .mypy_cache/ .ruff_cache/
+	rm -rf lithicrivers-test-saves/
 	@echo "✅ Clean complete!" 
 
 # Docker targets (DISABLED - Steam publishing)

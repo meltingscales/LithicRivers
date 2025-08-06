@@ -3,9 +3,7 @@ Test that structures are not generated on-demand when accessing tiles.
 """
 
 import unittest
-from lithicrivers.worldgen import create_world_generator
 from lithicrivers.model.vector import VectorN
-from lithicrivers.game import World
 from lithicrivers.test.test_fixtures import OptimizedTestCase
 
 
@@ -36,16 +34,13 @@ class TestNoOnDemandStructures(OptimizedTestCase):
     def test_forced_structures_preserved(self):
         """Test that forced structures are preserved and not overwritten."""
         # Create world generator and generate a small world
-        generator = create_world_generator(42)
-        radius = VectorN(30, 30, 5)
-        world_data = generator.generate_world_data(radius)
-        
+        world = self.get_world(seed=42)        
         # Check that the forced ship is present
         ship_pos = VectorN(20, 20, 0)
         ship_pos_str = ship_pos.serialize()
         
-        self.assertIn(ship_pos_str, world_data, "Forced ship should be present")
-        ship_tile = world_data[ship_pos_str]
+        self.assertIn(ship_pos_str, world.data, "Forced ship should be present")
+        ship_tile = world.data[ship_pos_str]
         
         # The ship should have iron scrap tiles (from the small_ship structure)
         # Let's check a few positions around the ship
@@ -55,8 +50,8 @@ class TestNoOnDemandStructures(OptimizedTestCase):
                 for z in range(0, 2):
                     pos = VectorN(x, y, z)
                     pos_str = pos.serialize()
-                    if pos_str in world_data:
-                        tile = world_data[pos_str]
+                    if pos_str in world.data:
+                        tile = world.data[pos_str]
                         if tile.tileid == "Iron Scrap":
                             ship_tiles_found += 1
         
@@ -71,8 +66,8 @@ class TestNoOnDemandStructures(OptimizedTestCase):
                 for z in range(-5, -1):
                     pos = VectorN(x, y, z)
                     pos_str = pos.serialize()
-                    if pos_str in world_data:
-                        tile = world_data[pos_str]
+                    if pos_str in world.data:
+                        tile = world.data[pos_str]
                         if tile.tileid == "Iron Scrap":
                             dungeon_tiles_found += 1
         

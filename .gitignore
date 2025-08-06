@@ -31,3 +31,7 @@ security-report.html
 *.pyd
 *.pyw
 *.pyz
+
+# saves
+lithicrivers-test-saves
+lithicrivers-saves
