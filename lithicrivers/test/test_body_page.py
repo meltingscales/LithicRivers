@@ -3,11 +3,8 @@ Tests for the BodyPage UI component.
 Copyright (c) 2024 HenryFBP. All rights reserved.
 """
 
-import pytest
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock
 from lithicrivers.ui import BodyPage
-from lithicrivers.game import Game, Player
-from lithicrivers.settings import DEFAULT_SEED
 from lithicrivers.test.test_fixtures import OptimizedTestCase
 
 

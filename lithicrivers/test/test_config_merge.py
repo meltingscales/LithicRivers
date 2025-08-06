@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 
 from lithicrivers.config_manager import ConfigManager
-
+from lithicrivers.test.test_fixtures import OptimizedTestCase
 
 class TestConfigMerge(OptimizedTestCase):
     """Test the merged configuration system."""

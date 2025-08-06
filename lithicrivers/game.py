@@ -1452,6 +1452,8 @@ class World(EntityListener):
         Note: This is different from the procedural structure generation that happens
         when chunks are loaded. This method is for story-critical structures only.
         """
+
+        print("Generating forced structures for seed: ", self.seed)
         # Force a ship to spawn at (20, 20, 0) - Main story location
         forced_ship_pos = VectorN(20, 20, 0)
         print(f"FORCING SHIP TO SPAWN AT {forced_ship_pos}")  # Debug output
@@ -1698,6 +1700,7 @@ class World(EntityListener):
 
 
 class Game:
+    """Main game class. Meant to hold all game state. Can be pickled to save the game."""
     def __init__(
         self,
         seed: int,

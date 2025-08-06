@@ -1,10 +1,6 @@
-import unittest
-
-from lithicrivers.game import Game
-from lithicrivers.model.vector import VectorN
 from lithicrivers.settings import DEFAULT_SEED
 from lithicrivers.test.test_fixtures import OptimizedTestCase
-
+from lithicrivers.model.vector import VectorN
 
 class TestInteractionMessages(OptimizedTestCase):
     """Test the interaction message system."""
@@ -56,7 +52,3 @@ class TestInteractionMessages(OptimizedTestCase):
         self.assertIn("ancient relic", text2.lower())
         self.assertIn("glows", text1.lower())
         self.assertIn("runes", text2.lower())
-
-
-if __name__ == "__main__":
-    unittest.main()

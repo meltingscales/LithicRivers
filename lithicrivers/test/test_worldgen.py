@@ -19,14 +19,14 @@ class TestWorldSeed(OptimizedTestCase):
 
     def test_world_seed_creation(self):
         """Test creating a WorldSeed."""
-        seed = WorldSeed(12345)
-        self.assertEqual(seed.seed, 12345)
+        seed = WorldSeed(42)
+        self.assertEqual(seed.seed, 42)
 
     def test_world_seed_string_representation(self):
         """Test string representation of WorldSeed."""
-        seed = WorldSeed(12345)
-        self.assertEqual(str(seed), "WorldSeed(12345)")
-        self.assertEqual(repr(seed), "WorldSeed(12345)")
+        seed = WorldSeed(42)
+        self.assertEqual(str(seed), "WorldSeed(42)")
+        self.assertEqual(repr(seed), "WorldSeed(42)")
 
 
 class TestSeededWorldGenerator(OptimizedTestCase):
