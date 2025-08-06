@@ -200,7 +200,8 @@
 - 🔄 **IN PROGRESS**: Procedural dungeons v2: Overhaul this and just copy the algorithm from https://www.gamedeveloper.com/programming/procedural-dungeon-generation-algorithm
 - ✅ **COMPLETED**: Fluids system
 - in progress: steam API integration
-- in progress: find out why GAME.shutdown() doesn't seem to work
+- in progress: find out why GAME.shutdown() doesn't seem to work. It should kill threads that cause the game to hang after "Quit" is clicked, but it doesn't.
+- Remove threading from the individual block generation code, but keep the threading in the chunk generation code. The overhead to schedule a thread just to gen 1 block doesn't make sense, but it does make sense for chunks.
 - COMPLETED: make structures generate upon new areas being loaded, not just in a small radius once. if a structure causes un-generated areas to be referenced, just generate them like normal. (Bug idea: Could rarely cause a cascade of world generation? I think some minecraft mods have this problem.)
 
 ## steam key giveaway list:
