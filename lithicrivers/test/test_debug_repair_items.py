@@ -6,7 +6,6 @@ Copyright (c) 2024 Henry Post. All rights reserved.
 import unittest
 
 from lithicrivers.game import Game, Items
-from lithicrivers.model.vector import VectorN
 from lithicrivers.settings import DEFAULT_SEED
 from lithicrivers.test.test_fixtures import OptimizedTestCase
 

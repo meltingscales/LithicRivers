@@ -3,11 +3,9 @@ UI testing framework for LithicRivers.
 This module provides utilities for testing UI components without requiring a full terminal interface.
 """
 
-import unittest
-
 from lithicrivers.constants import VEC_EAST, VEC_NORTH
-from lithicrivers.game_engine import GameEngine
 from lithicrivers.model.vector import VectorN
+from lithicrivers.test.test_fixtures import OptimizedTestCase
 
 
 class MockScreen:
@@ -54,12 +52,12 @@ class MockKeyboardEvent:
         self.key_code = key_code
 
 
-class UITestCase(unittest.TestCase):
+class UITestCase(OptimizedTestCase):
     """Base class for UI tests with common setup and utilities."""
 
     def setUp(self):
         """Set up common test fixtures."""
-        self.game_engine = GameEngine()
+        self.game_engine = self.get_game_engine()
         self.mock_screen = MockScreen()
         self.mock_canvas = self.mock_screen.canvas
 

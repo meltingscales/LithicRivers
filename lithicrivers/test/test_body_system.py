@@ -8,7 +8,7 @@ from lithicrivers.model.body import Body, BodyPart, BodyPartState, BodyPartType
 from lithicrivers.game import Player
 
 
-class TestBodySystem:
+class TestBodySystem(OptimizedTestCase):
     """Test the body modularity system."""
 
     def test_default_damaged_body(self):

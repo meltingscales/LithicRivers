@@ -3,7 +3,6 @@ Comprehensive unit tests for the modular game engine.
 These tests demonstrate how to programmatically manipulate game state for testing.
 """
 
-import unittest
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 
@@ -22,7 +21,7 @@ from lithicrivers.model.vector import VectorN
 from lithicrivers.test.test_fixtures import OptimizedTestCase
 
 
-class TestGameState(unittest.TestCase):
+class TestGameState(OptimizedTestCase):
     """Test the GameState dataclass."""
 
     def test_game_state_creation(self):
@@ -53,7 +52,7 @@ class TestGameState(unittest.TestCase):
         self.assertEqual(copied_state.player_health, 25)
 
 
-class TestGameActions(unittest.TestCase):
+class TestGameActions(OptimizedTestCase):
     """Test the various game actions."""
 
     def setUp(self):

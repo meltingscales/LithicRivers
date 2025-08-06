@@ -203,6 +203,7 @@
 - 🔄 **IN PROGRESS**: Procedural dungeons v2: Overhaul this and just copy the algorithm from https://www.gamedeveloper.com/programming/procedural-dungeon-generation-algorithm
 - ✅ **COMPLETED**: Fluids system
 - in progress: steam API integration
+- todo: changing chunk size seems to affect structure generation. fix this.
 
 - save/load system
 - save/load UI with a list of saved games

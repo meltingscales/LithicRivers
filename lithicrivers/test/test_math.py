@@ -1,7 +1,3 @@
-"""
-god i hate math
-"""
-
 import unittest
 
 from lithicrivers.model.vector import VectorN
@@ -9,7 +5,7 @@ from lithicrivers.model.vector import VectorN
 
 class TestVectorN(unittest.TestCase):
     def test_simple(self):
-        # foosdfasdf
+
         v1 = VectorN(1, 2, 0)
         self.assertEqual(v1.x, 1)
         self.assertEqual(v1.y, 2)

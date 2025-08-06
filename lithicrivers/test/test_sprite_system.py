@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Unit tests for the sprite system.
 Tests sprite loading, rendering, and scale handling.
@@ -7,13 +6,7 @@ Tests sprite loading, rendering, and scale handling.
 import unittest
 import tempfile
 import json
-import os
 from pathlib import Path
-from unittest.mock import patch
-
-# Add the project root to the path
-import sys
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from lithicrivers.sprite_loader import SpriteData, SpriteLoader, get_sprite_loader
 from lithicrivers.game import Fluid, Entities, VectorN, Game

@@ -154,7 +154,7 @@ class MockFrame:
         return (key, selected, allow_input_state)
 
 
-class AdvancedUITestCase(unittest.TestCase):
+class AdvancedUITestCase(OptimizedTestCase):
     """Advanced UI test case with comprehensive mocking and utilities."""
 
     def setUp(self):
@@ -165,8 +165,8 @@ class AdvancedUITestCase(unittest.TestCase):
                 "TERM environment variable not set - skipping terminal-dependent tests"
             )
 
-        self.game_engine = GameEngine()
-        self.game = Game(seed=DEFAULT_SEED)
+        self.game_engine = self.get_engine()
+        self.game = self.get_game()
         self.mock_screen = AdvancedMockScreen(80, 24)
         self.mock_frame = MockFrame(self.mock_screen)
         self.mock_canvas = self.mock_screen.canvas

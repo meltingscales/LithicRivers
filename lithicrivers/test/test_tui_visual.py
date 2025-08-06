@@ -13,17 +13,11 @@ import unittest
 from lithicrivers.game import Game
 from lithicrivers.game_engine import GameEngine
 from lithicrivers.settings import DEFAULT_SEED
+from lithicrivers.test.test_fixtures import OptimizedTestCase
 
 
-class VisualTUITestCase(unittest.TestCase):
+class VisualTUITestCase(OptimizedTestCase):
     """Base class for visual TUI tests."""
-
-    @classmethod
-    def setUpClass(cls):
-        """Create shared game instances for tests to improve performance."""
-        # Create shared game instances
-        cls.shared_game_engine = GameEngine()
-        cls.shared_game = Game(seed=DEFAULT_SEED)
 
     def setUp(self):
         """Set up common test fixtures."""
@@ -31,9 +25,8 @@ class VisualTUITestCase(unittest.TestCase):
         if not os.environ.get("TERM"):
             self.skipTest("TERM environment variable not set - skipping visual tests")
 
-        # Use shared instances instead of creating new ones
-        self.game_engine = self.shared_game_engine
-        self.game = self.shared_game
+        self.game_engine = self.get_game_engine()
+        self.game = self.get_game()
 
     def test_visual_test_placeholder(self):
         """Placeholder test for visual regression testing."""
