@@ -22,6 +22,7 @@ help: ## Show this help message
 	@echo "---------"
 	@echo "  test                 Run all tests (with TERM detection)"
 	@echo "  test-quick           Run quick tests only"
+	@echo "  test-profile-speedscope Profile test suite with speedscope"
 	@echo ""
 	@echo "🔍 DEMO"
 	@echo "------"
@@ -97,6 +98,15 @@ test-lcov: ## Generate LCOV coverage report
 	TESTING=1 $(UV_CMD) run coverage run  -m unittest discover lithicrivers
 	$(UV_CMD) run coverage lcov -o coverage/lcov.info
 	@echo "✅ LCOV report generated!"
+
+test-profile-speedscope: ## Profile test suite with speedscope
+	@echo "📊 Profiling test suite with speedscope..."
+	@echo "📄 This will create a detailed speedscope report of test execution"
+	@echo "⏱️  Running tests under profiler - this will be slower than normal"
+	TESTING=1 $(UV_CMD) run py-spy record --format speedscope --output test_profile.speedscope --gil -- python -m coverage run -m unittest discover lithicrivers
+	@echo "📊 Test profiling complete!"
+	@echo "📄 Profile saved to: test_profile.speedscope"
+	@echo "🌐 Visit https://www.speedscope.app/ to view the report"
 
 demo: ## Run all demos
 	$(UV_CMD) run python -m lithicrivers.demo.perlin_test
