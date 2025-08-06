@@ -41,7 +41,8 @@ class ChunkCache:
 
     def get_chunk_key(self, pos: VectorN) -> tuple[int, int, int]:
         """Get chunk coordinates for a position."""
-        chunk_size = 16
+        from lithicrivers.settings import CHUNK_SIZE
+        chunk_size = CHUNK_SIZE
         # Handle None values safely
         pos_x = pos.x if pos.x is not None else 0
         pos_y = pos.y if pos.y is not None else 0
@@ -74,14 +75,11 @@ class ChunkCache:
                 del self.cache[oldest_key]
 
     def pre_generate_chunk(
-        self,
-        chunk_x: int,
-        chunk_y: int,
-        chunk_z: int,
-        generator: "SeededWorldGenerator",
+        self, chunk_x: int, chunk_y: int, chunk_z: int, generator: "SeededWorldGenerator"
     ) -> None:
         """Pre-generate a chunk in background."""
-        chunk_size = 16
+        from lithicrivers.settings import CHUNK_SIZE
+        chunk_size = CHUNK_SIZE
         start_x = chunk_x * chunk_size
         start_y = chunk_y * chunk_size
         start_z = chunk_z * chunk_size
@@ -381,52 +379,6 @@ class SeededWorldGenerator:
                 else:
                     return Tiles.dirt()
 
-    def pre_generate_chunks_around(self, center_pos: VectorN, radius: int = 2) -> None:
-        """
-        Pre-generate chunks around a center position in background threads.
-
-        Args:
-            center_pos: The center position to generate chunks around
-            radius: Number of chunks to generate in each direction
-        """
-        chunk_size = 16
-        # Handle None values safely
-        center_x = center_pos.x if center_pos.x is not None else 0
-        center_y = center_pos.y if center_pos.y is not None else 0
-        center_z = center_pos.z if center_pos.z is not None else 0
-        center_chunk_x = center_x // chunk_size
-        center_chunk_y = center_y // chunk_size
-        center_chunk_z = center_z // chunk_size
-
-        # Create thread pool for background generation
-        from lithicrivers.settings import MAX_CPU_THREADS
-
-        with ThreadPoolExecutor(max_workers=MAX_CPU_THREADS) as executor:
-            futures = []
-
-            # Generate chunks in a cube around the center
-            for chunk_x in range(center_chunk_x - radius, center_chunk_x + radius + 1):
-                for chunk_y in range(
-                    center_chunk_y - radius, center_chunk_y + radius + 1
-                ):
-                    for chunk_z in range(
-                        center_chunk_z - radius, center_chunk_z + radius + 1
-                    ):
-                        future = executor.submit(
-                            self._generate_complete_chunk,
-                            chunk_x,
-                            chunk_y,
-                            chunk_z,
-                        )
-                        futures.append(future)
-
-            # Wait for all chunks to be generated
-            for future in as_completed(futures):
-                try:
-                    future.result()
-                except Exception as e:
-                    logger.warning(f"Failed to pre-generate chunk: {e}")
-
     def _generate_complete_chunk(self, chunk_x: int, chunk_y: int, chunk_z: int) -> None:
         """
         Generate a complete chunk including terrain and structures in a single thread.
@@ -436,7 +388,8 @@ class SeededWorldGenerator:
             chunk_y: Chunk Y coordinate  
             chunk_z: Chunk Z coordinate
         """
-        chunk_size = 16
+        from lithicrivers.settings import CHUNK_SIZE
+        chunk_size = CHUNK_SIZE
         start_x = chunk_x * chunk_size
         start_y = chunk_y * chunk_size
         start_z = chunk_z * chunk_size
@@ -511,7 +464,8 @@ class SeededWorldGenerator:
         """
 
         # Generate structures in chunks for better distribution
-        chunk_size = 16  # 16x16 chunks
+        from lithicrivers.settings import CHUNK_SIZE
+        chunk_size = CHUNK_SIZE
 
         # Handle None values safely
         radius_x = radius.x if radius.x is not None else 0

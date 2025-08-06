@@ -63,6 +63,9 @@
     },
     "performance": {
       "MAX_CPU_THREADS": 64
+    },
+    "worldgen": {
+      "CHUNK_SIZE": 8
     }
   }
 } 
