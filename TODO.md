@@ -189,6 +189,8 @@
 
 - perlin noise map caching: brainstorm on potential speedup. find way to invalidate when worldgen algorithm changes.
 
+- multi-thread unit tests...
+
 ## MVP for steam release (2026)
 
 - ✅ **COMPLETED**: Body modularity system with damaged android body

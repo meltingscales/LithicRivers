@@ -24,7 +24,7 @@ class SharedTestFixtures:
         return cls._instance
     
     def __init__(self):
-        if not self._initialized:
+        if not SharedTestFixtures._initialized:
             self._initialize_fixtures()
             SharedTestFixtures._initialized = True
     
@@ -47,8 +47,11 @@ class SharedTestFixtures:
         # Pre-populate caches with common seeds
         for seed in self.pregenerated_seeds:
             print(f"   Pre-generating fixture for seed: {seed}")
-            self.get_world(seed)
             self.get_game(seed)
+            # minor speedup by reusing the game's world
+            self._world_cache[seed] = self.get_game(seed).world.clone()
+
+            self.get_world(seed)
             self.get_engine(seed)
         
         init_time = time.time() - start_time
