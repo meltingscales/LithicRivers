@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from enum import Enum
 import os
 
-from lithicrivers.game.game import Tile, Tiles
+from lithicrivers.game.core import Tile, Tiles
 from lithicrivers.logging_config import get_logger
 from lithicrivers.model.vector import VectorN
 

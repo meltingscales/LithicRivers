@@ -4,7 +4,6 @@ This module provides utilities for testing UI components without requiring a ful
 """
 
 from lithicrivers.constants import VEC_EAST, VEC_NORTH
-from lithicrivers.model.vector import VectorN
 from lithicrivers.test.test_fixtures import OptimizedTestCase
 
 
@@ -166,6 +165,3 @@ class TestUIMockFramework(UITestCase):
         event = MockKeyboardEvent(ord("a"))
         self.assertEqual(event.key_code, ord("a"))
 
-
-if __name__ == "__main__":
-    unittest.main()

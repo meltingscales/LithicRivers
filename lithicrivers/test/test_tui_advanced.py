@@ -24,7 +24,7 @@ from lithicrivers.constants import (
     VEC_SOUTHWEST,
     VEC_WEST,
 )
-from lithicrivers.game.game import Tiles
+from lithicrivers.game.core import Tiles
 from lithicrivers.model.vector import VectorN
 from lithicrivers.test.test_fixtures import OptimizedTestCase
 from lithicrivers.ui import GameWidget, HelpPage, InputHandler, WorldMap

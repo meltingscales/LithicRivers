@@ -6,7 +6,8 @@ Copyright (c) 2024 Henry Post. All rights reserved.
 import unittest
 from unittest.mock import patch, MagicMock
 
-from lithicrivers.game.game import Game, Player
+from lithicrivers.game.game import Game
+from lithicrivers.game.core import Player, Tiles
 from lithicrivers.model.vector import VectorN
 from lithicrivers.settings import DEFAULT_SEED
 from lithicrivers.test.test_fixtures import OptimizedTestCase
@@ -57,8 +58,8 @@ class TestTickRateSystem(OptimizedTestCase):
 
     def test_entity_speed_affects_tick_frequency(self):
         """Test that entity speed affects how often entities tick."""
-        from lithicrivers.game.game import StumblingSheep
-        
+        from lithicrivers.game.npcs import StumblingSheep
+
         # Create a sheep with speed 0.2
         sheep = StumblingSheep(VectorN(0, 0, 0))
         self.game.world.add_entity(sheep)
@@ -97,8 +98,7 @@ class TestTickRateSystem(OptimizedTestCase):
 
     def test_mining_uses_tick_cost_system(self):
         """Test that mining uses the tick cost system."""
-        from lithicrivers.game.game import Tiles
-        
+
         # Set up a mineable tile
         self.game.set_tile_at_player_feet(Tiles.gold_ore())
         

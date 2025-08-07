@@ -7,7 +7,7 @@ This demo showcases the body modularity system and how it affects gameplay.
 """
 
 from lithicrivers.model.body import Body, BodyPartState, BodyPartType
-from lithicrivers.game.game import Player
+from lithicrivers.game.core import Player
 
 
 def demo_body_system():

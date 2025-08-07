@@ -67,7 +67,3 @@ class TestIronScrapWalls(OptimizedTestCase):
                           "Underground facility should have iron scrap walls")
         
         print(f"Found {iron_scrap_count} iron scrap tiles in underground facility")
-
-
-if __name__ == "__main__":
-    unittest.main() 

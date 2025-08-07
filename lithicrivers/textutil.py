@@ -6,13 +6,7 @@ import random
 import string
 from typing import Union
 
-# Import the new centralized color system
 from lithicrivers.colors import COLOR_MANAGER
-
-# Remove the circular import
-# from lithicrivers.logging_config import get_logger
-# logger = get_logger(__name__)
-
 
 def corrupt_text(text: str, corruption_rate: float = 0.01) -> str:
     """
@@ -107,3 +101,18 @@ def list_label(text: str, width: int = 5, align: str = ">") -> str:
 def emphasizing(text: str) -> str:
     """Format emphasized text."""
     return f"[ {text} ]"
+
+
+def generate_sprite_repeat(char: str, scale: int = 1) -> str:
+    normalized_scale = scale - 1
+
+    if normalized_scale == 0:
+        return char
+
+    ret = ""
+    for i in range(0, scale):
+        ret += char * scale
+        if i < (scale - 1):
+            ret += "\n"
+
+    return ret
