@@ -10,6 +10,7 @@ from pathlib import Path
 import pickle
 import time
 import os
+import logging
 class SharedTestFixtures:
     """
     Class that manages shared test fixtures to reduce test execution time.
@@ -24,27 +25,33 @@ class SharedTestFixtures:
         self.pregen_chunk_radius = 4
 
 
-        # if don't have enough seeds saved to a file, create a lock file and wait for it to be removed
-        if len(self.pregenerated_seeds) != len(os.listdir(self._test_saves_dir)):
-            # establish a lock file to prevent multiple processes from running at the same time,
-            # in case we parallelize these tests
-            if self._test_saves_lock.exists():
-                # wait until the lock file is removed
+        # Check if all required save files exist (more reliable than directory count)
+        missing_seeds = [seed for seed in self.pregenerated_seeds if not self.does_save_exist(seed)]
+        
+        if missing_seeds:
+            # Try to acquire lock atomically
+            try:
+                self._test_saves_dir.mkdir(exist_ok=True)
+                # Use exclusive creation to avoid race conditions
+                self._test_saves_lock.touch(exist_ok=False)
+                
+                # We got the lock, initialize fixtures
+                logging.info(f"Acquired lock, initializing fixtures for seeds: {missing_seeds}")
+                self._initialize_fixtures()
+                
+                # Release the lock
+                self._test_saves_lock.unlink()
+                
+            except FileExistsError:
+                # Another thread has the lock, wait for it
+                logging.info("Lock exists, waiting for fixture initialization to complete...")
                 while self._test_saves_lock.exists():
                     time.sleep(0.1)
-
-        # if we don't have enough seeds saved to a folder, create the saves
-        if len(self.pregenerated_seeds) != len(os.listdir(self._test_saves_dir)):
-            self._test_saves_dir.mkdir(exist_ok=True)
-
-            # create the lock file
-            self._test_saves_lock.touch()
-
-            # create save files
-            self._initialize_fixtures()
-
-            # release the lock file
-            self._test_saves_lock.unlink()
+                
+                # Verify all fixtures are now available
+                remaining_missing = [seed for seed in self.pregenerated_seeds if not self.does_save_exist(seed)]
+                if remaining_missing:
+                    raise RuntimeError(f"Fixture initialization failed, missing seeds: {remaining_missing}")
 
     def save_game(self, game: Game, seed: int):
         """Save a game to a file."""

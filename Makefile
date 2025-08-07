@@ -21,6 +21,7 @@ help: ## Show this help message
 	@echo "🧪 TESTING"
 	@echo "---------"
 	@echo "  test                 Run all tests (with TERM detection)"
+	@echo "  test-parallel        Run unit tests in parallel (faster)"
 	@echo "  test-quick           Run quick tests only"
 	@echo "  test-profile-speedscope Profile test suite with speedscope"
 	@echo ""
@@ -86,6 +87,13 @@ test: ## Run all tests with smart detection
 		$(UV_CMD) run python -m unittest lithicrivers.test.test_tui_visual; \
 	fi
 	@echo "✅ All tests completed!"
+
+test-parallel: ## Run unit tests in parallel (faster)
+	@echo "🚀 Running unit tests in parallel..."
+	@echo "📦 SharedTestFixtures will handle thread-safe world generation"
+	@echo "🧵 Using 4 parallel workers for faster execution"
+	TESTING=1 $(UV_CMD) run pytest lithicrivers/test/ -n 4 --verbose --tb=short
+	@echo "✅ Parallel unit tests completed!"
 
 test-quick: ## Run quick tests only
 	@echo "⚡ Running quick tests..."
