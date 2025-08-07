@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from typing import Any, Optional
 
-from lithicrivers.game.core import Tile, Tiles, TilePalette
+from lithicrivers.game.tiles import Tile, Tiles, TilePalette
 from lithicrivers.logging_config import get_logger
 from lithicrivers.model.vector import VectorN
 from lithicrivers.structure_generator import create_structure_manager
@@ -575,23 +575,3 @@ class Chunk:
         return True
 
 
-class ChunkedWorldData:
-    """
-    Efficient world data storage using chunked 3D arrays.
-    Similar to Minecraft's world storage system.
-    """
-
-    def __init__(self, chunk_size: int = None, world_generator: "SeededWorldGenerator" =None):
-        from lithicrivers.settings import CHUNK_SIZE
-        if chunk_size is None:
-            chunk_size = CHUNK_SIZE
-        self.chunk_size = chunk_size
-        self.chunks = {}  # (chunk_x, chunk_y, chunk_z) -> Chunk
-        self.entity_data = {}  # Entity storage
-        self._tile_cache = {}  # Cache for frequently accessed tiles
-        self._cache_size = 1000  # Max cache size
-        self.world_generator = world_generator  # Reference to world generator for structure generation
-        self._generated_chunks = set()  # Track which chunks have had structures generated
-        self._chunk_generation_lock = threading.Lock()  # Lock for thread-safe chunk generation
-        from lithicrivers.settings import MAX_CPU_THREADS
-        self._thread_pool = ThreadPoolExecutor(max_workers=MAX_CPU_THREADS)  # Thread pool for chunk generation
