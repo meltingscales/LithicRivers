@@ -2,7 +2,7 @@
 Tests for seeded world generation functionality.
 """
 
-from lithicrivers.game import Tile
+from lithicrivers.game.game import Tile
 from lithicrivers.model.vector import VectorN
 from lithicrivers.settings import DEFAULT_SEED
 from lithicrivers.test.test_fixtures import OptimizedTestCase

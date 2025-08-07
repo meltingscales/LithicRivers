@@ -3,7 +3,7 @@ Demo script for the pickup items functionality.
 Copyright (c) 2024 Henry Post. All rights reserved.
 """
 
-from lithicrivers.game import Game, DroppedItem, Items
+from lithicrivers.game.game import Game, DroppedItem, Items
 from lithicrivers.model.vector import VectorN
 from lithicrivers.settings import DEFAULT_SEED
 

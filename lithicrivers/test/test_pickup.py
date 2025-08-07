@@ -7,7 +7,7 @@ import unittest
 
 from asciimatics.event import KeyboardEvent
 
-from lithicrivers.game import Game, DroppedItem, Items
+from lithicrivers.game.game import Game, DroppedItem, Items
 from lithicrivers.keymap import KEYMAP
 from lithicrivers.model.vector import VectorN
 from lithicrivers.settings import DEFAULT_SEED

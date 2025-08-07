@@ -6,7 +6,7 @@ Copyright (c) 2024 HenryFBP. All rights reserved.
 This demo shows what the BodyPage displays.
 """
 
-from lithicrivers.game import Game
+from lithicrivers.game.game import Game
 from lithicrivers.settings import DEFAULT_SEED
 
 

@@ -6,7 +6,7 @@ This script shows how to create deterministic worlds using seeds.
 
 from lithicrivers.worldgen import SeededWorldGenerator, generate_world_with_seed
 from lithicrivers.model.vector import VectorN
-from lithicrivers.game import World, Game
+from lithicrivers.game.game import World, Game
 
 
 def demo_seeded_world_generation():

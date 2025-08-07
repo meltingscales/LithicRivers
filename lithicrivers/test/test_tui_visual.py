@@ -8,7 +8,7 @@ import os
 # Set TESTING environment BEFORE importing any game modules
 os.environ["TESTING"] = "1"
 
-from lithicrivers.game import Game
+from lithicrivers.game.game import Game
 from lithicrivers.test.test_fixtures import OptimizedTestCase
 
 
