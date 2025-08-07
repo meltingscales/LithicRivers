@@ -34,18 +34,18 @@ help: ## Show this help message
 	@echo "🎮 GAME"
 	@echo "------"
 	@echo "  delete-game-saves    Delete game saves"
-	@echo "  run                  Run the game"
-	@echo "  run-debug            Run the game with remote debugging"
-	@echo "  debug-attach         Show PyCharm debugging instructions"
-	@echo "  log-monitor          Monitor game logs in real-time"
+	@echo "  game-run             Run the game"
+	@echo "  game-run-debug       Run the game with remote debugging"
+	@echo "  game-debug-attach    Show PyCharm debugging instructions"
+	@echo "  game-log-monitor     Monitor game logs in real-time"
+	@echo ""
+	@echo "📊 GAME PERFORMANCE TESTING"
+	@echo "--------------------------"
+	@echo "  game-profile-speedscope   Generate speedscope CPU profiling report"
 	@echo ""
 	@echo "🔧 DEVELOPMENT TOOLS"
 	@echo "-------------------"
 	@echo "  generate-keychords   Generate platform-specific keychord mappings"
-	@echo ""
-	@echo "📊 PERFORMANCE TESTING"
-	@echo "---------------------"
-	@echo "  profile-speedscope   Generate speedscope CPU profiling report"
 	@echo ""
 	@echo "🔨 BUILDING"
 	@echo "----------"
@@ -152,10 +152,10 @@ delete-game-saves: ## Delete game saves
 	@echo "🗑️  Deleting saves..."
 	rm -rf lithicrivers-saves
 
-run: ## Run the game
+game-run: ## Run the game
 	$(UV_CMD) run python -m lithicrivers
 
-run-debug: ## Run the game with remote debugging enabled
+game-run-debug: ## Run the game with remote debugging enabled
 	@echo "🐛 Starting game with remote debugging..."
 	@echo "📝 In PyCharm: Run -> Attach to Process -> Select this Python process"
 	@echo "🔗 Or use: Run -> Edit Configurations -> + -> Python Debug Server"
@@ -163,21 +163,21 @@ run-debug: ## Run the game with remote debugging enabled
 	PYTHONPATH=. $(UV_CMD) run python -m lithicrivers --debug
 
 # Performance Testing
-profile-speedscope: ## Generate speedscope CPU profiling report
+game-profile-speedscope: ## Generate speedscope CPU profiling report
 	@echo "📊 Generating speedscope CPU profiling report..."
 	@echo "📄 This will create a detailed speedscope report of CPU usage"
 	@echo "🎮 Make sure the game is running in another terminal first"
-	@echo "💡 Run 'make run' in another terminal, then run this command"
+	@echo "💡 Run 'make game-run' in another terminal, then run this command"
 	@echo "⏱️  Profiling will continue until you stop it with Ctrl+C"
-	$(UV_CMD) run py-spy record --format speedscope --output profile_report.speedscope --gil -- python -m lithicrivers
+	$(UV_CMD) run py-spy record --format speedscope --output game_profile.speedscope --gil -- python -m lithicrivers
 	@echo "Visit https://www.speedscope.app/ to view the report"
 
-debug-attach: ## Show instructions for attaching to running process
+game-debug-attach: ## Show instructions for attaching to running process
 	@echo "🔗 PyCharm Remote Debugging Instructions"
 	@echo "========================================"
 	@echo ""
 	@echo "1. Start the game in another terminal:"
-	@echo "   make run"
+	@echo "   make game-run"
 	@echo ""
 	@echo "2. In PyCharm:"
 	@echo "   - Go to Run -> Edit Configurations"
@@ -192,7 +192,7 @@ debug-attach: ## Show instructions for attaching to running process
 	@echo "   import pydevd; pydevd.settrace(suspend=False, trace_only_current_thread=True)"
 	@echo ""
 	@echo "5. Or use the debug target instead:"
-	@echo "   make run-debug"
+	@echo "   make game-run-debug"
 	@echo ""
 	@echo "📚 More info: https://www.jetbrains.com/help/pycharm/remote-debugging-with-product.html"
 
