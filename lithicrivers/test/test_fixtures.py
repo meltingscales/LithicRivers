@@ -5,11 +5,11 @@ This module provides pre-generated worlds and other expensive objects that can b
 
 import unittest
 from lithicrivers.game import World, Game
-from lithicrivers.game_engine import GameEngine
 from lithicrivers.settings import DEFAULT_SEED
 from pathlib import Path
 import pickle
 import time
+import os
 class SharedTestFixtures:
     """
     Class that manages shared test fixtures to reduce test execution time.
@@ -19,23 +19,32 @@ class SharedTestFixtures:
         self._test_saves_dir = Path("lithicrivers-test-saves")
         self._test_saves_lock = Path("lithicrivers-test-saves/test-saves-creation.lock")
 
-        # establish a lock file to prevent multiple processes from running at the same time,
-        # in case we parallelize these tests
-        if self._test_saves_lock.exists():
-            # wait until the lock file is removed
-            while self._test_saves_lock.exists():
-                time.sleep(0.1)
+        # Define seeds to pre-generate (most commonly used in tests)
+        self.pregenerated_seeds = [DEFAULT_SEED, 42]
+        self.pregen_chunk_radius = 4
 
-        self._test_saves_dir.mkdir(exist_ok=True)
 
-        # create the lock file
-        self._test_saves_lock.touch()
+        # if don't have enough seeds saved to a file, create a lock file and wait for it to be removed
+        if len(self.pregenerated_seeds) != len(os.listdir(self._test_saves_dir)):
+            # establish a lock file to prevent multiple processes from running at the same time,
+            # in case we parallelize these tests
+            if self._test_saves_lock.exists():
+                # wait until the lock file is removed
+                while self._test_saves_lock.exists():
+                    time.sleep(0.1)
 
-        # create save files
-        self._initialize_fixtures()
+        # if we don't have enough seeds saved to a folder, create the saves
+        if len(self.pregenerated_seeds) != len(os.listdir(self._test_saves_dir)):
+            self._test_saves_dir.mkdir(exist_ok=True)
 
-        # release the lock file
-        self._test_saves_lock.unlink()
+            # create the lock file
+            self._test_saves_lock.touch()
+
+            # create save files
+            self._initialize_fixtures()
+
+            # release the lock file
+            self._test_saves_lock.unlink()
 
     def save_game(self, game: Game, seed: int):
         """Save a game to a file."""
@@ -47,14 +56,14 @@ class SharedTestFixtures:
             game.world.data.shutdown()
         
         with save_path.open("wb") as f:
-            print(f"Saving game for seed: {seed} to file {save_path}")
+            logging.info(f"Saving game for seed: {seed} to file {save_path}")
             pickle.dump(game, f)
     
     def load_game(self, seed: int) -> Game:
         """Load a game from a file."""
         save_path = self._test_saves_dir / f"seed_{seed}.pkl"
         with save_path.open("rb") as f:
-            print(f"Loading game for seed: {seed} from file {save_path}")
+            logging.info(f"Loading game for seed: {seed} from file {save_path}")
             return pickle.load(f)
 
     def does_save_exist(self, seed: int) -> bool:
@@ -66,28 +75,23 @@ class SharedTestFixtures:
         """Initialize all shared fixtures. This is called only once."""
         import time
         start_time = time.time()
-        print("🏗️  Initializing shared test fixtures...")
-
-        
-        # Define seeds to pre-generate (most commonly used in tests)
-        self.pregenerated_seeds = [DEFAULT_SEED, 42]
-        self.pregen_chunk_radius = 4
+        logging.info("🏗️  Initializing shared test fixtures...")
         
         # Pre-populate files with common seeds
         for seed in self.pregenerated_seeds:
-            print(f"   Pre-generating fixture for seed: {seed}")
+            logging.info(f"   Pre-generating fixture for seed: {seed}")
 
             # save to disk if it doesn't exist
             if not self.does_save_exist(seed):
-                print(f"   Pre-generating chunks for seed: {seed} as it doesn't exist as a save")
+                logging.info(f"   Pre-generating chunks for seed: {seed} as it doesn't exist as a save")
                 game = Game(seed)
                 game.pregen_chunks(radius=self.pregen_chunk_radius)
                 self.save_game(game, seed)
-                print("   Done pre-generating chunks for seed: {}".format(seed))
+                logging.info("   Done pre-generating chunks for seed: {}".format(seed))
 
         init_time = time.time() - start_time
-        print(f"✅ Shared test fixtures initialized in {init_time:.3f}s!")
-        print(f"   Pre-generated fixtures for seeds: {self.pregenerated_seeds}")
+        logging.info(f"✅ Shared test fixtures initialized in {init_time:.3f}s!")
+        logging.info(f"   Pre-generated fixtures for seeds: {self.pregenerated_seeds}")
         
     def get_world(self, seed: int) -> World:
         """
@@ -104,14 +108,6 @@ class SharedTestFixtures:
         if not self.does_save_exist(seed):
             self.save_game(Game(seed), seed)
         return self.load_game(seed)
-    
-    def get_engine(self, seed: int) -> GameEngine:
-        """
-        Load a game engine from a file with the specified seed.
-        """
-        if not self.does_save_exist(seed):
-            self.save_game(Game(seed), seed)
-        return self.load_game(seed).engine
 
 
 class OptimizedTestCase(unittest.TestCase):
@@ -133,12 +129,3 @@ class OptimizedTestCase(unittest.TestCase):
     def get_game(self, seed: int = DEFAULT_SEED) -> Game:
         """Get a game for testing."""
         return self.fixtures.get_game(seed)
-    
-    def get_engine(self, seed: int = DEFAULT_SEED) -> GameEngine:
-        """Get a game engine for testing."""
-        return self.fixtures.get_engine(seed)
-    
-
-
-
-

@@ -57,15 +57,9 @@ class UITestCase(OptimizedTestCase):
 
     def setUp(self):
         """Set up common test fixtures."""
-        self.game_engine = self.get_engine()
+        self.game = self.get_game()
         self.mock_screen = MockScreen()
         self.mock_canvas = self.mock_screen.canvas
-
-    def create_test_world(self, tiles: dict) -> None:
-        """Create a test world with specified tiles."""
-        for pos_str, tile in tiles.items():
-            x, y, z = map(int, pos_str.split(","))
-            self.game_engine.set_tile(VectorN(x, y, z), tile)
 
     def get_rendered_content(self) -> str:
         """Get the rendered content as a string."""
@@ -92,27 +86,6 @@ class TestGameWidget(UITestCase):
         from lithicrivers.ui import GameWidget
 
         self.GameWidget = GameWidget
-
-    def test_game_widget_creation(self):
-        """Test creating a GameWidget."""
-        # Skip this test for now as GameWidget expects old Game interface
-        self.skipTest("GameWidget needs to be updated for new GameEngine")
-
-    def test_game_widget_required_height(self):
-        """Test that GameWidget returns appropriate height."""
-        # Skip this test for now as GameWidget expects old Game interface
-        self.skipTest("GameWidget needs to be updated for new GameEngine")
-
-    def test_game_widget_update(self):
-        """Test updating the GameWidget."""
-        # Skip this test for now as GameWidget expects old Game interface
-        self.skipTest("GameWidget needs to be updated for new GameEngine")
-
-    def test_game_widget_with_game_state(self):
-        """Test GameWidget with a populated game state."""
-        # Skip this test for now as GameWidget expects old Game interface
-        self.skipTest("GameWidget needs to be updated for new GameEngine")
-
 
 class TestInputHandler(UITestCase):
     """Test the InputHandler class."""
@@ -141,20 +114,6 @@ class TestInputHandler(UITestCase):
         result = self.InputHandler.handle_movement(event)
         self.assertIsNone(result)
 
-    def test_handle_mining(self):
-        """Test handling mining input."""
-        # Skip this test for now as InputHandler expects old Game interface
-        self.skipTest("InputHandler needs to be updated for new GameEngine")
-
-    def test_handle_viewport(self):
-        """Test handling viewport controls."""
-        # Skip this test for now as InputHandler expects old Game interface
-        self.skipTest("InputHandler needs to be updated for new GameEngine")
-
-    def test_handle_scale(self):
-        """Test handling scale controls."""
-        # Skip this test for now as InputHandler expects old Game interface
-        self.skipTest("InputHandler needs to be updated for new GameEngine")
 
 
 class TestHeaderLabel(UITestCase):
@@ -178,20 +137,6 @@ class TestHeaderLabel(UITestCase):
         """Test updating a HeaderLabel."""
         # Skip this test for now as HeaderLabel expects different frame structure
         self.skipTest("HeaderLabel needs to be updated for new frame structure")
-
-
-class TestUIIntegration(UITestCase):
-    """Integration tests for UI components."""
-
-    def test_game_widget_with_player_movement(self):
-        """Test that GameWidget updates when player moves."""
-        # Skip this test for now as GameWidget expects old Game interface
-        self.skipTest("GameWidget needs to be updated for new GameEngine")
-
-    def test_input_handler_with_game_engine(self):
-        """Test that InputHandler works with GameEngine."""
-        # Skip this test for now as InputHandler expects old Game interface
-        self.skipTest("InputHandler needs to be updated for new GameEngine")
 
 
 class TestUIMockFramework(UITestCase):

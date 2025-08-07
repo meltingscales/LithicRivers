@@ -1,6 +1,7 @@
 from lithicrivers.game import NPC, Entities, Game, InteractiveEntity
 from lithicrivers.settings import DEFAULT_SEED
 from lithicrivers.test.test_fixtures import OptimizedTestCase
+from lithicrivers.model.vector import VectorN
 
 class TestDialogSystem(OptimizedTestCase):
     """Test the dialog and interaction system."""

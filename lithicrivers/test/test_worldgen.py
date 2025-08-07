@@ -336,19 +336,3 @@ class TestIntegrationWithGame(OptimizedTestCase):
         self.assertTrue(
             differences_found, "Different seeds should produce different games"
         )
-
-    def test_game_engine_with_seed(self):
-        """Test creating a GameEngine with a seed."""
-        
-        # Use shared fixtures instead of creating new engines
-        engine1 = self.get_engine(seed=42)
-        engine2 = self.get_engine(seed=42)
-        engine3 = self.get_engine(seed=12345)
-
-        # Same seed should produce identical game engines
-        self.assertEqual(engine1.seed, engine2.seed)
-        self.assertEqual(engine1.state.player_position, engine2.state.player_position)
-
-        # Different seeds should produce different game engines
-        self.assertEqual(engine1.seed, 42)
-        self.assertEqual(engine3.seed, 12345)

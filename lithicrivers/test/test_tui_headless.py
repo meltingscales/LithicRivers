@@ -26,7 +26,6 @@ from lithicrivers.constants import (
     VEC_WEST,
 )
 from lithicrivers.game import Game, Tiles
-from lithicrivers.game_engine import GameEngine
 from lithicrivers.model.vector import VectorN
 from lithicrivers.settings import DEFAULT_SEED
 from lithicrivers.ui import GameWidget, HelpPage, InputHandler, WorldMap
@@ -45,7 +44,6 @@ class HeadlessTUITestCase(OptimizedTestCase):
             )
 
         # Use shared instances instead of creating new ones
-        self.game_engine = self.get_engine()
         self.game = self.get_game()
         self.screen = None
 
