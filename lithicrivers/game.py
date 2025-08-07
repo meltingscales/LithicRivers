@@ -1246,7 +1246,6 @@ class ChunkedWorldData(Cloneable, ShutDownable):
         # Mark as generated to avoid duplicate work
         for chunk_key in chunk_coords:
             self._generated_chunks.add(chunk_key)
-        results = []
         with ProcessPoolExecutor() as pool:
             future_to_chunk = {
                 pool.submit(_generate_chunk_data_for_process, seed, cx, cy, cz): (cx, cy, cz)

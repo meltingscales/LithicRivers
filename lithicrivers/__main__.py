@@ -6,7 +6,7 @@ Copyright (c) 2024 Henry Post. All rights reserved.
 from pathlib import Path
 import sys
 import pickle
-
+import time
 from asciimatics.exceptions import ResizeScreenError
 from asciimatics.screen import Screen
 
@@ -66,9 +66,10 @@ if __name__ == "__main__":
     print("Game is no longer running :3c")
     print("Goodbye! Please wait for worldgen and thread pool to shut down.")
 
-    print("! " * 20)
-    print("DO NOT EXIT THE GAME OR PRESS CTRL-C!! YOU WILL LOSE GAME PROGRESS IF YOU DO!")
-    print("! " * 20)
+    for i in range(5):
+        print("! " * 20)
+        print("DO NOT EXIT THE GAME OR PRESS CTRL-C! YOU WILL LOSE GAME PROGRESS IF YOU DO!")
+    time.sleep(2)
 
     GAME.shutdown()
 
