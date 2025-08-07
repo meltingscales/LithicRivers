@@ -20,18 +20,20 @@ help: ## Show this help message
 	@echo ""
 	@echo "🧪 TESTING"
 	@echo "---------"
-	@echo "  test                 Run all tests (with TERM detection)"
-	@echo "  test-parallel        Run unit tests in parallel (faster)"
-	@echo "  test-quick           Run quick tests only"
+	@echo "  test                 	 Run all tests (with TERM detection)"
+	@echo "  test-specific        	 Run a specific test (requires SPECIFIC_TEST env var)"
+	@echo "  test-parallel        	 Run unit tests in parallel (faster)"
+	@echo "  test-quick           	 Run quick tests only"
 	@echo "  test-profile-speedscope Profile test suite with speedscope"
-	@echo "  generate-test-worlds Pre-generate test world fixtures"
+	@echo "  generate-test-worlds 	 Pre-generate test world fixtures"
 	@echo ""
 	@echo "🔍 DEMO"
 	@echo "------"
-	@echo "  demo                 Run demo"
+	@echo "  demo                 	 Run demo"
 	@echo ""
 	@echo "🎮 GAME"
 	@echo "------"
+	@echo "  delete-game-saves    Delete game saves"
 	@echo "  run                  Run the game"
 	@echo "  run-debug            Run the game with remote debugging"
 	@echo "  debug-attach         Show PyCharm debugging instructions"
@@ -71,7 +73,7 @@ install: ## Install dependencies
 	$(UV_CMD) sync --extra dev
 
 # Testing (consolidated)
-test: ## Run all tests with smart detection
+test: generate-test-worlds ## Run all tests with smart detection
 	@echo "🧪 Running comprehensive test suite..."
 	@echo "📊 Running unit tests with coverage..."
 	TESTING=1 $(UV_CMD) run coverage run -m unittest discover lithicrivers
@@ -88,6 +90,17 @@ test: ## Run all tests with smart detection
 		$(UV_CMD) run python -m unittest lithicrivers.test.test_tui_visual; \
 	fi
 	@echo "✅ All tests completed!"
+
+test-specific: ## Run a specific test (requires SPECIFIC_TEST env var)
+	@echo "🧪 Running specific test..."
+	if [ -z "$$SPECIFIC_TEST" ]; then \
+		echo "⚠️ SPECIFIC_TEST env var not set - running 2 sample tests only"; \
+		$(UV_CMD) run python -m unittest lithicrivers.test.test_tui_simple; \
+		$(UV_CMD) run python -m unittest lithicrivers.test.test_tui_advanced; \
+	else \
+		TESTING=1 $(UV_CMD) run coverage run -m unittest $(SPECIFIC_TEST); \
+	fi
+	@echo "✅ Specific test completed!"
 
 generate-test-worlds: ## Pre-generate test world fixtures
 	@echo "🏗️  Pre-generating test world fixtures..."
@@ -134,6 +147,11 @@ generate-keychords: ## Generate platform-specific keychord mappings
 	$(UV_CMD) run python lithicrivers/scripts/generate_platform_keychords.py
 
 # Game
+
+delete-game-saves: ## Delete game saves
+	@echo "🗑️  Deleting saves..."
+	rm -rf lithicrivers-saves
+
 run: ## Run the game
 	$(UV_CMD) run python -m lithicrivers
 

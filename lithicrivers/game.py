@@ -12,14 +12,14 @@ import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Union, Protocol, TypeVar, Callable
+from typing import Optional, Union
 
 from lithicrivers.colors import COLOR_MANAGER
 from lithicrivers.constants import VEC_EAST, VEC_NORTH, VEC_SOUTH, VEC_WEST
 from lithicrivers.model.generictype import T
 from lithicrivers.model.model import RenderedData, Viewport
 from lithicrivers.model.vector import VectorN
-from lithicrivers.model.body import Body, BodyPartState
+from lithicrivers.model.body import Body
 from lithicrivers.settings import (
     DEFAULT_PLAYER_NAME,
     DEFAULT_PLAYER_POSITION,
@@ -61,7 +61,14 @@ def generate_sprite_repeat(char: str, scale: int = 1) -> str:
     return ret
 
 
+class ShutDownable:
+    """Interface for objects that can be shut down. Safe to delete object after shutting down."""
+    def shutdown(self) -> None:
+        """Shut down this object. Release all locks and close all threads."""
+        pass
+
 class Cloneable:
+    """Interface for objects that can be cloned."""
     def clone(self) -> "Cloneable":
         """Clone this object. Override if you want to not clone specific fields."""
         return copy.deepcopy(self)
@@ -1134,7 +1141,7 @@ def _generate_chunk_data_for_process(seed, chunk_x, chunk_y, chunk_z):
     # Return as a dict mapping pos_str to tile (must be pickleable)
     return (chunk_x, chunk_y, chunk_z, chunk_data)
 
-class ChunkedWorldData:
+class ChunkedWorldData(Cloneable, ShutDownable):
     """
     Efficient world data storage using chunked 3D arrays.
     Similar to Minecraft's world storage system.
@@ -1431,7 +1438,7 @@ class ChunkedWorldData:
                             yield (pos.serialize(), tile)
 
 
-class World(EntityListener):
+class World(Cloneable, ShutDownable, EntityListener):
     """
     A world contains world data and manages the world state.
     """
@@ -1477,6 +1484,10 @@ class World(EntityListener):
         cloned_world._reestablish_entity_listeners()
         return cloned_world
     
+    def shutdown(self) -> None:
+        """Shutdown the world."""
+        self.data.shutdown()
+
     def _reestablish_entity_listeners(self) -> None:
         """Re-establish entity listeners after deserialization or cloning."""
         # Clear existing listeners and re-add the world as a listener to all entities
@@ -1761,7 +1772,7 @@ class World(EntityListener):
         return True
 
 
-class Game:
+class Game(Cloneable, ShutDownable):
     """Main game class. Meant to hold all game state. Can be pickled to save the game."""
     def __init__(
         self,
@@ -1820,8 +1831,9 @@ class Game:
         self.world.pregen_chunks(radius)
 
     def shutdown(self) -> None:
-        """Shutdown the game."""
-        self.world.data.shutdown()
+        """Shutdown the game. Does not destroy any resources. Meant to be called before serializing."""
+        self.world.shutdown()
+        self.running = False
 
     def get_tile_at_player_feet(self) -> Tile:
         return self.world.get_tile(self.player.position)
