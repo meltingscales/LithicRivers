@@ -22,6 +22,7 @@ dev = [
     "pytest",
     "pytest-cov",
     "pytest-mock",
+    "pytest-xdist",
     "ruff",
     "mypy",
     "pre-commit",
