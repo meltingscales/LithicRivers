@@ -1,4 +1,4 @@
-from lithicrivers.constants import VEC_NORTH, VEC_SOUTH, VEC_EAST, VEC_WEST
+from lithicrivers.constants import VEC_EAST, VEC_NORTH, VEC_SOUTH, VEC_WEST
 from lithicrivers.game.entities import Entity
 from lithicrivers.game.interfaces import SpriteRenderable
 from lithicrivers.model.vector import VectorN
@@ -18,7 +18,9 @@ class NPC(Entity, SpriteRenderable):
         from lithicrivers.sprite_loader import get_sprite_loader
 
         sprite_loader = get_sprite_loader()
-        sprite_data = sprite_loader.load_sprite(name.lower().replace(" ", "_"), "entities")
+        sprite_data = sprite_loader.load_sprite(
+            name.lower().replace(" ", "_"), "entities"
+        )
 
         # Use external sprite data
         self.sprite_sheet = sprite_data.sprites
@@ -123,7 +125,9 @@ class InteractiveEntity(Entity, SpriteRenderable):
         from lithicrivers.sprite_loader import get_sprite_loader
 
         sprite_loader = get_sprite_loader()
-        sprite_data = sprite_loader.load_sprite(name.lower().replace(" ", "_"), "entities")
+        sprite_data = sprite_loader.load_sprite(
+            name.lower().replace(" ", "_"), "entities"
+        )
 
         # Use external sprite data
         self.sprite_sheet = sprite_data.sprites
@@ -209,15 +213,15 @@ class StumblingSheep(InteractiveEntity):
         # This ensures the same behavior for the same seed
         # Get gametick from world if available, otherwise use 0
         gametick = 0
-        if hasattr(self, '_listeners'):
+        if hasattr(self, "_listeners"):
             for listener in self._listeners:
-                if hasattr(listener, 'gametick'):
+                if hasattr(listener, "gametick"):
                     gametick = listener.gametick
                     break
 
         # Only use deterministic seeding if not in a test environment
         # This allows mocking to work in tests
-        if not hasattr(random, '_test_mode'):
+        if not hasattr(random, "_test_mode"):
             random.seed(f"sheep_{self.position.serialize()}_{gametick}")
 
         if random.random() < 0.1:  # 10% chance to move each tick

@@ -86,6 +86,7 @@ class TestGameWidget(UITestCase):
 
         self.GameWidget = GameWidget
 
+
 class TestInputHandler(UITestCase):
     """Test the InputHandler class."""
 
@@ -112,7 +113,6 @@ class TestInputHandler(UITestCase):
         event = MockKeyboardEvent(ord("x"))
         result = self.InputHandler.handle_movement(event)
         self.assertIsNone(result)
-
 
 
 class TestHeaderLabel(UITestCase):
@@ -164,4 +164,3 @@ class TestUIMockFramework(UITestCase):
         """Test that MockKeyboardEvent works correctly."""
         event = MockKeyboardEvent(ord("a"))
         self.assertEqual(event.key_code, ord("a"))
-

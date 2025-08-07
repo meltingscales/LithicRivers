@@ -23,12 +23,10 @@ from lithicrivers.constants import (
     VEC_UP,
     VEC_WEST,
 )
-from lithicrivers.game.game import Game
 from lithicrivers.game.core import Tiles
 from lithicrivers.model.vector import VectorN
-from lithicrivers.settings import DEFAULT_SEED
-from lithicrivers.ui import KEYMAP, InputHandler
 from lithicrivers.test.test_fixtures import OptimizedTestCase
+from lithicrivers.ui import KEYMAP, InputHandler
 
 
 class SimpleTUITestCase(OptimizedTestCase):

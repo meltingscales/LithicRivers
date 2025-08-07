@@ -5,15 +5,16 @@ This module provides seeded randomness for reproducible world generation.
 
 import random
 import threading
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from typing import Any, Optional
 
-from lithicrivers.game.tiles import Tile, Tiles, TilePalette
+from lithicrivers.game.tiles import Tile, TilePalette, Tiles
 from lithicrivers.logging_config import get_logger
 from lithicrivers.model.vector import VectorN
+from lithicrivers.procedural_dungeon_generator import (
+    create_procedural_generator,
+)
 from lithicrivers.structure_generator import create_structure_manager
-from lithicrivers.procedural_dungeon_generator import create_procedural_generator, DungeonType
 
 logger = get_logger(__name__)
 
@@ -42,9 +43,9 @@ class ChunkCache:
     def __getstate__(self) -> object:
         state = self.__dict__.copy()
         # Don't serialize the lock - we'll recreate it on load
-        del state['lock']
+        del state["lock"]
         return state
-    
+
     def __setstate__(self, state: object) -> None:
         self.__dict__.update(state)
         self.lock = threading.RLock()
@@ -52,6 +53,7 @@ class ChunkCache:
     def get_chunk_key(self, pos: VectorN) -> tuple[int, int, int]:
         """Get chunk coordinates for a position."""
         from lithicrivers.settings import CHUNK_SIZE
+
         chunk_size = CHUNK_SIZE
         # Handle None values safely
         pos_x = pos.x if pos.x is not None else 0
@@ -85,10 +87,15 @@ class ChunkCache:
                 del self.cache[oldest_key]
 
     def pre_generate_chunk(
-        self, chunk_x: int, chunk_y: int, chunk_z: int, generator: "SeededWorldGenerator"
+        self,
+        chunk_x: int,
+        chunk_y: int,
+        chunk_z: int,
+        generator: "SeededWorldGenerator",
     ) -> None:
         """Pre-generate a chunk in background."""
         from lithicrivers.settings import CHUNK_SIZE
+
         chunk_size = CHUNK_SIZE
         start_x = chunk_x * chunk_size
         start_y = chunk_y * chunk_size
@@ -389,16 +396,19 @@ class SeededWorldGenerator:
                 else:
                     return Tiles.dirt()
 
-    def _generate_complete_chunk(self, chunk_x: int, chunk_y: int, chunk_z: int) -> None:
+    def _generate_complete_chunk(
+        self, chunk_x: int, chunk_y: int, chunk_z: int
+    ) -> None:
         """
         Generate a complete chunk including terrain and structures in a single thread.
-        
+
         Args:
             chunk_x: Chunk X coordinate
-            chunk_y: Chunk Y coordinate  
+            chunk_y: Chunk Y coordinate
             chunk_z: Chunk Z coordinate
         """
         from lithicrivers.settings import CHUNK_SIZE
+
         chunk_size = CHUNK_SIZE
         start_x = chunk_x * chunk_size
         start_y = chunk_y * chunk_size
@@ -417,12 +427,12 @@ class SeededWorldGenerator:
         chunk_center = VectorN(start_x, start_y, start_z)
         chunk_seed = hash((self.seed.seed, chunk_x, chunk_y, chunk_z))
         chunk_rng = random.Random(chunk_seed)
-        
+
         # Generate structures in this chunk
         self.structure_manager.generate_structures_for_chunk(
             chunk_data, chunk_center, chunk_size // 2, chunk_rng
         )
-        
+
         # Generate procedural dungeons in this chunk
         self.procedural_generator.generate_dungeons_for_chunk(
             chunk_data, chunk_center, chunk_size // 2, chunk_rng
@@ -475,6 +485,7 @@ class SeededWorldGenerator:
 
         # Generate structures in chunks for better distribution
         from lithicrivers.settings import CHUNK_SIZE
+
         chunk_size = CHUNK_SIZE
 
         # Handle None values safely
@@ -499,7 +510,7 @@ class SeededWorldGenerator:
                     self.structure_manager.generate_structures_for_chunk(
                         world_data, chunk_center, chunk_size // 2, chunk_rng
                     )
-                    
+
                     # Generate procedural dungeons in this chunk
                     self.procedural_generator.generate_dungeons_for_chunk(
                         world_data, chunk_center, chunk_size // 2, chunk_rng
@@ -573,5 +584,3 @@ class Chunk:
                     if self.blocks[x][y][z] != 0:
                         return False
         return True
-
-

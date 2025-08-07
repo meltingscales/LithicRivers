@@ -2,9 +2,9 @@ import os.path
 import unittest
 from pathlib import Path
 
-from lithicrivers.game.core import weighted_choice, Tiles
-from lithicrivers.worldgen import ChunkedWorldData
+from lithicrivers.game.core import Tiles, weighted_choice
 from lithicrivers.model.vector import VectorN
+from lithicrivers.worldgen import ChunkedWorldData
 
 filename = Path("testWorld.lithicriversworlddata")
 

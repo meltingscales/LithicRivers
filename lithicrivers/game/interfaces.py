@@ -5,6 +5,7 @@ from lithicrivers.textutil import generate_sprite_repeat
 
 class ShutDownable:
     """Interface for objects that can be shut down. Safe to delete object after shutting down."""
+
     def shutdown(self) -> None:
         """Shut down this object. Release all locks and close all threads."""
         pass
@@ -12,6 +13,7 @@ class ShutDownable:
 
 class Cloneable:
     """Interface for objects that can be cloned."""
+
     def clone(self) -> "Cloneable":
         """Clone this object. Override if you want to not clone specific fields."""
         return copy.deepcopy(self)

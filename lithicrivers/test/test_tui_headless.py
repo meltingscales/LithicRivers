@@ -25,12 +25,10 @@ from lithicrivers.constants import (
     VEC_SOUTHWEST,
     VEC_WEST,
 )
-from lithicrivers.game.game import Game
 from lithicrivers.game.core import Tiles
 from lithicrivers.model.vector import VectorN
-from lithicrivers.settings import DEFAULT_SEED
-from lithicrivers.ui import GameWidget, HelpPage, InputHandler, WorldMap
 from lithicrivers.test.test_fixtures import OptimizedTestCase
+from lithicrivers.ui import GameWidget, HelpPage, InputHandler, WorldMap
 
 
 class HeadlessTUITestCase(OptimizedTestCase):

@@ -39,7 +39,7 @@ if __name__ == "__main__":
 
     # Initialize save manager
     save_manager = GameSaveManager()
-    
+
     # Try to load existing save, creating a new one if it doesn't exist
     GAME = save_manager.load_game_or_create_new()
 
@@ -49,15 +49,17 @@ if __name__ == "__main__":
     while GAME.running:
         try:
             logger.debug("Running Screen.wrapper()")
-            Screen.wrapper(demo, catch_interrupt=True, arguments=[last_scene, GAME, save_manager])
-            
+            Screen.wrapper(
+                demo, catch_interrupt=True, arguments=[last_scene, GAME, save_manager]
+            )
+
             # Check for automatic snapshot creation
             if save_manager.should_create_automatic_snapshot(GAME.gametick):
                 logger.info(f"Creating automatic snapshot at tick {GAME.gametick}")
                 save_manager.create_automatic_snapshot_if_needed(GAME)
                 # Clean up old snapshots to prevent disk space issues
                 save_manager.cleanup_old_snapshots(max_snapshots=10)
-                
+
         except StopGameError:
             logger.debug("Caught StopGameError!")
             break
@@ -71,7 +73,9 @@ if __name__ == "__main__":
 
     for i in range(5):
         print("! " * 20)
-        print("DO NOT EXIT THE GAME OR PRESS CTRL-C! YOU WILL LOSE GAME PROGRESS IF YOU DO!")
+        print(
+            "DO NOT EXIT THE GAME OR PRESS CTRL-C! YOU WILL LOSE GAME PROGRESS IF YOU DO!"
+        )
     time.sleep(2)
 
     # Save the game using the save manager
@@ -79,7 +83,7 @@ if __name__ == "__main__":
     success = save_manager.save_game(GAME)
     if success:
         print(f"✅ Game saved successfully to {save_manager.saves_folder}")
-        
+
         # Create a snapshot for backup
         print("Creating backup snapshot...")
         snapshot_success = save_manager.create_snapshot(GAME)
@@ -89,7 +93,6 @@ if __name__ == "__main__":
             print("⚠️  Failed to create backup snapshot")
     else:
         print("❌ Failed to save game!")
-
 
     exit(0)
 

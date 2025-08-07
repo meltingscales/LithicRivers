@@ -139,6 +139,7 @@ class SetTickRateAction:
         new_state.tick_rate = max(1, self.tick_rate)  # Ensure minimum tick rate of 1
         return new_state
 
+
 class Inventory:
     """Inventory system for the game."""
 

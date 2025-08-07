@@ -1,6 +1,6 @@
 from lithicrivers.model.vector import VectorN
-from lithicrivers.ui import _generate_entity_selection_message
 from lithicrivers.test.test_fixtures import OptimizedTestCase
+from lithicrivers.ui import _generate_entity_selection_message
 
 
 class TestEntityMessages(OptimizedTestCase):

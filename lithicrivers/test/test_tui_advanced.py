@@ -167,7 +167,6 @@ class AdvancedUITestCase(OptimizedTestCase):
         self.mock_frame = MockFrame(self.mock_screen)
         self.mock_canvas = self.mock_screen.canvas
 
-
     def get_rendered_content(self) -> str:
         """Get the rendered content as a string."""
         return self.mock_canvas.get_content_string()
@@ -247,7 +246,6 @@ class TestGameWidgetAdvanced(AdvancedUITestCase):
         # Set up initial world
         self.game = self.get_game()
         self.game.pregen_chunks(radius=1)
-
 
         widget = GameWidget(self.game)
         widget._frame = self.mock_frame

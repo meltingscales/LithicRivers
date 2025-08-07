@@ -8,6 +8,7 @@ from typing import Union
 
 from lithicrivers.colors import COLOR_MANAGER
 
+
 def corrupt_text(text: str, corruption_rate: float = 0.01) -> str:
     """
     Randomly replaces characters in text with a random glitchy ASCII symbol

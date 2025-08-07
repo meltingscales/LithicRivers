@@ -4,8 +4,9 @@ Copyright (c) 2024 HenryFBP. All rights reserved.
 """
 
 from unittest.mock import Mock
-from lithicrivers.ui import BodyPage
+
 from lithicrivers.test.test_fixtures import OptimizedTestCase
+from lithicrivers.ui import BodyPage
 
 
 class TestBodyPage(OptimizedTestCase):
@@ -21,10 +22,10 @@ class TestBodyPage(OptimizedTestCase):
         mock_screen = Mock()
         mock_screen.height = 20
         mock_screen.width = 80
-        
+
         # Create BodyPage
         body_page = BodyPage(mock_screen, self.shared_game)
-        
+
         # Verify it was created successfully
         assert body_page is not None
         assert body_page.game == self.shared_game
@@ -35,10 +36,10 @@ class TestBodyPage(OptimizedTestCase):
         mock_screen = Mock()
         mock_screen.height = 20
         mock_screen.width = 80
-        
+
         # Create BodyPage without game
         body_page = BodyPage(mock_screen, None)
-        
+
         # Verify it was created successfully
         assert body_page is not None
         assert body_page.game is None
@@ -49,13 +50,13 @@ class TestBodyPage(OptimizedTestCase):
         mock_screen = Mock()
         mock_screen.height = 20
         mock_screen.width = 80
-        
+
         # Create BodyPage
         body_page = BodyPage(mock_screen, self.shared_game)
-        
+
         # Update the display
         body_page.update_body_display()
-        
+
         # Verify the label contains body information
         assert body_page.body_label is not None
         assert "ANDROID BODY STATUS" in body_page.body_label.text
@@ -74,23 +75,30 @@ class TestBodyPage(OptimizedTestCase):
         mock_screen = Mock()
         mock_screen.height = 20
         mock_screen.width = 80
-        
+
         player = self.shared_game.player
-        
+
         # Create BodyPage
         body_page = BodyPage(mock_screen, self.shared_game)
-        
+
         # Update the display
         body_page.update_body_display()
-        
+
         # Verify player data is displayed
         assert f"Health: {player.health}" in body_page.body_label.text
         assert f"Stamina: {player.stamina}" in body_page.body_label.text
-        
+
         # Verify body parts are shown
-        for part_name in ["Head", "Torso", "Left Arm", "Right Arm", "Left Leg", "Right Leg"]:
+        for part_name in [
+            "Head",
+            "Torso",
+            "Left Arm",
+            "Right Arm",
+            "Left Leg",
+            "Right Leg",
+        ]:
             assert part_name in body_page.body_label.text
-        
+
         # Verify speed modifiers are shown
         walk_speed = player.get_walk_speed_modifier()
         break_speed = player.get_break_speed_modifier()
@@ -103,13 +111,13 @@ class TestBodyPage(OptimizedTestCase):
         mock_screen = Mock()
         mock_screen.height = 20
         mock_screen.width = 80
-        
+
         # Create BodyPage
         body_page = BodyPage(mock_screen, self.shared_game)
-        
+
         # Update the display
         body_page.update_body_display()
-        
+
         # Verify action capabilities are shown
         actions = ["WALK", "MINE", "CRAFT", "PUSH", "INTERACT"]
         for action in actions:
@@ -121,19 +129,22 @@ class TestBodyPage(OptimizedTestCase):
         mock_screen = Mock()
         mock_screen.height = 20
         mock_screen.width = 80
-        
+
         # Create BodyPage
         body_page = BodyPage(mock_screen, self.shared_game)
-        
+
         # Update the display
         body_page.update_body_display()
-        
+
         # Verify repair requirements section exists
         assert "REPAIR REQUIREMENTS:" in body_page.body_label.text
-        
+
         # Should show requirements for damaged/missing parts
         # (Right Arm and Right Leg should be damaged/missing by default)
-        assert "Right Arm:" in body_page.body_label.text or "No repairs needed!" in body_page.body_label.text
+        assert (
+            "Right Arm:" in body_page.body_label.text
+            or "No repairs needed!" in body_page.body_label.text
+        )
 
     def test_body_page_body_descriptions(self):
         """Test that BodyPage shows body part descriptions."""
@@ -141,20 +152,27 @@ class TestBodyPage(OptimizedTestCase):
         mock_screen = Mock()
         mock_screen.height = 20
         mock_screen.width = 80
-        
+
         # Create BodyPage
         body_page = BodyPage(mock_screen, self.shared_game)
-        
+
         # Update the display
         body_page.update_body_display()
-        
+
         # Verify body descriptions section exists
         assert "BODY DESCRIPTIONS:" in body_page.body_label.text
-        
+
         # Should show descriptions for all body parts
-        for part_name in ["Head", "Torso", "Left Arm", "Right Arm", "Left Leg", "Right Leg"]:
+        for part_name in [
+            "Head",
+            "Torso",
+            "Left Arm",
+            "Right Arm",
+            "Left Leg",
+            "Right Leg",
+        ]:
             assert part_name in body_page.body_label.text
 
 
 if __name__ == "__main__":
-    pytest.main([__file__]) 
+    pytest.main([__file__])
