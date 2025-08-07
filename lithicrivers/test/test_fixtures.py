@@ -3,14 +3,15 @@ Shared test fixtures for optimizing unit test performance.
 This module provides pre-generated worlds and other expensive objects that can be reused across tests.
 """
 
-import unittest
-from lithicrivers.game.game import World, Game
-from lithicrivers.settings import DEFAULT_SEED
-from pathlib import Path
-import pickle
-import time
-import os
 import logging
+import pickle
+import unittest
+from pathlib import Path
+
+from lithicrivers.game.core import Game, World
+from lithicrivers.settings import DEFAULT_SEED
+
+
 class SharedTestFixtures:
     """
     Class that manages shared test fixtures to reduce test execution time.

@@ -90,7 +90,3 @@ class TestForcedDungeon(OptimizedTestCase):
         
         self.assertEqual(dungeon_tiles1, dungeon_tiles2,
                         "Dungeon tile counts should be identical with same seed")
-
-
-if __name__ == "__main__":
-    unittest.main() 

@@ -5,9 +5,7 @@ Copyright (c) 2024 HenryFBP. All rights reserved.
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
-
-from lithicrivers.model.vector import VectorN
+from typing import Dict
 
 
 class BodyPartType(Enum):

@@ -73,7 +73,3 @@ class TestNoOnDemandStructures(OptimizedTestCase):
         
         self.assertGreater(dungeon_tiles_found, 0, "Dungeon should have iron scrap tiles")
         print(f"Found {dungeon_tiles_found} iron scrap tiles from dungeon")
-
-
-if __name__ == "__main__":
-    unittest.main() 

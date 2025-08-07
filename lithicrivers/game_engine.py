@@ -4,15 +4,15 @@ This module is designed to be easily testable and manipulatable programmatically
 """
 
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import TYPE_CHECKING, Optional, Protocol
 
 from lithicrivers.model.model import Viewport
 from lithicrivers.model.vector import VectorN
-from lithicrivers.settings import DEFAULT_PLAYER_POSITION, DEFAULT_VIEWPORT
+from lithicrivers.settings import DEFAULT_VIEWPORT
 
 if TYPE_CHECKING:
-    from lithicrivers.game.game import Item, Tile
+    from lithicrivers.game.core import Tile, Tiles
+    from lithicrivers.game.entities import Item
 
 
 @dataclass
@@ -98,7 +98,6 @@ class MineAction:
                     new_state.inventory.add_item(dropped_item)
 
             # Replace with empty tile
-            from lithicrivers.game.game import Tiles
 
             new_state.world_data[tile_key] = Tiles.empty()
 

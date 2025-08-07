@@ -1,6 +1,9 @@
 import unittest
 
-from lithicrivers.game.game import ChunkedWorldData, Game, Tiles, generate_sprite_repeat
+from lithicrivers.game.game import Game
+from lithicrivers.game.core import Tiles
+from lithicrivers.worldgen import ChunkedWorldData
+from lithicrivers.textutil import generate_sprite_repeat
 from lithicrivers.model.model import RenderedData, Viewport
 from lithicrivers.model.vector import VectorN
 from lithicrivers.settings import DEFAULT_SEED
