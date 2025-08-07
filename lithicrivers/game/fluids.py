@@ -1,86 +1,10 @@
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
-from lithicrivers.game.entities import Entity
-from lithicrivers.game.core import Tile
-from lithicrivers.game.interfaces import SpriteRenderable
+from lithicrivers.game.tiles import Tile
 from lithicrivers.model.vector import VectorN
 
-
-class Fluid(Entity, SpriteRenderable):
-    """
-    A fluid entity that can flow and spread across the world.
-    Fluids don't replace blocks but exist as separate entities.
-    """
-
-    def __init__(self, fluid_type: str, position: VectorN, amount: int = 1000, viscosity: float = 1.0):
-        super().__init__(name=f"{fluid_type}_fluid", position=position)
-        self.fluid_type = fluid_type
-        # Convert to integer amount (1-1000) to eliminate floating-point precision issues
-        self.amount = max(1, min(1000, int(amount)))  # Clamp between 1-1000
-        self.viscosity = viscosity  # How slowly the fluid flows (higher = slower)
-        self.max_amount = 1000  # Maximum amount per tile (integer)
-        self.spread_threshold = 800  # Amount at which fluid starts spreading (80% of max)
-
-        # Settlement optimization properties
-        self.settled = False  # Whether this fluid has reached equilibrium
-        self.last_spread_tick = -1  # Last tick when this fluid spread
-        self.stability_counter = 0  # How many ticks this fluid has been stable
-        self.settlement_threshold = 5  # Ticks of stability before marking as settled
-
-        # Initialize sprite sheet after fluid_type is set
-        SpriteRenderable.__init__(self, self.get_sprites())
-
-
-    def render_sprite(self, scale: int = 1) -> str:
-        """Render the fluid sprite."""
-        sprites = self.get_sprites()
-        if self.fluid_type not in sprites:
-            raise ValueError(f"Fluid type '{self.fluid_type}' not found in sprite data. Available types: {list(sprites.keys())}")
-
-        sprite_list = sprites[self.fluid_type]
-        if scale <= 0 or scale > len(sprite_list):
-            raise ValueError(f"Scale {scale} is out of bounds for fluid '{self.fluid_type}'. Valid range: 1-{len(sprite_list)}")
-
-        return sprite_list[scale-1]
-
-    def get_sprites(self) -> dict[str, list[str]]:
-        """Get all possible sprite representations of this fluid (for different scales, 1x1, 2x2, 3x3, etc.)"""
-        # Try to load from external sprite data first
-        from lithicrivers.sprite_loader import get_sprite_loader
-
-        sprite_loader = get_sprite_loader()
-        sprite_data = sprite_loader.load_sprite(self.fluid_type, "fluids")
-
-        if sprite_data:
-            # Use external sprite data
-            return {self.fluid_type: sprite_data.sprites}
-
-        # No fallback - throw exception if external data not found
-        raise ValueError(f"External sprite data not found for fluid type '{self.fluid_type}' in 'fluids' category")
-
-    def get_color(self) -> str:
-        """Get the color for this fluid."""
-        # Try to load from external sprite data first
-        from lithicrivers.sprite_loader import get_sprite_loader
-
-        sprite_loader = get_sprite_loader()
-        sprite_data = sprite_loader.load_sprite(self.fluid_type, "fluids")
-
-        if sprite_data:
-            # Use external sprite data
-            return sprite_data.color
-
-        # No fallback - throw exception if external data not found
-        raise ValueError(f"External sprite data not found for fluid type '{self.fluid_type}' in 'fluids' category")
-
-    def tick(self) -> None:
-        """Process fluid physics each tick."""
-        # Fluid physics are handled by FluidManager
-        pass
-
-    def copy(self) -> "Fluid":
-        """Create a copy of this fluid."""
-        return Fluid(self.fluid_type, self.position, self.amount, self.viscosity)
+if TYPE_CHECKING:
+    from lithicrivers.game.entities import Fluid
 
 
 class FluidManager:
@@ -91,7 +15,7 @@ class FluidManager:
 
     def __init__(self, world: "World"):
         self.world = world
-        self.fluids: dict[str, Fluid] = {}  # position_key -> Fluid
+        self.fluids: dict[str, "Fluid"] = {}  # position_key -> Fluid
         self.flow_directions = [
             VectorN(0, 0, 1),   # Down (gravity) - deeper into earth
             VectorN(-1, 0, 0),  # Left
@@ -100,7 +24,7 @@ class FluidManager:
             VectorN(0, 1, 0),   # South
         ]
 
-    def add_fluid(self, fluid: Fluid) -> None:
+    def add_fluid(self, fluid: "Fluid") -> None:
         """Add a fluid to the manager."""
         pos_key = self._get_position_key(fluid.position)
         if pos_key in self.fluids:
@@ -124,6 +48,7 @@ class FluidManager:
                     overflow = total_amount - existing.max_amount
                     if overflow > 0:
                         # Create overflow fluid that will spread
+                        from lithicrivers.game.entities import Fluid
                         overflow_fluid = Fluid(fluid.fluid_type, fluid.position, overflow, fluid.viscosity)
                         self.fluids[pos_key] = overflow_fluid
         else:
@@ -135,7 +60,7 @@ class FluidManager:
         if pos_key in self.fluids:
             del self.fluids[pos_key]
 
-    def get_fluid(self, position: VectorN) -> Optional[Fluid]:
+    def get_fluid(self, position: VectorN) -> Optional["Fluid"]:
         """Get fluid at a position."""
         pos_key = self._get_position_key(position)
         return self.fluids.get(pos_key)
@@ -162,7 +87,7 @@ class FluidManager:
             if not fluid.settled and fluid.amount >= fluid.spread_threshold:
                 self._spread_fluid(fluid, gametick)
 
-    def _spread_fluid(self, fluid: Fluid, gametick: int) -> None:
+    def _spread_fluid(self, fluid: "Fluid", gametick: int) -> None:
         """Spread fluid to adjacent tiles based on physics. Fully deterministic and not random at all."""
 
         # Early exit if already settled (redundant check for safety)
@@ -196,6 +121,7 @@ class FluidManager:
             # Distribute remainder to first few targets to ensure exact distribution
             target_amount = amount_per_target + (1 if i < remainder else 0)
             if target_amount > 0:  # Only create fluid if there's actually amount to spread
+                from lithicrivers.game.entities import Fluid
                 new_fluid = Fluid(fluid.fluid_type, target_pos, target_amount, fluid.viscosity)
                 self.add_fluid(new_fluid)
 
@@ -210,7 +136,7 @@ class FluidManager:
             if fluid.last_spread_tick != gametick:
                 fluid.stability_counter += 1
 
-    def _update_fluid_settlement(self, fluid: Fluid, gametick: int) -> None:
+    def _update_fluid_settlement(self, fluid: "Fluid", gametick: int) -> None:
         """Update the settlement status of a fluid based on its stability."""
         # Skip if already settled
         if fluid.settled:
@@ -237,7 +163,7 @@ class FluidManager:
                     neighbor_fluid.settled = False
                     neighbor_fluid.stability_counter = 0
 
-    def _can_hold_fluid(self, position: VectorN, tile: Optional["Tile"]) -> bool:
+    def _can_hold_fluid(self, position: VectorN, tile: Optional[Tile]) -> bool:
         """Check if a position can hold fluid."""
         if tile is None:
             return True  # Empty space can hold fluid
@@ -258,7 +184,7 @@ class FluidManager:
         """Get a string key for a position."""
         return pos.serialize()
 
-    def get_all_fluids(self) -> list[Fluid]:
+    def get_all_fluids(self) -> list["Fluid"]:
         """Get all fluids in the manager."""
         return list(self.fluids.values())
 
