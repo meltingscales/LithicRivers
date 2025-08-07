@@ -19,7 +19,7 @@ class SharedTestFixtures:
         self._test_saves_dir.mkdir(exist_ok=True)
         self._initialize_fixtures()
 
-    def _save_game(self, game: Game, seed: int):
+    def save_game(self, game: Game, seed: int):
         """Save a game to a file."""
         save_path = self._test_saves_dir / f"seed_{seed}.pkl"
         with save_path.open("wb") as f:
