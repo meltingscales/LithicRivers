@@ -45,6 +45,7 @@ class ColorEnum(Enum):
     CLOUD = WHITE  # Sky
     EMPTY = BLACK  # Void
     GOLD_ORE = YELLOW  # Gold
+    PLASTEEL_SCRAP = BLUE  # Steel
 
     # Player colors
     PLAYER = CYAN
@@ -92,6 +93,7 @@ class ColorManager:
             "Cloud": ColorEnum.CLOUD.value,
             "Empty": ColorEnum.EMPTY.value,
             "Gold Ore": ColorEnum.GOLD_ORE.value,
+            "Plasteel Scrap": ColorEnum.PLASTEEL_SCRAP.value,
         }
 
         # Item color mappings

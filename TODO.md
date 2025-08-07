@@ -206,8 +206,10 @@
 - 🔄 **IN PROGRESS**: Procedural dungeons v2: Overhaul this and just copy the algorithm from https://www.gamedeveloper.com/programming/procedural-dungeon-generation-algorithm
 - ✅ **COMPLETED**: Fluids system
 - in progress: steam API integration
+- ask ai: In @core.py , critique the `_generate_forced_structures` method. Is it possible it's not working as intended?
 - todo: changing chunk size seems to affect structure generation. fix this.
 - todo: cores are definitely being used by worldgen, but don't max out CPU. Why might this be? they only use like 8% CPU. (This is because of GIL. We need to switch to ProcessPoolExecutor.)
+- todo: MANUAL TASK: Go into `worldgen.py` and make a way to force a specific structure to generate, then fix `_generate_forced_structures`... Don't use AI as it seems to get confused.
 
 - save/load system where you can pick a save file from a list of saved games (build UI for this...)
 
