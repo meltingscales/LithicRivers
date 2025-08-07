@@ -5,15 +5,15 @@ Copyright (c) 2024 Henry Post. All rights reserved.
 
 from pathlib import Path
 import sys
-import pickle
 import time
 from asciimatics.exceptions import ResizeScreenError
 from asciimatics.screen import Screen
 
 from lithicrivers.game import Game
+from lithicrivers.game_save_manager import GameSaveManager
 from lithicrivers.logging_config import get_logger, setup_logging
 from lithicrivers.model.model import StopGameError
-from lithicrivers.settings import DEFAULT_SEED, GAME_NAME, LOGFILENAME, SAVES_FOLDER
+from lithicrivers.settings import DEFAULT_SEED, GAME_NAME, LOGFILENAME
 from lithicrivers.ui import demo
 
 # Setup logging
@@ -38,15 +38,11 @@ if __name__ == "__main__":
             print("⚠️  pydevd not installed. Install with: pip install pydevd")
             print("   Or use: uv add pydevd")
 
-    # load from file if it exists
-    if Path(SAVES_FOLDER).exists():
-        with open(f"{SAVES_FOLDER}/default-world.pkl", "rb") as f:
-            print("Loading save from {}".format(SAVES_FOLDER))
-            GAME: Game = pickle.load(f)
-            GAME.running = True
-    else:
-        print("No save found, creating new game...")
-        GAME = Game(seed=DEFAULT_SEED)
+    # Initialize save manager
+    save_manager = GameSaveManager()
+    
+    # Try to load existing save, creating a new one if it doesn't exist
+    GAME = save_manager.load_game_or_create_new()
 
     print(f"Welcome to {GAME_NAME}.\nSee '{LOGFILENAME}' for logs.")
 
@@ -54,7 +50,15 @@ if __name__ == "__main__":
     while GAME.running:
         try:
             logger.debug("Running Screen.wrapper()")
-            Screen.wrapper(demo, catch_interrupt=True, arguments=[last_scene, GAME])
+            Screen.wrapper(demo, catch_interrupt=True, arguments=[last_scene, GAME, save_manager])
+            
+            # Check for automatic snapshot creation
+            if save_manager.should_create_automatic_snapshot(GAME.gametick):
+                logger.info(f"Creating automatic snapshot at tick {GAME.gametick}")
+                save_manager.create_automatic_snapshot_if_needed(GAME)
+                # Clean up old snapshots to prevent disk space issues
+                save_manager.cleanup_old_snapshots(max_snapshots=10)
+                
         except StopGameError:
             logger.debug("Caught StopGameError!")
             break
@@ -71,13 +75,21 @@ if __name__ == "__main__":
         print("DO NOT EXIT THE GAME OR PRESS CTRL-C! YOU WILL LOSE GAME PROGRESS IF YOU DO!")
     time.sleep(2)
 
-    GAME.shutdown()
-
-    # Save to a pickle file
-    Path(SAVES_FOLDER).mkdir(parents=True, exist_ok=True)
-    with open(f"{SAVES_FOLDER}/default-world.pkl", "wb") as f:
-        print("Saving game to {}".format(SAVES_FOLDER))
-        pickle.dump(GAME, f)
+    # Save the game using the save manager
+    print("Saving game...")
+    success = save_manager.save_game(GAME)
+    if success:
+        print(f"✅ Game saved successfully to {save_manager.saves_folder}")
+        
+        # Create a snapshot for backup
+        print("Creating backup snapshot...")
+        snapshot_success = save_manager.create_snapshot(GAME)
+        if snapshot_success:
+            print(f"✅ Backup snapshot created in {save_manager.snapshots_folder}")
+        else:
+            print("⚠️  Failed to create backup snapshot")
+    else:
+        print("❌ Failed to save game!")
 
 
     exit(0)
