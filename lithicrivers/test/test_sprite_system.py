@@ -165,12 +165,12 @@ class TestSpriteLoader(unittest.TestCase):
         self.assertIsNot(sprite_data1, sprite_data2)
 
 
-class TestFluidSpriteRendering(unittest.TestCase):
+class TestFluidSpriteRendering(OptimizedTestCase):
     """Test fluid sprite rendering at different scales."""
     
     def setUp(self):
         """Set up test environment."""
-        self.game = Game(seed=42)
+        self.game = self.get_game()
     
     def test_water_sprite_scales(self):
         """Test water sprite rendering at all scales."""
@@ -279,7 +279,7 @@ class TestFluidSpriteRendering(unittest.TestCase):
             self.assertEqual(color, expected_color)
 
 
-class TestSpriteSystemIntegration(unittest.TestCase):
+class TestSpriteSystemIntegration(OptimizedTestCase):
     """Test integration between sprite loader and fluid rendering."""
     
     def test_external_sprite_loading(self):

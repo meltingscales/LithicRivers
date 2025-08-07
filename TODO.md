@@ -208,6 +208,7 @@
 - The `SharedTestFixtures` class is meant to speed up worldgen. Because of how Python handles unit tests, we can't use a singleton pattern to cache pre-generated worlds and other expensive objects. Instead, I want to implement saving/loading `World` objects (and other game-state-containing objects). instead of a memory-based cache, save the test worlds to a temp directory `lithicrivers-test-saves/` and delete them after tests finish with the `Makefile`. The main class to save is `Game`, but since all of its children will implement `clone`, we can just save the `Game` instance and it will save all of its children. 
 - in progress: steam API integration
 - todo: changing chunk size seems to affect structure generation. fix this.
+- todo: cores are definitely being used by worldgen, but don't max out CPU. Why might this be? they only use like 8% CPU. 
 
 - save/load system
 - save/load UI with a list of saved games
