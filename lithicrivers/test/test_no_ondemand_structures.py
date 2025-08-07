@@ -13,7 +13,7 @@ class TestNoOnDemandStructures(OptimizedTestCase):
     def test_structures_only_generated_during_worldgen(self):
         """Test that accessing tiles doesn't trigger structure generation."""
         # Create a world with a small radius to avoid the forced structures
-        world = self.get_world(seed=42, read_only=False)
+        world = self.get_world(seed=42)
         
         # Access a tile that should only have basic terrain
         # Use a position far from the forced structures (ship at 20,20,0 and dungeon at 50,50,-3)

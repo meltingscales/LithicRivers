@@ -24,7 +24,6 @@ from lithicrivers.constants import (
     VEC_WEST,
 )
 from lithicrivers.game import Game, Tiles
-from lithicrivers.game_engine import GameEngine
 from lithicrivers.model.vector import VectorN
 from lithicrivers.settings import DEFAULT_SEED
 from lithicrivers.ui import KEYMAP, InputHandler
@@ -36,7 +35,6 @@ class SimpleTUITestCase(OptimizedTestCase):
 
     def setUp(self):
         """Set up common test fixtures."""
-        self.game_engine = self.get_engine()
         self.game = self.get_game()
 
     def create_keyboard_event(self, key_code: int):

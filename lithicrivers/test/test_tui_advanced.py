@@ -12,8 +12,6 @@ import unittest
 from typing import Any, Optional
 from unittest.mock import Mock
 
-import asciimatics.screen
-import asciimatics.widgets
 from asciimatics.event import KeyboardEvent, MouseEvent
 
 from lithicrivers.constants import (
@@ -26,10 +24,8 @@ from lithicrivers.constants import (
     VEC_SOUTHWEST,
     VEC_WEST,
 )
-from lithicrivers.game import Game, Tiles
-from lithicrivers.game_engine import GameEngine
+from lithicrivers.game import Tiles
 from lithicrivers.model.vector import VectorN
-from lithicrivers.settings import DEFAULT_SEED
 from lithicrivers.test.test_fixtures import OptimizedTestCase
 from lithicrivers.ui import GameWidget, HelpPage, InputHandler, WorldMap
 
@@ -166,17 +162,11 @@ class AdvancedUITestCase(OptimizedTestCase):
                 "TERM environment variable not set - skipping terminal-dependent tests"
             )
 
-        self.game_engine = self.get_engine()
         self.game = self.get_game()
         self.mock_screen = AdvancedMockScreen(80, 24)
         self.mock_frame = MockFrame(self.mock_screen)
         self.mock_canvas = self.mock_screen.canvas
 
-    def create_test_world(self, tiles: dict) -> None:
-        """Create a test world with specified tiles."""
-        for pos_str, tile in tiles.items():
-            x, y, z = map(int, pos_str.split(","))
-            self.game_engine.set_tile(VectorN(x, y, z), tile)
 
     def get_rendered_content(self) -> str:
         """Get the rendered content as a string."""
@@ -255,12 +245,9 @@ class TestGameWidgetAdvanced(AdvancedUITestCase):
     def test_game_widget_with_player_movement(self):
         """Test that GameWidget updates when player moves."""
         # Set up initial world
-        self.create_test_world(
-            {
-                "0,0,0": Tiles.dirt(),
-                "1,0,0": Tiles.tree(),
-            }
-        )
+        self.game = self.get_game()
+        self.game.pregen_chunks(radius=1)
+
 
         widget = GameWidget(self.game)
         widget._frame = self.mock_frame

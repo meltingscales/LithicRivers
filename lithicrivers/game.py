@@ -61,6 +61,11 @@ def generate_sprite_repeat(char: str, scale: int = 1) -> str:
     return ret
 
 
+class Cloneable:
+    def clone(self) -> "Cloneable":
+        """Clone this object. Override if you want to not clone specific fields."""
+        return copy.deepcopy(self)
+
 class SpriteRenderable:
     def __init__(self, sprite_sheet: list[str]):
         self.sprite_sheet = sprite_sheet
