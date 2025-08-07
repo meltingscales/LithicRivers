@@ -104,8 +104,8 @@ generate-test-worlds: ## Pre-generate test world fixtures
 test-parallel: generate-test-worlds ## Run unit tests in parallel (faster)
 	@echo "🚀 Running unit tests in parallel..."
 	@echo "📦 Using pre-generated world fixtures for maximum speed"
-	@echo "🧵 Using 4 parallel workers for faster execution"
-	TESTING=1 $(UV_CMD) run pytest lithicrivers/test/ -n 4 --verbose --tb=short
+	@echo "🧵 Using auto parallel workers for faster execution"
+	TESTING=1 $(UV_CMD) run pytest lithicrivers/test/ -n auto --verbose --tb=short
 	@echo "✅ Parallel unit tests completed!"
 
 test-quick: generate-test-worlds ## Run quick tests only
