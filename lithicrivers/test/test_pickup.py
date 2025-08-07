@@ -7,7 +7,7 @@ import unittest
 
 from asciimatics.event import KeyboardEvent
 
-from lithicrivers.game.game import Game, DroppedItem, Items
+from lithicrivers.game.entities import Items, DroppedItem
 from lithicrivers.keymap import KEYMAP
 from lithicrivers.model.vector import VectorN
 from lithicrivers.settings import DEFAULT_SEED
@@ -132,7 +132,3 @@ class TestPickupSystem(OptimizedTestCase):
         item_names = [name for name, pos, color, entity in dropped_items]
         self.assertIn("Acorn", item_names)
         self.assertIn("Stick", item_names)
-
-
-if __name__ == "__main__":
-    unittest.main() 

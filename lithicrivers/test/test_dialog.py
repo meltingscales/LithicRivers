@@ -1,8 +1,9 @@
-from lithicrivers.game.game_save_manager import GameSaveManager
-from lithicrivers.game.game import NPC, Entities, Game, InteractiveEntity
+from lithicrivers.game.entities import Entities
+from lithicrivers.game.npcs import NPC, InteractiveEntity
+from lithicrivers.model.vector import VectorN
 from lithicrivers.settings import DEFAULT_SEED
 from lithicrivers.test.test_fixtures import OptimizedTestCase
-from lithicrivers.model.vector import VectorN
+
 
 class TestDialogSystem(OptimizedTestCase):
     """Test the dialog and interaction system."""
@@ -113,7 +114,3 @@ class TestDialogSystem(OptimizedTestCase):
 
         self.assertIn("crystal shard", entity1.interact().lower())
         self.assertIn("ancient relic", entity2.interact().lower())
-
-
-if __name__ == "__main__":
-    unittest.main()

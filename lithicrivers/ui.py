@@ -27,7 +27,10 @@ from asciimatics.widgets import (
 )
 
 from lithicrivers.colors import COLOR_MANAGER
-from lithicrivers.game.game import NPC, Game, Item, ItemArtRenderable, Tile, Tiles, DroppedItem
+from lithicrivers.game.core import Tile, Tiles, Game
+from lithicrivers.game.entities import DroppedItem, Item
+from lithicrivers.game.npcs import NPC
+from lithicrivers.game.interfaces import ItemArtRenderable
 from lithicrivers.keymap import KEYMAP
 from lithicrivers.model.model import RenderedData, StopGameError, Viewport
 from lithicrivers.model.vector import VectorN
