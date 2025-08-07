@@ -61,9 +61,11 @@ class SharedTestFixtures:
 
             # save to disk if it doesn't exist
             if not self.does_save_exist(seed):
+                print(f"   Pre-generating chunks for seed: {seed} as it doesn't exist as a save")
                 game = Game(seed)
                 game.pregen_chunks(radius=self.pregen_chunk_radius)
                 self.save_game(game, seed)
+                print("   Done pre-generating chunks for seed: {}".format(seed))
 
             # minor speedup by reusing the game's world
             self._world_cache[seed] = self.get_game(seed).world.clone()
