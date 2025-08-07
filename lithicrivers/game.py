@@ -1115,6 +1115,33 @@ class ChunkedWorldData:
         from lithicrivers.settings import MAX_CPU_THREADS
         self._thread_pool = ThreadPoolExecutor(max_workers=MAX_CPU_THREADS)  # Thread pool for chunk generation
 
+    def pregen_chunks(self, radius: int) -> None:
+        """Pre-generate all chunks within a cubic radius around (0,0,0). Waits for all threads to finish.
+        
+        This should only be called when the world generator is initialized, or during unit tests to speed them up if pickling after generating."""
+        if not self.world_generator:
+            raise Exception("World generator is not initialized")
+        
+        chunk_size = self.chunk_size
+        # Calculate chunk radius (how many chunks in each direction)
+        chunk_radius = (radius + chunk_size - 1) // chunk_size  # ceil division
+        # Center at (0,0,0) for now (could be player spawn)
+        futures = []
+        for cx in range(-chunk_radius, chunk_radius + 1):
+            for cy in range(-chunk_radius, chunk_radius + 1):
+                for cz in range(-chunk_radius, chunk_radius + 1):
+                    chunk_key = (cx, cy, cz)
+                    # Only generate if not already generated
+                    if chunk_key not in self._generated_chunks:
+                        self._generated_chunks.add(chunk_key)
+                        # Submit to thread pool
+                        future = self._thread_pool.submit(self._generate_chunk_worker, cx, cy, cz)
+                        futures.append(future)
+        # Wait for all chunk generation to finish
+        for future in futures:
+            future.result()  # Will raise if any errors occurred
+
+
     def __deepcopy__(self, memo):
         """
         Custom deepcopy implementation that handles threading primitives properly.
@@ -1175,50 +1202,6 @@ class ChunkedWorldData:
                 # Use threaded chunk generation for lazy loading
                 self._generate_chunk_threaded(chunk_key)
         return self.chunks[chunk_key]
-
-    def _generate_structures_for_chunk(self, chunk_key: tuple[int, int, int]) -> None:
-        """
-        Generate procedural structures for a specific chunk when it's first loaded.
-        
-        This method handles the procedural generation of structures (both predefined
-        structures and procedural dungeons) when new chunks are loaded. This is
-        separate from the forced structures generated for quests and story content.
-        
-        Args:
-            chunk_key: The chunk coordinates (chunk_x, chunk_y, chunk_z)
-        """
-        if not self.world_generator:
-            return
-            
-        # Skip structure generation during testing to speed up tests
-        if os.environ.get("TESTING") == "1":
-            return
-            
-        chunk_x, chunk_y, chunk_z = chunk_key
-        
-        # Use threaded chunk generation instead of single-threaded
-        # This will generate the entire chunk (terrain + structures) in a background thread
-        self.world_generator._generate_complete_chunk(chunk_x, chunk_y, chunk_z)
-        
-        # Apply the generated chunk data to our chunked world
-        chunk_data = self.world_generator.chunk_cache.cache.get((chunk_x, chunk_y, chunk_z), {})
-        
-        tiles_applied = 0
-        for pos_str, tile in chunk_data.items():
-            pos_parts = pos_str.split(',')
-            world_pos = VectorN(int(pos_parts[0]), int(pos_parts[1]), int(pos_parts[2]))
-            
-            # Get chunk directly without triggering generation
-            chunk_key = self.get_chunk_key(world_pos)
-            if chunk_key in self.chunks:
-                chunk = self.chunks[chunk_key]
-                local_pos = chunk.get_local_pos(world_pos)
-                chunk.set_tile(local_pos, tile)
-                
-                # Update cache
-                pos_key = (world_pos.x, world_pos.y, world_pos.z)
-                self._tile_cache[pos_key] = tile
-                tiles_applied += 1
 
     def _generate_chunk_threaded(self, chunk_key: tuple[int, int, int]) -> None:
         """
@@ -1403,6 +1386,10 @@ class World(EntityListener):
         
         # Generate forced structures for quests and main story content
         self._generate_forced_structures()
+
+    def pregen_chunks(self, radius: int) -> None:
+        """Pre-generate chunks for the world."""
+        self.data.pregen_chunks(radius)
 
     def clone(self) -> "World":
         """
@@ -1744,6 +1731,10 @@ class Game:
         self.message_log.add_message(
             "Welcome to LithicRivers! Your adventures will be logged here.", "info"
         )
+
+    def pregen_chunks(self, radius: int) -> None:
+        """Pre-generate chunks for the world."""
+        self.world.pregen_chunks(radius)
 
     def shutdown(self) -> None:
         """Shutdown the game."""

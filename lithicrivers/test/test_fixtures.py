@@ -26,7 +26,7 @@ class SharedTestFixtures:
             print(f"Saving game for seed: {seed} to file {save_path}")
             pickle.dump(game, f)
     
-    def _load_game(self, seed: int) -> Game:
+    def load_game(self, seed: int) -> Game:
         """Load a game from a file."""
         save_path = self._test_saves_dir / f"seed_{seed}.pkl"
         with save_path.open("rb") as f:
@@ -47,6 +47,7 @@ class SharedTestFixtures:
         
         # Define seeds to pre-generate (most commonly used in tests)
         self.pregenerated_seeds = [DEFAULT_SEED, 42]
+        self.pregen_chunk_radius = 4
         
         # Use cache variables for all fixtures (pre-populated + dynamic)
         self._world_cache = {}
@@ -60,7 +61,9 @@ class SharedTestFixtures:
 
             # save to disk if it doesn't exist
             if not self.does_save_exist(seed):
-                self._save_game(Game(seed), seed)
+                game = Game(seed)
+                game.pregen_chunks(radius=self.pregen_chunk_radius)
+                self.save_game(game, seed)
 
             # minor speedup by reusing the game's world
             self._world_cache[seed] = self.get_game(seed).world.clone()
@@ -85,7 +88,7 @@ class SharedTestFixtures:
                 # Remove oldest entry (simple FIFO)
                 oldest_key = next(iter(self._world_cache))
                 del self._world_cache[oldest_key]
-            self._world_cache[seed] = self._load_game(seed).world.clone()
+            self._world_cache[seed] = self.load_game(seed).world.clone()
         base_world = self._world_cache[seed]
         
         # Create a proper clone using the World's clone method
@@ -104,7 +107,9 @@ class SharedTestFixtures:
             if not self.does_save_exist(seed):
                 # create a new game, and it'll get used later
                 print(f"Cache MISS: creating and saving game for seed: {seed}")
-                self._save_game(Game(seed=seed), seed)
+                game = Game(seed=seed)
+                game.pregen_chunks(radius=self.pregen_chunk_radius)
+                self.save_game(game, seed)
                 
             print(f"Cache MISS: loading game for seed: {seed}")
             # Prevent unbounded cache growth
@@ -112,7 +117,7 @@ class SharedTestFixtures:
                 # Remove oldest entry (simple FIFO)
                 oldest_key = next(iter(self._game_cache))
                 del self._game_cache[oldest_key]
-            self._game_cache[seed] = self._load_game(seed)
+            self._game_cache[seed] = self.load_game(seed)
         base_game = self._game_cache[seed]
         
         # Create a proper clone using the Game's clone method
@@ -131,7 +136,7 @@ class SharedTestFixtures:
                 # Remove oldest entry (simple FIFO)
                 oldest_key = next(iter(self._engine_cache))
                 del self._engine_cache[oldest_key]
-            self._engine_cache[seed] = self._load_game(seed).engine
+            self._engine_cache[seed] = self.load_game(seed).engine
         base_engine = self._engine_cache[seed]
         
         # Create a proper clone using the GameEngine's clone method
