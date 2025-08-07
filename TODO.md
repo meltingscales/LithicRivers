@@ -214,6 +214,11 @@
 - save/load UI with a list of saved games
 - snapshots feature that saves on quit, on save, and every 1,000,000 ticks in `lithicrivers-saves/snapshots/` to make sure players don't lose progress due to bugs or accidents
 
+- TODO: Run each unit test individually and figure out why some fail. i.e. 
+
+    UV_CMD=$(if [ -f /run/current-system/sw/bin/uv ]; then echo "/run/current-system/sw/bin/uv"; else echo "uv"; fi)
+    $UV_CMD run python -m unittest lithicrivers.test.test_body_page
+
 ## steam key giveaway list:
 - skomor123
 - noahnogueras@gmail.com
