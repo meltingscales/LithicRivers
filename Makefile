@@ -1,4 +1,4 @@
-.PHONY: help install test build run clean lint format log-monitor
+.PHONY: help install test build game-run game-run-debug game-debug-attach game-log-monitor game-profile-speedscope clean lint format log-monitor
 
 # NixOS uv detection and path fixing
 # Check if we're on NixOS and use system uv if available
