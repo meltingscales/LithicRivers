@@ -42,6 +42,7 @@
     "game": {
       "GAME_NAME": "LithicRivers",
       "LOGFILENAME": "LithicRivers.log",
+      "SAVES_FOLDER": "lithicrivers-saves",
       "LOGGINGLEVEL": "INFO",
       "DEVELOPER_MODE": true,
       "DEFAULT_SEED": 4669201609,

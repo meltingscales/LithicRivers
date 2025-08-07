@@ -68,6 +68,7 @@ class ConfigManager:
                     "GAME_NAME": "LithicRivers",
                     "LOGFILENAME": "LithicRivers.log",
                     "LOGGINGLEVEL": "INFO",
+                    "SAVES_FOLDER": "lithicrivers-saves",
                     "DEVELOPER_MODE": True,
                     "DEFAULT_SEED": 4669201609,
                     "DEFAULT_PLAYER_NAME": "Inigo Montoya",
