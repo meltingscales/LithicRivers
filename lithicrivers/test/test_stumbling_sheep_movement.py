@@ -5,7 +5,7 @@ Copyright (c) 2024 Henry Post. All rights reserved.
 
 from unittest.mock import patch, MagicMock
 
-from lithicrivers.game import Game, StumblingSheep
+from lithicrivers.game.game import Game, StumblingSheep
 from lithicrivers.model.vector import VectorN
 from lithicrivers.settings import DEFAULT_SEED
 from lithicrivers.test.test_fixtures import OptimizedTestCase

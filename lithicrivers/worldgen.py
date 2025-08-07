@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from typing import Any, Optional
 
-from lithicrivers.game import Tile, Tiles
+from lithicrivers.game.game import Tile, Tiles
 from lithicrivers.logging_config import get_logger
 from lithicrivers.model.vector import VectorN
 from lithicrivers.structure_generator import create_structure_manager

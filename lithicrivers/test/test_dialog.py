@@ -1,4 +1,5 @@
-from lithicrivers.game import NPC, Entities, Game, InteractiveEntity
+from lithicrivers.game.game_save_manager import GameSaveManager
+from lithicrivers.game.game import NPC, Entities, Game, InteractiveEntity
 from lithicrivers.settings import DEFAULT_SEED
 from lithicrivers.test.test_fixtures import OptimizedTestCase
 from lithicrivers.model.vector import VectorN

@@ -1,6 +1,6 @@
 import unittest
 
-from lithicrivers.game import ChunkedWorldData, Game, Tiles, generate_sprite_repeat
+from lithicrivers.game.game import ChunkedWorldData, Game, Tiles, generate_sprite_repeat
 from lithicrivers.model.model import RenderedData, Viewport
 from lithicrivers.model.vector import VectorN
 from lithicrivers.settings import DEFAULT_SEED
@@ -121,7 +121,7 @@ class RenderStuff(OptimizedTestCase):
         """Test that viewport sizing dynamically adjusts based on available space."""
         from unittest.mock import Mock
 
-        from lithicrivers.game import Game
+        from lithicrivers.game.game import Game
         from lithicrivers.ui import WorldMap
 
         # Create a mock screen with different sizes
@@ -170,7 +170,7 @@ class RenderStuff(OptimizedTestCase):
 
     def test_on_demand_tile_generation(self):
         """Test that tiles are generated on-demand when accessed outside the initial world area."""
-        from lithicrivers.game import Game
+        from lithicrivers.game.game import Game
         from lithicrivers.model.vector import VectorN
 
         # Create a game with a small initial world

@@ -12,7 +12,7 @@ from lithicrivers.model.vector import VectorN
 from lithicrivers.settings import DEFAULT_PLAYER_POSITION, DEFAULT_VIEWPORT
 
 if TYPE_CHECKING:
-    from lithicrivers.game import Item, Tile
+    from lithicrivers.game.game import Item, Tile
 
 
 @dataclass
@@ -98,7 +98,7 @@ class MineAction:
                     new_state.inventory.add_item(dropped_item)
 
             # Replace with empty tile
-            from lithicrivers.game import Tiles
+            from lithicrivers.game.game import Tiles
 
             new_state.world_data[tile_key] = Tiles.empty()
 

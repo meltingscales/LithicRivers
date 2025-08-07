@@ -8,7 +8,7 @@ import random
 from pathlib import Path
 from typing import Optional
 
-from lithicrivers.game import Tile, Tiles
+from lithicrivers.game.game import Tile, Tiles
 from lithicrivers.logging_config import get_logger
 from lithicrivers.model.vector import VectorN
 

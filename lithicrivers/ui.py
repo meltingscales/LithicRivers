@@ -9,7 +9,7 @@ import platform
 import subprocess
 from typing import TYPE_CHECKING, Callable, Optional, Union
 
-from lithicrivers.game_save_manager import GameSaveManager
+from lithicrivers.game.game_save_manager import GameSaveManager
 import asciimatics.widgets
 from asciimatics.event import KeyboardEvent, MouseEvent
 from asciimatics.exceptions import NextScene
@@ -27,7 +27,7 @@ from asciimatics.widgets import (
 )
 
 from lithicrivers.colors import COLOR_MANAGER
-from lithicrivers.game import NPC, Game, Item, ItemArtRenderable, Tile, Tiles, DroppedItem
+from lithicrivers.game.game import NPC, Game, Item, ItemArtRenderable, Tile, Tiles, DroppedItem
 from lithicrivers.keymap import KEYMAP
 from lithicrivers.model.model import RenderedData, StopGameError, Viewport
 from lithicrivers.model.vector import VectorN
@@ -303,6 +303,7 @@ class TabButtons(Layout):
             Button("World Map", self._safe_scene_change("WorldMap")),
             Button("Help", self._safe_scene_change("HelpPage")),
             Button("Message Log", self._safe_scene_change("MessageLogPage")),
+            # Button("Menu", self._safe_scene_change("MenuPage")),
             Button("Inventory", self._safe_scene_change("InventoryPage")),
             Button("Body", self._safe_scene_change("BodyPage")),
         ]
@@ -1430,6 +1431,248 @@ class DevPopupPage(Frame):
         self.fix()
 
 
+class MenuPage(Frame):
+    """Main menu page for save/load operations and game management."""
+    
+    def __init__(self, screen, game: Game, save_manager: GameSaveManager) -> None:
+        super().__init__(
+            screen, screen.height, screen.width, can_scroll=False, title="Game Menu"
+        )
+        self.game = game
+        self.save_manager = save_manager
+        self.save_list = []
+        self.selected_save = None
+        
+        # Main layout
+        layout1 = Layout([1], fill_frame=True)
+        self.add_layout(layout1)
+        
+        # Title and instructions
+        title_text = f"Welcome to {GAME_NAME} - Game Menu\n\n"
+        title_text += "Use this menu to save, load, or manage your games.\n"
+        title_text += "Press ESC to return to the game.\n\n"
+        
+        layout1.add_widget(Label(title_text, height=5))
+        layout1.add_widget(Divider())
+        
+        # Save/Load buttons layout
+        button_layout = Layout([1, 1], fill_frame=False)
+        self.add_layout(button_layout)
+        
+        # Left column - Save operations
+        button_layout.add_widget(Label("Save Operations:", height=1), 0)
+        button_layout.add_widget(Button("Quick Save", self._quick_save), 0)
+        button_layout.add_widget(Button("Save As...", self._save_as), 0)
+        button_layout.add_widget(Button("Create Snapshot", self._create_snapshot), 0)
+        
+        # Right column - Load operations  
+        button_layout.add_widget(Label("Load Operations:", height=1), 1)
+        button_layout.add_widget(Button("Quick Load", self._quick_load), 1)
+        button_layout.add_widget(Button("Load Game...", self._load_game), 1)
+        button_layout.add_widget(Button("New Game", self._new_game), 1)
+        
+        # Divider
+        layout1.add_widget(Divider())
+        
+        # Save file list
+        list_layout = Layout([1], fill_frame=True)
+        self.add_layout(list_layout)
+        
+        list_layout.add_widget(Label("Available Save Files:", height=1))
+        
+        # Create save list display
+        self._refresh_save_list()
+        save_list_text = self._generate_save_list_text()
+        self.save_list_widget = Label(save_list_text, height=10)
+        list_layout.add_widget(self.save_list_widget)
+        
+        # Management buttons
+        mgmt_layout = Layout([1, 1, 1], fill_frame=False)
+        self.add_layout(mgmt_layout)
+        
+        mgmt_layout.add_widget(Button("Refresh List", self._refresh_saves), 0)
+        mgmt_layout.add_widget(Button("Delete Save...", self._delete_save), 1)
+        mgmt_layout.add_widget(Button("Cleanup Snapshots", self._cleanup_snapshots), 2)
+        
+        # Tab buttons at bottom
+        layout2 = TabButtons(self)
+        self.add_layout(layout2)
+        self.fix()
+    
+    def _refresh_save_list(self) -> None:
+        """Refresh the list of available save files."""
+        try:
+            self.save_list = self.save_manager.list_saves()
+        except Exception as e:
+            logging.error(f"Failed to refresh save list: {e}")
+            self.save_list = []
+    
+    def _generate_save_list_text(self) -> str:
+        """Generate formatted text for the save list display."""
+        if not self.save_list:
+            return "No save files found.\n\nCreate a save using 'Quick Save' or 'Save As...' buttons above."
+        
+        text = ""
+        for i, save_meta in enumerate(self.save_list):
+            text += f"{i+1:2d}. {save_meta.filename}\n"
+            text += f"    Time: {save_meta.readable_time}\n"
+            text += f"    Tick: {save_meta.game_tick:,}\n"
+            text += f"    Player: {save_meta.player_name}\n"
+            text += f"    Seed: {save_meta.world_seed}\n\n"
+        
+        return text
+    
+    def _quick_save(self) -> None:
+        """Perform a quick save operation."""
+        try:
+            success = self.save_manager.save_game(self.game)
+            if success:
+                self._show_message("Game saved successfully!")
+                self._refresh_saves()
+            else:
+                self._show_message("Failed to save game. Check logs for details.")
+        except Exception as e:
+            logging.error(f"Quick save failed: {e}")
+            self._show_message(f"Save failed: {str(e)}")
+    
+    def _save_as(self) -> None:
+        """Show dialog for custom save name."""
+        # For now, just use a timestamp-based name
+        from datetime import datetime
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        save_name = f"save_{timestamp}.pkl"
+        
+        try:
+            success = self.save_manager.save_game(self.game, save_name)
+            if success:
+                self._show_message(f"Game saved as '{save_name}'!")
+                self._refresh_saves()
+            else:
+                self._show_message("Failed to save game. Check logs for details.")
+        except Exception as e:
+            logging.error(f"Save as failed: {e}")
+            self._show_message(f"Save failed: {str(e)}")
+    
+    def _create_snapshot(self) -> None:
+        """Create a snapshot backup."""
+        try:
+            success = self.save_manager.create_snapshot(self.game)
+            if success:
+                self._show_message("Snapshot created successfully!")
+            else:
+                self._show_message("Failed to create snapshot. Check logs for details.")
+        except Exception as e:
+            logging.error(f"Snapshot creation failed: {e}")
+            self._show_message(f"Snapshot failed: {str(e)}")
+    
+    def _quick_load(self) -> None:
+        """Load the default save file."""
+        try:
+            loaded_game = self.save_manager.load_game()
+            if loaded_game:
+                # Replace current game with loaded game
+                self.game.__dict__.update(loaded_game.__dict__)
+                self._show_message("Game loaded successfully!")
+                # Return to world map
+                raise NextScene("WorldMap")
+            else:
+                self._show_message("No default save file found or load failed.")
+        except NextScene:
+            raise  # Re-raise NextScene exceptions
+        except Exception as e:
+            logging.error(f"Quick load failed: {e}")
+            self._show_message(f"Load failed: {str(e)}")
+    
+    def _load_game(self) -> None:
+        """Show dialog to select a save file to load."""
+        if not self.save_list:
+            self._show_message("No save files available to load.")
+            return
+        
+        # For now, load the first save file
+        # TODO: Implement proper save selection dialog
+        save_to_load = self.save_list[0].filename
+        
+        try:
+            loaded_game = self.save_manager.load_game(save_to_load)
+            if loaded_game:
+                # Replace current game with loaded game
+                self.game.__dict__.update(loaded_game.__dict__)
+                self._show_message(f"Loaded '{save_to_load}' successfully!")
+                # Return to world map
+                raise NextScene("WorldMap")
+            else:
+                self._show_message(f"Failed to load '{save_to_load}'.")
+        except NextScene:
+            raise  # Re-raise NextScene exceptions
+        except Exception as e:
+            logging.error(f"Load game failed: {e}")
+            self._show_message(f"Load failed: {str(e)}")
+    
+    def _new_game(self) -> None:
+        """Create a new game."""
+        try:
+            new_game = self.save_manager.create_new_game()
+            if new_game:
+                # Replace current game with new game
+                self.game.__dict__.update(new_game.__dict__)
+                self._show_message("New game created successfully!")
+                # Return to world map
+                raise NextScene("WorldMap")
+            else:
+                self._show_message("Failed to create new game.")
+        except NextScene:
+            raise  # Re-raise NextScene exceptions
+        except Exception as e:
+            logging.error(f"New game creation failed: {e}")
+            self._show_message(f"New game failed: {str(e)}")
+    
+    def _refresh_saves(self) -> None:
+        """Refresh the save file list display."""
+        self._refresh_save_list()
+        new_text = self._generate_save_list_text()
+        self.save_list_widget.text = new_text
+        self._show_message("Save list refreshed.")
+    
+    def _delete_save(self) -> None:
+        """Delete a selected save file."""
+        if not self.save_list:
+            self._show_message("No save files available to delete.")
+            return
+        
+        # For now, show a warning about deleting the first save
+        # TODO: Implement proper save selection dialog
+        save_to_delete = self.save_list[0].filename
+        self._show_message(f"Delete functionality not yet implemented for '{save_to_delete}'.")
+    
+    def _cleanup_snapshots(self) -> None:
+        """Clean up old snapshot files."""
+        try:
+            self.save_manager.cleanup_old_snapshots()
+            self._show_message("Old snapshots cleaned up successfully!")
+        except Exception as e:
+            logging.error(f"Snapshot cleanup failed: {e}")
+            self._show_message(f"Cleanup failed: {str(e)}")
+    
+    def _show_message(self, message: str) -> None:
+        """Show a temporary message to the user."""
+        # For now, just log the message
+        # TODO: Implement proper message display system
+        logging.info(f"MenuPage message: {message}")
+        print(f"Menu: {message}")  # Temporary console output
+    
+    def process_event(
+        self, event: Union[KeyboardEvent, MouseEvent]
+    ) -> Union[KeyboardEvent, MouseEvent]:
+        """Handle events for the menu page, including ESC to close."""
+        # Check for ESC key to close menu using keymap
+        if hasattr(event, "key_code") and KEYMAP.matches("CLOSE_HELP_MENU", event):
+            raise NextScene("WorldMap")
+        
+        # Let the parent class handle other events
+        return super().process_event(event)
+
+
 class DialogBox(Frame):
     """A modal dialog box for conversations and interactions."""
 
@@ -2262,6 +2505,17 @@ class BodyPageEventHandler(SceneEventHandler):
         return False  # Let the page handle it normally
 
 
+class MenuPageEventHandler(SceneEventHandler):
+    """Handles events for the MenuPage scene."""
+
+    def handle_event(
+        self, event: Union[KeyboardEvent, MouseEvent], screen, popup_manager, page
+    ) -> bool:
+        """Handle events for the MenuPage scene."""
+        # Menu page handles its own events via process_event
+        return False  # Let the page handle it normally
+
+
 class SceneEventRouter:
     """Routes events to appropriate scene handlers."""
 
@@ -2270,6 +2524,7 @@ class SceneEventRouter:
             WorldMap: WorldMapEventHandler(),
             HelpPage: HelpPageEventHandler(),
             MessageLogPage: MessageLogPageEventHandler(),
+            MenuPage: MenuPageEventHandler(),
             DevPopupPage: DevPopupPageEventHandler(),
             DevKeystrokesPage: DevKeystrokesPageEventHandler(),
             InventoryPage: InventoryPageEventHandler(),
@@ -2421,6 +2676,7 @@ def demo(screen: Screen, scene: Scene, game: Game, save_manager: GameSaveManager
         Scene([WorldMap(screen, game)], -1, name="WorldMap"),
         Scene([HelpPage(screen, game)], -1, name="HelpPage"),
         Scene([MessageLogPage(screen, game)], -1, name="MessageLogPage"),
+        # Scene([MenuPage(screen, game, save_manager)], -1, name="MenuPage"),
         Scene([DevPopupPage(screen)], -1, name="DevPopupPage"),
         Scene([DevKeystrokesPage(screen)], -1, name="DevKeystrokesPage"),
         Scene([InventoryPage(screen, game)], -1, name="InventoryPage"),

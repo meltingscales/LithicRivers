@@ -9,8 +9,8 @@ import time
 from asciimatics.exceptions import ResizeScreenError
 from asciimatics.screen import Screen
 
-from lithicrivers.game import Game
-from lithicrivers.game_save_manager import GameSaveManager
+from lithicrivers.game.game import Game
+from lithicrivers.game.game_save_manager import GameSaveManager
 from lithicrivers.logging_config import get_logger, setup_logging
 from lithicrivers.model.model import StopGameError
 from lithicrivers.settings import DEFAULT_SEED, GAME_NAME, LOGFILENAME

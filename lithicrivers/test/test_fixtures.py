@@ -4,7 +4,7 @@ This module provides pre-generated worlds and other expensive objects that can b
 """
 
 import unittest
-from lithicrivers.game import World, Game
+from lithicrivers.game.game import World, Game
 from lithicrivers.settings import DEFAULT_SEED
 from pathlib import Path
 import pickle

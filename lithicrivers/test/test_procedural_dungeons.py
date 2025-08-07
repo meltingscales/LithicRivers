@@ -9,7 +9,7 @@ from lithicrivers.procedural_dungeon_generator import (
     create_procedural_generator
 )
 from lithicrivers.model.vector import VectorN
-from lithicrivers.game import Tiles
+from lithicrivers.game.game import Tiles
 
 
 class TestProceduralDungeonGenerator:
