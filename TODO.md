@@ -191,20 +191,15 @@
 
 - stats/perf measurements throughout the game code that logs to some format...TBH speedscope is "good enough" but it could be useful long term to do this.
 
-## MVP for steam release (2026)
+## MVP for steam release (2025 christmas release)
 
-- fix pickle vulnerability, rce
-- ✅ **COMPLETED**: Body modularity system with damaged android body
-- ✅ **COMPLETED**: Dynamic walk and break speeds based on body condition
-- ✅ **COMPLETED**: Higher tick rate system (200+) for granular speed control
+- fix pickle vulnerability, rce - don't implement custom JSON serialization, but use msgspec...
 - in progress: visualize body parts in the body panel with a custom asciimatics class that extends Frame...
 - in progress: UI elements that let you select and repair body parts, and backend code that actually repairs the body part for a material cost.
-- ✅ **COMPLETED**: Start with double the necessary items to repair body parts for debug purposes
 - 🔄 **IN PROGRESS**: Block placement with body-based restrictions
 - 🔄 **IN PROGRESS**: Push boxes that require certain body parts
 - 🔄 **IN PROGRESS**: Basic crafting system for body repairs
 - 🔄 **IN PROGRESS**: Procedural dungeons v2: Overhaul this and just copy the algorithm from https://www.gamedeveloper.com/programming/procedural-dungeon-generation-algorithm
-- ✅ **COMPLETED**: Fluids system
 - in progress: steam API integration
 - ask ai: In @core.py , critique the `_generate_forced_structures` method. Is it possible it's not working as intended?
 - todo: changing chunk size seems to affect structure generation. fix this.
@@ -213,17 +208,13 @@
 
 - save/load system where you can pick a save file from a list of saved games (build UI for this...)
 
-- TODO: Run each unit test individually and figure out why some fail. i.e. 
-
-    UV_CMD=$(if [ -f /run/current-system/sw/bin/uv ]; then echo "/run/current-system/sw/bin/uv"; else echo "uv"; fi)
-    $UV_CMD run python -m unittest lithicrivers.test.test_body_page
-
 ## steam key giveaway list:
 - skomor123
 - noahnogueras@gmail.com
 - oglingling
 - Tj.kennedy@gmail.com
 - college friends
+- miguel from colab
 
 ## streamers
 
