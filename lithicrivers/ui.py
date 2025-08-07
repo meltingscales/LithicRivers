@@ -9,6 +9,7 @@ import platform
 import subprocess
 from typing import TYPE_CHECKING, Callable, Optional, Union
 
+from lithicrivers.game_save_manager import GameSaveManager
 import asciimatics.widgets
 from asciimatics.event import KeyboardEvent, MouseEvent
 from asciimatics.exceptions import NextScene
@@ -2401,7 +2402,7 @@ class PopupManager:
         return False
 
 
-def demo(screen: Screen, scene: Scene, game: Game) -> None:
+def demo(screen: Screen, scene: Scene, game: Game, save_manager: GameSaveManager) -> None:
     # Create a global variable to store the current dialog
     global current_dialog_scene
 

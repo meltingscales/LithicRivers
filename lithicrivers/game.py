@@ -1848,6 +1848,7 @@ class Game(Cloneable, ShutDownable):
         player: Player = None,
         world: World = None,
         viewport: Viewport = DEFAULT_VIEWPORT,
+        save_manager: "GameSaveManager" = None,
     ):
         # Create a copy of the viewport to avoid shared state between tests
         if viewport is DEFAULT_VIEWPORT:
@@ -1876,6 +1877,8 @@ class Game(Cloneable, ShutDownable):
 
         self.player: Player = player
         self.world: World = world
+
+        self.save_manager: "GameSaveManager" = save_manager
 
         self.running = True
         self.message_log = MessageLog(game=self)

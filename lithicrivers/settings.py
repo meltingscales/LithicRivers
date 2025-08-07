@@ -13,6 +13,7 @@ DEVELOPER_MODE = config_manager.get_setting("game", "DEVELOPER_MODE")
 DEFAULT_SEED = config_manager.get_setting("game", "DEFAULT_SEED")
 DEFAULT_PLAYER_NAME = config_manager.get_setting("game", "DEFAULT_PLAYER_NAME")
 SAVES_FOLDER = config_manager.get_setting("game", "SAVES_FOLDER")
+SNAPSHOTS_FOLDER = config_manager.get_setting("game", "SNAPSHOTS_FOLDER")
 
 # Load logging level with support for custom levels
 log_level_str = config_manager.get_setting("game", "LOGGINGLEVEL")
