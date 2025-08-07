@@ -209,8 +209,7 @@
 - todo: changing chunk size seems to affect structure generation. fix this.
 - todo: cores are definitely being used by worldgen, but don't max out CPU. Why might this be? they only use like 8% CPU. (This is because of GIL. We need to switch to ProcessPoolExecutor.)
 
-- save/load system where you can pick a save file from a list of saved games
-- snapshots feature that saves a copy of the world on quit, on save, and every 1,000,000 ticks in `lithicrivers-saves/snapshots/` to make sure players don't lose progress due to bugs or accidents
+- save/load system where you can pick a save file from a list of saved games (build UI for this...)
 
 - TODO: Run each unit test individually and figure out why some fail. i.e. 
 
