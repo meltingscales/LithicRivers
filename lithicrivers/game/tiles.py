@@ -194,6 +194,15 @@ class Tiles:
             drops={0.3: Items.gold_nugget(), 0.7: Items.diamond()},
         )
 
+    @staticmethod
+    def plasteel_scrap() -> "Tile":
+        from lithicrivers.game.entities import Items
+
+        return Tile(
+            "Plasteel Scrap",
+            drops={0.8: Items.iron_scrap(), 0.2: Items.gold_nugget()},
+        )
+
 
 class TilePalette:
     """
