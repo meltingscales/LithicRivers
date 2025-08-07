@@ -16,6 +16,8 @@ from typing import Optional, List, Dict, Any
 from datetime import datetime
 
 from lithicrivers.settings import SAVES_FOLDER, SNAPSHOTS_FOLDER
+from lithicrivers.game import Game
+from lithicrivers.settings import DEFAULT_SEED
 
 logger = logging.getLogger(__name__)
 
@@ -168,17 +170,15 @@ class GameSaveManager:
         try:
             logger.info(f"Loading game from: {save_path}")
             with open(save_path, "rb") as f:
-                loaded_data = pickle.load(f)
+                saved_data = pickle.load(f)
             
-            # Handle both old format (direct Game object) and new format (SavedGameData)
-            if isinstance(loaded_data, SavedGameData):
-                game = loaded_data.game
-                metadata = loaded_data.metadata
-                logger.info(f"Loaded game with metadata: {metadata.player_name}, tick {metadata.game_tick}")
-            else:
-                # Legacy format - direct Game object
-                game = loaded_data
-                logger.info("Loaded legacy save format (no embedded metadata)")
+            # Extract game and metadata from SavedGameData container
+            if not isinstance(saved_data, SavedGameData):
+                raise ValueError(f"Invalid save file format: expected SavedGameData, got {type(saved_data)}")
+                
+            game = saved_data.game
+            metadata = saved_data.metadata
+            logger.info(f"Loaded game with metadata: {metadata.player_name}, tick {metadata.game_tick}")
             
             # Ensure the game is marked as running
             game.running = True
@@ -307,22 +307,13 @@ class GameSaveManager:
         """
         try:
             with open(save_path, "rb") as f:
-                loaded_data = pickle.load(f)
+                saved_data = pickle.load(f)
             
-            # Handle both new format (SavedGameData) and legacy format (direct Game)
-            if isinstance(loaded_data, SavedGameData):
-                return loaded_data.metadata
-            else:
-                # Legacy format - extract from Game object
-                game = loaded_data
-                stat = save_path.stat()
-                return SaveMetadata(
-                    filename=save_path.name,
-                    timestamp=stat.st_mtime,
-                    game_tick=getattr(game, 'gametick', 0),
-                    player_name=getattr(game.player, 'name', 'Unknown') if hasattr(game, 'player') else 'Unknown',
-                    world_seed=getattr(game.world, 'seed', 'Unknown') if hasattr(game, 'world') else 'Unknown'
-                )
+            # Extract metadata from SavedGameData container
+            if not isinstance(saved_data, SavedGameData):
+                raise ValueError(f"Invalid save file format: expected SavedGameData, got {type(saved_data)}")
+                
+            return saved_data.metadata
                 
         except Exception as e:
             logger.error(f"Failed to extract metadata from {save_path}: {e}")
