@@ -1,4 +1,4 @@
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from lithicrivers.game.tiles import Tile
 from lithicrivers.model.vector import VectorN
@@ -15,13 +15,13 @@ class FluidManager:
 
     def __init__(self, world: "World"):
         self.world = world
-        self.fluids: dict[str, "Fluid"] = {}  # position_key -> Fluid
+        self.fluids: dict[str, Fluid] = {}  # position_key -> Fluid
         self.flow_directions = [
-            VectorN(0, 0, 1),   # Down (gravity) - deeper into earth
+            VectorN(0, 0, 1),  # Down (gravity) - deeper into earth
             VectorN(-1, 0, 0),  # Left
-            VectorN(1, 0, 0),   # Right
+            VectorN(1, 0, 0),  # Right
             VectorN(0, -1, 0),  # North
-            VectorN(0, 1, 0),   # South
+            VectorN(0, 1, 0),  # South
         ]
 
     def add_fluid(self, fluid: "Fluid") -> None:
@@ -49,7 +49,10 @@ class FluidManager:
                     if overflow > 0:
                         # Create overflow fluid that will spread
                         from lithicrivers.game.entities import Fluid
-                        overflow_fluid = Fluid(fluid.fluid_type, fluid.position, overflow, fluid.viscosity)
+
+                        overflow_fluid = Fluid(
+                            fluid.fluid_type, fluid.position, overflow, fluid.viscosity
+                        )
                         self.fluids[pos_key] = overflow_fluid
         else:
             self.fluids[pos_key] = fluid
@@ -69,6 +72,7 @@ class FluidManager:
         """Process all fluid physics for a given tick."""
         # Use deterministic randomness based on world seed and tick
         import random
+
         random.seed(f"fluids_{self.world.seed}_{gametick}")
 
         # Create a copy of fluids to avoid modifying during iteration
@@ -120,9 +124,14 @@ class FluidManager:
         for i, target_pos in enumerate(valid_targets):
             # Distribute remainder to first few targets to ensure exact distribution
             target_amount = amount_per_target + (1 if i < remainder else 0)
-            if target_amount > 0:  # Only create fluid if there's actually amount to spread
+            if (
+                target_amount > 0
+            ):  # Only create fluid if there's actually amount to spread
                 from lithicrivers.game.entities import Fluid
-                new_fluid = Fluid(fluid.fluid_type, target_pos, target_amount, fluid.viscosity)
+
+                new_fluid = Fluid(
+                    fluid.fluid_type, target_pos, target_amount, fluid.viscosity
+                )
                 self.add_fluid(new_fluid)
 
         # Track spreading activity for settlement optimization

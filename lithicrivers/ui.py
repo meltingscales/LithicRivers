@@ -9,7 +9,6 @@ import platform
 import subprocess
 from typing import TYPE_CHECKING, Callable, Optional, Union
 
-from lithicrivers.game.game_save_manager import GameSaveManager
 import asciimatics.widgets
 from asciimatics.event import KeyboardEvent, MouseEvent
 from asciimatics.exceptions import NextScene
@@ -27,10 +26,11 @@ from asciimatics.widgets import (
 )
 
 from lithicrivers.colors import COLOR_MANAGER
-from lithicrivers.game.core import Tile, Tiles, Game
+from lithicrivers.game.core import Game, Tile, Tiles
 from lithicrivers.game.entities import DroppedItem, Item
-from lithicrivers.game.npcs import NPC
+from lithicrivers.game.game_save_manager import GameSaveManager
 from lithicrivers.game.interfaces import ItemArtRenderable
+from lithicrivers.game.npcs import NPC
 from lithicrivers.keymap import KEYMAP
 from lithicrivers.model.model import RenderedData, StopGameError, Viewport
 from lithicrivers.model.vector import VectorN
@@ -60,27 +60,27 @@ def set_popup_manager(manager: "PopupManager") -> None:
 def generate_button_text_with_keybind(base_text: str, keybind_name: str) -> str:
     """
     Generate button text with highlighted keybind character.
-    
+
     Args:
         base_text: The base text for the button (e.g., "drop", "destroy")
         keybind_name: The keybind name to look up (e.g., "DROP_ITEM", "DESTROY_ITEM")
-    
+
     Returns:
         Button text with highlighted character, e.g., "(d)rop" or "(x) destroy"
     """
     # Get the keybind from KEYMAP
     keybind = getattr(KEYMAP, keybind_name, frozenset())
-    
+
     if not keybind:
         # If no keybind found, return base text as-is
         return base_text
-    
+
     # Get the first key from the keybind (assuming single key for now)
     key = next(iter(keybind), None)
-    
+
     if not key:
         return base_text
-    
+
     # Handle special keys that don't have single character representation
     special_key_mapping = {
         "ESCAPE": "ESC",
@@ -94,30 +94,40 @@ def generate_button_text_with_keybind(base_text: str, keybind_name: str) -> str:
         "END": "↘",
         "PAGE_UP": "⇑",
         "PAGE_DOWN": "⇓",
-        "F1": "F1", "F2": "F2", "F3": "F3", "F4": "F4",
-        "F5": "F5", "F6": "F6", "F7": "F7", "F8": "F8",
-        "F9": "F9", "F10": "F10", "F11": "F11", "F12": "F12",
+        "F1": "F1",
+        "F2": "F2",
+        "F3": "F3",
+        "F4": "F4",
+        "F5": "F5",
+        "F6": "F6",
+        "F7": "F7",
+        "F8": "F8",
+        "F9": "F9",
+        "F10": "F10",
+        "F11": "F11",
+        "F12": "F12",
     }
-    
+
     # Use special mapping if available, otherwise use the key as-is
     display_key = special_key_mapping.get(key, key)
-    
+
     # For single character keys, try to find them in the base text
     if len(display_key) == 1:
         # Check if the key is already in the base text (case insensitive)
         key_lower = display_key.lower()
         text_lower = base_text.lower()
         pos = text_lower.find(key_lower)
-        
+
         if pos != -1:
             # Insert parentheses around the key
-            return base_text[:pos] + f"({display_key})" + base_text[pos + len(display_key):]
-    
+            return (
+                base_text[:pos]
+                + f"({display_key})"
+                + base_text[pos + len(display_key) :]
+            )
+
     # If key not found in text or is a special key, prepend it
     return f"({display_key}) {base_text}"
-
-
-
 
 
 def _show_numlock_warning(world_map: "WorldMap") -> None:
@@ -716,15 +726,15 @@ class WorldMap(Frame):
         if hasattr(self, "game") and self.game:
             # Update status label
             self.update_status_label()
-            
+
             # Update inventory display
             if hasattr(self, "labelInventory"):
                 self.labelInventory.text = self.game.player.inventory.summary()
-            
+
             # Update tile under feet display
             if hasattr(self, "labelFeet"):
                 self.labelFeet.text = str(self.game.get_tile_at_player_feet())
-            
+
             # Update viewport display
             if hasattr(self, "labelViewport"):
                 self.labelViewport.text = str(self.game.viewport.render_pretty())
@@ -959,20 +969,20 @@ class InventoryPage(Frame):
         main_layout.add_widget(self.selected_item_header, column=2)
 
         self.button_drop_selected_item = Button(
-            generate_button_text_with_keybind("drop", "DROP_ITEM"), 
-            self.drop_selected_item
+            generate_button_text_with_keybind("drop", "DROP_ITEM"),
+            self.drop_selected_item,
         )
         main_layout.add_widget(self.button_drop_selected_item, column=2)
 
         self.button_destroy_selected_item = Button(
             generate_button_text_with_keybind("destroy", "DESTROY_ITEM"),
-            self.destroy_selected_item
+            self.destroy_selected_item,
         )
         main_layout.add_widget(self.button_destroy_selected_item, column=2)
 
         self.button_cheat_duplicate_selected_item = Button(
             generate_button_text_with_keybind("duplicate", "CHEAT_DUPLICATE_ITEM"),
-            self.cheat_duplicate_selected_item
+            self.cheat_duplicate_selected_item,
         )
         main_layout.add_widget(self.button_cheat_duplicate_selected_item, column=2)
 
@@ -1005,21 +1015,18 @@ class InventoryPage(Frame):
 
         # Remove item from inventory
         self.game.player.inventory.itemsdata.remove(self.selected_item)
-        
+
         # Create a DroppedItem entity at the player's position
-        dropped_item_entity = DroppedItem(
-            self.selected_item, 
-            self.game.player.position
-        )
+        dropped_item_entity = DroppedItem(self.selected_item, self.game.player.position)
         self.game.world.add_entity(dropped_item_entity)
-        
+
         # Log the action
         self.game.log_pickup(f"Dropped {self.selected_item.name}")
         # Use action tick cost system for inventory operations (lower cost)
         tick_cost = self.game.get_action_tick_cost("inventory")
         for _ in range(tick_cost):
             self.game.increment_tick()
-        
+
         # Clear selection and update displays
         self.selected_item = None
         self.update_inventory_display()
@@ -1032,14 +1039,14 @@ class InventoryPage(Frame):
 
         # Remove item from inventory
         self.game.player.inventory.itemsdata.remove(self.selected_item)
-        
+
         # Log the action
         self.game.log_info(f"Destroyed {self.selected_item.name}")
         # Use action tick cost system for inventory operations (lower cost)
         tick_cost = self.game.get_action_tick_cost("inventory")
         for _ in range(tick_cost):
             self.game.increment_tick()
-        
+
         # Clear selection and update displays
         self.selected_item = None
         self.update_inventory_display()
@@ -1053,18 +1060,20 @@ class InventoryPage(Frame):
         # Create a copy of the item and add to inventory
         # For now, create a new Item with the same name and sprite sheet
         duplicated_item = Item(
-            self.selected_item.name, 
-            self.selected_item.sprite_sheet.copy() if self.selected_item.sprite_sheet else None
+            self.selected_item.name,
+            self.selected_item.sprite_sheet.copy()
+            if self.selected_item.sprite_sheet
+            else None,
         )
         self.game.player.inventory.add_item(duplicated_item)
-        
+
         # Log the action
         self.game.log_info(f"Duplicated {self.selected_item.name}")
         # Use action tick cost system for inventory operations (lower cost)
         tick_cost = self.game.get_action_tick_cost("inventory")
         for _ in range(tick_cost):
             self.game.increment_tick()
-        
+
         # Update displays
         self.update_inventory_display()
 
@@ -1182,31 +1191,31 @@ class BodyPage(Frame):
             return
 
         player = self.game.player
-        
+
         # Build the body status display
         lines = []
         lines.append("ANDROID BODY STATUS")
         lines.append("=" * 40)
         lines.append("")
-        
+
         # Basic stats
         lines.append(f"[*] Health: {player.health}")
         lines.append(f"[*] Stamina: {player.stamina}")
         lines.append("")
-        
+
         # Body parts status
         lines.append("BODY PARTS:")
         body_summary = player.get_body_status_summary()
-        for line in body_summary.split('\n'):
+        for line in body_summary.split("\n"):
             lines.append(f"   {line}")
         lines.append("")
-        
+
         # Movement and action status
         lines.append("MOVEMENT STATUS:")
         penalty_desc = player.get_movement_penalty_description()
         lines.append(f"   {penalty_desc}")
         lines.append("")
-        
+
         # Speed modifiers
         lines.append("SPEED MODIFIERS:")
         walk_speed = player.get_walk_speed_modifier()
@@ -1214,7 +1223,7 @@ class BodyPage(Frame):
         lines.append(f"   Walk Speed: {walk_speed:.2f}")
         lines.append(f"   Break Speed: {break_speed:.2f}")
         lines.append("")
-        
+
         # Action capabilities
         lines.append("ACTION CAPABILITIES:")
         actions = ["walk", "mine", "craft", "push", "interact"]
@@ -1224,7 +1233,7 @@ class BodyPage(Frame):
             status = "[OK]" if can_do else "[X]"
             lines.append(f"   {action.upper():8} {status} (speed: {speed:.2f})")
         lines.append("")
-        
+
         # Repair requirements
         lines.append("REPAIR REQUIREMENTS:")
         requirements = player.body.get_repair_requirements()
@@ -1236,14 +1245,14 @@ class BodyPage(Frame):
         else:
             lines.append("   No repairs needed!")
         lines.append("")
-        
+
         # Basic descriptions
         lines.append("BODY DESCRIPTIONS:")
         for part_type, part in player.body.parts.items():
             part_name = part.name
             description = part.description
             lines.append(f"   {part_name}: {description}")
-        
+
         self.body_label.text = "\n".join(lines)
 
 
@@ -1392,6 +1401,7 @@ class DevPopupPage(Frame):
 
         def test_popup_box() -> None:
             """Test vertical popup dialog."""
+
             def callback(result) -> None:
                 print(f"Popup dialog result: {result}")
                 popup_manager = get_popup_manager()
@@ -1431,6 +1441,7 @@ class DevPopupPage(Frame):
         layout2 = TabButtons(self)
         self.add_layout(layout2)
         self.fix()
+
 
 class DialogBox(Frame):
     """A modal dialog box for conversations and interactions."""
@@ -1780,12 +1791,16 @@ class InputHandler:
         # Check all adjacent positions for dropped items
         for dx in [-1, 0, 1]:
             for dy in [-1, 0, 1]:
-                check_pos = VectorN(game.player.position.x + dx, game.player.position.y + dy, game.player.position.z)
+                check_pos = VectorN(
+                    game.player.position.x + dx,
+                    game.player.position.y + dy,
+                    game.player.position.z,
+                )
                 entities = game.world.get_entities(check_pos)
-                
+
                 for entity in entities:
                     # Check if this is a DroppedItem
-                    if hasattr(entity, 'item') and hasattr(entity, 'name'):
+                    if hasattr(entity, "item") and hasattr(entity, "name"):
                         # This is a DroppedItem entity
                         color = entity.color if hasattr(entity, "color") else "white"
                         dropped_items.append((entity.name, check_pos, color, entity))
@@ -1918,14 +1933,14 @@ class InputHandler:
     ) -> None:
         """Handle interaction with a specific entity."""
         entities = game.world.get_entities(pos)
-        
+
         # Find the specific entity by name (in case there are multiple entities)
         entity = None
         for e in entities:
             if e.name == name:
                 entity = e
                 break
-        
+
         # If not found by name, use the first entity
         if entity is None and entities:
             entity = entities[0]
@@ -2004,7 +2019,11 @@ class InputHandler:
         """Show a popup for picking up items."""
         # Generate the message for the popup
         message = cls._generate_pickup_message(dropped_items)
-        options = ["Pick Up All"] + [f"Pick Up {name}" for name, _, _, _ in dropped_items] + ["Cancel"]
+        options = (
+            ["Pick Up All"]
+            + [f"Pick Up {name}" for name, _, _, _ in dropped_items]
+            + ["Cancel"]
+        )
 
         def popup_callback(selected_option: int) -> None:
             if selected_option == 0:
@@ -2049,18 +2068,21 @@ class InputHandler:
 
     @classmethod
     def _handle_pickup_all_items(
-        cls, game: Game, dropped_items: list[tuple[str, VectorN, str, "DroppedItem"]], world_map: WorldMap
+        cls,
+        game: Game,
+        dropped_items: list[tuple[str, VectorN, str, "DroppedItem"]],
+        world_map: WorldMap,
     ) -> None:
         """Handle picking up all items."""
         picked_up_items = []
-        
+
         for name, pos, color, entity in dropped_items:
             # Add item to inventory
             game.player.inventory.add_item(entity.item)
             # Remove entity from world
             game.world.remove_entity(entity)
             picked_up_items.append(name)
-        
+
         # Log the action
         if picked_up_items:
             game.log_pickup(f"Picked up: {', '.join(picked_up_items)}")
@@ -2069,7 +2091,7 @@ class InputHandler:
             for _ in range(tick_cost):
                 game.increment_tick()
             world_map.update_all_ui_elements()
-        
+
         # Close popup
         popup_manager = get_popup_manager()
         if popup_manager:
@@ -2077,14 +2099,19 @@ class InputHandler:
 
     @classmethod
     def _handle_item_pickup(
-        cls, game: Game, name: str, pos: VectorN, entity: "DroppedItem", world_map: WorldMap
+        cls,
+        game: Game,
+        name: str,
+        pos: VectorN,
+        entity: "DroppedItem",
+        world_map: WorldMap,
     ) -> None:
         """Handle picking up a specific item."""
         # Add item to inventory
         game.player.inventory.add_item(entity.item)
         # Remove entity from world
         game.world.remove_entity(entity)
-        
+
         # Log the action
         game.log_pickup(f"Picked up {name}")
         # Use action tick cost system for pickup operations (lower cost)
@@ -2092,7 +2119,7 @@ class InputHandler:
         for _ in range(tick_cost):
             game.increment_tick()
         world_map.update_all_ui_elements()
-        
+
         # Close popup
         popup_manager = get_popup_manager()
         if popup_manager:
@@ -2404,7 +2431,9 @@ class PopupManager:
         return False
 
 
-def demo(screen: Screen, scene: Scene, game: Game, save_manager: GameSaveManager) -> None:
+def demo(
+    screen: Screen, scene: Scene, game: Game, save_manager: GameSaveManager
+) -> None:
     # Create a global variable to store the current dialog
     global current_dialog_scene
 

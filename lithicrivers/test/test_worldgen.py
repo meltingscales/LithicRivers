@@ -302,7 +302,7 @@ class TestIntegrationWithGame(OptimizedTestCase):
 
     def test_game_creation_with_seed(self):
         """Test creating a Game with a seed."""
-        
+
         # Use shared fixtures instead of creating new games
         game1 = self.get_game(seed=42)
         game2 = self.get_game(seed=42)

@@ -1,6 +1,7 @@
+from lithicrivers.model.vector import VectorN
 from lithicrivers.settings import DEFAULT_SEED
 from lithicrivers.test.test_fixtures import OptimizedTestCase
-from lithicrivers.model.vector import VectorN
+
 
 class TestInteractionMessages(OptimizedTestCase):
     """Test the interaction message system."""

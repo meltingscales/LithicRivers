@@ -143,7 +143,7 @@ class ConfigManager:
             # Update the config dict with current keybinds and settings
             self.config["keybinds"] = self.keybinds
             self.config["settings"] = self.settings
-            
+
             with open(self.config_file, "w") as f:
                 json.dump(self.config, f, indent=2)
         except OSError as e:

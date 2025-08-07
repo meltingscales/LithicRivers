@@ -3,24 +3,20 @@ import logging
 import os
 import pickle
 import pprint
-import random
 import threading
-from concurrent.futures import ProcessPoolExecutor
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from datetime import datetime
 from pathlib import Path
 from typing import Optional, Union
 
 from lithicrivers.colors import COLOR_MANAGER
 from lithicrivers.constants import VEC_NORTH
-from lithicrivers.game.entities import Entity, Entities, Items, \
-    DroppedItem, Item
-from lithicrivers.game.events import EntityMovedEvent, EntityListener
+from lithicrivers.game.entities import DroppedItem, Entities, Entity, Item, Items
+from lithicrivers.game.events import EntityListener, EntityMovedEvent
 from lithicrivers.game.fluids import FluidManager
-from lithicrivers.game.interfaces import ShutDownable, Cloneable, SpriteRenderable
-from lithicrivers.game.tiles import Tile, Tiles, TilePalette
+from lithicrivers.game.interfaces import Cloneable, ShutDownable, SpriteRenderable
+from lithicrivers.game.tiles import Tile, Tiles
 from lithicrivers.model.body import Body
-from lithicrivers.model.generictype import T
 from lithicrivers.model.model import RenderedData, Viewport
 from lithicrivers.model.vector import VectorN
 from lithicrivers.settings import (
@@ -29,7 +25,7 @@ from lithicrivers.settings import (
     DEFAULT_VIEWPORT,
 )
 from lithicrivers.textutil import get_color_for_item, get_color_for_tile
-from lithicrivers.worldgen import SeededWorldGenerator, Chunk
+from lithicrivers.worldgen import Chunk, SeededWorldGenerator
 
 
 class Player(Entity, SpriteRenderable):
@@ -126,8 +122,6 @@ class Player(Entity, SpriteRenderable):
         pass
 
 
-
-
 class MessageLog:
     """A class to manage game messages for the message log pane."""
 
@@ -166,6 +160,7 @@ class MessageLog:
     def clear(self):
         """Clear all messages."""
         self.messages.clear()
+
 
 class World(Cloneable, ShutDownable, EntityListener):
     """
@@ -208,6 +203,7 @@ class World(Cloneable, ShutDownable, EntityListener):
         This is more efficient than creating a new world from scratch.
         """
         import copy
+
         cloned_world = copy.deepcopy(self)
         # Re-establish entity listeners after cloning
         cloned_world._reestablish_entity_listeners()
@@ -229,8 +225,8 @@ class World(Cloneable, ShutDownable, EntityListener):
         """Custom pickle serialization that handles threading primitives."""
         state = self.__dict__.copy()
         # Don't serialize the generator - we'll recreate it on load
-        if 'generator' in state:
-            del state['generator']
+        if "generator" in state:
+            del state["generator"]
         return state
 
     def __setstate__(self, state):
@@ -238,6 +234,7 @@ class World(Cloneable, ShutDownable, EntityListener):
         self.__dict__.update(state)
         # Recreate the world generator with the same seed
         from lithicrivers.worldgen import SeededWorldGenerator
+
         self.generator = SeededWorldGenerator(self.seed)
         # Re-establish entity listeners
         self._reestablish_entity_listeners()
@@ -266,13 +263,15 @@ class World(Cloneable, ShutDownable, EntityListener):
 
         # Apply the ship world data to our chunked world
         for pos_str, tile in ship_world_data.items():
-            pos_parts = pos_str.split(',')
+            pos_parts = pos_str.split(",")
             world_pos = VectorN(int(pos_parts[0]), int(pos_parts[1]), int(pos_parts[2]))
             self.data.set_tile(world_pos, tile)
 
         # Force a procedural dungeon to spawn at (50, 50, -3) - Quest location
         forced_dungeon_pos = VectorN(50, 50, -3)
-        print(f"FORCING UNDERGROUND FACILITY TO SPAWN AT {forced_dungeon_pos}")  # Debug output
+        print(
+            f"FORCING UNDERGROUND FACILITY TO SPAWN AT {forced_dungeon_pos}"
+        )  # Debug output
 
         # Generate a small world around the dungeon to place it
         dungeon_radius = VectorN(55, 55, 5)
@@ -280,7 +279,7 @@ class World(Cloneable, ShutDownable, EntityListener):
 
         # Apply the dungeon world data to our chunked world
         for pos_str, tile in dungeon_world_data.items():
-            pos_parts = pos_str.split(',')
+            pos_parts = pos_str.split(",")
             world_pos = VectorN(int(pos_parts[0]), int(pos_parts[1]), int(pos_parts[2]))
             self.data.set_tile(world_pos, tile)
 
@@ -446,9 +445,9 @@ class World(Cloneable, ShutDownable, EntityListener):
 
         # Sort entities by priority
         def get_priority(entity):
-            if hasattr(entity, 'get_conversation'):  # NPCs
+            if hasattr(entity, "get_conversation"):  # NPCs
                 return 3
-            elif hasattr(entity, 'interact'):  # Interactive entities
+            elif hasattr(entity, "interact"):  # Interactive entities
                 return 2
             elif isinstance(entity, DroppedItem):  # Dropped items
                 return 1
@@ -513,12 +512,12 @@ class Game(Cloneable, ShutDownable):
     """Main game class. Meant to hold all game state. Can be pickled to save the game."""
 
     def __init__(
-            self,
-            seed: int,
-            player: Player = None,
-            world: World = None,
-            viewport: Viewport = DEFAULT_VIEWPORT,
-            save_manager: "GameSaveManager" = None,
+        self,
+        seed: int,
+        player: Player = None,
+        world: World = None,
+        viewport: Viewport = DEFAULT_VIEWPORT,
+        save_manager: "GameSaveManager" = None,
     ):
         # Create a copy of the viewport to avoid shared state between tests
         if viewport is DEFAULT_VIEWPORT:
@@ -548,7 +547,7 @@ class Game(Cloneable, ShutDownable):
         self.player: Player = player
         self.world: World = world
 
-        self.save_manager: "GameSaveManager" = save_manager
+        self.save_manager: GameSaveManager = save_manager
 
         self.running = True
         self.message_log = MessageLog(game=self)
@@ -562,6 +561,7 @@ class Game(Cloneable, ShutDownable):
     def clone(self) -> "Game":
         """Create a deep copy of this Game for pickling or testing."""
         import copy
+
         cloned_game = copy.deepcopy(self)
         # Re-establish entity listeners after cloning
         cloned_game.world._reestablish_entity_listeners()
@@ -781,7 +781,9 @@ class Game(Cloneable, ShutDownable):
 
         # Adjust cost based on body condition
         if speed_modifier < 0.5:
-            return max(1, int(base_cost / speed_modifier))  # More ticks for slower actions
+            return max(
+                1, int(base_cost / speed_modifier)
+            )  # More ticks for slower actions
         else:
             return base_cost
 
@@ -809,6 +811,7 @@ class ChunkedWorldData(Cloneable, ShutDownable):
 
     def __init__(self, chunk_size: int = None, world_generator=None):
         from lithicrivers.settings import CHUNK_SIZE
+
         if chunk_size is None:
             chunk_size = CHUNK_SIZE
         self.chunk_size = chunk_size
@@ -816,22 +819,33 @@ class ChunkedWorldData(Cloneable, ShutDownable):
         self.entity_data = {}  # Entity storage
         self._tile_cache = {}  # Cache for frequently accessed tiles
         self._cache_size = 1000  # Max cache size
-        self.world_generator = world_generator  # Reference to world generator for structure generation
-        self._generated_chunks = set()  # Track which chunks have had structures generated
-        self._chunk_generation_lock = threading.Lock()  # Lock for thread-safe chunk generation
+        self.world_generator = (
+            world_generator  # Reference to world generator for structure generation
+        )
+        self._generated_chunks = (
+            set()
+        )  # Track which chunks have had structures generated
+        self._chunk_generation_lock = (
+            threading.Lock()
+        )  # Lock for thread-safe chunk generation
         from lithicrivers.settings import MAX_CPU_THREADS
-        self._thread_pool = ThreadPoolExecutor(max_workers=MAX_CPU_THREADS)  # Thread pool for chunk generation
+
+        self._thread_pool = ThreadPoolExecutor(
+            max_workers=MAX_CPU_THREADS
+        )  # Thread pool for chunk generation
 
     def pregen_chunks(self, radius: int) -> None:
         """Pre-generate all chunks within a cubic radius around (0,0,0) using process pool. Waits for all processes to finish.
         This should only be called when the world generator is initialized, or during unit tests to speed them up if pickling after generating."""
         if not self.world_generator:
             raise Exception("World generator is not initialized")
-        seed = getattr(self.world_generator, 'seed', None)
-        if hasattr(seed, 'seed'):
+        seed = getattr(self.world_generator, "seed", None)
+        if hasattr(seed, "seed"):
             seed = seed.seed
         if seed is None:
-            raise Exception("World generator must have a .seed or .seed.seed attribute for process pool pregen")
+            raise Exception(
+                "World generator must have a .seed or .seed.seed attribute for process pool pregen"
+            )
         chunk_size = self.chunk_size
         chunk_radius = (radius + chunk_size - 1) // chunk_size  # ceil division
         # Prepare all chunk coords to generate
@@ -847,7 +861,11 @@ class ChunkedWorldData(Cloneable, ShutDownable):
             self._generated_chunks.add(chunk_key)
         with ProcessPoolExecutor() as pool:
             future_to_chunk = {
-                pool.submit(_generate_chunk_data_for_process, seed, cx, cy, cz): (cx, cy, cz)
+                pool.submit(_generate_chunk_data_for_process, seed, cx, cy, cz): (
+                    cx,
+                    cy,
+                    cz,
+                )
                 for (cx, cy, cz) in chunk_coords
             }
             for future in concurrent.futures.as_completed(future_to_chunk):
@@ -867,15 +885,17 @@ class ChunkedWorldData(Cloneable, ShutDownable):
     def __getstate__(self):
         state = self.__dict__.copy()
         # Remove unpickleable objects for pickling
-        state.pop('_chunk_generation_lock', None)
-        state.pop('_thread_pool', None)
+        state.pop("_chunk_generation_lock", None)
+        state.pop("_thread_pool", None)
         return state
 
     def __setstate__(self, state):
         self.__dict__.update(state)
         import threading
         from concurrent.futures import ThreadPoolExecutor
+
         from lithicrivers.settings import MAX_CPU_THREADS
+
         self._chunk_generation_lock = threading.Lock()
         self._thread_pool = ThreadPoolExecutor(max_workers=MAX_CPU_THREADS)
 
@@ -884,6 +904,7 @@ class ChunkedWorldData(Cloneable, ShutDownable):
         Custom deepcopy implementation that handles threading primitives properly.
         """
         import copy
+
         from lithicrivers.worldgen import SeededWorldGenerator
 
         # Create new ChunkedWorldData with same parameters
@@ -893,7 +914,9 @@ class ChunkedWorldData(Cloneable, ShutDownable):
 
         # Create a new world generator with the same seed instead of deep copying
         if self.world_generator:
-            cloned_data.world_generator = SeededWorldGenerator(self.world_generator.seed.seed)
+            cloned_data.world_generator = SeededWorldGenerator(
+                self.world_generator.seed.seed
+            )
         else:
             cloned_data.world_generator = None
 
@@ -908,6 +931,7 @@ class ChunkedWorldData(Cloneable, ShutDownable):
         # Create new threading primitives (can't be copied)
         cloned_data._chunk_generation_lock = threading.Lock()
         from lithicrivers.settings import MAX_CPU_THREADS
+
         cloned_data._thread_pool = ThreadPoolExecutor(max_workers=MAX_CPU_THREADS)
 
         return cloned_data
@@ -918,6 +942,7 @@ class ChunkedWorldData(Cloneable, ShutDownable):
         This is more efficient than regenerating all chunks from scratch.
         """
         import copy
+
         return copy.deepcopy(self)
 
     def get_chunk_key(self, pos: VectorN) -> tuple[int, int, int]:
@@ -957,7 +982,9 @@ class ChunkedWorldData(Cloneable, ShutDownable):
         chunk_x, chunk_y, chunk_z = chunk_key
 
         # Submit chunk generation to thread pool
-        future = self._thread_pool.submit(self._generate_chunk_worker, chunk_x, chunk_y, chunk_z)
+        future = self._thread_pool.submit(
+            self._generate_chunk_worker, chunk_x, chunk_y, chunk_z
+        )
 
         # Store the future for later retrieval if needed
         # For now, we'll let it run in the background
@@ -977,13 +1004,17 @@ class ChunkedWorldData(Cloneable, ShutDownable):
             self.world_generator._generate_complete_chunk(chunk_x, chunk_y, chunk_z)
 
             # Apply the generated chunk data to our chunked world
-            chunk_data = self.world_generator.chunk_cache.cache.get((chunk_x, chunk_y, chunk_z), {})
+            chunk_data = self.world_generator.chunk_cache.cache.get(
+                (chunk_x, chunk_y, chunk_z), {}
+            )
 
             with self._chunk_generation_lock:
                 tiles_applied = 0
                 for pos_str, tile in chunk_data.items():
-                    pos_parts = pos_str.split(',')
-                    world_pos = VectorN(int(pos_parts[0]), int(pos_parts[1]), int(pos_parts[2]))
+                    pos_parts = pos_str.split(",")
+                    world_pos = VectorN(
+                        int(pos_parts[0]), int(pos_parts[1]), int(pos_parts[2])
+                    )
 
                     # Get chunk directly without triggering generation
                     chunk_key = self.get_chunk_key(world_pos)
@@ -999,7 +1030,10 @@ class ChunkedWorldData(Cloneable, ShutDownable):
         except Exception as e:
             # Log any errors that occur during chunk generation
             import logging
-            logging.warning(f"Error generating chunk ({chunk_x}, {chunk_y}, {chunk_z}): {e}")
+
+            logging.warning(
+                f"Error generating chunk ({chunk_x}, {chunk_y}, {chunk_z}): {e}"
+            )
 
     def get_tile(self, pos: VectorN) -> Union[Tile, None]:
         """Get tile at world position."""
@@ -1040,7 +1074,7 @@ class ChunkedWorldData(Cloneable, ShutDownable):
 
     def shutdown(self) -> None:
         """Shutdown the thread pool and clean up resources."""
-        if hasattr(self, '_thread_pool'):
+        if hasattr(self, "_thread_pool"):
             # Shutdown the thread pool and wait for all threads to complete
             # This prevents the game from hanging due to background threads
             print("Shutting down thread pool...")
@@ -1137,11 +1171,6 @@ class Inventory:
             s += f"{k}={v} ({color_name}), "
 
         return s[0 : len(s) - 2] if s else "Empty"
-
-
-
-
-
 
 
 def _generate_chunk_data_for_process(seed, chunk_x, chunk_y, chunk_z):

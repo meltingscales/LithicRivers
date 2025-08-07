@@ -3,11 +3,10 @@ Test the pickup items functionality.
 Copyright (c) 2024 Henry Post. All rights reserved.
 """
 
-import unittest
 
 from asciimatics.event import KeyboardEvent
 
-from lithicrivers.game.entities import Items, DroppedItem
+from lithicrivers.game.entities import DroppedItem, Items
 from lithicrivers.keymap import KEYMAP
 from lithicrivers.model.vector import VectorN
 from lithicrivers.settings import DEFAULT_SEED
@@ -54,8 +53,10 @@ class TestPickupSystem(OptimizedTestCase):
         self.game.world.add_entity(dropped_item)
 
         # Get adjacent entities
-        adjacent_entities = self.game.world.get_adjacent_entities(self.game.player.position)
-        
+        adjacent_entities = self.game.world.get_adjacent_entities(
+            self.game.player.position
+        )
+
         # Check that the dropped item is detected
         entity_names = [name for name, pos, color in adjacent_entities]
         self.assertIn("Acorn", entity_names)
@@ -89,14 +90,16 @@ class TestPickupSystem(OptimizedTestCase):
         self.game.player.position = VectorN(100, 100, 0)
 
         # Get adjacent entities
-        adjacent_entities = self.game.world.get_adjacent_entities(self.game.player.position)
-        
+        adjacent_entities = self.game.world.get_adjacent_entities(
+            self.game.player.position
+        )
+
         # Filter for dropped items
         dropped_items = []
         for name, pos, color in adjacent_entities:
             entities = self.game.world.get_entities(pos)
             for entity in entities:
-                if hasattr(entity, 'item') and hasattr(entity, 'name'):
+                if hasattr(entity, "item") and hasattr(entity, "name"):
                     dropped_items.append((entity.name, pos, color, entity))
 
         # Should be no dropped items
@@ -109,26 +112,28 @@ class TestPickupSystem(OptimizedTestCase):
         item2 = Items.stick()
         position1 = VectorN(1, 0, 0)
         position2 = VectorN(0, 1, 0)
-        
+
         dropped_item1 = DroppedItem(item1, position1)
         dropped_item2 = DroppedItem(item2, position2)
-        
+
         self.game.world.add_entity(dropped_item1)
         self.game.world.add_entity(dropped_item2)
 
         # Get adjacent entities and filter for dropped items
-        adjacent_entities = self.game.world.get_adjacent_entities(self.game.player.position)
+        adjacent_entities = self.game.world.get_adjacent_entities(
+            self.game.player.position
+        )
         dropped_items = []
 
         for name, pos, color in adjacent_entities:
             entities = self.game.world.get_entities(pos)
             for entity in entities:
-                if hasattr(entity, 'item') and hasattr(entity, 'name'):
+                if hasattr(entity, "item") and hasattr(entity, "name"):
                     dropped_items.append((entity.name, pos, color, entity))
 
         # Should find both dropped items
         self.assertEqual(len(dropped_items), 2)
-        
+
         item_names = [name for name, pos, color, entity in dropped_items]
         self.assertIn("Acorn", item_names)
         self.assertIn("Stick", item_names)

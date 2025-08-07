@@ -131,7 +131,9 @@ class Keymap:
         # Inventory keys
         self.DROP_ITEM = config_manager.get_keybind("inventory", "DROP_ITEM")
         self.DESTROY_ITEM = config_manager.get_keybind("inventory", "DESTROY_ITEM")
-        self.CHEAT_DUPLICATE_ITEM = config_manager.get_keybind("inventory", "CHEAT_DUPLICATE_ITEM")
+        self.CHEAT_DUPLICATE_ITEM = config_manager.get_keybind(
+            "inventory", "CHEAT_DUPLICATE_ITEM"
+        )
 
     def _load_keychords(self) -> None:
         """Load platform-specific keychords from JSON file."""

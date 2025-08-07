@@ -5,7 +5,6 @@ from lithicrivers.model.vector import VectorN
 
 class TestVectorN(unittest.TestCase):
     def test_simple(self):
-
         v1 = VectorN(1, 2, 0)
         self.assertEqual(v1.x, 1)
         self.assertEqual(v1.y, 2)

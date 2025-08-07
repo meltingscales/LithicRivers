@@ -13,24 +13,24 @@ from asciimatics.widgets import Button, Frame, Layout, TextBox, _split_text
 class VerticalPopUpDialog(Frame):
     """
     A vertical version of PopUpDialog that arranges buttons vertically instead of horizontally.
-    
+
     This class provides a modal dialog with vertically arranged buttons, which is often
     more user-friendly than horizontal button layouts, especially for multiple options
     or longer button text.
     """
 
     def __init__(
-        self, 
-        screen, 
-        text: str, 
-        buttons: list[str], 
-        on_close: Optional[Callable] = None, 
-        has_shadow: bool = False, 
-        theme: str = "warning"
+        self,
+        screen,
+        text: str,
+        buttons: list[str],
+        on_close: Optional[Callable] = None,
+        has_shadow: bool = False,
+        theme: str = "warning",
     ):
         """
         Initialize the vertical popup dialog.
-        
+
         Args:
             screen: The Screen that owns this dialog.
             text: The message text to display.
@@ -52,7 +52,9 @@ class VerticalPopUpDialog(Frame):
         self._on_close = on_close
 
         # Decide on optimum width of the dialog. Limit to 2/3 the screen width.
-        string_len = getattr(screen, 'unicode_aware', False) and (lambda x: len(x)) or len
+        string_len = (
+            (getattr(screen, "unicode_aware", False) and (lambda x: len(x))) or len
+        )
         width = max(string_len(x) for x in text.split("\n"))
         # For vertical buttons, we need to account for the widest button
         if buttons:
@@ -62,14 +64,22 @@ class VerticalPopUpDialog(Frame):
 
         # Figure out the necessary message and allow for buttons and borders
         # when deciding on height.
-        delta_h = 4 + len(buttons) if len(buttons) > 0 else 2  # Extra height for vertical buttons
-        self._message = _split_text(text, width - 2, screen.height - delta_h, getattr(screen, 'unicode_aware', False))
+        delta_h = (
+            4 + len(buttons) if len(buttons) > 0 else 2
+        )  # Extra height for vertical buttons
+        self._message = _split_text(
+            text,
+            width - 2,
+            screen.height - delta_h,
+            getattr(screen, "unicode_aware", False),
+        )
         height = len(self._message) + delta_h
 
         # Construct the Frame
         self._data = {"message": self._message}
         super().__init__(
-            screen, height, width, self._data, has_shadow=has_shadow, is_modal=True)
+            screen, height, width, self._data, has_shadow=has_shadow, is_modal=True
+        )
 
         # Build up the message box
         layout = Layout([width - 2], fill_frame=True)
@@ -77,7 +87,7 @@ class VerticalPopUpDialog(Frame):
         text_box = TextBox(len(self._message), name="message")
         text_box.disabled = True
         layout.add_widget(text_box)
-        
+
         # Add vertical button layout
         if buttons:
             layout2 = Layout([1])  # Single column for vertical buttons
@@ -85,7 +95,7 @@ class VerticalPopUpDialog(Frame):
             for i, button in enumerate(buttons):
                 func = partial(self._destroy, i)
                 layout2.add_widget(Button(button, func))
-        
+
         self.fix()
 
         # Ensure that we have the right palette in place
@@ -107,4 +117,6 @@ class VerticalPopUpDialog(Frame):
         """
         # Only clone the object if the function is safe to do so.
         if self._on_close is None or isfunction(self._on_close):
-            scene.add_effect(VerticalPopUpDialog(screen, self._text, self._buttons, self._on_close)) 
+            scene.add_effect(
+                VerticalPopUpDialog(screen, self._text, self._buttons, self._on_close)
+            )
