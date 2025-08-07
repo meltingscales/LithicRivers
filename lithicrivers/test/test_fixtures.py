@@ -18,40 +18,13 @@ class SharedTestFixtures:
         
     def __init__(self):
         self._test_saves_dir = Path("lithicrivers-test-saves")
-        self._test_saves_lock = Path("lithicrivers-test-saves/test-saves-creation.lock")
-
+        
         # Define seeds to pre-generate (most commonly used in tests)
         self.pregenerated_seeds = [DEFAULT_SEED, 42]
         self.pregen_chunk_radius = 4
-
-
-        # Check if all required save files exist (more reliable than directory count)
-        missing_seeds = [seed for seed in self.pregenerated_seeds if not self.does_save_exist(seed)]
         
-        if missing_seeds:
-            # Try to acquire lock atomically
-            try:
-                self._test_saves_dir.mkdir(exist_ok=True)
-                # Use exclusive creation to avoid race conditions
-                self._test_saves_lock.touch(exist_ok=False)
-                
-                # We got the lock, initialize fixtures
-                logging.info(f"Acquired lock, initializing fixtures for seeds: {missing_seeds}")
-                self._initialize_fixtures()
-                
-                # Release the lock
-                self._test_saves_lock.unlink()
-                
-            except FileExistsError:
-                # Another thread has the lock, wait for it
-                logging.info("Lock exists, waiting for fixture initialization to complete...")
-                while self._test_saves_lock.exists():
-                    time.sleep(0.1)
-                
-                # Verify all fixtures are now available
-                remaining_missing = [seed for seed in self.pregenerated_seeds if not self.does_save_exist(seed)]
-                if remaining_missing:
-                    raise RuntimeError(f"Fixture initialization failed, missing seeds: {remaining_missing}")
+        # Create directory if it doesn't exist
+        self._test_saves_dir.mkdir(exist_ok=True)
 
     def save_game(self, game: Game, seed: int):
         """Save a game to a file."""
