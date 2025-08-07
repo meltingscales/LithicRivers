@@ -189,7 +189,7 @@
 
 - perlin noise map caching: brainstorm on potential speedup. find way to invalidate when worldgen algorithm changes.
 
-- multi-thread unit tests...
+- stats/perf measurements throughout the game code that logs to some format...TBH speedscope is "good enough" but it could be useful long term to do this.
 
 ## MVP for steam release (2026)
 

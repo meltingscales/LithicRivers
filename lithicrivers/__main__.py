@@ -66,6 +66,10 @@ if __name__ == "__main__":
     print("Game is no longer running :3c")
     print("Goodbye! Please wait for worldgen and thread pool to shut down.")
 
+    print("! " * 20)
+    print("DO NOT EXIT THE GAME OR PRESS CTRL-C!! YOU WILL LOSE GAME PROGRESS IF YOU DO!")
+    print("! " * 20)
+
     GAME.shutdown()
 
     # Save to a pickle file
