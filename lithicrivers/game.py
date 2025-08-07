@@ -426,13 +426,21 @@ class Fluid(Entity, SpriteRenderable):
     Fluids don't replace blocks but exist as separate entities.
     """
     
-    def __init__(self, fluid_type: str, position: VectorN, amount: float = 1.0, viscosity: float = 1.0):
+    def __init__(self, fluid_type: str, position: VectorN, amount: int = 1000, viscosity: float = 1.0):
         super().__init__(name=f"{fluid_type}_fluid", position=position)
         self.fluid_type = fluid_type
-        self.amount = amount  # Amount of fluid (0.0 to 1.0)
+        # Convert to integer amount (1-1000) to eliminate floating-point precision issues
+        self.amount = max(1, min(1000, int(amount)))  # Clamp between 1-1000
         self.viscosity = viscosity  # How slowly the fluid flows (higher = slower)
-        self.max_amount = 1.0  # Maximum amount per tile
-        self.spread_threshold = 0.8  # Amount at which fluid starts spreading
+        self.max_amount = 1000  # Maximum amount per tile (integer)
+        self.spread_threshold = 800  # Amount at which fluid starts spreading (80% of max)
+        
+        # Settlement optimization properties
+        self.settled = False  # Whether this fluid has reached equilibrium
+        self.last_spread_tick = -1  # Last tick when this fluid spread
+        self.stability_counter = 0  # How many ticks this fluid has been stable
+        self.settlement_threshold = 5  # Ticks of stability before marking as settled
+        
         # Initialize sprite sheet after fluid_type is set
         SpriteRenderable.__init__(self, self.get_sprites())
         
@@ -514,6 +522,14 @@ class FluidManager:
             existing = self.fluids[pos_key]
             if existing.fluid_type == fluid.fluid_type:
                 total_amount = existing.amount + fluid.amount
+                
+                # Disturb settled fluid when new fluid is added
+                if existing.settled and fluid.amount > 0:
+                    existing.settled = False
+                    existing.stability_counter = 0
+                    # Also disturb neighboring fluids that might be affected
+                    self._disturb_neighboring_fluids(existing.position)
+                
                 if total_amount <= existing.max_amount:
                     existing.amount = total_amount
                 else:
@@ -553,15 +569,23 @@ class FluidManager:
                 del self.fluids[pos_key]
                 continue
             
-            # Check if fluid should spread
-            if fluid.amount >= fluid.spread_threshold:
+            # Update settlement status
+            self._update_fluid_settlement(fluid, gametick)
+            
+            # Only process unsettled fluids that should spread
+            if not fluid.settled and fluid.amount >= fluid.spread_threshold:
                 self._spread_fluid(fluid, gametick)
     
     def _spread_fluid(self, fluid: Fluid, gametick: int) -> None:
         """Spread fluid to adjacent tiles based on physics. Fully deterministic and not random at all."""
         
+        # Early exit if already settled (redundant check for safety)
+        if fluid.settled:
+            return
+
         # Calculate how much to spread
         spread_amount = fluid.amount - fluid.spread_threshold
+        original_amount = fluid.amount
         fluid.amount = fluid.spread_threshold
         
         # Try to spread to adjacent positions
@@ -578,13 +602,54 @@ class FluidManager:
         if not valid_targets:
             return
         
-        # Distribute fluid among valid targets
-        amount_per_target = spread_amount / len(valid_targets)
+        # Distribute fluid among valid targets using integer division
+        amount_per_target = spread_amount // len(valid_targets)
+        remainder = spread_amount % len(valid_targets)
         
-        for target_pos in valid_targets:
-            # Create new fluid at target position
-            new_fluid = Fluid(fluid.fluid_type, target_pos, amount_per_target, fluid.viscosity)
-            self.add_fluid(new_fluid)
+        for i, target_pos in enumerate(valid_targets):
+            # Distribute remainder to first few targets to ensure exact distribution
+            target_amount = amount_per_target + (1 if i < remainder else 0)
+            if target_amount > 0:  # Only create fluid if there's actually amount to spread
+                new_fluid = Fluid(fluid.fluid_type, target_pos, target_amount, fluid.viscosity)
+                self.add_fluid(new_fluid)
+        
+        # Track spreading activity for settlement optimization
+        if len(valid_targets) > 0:
+            # Fluid actually spread - reset settlement tracking
+            fluid.last_spread_tick = gametick
+            fluid.stability_counter = 0
+            fluid.settled = False
+        else:
+            # Fluid wanted to spread but couldn't - this counts as stability
+            if fluid.last_spread_tick != gametick:
+                fluid.stability_counter += 1
+    
+    def _update_fluid_settlement(self, fluid: Fluid, gametick: int) -> None:
+        """Update the settlement status of a fluid based on its stability."""
+        # Skip if already settled
+        if fluid.settled:
+            return
+        
+        # Check if fluid is below spread threshold (naturally stable)
+        if fluid.amount < fluid.spread_threshold:
+            fluid.stability_counter += 1
+        
+        # Mark as settled if stable for enough ticks
+        if fluid.stability_counter >= fluid.settlement_threshold:
+            fluid.settled = True
+            # Optional: Log settlement for debugging
+            # print(f"Fluid {fluid.fluid_type} at {fluid.position} settled after {fluid.stability_counter} stable ticks")
+    
+    def _disturb_neighboring_fluids(self, position: VectorN) -> None:
+        """Disturb neighboring fluids when a fluid at the given position changes."""
+        for direction in self.flow_directions:
+            neighbor_pos = position + direction
+            neighbor_key = self._get_position_key(neighbor_pos)
+            if neighbor_key in self.fluids:
+                neighbor_fluid = self.fluids[neighbor_key]
+                if neighbor_fluid.settled:
+                    neighbor_fluid.settled = False
+                    neighbor_fluid.stability_counter = 0
     
     def _can_hold_fluid(self, position: VectorN, tile: Optional["Tile"]) -> bool:
         """Check if a position can hold fluid."""
@@ -634,23 +699,23 @@ class Entities:
         return AncientRelic(position)
     
     @staticmethod
-    def water(position: VectorN = VectorN(0, 0, 0), amount: float = 1.0) -> "Fluid":
+    def water(position: VectorN = VectorN(0, 0, 0), amount: int = 1000) -> "Fluid":
         return Fluid("water", position, amount, viscosity=100.0)
     
     @staticmethod
-    def lava(position: VectorN = VectorN(0, 0, 0), amount: float = 1.0) -> "Fluid":
+    def lava(position: VectorN = VectorN(0, 0, 0), amount: int = 1000) -> "Fluid":
         return Fluid("lava", position, amount, viscosity=200.0)  # Lava flows slower
     
     @staticmethod
-    def acid(position: VectorN = VectorN(0, 0, 0), amount: float = 1.0) -> "Fluid":
+    def acid(position: VectorN = VectorN(0, 0, 0), amount: int = 1000) -> "Fluid":
         return Fluid("acid", position, amount, viscosity=150.0)
     
     @staticmethod
-    def oil(position: VectorN = VectorN(0, 0, 0), amount: float = 1.0) -> "Fluid":
+    def oil(position: VectorN = VectorN(0, 0, 0), amount: int = 1000) -> "Fluid":
         return Fluid("oil", position, amount, viscosity=50.0)  # Oil flows faster
     
     @staticmethod
-    def blood(position: VectorN = VectorN(0, 0, 0), amount: float = 1.0) -> "Fluid":
+    def blood(position: VectorN = VectorN(0, 0, 0), amount: int = 1000) -> "Fluid":
         return Fluid("blood", position, amount, viscosity=120.0)
 
 
@@ -1590,24 +1655,32 @@ class World(Cloneable, ShutDownable, EntityListener):
         
         # Add some test fluids to demonstrate the system
         # Water pool near the player
-        water_pos = DEFAULT_PLAYER_POSITION + VectorN(3, 0, 0)
-        water = Entities.water(water_pos, amount=1.0)
+        water_pos = DEFAULT_PLAYER_POSITION + VectorN(1, 0, 0)
+        water = Entities.water(water_pos, amount=1000)
         self.fluid_manager.add_fluid(water)
         
         # Lava pool further away
         lava_pos = DEFAULT_PLAYER_POSITION + VectorN(-3, -1, 0)
-        lava = Entities.lava(lava_pos, amount=1.0)
+        lava = Entities.lava(lava_pos, amount=1000)
         self.fluid_manager.add_fluid(lava)
         
         # Acid pool
         acid_pos = DEFAULT_PLAYER_POSITION + VectorN(0, 2, 0)
-        acid = Entities.acid(acid_pos, amount=1.0)
+        acid = Entities.acid(acid_pos, amount=1000)
         self.fluid_manager.add_fluid(acid)
 
-        # BIG oil pool further away
+        # BIG oil pool further away (10x normal amount)
         oil_pos = DEFAULT_PLAYER_POSITION + VectorN(0, -10, 0)
-        oil = Entities.oil(oil_pos, amount=100.0)
+        oil = Entities.oil(oil_pos, amount=1000)  # Max amount per tile
         self.fluid_manager.add_fluid(oil)
+        
+        # Add multiple oil tiles to create a big pool
+        for dx in range(-1, 2):
+            for dy in range(-1, 2):
+                if dx != 0 or dy != 0:  # Skip the center tile (already added)
+                    oil_tile_pos = oil_pos + VectorN(dx, dy, 0)
+                    oil_tile = Entities.oil(oil_tile_pos, amount=1000)
+                    self.fluid_manager.add_fluid(oil_tile)
 
     def get_tile(self, pos: VectorN):
         tile = self.data.get_tile(pos)
