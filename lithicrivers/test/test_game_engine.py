@@ -3,6 +3,7 @@ Comprehensive unit tests for the modular game engine.
 These tests demonstrate how to programmatically manipulate game state for testing.
 """
 
+import unittest
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 
@@ -237,7 +238,7 @@ class TestGameEngine(OptimizedTestCase):
         self.assertEqual(len(self.engine.state.world_data), 0)
 
 
-class TestInventory(unittest.TestCase):
+class TestInventory(OptimizedTestCase):
     """Test the inventory system."""
 
     def test_inventory_creation(self):
@@ -281,7 +282,7 @@ class TestInventory(unittest.TestCase):
         self.assertIsNot(original.items, copied.items)
 
 
-class TestEntity(unittest.TestCase):
+class TestEntity(OptimizedTestCase):
     """Test the entity system."""
 
     def test_entity_creation(self):
@@ -307,12 +308,12 @@ class TestEntity(unittest.TestCase):
         self.assertIsNot(original, copied)
 
 
-class TestGameEngineIntegration(unittest.TestCase):
+class TestGameEngineIntegration(OptimizedTestCase):
     """Integration tests for the game engine."""
 
     def test_complex_game_scenario(self):
         """Test a complex game scenario with multiple actions."""
-        engine = GameEngine()
+        engine = self.get_engine()
 
         # Start with player at origin for this test
         engine.state.player_position = VectorN(0, 0, 0)
@@ -336,7 +337,7 @@ class TestGameEngineIntegration(unittest.TestCase):
 
     def test_action_history(self):
         """Test that action history is maintained correctly."""
-        engine = GameEngine()
+        engine = self.get_engine()
 
         # Perform some actions
         engine.move_player(VEC_NORTH)

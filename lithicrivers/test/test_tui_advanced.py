@@ -30,6 +30,7 @@ from lithicrivers.game import Game, Tiles
 from lithicrivers.game_engine import GameEngine
 from lithicrivers.model.vector import VectorN
 from lithicrivers.settings import DEFAULT_SEED
+from lithicrivers.test.test_fixtures import OptimizedTestCase
 from lithicrivers.ui import GameWidget, HelpPage, InputHandler, WorldMap
 
 

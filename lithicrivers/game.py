@@ -1375,6 +1375,7 @@ class ChunkedWorldData:
         if hasattr(self, '_thread_pool'):
             # Shutdown the thread pool and wait for all threads to complete
             # This prevents the game from hanging due to background threads
+            print("Shutting down thread pool...")
             self._thread_pool.shutdown(wait=True)
             print("Thread pool shutdown complete.")
 
@@ -1800,6 +1801,14 @@ class Game:
         self.message_log.add_message(
             "Welcome to LithicRivers! Your adventures will be logged here.", "info"
         )
+
+    def clone(self) -> "Game":
+        """Create a deep copy of this Game for pickling or testing."""
+        import copy
+        cloned_game = copy.deepcopy(self)
+        # Re-establish entity listeners after cloning
+        cloned_game.world._reestablish_entity_listeners()
+        return cloned_game
 
     def pregen_chunks(self, radius: int) -> None:
         """Pre-generate chunks for the world."""
