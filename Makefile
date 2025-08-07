@@ -24,6 +24,7 @@ help: ## Show this help message
 	@echo "  test-parallel        Run unit tests in parallel (faster)"
 	@echo "  test-quick           Run quick tests only"
 	@echo "  test-profile-speedscope Profile test suite with speedscope"
+	@echo "  generate-test-worlds Pre-generate test world fixtures"
 	@echo ""
 	@echo "🔍 DEMO"
 	@echo "------"
@@ -88,26 +89,31 @@ test: ## Run all tests with smart detection
 	fi
 	@echo "✅ All tests completed!"
 
-test-parallel: ## Run unit tests in parallel (faster)
+generate-test-worlds: ## Pre-generate test world fixtures
+	@echo "🏗️  Pre-generating test world fixtures..."
+	$(UV_CMD) run python lithicrivers/scripts/generate_test_worlds.py
+	@echo "✅ Test world fixtures ready!"
+
+test-parallel: generate-test-worlds ## Run unit tests in parallel (faster)
 	@echo "🚀 Running unit tests in parallel..."
-	@echo "📦 SharedTestFixtures will handle thread-safe world generation"
+	@echo "📦 Using pre-generated world fixtures for maximum speed"
 	@echo "🧵 Using 4 parallel workers for faster execution"
 	TESTING=1 $(UV_CMD) run pytest lithicrivers/test/ -n 4 --verbose --tb=short
 	@echo "✅ Parallel unit tests completed!"
 
-test-quick: ## Run quick tests only
+test-quick: generate-test-worlds ## Run quick tests only
 	@echo "⚡ Running quick tests..."
 	TESTING=1 $(UV_CMD) run coverage run -m unittest discover lithicrivers
 	$(UV_CMD) run python -m unittest lithicrivers.test.test_tui_simple
 	@echo "✅ Quick tests completed!"
 
-test-lcov: ## Generate LCOV coverage report
+test-lcov: generate-test-worlds ## Generate LCOV coverage report
 	@echo "📊 Generating LCOV coverage report..."
 	TESTING=1 $(UV_CMD) run coverage run  -m unittest discover lithicrivers
 	$(UV_CMD) run coverage lcov -o coverage/lcov.info
 	@echo "✅ LCOV report generated!"
 
-test-profile-speedscope: ## Profile test suite with speedscope
+test-profile-speedscope: generate-test-worlds ## Profile test suite with speedscope
 	@echo "📊 Profiling test suite with speedscope..."
 	@echo "📄 This will create a detailed speedscope report of test execution"
 	@echo "⏱️  Running tests under profiler - this will be slower than normal"
