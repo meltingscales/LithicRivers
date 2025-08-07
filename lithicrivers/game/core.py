@@ -252,36 +252,41 @@ class World(Cloneable, ShutDownable, EntityListener):
         when chunks are loaded. This method is for story-critical structures only.
         """
 
-        print("Generating forced structures for seed: ", self.seed)
-        # Force a ship to spawn at (20, 20, 0) - Main story location
-        forced_ship_pos = VectorN(20, 20, 0)
-        print(f"FORCING SHIP TO SPAWN AT {forced_ship_pos}")  # Debug output
+        # TODO actually fix this, see TODO.md
+        '''
+        - todo: MANUAL TASK: Go into `worldgen.py` and make a way to force a specific structure to generate, then fix `_generate_forced_structures`... Don't use AI as it seems to get confused.
+        '''
 
-        # Generate a small world around the ship to place it
-        ship_radius = VectorN(25, 25, 2)
-        ship_world_data = self.generator.generate_world_data(ship_radius)
+        # print("Generating forced structures for seed: ", self.seed)
+        # # Force a ship to spawn at (20, 20, 0) - Main story location
+        # forced_ship_pos = VectorN(20, 20, 0)
+        # print(f"FORCING SHIP TO SPAWN AT {forced_ship_pos}")  # Debug output
 
-        # Apply the ship world data to our chunked world
-        for pos_str, tile in ship_world_data.items():
-            pos_parts = pos_str.split(",")
-            world_pos = VectorN(int(pos_parts[0]), int(pos_parts[1]), int(pos_parts[2]))
-            self.data.set_tile(world_pos, tile)
-
-        # Force a procedural dungeon to spawn at (50, 50, -3) - Quest location
-        forced_dungeon_pos = VectorN(50, 50, -3)
-        print(
-            f"FORCING UNDERGROUND FACILITY TO SPAWN AT {forced_dungeon_pos}"
-        )  # Debug output
-
-        # Generate a small world around the dungeon to place it
-        dungeon_radius = VectorN(55, 55, 5)
-        dungeon_world_data = self.generator.generate_world_data(dungeon_radius)
-
-        # Apply the dungeon world data to our chunked world
-        for pos_str, tile in dungeon_world_data.items():
-            pos_parts = pos_str.split(",")
-            world_pos = VectorN(int(pos_parts[0]), int(pos_parts[1]), int(pos_parts[2]))
-            self.data.set_tile(world_pos, tile)
+        # # Generate a small world around the ship to place it
+        # ship_radius = VectorN(25, 25, 2)
+        # ship_world_data = self.generator.generate_world_data(ship_radius)
+        #
+        # # Apply the ship world data to our chunked world
+        # for pos_str, tile in ship_world_data.items():
+        #     pos_parts = pos_str.split(",")
+        #     world_pos = VectorN(int(pos_parts[0]), int(pos_parts[1]), int(pos_parts[2]))
+        #     self.data.set_tile(world_pos, tile)
+        #
+        # # Force a procedural dungeon to spawn at (50, 50, -3) - Quest location
+        # forced_dungeon_pos = VectorN(50, 50, -3)
+        # print(
+        #     f"FORCING UNDERGROUND FACILITY TO SPAWN AT {forced_dungeon_pos}"
+        # )  # Debug output
+        #
+        # # Generate a small world around the dungeon to place it
+        # dungeon_radius = VectorN(55, 55, 5)
+        # dungeon_world_data = self.generator.generate_world_data(dungeon_radius)
+        #
+        # # Apply the dungeon world data to our chunked world
+        # for pos_str, tile in dungeon_world_data.items():
+        #     pos_parts = pos_str.split(",")
+        #     world_pos = VectorN(int(pos_parts[0]), int(pos_parts[1]), int(pos_parts[2]))
+        #     self.data.set_tile(world_pos, tile)
 
     def on_entity_moved(self, event: EntityMovedEvent) -> None:
         """Handle entity movement events."""
