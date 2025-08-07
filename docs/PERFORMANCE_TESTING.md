@@ -40,7 +40,7 @@ Speedscope is a web-based profiling tool that provides:
 ### How to View Speedscope Reports
 
 1. **Generate the report**: `make profile-speedscope`
-2. **Open the file**: The report is saved as `profile_report.speedscope`
+2. **Open the file**: The report is saved as `game_profile.speedscope`
 3. **View online**: Upload to https://www.speedscope.app/
 4. **Or use local viewer**: Open in a web browser
 
@@ -129,7 +129,7 @@ make install
 
 Profiling generates:
 
-- `profile_report.speedscope`: Speedscope format CPU profile
+- `game_profile.speedscope`: Speedscope format CPU profile
 
 ## Advanced Usage
 

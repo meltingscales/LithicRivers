@@ -558,11 +558,7 @@ class FluidManager:
                 self._spread_fluid(fluid, gametick)
     
     def _spread_fluid(self, fluid: Fluid, gametick: int) -> None:
-        """Spread fluid to adjacent tiles based on physics."""
-        import random
-        
-        # Use deterministic randomness for this specific fluid
-        random.seed(f"fluid_spread_{fluid.position.serialize()}_{gametick}")
+        """Spread fluid to adjacent tiles based on physics. Fully deterministic and not random at all."""
         
         # Calculate how much to spread
         spread_amount = fluid.amount - fluid.spread_threshold
