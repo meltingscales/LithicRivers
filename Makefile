@@ -61,12 +61,6 @@ help: ## Show this help message
 	@echo "🧹 CLEANUP"
 	@echo "---------"
 	@echo "  clean                Clean build artifacts"
-	@echo ""
-	@echo "🐳 DOCKER (DISABLED)"
-	@echo "-------------------"
-	@echo "  docker-build         [DISABLED] Build Docker image"
-	@echo "  docker-run           [DISABLED] Run Docker container"
-	@echo "  docker-push          [DISABLED] Push to Docker Hub"
 
 # Setup
 install: ## Install dependencies
@@ -246,25 +240,3 @@ clean: ## Clean build artifacts
 	rm -rf .pytest_cache/ .mypy_cache/ .ruff_cache/
 	rm -rf lithicrivers-test-saves/
 	@echo "✅ Clean complete!" 
-
-# Docker targets (DISABLED - Steam publishing)
-docker-build: ## Build Docker image
-	@echo "🚫 Docker targets are disabled!"
-	@echo "📦 LithicRivers is now being published on Steam!"
-	@echo "🎮 Please use Steam to download and play the game."
-	@echo "🔗 Visit: https://store.steampowered.com/app/[YOUR_APP_ID]"
-	@exit 1
-
-docker-run: ## Run Docker container
-	@echo "🚫 Docker targets are disabled!"
-	@echo "📦 LithicRivers is now being published on Steam!"
-	@echo "🎮 Please use Steam to download and play the game."
-	@echo "🔗 Visit: https://store.steampowered.com/app/[YOUR_APP_ID]"
-	@exit 1
-
-docker-push: ## Push to Docker Hub
-	@echo "🚫 Docker targets are disabled!"
-	@echo "📦 LithicRivers is now being published on Steam!"
-	@echo "🎮 Please use Steam to download and play the game."
-	@echo "🔗 Visit: https://store.steampowered.com/app/[YOUR_APP_ID]"
-	@exit 1 
