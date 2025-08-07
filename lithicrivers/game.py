@@ -1093,6 +1093,41 @@ class Chunk:
                         return False
         return True
 
+from lithicrivers.worldgen import SeededWorldGenerator
+
+class ChunkedWorldData:
+    """
+    Efficient world data storage using chunked 3D arrays.
+    Similar to Minecraft's world storage system.
+    """
+
+    def __init__(self, chunk_size: int = None, world_generator: "SeededWorldGenerator" =None):
+        from lithicrivers.settings import CHUNK_SIZE
+        if chunk_size is None:
+            chunk_size = CHUNK_SIZE
+        self.chunk_size = chunk_size
+        self.chunks = {}  # (chunk_x, chunk_y, chunk_z) -> Chunk
+        self.entity_data = {}  # Entity storage
+        self._tile_cache = {}  # Cache for frequently accessed tiles
+        self._cache_size = 1000  # Max cache size
+        self.world_generator = world_generator  # Reference to world generator for structure generation
+        self._generated_chunks = set()  # Track which chunks have had structures generated
+        self._chunk_generation_lock = threading.Lock()  # Lock for thread-safe chunk generation
+        from lithicrivers.settings import MAX_CPU_THREADS
+        self._thread_pool = ThreadPoolExecutor(max_workers=MAX_CPU_THREADS)  # Thread pool for chunk generation
+
+import concurrent.futures
+from concurrent.futures import ProcessPoolExecutor
+
+def _generate_chunk_data_for_process(seed, chunk_x, chunk_y, chunk_z):
+    # This function runs in a separate process
+    from lithicrivers.model.vector import VectorN
+    generator = SeededWorldGenerator(seed)
+    generator._generate_complete_chunk(chunk_x, chunk_y, chunk_z)
+    # Get chunk data from the generator's chunk cache
+    chunk_data = generator.chunk_cache.cache.get((chunk_x, chunk_y, chunk_z), {})
+    # Return as a dict mapping pos_str to tile (must be pickleable)
+    return (chunk_x, chunk_y, chunk_z, chunk_data)
 
 class ChunkedWorldData:
     """
@@ -1116,31 +1151,65 @@ class ChunkedWorldData:
         self._thread_pool = ThreadPoolExecutor(max_workers=MAX_CPU_THREADS)  # Thread pool for chunk generation
 
     def pregen_chunks(self, radius: int) -> None:
-        """Pre-generate all chunks within a cubic radius around (0,0,0). Waits for all threads to finish.
-        
+        """Pre-generate all chunks within a cubic radius around (0,0,0) using process pool. Waits for all processes to finish.
         This should only be called when the world generator is initialized, or during unit tests to speed them up if pickling after generating."""
         if not self.world_generator:
             raise Exception("World generator is not initialized")
-        
+        seed = getattr(self.world_generator, 'seed', None)
+        if hasattr(seed, 'seed'):
+            seed = seed.seed
+        if seed is None:
+            raise Exception("World generator must have a .seed or .seed.seed attribute for process pool pregen")
         chunk_size = self.chunk_size
-        # Calculate chunk radius (how many chunks in each direction)
         chunk_radius = (radius + chunk_size - 1) // chunk_size  # ceil division
-        # Center at (0,0,0) for now (could be player spawn)
-        futures = []
-        for cx in range(-chunk_radius, chunk_radius + 1):
-            for cy in range(-chunk_radius, chunk_radius + 1):
-                for cz in range(-chunk_radius, chunk_radius + 1):
-                    chunk_key = (cx, cy, cz)
-                    # Only generate if not already generated
-                    if chunk_key not in self._generated_chunks:
-                        self._generated_chunks.add(chunk_key)
-                        # Submit to thread pool
-                        future = self._thread_pool.submit(self._generate_chunk_worker, cx, cy, cz)
-                        futures.append(future)
-        # Wait for all chunk generation to finish
-        for future in futures:
-            future.result()  # Will raise if any errors occurred
+        # Prepare all chunk coords to generate
+        chunk_coords = [
+            (cx, cy, cz)
+            for cx in range(-chunk_radius, chunk_radius + 1)
+            for cy in range(-chunk_radius, chunk_radius + 1)
+            for cz in range(-chunk_radius, chunk_radius + 1)
+            if (cx, cy, cz) not in self._generated_chunks
+        ]
+        # Mark as generated to avoid duplicate work
+        for chunk_key in chunk_coords:
+            self._generated_chunks.add(chunk_key)
+        results = []
+        with ProcessPoolExecutor() as pool:
+            future_to_chunk = {
+                pool.submit(_generate_chunk_data_for_process, seed, cx, cy, cz): (cx, cy, cz)
+                for (cx, cy, cz) in chunk_coords
+            }
+            for future in concurrent.futures.as_completed(future_to_chunk):
+                cx, cy, cz, chunk_data = future.result()
+                # Insert chunk data into self.chunks
+                from lithicrivers.model.vector import VectorN
+                if (cx, cy, cz) not in self.chunks:
+                    from lithicrivers.game import Chunk
+                    self.chunks[(cx, cy, cz)] = Chunk(self.chunk_size)
+                chunk = self.chunks[(cx, cy, cz)]
+                for pos_str, tile in chunk_data.items():
+                    pos_parts = [int(x) for x in pos_str.split(",")]
+                    world_pos = VectorN(*pos_parts)
+                    local_pos = chunk.get_local_pos(world_pos)
+                    chunk.set_tile(local_pos, tile)
+                    pos_key = (world_pos.x, world_pos.y, world_pos.z)
+                    self._tile_cache[pos_key] = tile
 
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        # Remove unpickleable objects for pickling
+        state.pop('_chunk_generation_lock', None)
+        state.pop('_thread_pool', None)
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        import threading
+        from concurrent.futures import ThreadPoolExecutor
+        from lithicrivers.settings import MAX_CPU_THREADS
+        self._chunk_generation_lock = threading.Lock()
+        self._thread_pool = ThreadPoolExecutor(max_workers=MAX_CPU_THREADS)
 
     def __deepcopy__(self, memo):
         """
