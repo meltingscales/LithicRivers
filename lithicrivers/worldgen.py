@@ -39,6 +39,16 @@ class ChunkCache:
         self.cache: dict[tuple[int, int, int], dict[str, Tile]] = {}
         self.lock = threading.RLock()
 
+    def __getstate__(self) -> object:
+        state = self.__dict__.copy()
+        # Don't serialize the lock - we'll recreate it on load
+        del state['lock']
+        return state
+    
+    def __setstate__(self, state: object) -> None:
+        self.__dict__.update(state)
+        self.lock = threading.RLock()
+
     def get_chunk_key(self, pos: VectorN) -> tuple[int, int, int]:
         """Get chunk coordinates for a position."""
         from lithicrivers.settings import CHUNK_SIZE

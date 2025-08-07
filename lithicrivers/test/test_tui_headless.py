@@ -45,7 +45,7 @@ class HeadlessTUITestCase(OptimizedTestCase):
             )
 
         # Use shared instances instead of creating new ones
-        self.game_engine = self.get_game_engine()
+        self.game_engine = self.get_engine()
         self.game = self.get_game()
         self.screen = None
 

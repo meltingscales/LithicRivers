@@ -25,7 +25,7 @@ class VisualTUITestCase(OptimizedTestCase):
         if not os.environ.get("TERM"):
             self.skipTest("TERM environment variable not set - skipping visual tests")
 
-        self.game_engine = self.get_game_engine()
+        self.game_engine = self.get_engine()
         self.game = self.get_game()
 
     def test_visual_test_placeholder(self):

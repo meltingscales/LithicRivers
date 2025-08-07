@@ -36,7 +36,7 @@ class SimpleTUITestCase(OptimizedTestCase):
 
     def setUp(self):
         """Set up common test fixtures."""
-        self.game_engine = self.get_game_engine()
+        self.game_engine = self.get_engine()
         self.game = self.get_game()
 
     def create_keyboard_event(self, key_code: int):

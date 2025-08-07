@@ -57,7 +57,7 @@ class UITestCase(OptimizedTestCase):
 
     def setUp(self):
         """Set up common test fixtures."""
-        self.game_engine = self.get_game_engine()
+        self.game_engine = self.get_engine()
         self.mock_screen = MockScreen()
         self.mock_canvas = self.mock_screen.canvas
 

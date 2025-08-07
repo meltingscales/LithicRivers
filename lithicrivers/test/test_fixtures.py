@@ -9,6 +9,7 @@ from lithicrivers.game_engine import GameEngine
 from lithicrivers.settings import DEFAULT_SEED
 from pathlib import Path
 import pickle
+import time
 class SharedTestFixtures:
     """
     Class that manages shared test fixtures to reduce test execution time.
@@ -16,12 +17,35 @@ class SharedTestFixtures:
         
     def __init__(self):
         self._test_saves_dir = Path("lithicrivers-test-saves")
+        self._test_saves_lock = Path("lithicrivers-test-saves/test-saves-creation.lock")
+
+        # establish a lock file to prevent multiple processes from running at the same time,
+        # in case we parallelize these tests
+        if self._test_saves_lock.exists():
+            # wait until the lock file is removed
+            while self._test_saves_lock.exists():
+                time.sleep(0.1)
+
         self._test_saves_dir.mkdir(exist_ok=True)
+
+        # create the lock file
+        self._test_saves_lock.touch()
+
+        # create save files
         self._initialize_fixtures()
+
+        # release the lock file
+        self._test_saves_lock.unlink()
 
     def save_game(self, game: Game, seed: int):
         """Save a game to a file."""
         save_path = self._test_saves_dir / f"seed_{seed}.pkl"
+        
+        # Shut down any background threads before pickling to prevent
+        # "dictionary changed size during iteration" errors
+        if hasattr(game.world, 'data') and hasattr(game.world.data, 'shutdown'):
+            game.world.data.shutdown()
+        
         with save_path.open("wb") as f:
             print(f"Saving game for seed: {seed} to file {save_path}")
             pickle.dump(game, f)
@@ -49,13 +73,7 @@ class SharedTestFixtures:
         self.pregenerated_seeds = [DEFAULT_SEED, 42]
         self.pregen_chunk_radius = 4
         
-        # Use cache variables for all fixtures (pre-populated + dynamic)
-        self._world_cache = {}
-        self._game_cache = {}
-        self._engine_cache = {}
-        self._cache_max_size = 50  # Prevent unbounded cache growth
-        
-        # Pre-populate caches with common seeds
+        # Pre-populate files with common seeds
         for seed in self.pregenerated_seeds:
             print(f"   Pre-generating fixture for seed: {seed}")
 
@@ -67,82 +85,33 @@ class SharedTestFixtures:
                 self.save_game(game, seed)
                 print("   Done pre-generating chunks for seed: {}".format(seed))
 
-            # minor speedup by reusing the game's world
-            self._world_cache[seed] = self.get_game(seed).world.clone()
-
-            self.get_world(seed)
-            self.get_engine(seed)
-
         init_time = time.time() - start_time
         print(f"✅ Shared test fixtures initialized in {init_time:.3f}s!")
         print(f"   Pre-generated fixtures for seeds: {self.pregenerated_seeds}")
         
     def get_world(self, seed: int) -> World:
         """
-        Get a cloned world with the specified seed.
-        This is much faster than creating a new world from scratch.
+        Load a world from a file with the specified seed.
         """
-        # Use cached instances (pre-populated + dynamic)
-        if seed not in self._world_cache:
-            print(f"Cache MISS: generating world for seed: {seed}")
-            # Prevent unbounded cache growth
-            if len(self._world_cache) >= self._cache_max_size:
-                # Remove oldest entry (simple FIFO)
-                oldest_key = next(iter(self._world_cache))
-                del self._world_cache[oldest_key]
-            self._world_cache[seed] = self.load_game(seed).world.clone()
-        base_world = self._world_cache[seed]
-        
-        # Create a proper clone using the World's clone method
-        return base_world.clone()
+        if not self.does_save_exist(seed):
+            self.save_game(Game(seed), seed)
+        return self.load_game(seed).world
     
     def get_game(self, seed: int) -> Game:
         """
-        Get a cloned game with the specified seed.
-        This is much faster than creating a new game from scratch.
+        Load a game from a file with the specified seed.
         """
-        
-        # Use cached instances (pre-populated + dynamic)
-        if seed not in self._game_cache:
-
-            # if save doesn't exist, create it
-            if not self.does_save_exist(seed):
-                # create a new game, and it'll get used later
-                print(f"Cache MISS: creating and saving game for seed: {seed}")
-                game = Game(seed=seed)
-                game.pregen_chunks(radius=self.pregen_chunk_radius)
-                self.save_game(game, seed)
-                
-            print(f"Cache MISS: loading game for seed: {seed}")
-            # Prevent unbounded cache growth
-            if len(self._game_cache) >= self._cache_max_size:
-                # Remove oldest entry (simple FIFO)
-                oldest_key = next(iter(self._game_cache))
-                del self._game_cache[oldest_key]
-            self._game_cache[seed] = self.load_game(seed)
-        base_game = self._game_cache[seed]
-        
-        # Create a proper clone using the Game's clone method
-        return base_game.clone()
+        if not self.does_save_exist(seed):
+            self.save_game(Game(seed), seed)
+        return self.load_game(seed)
     
     def get_engine(self, seed: int) -> GameEngine:
         """
-        Get a cloned game engine with the specified seed.
-        This is much faster than creating a new engine from scratch.
+        Load a game engine from a file with the specified seed.
         """
-        # Use cached instances (pre-populated + dynamic)
-        if seed not in self._engine_cache:
-            print(f"Cache MISS: generating engine for seed: {seed}")
-            # Prevent unbounded cache growth
-            if len(self._engine_cache) >= self._cache_max_size:
-                # Remove oldest entry (simple FIFO)
-                oldest_key = next(iter(self._engine_cache))
-                del self._engine_cache[oldest_key]
-            self._engine_cache[seed] = self.load_game(seed).engine
-        base_engine = self._engine_cache[seed]
-        
-        # Create a proper clone using the GameEngine's clone method
-        return base_engine.clone()
+        if not self.does_save_exist(seed):
+            self.save_game(Game(seed), seed)
+        return self.load_game(seed).engine
 
 
 class OptimizedTestCase(unittest.TestCase):
@@ -162,11 +131,11 @@ class OptimizedTestCase(unittest.TestCase):
         return self.fixtures.get_world(seed)
     
     def get_game(self, seed: int = DEFAULT_SEED) -> Game:
-        """Get a cloned game for testing."""
+        """Get a game for testing."""
         return self.fixtures.get_game(seed)
     
     def get_engine(self, seed: int = DEFAULT_SEED) -> GameEngine:
-        """Get a cloned game engine for testing."""
+        """Get a game engine for testing."""
         return self.fixtures.get_engine(seed)
     
 

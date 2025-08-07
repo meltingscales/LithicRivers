@@ -2,7 +2,7 @@ from lithicrivers.keymap import KEYMAP
 from lithicrivers.model.vector import VectorN
 from lithicrivers.settings import DEFAULT_SEED
 from lithicrivers.test.test_fixtures import OptimizedTestCase
-from asciimatics import KeyboardEvent
+from asciimatics.event import KeyboardEvent
 
 class TestInteractionSystem(OptimizedTestCase):
     """Test the interaction system."""
