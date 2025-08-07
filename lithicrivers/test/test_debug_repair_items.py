@@ -5,7 +5,8 @@ Copyright (c) 2024 Henry Post. All rights reserved.
 
 import unittest
 
-from lithicrivers.game.game import Game, Items
+from lithicrivers.game.game import Game
+from lithicrivers.game.entities import Items
 from lithicrivers.settings import DEFAULT_SEED
 from lithicrivers.test.test_fixtures import OptimizedTestCase
 
@@ -70,8 +71,8 @@ class TestDebugRepairItems(OptimizedTestCase):
 
     def test_tile_drops_updated(self):
         """Test that tile drops are updated to include the correct items."""
-        from lithicrivers.game.game import Tiles
-        
+        from lithicrivers.game.core import Tiles
+
         # Test iron_scrap tile drops
         iron_scrap_tile = Tiles.iron_scrap()
         self.assertIsNotNone(iron_scrap_tile.drops)

@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from typing import Any, Optional
 
-from lithicrivers.game.game import Tile, Tiles
+from lithicrivers.game.tiles import Tile, Tiles, TilePalette
 from lithicrivers.logging_config import get_logger
 from lithicrivers.model.vector import VectorN
 from lithicrivers.structure_generator import create_structure_manager
@@ -532,3 +532,46 @@ def generate_world_with_seed(radius: VectorN, seed: int) -> dict[str, Tile]:
     """
     generator = create_world_generator(seed)
     return generator.generate_world_data(radius)
+
+
+class Chunk:
+    """
+    A 3D chunk of the world, storing tile data efficiently.
+    Similar to Minecraft's chunk system.
+    """
+
+    def __init__(self, size: int = 16):
+        self.size = size
+        self.palette = TilePalette()
+        # 3D array of tile IDs (integers)
+        self.blocks = [[[0] * size for _ in range(size)] for _ in range(size)]
+        self.is_generated = False
+
+    def get_local_pos(self, world_pos: VectorN) -> tuple[int, int, int]:
+        """Convert world position to local chunk position."""
+        return (
+            world_pos.x % self.size,
+            world_pos.y % self.size,
+            world_pos.z % self.size,
+        )
+
+    def get_tile(self, local_pos: tuple[int, int, int]) -> Tile:
+        """Get tile at local position within this chunk."""
+        tile_id = self.blocks[local_pos[0]][local_pos[1]][local_pos[2]]
+        return self.palette.get_tile(tile_id)
+
+    def set_tile(self, local_pos: tuple[int, int, int], tile: Tile) -> None:
+        """Set tile at local position within this chunk."""
+        tile_id = self.palette.get_id(tile)
+        self.blocks[local_pos[0]][local_pos[1]][local_pos[2]] = tile_id
+
+    def is_empty(self) -> bool:
+        """Check if chunk is completely empty (all blocks are ID 0)."""
+        for x in range(self.size):
+            for y in range(self.size):
+                for z in range(self.size):
+                    if self.blocks[x][y][z] != 0:
+                        return False
+        return True
+
+

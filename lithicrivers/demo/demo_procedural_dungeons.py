@@ -13,11 +13,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from lithicrivers.procedural_dungeon_generator import (
     ProceduralStructureGenerator,
-    DungeonType,
-    create_procedural_generator
+    DungeonType
 )
 from lithicrivers.model.vector import VectorN
-from lithicrivers.game.game import Tiles
 
 
 def demo_dungeon_generation():

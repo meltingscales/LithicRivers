@@ -15,8 +15,8 @@ from pathlib import Path
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 
+from lithicrivers.game.core import Game
 from lithicrivers.settings import SAVES_FOLDER, SNAPSHOTS_FOLDER
-from lithicrivers.game.game import Game
 from lithicrivers.settings import DEFAULT_SEED
 
 logger = logging.getLogger(__name__)

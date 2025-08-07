@@ -9,7 +9,9 @@ import json
 from pathlib import Path
 
 from lithicrivers.sprite_loader import SpriteData, SpriteLoader, get_sprite_loader
-from lithicrivers.game.game import Fluid, Entities, VectorN, Game
+from lithicrivers.game.game import VectorN, Game
+from lithicrivers.game.entities import Entities
+from lithicrivers.game.fluids import Fluid
 from lithicrivers.test.test_fixtures import OptimizedTestCase
 
 

@@ -60,7 +60,3 @@ class TestViewportScaling(OptimizedTestCase):
             self.assertGreater(expected_width, 0)
             self.assertLess(expected_height, 1000)  # Reasonable upper bound
             self.assertLess(expected_width, 1000)  # Reasonable upper bound
-
-
-if __name__ == "__main__":
-    unittest.main()
