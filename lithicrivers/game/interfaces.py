@@ -1,6 +1,5 @@
 import copy
 
-from lithicrivers.textutil import generate_sprite_repeat
 
 
 class ShutDownable:
@@ -32,6 +31,7 @@ class SpriteRenderable:
 
         if normalized_scale >= len(self.sprite_sheet):
             # if they ask for a sprite too large, give them '?'
+            from lithicrivers.textutil import generate_sprite_repeat #TODO this is code smell, fix circular imports for the love of god
             return generate_sprite_repeat("?", scale)
 
             # raise Exception("Cannot render sprite with scale {} as it only has these sprites:\n{} ".format(

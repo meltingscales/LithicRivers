@@ -93,8 +93,8 @@ class GameSaveManager(msgspec.Struct, frozen=False):
     - Configurable save locations
     - Portable save files (metadata embedded in msgspec)
     """
-    saves_folder: Path = msgspec.field(default_factory=lambda: Path(SAVES_FOLDER))
-    snapshots_folder: Path = msgspec.field(default_factory=lambda: Path(SNAPSHOTS_FOLDER))
+    saves_folder: str = msgspec.field(default_factory=lambda: str(Path(SAVES_FOLDER).absolute()))
+    snapshots_folder: str = msgspec.field(default_factory=lambda: str(Path(SNAPSHOTS_FOLDER).absolute()))
     default_save_name: str = "default-world.pkl"
     last_snapshot_tick: int = 0
     snapshot_interval: int = 1_000_000  # Every 1 million ticks
@@ -102,8 +102,8 @@ class GameSaveManager(msgspec.Struct, frozen=False):
     @classmethod
     def create(cls) -> "GameSaveManager":
         obj = cls()
-        obj.saves_folder.mkdir(parents=True, exist_ok=True)
-        obj.snapshots_folder.mkdir(parents=True, exist_ok=True)
+        Path(obj.saves_folder).mkdir(parents=True, exist_ok=True)
+        Path(obj.snapshots_folder).mkdir(parents=True, exist_ok=True)
         return obj
 
     def save_game(
@@ -132,7 +132,7 @@ class GameSaveManager(msgspec.Struct, frozen=False):
                 if save_name is None:
                     save_name = self.default_save_name
 
-            save_path = save_folder / save_name
+            save_path = Path(save_folder) / save_name
 
             # Ensure the game is properly shut down before saving
             logger.info(f"Preparing game for save: {save_path}")
@@ -141,7 +141,7 @@ class GameSaveManager(msgspec.Struct, frozen=False):
             # Create metadata
             metadata = SaveMetadata(
                 filename=save_name,
-                timestamp=time.time(),
+                timestamp=datetime.now().timestamp(),
                 game_tick=game.gametick,
                 player_name=game.player.name,
                 world_seed=game.world.seed,
@@ -175,7 +175,7 @@ class GameSaveManager(msgspec.Struct, frozen=False):
         if save_name is None:
             save_name = self.default_save_name
 
-        save_path = self.saves_folder / save_name
+        save_path = Path(self.saves_folder) / save_name
 
         if not save_path.exists():
             logger.info(f"Save file not found: {save_path}")
@@ -313,7 +313,7 @@ class GameSaveManager(msgspec.Struct, frozen=False):
             return success
         return False
 
-    def _extract_metadata_from_file(self, save_path: Path) -> Optional[SaveMetadata]:
+    def _extract_metadata_from_file(self, save_path: Path) -> SaveMetadata:
         """
         Extract metadata from a msgspec file without fully loading the game.
 
@@ -321,34 +321,19 @@ class GameSaveManager(msgspec.Struct, frozen=False):
             save_path: Path to the save file
 
         Returns:
-            SaveMetadata if successful, None otherwise
+            SaveMetadata
         """
-        try:
-            with open(save_path, "rb") as f:
-                saved_data = msgspec.msgpack.decode(f.read(), type=SavedGameData)
+        with open(save_path, "rb") as f:
+            saved_data = msgspec.msgpack.decode(f.read(), type=SavedGameData)
 
-            # Extract metadata from SavedGameData container
-            if not isinstance(saved_data, SavedGameData):
-                raise ValueError(
-                    f"Invalid save file format: expected SavedGameData, got {type(saved_data)}"
-                )
+        # Extract metadata from SavedGameData container
+        if not isinstance(saved_data, SavedGameData):
+            raise ValueError(
+                f"Invalid save file format: expected SavedGameData, got {type(saved_data)}"
+            )
 
-            return saved_data.metadata
+        return saved_data.metadata
 
-        except Exception as e:
-            logger.error(f"Failed to extract metadata from {save_path}: {e}")
-            # Fallback to file stats
-            try:
-                stat = save_path.stat()
-                return SaveMetadata(
-                    filename=save_path.name,
-                    timestamp=stat.st_mtime,
-                    game_tick=0,
-                    player_name="Unknown",
-                    world_seed="Unknown",
-                )
-            except Exception:
-                return None
 
     def cleanup_old_snapshots(self, max_snapshots: int = 10) -> None:
         """

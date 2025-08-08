@@ -188,8 +188,21 @@ class ChunkedWorldData(Cloneable, ShutDownable, msgspec.Struct, frozen=False):
     _cache_size: int = None
     world_generator: "SeededWorldGenerator" = None
     _generated_chunks: set[tuple[int, int, int]] = None
-    _chunk_generation_lock: threading.Lock = None
-    _thread_pool: ThreadPoolExecutor = None
+    
+    def __getstate__(self) -> object:
+        state = self.__dict__.copy()
+        # Don't serialize the lock - we'll recreate it on load
+        if "_chunk_generation_lock" in state:
+            del state["_chunk_generation_lock"]
+        if "_thread_pool" in state:
+            del state["_thread_pool"]
+        return state
+
+    def __setstate__(self, state: object) -> None:
+        self.__dict__.update(state)
+        self._chunk_generation_lock = threading.RLock()
+        from lithicrivers.settings import MAX_CPU_THREADS
+        self._thread_pool = ThreadPoolExecutor(max_workers=MAX_CPU_THREADS)
 
     @classmethod
     def create(cls, chunk_size: int = None, world_generator=None):
