@@ -209,6 +209,9 @@ class TilePalette:
     Similar to Minecraft's block palette system.
     """
 
+    def __iter__(self):
+        yield from self.id_to_tile.values()
+
     def __init__(self) -> None:
         self.tile_to_id = {}  # tileid -> int
         self.id_to_tile = {}  # int -> Tile

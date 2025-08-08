@@ -10,6 +10,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 from lithicrivers.game.core import Game
 import gc
+from pprint import pprint
 
 def find_cycles(obj, seen=None, path=None):
     """Recursively traverse the object graph to find cycles."""
@@ -46,6 +47,8 @@ if __name__ == "__main__":
     # create a game
     game = Game.create(42)
     game.pregen_chunks(3)
+
+    pprint(game.world.data.get_chunk_stats())
 
     # Build a reference graph using networkx
     print("\n[1] Building object reference graph with networkx...")

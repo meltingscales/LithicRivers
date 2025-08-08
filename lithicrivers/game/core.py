@@ -485,11 +485,22 @@ class ChunkedWorldData(Cloneable, ShutDownable, msgspec.Struct, frozen=False):
         empty_chunks = sum(1 for chunk in self.chunks.values() if chunk.is_empty())
         total_tiles = sum(len(chunk.palette) for chunk in self.chunks.values())
 
+        unique_tiles: set[Tile] = set()
+        for chunk in self.chunks.values():
+            for tile in chunk.palette:
+                unique_tiles.add(tile)
+
+        tile_distribution = {
+            tile: sum(1 for chunk in self.chunks.values() for tile in chunk.palette)
+            for tile in unique_tiles
+        }
+
         return {
             "total_chunks": total_chunks,
             "empty_chunks": empty_chunks,
             "used_chunks": total_chunks - empty_chunks,
             "total_tile_types": total_tiles,
+            "tile_distribution": tile_distribution,
             "cache_size": len(self._tile_cache),
         }
 
