@@ -79,23 +79,25 @@ def _intro(screen: Screen) -> None:
             )
         )
 
-    # Scene duration should cover all starts plus per-line animation
+    # Scene duration should cover all starts plus per-line animation,
+    # then pause briefly before exiting.
     if effects:
         last_start = (len(effects) - 1) * max(1, stagger)
-        duration = last_start + per_line_duration
+        # ~1.5s pause at end (fallback to 30 FPS if unknown)
+        end_pause = int(getattr(screen, "frame_rate", 30) * 1.5)
+        duration = last_start + per_line_duration + end_pause
     else:
-        duration = 60
+        duration = 90
 
     scene = Scene(effects, duration=duration, clear=True)
     screen.play([scene], stop_on_resize=True)
 
 
 if __name__ == "__main__":
-    # Run until we get a clean render without needing a resize.
-    while True:
-        try:
-            Screen.wrapper(_intro)
-            sys.exit(0)
-        except ResizeScreenError:
-            # Try again after resize
-            pass
+    # Run once and exit (no loop).
+    try:
+        Screen.wrapper(_intro)
+    except ResizeScreenError:
+        # Exit on resize instead of looping
+        pass
+    sys.exit(0)
