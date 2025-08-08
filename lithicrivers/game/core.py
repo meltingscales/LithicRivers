@@ -24,6 +24,7 @@ from lithicrivers.settings import (
     DEFAULT_PLAYER_NAME,
     DEFAULT_PLAYER_POSITION,
     DEFAULT_VIEWPORT,
+    CHUNK_SIZE,
 )
 from lithicrivers.textutil import get_color_for_item, get_color_for_tile
 from lithicrivers.worldgen import Chunk, SeededWorldGenerator
@@ -207,6 +208,9 @@ class ChunkedWorldData(Cloneable, ShutDownable, msgspec.Struct, frozen=False):
     @classmethod
     def create(cls, chunk_size: int = None, world_generator=None):
         instance = cls(chunk_size=chunk_size, world_generator=world_generator)
+
+        if not instance.chunk_size:
+            instance.chunk_size = CHUNK_SIZE
 
         instance.chunks = {}  # (chunk_x, chunk_y, chunk_z) -> Chunk
         instance.entity_data = {}  # Entity storage
@@ -571,7 +575,7 @@ class Inventory(msgspec.Struct, frozen=False):
 
 def _generate_chunk_data_for_process(seed, chunk_x, chunk_y, chunk_z):
     # This function runs in a separate process
-    generator = SeededWorldGenerator(seed)
+    generator = SeededWorldGenerator.create(seed)
     generator._generate_complete_chunk(chunk_x, chunk_y, chunk_z)
     # Get chunk data from the generator's chunk cache
     chunk_data = generator.chunk_cache.cache.get((chunk_x, chunk_y, chunk_z), {})

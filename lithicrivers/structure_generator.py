@@ -108,8 +108,7 @@ class StructureManager(msgspec.Struct, frozen=False):
 
     @classmethod
     def create(cls, structures_dir: str):
-        instance = cls()
-        instance.structures_dir = structures_dir
+        instance = cls(structures_dir=structures_dir)
         instance.structures = {}
         instance._load_structures()
         return instance
@@ -261,7 +260,7 @@ def create_structure_manager(structures_dir: Optional[Path] = None) -> Structure
             current_dir = Path(__file__).parent
             structures_dir = current_dir / "data" / "structures"
 
-        _global_structure_manager = StructureManager(str(structures_dir))
+        _global_structure_manager = StructureManager.create(structures_dir=str(structures_dir))
         logger.info("Created singleton StructureManager instance")
 
     return _global_structure_manager

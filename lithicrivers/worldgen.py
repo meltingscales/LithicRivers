@@ -40,8 +40,8 @@ class WorldSeed(msgspec.Struct, frozen=False):
 class ChunkCache(Cloneable, ShutDownable, msgspec.Struct, frozen=False):
     """Thread-safe cache for pre-generated chunks."""
 
-    max_chunks: int = None
-    cache: dict[tuple[int, int, int], dict[str, Tile]] = None
+    max_chunks: int = 100
+    cache: dict[tuple[int, int, int], dict[str, Tile]] = dict()
 
     @classmethod
     def create(cls, max_chunks: int = 100):
@@ -259,14 +259,16 @@ class SeededWorldGenerator(Cloneable, ShutDownable, msgspec.Struct, frozen=False
     perlin: PerlinNoise = None
     structure_manager: "StructureManager" = None
     procedural_generator: "ProceduralGenerator" = None
+    chunk_cache: ChunkCache = None
 
     @classmethod
     def create(cls, seed: int):
         instance = cls(seed=WorldSeed(seed))
         instance.rng = SimpleRNG.create(seed)
-        instance.perlin = PerlinNoise(seed)
+        instance.perlin = PerlinNoise.create(seed)
         instance.structure_manager = create_structure_manager()
         instance.procedural_generator = create_procedural_generator()
+        instance.chunk_cache = ChunkCache.create()
         return instance
 
     def get_seed(self) -> WorldSeed:
@@ -277,7 +279,7 @@ class SeededWorldGenerator(Cloneable, ShutDownable, msgspec.Struct, frozen=False
         """Set a new seed for the generator."""
         self.seed = WorldSeed(seed)
         self.rng = SimpleRNG.create(seed)
-        self.perlin = PerlinNoise(seed)
+        self.perlin = PerlinNoise.create(seed)
 
     def seeded_weighted_choice(
         self, weights: list[float], choices: list[Any], context: str = ""
@@ -359,7 +361,7 @@ class SeededWorldGenerator(Cloneable, ShutDownable, msgspec.Struct, frozen=False
             )
             # Add depth-based variation using Z coordinate
             # Create a separate noise function for depth to avoid vertical striping
-            depth_perlin = PerlinNoise(
+            depth_perlin = PerlinNoise.create(
                 self.seed.seed + abs(pos_z) * 1000
             )  # Different seed for each Z level
             depth_noise = depth_perlin.octave_noise_2d(

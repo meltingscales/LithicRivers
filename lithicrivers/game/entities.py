@@ -85,35 +85,35 @@ class Items:
 
     @staticmethod
     def rock() -> "Item":
-        return Item("Rock")
+        return Item.create("Rock")
 
     @staticmethod
     def gold_nugget() -> "Item":
-        return Item("Gold Nugget")
+        return Item.create("Gold Nugget")
 
     @staticmethod
     def stick() -> "Item":
-        return Item("Stick")
+        return Item.create("Stick")
 
     @staticmethod
     def diamond() -> "Item":
-        return Item("Diamond")
+        return Item.create("Diamond")
 
     @staticmethod
     def log() -> "Item":
-        return Item("Log")
+        return Item.create("Log")
 
     @staticmethod
     def acorn() -> "Item":
-        return Item("Acorn")
+        return Item.create("Acorn")
 
     @staticmethod
     def iron_scrap() -> "Item":
-        return Item("Iron Scrap")
+        return Item.create("Iron Scrap")
 
     @staticmethod
     def scrap_electronics() -> "Item":
-        return Item("Scrap Electronics")
+        return Item.create("Scrap Electronics")
 
 
 class DroppedItem(Entity, msgspec.Struct, frozen=False, kw_only=True):
@@ -128,7 +128,7 @@ class DroppedItem(Entity, msgspec.Struct, frozen=False, kw_only=True):
 
 
 class Item(msgspec.Struct, frozen=False, kw_only=True):
-    name: str
+    name: str = None
     sprite_sheet: Optional[list[str]] = None
 
     @classmethod

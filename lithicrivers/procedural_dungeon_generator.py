@@ -54,12 +54,12 @@ class ProceduralStructureGenerator(msgspec.Struct, frozen=False):
     @classmethod
     def create(cls):
         instance = cls()
-        instance.dungeon_configs = instance._initialize_dungeon_configs()
+        instance._initialize_dungeon_configs()
         return instance
 
-    def _initialize_dungeon_configs(self) -> Dict[DungeonType, DungeonConfig]:
+    def _initialize_dungeon_configs(self) -> None:
         """Initialize dungeon configurations."""
-        return {
+        self.dungeon_configs = {
             DungeonType.CAVE_SYSTEM: DungeonConfig(
                 dungeon_type=DungeonType.CAVE_SYSTEM,
                 min_size=8,
