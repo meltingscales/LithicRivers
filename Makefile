@@ -62,6 +62,7 @@ help: ## Show this help message
 	@echo "🧹 CLEANUP"
 	@echo "---------"
 	@echo "  clean                Clean build artifacts"
+	@echo "  clean-cycle-pngs     Clean cycle PNGs"
 
 # Setup
 install: ## Install dependencies
@@ -243,9 +244,12 @@ clean: ## Clean build artifacts
 	find . -type f -name "*.pyc" -delete 2>/dev/null || true
 	rm -rf .pytest_cache/ .mypy_cache/ .ruff_cache/
 	rm -rf lithicrivers-test-saves/
+	rm -rf *.speedscope
+	@echo "✅ Clean complete!" 
+
+clean-cycle-pngs: ## Clean cycle PNGs
 	rm -rf cycle-*.png
 	rm -rf game-backrefs.png
 	rm -rf game-networkx.png
 	rm -rf game-cycle.png
-	rm -rf *.speedscope
-	@echo "✅ Clean complete!" 
+	@echo "✅ Clean complete!"
