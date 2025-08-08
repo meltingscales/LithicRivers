@@ -31,6 +31,8 @@ help: ## Show this help message
 	@echo "------"
 	@echo "  demo                 	 Run demo"
 	@echo "  demo-ui-file-browser 	 Run file browser demo"
+	@echo "  demo-ui-credits      	 Run credits demo"
+	@echo "  demo-ui-experimental 	 Run experimental demo"
 	@echo ""
 	@echo "🎮 GAME"
 	@echo "------"
@@ -135,7 +137,13 @@ demo: ## Run all demos
 
 
 demo-ui-file-browser: ## Run file browser demo
-	$(UV_CMD) run python lithicrivers/demo/ui/test_file_browser.py
+	$(UV_CMD) run python lithicrivers/demo/ui/demo_file_browser.py
+
+demo-ui-credits: ## Run credits demo
+	$(UV_CMD) run python lithicrivers/demo/ui/demo_credits.py
+
+demo-ui-experimental: ## Run experimental demo
+	$(UV_CMD) run python lithicrivers/demo/ui/demo_experimental.py
 
 # Development tools
 generate-keychords: ## Generate platform-specific keychord mappings
