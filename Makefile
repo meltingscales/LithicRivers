@@ -243,4 +243,8 @@ clean: ## Clean build artifacts
 	find . -type f -name "*.pyc" -delete 2>/dev/null || true
 	rm -rf .pytest_cache/ .mypy_cache/ .ruff_cache/
 	rm -rf lithicrivers-test-saves/
+	rm -rf cycle-*.png
+	rm -rf game-backrefs.png
+	rm -rf game-networkx.png
+	rm -rf *.speedscope
 	@echo "✅ Clean complete!" 
