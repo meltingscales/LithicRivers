@@ -46,6 +46,7 @@ help: ## Show this help message
 	@echo "🔧 DEVELOPMENT TOOLS"
 	@echo "-------------------"
 	@echo "  generate-keychords   Generate platform-specific keychord mappings"
+	@echo "  find-cycles          Find object cycles (requires ninja package)"
 	@echo ""
 	@echo "🔨 BUILDING"
 	@echo "----------"
@@ -228,6 +229,9 @@ security-deps: ## Run dependency security checks (requires Safety CLI login)
 	@echo "📦 Checking dependencies for vulnerabilities..."
 	$(UV_CMD) run safety scan
 	@echo "✅ Dependency security checks completed!"
+
+find-cycles: clean ## Find object cycles
+	$(UV_CMD) run python lithicrivers/scripts/find_object_cycles.py
 
 # Cleanup
 clean: ## Clean build artifacts
