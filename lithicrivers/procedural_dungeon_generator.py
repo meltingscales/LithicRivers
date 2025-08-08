@@ -575,7 +575,7 @@ def create_procedural_generator() -> ProceduralStructureGenerator:
     global _global_procedural_generator
 
     if _global_procedural_generator is None:
-        _global_procedural_generator = ProceduralStructureGenerator()
+        _global_procedural_generator = ProceduralStructureGenerator.create()
         logger.info("Created singleton ProceduralStructureGenerator instance")
 
     return _global_procedural_generator
