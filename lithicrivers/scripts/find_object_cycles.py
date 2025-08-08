@@ -9,6 +9,7 @@ import logging
 import importlib
 import threading
 import time
+import inspect
 from collections import deque
 from typing import Callable, Optional, Tuple, List
 
@@ -202,16 +203,83 @@ if __name__ == "__main__":
     print("\n[3] Objgraph cycle detection across key components (World, Player, Engine, WorldData)...")
     gc.collect()
 
-    candidates = {
-        "world": getattr(game, "world", None),
-        "player": getattr(game, "player", None),
-        "engine": getattr(game, "engine", None),
-        "game": game,
-        "world_data": getattr(getattr(game, "world", None), "data", None),
-    }
+    def _safe_get(obj, attr):
+        try:
+            return getattr(obj, attr)
+        except Exception:
+            return None
 
-    # Remove Nones
-    candidates = {k: v for k, v in candidates.items() if v is not None}
+    def build_candidates(game: object, *, auto_discover: bool = True, auto_limit: int = 20) -> dict[str, object]:
+        c: dict[str, object] = {}
+        # Core
+        base = {
+            "game": game,
+            "world": _safe_get(game, "world"),
+            "player": _safe_get(game, "player"),
+            "engine": _safe_get(game, "engine"),
+            "world_data": _safe_get(_safe_get(game, "world"), "data"),
+            # High-probability runtime-only refs
+            "message_log": _safe_get(game, "message_log"),
+            "save_manager": _safe_get(game, "save_manager"),
+            # Common caches/managers
+            "chunk_cache": _safe_get(_safe_get(_safe_get(game, "world"), "data"), "chunk_cache"),
+            "entities": _safe_get(_safe_get(game, "world"), "entities"),
+            "fluids": _safe_get(game, "fluids") or _safe_get(_safe_get(game, "world"), "fluids"),
+            "npc_manager": _safe_get(game, "npc_manager"),
+            # Worldgen/managers if present
+            "structure_manager": _safe_get(game, "structure_manager") or _safe_get(_safe_get(game, "world"), "structure_manager"),
+            "procedural_generator": _safe_get(game, "procedural_generator") or _safe_get(_safe_get(game, "world"), "procedural_generator"),
+        }
+        for k, v in base.items():
+            if v is not None:
+                c[k] = v
+
+        if auto_discover:
+            def include_obj(name: str, obj: object) -> bool:
+                if obj is None:
+                    return False
+                if name in c:
+                    return False
+                t = type(obj)
+                mod = getattr(t, "__module__", "")
+                if not isinstance(obj, (int, float, bool, str)) and mod.startswith("lithicrivers"):
+                    return True
+                return False
+
+            scanned = 0
+            owners = {
+                "game": game,
+                "world": _safe_get(game, "world"),
+                "engine": _safe_get(game, "engine"),
+                "player": _safe_get(game, "player"),
+                "world_data": _safe_get(_safe_get(game, "world"), "data"),
+            }
+            for owner_name, owner in owners.items():
+                if owner is None:
+                    continue
+                for attr in dir(owner):
+                    if attr.startswith("_"):
+                        continue
+                    # Avoid methods and properties with side effects by try/except
+                    try:
+                        val = getattr(owner, attr)
+                    except Exception:
+                        continue
+                    # Skip callables and modules
+                    if callable(val) or inspect.ismodule(val):
+                        continue
+                    name = f"{owner_name}.{attr}"
+                    if include_obj(name, val):
+                        c[name] = val
+                        scanned += 1
+                        if scanned >= auto_limit:
+                            break
+                if scanned >= auto_limit:
+                    break
+
+        return c
+
+    candidates = build_candidates(game, auto_discover=True, auto_limit=20)
 
     any_found = False
     any_found |= run_chain_round(candidates, game, reverse=False, max_depth=30)
