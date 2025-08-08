@@ -1,13 +1,14 @@
 import concurrent.futures
 import logging
 import os
-import pickle
+import msgspec
+import msgspec.msgpack
 import pprint
 import threading
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional, Union, TYPE_CHECKING
 
 from lithicrivers.colors import COLOR_MANAGER
 from lithicrivers.constants import VEC_NORTH
@@ -27,16 +28,27 @@ from lithicrivers.settings import (
 from lithicrivers.textutil import get_color_for_item, get_color_for_tile
 from lithicrivers.worldgen import Chunk, SeededWorldGenerator
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from lithicrivers.game.game_save_manager import GameSaveManager
 
-class Player(Entity, SpriteRenderable):
-    def __init__(self, name):
-        Entity.__init__(self, name=name, position=DEFAULT_PLAYER_POSITION)
+# Import GameSaveManager at runtime for msgspec compatibility
+try:
+    from lithicrivers.game.game_save_manager import GameSaveManager
+except ImportError:
+    GameSaveManager = None
 
-        # Load sprites from external data
+class Player(Entity, msgspec.Struct, frozen=False):
+    name: str
+    position: VectorN = msgspec.field(default_factory=lambda: DEFAULT_PLAYER_POSITION)
+    sprite_sheet: Optional[list[str]] = None
+
+    @classmethod
+    def create(cls, name: str = DEFAULT_PLAYER_NAME, position: VectorN = DEFAULT_PLAYER_POSITION) -> "Player":
         from lithicrivers.sprite_loader import get_sprite_loader
-
         sprite_loader = get_sprite_loader()
         sprite_data = sprite_loader.load_sprite("player", "entities")
+        return cls(name=name, position=position, sprite_sheet=sprite_data.sprites)
 
         # Use external sprite data
         SpriteRenderable.__init__(self, sprite_data.sprites)
@@ -122,13 +134,15 @@ class Player(Entity, SpriteRenderable):
         pass
 
 
-class MessageLog:
+class MessageLog(msgspec.Struct, frozen=False):
     """A class to manage game messages for the message log pane."""
+    messages: list[dict] = msgspec.field(default_factory=list)
+    max_messages: int = 100
+    game: Optional["Game"] = None
 
-    def __init__(self, max_messages: int = 100, game: "Game" = None):
-        self.messages = []
-        self.max_messages = max_messages
-        self.game = game
+    @classmethod
+    def create(cls, max_messages: int = 100, game: Optional["Game"] = None) -> "MessageLog":
+        return cls(messages=[], max_messages=max_messages, game=game)
 
     def add_message(self, message: str, message_type: str = "info"):
         """Add a message to the log with timestamp, game tick, and type."""
@@ -161,13 +175,420 @@ class MessageLog:
         """Clear all messages."""
         self.messages.clear()
 
+class ChunkedWorldData(Cloneable, ShutDownable, msgspec.Struct, frozen=False):
+    """
+    Efficient world data storage using chunked 3D arrays.
+    Similar to Minecraft's world storage system.
+    """
 
-class World(Cloneable, ShutDownable, EntityListener):
+    chunk_size: int
+    chunks: dict[tuple[int, int, int], Chunk]
+    entity_data: dict[str, Entity]
+    _tile_cache: dict[str, Tile]
+    _cache_size: int
+    world_generator: "SeededWorldGenerator"
+    _generated_chunks: set[tuple[int, int, int]]
+    _chunk_generation_lock: threading.Lock
+    _thread_pool: ThreadPoolExecutor
+
+    @classmethod
+    def create(cls, chunk_size: int = None, world_generator=None):
+        instance = cls(chunk_size=chunk_size, world_generator=world_generator)
+
+        instance.chunks = {}  # (chunk_x, chunk_y, chunk_z) -> Chunk
+        instance.entity_data = {}  # Entity storage
+        instance._tile_cache = {}  # Cache for frequently accessed tiles
+        instance._cache_size = 1000  # Max cache size
+        instance.world_generator = (
+            world_generator  # Reference to world generator for structure generation
+        )
+        instance._generated_chunks = (
+            set()
+        )  # Track which chunks have had structures generated
+        instance._chunk_generation_lock = (
+            threading.Lock()
+        )  # Lock for thread-safe chunk generation
+        from lithicrivers.settings import MAX_CPU_THREADS
+
+        instance._thread_pool = ThreadPoolExecutor(
+            max_workers=MAX_CPU_THREADS
+        )  # Thread pool for chunk generation
+        return instance
+
+    def pregen_chunks(self, radius: int) -> None:
+        """Pre-generate all chunks within a cubic radius around (0,0,0) using process pool. Waits for all processes to finish.
+        This should only be called when the world generator is initialized, or during unit tests to speed them up if pickling after generating."""
+        if not self.world_generator:
+            raise Exception("World generator is not initialized")
+        seed = getattr(self.world_generator, "seed", None)
+        if hasattr(seed, "seed"):
+            seed = seed.seed
+        if seed is None:
+            raise Exception(
+                "World generator must have a .seed or .seed.seed attribute for process pool pregen"
+            )
+        chunk_size = self.chunk_size
+        chunk_radius = (radius + chunk_size - 1) // chunk_size  # ceil division
+        # Prepare all chunk coords to generate
+        chunk_coords = [
+            (cx, cy, cz)
+            for cx in range(-chunk_radius, chunk_radius + 1)
+            for cy in range(-chunk_radius, chunk_radius + 1)
+            for cz in range(-chunk_radius, chunk_radius + 1)
+            if (cx, cy, cz) not in self._generated_chunks
+        ]
+        # Mark as generated to avoid duplicate work
+        for chunk_key in chunk_coords:
+            self._generated_chunks.add(chunk_key)
+        with ProcessPoolExecutor() as pool:
+            future_to_chunk = {
+                pool.submit(_generate_chunk_data_for_process, seed, cx, cy, cz): (
+                    cx,
+                    cy,
+                    cz,
+                )
+                for (cx, cy, cz) in chunk_coords
+            }
+            for future in concurrent.futures.as_completed(future_to_chunk):
+                cx, cy, cz, chunk_data = future.result()
+                # Insert chunk data into self.chunks
+                if (cx, cy, cz) not in self.chunks:
+                    self.chunks[(cx, cy, cz)] = Chunk(self.chunk_size)
+                chunk = self.chunks[(cx, cy, cz)]
+                for pos_str, tile in chunk_data.items():
+                    pos_parts = [int(x) for x in pos_str.split(",")]
+                    world_pos = VectorN.from_args(*pos_parts)
+                    local_pos = chunk.get_local_pos(world_pos)
+                    chunk.set_tile(local_pos, tile)
+                    pos_key = (world_pos.x, world_pos.y, world_pos.z)
+                    self._tile_cache[pos_key] = tile
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        # Remove unserializable objects for msgspec serialization
+        state.pop("_chunk_generation_lock", None)
+        state.pop("_thread_pool", None)
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        import threading
+        from concurrent.futures import ThreadPoolExecutor
+
+        from lithicrivers.settings import MAX_CPU_THREADS
+
+        self._chunk_generation_lock = threading.Lock()
+        self._thread_pool = ThreadPoolExecutor(max_workers=MAX_CPU_THREADS)
+
+    def __deepcopy__(self, memo):
+        """
+        Custom deepcopy implementation that handles threading primitives properly.
+        """
+        import copy
+
+        from lithicrivers.worldgen import SeededWorldGenerator
+
+        # Create new ChunkedWorldData with same parameters
+        cloned_data = ChunkedWorldData.__new__(ChunkedWorldData)
+        cloned_data.chunk_size = self.chunk_size
+        cloned_data._cache_size = self._cache_size
+
+        # Create a new world generator with the same seed instead of deep copying
+        if self.world_generator:
+            cloned_data.world_generator = SeededWorldGenerator(
+                self.world_generator.seed.seed
+            )
+        else:
+            cloned_data.world_generator = None
+
+        # Deep copy chunks
+        cloned_data.chunks = copy.deepcopy(self.chunks, memo)
+
+        # Deep copy other data structures
+        cloned_data.entity_data = copy.deepcopy(self.entity_data, memo)
+        cloned_data._tile_cache = copy.deepcopy(self._tile_cache, memo)
+        cloned_data._generated_chunks = copy.deepcopy(self._generated_chunks, memo)
+
+        # Create new threading primitives (can't be copied)
+        cloned_data._chunk_generation_lock = threading.Lock()
+        from lithicrivers.settings import MAX_CPU_THREADS
+
+        cloned_data._thread_pool = ThreadPoolExecutor(max_workers=MAX_CPU_THREADS)
+
+        return cloned_data
+
+    def clone(self) -> "ChunkedWorldData":
+        """
+        Create a deep copy of this ChunkedWorldData for testing purposes.
+        This is more efficient than regenerating all chunks from scratch.
+        """
+        import copy
+
+        return copy.deepcopy(self)
+
+    def get_chunk_key(self, pos: VectorN) -> tuple[int, int, int]:
+        """Get chunk coordinates from world position."""
+        return (
+            pos.x // self.chunk_size,
+            pos.y // self.chunk_size,
+            pos.z // self.chunk_size,
+        )
+
+    def get_chunk(self, chunk_key: tuple[int, int, int]) -> Chunk:
+        """Get or create a chunk."""
+        if chunk_key not in self.chunks:
+            self.chunks[chunk_key] = Chunk(self.chunk_size)
+            # Generate structures for this chunk if it's the first time
+            if self.world_generator and chunk_key not in self._generated_chunks:
+                # Mark as generated first to prevent infinite recursion
+                self._generated_chunks.add(chunk_key)
+                # Use threaded chunk generation for lazy loading
+                self._generate_chunk_threaded(chunk_key)
+        return self.chunks[chunk_key]
+
+    def _generate_chunk_threaded(self, chunk_key: tuple[int, int, int]) -> None:
+        """
+        Generate a chunk using threaded generation for lazy loading.
+
+        Args:
+            chunk_key: The chunk coordinates (chunk_x, chunk_y, chunk_z)
+        """
+        if not self.world_generator:
+            return
+
+        # Skip structure generation during testing to speed up tests
+        if os.environ.get("TESTING") == "1":
+            return
+
+        chunk_x, chunk_y, chunk_z = chunk_key
+
+        # Submit chunk generation to thread pool
+        future = self._thread_pool.submit(
+            self._generate_chunk_worker, chunk_x, chunk_y, chunk_z
+        )
+
+        # Store the future for later retrieval if needed
+        # For now, we'll let it run in the background
+        # In a more sophisticated implementation, we could track futures and wait for them
+
+    def _generate_chunk_worker(self, chunk_x: int, chunk_y: int, chunk_z: int) -> None:
+        """
+        Worker method that runs in a separate thread to generate a chunk.
+
+        Args:
+            chunk_x: Chunk X coordinate
+            chunk_y: Chunk Y coordinate
+            chunk_z: Chunk Z coordinate
+        """
+        try:
+            # Use the world generator's threaded chunk generation
+            self.world_generator._generate_complete_chunk(chunk_x, chunk_y, chunk_z)
+
+            # Apply the generated chunk data to our chunked world
+            chunk_data = self.world_generator.chunk_cache.cache.get(
+                (chunk_x, chunk_y, chunk_z), {}
+            )
+
+            with self._chunk_generation_lock:
+                tiles_applied = 0
+                for pos_str, tile in chunk_data.items():
+                    pos_parts = pos_str.split(",")
+                    world_pos = VectorN(
+                        int(pos_parts[0]), int(pos_parts[1]), int(pos_parts[2])
+                    )
+
+                    # Get chunk directly without triggering generation
+                    chunk_key = self.get_chunk_key(world_pos)
+                    if chunk_key in self.chunks:
+                        chunk = self.chunks[chunk_key]
+                        local_pos = chunk.get_local_pos(world_pos)
+                        chunk.set_tile(local_pos, tile)
+
+                        # Update cache
+                        pos_key = (world_pos.x, world_pos.y, world_pos.z)
+                        self._tile_cache[pos_key] = tile
+                        tiles_applied += 1
+        except Exception as e:
+            # Log any errors that occur during chunk generation
+            import logging
+
+            logging.warning(
+                f"Error generating chunk ({chunk_x}, {chunk_y}, {chunk_z}): {e}"
+            )
+
+    def get_tile(self, pos: VectorN) -> Union[Tile, None]:
+        """Get tile at world position."""
+        # Check cache first
+        pos_key = (pos.x, pos.y, pos.z)
+        if pos_key in self._tile_cache:
+            return self._tile_cache[pos_key]
+
+        # Get chunk and local position
+        chunk_key = self.get_chunk_key(pos)
+        chunk = self.get_chunk(chunk_key)
+        local_pos = chunk.get_local_pos(pos)
+
+        # Get tile from chunk
+        tile = chunk.get_tile(local_pos)
+
+        # Cache the result (but limit cache size)
+        if len(self._tile_cache) < self._cache_size:
+            self._tile_cache[pos_key] = tile
+
+        return tile if tile != chunk.palette.get_empty_tile() else None
+
+    def set_tile(self, pos: VectorN, tile: Tile) -> None:
+        """Set tile at world position."""
+        chunk_key = self.get_chunk_key(pos)
+        chunk = self.get_chunk(chunk_key)
+        local_pos = chunk.get_local_pos(pos)
+
+        chunk.set_tile(local_pos, tile)
+
+        # Update cache
+        pos_key = (pos.x, pos.y, pos.z)
+        self._tile_cache[pos_key] = tile
+
+    def clear_cache(self) -> None:
+        """Clear the tile cache."""
+        self._tile_cache.clear()
+
+    def shutdown(self) -> None:
+        """Shutdown the thread pool and clean up resources."""
+        if hasattr(self, "_thread_pool"):
+            # Shutdown the thread pool and wait for all threads to complete
+            # This prevents the game from hanging due to background threads
+            print("Shutting down thread pool...")
+            self._thread_pool.shutdown(wait=True)
+            print("Thread pool shutdown complete.")
+
+    def get_chunk_stats(self) -> dict:
+        """Get statistics about chunk usage."""
+        total_chunks = len(self.chunks)
+        empty_chunks = sum(1 for chunk in self.chunks.values() if chunk.is_empty())
+        total_tiles = sum(len(chunk.palette) for chunk in self.chunks.values())
+
+        return {
+            "total_chunks": total_chunks,
+            "empty_chunks": empty_chunks,
+            "used_chunks": total_chunks - empty_chunks,
+            "total_tile_types": total_tiles,
+            "cache_size": len(self._tile_cache),
+        }
+
+    def serialize(self, filepath: Path) -> Path:
+        """Serialize the chunked world data."""
+        with open(filepath, "wb") as fh:
+            fh.write(msgspec.encode(self))
+        return filepath
+
+    @staticmethod
+    def deserialize(filepath: Path):
+        """Deserialize the chunked world data."""
+        with open(filepath, "rb") as fh:
+            return msgspec.msgpack.decode(fh.read(), type=type(self))
+
+    def __getitem__(self, *item: int):
+        return self.get_tile(VectorN.from_args(*item))
+
+    def __setitem__(self, *item: int):
+        self.set_tile(VectorN.from_args(*item))
+
+    def __iter__(self):
+        """Iterate over all tiles in all chunks."""
+        for chunk_key, chunk in self.chunks.items():
+            for x in range(self.chunk_size):
+                for y in range(self.chunk_size):
+                    for z in range(self.chunk_size):
+                        tile = chunk.get_tile((x, y, z))
+                        if tile != chunk.palette.get_empty_tile():
+                            world_x = chunk_key[0] * self.chunk_size + x
+                            world_y = chunk_key[1] * self.chunk_size + y
+                            world_z = chunk_key[2] * self.chunk_size + z
+                            pos = VectorN.from_args(world_x, world_y, world_z)
+                            yield (pos.serialize(), tile)
+
+
+class Inventory(msgspec.Struct, frozen=False):
+    itemsdata: list["Item"] = msgspec.field(default_factory=list)
+
+    @classmethod
+    def create(cls, items: Optional[list["Item"]] = None) -> "Inventory":
+        if items is None:
+            items = []
+        return cls(itemsdata=items)
+
+    def add_item(self, item: "Item") -> None:
+        self.itemsdata.append(item)
+
+    def __str__(self) -> str:
+        return f"<Inventory numItems={len(self.itemsdata)} summary={self.summary()}>"
+
+    def count_items(self) -> dict[str, int]:
+        d = {}
+
+        for item in self.itemsdata:
+            if item.name in d:
+                d[item.name] += 1
+            else:
+                d[item.name] = 1
+
+        return d
+
+    def summary(self) -> str:
+        s = ""
+
+        for k, v in self.count_items().items():
+            s += f"{k}={v}, "
+
+        return s[0 : len(s) - 2]
+
+    def colored_summary(self) -> str:
+        """Generate a colored summary of inventory items."""
+        s = ""
+
+        for k, v in self.count_items().items():
+            # Get color for this item
+            item_color = get_color_for_item(k)
+            color_name = COLOR_MANAGER.get_color_name(item_color)
+            s += f"{k}={v} ({color_name}), "
+
+        return s[0 : len(s) - 2] if s else "Empty"
+
+
+def _generate_chunk_data_for_process(seed, chunk_x, chunk_y, chunk_z):
+    # This function runs in a separate process
+    generator = SeededWorldGenerator(seed)
+    generator._generate_complete_chunk(chunk_x, chunk_y, chunk_z)
+    # Get chunk data from the generator's chunk cache
+    chunk_data = generator.chunk_cache.cache.get((chunk_x, chunk_y, chunk_z), {})
+    # Return as a dict mapping pos_str to tile (must be serializable)
+    return (chunk_x, chunk_y, chunk_z, chunk_data)
+
+
+class World(Cloneable, ShutDownable, EntityListener, msgspec.Struct, frozen=False):
     """
     A world contains world data and manages the world state.
     """
 
-    def __init__(self, seed: int, name="Gaia"):
+    name: str
+    seed: int
+    generator: "SeededWorldGenerator"
+    data: "ChunkedWorldData"
+    gametick: int
+    entities_by_position: dict[tuple[int, int, int], list[Entity]]
+    fluid_manager: "FluidManager"
+
+    @classmethod
+    def create(cls, seed: int, name="Gaia") -> "World":
+        instance = cls(seed=seed, name=name)
+        instance._add_starter_entities()
+        instance._generate_forced_structures()
+        instance.generator = SeededWorldGenerator(seed)
+        instance.data = ChunkedWorldData(world_generator=instance.generator)
+        return instance
+
+    def __init___disabled_due_to_msgspec(self, seed: int, name="Gaia"):
         self.name = name
         self.seed = seed
 
@@ -512,24 +933,27 @@ class World(Cloneable, ShutDownable, EntityListener):
 
         return True
 
-
-class Game(Cloneable, ShutDownable):
+class Game(Cloneable, ShutDownable, msgspec.Struct, frozen=False):
     """Main game class. Meant to hold all game state. Can be pickled to save the game."""
 
-    def __init__(
-        self,
-        seed: int,
-        player: Player = None,
-        world: World = None,
-        viewport: Viewport = DEFAULT_VIEWPORT,
-        save_manager: "GameSaveManager" = None,
-    ):
-        # Create a copy of the viewport to avoid shared state between tests
-        if viewport is DEFAULT_VIEWPORT:
-            from lithicrivers.model.model import Viewport
-            from lithicrivers.model.vector import VectorN
+    player: Player
+    world: World
+    viewport: Viewport
+    save_manager: "GameSaveManager"
+    running: bool
+    message_log: "MessageLog"
+    gametick: int
 
-            self.viewport = Viewport(
+    @classmethod
+    def create(cls, seed: int, player: Player = None, world: World = None, viewport: Viewport = DEFAULT_VIEWPORT, save_manager: "GameSaveManager" = None) -> "Game":
+        instance = cls(seed=seed, player=player, world=world, viewport=viewport, save_manager=save_manager)
+
+        instance.running = True
+        instance.message_log = MessageLog(game=instance)
+        instance.gametick = 0 
+
+        if viewport is DEFAULT_VIEWPORT:
+            instance.viewport = Viewport(
                 top_left=VectorN(
                     viewport.top_left.x, viewport.top_left.y, viewport.top_left.z
                 ),
@@ -541,27 +965,13 @@ class Game(Cloneable, ShutDownable):
                 scale=viewport.scale,
             )
         else:
-            self.viewport = viewport
-
-        if player is None:
-            player = Player(name=DEFAULT_PLAYER_NAME)
-
-        if world is None:
-            world = World(seed=seed)
-
-        self.player: Player = player
-        self.world: World = world
-
-        self.save_manager: GameSaveManager = save_manager
-
-        self.running = True
-        self.message_log = MessageLog(game=self)
-        self.gametick = 0
+            instance.viewport = viewport
 
         # Add initial welcome message
-        self.message_log.add_message(
+        instance.message_log.add_message(
             "Welcome to LithicRivers! Your adventures will be logged here.", "info"
         )
+        return instance
 
     def clone(self) -> "Game":
         """Create a deep copy of this Game for pickling or testing."""
@@ -806,383 +1216,3 @@ class Game(Cloneable, ShutDownable):
                 else:
                     # Default behavior for entities without speed attribute
                     entity.tick()
-
-
-class ChunkedWorldData(Cloneable, ShutDownable):
-    """
-    Efficient world data storage using chunked 3D arrays.
-    Similar to Minecraft's world storage system.
-    """
-
-    def __init__(self, chunk_size: int = None, world_generator=None):
-        from lithicrivers.settings import CHUNK_SIZE
-
-        if chunk_size is None:
-            chunk_size = CHUNK_SIZE
-        self.chunk_size = chunk_size
-        self.chunks = {}  # (chunk_x, chunk_y, chunk_z) -> Chunk
-        self.entity_data = {}  # Entity storage
-        self._tile_cache = {}  # Cache for frequently accessed tiles
-        self._cache_size = 1000  # Max cache size
-        self.world_generator = (
-            world_generator  # Reference to world generator for structure generation
-        )
-        self._generated_chunks = (
-            set()
-        )  # Track which chunks have had structures generated
-        self._chunk_generation_lock = (
-            threading.Lock()
-        )  # Lock for thread-safe chunk generation
-        from lithicrivers.settings import MAX_CPU_THREADS
-
-        self._thread_pool = ThreadPoolExecutor(
-            max_workers=MAX_CPU_THREADS
-        )  # Thread pool for chunk generation
-
-    def pregen_chunks(self, radius: int) -> None:
-        """Pre-generate all chunks within a cubic radius around (0,0,0) using process pool. Waits for all processes to finish.
-        This should only be called when the world generator is initialized, or during unit tests to speed them up if pickling after generating."""
-        if not self.world_generator:
-            raise Exception("World generator is not initialized")
-        seed = getattr(self.world_generator, "seed", None)
-        if hasattr(seed, "seed"):
-            seed = seed.seed
-        if seed is None:
-            raise Exception(
-                "World generator must have a .seed or .seed.seed attribute for process pool pregen"
-            )
-        chunk_size = self.chunk_size
-        chunk_radius = (radius + chunk_size - 1) // chunk_size  # ceil division
-        # Prepare all chunk coords to generate
-        chunk_coords = [
-            (cx, cy, cz)
-            for cx in range(-chunk_radius, chunk_radius + 1)
-            for cy in range(-chunk_radius, chunk_radius + 1)
-            for cz in range(-chunk_radius, chunk_radius + 1)
-            if (cx, cy, cz) not in self._generated_chunks
-        ]
-        # Mark as generated to avoid duplicate work
-        for chunk_key in chunk_coords:
-            self._generated_chunks.add(chunk_key)
-        with ProcessPoolExecutor() as pool:
-            future_to_chunk = {
-                pool.submit(_generate_chunk_data_for_process, seed, cx, cy, cz): (
-                    cx,
-                    cy,
-                    cz,
-                )
-                for (cx, cy, cz) in chunk_coords
-            }
-            for future in concurrent.futures.as_completed(future_to_chunk):
-                cx, cy, cz, chunk_data = future.result()
-                # Insert chunk data into self.chunks
-                if (cx, cy, cz) not in self.chunks:
-                    self.chunks[(cx, cy, cz)] = Chunk(self.chunk_size)
-                chunk = self.chunks[(cx, cy, cz)]
-                for pos_str, tile in chunk_data.items():
-                    pos_parts = [int(x) for x in pos_str.split(",")]
-                    world_pos = VectorN(*pos_parts)
-                    local_pos = chunk.get_local_pos(world_pos)
-                    chunk.set_tile(local_pos, tile)
-                    pos_key = (world_pos.x, world_pos.y, world_pos.z)
-                    self._tile_cache[pos_key] = tile
-
-    def __getstate__(self):
-        state = self.__dict__.copy()
-        # Remove unpickleable objects for pickling
-        state.pop("_chunk_generation_lock", None)
-        state.pop("_thread_pool", None)
-        return state
-
-    def __setstate__(self, state):
-        self.__dict__.update(state)
-        import threading
-        from concurrent.futures import ThreadPoolExecutor
-
-        from lithicrivers.settings import MAX_CPU_THREADS
-
-        self._chunk_generation_lock = threading.Lock()
-        self._thread_pool = ThreadPoolExecutor(max_workers=MAX_CPU_THREADS)
-
-    def __deepcopy__(self, memo):
-        """
-        Custom deepcopy implementation that handles threading primitives properly.
-        """
-        import copy
-
-        from lithicrivers.worldgen import SeededWorldGenerator
-
-        # Create new ChunkedWorldData with same parameters
-        cloned_data = ChunkedWorldData.__new__(ChunkedWorldData)
-        cloned_data.chunk_size = self.chunk_size
-        cloned_data._cache_size = self._cache_size
-
-        # Create a new world generator with the same seed instead of deep copying
-        if self.world_generator:
-            cloned_data.world_generator = SeededWorldGenerator(
-                self.world_generator.seed.seed
-            )
-        else:
-            cloned_data.world_generator = None
-
-        # Deep copy chunks
-        cloned_data.chunks = copy.deepcopy(self.chunks, memo)
-
-        # Deep copy other data structures
-        cloned_data.entity_data = copy.deepcopy(self.entity_data, memo)
-        cloned_data._tile_cache = copy.deepcopy(self._tile_cache, memo)
-        cloned_data._generated_chunks = copy.deepcopy(self._generated_chunks, memo)
-
-        # Create new threading primitives (can't be copied)
-        cloned_data._chunk_generation_lock = threading.Lock()
-        from lithicrivers.settings import MAX_CPU_THREADS
-
-        cloned_data._thread_pool = ThreadPoolExecutor(max_workers=MAX_CPU_THREADS)
-
-        return cloned_data
-
-    def clone(self) -> "ChunkedWorldData":
-        """
-        Create a deep copy of this ChunkedWorldData for testing purposes.
-        This is more efficient than regenerating all chunks from scratch.
-        """
-        import copy
-
-        return copy.deepcopy(self)
-
-    def get_chunk_key(self, pos: VectorN) -> tuple[int, int, int]:
-        """Get chunk coordinates from world position."""
-        return (
-            pos.x // self.chunk_size,
-            pos.y // self.chunk_size,
-            pos.z // self.chunk_size,
-        )
-
-    def get_chunk(self, chunk_key: tuple[int, int, int]) -> Chunk:
-        """Get or create a chunk."""
-        if chunk_key not in self.chunks:
-            self.chunks[chunk_key] = Chunk(self.chunk_size)
-            # Generate structures for this chunk if it's the first time
-            if self.world_generator and chunk_key not in self._generated_chunks:
-                # Mark as generated first to prevent infinite recursion
-                self._generated_chunks.add(chunk_key)
-                # Use threaded chunk generation for lazy loading
-                self._generate_chunk_threaded(chunk_key)
-        return self.chunks[chunk_key]
-
-    def _generate_chunk_threaded(self, chunk_key: tuple[int, int, int]) -> None:
-        """
-        Generate a chunk using threaded generation for lazy loading.
-
-        Args:
-            chunk_key: The chunk coordinates (chunk_x, chunk_y, chunk_z)
-        """
-        if not self.world_generator:
-            return
-
-        # Skip structure generation during testing to speed up tests
-        if os.environ.get("TESTING") == "1":
-            return
-
-        chunk_x, chunk_y, chunk_z = chunk_key
-
-        # Submit chunk generation to thread pool
-        future = self._thread_pool.submit(
-            self._generate_chunk_worker, chunk_x, chunk_y, chunk_z
-        )
-
-        # Store the future for later retrieval if needed
-        # For now, we'll let it run in the background
-        # In a more sophisticated implementation, we could track futures and wait for them
-
-    def _generate_chunk_worker(self, chunk_x: int, chunk_y: int, chunk_z: int) -> None:
-        """
-        Worker method that runs in a separate thread to generate a chunk.
-
-        Args:
-            chunk_x: Chunk X coordinate
-            chunk_y: Chunk Y coordinate
-            chunk_z: Chunk Z coordinate
-        """
-        try:
-            # Use the world generator's threaded chunk generation
-            self.world_generator._generate_complete_chunk(chunk_x, chunk_y, chunk_z)
-
-            # Apply the generated chunk data to our chunked world
-            chunk_data = self.world_generator.chunk_cache.cache.get(
-                (chunk_x, chunk_y, chunk_z), {}
-            )
-
-            with self._chunk_generation_lock:
-                tiles_applied = 0
-                for pos_str, tile in chunk_data.items():
-                    pos_parts = pos_str.split(",")
-                    world_pos = VectorN(
-                        int(pos_parts[0]), int(pos_parts[1]), int(pos_parts[2])
-                    )
-
-                    # Get chunk directly without triggering generation
-                    chunk_key = self.get_chunk_key(world_pos)
-                    if chunk_key in self.chunks:
-                        chunk = self.chunks[chunk_key]
-                        local_pos = chunk.get_local_pos(world_pos)
-                        chunk.set_tile(local_pos, tile)
-
-                        # Update cache
-                        pos_key = (world_pos.x, world_pos.y, world_pos.z)
-                        self._tile_cache[pos_key] = tile
-                        tiles_applied += 1
-        except Exception as e:
-            # Log any errors that occur during chunk generation
-            import logging
-
-            logging.warning(
-                f"Error generating chunk ({chunk_x}, {chunk_y}, {chunk_z}): {e}"
-            )
-
-    def get_tile(self, pos: VectorN) -> Union[Tile, None]:
-        """Get tile at world position."""
-        # Check cache first
-        pos_key = (pos.x, pos.y, pos.z)
-        if pos_key in self._tile_cache:
-            return self._tile_cache[pos_key]
-
-        # Get chunk and local position
-        chunk_key = self.get_chunk_key(pos)
-        chunk = self.get_chunk(chunk_key)
-        local_pos = chunk.get_local_pos(pos)
-
-        # Get tile from chunk
-        tile = chunk.get_tile(local_pos)
-
-        # Cache the result (but limit cache size)
-        if len(self._tile_cache) < self._cache_size:
-            self._tile_cache[pos_key] = tile
-
-        return tile if tile != chunk.palette.get_empty_tile() else None
-
-    def set_tile(self, pos: VectorN, tile: Tile) -> None:
-        """Set tile at world position."""
-        chunk_key = self.get_chunk_key(pos)
-        chunk = self.get_chunk(chunk_key)
-        local_pos = chunk.get_local_pos(pos)
-
-        chunk.set_tile(local_pos, tile)
-
-        # Update cache
-        pos_key = (pos.x, pos.y, pos.z)
-        self._tile_cache[pos_key] = tile
-
-    def clear_cache(self) -> None:
-        """Clear the tile cache."""
-        self._tile_cache.clear()
-
-    def shutdown(self) -> None:
-        """Shutdown the thread pool and clean up resources."""
-        if hasattr(self, "_thread_pool"):
-            # Shutdown the thread pool and wait for all threads to complete
-            # This prevents the game from hanging due to background threads
-            print("Shutting down thread pool...")
-            self._thread_pool.shutdown(wait=True)
-            print("Thread pool shutdown complete.")
-
-    def get_chunk_stats(self) -> dict:
-        """Get statistics about chunk usage."""
-        total_chunks = len(self.chunks)
-        empty_chunks = sum(1 for chunk in self.chunks.values() if chunk.is_empty())
-        total_tiles = sum(len(chunk.palette) for chunk in self.chunks.values())
-
-        return {
-            "total_chunks": total_chunks,
-            "empty_chunks": empty_chunks,
-            "used_chunks": total_chunks - empty_chunks,
-            "total_tile_types": total_tiles,
-            "cache_size": len(self._tile_cache),
-        }
-
-    def serialize(self, filepath: Path) -> Path:
-        """Serialize the chunked world data."""
-        with open(filepath, "wb") as fh:
-            pickle.dump(self, fh)
-        return filepath
-
-    @staticmethod
-    def deserialize(filepath: Path):
-        """Deserialize the chunked world data."""
-        with open(filepath, "rb") as fh:
-            return pickle.load(fh)
-
-    def __getitem__(self, *item: int):
-        return self.get_tile(VectorN(*item))
-
-    def __setitem__(self, *item: int):
-        self.set_tile(VectorN(*item))
-
-    def __iter__(self):
-        """Iterate over all tiles in all chunks."""
-        for chunk_key, chunk in self.chunks.items():
-            for x in range(self.chunk_size):
-                for y in range(self.chunk_size):
-                    for z in range(self.chunk_size):
-                        tile = chunk.get_tile((x, y, z))
-                        if tile != chunk.palette.get_empty_tile():
-                            world_x = chunk_key[0] * self.chunk_size + x
-                            world_y = chunk_key[1] * self.chunk_size + y
-                            world_z = chunk_key[2] * self.chunk_size + z
-                            pos = VectorN(world_x, world_y, world_z)
-                            yield (pos.serialize(), tile)
-
-
-class Inventory:
-    def __init__(self, items: Optional[list[Item]] = None):
-        if items is None:
-            items = []
-
-        self.itemsdata = items
-
-    def add_item(self, item: "Item") -> None:
-        self.itemsdata.append(item)
-
-    def __str__(self) -> str:
-        return f"<Inventory numItems={len(self.itemsdata)} summary={self.summary()}>"
-
-    def count_items(self) -> dict[str, int]:
-        d = {}
-
-        for item in self.itemsdata:
-            if item.name in d:
-                d[item.name] += 1
-            else:
-                d[item.name] = 1
-
-        return d
-
-    def summary(self) -> str:
-        s = ""
-
-        for k, v in self.count_items().items():
-            s += f"{k}={v}, "
-
-        return s[0 : len(s) - 2]
-
-    def colored_summary(self) -> str:
-        """Generate a colored summary of inventory items."""
-        s = ""
-
-        for k, v in self.count_items().items():
-            # Get color for this item
-            item_color = get_color_for_item(k)
-            color_name = COLOR_MANAGER.get_color_name(item_color)
-            s += f"{k}={v} ({color_name}), "
-
-        return s[0 : len(s) - 2] if s else "Empty"
-
-
-def _generate_chunk_data_for_process(seed, chunk_x, chunk_y, chunk_z):
-    # This function runs in a separate process
-    generator = SeededWorldGenerator(seed)
-    generator._generate_complete_chunk(chunk_x, chunk_y, chunk_z)
-    # Get chunk data from the generator's chunk cache
-    chunk_data = generator.chunk_cache.cache.get((chunk_x, chunk_y, chunk_z), {})
-    # Return as a dict mapping pos_str to tile (must be pickleable)
-    return (chunk_x, chunk_y, chunk_z, chunk_data)

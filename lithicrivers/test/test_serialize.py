@@ -4,7 +4,7 @@ from pathlib import Path
 
 from lithicrivers.game.core import Tiles, weighted_choice
 from lithicrivers.model.vector import VectorN
-from lithicrivers.worldgen import ChunkedWorldData
+from lithicrivers.game.core import ChunkedWorldData
 
 filename = Path("testWorld.lithicriversworlddata")
 

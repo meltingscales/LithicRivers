@@ -8,6 +8,9 @@ import threading
 from dataclasses import dataclass
 from typing import Any, Optional
 
+import msgspec
+
+from lithicrivers.game.interfaces import Cloneable, ShutDownable
 from lithicrivers.game.tiles import Tile, TilePalette, Tiles
 from lithicrivers.logging_config import get_logger
 from lithicrivers.model.vector import VectorN
@@ -20,10 +23,14 @@ logger = get_logger(__name__)
 
 
 @dataclass
-class WorldSeed:
+class WorldSeed(msgspec.Struct, frozen=False):
     """Represents a world seed for deterministic generation."""
 
     seed: int
+
+    @classmethod
+    def create(cls, seed: int):
+        return cls(seed=seed)
 
     def __str__(self) -> str:
         return f"WorldSeed({self.seed})"
@@ -32,13 +39,24 @@ class WorldSeed:
         return str(self)
 
 
-class ChunkCache:
+class ChunkCache(Cloneable, ShutDownable, msgspec.Struct, frozen=False):
     """Thread-safe cache for pre-generated chunks."""
 
-    def __init__(self, max_chunks: int = 100):
-        self.max_chunks = max_chunks
-        self.cache: dict[tuple[int, int, int], dict[str, Tile]] = {}
-        self.lock = threading.RLock()
+    max_chunks: int
+    cache: dict[tuple[int, int, int], dict[str, Tile]]
+    lock: threading.RLock
+
+    @classmethod
+    def create(cls, max_chunks: int = 100):
+        instance = cls(max_chunks=max_chunks)
+        instance.cache = {}
+        instance.lock = threading.RLock()
+        return instance
+
+    def shutdown(self) -> None:
+        self.cache.clear()
+        self.lock.release()
+        self.lock = None
 
     def __getstate__(self) -> object:
         state = self.__dict__.copy()
@@ -225,26 +243,26 @@ class PerlinNoise:
         return total / max_value
 
 
-class SeededWorldGenerator:
+class SeededWorldGenerator(Cloneable, ShutDownable, msgspec.Struct, frozen=False):
     """
     World generator that uses seeded randomness for deterministic generation.
     Similar to Minecraft's world generation system.
     """
 
-    def __init__(self, seed: int):
-        """
-        Initialize the world generator with a seed.
+    seed: WorldSeed
+    rng: random.Random
+    perlin: PerlinNoise
+    structure_manager: StructureManager
+    procedural_generator: ProceduralGenerator
 
-        Args:
-            seed: The seed for deterministic generation.
-        """
-
-        self.seed = WorldSeed(seed)
-        self.rng = random.Random(seed)
-        self.perlin = PerlinNoise(seed)
-        self.structure_manager = create_structure_manager()
-        self.procedural_generator = create_procedural_generator()
-        self.chunk_cache = ChunkCache()
+    @classmethod
+    def create(cls, seed: int):
+        instance = cls(seed=WorldSeed(seed))
+        instance.rng = random.Random(seed)
+        instance.perlin = PerlinNoise(seed)
+        instance.structure_manager = create_structure_manager()
+        instance.procedural_generator = create_procedural_generator()
+        return instance
 
     def get_seed(self) -> WorldSeed:
         """Get the current world seed."""

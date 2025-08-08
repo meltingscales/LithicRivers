@@ -9,18 +9,13 @@ from lithicrivers.textutil import (
 )
 
 
-class ColoredRenderedData:
-    """A rendered list of objects with color information."""
+import msgspec
 
-    def __init__(
-        self,
-        render_data: list[list[str]],
-        color_data: list[list[tuple[int, int, int]]],
-        scale: int = 1,
-    ):
-        self.render_data = render_data
-        self.color_data = color_data
-        self.scale = scale
+class ColoredRenderedData(msgspec.Struct, frozen=False):
+    """A rendered list of objects with color information."""
+    render_data: list[list[str]]
+    color_data: list[list[tuple[int, int, int]]]
+    scale: int = 1
 
     def as_string(self, eol: str = "\n") -> str:
         """Convert to string (without color information)."""
@@ -48,19 +43,18 @@ class ColoredRenderedData:
         return COLOR_MANAGER.get_color("DEFAULT")
 
 
-class RenderedData:
+class RenderedData(msgspec.Struct, frozen=False):
     """A rendered list of objects -- tile, sprite, etc.
 
     Scale is necessary to know so that objects can be "sliced" by how many
     columns/rows they inhabit...
     """
+    render_data: list[list[str]]
+    scale: int = 1
+    color_data: Optional[list[list[tuple[int, int, int]]]] = None
 
-    def __init__(
-        self,
-        render_data: Any,
-        scale: int = 1,
-        color_data: Optional[list[list[tuple[int, int, int]]]] = None,
-    ):
+    @classmethod
+    def create(cls, render_data: Any, scale: int = 1, color_data: Optional[list[list[tuple[int, int, int]]]] = None) -> "RenderedData":
         # constructor flexibility
         if isinstance(render_data, str):
             render_data = [[render_data]]
@@ -70,21 +64,14 @@ class RenderedData:
             and isinstance(render_data[0], str)
         ):
             render_data = [render_data]
-
         # At this point, render_data should be list[list[str]]
-        # Use explicit type casting to help mypy
         from typing import cast
-
-        self.render_data = cast("list[list[str]]", render_data)
-        self.scale = scale
-
-        # Initialize color data if not provided
+        render_data = cast("list[list[str]]", render_data)
         if color_data is None:
-            self.color_data = [
+            color_data = [
                 [COLOR_MANAGER.get_color("DEFAULT") for _ in row] for row in render_data
             ]
-        else:
-            self.color_data = color_data
+        return cls(render_data=render_data, scale=scale, color_data=color_data)
 
     def as_string(self, eol: str = "\n") -> str:
         ret = []
@@ -111,19 +98,25 @@ class RenderedData:
         return COLOR_MANAGER.get_color("DEFAULT")
 
 
-class Viewport:
+import msgspec
+
+class Viewport(msgspec.Struct, frozen=False):
     """
     Please note that y grows downwards, and x grows rightwards.
     This is why top_left is "smaller" numerically than lower_right.
 
     The reason for this is...I lazily used list(list(...)) as my underlying data structure for World :P
     """
+    top_left: VectorN
+    lower_right: VectorN
+    scale: int = 1
+    original_size: VectorN = msgspec.field(default=None)
 
-    def __init__(self, top_left: VectorN, lower_right: VectorN, scale: int = 1):
-        self.top_left = top_left
-        self.lower_right = lower_right
-        self.original_size = self.get_size()
-        self.scale = scale
+    @classmethod
+    def create(cls, top_left: VectorN, lower_right: VectorN, scale: int = 1) -> "Viewport":
+        vp = cls(top_left=top_left, lower_right=lower_right, scale=scale)
+        vp.original_size = vp.get_size()
+        return vp
 
     @staticmethod
     def generate_centered(

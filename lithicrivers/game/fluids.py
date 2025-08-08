@@ -17,11 +17,11 @@ class FluidManager:
         self.world = world
         self.fluids: dict[str, Fluid] = {}  # position_key -> Fluid
         self.flow_directions = [
-            VectorN(0, 0, 1),  # Down (gravity) - deeper into earth
-            VectorN(-1, 0, 0),  # Left
-            VectorN(1, 0, 0),  # Right
-            VectorN(0, -1, 0),  # North
-            VectorN(0, 1, 0),  # South
+            VectorN.from_args(0, 0, 1),  # Down (gravity) - deeper into earth
+            VectorN.from_args(-1, 0, 0),  # Left
+            VectorN.from_args(1, 0, 0),  # Right
+            VectorN.from_args(0, -1, 0),  # North
+            VectorN.from_args(0, 1, 0),  # South
         ]
 
     def add_fluid(self, fluid: "Fluid") -> None:

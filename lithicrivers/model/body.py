@@ -3,7 +3,7 @@ Body modularity system for the damaged android concept.
 Copyright (c) 2024 HenryFBP. All rights reserved.
 """
 
-from dataclasses import dataclass, field
+import msgspec
 from enum import Enum
 from typing import Dict
 
@@ -28,8 +28,7 @@ class BodyPartState(Enum):
     ENHANCED = "enhanced"  # Better than normal
 
 
-@dataclass
-class BodyPart:
+class BodyPart(msgspec.Struct, frozen=False):
     """Represents a single body part with its state and effects."""
 
     part_type: BodyPartType
@@ -130,11 +129,10 @@ class BodyPart:
             return {}
 
 
-@dataclass
-class Body:
+class Body(msgspec.Struct, frozen=False):
     """Represents the complete body of the android with all its parts."""
 
-    parts: Dict[BodyPartType, BodyPart] = field(default_factory=dict)
+    parts: Dict[BodyPartType, BodyPart] = msgspec.field(default_factory=dict)
 
     def __post_init__(self):
         """Initialize with default damaged android body."""

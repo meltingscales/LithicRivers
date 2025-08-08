@@ -135,7 +135,7 @@ class ConfigManager:
         value = self.settings.get(category, {}).get(key, {})
         coords = value.get(environment, [0, 0, 0]) if isinstance(value, dict) else value
 
-        return VectorN(*coords)
+        return VectorN.from_args(*coords)
 
     def save_config(self) -> None:
         """Save current configuration to file."""

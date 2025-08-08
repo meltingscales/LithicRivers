@@ -6,26 +6,22 @@ from lithicrivers.model.vector import VectorN
 
 class NPC(Entity, SpriteRenderable):
     """A non-player character that can have conversations."""
+    sprite: str = "N"
+    color: str = "cyan"
+    sprite_sheet: list[str] | None = None
+    conversations: dict | None = None
 
-    def __init__(
-        self, name: str, position: VectorN, sprite: str = "N", color: str = "cyan"
-    ):
-        super().__init__(name, position)
-        self.sprite = sprite
-        self.color = color
-        self.conversations = {}
-        # Load sprites from external data
+    @classmethod
+    def create(cls, name: str, position: VectorN, sprite: str = "N", color: str = "cyan") -> "NPC":
         from lithicrivers.sprite_loader import get_sprite_loader
-
         sprite_loader = get_sprite_loader()
         sprite_data = sprite_loader.load_sprite(
             name.lower().replace(" ", "_"), "entities"
         )
-
-        # Use external sprite data
-        self.sprite_sheet = sprite_data.sprites
-        self.color = sprite_data.color
-        self._setup_default_conversation()
+        npc = cls(name=name, position=position, sprite=sprite_data.sprites[0] if sprite_data.sprites else sprite, color=sprite_data.color)
+        npc.sprite_sheet = sprite_data.sprites
+        npc._setup_default_conversation()
+        return npc
 
     def _setup_default_conversation(self) -> None:
         self.conversations = {
@@ -49,18 +45,15 @@ class NPC(Entity, SpriteRenderable):
 
 
 class ElderOak(NPC):
-    def __init__(self, position: VectorN):
-        super().__init__("Elder Oak", position, sprite="N", color="cyan")
-        # Load sprites from external data
+    @classmethod
+    def create(cls, position: VectorN) -> "ElderOak":
         from lithicrivers.sprite_loader import get_sprite_loader
-
         sprite_loader = get_sprite_loader()
         sprite_data = sprite_loader.load_sprite("elder_oak", "entities")
-
-        # Use external sprite data
-        self.sprite_sheet = sprite_data.sprites
-        self.color = sprite_data.color
-        self._setup_default_conversation()
+        npc = cls(name="Elder Oak", position=position, sprite=sprite_data.sprites[0] if sprite_data.sprites else "N", color=sprite_data.color)
+        npc.sprite_sheet = sprite_data.sprites
+        npc._setup_default_conversation()
+        return npc
 
     def _setup_default_conversation(self) -> None:
         self.conversations = {
@@ -107,31 +100,21 @@ class ElderOak(NPC):
 
 class InteractiveEntity(Entity, SpriteRenderable):
     """An entity that can be interacted with."""
+    sprite: str = "E"
+    color: str = "yellow"
+    sprite_sheet: list[str] | None = None
+    interaction_text: str = "This is an interactive entity."
 
-    def __init__(
-        self,
-        name: str,
-        position: VectorN,
-        sprite: str = "E",
-        color: str = "yellow",
-        interaction_text: str = "This is an interactive entity.",
-    ):
-        super().__init__(name, position)
-        self.sprite = sprite
-        self.color = color
-        self.interaction_text = interaction_text
-
-        # Load sprites from external data
+    @classmethod
+    def create(cls, name: str, position: VectorN, sprite: str = "E", color: str = "yellow", interaction_text: str = "This is an interactive entity.") -> "InteractiveEntity":
         from lithicrivers.sprite_loader import get_sprite_loader
-
         sprite_loader = get_sprite_loader()
         sprite_data = sprite_loader.load_sprite(
             name.lower().replace(" ", "_"), "entities"
         )
-
-        # Use external sprite data
-        self.sprite_sheet = sprite_data.sprites
-        self.color = sprite_data.color
+        entity = cls(name=name, position=position, sprite=sprite_data.sprites[0] if sprite_data.sprites else sprite, color=sprite_data.color, interaction_text=interaction_text)
+        entity.sprite_sheet = sprite_data.sprites
+        return entity
 
     def render_sprite(self, scale: int = 1) -> str:
         """Render the entity sprite."""
@@ -144,66 +127,39 @@ class InteractiveEntity(Entity, SpriteRenderable):
 
 
 class CrystalShard(InteractiveEntity):
-    def __init__(self, position: VectorN):
-        super().__init__(
-            "Crystal Shard",
-            position,
-            sprite="C",
-            color="blue",
-            interaction_text="This crystal shard glows with a soft blue light. It seems to pulse with energy.",
-        )
-        # Load sprites from external data
+    @classmethod
+    def create(cls, position: VectorN) -> "CrystalShard":
         from lithicrivers.sprite_loader import get_sprite_loader
-
         sprite_loader = get_sprite_loader()
         sprite_data = sprite_loader.load_sprite("crystal_shard", "entities")
-
-        # Use external sprite data
-        self.sprite_sheet = sprite_data.sprites
-        self.color = sprite_data.color
+        entity = cls(name="Crystal Shard", position=position, sprite=sprite_data.sprites[0] if sprite_data.sprites else "C", color=sprite_data.color, interaction_text="This crystal shard glows with a soft blue light. It seems to pulse with energy.")
+        entity.sprite_sheet = sprite_data.sprites
+        return entity
 
 
 class AncientRelic(InteractiveEntity):
-    def __init__(self, position: VectorN):
-        super().__init__(
-            "Ancient Relic",
-            position,
-            sprite="R",
-            color="red",
-            interaction_text="This ancient relic is covered in mysterious runes. It radiates warmth.",
-        )
-        # Load sprites from external data
+    @classmethod
+    def create(cls, position: VectorN) -> "AncientRelic":
         from lithicrivers.sprite_loader import get_sprite_loader
-
         sprite_loader = get_sprite_loader()
         sprite_data = sprite_loader.load_sprite("ancient_relic", "entities")
-
-        # Use external sprite data
-        self.sprite_sheet = sprite_data.sprites
-        self.color = sprite_data.color
+        entity = cls(name="Ancient Relic", position=position, sprite=sprite_data.sprites[0] if sprite_data.sprites else "R", color=sprite_data.color, interaction_text="This ancient relic is covered in mysterious runes. It radiates warmth.")
+        entity.sprite_sheet = sprite_data.sprites
+        return entity
 
 
 class StumblingSheep(InteractiveEntity):
     """A sheep that stumbles around randomly."""
 
-    def __init__(self, position: VectorN):
-        super().__init__(
-            name="Stumbling Sheep",
-            position=position,
-            sprite="S",
-            color="white",
-            interaction_text="The sheep stumbles around aimlessly, occasionally making confused noises.",
-        )
-        # Load sprites from external data
+    @classmethod
+    def create(cls, position: VectorN) -> "StumblingSheep":
         from lithicrivers.sprite_loader import get_sprite_loader
-
         sprite_loader = get_sprite_loader()
         sprite_data = sprite_loader.load_sprite("stumbling_sheep", "entities")
-
-        # Use external sprite data
-        self.sprite_sheet = sprite_data.sprites
-        self.color = sprite_data.color
-        self.speed = 0.2  # Sheep moves at 0.2x speed (tick every 5 frames)
+        entity = cls(name="Stumbling Sheep", position=position, sprite=sprite_data.sprites[0] if sprite_data.sprites else "S", color=sprite_data.color, interaction_text="The sheep stumbles around aimlessly, occasionally making confused noises.")
+        entity.sprite_sheet = sprite_data.sprites
+        entity.speed = 0.2  # Sheep moves at 0.2x speed (tick every 5 frames)
+        return entity
 
     def tick(self) -> None:
         """Move randomly every few ticks."""

@@ -1,49 +1,35 @@
 from typing import Any, ClassVar, Union
 
 
-class VectorN:
+import msgspec
+
+class VectorN(msgspec.Struct, frozen=False):
     """
     Vector (point) that can be any dimension (X, or X/Y, or X/Y/Z, or X/Y/Z/W, etc)
+    Use VectorN.from_args(0, 0, 1) for ergonomic construction.
     """
+
+    dimension_values: tuple[int, ...] = ()
+    x: int | None = None
+    y: int | None = None
+    z: int | None = None
+    w: int | None = None
 
     dim_pos_map: ClassVar[dict[str, int]] = {"x": 0, "y": 1, "z": 2, "w": 3}
 
-    def __init__(self, *dimvals: Any):
-        # Handle different input types
-        if len(dimvals) == 1 and not isinstance(dimvals[0], int):
-            # Single non-int argument - try to deserialize
-            obj = dimvals[0]
-            if isinstance(obj, VectorN):
-                # Copy from existing VectorN
-                self.dimension_values: tuple[int, ...] = obj.dimension_values
-            elif isinstance(obj, (list, tuple)):
-                # Convert list/tuple to ints
-                self.dimension_values = tuple(int(x) for x in obj)
-            elif isinstance(obj, str):
-                # Parse string
-                obj = obj.strip()
-                tokens = obj.split(",")
-                self.dimension_values = tuple(int(x.strip()) for x in tokens)
-            else:
-                raise ValueError(f"Cannot create VectorN from {type(obj)}")
-        else:
-            # Direct int arguments
-            self.dimension_values = tuple(int(x) for x in dimvals)
+    @classmethod
+    def from_args(cls, *args: int) -> "VectorN":
+        return cls(dimension_values=tuple(args))
 
-        # Initialize x, y, z, w to None first
-        self.x = None
-        self.y = None
-        self.z = None
-        self.w = None
-
+    def __post_init__(self):
         # set x,y,z, etc based on available dimensions
         for dim_name, dim_idx in self.dim_pos_map.items():
             if dim_idx < len(self.dimension_values):
-                self.__setattr__(dim_name, self.dimension_values[dim_idx])
+                setattr(self, dim_name, self.dimension_values[dim_idx])
 
     def trim(self, new_size: int) -> "VectorN":
         """Trim VectorN down to smaller size."""
-        return VectorN(*self.as_list()[0:new_size])
+        return VectorN.from_args(*self.as_list()[0:new_size])
 
     def dimension_order(self) -> int:
         """are we "1"d, "2"d, "3"d, etc"""
@@ -65,31 +51,24 @@ class VectorN:
             )
 
     def __neg__(self) -> "VectorN":
-        return VectorN(*[(-1 * a) for a in self.dimension_values])
+        return VectorN.from_args(*[(-1 * a) for a in self.dimension_values])
 
     def __add__(self, other: "VectorN") -> "VectorN":
         self.assert_same_dimension_order(other)
-        return VectorN(
+        return VectorN.from_args(
             *[(a + b) for a, b in zip(self.dimension_values, other.dimension_values)]
         )
 
     def __sub__(self, other: "VectorN") -> "VectorN":
         self.assert_same_dimension_order(other)
-        return VectorN(
-            *[(a - b) for a, b in zip(self.dimension_values, other.dimension_values)]
-        )
+        return VectorN.from_args(*[(a - b) for a, b in zip(self.dimension_values, other.dimension_values)])
 
     def __mul__(self, other: Union[Any, int]) -> "VectorN":
         if isinstance(other, VectorN):
             self.assert_same_dimension_order(other)
-            return VectorN(
-                *[
-                    (a * b)
-                    for a, b in zip(self.dimension_values, other.dimension_values)
-                ]
-            )
+            return VectorN.from_args(*[(a * b) for a, b in zip(self.dimension_values, other.dimension_values)])
         else:
-            return VectorN(*[(a * other) for a in self.dimension_values])
+            return VectorN.from_args(*[(a * other) for a in self.dimension_values])
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, VectorN):
