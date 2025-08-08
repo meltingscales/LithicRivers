@@ -231,7 +231,7 @@ security-deps: ## Run dependency security checks (requires Safety CLI login)
 	@echo "✅ Dependency security checks completed!"
 
 find-cycles: clean ## Find object cycles
-	$(UV_CMD) run python lithicrivers/scripts/find_object_cycles.py
+	$(UV_CMD) run --extra cycles python lithicrivers/scripts/find_object_cycles.py
 
 # Cleanup
 clean: ## Clean build artifacts
