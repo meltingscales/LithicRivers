@@ -195,7 +195,7 @@ if __name__ == "__main__":
 
     # create a game
     game = Game.create(42)
-    game.pregen_chunks(3)
+    game.pregen_chunks(1)  # Pre-generate a single chunk for testing
 
     pprint(game.world.data.get_chunk_stats())
 
