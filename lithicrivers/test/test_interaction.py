@@ -21,7 +21,7 @@ class TestInteractionSystem(OptimizedTestCase):
     def test_adjacent_entities_detection(self):
         """Test that adjacent entities are properly detected."""
         # Move player near the NPC
-        self.game.player.position = VectorN(4, 5, 0)  # Adjacent to NPC at (5, 5, 0)
+        self.game.player.position = VectorN.create(4, 5, 0)  # Adjacent to NPC at (5, 5, 0)
 
         adjacent = self.game.world.get_adjacent_entities(self.game.player.position)
         self.assertGreater(len(adjacent), 0)
@@ -32,8 +32,8 @@ class TestInteractionSystem(OptimizedTestCase):
         self.assertIn("Ancient Relic", entity_names)  # Test entity 2
 
         # Move player to a position where all entities are adjacent
-        self.game.player.position = VectorN(
-            5, 5, 0
+        self.game.player.position = VectorN.create(
+            5, 5, 0 
         )  # At NPC position, should see others
 
         adjacent = self.game.world.get_adjacent_entities(self.game.player.position)
@@ -43,9 +43,9 @@ class TestInteractionSystem(OptimizedTestCase):
 
     def test_entity_colors(self):
         """Test that entities have the correct colors."""
-        npc = self.game.world.get_entity(VectorN(5, 5, 0))
-        entity1 = self.game.world.get_entity(VectorN(6, 5, 0))
-        entity2 = self.game.world.get_entity(VectorN(5, 6, 0))
+        npc = self.game.world.get_entity(VectorN.create(5, 5, 0))
+        entity1 = self.game.world.get_entity(VectorN.create(6, 5, 0))
+        entity2 = self.game.world.get_entity(VectorN.create(5, 6, 0))
 
         self.assertEqual(npc.color, "cyan")
         self.assertEqual(entity1.color, "blue")
@@ -62,22 +62,22 @@ class TestInteractionSystem(OptimizedTestCase):
     def test_no_adjacent_entities(self):
         """Test behavior when no entities are adjacent."""
         # Move player far from any entities
-        self.game.player.position = VectorN(100, 100, 0)
+        self.game.player.position = VectorN.create(100, 100, 0)
 
         adjacent = self.game.world.get_adjacent_entities(self.game.player.position)
         self.assertEqual(len(adjacent), 0)
 
     def test_entity_interaction_text(self):
         """Test that interactive entities have proper interaction text."""
-        entity1 = self.game.world.get_entity(VectorN(6, 5, 0))
-        entity2 = self.game.world.get_entity(VectorN(5, 6, 0))
+        entity1 = self.game.world.get_entity(VectorN.create(6, 5, 0))
+        entity2 = self.game.world.get_entity(VectorN.create(5, 6, 0))
 
         self.assertIn("crystal shard", entity1.interact().lower())
         self.assertIn("ancient relic", entity2.interact().lower())
 
     def test_npc_conversation_system(self):
         """Test that NPCs have proper conversation systems."""
-        npc = self.game.world.get_entity(VectorN(5, 5, 0))
+        npc = self.game.world.get_entity(VectorN.create(5, 5, 0))
 
         # Test initial conversation
         conv = npc.get_conversation()

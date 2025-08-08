@@ -36,7 +36,7 @@ class TestPickupSystem(OptimizedTestCase):
     def test_dropped_item_creation(self):
         """Test that DroppedItem entities can be created."""
         item = Items.acorn()
-        position = VectorN(10, 10, 0)
+        position = VectorN.create(10, 10, 0)
         dropped_item = DroppedItem(item, position)
 
         self.assertEqual(dropped_item.name, "Acorn")
@@ -48,7 +48,7 @@ class TestPickupSystem(OptimizedTestCase):
         """Test that dropped items are properly detected."""
         # Create a dropped item near the player
         item = Items.acorn()
-        position = VectorN(1, 0, 0)  # Adjacent to player at (0, 0, 0)
+        position = VectorN.create(1, 0, 0)  # Adjacent to player at (0, 0, 0)
         dropped_item = DroppedItem(item, position)
         self.game.world.add_entity(dropped_item)
 
@@ -65,7 +65,7 @@ class TestPickupSystem(OptimizedTestCase):
         """Test that items can be picked up."""
         # Create a dropped item near the player
         item = Items.acorn()
-        position = VectorN(1, 0, 0)  # Adjacent to player at (0, 0, 0)
+        position = VectorN.create(1, 0, 0)  # Adjacent to player at (0, 0, 0)
         dropped_item = DroppedItem(item, position)
         self.game.world.add_entity(dropped_item)
 
@@ -87,7 +87,7 @@ class TestPickupSystem(OptimizedTestCase):
     def test_no_items_to_pickup(self):
         """Test behavior when no items are available to pick up."""
         # Move player to a position with no dropped items
-        self.game.player.position = VectorN(100, 100, 0)
+        self.game.player.position = VectorN.create(100, 100, 0)
 
         # Get adjacent entities
         adjacent_entities = self.game.world.get_adjacent_entities(
@@ -110,8 +110,8 @@ class TestPickupSystem(OptimizedTestCase):
         # Create multiple dropped items near the player
         item1 = Items.acorn()
         item2 = Items.stick()
-        position1 = VectorN(1, 0, 0)
-        position2 = VectorN(0, 1, 0)
+        position1 = VectorN.create(1, 0, 0)
+        position2 = VectorN.create(0, 1, 0)
 
         dropped_item1 = DroppedItem(item1, position1)
         dropped_item2 = DroppedItem(item2, position2)

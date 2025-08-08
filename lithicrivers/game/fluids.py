@@ -1,28 +1,36 @@
 from typing import TYPE_CHECKING, Optional
 
+import msgspec
 from lithicrivers.game.tiles import Tile
 from lithicrivers.model.vector import VectorN
 
 if TYPE_CHECKING:
     from lithicrivers.game.entities import Fluid
+    from lithicrivers.game.core import World
 
 
-class FluidManager:
+class FluidManager(msgspec.Struct, frozen=False):
     """
     Manages fluid physics and spreading across the world.
     All fluid calculations are deterministic based on world seed and tick.
     """
 
-    def __init__(self, world: "World"):
-        self.world = world
-        self.fluids: dict[str, Fluid] = {}  # position_key -> Fluid
-        self.flow_directions = [
+    world: "World" = None
+    fluids: dict[str, "Fluid"] = None
+    flow_directions: list[VectorN] = None
+
+    @classmethod
+    def create(cls, world: "World"):
+        instance = cls(world=world)
+        instance.fluids = {}
+        instance.flow_directions = [
             VectorN.from_args(0, 0, 1),  # Down (gravity) - deeper into earth
             VectorN.from_args(-1, 0, 0),  # Left
             VectorN.from_args(1, 0, 0),  # Right
             VectorN.from_args(0, -1, 0),  # North
             VectorN.from_args(0, 1, 0),  # South
         ]
+        return instance
 
     def add_fluid(self, fluid: "Fluid") -> None:
         """Add a fluid to the manager."""
@@ -48,8 +56,6 @@ class FluidManager:
                     overflow = total_amount - existing.max_amount
                     if overflow > 0:
                         # Create overflow fluid that will spread
-                        from lithicrivers.game.entities import Fluid
-
                         overflow_fluid = Fluid(
                             fluid.fluid_type, fluid.position, overflow, fluid.viscosity
                         )
@@ -71,9 +77,9 @@ class FluidManager:
     def process_fluids(self, gametick: int) -> None:
         """Process all fluid physics for a given tick."""
         # Use deterministic randomness based on world seed and tick
-        import random
+        from lithicrivers.game.rng import SimpleRNG
 
-        random.seed(f"fluids_{self.world.seed}_{gametick}")
+        rng = SimpleRNG.create(f"fluids_{self.world.seed}_{gametick}")
 
         # Create a copy of fluids to avoid modifying during iteration
         fluids_to_process = list(self.fluids.items())

@@ -60,7 +60,7 @@ class TestTickRateSystem(OptimizedTestCase):
         from lithicrivers.game.npcs import StumblingSheep
 
         # Create a sheep with speed 0.2
-        sheep = StumblingSheep(VectorN(0, 0, 0))
+        sheep = StumblingSheep(VectorN.create(0, 0, 0))
         self.game.world.add_entity(sheep)
 
         # Mock the sheep's tick method to track calls
@@ -88,7 +88,7 @@ class TestTickRateSystem(OptimizedTestCase):
         initial_tick = self.game.gametick
 
         # Move the player
-        self.game.move_player(VectorN(1, 0, 0))
+        self.game.move_player(VectorN.create(1, 0, 0))
 
         # Verify that the tick count increased by the walk action cost
         walk_cost = self.game.get_action_tick_cost("walk")

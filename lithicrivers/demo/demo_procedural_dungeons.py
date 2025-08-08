@@ -4,7 +4,7 @@ Demo script for procedural dungeon generation.
 Shows how different dungeon types are generated and placed in the world.
 """
 
-import random
+from lithicrivers.game.rng import SimpleRNG
 import sys
 from pathlib import Path
 
@@ -41,7 +41,7 @@ def demo_dungeon_generation():
     print("\n🎲 Generating Sample Dungeons:")
     print("-" * 50)
 
-    rng = random.Random(42)  # Fixed seed for demo
+    rng = SimpleRNG.create(42)  # Fixed seed for demo
     world_data = {}
 
     for dungeon_type in DungeonType:
@@ -50,7 +50,7 @@ def demo_dungeon_generation():
         # Generate at appropriate depth
         config = generator.dungeon_configs[dungeon_type]
         depth = (config.depth_range[0] + config.depth_range[1]) // 2
-        base_position = VectorN(0, 0, depth)
+        base_position = VectorN.create(0, 0, depth)
 
         # Generate dungeon
         success = generator.generate_dungeon(
@@ -80,7 +80,7 @@ def demo_dungeon_generation():
     print("-" * 30)
 
     chunk_world_data = {}
-    chunk_center = VectorN(100, 100, -3)
+    chunk_center = VectorN.create(100, 100, -3)
     chunk_radius = 8
 
     generator.generate_dungeons_for_chunk(
@@ -111,11 +111,11 @@ def demo_deterministic_generation():
 
     generator = ProceduralStructureGenerator()
     dungeon_type = DungeonType.CAVE_SYSTEM
-    base_position = VectorN(0, 0, -2)
+    base_position = VectorN.create(0, 0, -2)
 
     # Generate with same seed multiple times
     for i in range(3):
-        rng = random.Random(12345)  # Same seed
+        rng = SimpleRNG.create(12345)  # Same seed
         world_data = {}
 
         success = generator.generate_dungeon(

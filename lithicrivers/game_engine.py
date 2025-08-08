@@ -3,8 +3,9 @@ Core game engine module that handles game state and logic independently of the U
 This module is designed to be easily testable and manipulatable programmatically.
 """
 
-from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Optional, Protocol
+
+import msgspec
 
 from lithicrivers.model.model import Viewport
 from lithicrivers.model.vector import VectorN
@@ -15,17 +16,16 @@ if TYPE_CHECKING:
     from lithicrivers.game.entities import Item
 
 
-@dataclass
-class GameState:
+class GameState(msgspec.Struct, frozen=False):
     """Immutable game state that can be easily serialized and tested."""
 
     player_position: VectorN
     player_health: int = 100
     player_stamina: int = 100
-    viewport: Viewport = field(default_factory=lambda: DEFAULT_VIEWPORT)
-    world_data: dict[str, "Tile"] = field(default_factory=dict)
-    entities: list["Entity"] = field(default_factory=list)
-    inventory: "Inventory" = field(default_factory=lambda: Inventory())
+    viewport: Viewport = msgspec.field(default_factory=lambda: DEFAULT_VIEWPORT)
+    world_data: dict[str, "Tile"] = msgspec.field(default_factory=dict)
+    entities: list["Entity"] = msgspec.field(default_factory=list)
+    inventory: "Inventory" = msgspec.field(default_factory=lambda: Inventory())
     gametick: int = 0
     tick_rate: int = 200  # Higher tick rate for more granular timing
 
@@ -68,8 +68,7 @@ class GameAction(Protocol):
         ...
 
 
-@dataclass
-class MovePlayerAction:
+class MovePlayerAction(msgspec.Struct, frozen=False):
     """Action to move the player in a specific direction."""
 
     direction: VectorN
@@ -81,8 +80,7 @@ class MovePlayerAction:
         return new_state
 
 
-@dataclass
-class MineAction:
+class MineAction(msgspec.Struct, frozen=False):
     """Action to mine a tile at the player's position."""
 
     def apply(self, state: GameState) -> GameState:
@@ -104,8 +102,7 @@ class MineAction:
         return new_state
 
 
-@dataclass
-class SetTileAction:
+class SetTileAction(msgspec.Struct, frozen=False):
     """Action to set a tile at a specific position."""
 
     position: VectorN
@@ -118,8 +115,7 @@ class SetTileAction:
         return new_state
 
 
-@dataclass
-class IncrementTickAction:
+class IncrementTickAction(msgspec.Struct, frozen=False):
     """Action to increment the game tick counter."""
 
     def apply(self, state: GameState) -> GameState:
@@ -128,8 +124,7 @@ class IncrementTickAction:
         return new_state
 
 
-@dataclass
-class SetTickRateAction:
+class SetTickRateAction(msgspec.Struct, frozen=False):
     """Action to set the game tick rate."""
 
     tick_rate: int
@@ -140,11 +135,12 @@ class SetTickRateAction:
         return new_state
 
 
-class Inventory:
+class Inventory(msgspec.Struct, frozen=False):
     """Inventory system for the game."""
 
-    def __init__(self, items: Optional[list["Item"]] = None):
-        self.items = items or []
+    @classmethod
+    def create(cls, items: Optional[list["Item"]] = None):
+        return cls(items=items)
 
     def add_item(self, item: "Item") -> None:
         """Add an item to the inventory."""
@@ -168,21 +164,32 @@ class Inventory:
         return self.items == other.items
 
 
-class Entity:
+class Entity(msgspec.Struct, frozen=False):
     """Base entity class."""
 
-    def __init__(self, name: str, position: VectorN):
-        self.name = name
-        self.position = position
-        self.health = 100
-        self.stamina = 100
+    @classmethod
+    def create(cls, name: str, position: VectorN):
+        instance = cls(name=name, position=position)
+        instance.health = 100
+        instance.stamina = 100
+        return instance
 
     def copy(self) -> "Entity":
         """Create a copy of this entity."""
-        copied = Entity(self.name, self.position)
+        copied = Entity.create(self.name, self.position)
         copied.health = self.health
         copied.stamina = self.stamina
         return copied
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Entity):
+            return False
+        return (
+            self.name == other.name
+            and self.position == other.position
+            and self.health == other.health
+            and self.stamina == other.stamina
+        )
 
 
 # Import these here to avoid circular imports

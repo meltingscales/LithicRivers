@@ -4,10 +4,11 @@ Uses seeded randomness for deterministic generation.
 """
 
 import os
-import random
-from dataclasses import dataclass
+from lithicrivers.game.rng import SimpleRNG
 from enum import Enum
 from typing import Dict, List, Tuple
+
+import msgspec
 
 from lithicrivers.game.core import Tile, Tiles
 from lithicrivers.logging_config import get_logger
@@ -26,8 +27,7 @@ class DungeonType(Enum):
     LABORATORY = "laboratory"
 
 
-@dataclass
-class DungeonConfig:
+class DungeonConfig(msgspec.Struct, frozen=False):
     """Configuration for a procedural dungeon."""
 
     dungeon_type: DungeonType
@@ -43,14 +43,19 @@ class DungeonConfig:
     special_room_chance: float
 
 
-class ProceduralStructureGenerator:
+class ProceduralStructureGenerator(msgspec.Struct, frozen=False):
     """
     Generates procedural dungeons using seeded randomness.
     Follows the same deterministic principles as the existing structure system.
     """
 
-    def __init__(self):
-        self.dungeon_configs = self._initialize_dungeon_configs()
+    dungeon_configs: Dict[DungeonType, DungeonConfig] = None
+
+    @classmethod
+    def create(cls):
+        instance = cls()
+        instance.dungeon_configs = instance._initialize_dungeon_configs()
+        return instance
 
     def _initialize_dungeon_configs(self) -> Dict[DungeonType, DungeonConfig]:
         """Initialize dungeon configurations."""
@@ -117,7 +122,7 @@ class ProceduralStructureGenerator:
         dungeon_type: DungeonType,
         base_position: VectorN,
         world_data: Dict[str, Tile],
-        rng: random.Random,
+        rng: SimpleRNG,
         force_placement: bool = False,
     ) -> bool:
         """
@@ -171,7 +176,7 @@ class ProceduralStructureGenerator:
         size: int,
         room_count: int,
         base_position: VectorN,
-        rng: random.Random,
+        rng: SimpleRNG,
     ) -> Dict[VectorN, str]:
         """
         Generate the layout for a dungeon.
@@ -195,13 +200,13 @@ class ProceduralStructureGenerator:
         return layout
 
     def _generate_cave_system(
-        self, size: int, room_count: int, rng: random.Random
+        self, size: int, room_count: int, rng: SimpleRNG
     ) -> Dict[VectorN, str]:
         """Generate a natural cave system."""
         layout = {}
 
         # Create main cavern
-        cavern_center = VectorN(size // 2, size // 2, 0)
+        cavern_center = VectorN.from_args(size // 2, size // 2, 0)
         # Ensure cavern_radius is valid for small sizes
         max_radius = max(1, size // 3)
         cavern_radius = rng.randint(1, max_radius)
@@ -209,7 +214,7 @@ class ProceduralStructureGenerator:
         # Generate irregular cavern using noise-like approach
         for x in range(size):
             for y in range(size):
-                pos = VectorN(x, y, 0)
+                pos = VectorN.from_args(x, y, 0)
                 distance = abs(x - cavern_center.x) + abs(y - cavern_center.y)
 
                 # Add some randomness to make it more natural
@@ -230,20 +235,20 @@ class ProceduralStructureGenerator:
                     nx, ny = chamber_x + dx, chamber_y + dy
                     if 0 <= nx < size and 0 <= ny < size:
                         if abs(dx) + abs(dy) < chamber_radius:
-                            layout[VectorN(nx, ny, 0)] = "."
+                            layout[VectorN.from_args(nx, ny, 0)] = "."
 
         # Add some ore deposits
         ore_count = rng.randint(2, 5)
         for _ in range(ore_count):
             ore_x = rng.randint(1, size - 2)
             ore_y = rng.randint(1, size - 2)
-            if layout.get(VectorN(ore_x, ore_y, 0)) == ".":
-                layout[VectorN(ore_x, ore_y, 0)] = "O"
+            if layout.get(VectorN.from_args(ore_x, ore_y, 0)) == ".":
+                layout[VectorN.from_args(ore_x, ore_y, 0)] = "O"
 
         return layout
 
     def _generate_underground_facility(
-        self, size: int, room_count: int, rng: random.Random
+        self, size: int, room_count: int, rng: SimpleRNG
     ) -> Dict[VectorN, str]:
         """Generate an underground facility with rooms and corridors."""
         layout = {}
@@ -251,7 +256,7 @@ class ProceduralStructureGenerator:
         # Initialize with walls
         for x in range(size):
             for y in range(size):
-                layout[VectorN(x, y, 0)] = "W"
+                layout[VectorN.from_args(x, y, 0)] = "W"
 
         # Generate rooms
         rooms = []
@@ -264,7 +269,7 @@ class ProceduralStructureGenerator:
             # Create room
             for rx in range(room_width):
                 for ry in range(room_height):
-                    layout[VectorN(room_x + rx, room_y + ry, 0)] = "."
+                    layout[VectorN.create(room_x + rx, room_y + ry, 0)] = "."
 
             rooms.append((room_x, room_y, room_width, room_height))
 
@@ -282,14 +287,14 @@ class ProceduralStructureGenerator:
                 min(center1[0], center2[0]), max(center1[0], center2[0]) + 1
             ):
                 if 0 <= x < size:
-                    layout[VectorN(x, center1[1], 0)] = "."
+                    layout[VectorN.create(x, center1[1], 0)] = "."
 
             # Vertical corridor
             for y in range(
                 min(center1[1], center2[1]), max(center1[1], center2[1]) + 1
             ):
                 if 0 <= y < size:
-                    layout[VectorN(center2[0], y, 0)] = "."
+                    layout[VectorN.create(center2[0], y, 0)] = "."
 
         # Add some special rooms (treasure, machinery, etc.)
         special_room_count = rng.randint(1, 3)
@@ -298,12 +303,12 @@ class ProceduralStructureGenerator:
                 room = rng.choice(rooms)
                 room_center_x = room[0] + room[2] // 2
                 room_center_y = room[1] + room[3] // 2
-                layout[VectorN(room_center_x, room_center_y, 0)] = "T"
+                layout[VectorN.create(room_center_x, room_center_y, 0)] = "T"
 
         return layout
 
     def _generate_mining_shaft(
-        self, size: int, room_count: int, rng: random.Random
+        self, size: int, room_count: int, rng: SimpleRNG
     ) -> Dict[VectorN, str]:
         """Generate a mining shaft with branching tunnels."""
         layout = {}
@@ -311,12 +316,12 @@ class ProceduralStructureGenerator:
         # Initialize with walls
         for x in range(size):
             for y in range(size):
-                layout[VectorN(x, y, 0)] = "X"
+                layout[VectorN.create(x, y, 0)] = "X"
 
         # Main shaft
         shaft_x = size // 2
         for y in range(1, size - 1):
-            layout[VectorN(shaft_x, y, 0)] = "."
+            layout[VectorN.create(shaft_x, y, 0)] = "."
 
         # Add branching tunnels
         for _ in range(room_count):
@@ -327,7 +332,7 @@ class ProceduralStructureGenerator:
             for i in range(branch_length):
                 branch_x = shaft_x + (i * branch_direction)
                 if 0 <= branch_x < size:
-                    layout[VectorN(branch_x, branch_y, 0)] = "."
+                    layout[VectorN.create(branch_x, branch_y, 0)] = "."
 
                     # Add small mining chambers
                     if i % 3 == 0 and i > 0:
@@ -337,20 +342,20 @@ class ProceduralStructureGenerator:
                                 nx, ny = branch_x + dx, branch_y + dy
                                 if 0 <= nx < size and 0 <= ny < size:
                                     if abs(dx) + abs(dy) < chamber_radius:
-                                        layout[VectorN(nx, ny, 0)] = "."
+                                        layout[VectorN.create(nx, ny, 0)] = "."
 
         # Add ore deposits
         ore_count = rng.randint(3, 8)
         for _ in range(ore_count):
             ore_x = rng.randint(1, size - 2)
             ore_y = rng.randint(1, size - 2)
-            if layout.get(VectorN(ore_x, ore_y, 0)) == ".":
-                layout[VectorN(ore_x, ore_y, 0)] = "O"
+            if layout.get(VectorN.create(ore_x, ore_y, 0)) == ".":
+                layout[VectorN.create(ore_x, ore_y, 0)] = "O"
 
         return layout
 
     def _generate_crypt(
-        self, size: int, room_count: int, rng: random.Random
+        self, size: int, room_count: int, rng: SimpleRNG
     ) -> Dict[VectorN, str]:
         """Generate a crypt with burial chambers."""
         layout = {}
@@ -358,12 +363,12 @@ class ProceduralStructureGenerator:
         # Initialize with walls
         for x in range(size):
             for y in range(size):
-                layout[VectorN(x, y, 0)] = "X"
+                layout[VectorN.create(x, y, 0)] = "X"
 
         # Main corridor
         corridor_y = size // 2
         for x in range(1, size - 1):
-            layout[VectorN(x, corridor_y, 0)] = "."
+            layout[VectorN.create(x, corridor_y, 0)] = "."
 
         # Burial chambers along the corridor
         chamber_spacing = size // (room_count + 1)
@@ -379,18 +384,18 @@ class ProceduralStructureGenerator:
                         nx = chamber_x + cx
                         ny = corridor_y - chamber_height // 2 + cy
                         if 0 <= nx < size and 0 <= ny < size:
-                            layout[VectorN(nx, ny, 0)] = "."
+                            layout[VectorN.create(nx, ny, 0)] = "."
 
                 # Add sarcophagus or treasure in chamber center
                 center_x = chamber_x + chamber_width // 2
                 center_y = corridor_y
                 if 0 <= center_x < size:
-                    layout[VectorN(center_x, center_y, 0)] = "T"
+                    layout[VectorN.create(center_x, center_y, 0)] = "T"
 
         return layout
 
     def _generate_laboratory(
-        self, size: int, room_count: int, rng: random.Random
+        self, size: int, room_count: int, rng: SimpleRNG
     ) -> Dict[VectorN, str]:
         """Generate a laboratory with specialized rooms."""
         layout = {}
@@ -398,7 +403,7 @@ class ProceduralStructureGenerator:
         # Initialize with walls
         for x in range(size):
             for y in range(size):
-                layout[VectorN(x, y, 0)] = "X"
+                layout[VectorN.create(x, y, 0)] = "X"
 
         # Generate a grid-based layout
         grid_size = int(size**0.5)
@@ -417,34 +422,34 @@ class ProceduralStructureGenerator:
                     for ry in range(room_height):
                         nx, ny = room_x + rx, room_y + ry
                         if nx < size and ny < size:
-                            layout[VectorN(nx, ny, 0)] = "."
+                            layout[VectorN.create(nx, ny, 0)] = "."
 
                 # Add doors between adjacent rooms
                 if gx < grid_size - 1:
                     door_x = (gx + 1) * cell_size - 1
                     door_y = gy * cell_size + cell_size // 2
                     if door_y < size:
-                        layout[VectorN(door_x, door_y, 0)] = "."
+                        layout[VectorN.create(door_x, door_y, 0)] = "."
 
                 if gy < grid_size - 1:
                     door_x = gx * cell_size + cell_size // 2
                     door_y = (gy + 1) * cell_size - 1
                     if door_x < size:
-                        layout[VectorN(door_x, door_y, 0)] = "."
+                        layout[VectorN.create(door_x, door_y, 0)] = "."
 
         # Add specialized equipment rooms
         equipment_count = rng.randint(2, 5)
         for _ in range(equipment_count):
             eq_x = rng.randint(1, size - 2)
             eq_y = rng.randint(1, size - 2)
-            if layout.get(VectorN(eq_x, eq_y, 0)) == ".":
-                layout[VectorN(eq_x, eq_y, 0)] = "E"
+            if layout.get(VectorN.create(eq_x, eq_y, 0)) == ".":
+                layout[VectorN.create(eq_x, eq_y, 0)] = "E"
 
         # Add central control room
         center_x = size // 2
         center_y = size // 2
-        if layout.get(VectorN(center_x, center_y, 0)) == ".":
-            layout[VectorN(center_x, center_y, 0)] = "C"
+        if layout.get(VectorN.create(center_x, center_y, 0)) == ".":
+            layout[VectorN.create(center_x, center_y, 0)] = "C"
 
         return layout
 
@@ -453,7 +458,7 @@ class ProceduralStructureGenerator:
         layout: Dict[VectorN, str],
         world_data: Dict[str, Tile],
         base_position: VectorN,
-        rng: random.Random,
+        rng: SimpleRNG,
     ) -> int:
         """
         Place the dungeon layout into the world data.
@@ -492,7 +497,7 @@ class ProceduralStructureGenerator:
                 else rel_pos.z
             )
 
-            abs_pos = VectorN(abs_x, abs_y, abs_z)
+            abs_pos = VectorN.create(abs_x, abs_y, abs_z)
 
             # Get tile type
             tile_name = tile_mappings.get(symbol, "empty")
@@ -526,7 +531,7 @@ class ProceduralStructureGenerator:
         world_data: Dict[str, Tile],
         chunk_center: VectorN,
         chunk_radius: int,
-        rng: random.Random,
+        rng: SimpleRNG,
     ) -> None:
         """
         Generate procedural dungeons for a chunk of the world.
@@ -552,7 +557,7 @@ class ProceduralStructureGenerator:
                 pos_y = center_y + rng.randint(-chunk_radius, chunk_radius)
                 pos_z = center_z + rng.randint(-chunk_radius, chunk_radius)
 
-                base_pos = VectorN(pos_x, pos_y, pos_z)
+                base_pos = VectorN.create(pos_x, pos_y, pos_z)
                 self.generate_dungeon(dungeon_type, base_pos, world_data, rng)
 
 

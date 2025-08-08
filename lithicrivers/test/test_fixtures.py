@@ -69,7 +69,7 @@ class SharedTestFixtures:
                 logging.info(
                     f"   Pre-generating chunks for seed: {seed} as it doesn't exist as a save"
                 )
-                game = Game.create(world=World.create(seed), player=Player.create())
+                game = Game.create(seed)
                 game.pregen_chunks(radius=self.pregen_chunk_radius)
                 self.save_game(game, seed)
                 logging.info(f"   Done pre-generating chunks for seed: {seed}")
@@ -83,7 +83,7 @@ class SharedTestFixtures:
         Load a world from a file with the specified seed.
         """
         if not self.does_save_exist(seed):
-            self.save_game(Game.create(world=World.create(seed), player=Player.create()), seed)
+            self.save_game(Game.create(seed), seed)
         return self.load_game(seed).world
 
     def get_game(self, seed: int) -> Game:
@@ -91,7 +91,7 @@ class SharedTestFixtures:
         Load a game from a file with the specified seed.
         """
         if not self.does_save_exist(seed):
-            self.save_game(Game.create(world=World.create(seed), player=Player.create()), seed)
+            self.save_game(Game.create(seed), seed)
         return self.load_game(seed)
 
 

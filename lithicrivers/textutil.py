@@ -2,7 +2,7 @@
 Text utilities for formatting and displaying game information.
 """
 
-import random
+from lithicrivers.game.rng import SimpleRNG
 import string
 from typing import Union
 
@@ -29,8 +29,8 @@ def corrupt_text(text: str, corruption_rate: float = 0.01) -> str:
         if char in "\n\r":
             # Preserve newlines exactly
             corrupted_chars.append(char)
-        elif random.random() < corruption_rate:
-            corrupted_chars.append(random.choice(corruption_pool))
+        elif SimpleRNG.create(0).random() < corruption_rate:
+            corrupted_chars.append(SimpleRNG.create(0).choice(corruption_pool))
         else:
             corrupted_chars.append(char)
 

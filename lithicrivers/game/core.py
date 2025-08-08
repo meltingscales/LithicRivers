@@ -181,15 +181,15 @@ class ChunkedWorldData(Cloneable, ShutDownable, msgspec.Struct, frozen=False):
     Similar to Minecraft's world storage system.
     """
 
-    chunk_size: int
-    chunks: dict[tuple[int, int, int], Chunk]
-    entity_data: dict[str, Entity]
-    _tile_cache: dict[str, Tile]
-    _cache_size: int
-    world_generator: "SeededWorldGenerator"
-    _generated_chunks: set[tuple[int, int, int]]
-    _chunk_generation_lock: threading.Lock
-    _thread_pool: ThreadPoolExecutor
+    chunk_size: int = None
+    chunks: dict[tuple[int, int, int], Chunk] = None
+    entity_data: dict[str, Entity] = None
+    _tile_cache: dict[str, Tile] = None
+    _cache_size: int = None
+    world_generator: "SeededWorldGenerator" = None
+    _generated_chunks: set[tuple[int, int, int]] = None
+    _chunk_generation_lock: threading.Lock = None
+    _thread_pool: ThreadPoolExecutor = None
 
     @classmethod
     def create(cls, chunk_size: int = None, world_generator=None):
@@ -393,7 +393,7 @@ class ChunkedWorldData(Cloneable, ShutDownable, msgspec.Struct, frozen=False):
                 tiles_applied = 0
                 for pos_str, tile in chunk_data.items():
                     pos_parts = pos_str.split(",")
-                    world_pos = VectorN(
+                    world_pos = VectorN.create(
                         int(pos_parts[0]), int(pos_parts[1]), int(pos_parts[2])
                     )
 
@@ -571,48 +571,24 @@ class World(Cloneable, ShutDownable, EntityListener, msgspec.Struct, frozen=Fals
     A world contains world data and manages the world state.
     """
 
-    name: str
-    seed: int
-    generator: "SeededWorldGenerator"
-    data: "ChunkedWorldData"
-    gametick: int
-    entities_by_position: dict[tuple[int, int, int], list[Entity]]
-    fluid_manager: "FluidManager"
+    name: str = None
+    seed: int = None
+    generator: "SeededWorldGenerator" = None
+    data: "ChunkedWorldData" = None
+    gametick: int = 0
+    entities_by_position: dict[tuple[int, int, int], list[Entity]] = None
+    fluid_manager: "FluidManager" = None
 
     @classmethod
     def create(cls, seed: int, name="Gaia") -> "World":
         instance = cls(seed=seed, name=name)
+        instance.entities_by_position = {}
+        instance.fluid_manager = FluidManager.create(instance)
         instance._add_starter_entities()
         instance._generate_forced_structures()
-        instance.generator = SeededWorldGenerator(seed)
-        instance.data = ChunkedWorldData(world_generator=instance.generator)
+        instance.generator = SeededWorldGenerator.create(seed)
+        instance.data = ChunkedWorldData.create(world_generator=instance.generator)
         return instance
-
-    def __init___disabled_due_to_msgspec(self, seed: int, name="Gaia"):
-        self.name = name
-        self.seed = seed
-
-        # Create ONE generator that will be reused
-        from lithicrivers.worldgen import SeededWorldGenerator
-
-        self.generator = SeededWorldGenerator(seed)
-
-        # Start with empty world data - everything will be generated lazily
-        # Pass the generator so structures can be generated when chunks are loaded
-        self.data = ChunkedWorldData(world_generator=self.generator)
-        self.gametick = 0
-
-        # Change entity storage to support multiple entities per position
-        # Map position tuples to lists of entities
-        self.entities_by_position = {}  # (x, y, z) -> list[Entity]
-
-        # Initialize fluid manager
-        self.fluid_manager = FluidManager(self)
-
-        self._add_starter_entities()
-
-        # Generate forced structures for quests and main story content
-        self._generate_forced_structures()
 
     def pregen_chunks(self, radius: int) -> None:
         """Pre-generate chunks for the world."""
@@ -680,33 +656,33 @@ class World(Cloneable, ShutDownable, EntityListener, msgspec.Struct, frozen=Fals
 
         # print("Generating forced structures for seed: ", self.seed)
         # # Force a ship to spawn at (20, 20, 0) - Main story location
-        # forced_ship_pos = VectorN(20, 20, 0)
+        # forced_ship_pos = VectorN.create(20, 20, 0)
         # print(f"FORCING SHIP TO SPAWN AT {forced_ship_pos}")  # Debug output
 
         # # Generate a small world around the ship to place it
-        # ship_radius = VectorN(25, 25, 2)
+        # ship_radius = VectorN.create(25, 25, 2)
         # ship_world_data = self.generator.generate_world_data(ship_radius)
         #
         # # Apply the ship world data to our chunked world
         # for pos_str, tile in ship_world_data.items():
         #     pos_parts = pos_str.split(",")
-        #     world_pos = VectorN(int(pos_parts[0]), int(pos_parts[1]), int(pos_parts[2]))
+        #     world_pos = VectorN.create(int(pos_parts[0]), int(pos_parts[1]), int(pos_parts[2]))
         #     self.data.set_tile(world_pos, tile)
         #
         # # Force a procedural dungeon to spawn at (50, 50, -3) - Quest location
-        # forced_dungeon_pos = VectorN(50, 50, -3)
+        # forced_dungeon_pos = VectorN.create(50, 50, -3)
         # print(
         #     f"FORCING UNDERGROUND FACILITY TO SPAWN AT {forced_dungeon_pos}"
         # )  # Debug output
         #
         # # Generate a small world around the dungeon to place it
-        # dungeon_radius = VectorN(55, 55, 5)
+        # dungeon_radius = VectorN.create(55, 55, 5)
         # dungeon_world_data = self.generator.generate_world_data(dungeon_radius)
         #
         # # Apply the dungeon world data to our chunked world
         # for pos_str, tile in dungeon_world_data.items():
         #     pos_parts = pos_str.split(",")
-        #     world_pos = VectorN(int(pos_parts[0]), int(pos_parts[1]), int(pos_parts[2]))
+        #     world_pos = VectorN.create(int(pos_parts[0]), int(pos_parts[1]), int(pos_parts[2]))
         #     self.data.set_tile(world_pos, tile)
 
     def on_entity_moved(self, event: EntityMovedEvent) -> None:
@@ -748,22 +724,22 @@ class World(Cloneable, ShutDownable, EntityListener, msgspec.Struct, frozen=Fals
 
         # Add some test fluids to demonstrate the system
         # Water pool near the player
-        water_pos = DEFAULT_PLAYER_POSITION + VectorN(1, 0, 0)
+        water_pos = DEFAULT_PLAYER_POSITION + VectorN.create(1, 0, 0)
         water = Entities.water(water_pos, amount=1000)
         self.fluid_manager.add_fluid(water)
 
         # Lava pool further away
-        lava_pos = DEFAULT_PLAYER_POSITION + VectorN(-3, -1, 0)
+        lava_pos = DEFAULT_PLAYER_POSITION + VectorN.create(-3, -1, 0)
         lava = Entities.lava(lava_pos, amount=1000)
         self.fluid_manager.add_fluid(lava)
 
         # Acid pool
-        acid_pos = DEFAULT_PLAYER_POSITION + VectorN(0, 2, 0)
+        acid_pos = DEFAULT_PLAYER_POSITION + VectorN.create(0, 2, 0)
         acid = Entities.acid(acid_pos, amount=1000)
         self.fluid_manager.add_fluid(acid)
 
         # BIG oil pool further away (10x normal amount)
-        oil_pos = DEFAULT_PLAYER_POSITION + VectorN(0, -10, 0)
+        oil_pos = DEFAULT_PLAYER_POSITION + VectorN.create(0, -10, 0)
         oil = Entities.oil(oil_pos, amount=1000)  # Max amount per tile
         self.fluid_manager.add_fluid(oil)
 
@@ -771,7 +747,7 @@ class World(Cloneable, ShutDownable, EntityListener, msgspec.Struct, frozen=Fals
         for dx in range(-1, 2):
             for dy in range(-1, 2):
                 if dx != 0 or dy != 0:  # Skip the center tile (already added)
-                    oil_tile_pos = oil_pos + VectorN(dx, dy, 0)
+                    oil_tile_pos = oil_pos + VectorN.create(dx, dy, 0)
                     oil_tile = Entities.oil(oil_tile_pos, amount=1000)
                     self.fluid_manager.add_fluid(oil_tile)
 
@@ -842,7 +818,7 @@ class World(Cloneable, ShutDownable, EntityListener, msgspec.Struct, frozen=Fals
         adjacent = []
         for dx in [-1, 0, 1]:
             for dy in [-1, 0, 1]:
-                check_pos = VectorN(pos.x + dx, pos.y + dy, pos.z)
+                check_pos = VectorN.create(pos.x + dx, pos.y + dy, pos.z)
                 entities = self.get_entities(check_pos)
                 for entity in entities:
                     color = entity.color if hasattr(entity, "color") else "white"
@@ -894,7 +870,7 @@ class World(Cloneable, ShutDownable, EntityListener, msgspec.Struct, frozen=Fals
         Returns True if the test passes.
         """
         # Create test position
-        test_pos = VectorN(10, 10, 0)
+        test_pos = VectorN.create(10, 10, 0)
 
         # Create multiple dropped items at the same position
         item1 = Items.rock()
@@ -936,36 +912,30 @@ class World(Cloneable, ShutDownable, EntityListener, msgspec.Struct, frozen=Fals
 class Game(Cloneable, ShutDownable, msgspec.Struct, frozen=False):
     """Main game class. Meant to hold all game state. Can be pickled to save the game."""
 
-    player: Player
-    world: World
-    viewport: Viewport
-    save_manager: "GameSaveManager"
-    running: bool
-    message_log: "MessageLog"
-    gametick: int
+    player: Player = None
+    world: World = None
+    viewport: Viewport = None
+    save_manager: "GameSaveManager" = None
+    running: bool = True
+    message_log: "MessageLog" = None
+    gametick: int = 0
+
+    def set_seed(self, seed: int) -> None:
+        self.world.seed = seed
+        self.world.generator.set_seed(seed)
 
     @classmethod
-    def create(cls, seed: int, player: Player = None, world: World = None, viewport: Viewport = DEFAULT_VIEWPORT, save_manager: "GameSaveManager" = None) -> "Game":
-        instance = cls(seed=seed, player=player, world=world, viewport=viewport, save_manager=save_manager)
+    def create(cls, seed: int) -> "Game":
+        instance = cls()
+
+        instance.player = Player.create()
+        instance.world = World.create(seed)
+        instance.viewport = DEFAULT_VIEWPORT
+        instance.save_manager = GameSaveManager.create()
 
         instance.running = True
         instance.message_log = MessageLog(game=instance)
         instance.gametick = 0 
-
-        if viewport is DEFAULT_VIEWPORT:
-            instance.viewport = Viewport(
-                top_left=VectorN(
-                    viewport.top_left.x, viewport.top_left.y, viewport.top_left.z
-                ),
-                lower_right=VectorN(
-                    viewport.lower_right.x,
-                    viewport.lower_right.y,
-                    viewport.lower_right.z,
-                ),
-                scale=viewport.scale,
-            )
-        else:
-            instance.viewport = viewport
 
         # Add initial welcome message
         instance.message_log.add_message(
@@ -1017,7 +987,7 @@ class Game(Cloneable, ShutDownable, msgspec.Struct, frozen=False):
             retrow = []
             color_row = []
             for x in range(viewport.top_left.x, (viewport.lower_right.x + 1)):
-                pos = VectorN(x, y, z)
+                pos = VectorN.create(x, y, z)
                 tile = self.world.get_tile(pos)
                 if not tile:
                     tile = Tiles.empty()
@@ -1112,9 +1082,9 @@ class Game(Cloneable, ShutDownable, msgspec.Struct, frozen=False):
             vph_lr += 1
 
         # make our bounds centered on the player position
-        self.viewport.top_left = VectorN(px - vpw_tl, py - vph_tl, pz)
+        self.viewport.top_left = VectorN.create(px - vpw_tl, py - vph_tl, pz)
 
-        self.viewport.lower_right = VectorN(px + vpw_lr, py + vph_lr, pz)
+        self.viewport.lower_right = VectorN.create(px + vpw_lr, py + vph_lr, pz)
 
     def set_tile_at_player_feet(self, tile):
         self.world.set_tile(self.player.position, tile)

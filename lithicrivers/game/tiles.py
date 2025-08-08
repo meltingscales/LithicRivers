@@ -2,7 +2,7 @@
 Copyright (c) 2024 Henry Post. All rights reserved.
 """
 
-import random
+from lithicrivers.game.rng import SimpleRNG
 from typing import TYPE_CHECKING, Optional
 
 from lithicrivers.game.interfaces import SpriteRenderable
@@ -30,7 +30,7 @@ def weighted_choice(weights: list[float], choices: list[T]) -> T:
     normalized_weights = [w / total_weight for w in weights]
 
     # Use random.choices for weighted selection
-    return random.choices(choices, weights=normalized_weights, k=1)[0]
+    return SimpleRNG.choices(choices, weights=normalized_weights, k=1)[0]
 
 
 def weighted_choice_dict(dict_weight: dict[float, T]) -> T:
@@ -85,7 +85,7 @@ class Tile(SpriteRenderable):
         90% chance of exactly 1 acorn, 10% chance of 2-3 acorns.
         """
         # Determine number of acorns (1-3, with 90% chance of 1)
-        num_acorns = 1 if random.random() < 0.9 else random.randint(2, 3)
+        num_acorns = 1 if SimpleRNG.create(0).random() < 0.9 else SimpleRNG.create(0).randint(2, 3)
 
         # Create list of items to return
         items = []
@@ -97,9 +97,9 @@ class Tile(SpriteRenderable):
             items.append(Items.acorn())
 
         # Add other possible drops (stick, log) with original probabilities
-        if random.random() < 0.5:
+        if SimpleRNG.create(0).random() < 0.5:
             items.append(Items.stick())
-        if random.random() < 0.3:
+        if SimpleRNG.create(0).random() < 0.3:
             items.append(Items.log())
 
         return items

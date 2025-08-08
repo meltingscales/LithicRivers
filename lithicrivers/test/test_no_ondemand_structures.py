@@ -16,7 +16,7 @@ class TestNoOnDemandStructures(OptimizedTestCase):
 
         # Access a tile that should only have basic terrain
         # Use a position far from the forced structures (ship at 20,20,0 and dungeon at 50,50,-3)
-        test_pos = VectorN(100, 100, 0)
+        test_pos = VectorN.create(100, 100, 0)
         tile = world.get_tile(test_pos)
 
         # The tile should be basic terrain (dirt, tree, etc.) not a structure
@@ -38,7 +38,7 @@ class TestNoOnDemandStructures(OptimizedTestCase):
         # Create world generator and generate a small world
         world = self.get_world(seed=42)
         # Check that the forced ship is present
-        ship_pos = VectorN(20, 20, 0)
+        ship_pos = VectorN.create(20, 20, 0)
         ship_pos_str = ship_pos.serialize()
 
         self.assertIn(ship_pos_str, world.data, "Forced ship should be present")
@@ -50,7 +50,7 @@ class TestNoOnDemandStructures(OptimizedTestCase):
         for x in range(18, 23):
             for y in range(18, 23):
                 for z in range(0, 2):
-                    pos = VectorN(x, y, z)
+                    pos = VectorN.create(x, y, z)
                     pos_str = pos.serialize()
                     if pos_str in world.data:
                         tile = world.data[pos_str]
@@ -61,12 +61,12 @@ class TestNoOnDemandStructures(OptimizedTestCase):
         print(f"Found {ship_tiles_found} iron scrap tiles from ship")
 
         # Check that the forced dungeon is present
-        dungeon_pos = VectorN(50, 50, -3)
+        dungeon_pos = VectorN.create(50, 50, -3)
         dungeon_tiles_found = 0
         for x in range(45, 55):
             for y in range(45, 55):
                 for z in range(-5, -1):
-                    pos = VectorN(x, y, z)
+                    pos = VectorN.create(x, y, z)
                     pos_str = pos.serialize()
                     if pos_str in world.data:
                         tile = world.data[pos_str]

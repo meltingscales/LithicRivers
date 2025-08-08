@@ -2,7 +2,7 @@
 Test that underground facilities use iron scrap walls.
 """
 
-import random
+from lithicrivers.game.rng import SimpleRNG
 
 from lithicrivers.model.vector import VectorN
 from lithicrivers.procedural_dungeon_generator import (
@@ -18,7 +18,7 @@ class TestIronScrapWalls(OptimizedTestCase):
     def test_underground_facility_uses_iron_scrap_walls(self):
         """Test that underground facilities generate iron scrap walls."""
         generator = ProceduralStructureGenerator()
-        rng = random.Random(42)  # Fixed seed for testing
+        rng = SimpleRNG.create(42)  # Fixed seed for testing
 
         # Generate an underground facility
         layout = generator._generate_underground_facility(15, 5, rng)
@@ -48,9 +48,9 @@ class TestIronScrapWalls(OptimizedTestCase):
     def test_iron_scrap_walls_placed_in_world(self):
         """Test that iron scrap walls are actually placed in the world."""
         generator = ProceduralStructureGenerator()
-        rng = random.Random(42)
+        rng = SimpleRNG.create(42)
         world_data = {}
-        base_position = VectorN(0, 0, -3)
+        base_position = VectorN.create(0, 0, -3)
 
         # Generate dungeon
         success = generator.generate_dungeon(

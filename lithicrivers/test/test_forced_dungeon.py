@@ -18,12 +18,12 @@ class TestForcedDungeon(OptimizedTestCase):
         # Generate a smaller world focused on the dungeon area
         # The forced dungeon is at (50, 50, -3), so we check a smaller radius
         generator = create_world_generator(42)
-        radius = VectorN(15, 15, 3)  # Much smaller - 900 tiles vs 121,000!
+        radius = VectorN.create(15, 15, 3)  # Much smaller - 900 tiles vs 121,000!
         world_data = generator.generate_world_data(radius)
 
         # Check that the forced dungeon position has been modified
         # The forced dungeon should be at (50, 50, -3)
-        forced_pos = VectorN(50, 50, -3)
+        forced_pos = VectorN.create(50, 50, -3)
         forced_pos_str = forced_pos.serialize()
 
         # The dungeon should have placed tiles around this position
@@ -34,7 +34,7 @@ class TestForcedDungeon(OptimizedTestCase):
         for x in range(-5, 5):
             for y in range(-5, 5):
                 for z in range(-3, 1):
-                    pos = VectorN(x, y, z)
+                    pos = VectorN.create(x, y, z)
                     pos_str = pos.serialize()
                     if pos_str in world_data:
                         tile = world_data[pos_str]
@@ -59,7 +59,7 @@ class TestForcedDungeon(OptimizedTestCase):
         # Generate smaller worlds for comparison (900 tiles vs 121,000!)
         generator1 = create_world_generator(42)
         generator2 = create_world_generator(42)
-        radius = VectorN(10, 10, 2)  # Much smaller for faster testing
+        radius = VectorN.create(10, 10, 2)  # Much smaller for faster testing
         world_data1 = generator1.generate_world_data(radius)
         world_data2 = generator2.generate_world_data(radius)
 
@@ -77,7 +77,7 @@ class TestForcedDungeon(OptimizedTestCase):
         for x in range(-5, 5):
             for y in range(-5, 5):
                 for z in range(-2, 1):
-                    pos = VectorN(x, y, z)
+                    pos = VectorN.create(x, y, z)
                     pos_str = pos.serialize()
 
                     if pos_str in world_data1:
