@@ -121,6 +121,73 @@ def find_backref_chain_with_count(
             q.append((ref, depth + 1))
     return [], traversals
 
+
+def run_chain_round(
+    starts: dict[str, object],
+    game: object,
+    *,
+    reverse: bool = False,
+    max_depth: int = 30,
+) -> bool:
+    """Run a single round of chain searches.
+
+    If reverse is False, searches each start -> Game.
+    If reverse is True, searches Game -> each start.
+    Returns True if any chain was found in this round.
+    """
+    any_found = False
+    total = len(starts)
+    for idx, (name, obj) in enumerate(starts.items(), start=1):
+        if reverse:
+            print(f"- [{idx}/{total}] Searching chain from Game -> {name} ...")
+            spinner = Spinner(prefix=f"  find_backref_chain(Game -> {name})").start()
+            try:
+                chain, traversals = find_backref_chain_with_count(
+                    game,
+                    predicate=lambda x, target=obj: x is target,
+                    max_depth=max_depth,
+                    on_step=lambda n: spinner.set_status(f"{n} traversals"),
+                )
+            except RuntimeError as e:
+                spinner.stop()
+                print(f"  Skipped {name} due to error: {e}")
+                continue
+            finally:
+                spinner.stop()
+            if chain:
+                any_found = True
+                out = f"cycle-game-to-{name}.png"
+                print("  Rendering chain PNG...")
+                objgraph.show_chain(chain, filename=out)
+                print(f"  Found. Wrote {out}. Traversals: {traversals}")
+            else:
+                print(f"  No chain from Game to {name} within max_depth. Traversals: {traversals}")
+        else:
+            print(f"- [{idx}/{total}] Searching chain from {name} -> Game ...")
+            spinner = Spinner(prefix=f"  find_backref_chain({name} -> Game)").start()
+            try:
+                chain, traversals = find_backref_chain_with_count(
+                    obj,
+                    predicate=lambda x, target=game: x is target,
+                    max_depth=max_depth,
+                    on_step=lambda n: spinner.set_status(f"{n} traversals"),
+                )
+            except RuntimeError as e:
+                spinner.stop()
+                print(f"  Skipped {name} due to error: {e}")
+                continue
+            finally:
+                spinner.stop()
+            if chain:
+                any_found = True
+                out = f"cycle-{name}-to-game.png"
+                print("  Rendering chain PNG...")
+                objgraph.show_chain(chain, filename=out)
+                print(f"  Found. Wrote {out}. Traversals: {traversals}")
+            else:
+                print(f"  No chain from {name} to Game within max_depth. Traversals: {traversals}")
+    return any_found
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     print("\n=== LithicRivers Object Graph Cycle Analysis ===\n")
@@ -139,6 +206,7 @@ if __name__ == "__main__":
         "world": getattr(game, "world", None),
         "player": getattr(game, "player", None),
         "engine": getattr(game, "engine", None),
+        "game": game,
         "world_data": getattr(getattr(game, "world", None), "data", None),
     }
 
@@ -146,56 +214,12 @@ if __name__ == "__main__":
     candidates = {k: v for k, v in candidates.items() if v is not None}
 
     any_found = False
-    total = len(candidates)
-    for idx, (name, obj) in enumerate(candidates.items(), start=1):
-        print(f"- [{idx}/{total}] Searching chain from {name} -> Game ...")
-        spinner = Spinner(prefix=f"  find_backref_chain({name} -> Game)").start()
-        try:
-            chain, traversals = find_backref_chain_with_count(
-                obj,
-                predicate=lambda x: x is game,
-                max_depth=30,
-                on_step=lambda n: spinner.set_status(f"{n} traversals"),
-            )
-        except RuntimeError as e:
-            spinner.stop()
-            print(f"  Skipped {name} due to error: {e}")
-            continue
-        finally:
-            spinner.stop()
-        if chain:
-            any_found = True
-            out = f"cycle-{name}-to-game.png"
-            print("  Rendering chain PNG...")
-            objgraph.show_chain(chain, filename=out)
-            print(f"  Found. Wrote {out}. Traversals: {traversals}")
-        else:
-            print(f"  No chain from {name} to Game within max_depth. Traversals: {traversals}")
+    any_found |= run_chain_round(candidates, game, reverse=False, max_depth=30)
+    any_found |= run_chain_round(candidates, game, reverse=True, max_depth=30)
 
-    for idx, (name, obj) in enumerate(candidates.items(), start=1):
-        print(f"- [{idx}/{total}] Searching chain from Game -> {name} ...")
-        spinner = Spinner(prefix=f"  find_backref_chain(Game -> {name})").start()
-        try:
-            chain, traversals = find_backref_chain_with_count(
-                game,
-                predicate=lambda x: x is obj,
-                max_depth=30,
-                on_step=lambda n: spinner.set_status(f"{n} traversals"),
-            )
-        except RuntimeError as e:
-            spinner.stop()
-            print(f"  Skipped {name} due to error: {e}")
-            continue
-        finally:
-            spinner.stop()
-        if chain:
-            any_found = True
-            out = f"cycle-game-to-{name}.png"
-            print("  Rendering chain PNG...")
-            objgraph.show_chain(chain, filename=out)
-            print(f"  Found. Wrote {out}. Traversals: {traversals}")
-        else:
-            print(f"  No chain from Game to {name} within max_depth. Traversals: {traversals}")
+    if not any_found:
+        print("\nNo non-trivial chains found. You may need to raise max_depth or add more candidate objects.")
+    print("\nDone. Check generated PNGs (cycle-*, game-backrefs.png).")
 
     # Inbound references to Game (broad view)
     print("\n[4] Backrefs to Game (graph). This can be noisy; consider installing graphviz.)")
