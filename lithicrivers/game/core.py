@@ -479,7 +479,7 @@ class ChunkedWorldData(Cloneable, ShutDownable, msgspec.Struct, frozen=False):
             self._thread_pool.shutdown(wait=True)
             print("Thread pool shutdown complete.")
 
-    def get_chunk_stats(self) -> dict:
+    def get_chunk_stats(self) -> dict: # TODO this seems to print weird stuff, but you should check it with a running game...
         """Get statistics about chunk usage."""
         total_chunks = len(self.chunks)
         empty_chunks = sum(1 for chunk in self.chunks.values() if chunk.is_empty())

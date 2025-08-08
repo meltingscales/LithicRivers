@@ -30,9 +30,13 @@ dev = [
     "py-spy",
     "bandit[toml]",
     "safety",
-    "matplotlib",
-    "networkx",
     "msgspec",
+]
+
+# Optional tools used only for cycle analysis. Keep this separate so NixOS dev
+# environments don't pull it in by default.
+cycles = [
+    "objgraph>=3.6.0",
 ]
 
 [build-system]
