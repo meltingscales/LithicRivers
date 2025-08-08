@@ -1,16 +1,12 @@
 from lithicrivers.model.vector import VectorN
 
-VEC_DOWN = VectorN(0, 0, 1)
-VEC_UP = VectorN(0, 0, -1)
-VEC_NORTH = -VectorN(
-    0, 1, 0
-)  # negative because i am laaaaazy and my Y values are flipped
-VEC_SOUTH = -VectorN(
-    0, -1, 0
-)  # negative because i am laaaaazy and my Y values are flipped
-VEC_WEST = VectorN(-1, 0, 0)
-VEC_EAST = VectorN(1, 0, 0)
-VEC_ZERO = VectorN(0, 0, 0)
+VEC_DOWN = VectorN.from_args(0, 0, 1)
+VEC_UP = VectorN.from_args(0, 0, -1)
+VEC_NORTH = -VectorN.from_args(0, 1, 0)  # negative because i am laaaaazy and my Y values are flipped
+VEC_SOUTH = -VectorN.from_args(0, -1, 0)  # negative because i am laaaaazy and my Y values are flipped
+VEC_WEST = VectorN.from_args(-1, 0, 0)
+VEC_EAST = VectorN.from_args(1, 0, 0)
+VEC_ZERO = VectorN.from_args(0, 0, 0)
 
 # Diagonal movement vectors for 8-way movement
 VEC_NORTHWEST = VEC_NORTH + VEC_WEST

@@ -4,11 +4,12 @@ This module provides pre-generated worlds and other expensive objects that can b
 """
 
 import logging
-import pickle
+import msgspec
+import msgspec.msgpack
 import unittest
 from pathlib import Path
 
-from lithicrivers.game.core import Game, World
+from lithicrivers.game.core import Game, World, Player
 from lithicrivers.settings import DEFAULT_SEED
 
 
@@ -38,14 +39,14 @@ class SharedTestFixtures:
 
         with save_path.open("wb") as f:
             logging.info(f"Saving game for seed: {seed} to file {save_path}")
-            pickle.dump(game, f)
+            f.write(msgspec.msgpack.encode(game))
 
     def load_game(self, seed: int) -> Game:
         """Load a game from a file."""
         save_path = self._test_saves_dir / f"seed_{seed}.pkl"
         with save_path.open("rb") as f:
             logging.info(f"Loading game for seed: {seed} from file {save_path}")
-            return pickle.load(f)
+            return msgspec.msgpack.decode(f.read(), type=Game)
 
     def does_save_exist(self, seed: int) -> bool:
         """Check if a save exists for the given seed."""
@@ -68,7 +69,7 @@ class SharedTestFixtures:
                 logging.info(
                     f"   Pre-generating chunks for seed: {seed} as it doesn't exist as a save"
                 )
-                game = Game(seed)
+                game = Game.create(world=World.create(seed), player=Player.create())
                 game.pregen_chunks(radius=self.pregen_chunk_radius)
                 self.save_game(game, seed)
                 logging.info(f"   Done pre-generating chunks for seed: {seed}")
@@ -82,7 +83,7 @@ class SharedTestFixtures:
         Load a world from a file with the specified seed.
         """
         if not self.does_save_exist(seed):
-            self.save_game(Game(seed), seed)
+            self.save_game(Game.create(world=World.create(seed), player=Player.create()), seed)
         return self.load_game(seed).world
 
     def get_game(self, seed: int) -> Game:
@@ -90,7 +91,7 @@ class SharedTestFixtures:
         Load a game from a file with the specified seed.
         """
         if not self.does_save_exist(seed):
-            self.save_game(Game(seed), seed)
+            self.save_game(Game.create(world=World.create(seed), player=Player.create()), seed)
         return self.load_game(seed)
 
 

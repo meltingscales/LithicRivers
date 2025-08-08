@@ -5,7 +5,7 @@ from lithicrivers.model.vector import VectorN
 from lithicrivers.settings import DEFAULT_SEED
 from lithicrivers.test.test_fixtures import OptimizedTestCase
 from lithicrivers.textutil import generate_sprite_repeat
-from lithicrivers.worldgen import ChunkedWorldData
+from lithicrivers.game.core import ChunkedWorldData
 
 
 class RenderStuff(OptimizedTestCase):

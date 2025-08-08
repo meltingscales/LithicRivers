@@ -20,10 +20,7 @@ class Cloneable:
 
 
 class SpriteRenderable:
-    def __init__(self, sprite_sheet: list[str]):
-        self.sprite_sheet = sprite_sheet
-        if not sprite_sheet:
-            self.sprite_sheet = ["?", "??\n??", "???\n???\n???"]
+    # No __init__; sprite_sheet should be set directly by Structs or their factories
 
     def render_sprite(self, scale: int = 1) -> str:
         normalized_scale = scale - 1

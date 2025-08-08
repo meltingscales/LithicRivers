@@ -9,34 +9,37 @@ Handles all game saving and loading operations, including:
 """
 
 import logging
-import pickle
-import time
+import msgspec
+import msgspec.msgpack
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from lithicrivers.game.core import Game
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from lithicrivers.game.core import Game
 from lithicrivers.settings import DEFAULT_SEED, SAVES_FOLDER, SNAPSHOTS_FOLDER
 
 logger = logging.getLogger(__name__)
 
 
-class SaveMetadata:
+class SaveMetadata(msgspec.Struct, frozen=False):
     """Metadata for a save file."""
+    filename: str
+    timestamp: float
+    game_tick: int
+    player_name: str
+    world_seed: int
 
-    def __init__(
-        self,
-        filename: str,
-        timestamp: float,
-        game_tick: int,
-        player_name: str,
-        world_seed: int,
-    ):
-        self.filename = filename
-        self.timestamp = timestamp
-        self.game_tick = game_tick
-        self.player_name = player_name
-        self.world_seed = world_seed
+    @classmethod
+    def create(cls, filename: str, timestamp: float, game_tick: int, player_name: str, world_seed: int) -> "SaveMetadata":
+        return cls(
+            filename=filename,
+            timestamp=timestamp,
+            game_tick=game_tick,
+            player_name=player_name,
+            world_seed=world_seed,
+        )
         self.readable_time = datetime.fromtimestamp(timestamp).strftime(
             "%Y-%m-%d %H:%M:%S"
         )
@@ -64,19 +67,21 @@ class SaveMetadata:
         )
 
 
-class SavedGameData:
+class SavedGameData(msgspec.Struct, frozen=False):
     """
     Container for saved game data with embedded metadata.
     This makes save files completely self-contained and portable.
     """
+    game: "Game"
+    metadata: SaveMetadata
+    save_version: str = "1.0"  # For future compatibility. TODO Read ./VERSION
 
-    def __init__(self, game: "Game", metadata: SaveMetadata):
-        self.game = game
-        self.metadata = metadata
-        self.save_version = "1.0"  # For future compatibility
+    @classmethod
+    def create(cls, game: "Game", metadata: SaveMetadata) -> "SavedGameData":
+        return cls(game=game, metadata=metadata)
 
 
-class GameSaveManager:
+class GameSaveManager(msgspec.Struct, frozen=False):
     """
     Manages game saving and loading operations.
 
@@ -86,21 +91,20 @@ class GameSaveManager:
     - Save file listing and metadata extraction
     - Error handling and recovery
     - Configurable save locations
-    - Portable save files (metadata embedded in pickle)
+    - Portable save files (metadata embedded in msgspec)
     """
+    saves_folder: Path = msgspec.field(default_factory=lambda: Path(SAVES_FOLDER))
+    snapshots_folder: Path = msgspec.field(default_factory=lambda: Path(SNAPSHOTS_FOLDER))
+    default_save_name: str = "default-world.pkl"
+    last_snapshot_tick: int = 0
+    snapshot_interval: int = 1_000_000  # Every 1 million ticks
 
-    def __init__(self):
-        self.saves_folder = Path(SAVES_FOLDER)
-        self.snapshots_folder = Path(SNAPSHOTS_FOLDER)
-        self.default_save_name = "default-world.pkl"
-
-        # Create directories if they don't exist
-        self.saves_folder.mkdir(parents=True, exist_ok=True)
-        self.snapshots_folder.mkdir(parents=True, exist_ok=True)
-
-        # Track last snapshot tick for automatic snapshots
-        self.last_snapshot_tick = 0
-        self.snapshot_interval = 1_000_000  # Every 1 million ticks
+    @classmethod
+    def create(cls) -> "GameSaveManager":
+        obj = cls()
+        obj.saves_folder.mkdir(parents=True, exist_ok=True)
+        obj.snapshots_folder.mkdir(parents=True, exist_ok=True)
+        return obj
 
     def save_game(
         self, game: "Game", save_name: Optional[str] = None, is_snapshot: bool = False
@@ -149,7 +153,7 @@ class GameSaveManager:
             # Save the game with embedded metadata
             logger.info(f"Saving game to: {save_path}")
             with open(save_path, "wb") as f:
-                pickle.dump(saved_data, f)
+                f.write(msgspec.encode(saved_data))
 
             logger.info(f"✅ Game saved successfully: {save_path}")
             return True
@@ -180,7 +184,7 @@ class GameSaveManager:
         try:
             logger.info(f"Loading game from: {save_path}")
             with open(save_path, "rb") as f:
-                saved_data = pickle.load(f)
+                saved_data = msgspec.msgpack.decode(f.read(), type=SavedGameData)
 
             # Extract game and metadata from SavedGameData container
             if not isinstance(saved_data, SavedGameData):
@@ -311,7 +315,7 @@ class GameSaveManager:
 
     def _extract_metadata_from_file(self, save_path: Path) -> Optional[SaveMetadata]:
         """
-        Extract metadata from a pickle file without fully loading the game.
+        Extract metadata from a msgspec file without fully loading the game.
 
         Args:
             save_path: Path to the save file
@@ -321,7 +325,7 @@ class GameSaveManager:
         """
         try:
             with open(save_path, "rb") as f:
-                saved_data = pickle.load(f)
+                saved_data = msgspec.msgpack.decode(f.read(), type=SavedGameData)
 
             # Extract metadata from SavedGameData container
             if not isinstance(saved_data, SavedGameData):
