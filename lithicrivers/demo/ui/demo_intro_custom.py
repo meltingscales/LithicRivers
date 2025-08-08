@@ -33,8 +33,8 @@ def _build_glitch_frames(line: str, glitch_frames: int = 20) -> list[str]:
     frames = []
     # Start more heavily corrupted, end clean.
     for i in range(glitch_frames):
-        # Linear falloff from 0.25 -> ~0.02
-        rate = 0.25 * (1.0 - (i / max(1, glitch_frames))) + 0.02
+        # Linear falloff
+        rate = 0.05 * (1.0 - (i / max(1, glitch_frames))) + 0.02
         frames.append(corrupt_text(line, corruption_rate=rate))
     frames.append(line)  # Final clean line
     return frames
@@ -49,7 +49,7 @@ def _intro(screen: Screen) -> None:
     line_spacing = 1  # one row per line
 
     # Timing parameters
-    glitch_frames = 18
+    glitch_frames = 20
     per_line_duration = glitch_frames + 4  # frames each line animates
     stagger = glitch_frames // 2  # how many frames between line starts
 
