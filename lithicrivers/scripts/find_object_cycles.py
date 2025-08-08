@@ -24,6 +24,8 @@ class Spinner:
         self._thread = None
         self.prefix = prefix
         self.interval = interval
+        self._status = ""
+        self._lock = threading.Lock()
 
     def start(self):
         if self._thread is not None:
@@ -45,16 +47,24 @@ class Spinner:
         i = 0
         while not self._stop.is_set():
             ch = glyphs[i % len(glyphs)]
-            sys.stdout.write(f"\r{self.prefix} {ch}")
+            with self._lock:
+                status = self._status
+            sys.stdout.write(f"\r{self.prefix} {ch}  {status}")
             sys.stdout.flush()
             time.sleep(self.interval)
             i += 1
+
+    def set_status(self, text: str):
+        with self._lock:
+            self._status = text
 
 
 def find_backref_chain_with_count(
     start_obj: object,
     predicate: Callable[[object], bool],
     max_depth: int = 30,
+    on_step: Optional[Callable[[int], None]] = None,
+    report_every: int = 500,
 ) -> Tuple[List[object], int]:
     """
     Instrumented BFS over backreferences using gc.get_referrers to find a chain
@@ -93,6 +103,11 @@ def find_backref_chain_with_count(
             # Skip frames to reduce noise/explosions
             if ref.__class__.__name__ in {"frame", "cell"}:
                 continue
+            if on_step is not None and (traversals % report_every == 0):
+                try:
+                    on_step(traversals)
+                except Exception:
+                    pass
             node_obj[rid] = ref
             parent[rid] = obj_id
             if predicate(ref):
@@ -136,7 +151,12 @@ if __name__ == "__main__":
         print(f"- [{idx}/{total}] Searching chain from {name} -> Game ...")
         spinner = Spinner(prefix=f"  find_backref_chain({name} -> Game)").start()
         try:
-            chain, traversals = find_backref_chain_with_count(obj, predicate=lambda x: x is game, max_depth=30)
+            chain, traversals = find_backref_chain_with_count(
+                obj,
+                predicate=lambda x: x is game,
+                max_depth=30,
+                on_step=lambda n: spinner.set_status(f"{n} traversals"),
+            )
         except RuntimeError as e:
             spinner.stop()
             print(f"  Skipped {name} due to error: {e}")
@@ -156,7 +176,12 @@ if __name__ == "__main__":
         print(f"- [{idx}/{total}] Searching chain from Game -> {name} ...")
         spinner = Spinner(prefix=f"  find_backref_chain(Game -> {name})").start()
         try:
-            chain, traversals = find_backref_chain_with_count(game, predicate=lambda x: x is obj, max_depth=30)
+            chain, traversals = find_backref_chain_with_count(
+                game,
+                predicate=lambda x: x is obj,
+                max_depth=30,
+                on_step=lambda n: spinner.set_status(f"{n} traversals"),
+            )
         except RuntimeError as e:
             spinner.stop()
             print(f"  Skipped {name} due to error: {e}")
