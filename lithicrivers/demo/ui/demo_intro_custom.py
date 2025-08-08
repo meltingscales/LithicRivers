@@ -9,6 +9,7 @@ settling on the final clean text.
 """
 
 from pathlib import Path
+from collections import deque
 import sys
 
 from asciimatics.effects import Print
@@ -46,50 +47,57 @@ def _intro(screen: Screen) -> None:
     # Layout parameters
     top_margin = max(1, screen.height // 6)
     left_margin = max(2, screen.width // 12)
-    line_spacing = 1  # one row per line
+    # Viewport height available for lines
+    viewport_height = max(1, screen.height - top_margin - 2)
 
     # Timing parameters
-    glitch_frames = 20
-    per_line_duration = glitch_frames + 4  # frames each line animates
-    stagger = glitch_frames // 2  # how many frames between line starts
+    glitch_frames = 10
 
-    effects = []
-    for idx, raw_line in enumerate(lines):
-        # Ensure nothing overflows the screen width; truncate if necessary.
-        available_width = max(1, screen.width - left_margin - 1)
-        line = raw_line[:available_width]
+    # Build frame-by-frame images for a scrolling log window using a deque
+    available_width = max(1, screen.width - left_margin - 1)
+    window: deque[str] = deque(maxlen=viewport_height)
+    images: list[str] = []
 
-        y = top_margin + idx * line_spacing
-        if y >= screen.height - 1:
-            break  # Don't draw beyond screen
+    for raw in lines:
+        base_line = (raw or "")[:available_width]
+        # Animate corrupted -> clean for this new line while it sits at the bottom
+        for frame in _build_glitch_frames(base_line, glitch_frames=glitch_frames):
+            # Push a temporary frame variant at the bottom without committing clean text yet
+            window.append(base_line if len(window) == window.maxlen else base_line)
+            # Replace the last line display with the current frame variant
+            buffer_lines = list(window)
+            if buffer_lines:
+                buffer_lines[-1] = frame
+            # Right-pad to fully overwrite previous characters and preserve whitespace
+            padded = [l.ljust(available_width) for l in buffer_lines]
+            images.append("\n".join(padded))
+            # Remove the temp line so next frame can reuse previous state
+            if window and (len(window) == viewport_height or True):
+                window.pop()
+        # Commit the clean line and let it remain in the window
+        window.append(base_line)
+        images.append("\n".join([l.ljust(available_width) for l in window]))
 
-        frames = _build_glitch_frames(line, glitch_frames=glitch_frames)
-        renderer = StaticRenderer(images=frames)
+    # After all lines, keep a few idle frames to let the user read
+    idle_tail = int(getattr(screen, "frame_rate", 30) * 1.5)
+    if images:
+        last_image = images[-1]
+        images.extend([last_image] * idle_tail)
 
-        start = idx * max(1, stagger)
-        effects.append(
-            Print(
-                screen,
-                renderer,
-                y,
-                x=left_margin,
-                start_frame=start,
-                speed=1,
-                transparent=True,
-            )
-        )
+    # Use a single Print with a StaticRenderer that advances through images
+    renderer = StaticRenderer(images=images)
+    effect = Print(
+        screen,
+        renderer,
+        y=top_margin,
+        x=left_margin,
+        start_frame=0,
+        speed=1,
+        transparent=False,
+    )
 
-    # Scene duration should cover all starts plus per-line animation,
-    # then pause briefly before exiting.
-    if effects:
-        last_start = (len(effects) - 1) * max(1, stagger)
-        # ~1.5s pause at end (fallback to 30 FPS if unknown)
-        end_pause = int(getattr(screen, "frame_rate", 30) * 1.5)
-        duration = last_start + per_line_duration + end_pause
-    else:
-        duration = 90
-
-    scene = Scene(effects, duration=duration, clear=True)
+    duration = max(len(images), 1)
+    scene = Scene([effect], duration=duration, clear=True)
     screen.play([scene], stop_on_resize=True)
 
 
