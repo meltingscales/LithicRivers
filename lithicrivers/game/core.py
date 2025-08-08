@@ -9,7 +9,7 @@ from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from datetime import datetime
 from pathlib import Path
 from typing import Optional, Union, TYPE_CHECKING
-
+import weakref
 from lithicrivers.colors import COLOR_MANAGER
 from lithicrivers.constants import VEC_NORTH
 from lithicrivers.game.entities import DroppedItem, Entities, Entity, Item, Items
@@ -139,16 +139,16 @@ class MessageLog(msgspec.Struct, frozen=False):
     """A class to manage game messages for the message log pane."""
     messages: list[dict] = msgspec.field(default_factory=list)
     max_messages: int = 100
-    game: Optional["Game"] = None
 
     @classmethod
-    def create(cls, max_messages: int = 100, game: Optional["Game"] = None) -> "MessageLog":
-        return cls(messages=[], max_messages=max_messages, game=game)
+    def create(cls, max_messages: int = 100) -> "MessageLog":
+        instance = cls(messages=[], max_messages=max_messages)
+        return instance
 
-    def add_message(self, message: str, message_type: str = "info"):
+    def add_message(self, game: "Game", message: str, message_type: str = "info"):
         """Add a message to the log with timestamp, game tick, and type."""
         timestamp = datetime.now().strftime("%H:%M:%S")
-        gametick = self.game.gametick if self.game else 0
+        gametick = game.gametick
         log_entry = {
             "timestamp": timestamp,
             "gametick": gametick,
@@ -962,12 +962,12 @@ class Game(Cloneable, ShutDownable, msgspec.Struct, frozen=False):
         instance.save_manager = GameSaveManager.create()
 
         instance.running = True
-        instance.message_log = MessageLog(game=instance)
+        instance.message_log = MessageLog.create()
         instance.gametick = 0 
 
         # Add initial welcome message
         instance.message_log.add_message(
-            "Welcome to LithicRivers! Your adventures will be logged here.", "info"
+            instance, "Welcome to LithicRivers! Your adventures will be logged here.", "info"
         )
         return instance
 
@@ -1125,28 +1125,26 @@ class Game(Cloneable, ShutDownable, msgspec.Struct, frozen=False):
         if items_dropped:
             items_str = ", ".join(items_dropped)
             self.message_log.add_message(
-                f"Mined {tile_name} and found: {items_str}", "mining"
+                self, f"Mined {tile_name} and found: {items_str}", "mining"
             )
         else:
-            self.message_log.add_message(f"Mined {tile_name}", "mining")
+            self.message_log.add_message(self, f"Mined {tile_name}", "mining")
 
     def log_interaction(self, entity_name: str, interaction_text: str):
         """Log an interaction event."""
-        self.message_log.add_message(
-            f"Interacted with {entity_name}: {interaction_text}", "interaction"
-        )
+        self.message_log.add_message(self, f"Interacted with {entity_name}: {interaction_text}", "interaction")
 
     def log_pickup(self, item_name: str):
         """Log an item pickup event."""
-        self.message_log.add_message(f"Picked up: {item_name}", "pickup")
+        self.message_log.add_message(self, f"Picked up: {item_name}", "pickup")
 
     def log_dialog(self, speaker: str, message: str):
         """Log a dialog event."""
-        self.message_log.add_message(f"{speaker}: {message}", "dialog")
+        self.message_log.add_message(self, f"{speaker}: {message}", "dialog")
 
     def log_info(self, message: str):
         """Log a general info message."""
-        self.message_log.add_message(message, "info")
+        self.message_log.add_message(self, message, "info")
 
     def increment_tick(self):
         """Increment the game tick counter."""
