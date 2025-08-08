@@ -17,24 +17,26 @@ from lithicrivers.model.vector import VectorN
 logger = get_logger(__name__)
 
 
-class StructureDefinition:
+class StructureDefinition(msgspec.Struct, frozen=False):
     """Represents a structure definition loaded from files."""
 
-    def __init__(
-        self,
-        name: str,
-        blocks: dict[str, str],
-        layers: list[str],
-        gen_biomes: str,
-        gen_chance: float,
-        y_layer_gen_range: list[int],
-    ):
-        self.name = name
-        self.blocks = blocks
-        self.layers = layers
-        self.gen_biomes = gen_biomes
-        self.gen_chance = gen_chance
-        self.y_layer_gen_range = y_layer_gen_range
+    name: str
+    blocks: dict[str, str]
+    layers: list[str]
+    gen_biomes: str
+    gen_chance: float
+    y_layer_gen_range: list[int]
+
+    @classmethod
+    def create(cls, name: str, blocks: dict[str, str], layers: list[str], gen_biomes: str, gen_chance: float, y_layer_gen_range: list[int]):
+        return cls(
+            name=name,
+            blocks=blocks,
+            layers=layers,
+            gen_biomes=gen_biomes,
+            gen_chance=gen_chance,
+            y_layer_gen_range=y_layer_gen_range,
+        )
 
     @classmethod
     def load_from_directory(cls, structure_dir: Path) -> "StructureDefinition":
@@ -56,7 +58,7 @@ class StructureDefinition:
             layer.strip() for layer in shape_content.split("~~~~~") if layer.strip()
         ]
 
-        return cls(
+        return cls.create(
             name=name,
             blocks=data["blocks"],
             layers=layers,
