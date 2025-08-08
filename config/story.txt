@@ -1,14 +1,10 @@
-Lorem Ipsum
+LithicRivers
 
-Year 3056
+Year 3186
+1,000 years after the incident
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec ut lectus quis erat vehicula interdum eu id lacus. Nam tempor, elit a auctor porttitor, sem mauris venenatis dui, vitae dapibus dolor velit in magna. Suspendisse potenti. Suspendisse id turpis dolor. Sed sapien magna, congue id tincidunt nec, ullamcorper et massa. Mauris iaculis luctus ipsum, a suscipit odio luctus eu. Maecenas felis orci, ultricies aliquet mi at, tempor tempor augue.
+You're alive due to a 32-bit date overflow error. 
 
-Phasellus convallis egestas vehicula. Donec ac neque tellus. Sed pellentesque lorem purus, eget faucibus est ultricies eget. Fusce rutrum lacus tellus. Vivamus mattis dapibus odio consequat ullamcorper. Nulla porttitor ultrices arcu, non dapibus felis vehicula non. Integer lobortis diam et nulla ornare venenatis.
+The world is a desolate wasteland. 
 
-Etiam magna lorem, gravida et dui sed, ultrices fermentum nulla. Nam ornare massa nec vestibulum ullamcorper. In et nisl blandit, placerat tortor quis, pellentesque leo. Nunc euismod purus eget ex tempus, et maximus massa ultrices. Fusce id diam est. Maecenas rhoncus, leo suscipit lacinia pharetra, lectus tortor dictum quam, ac sollicitudin tellus dui in nisl. Suspendisse ullamcorper ante non porta ornare. Nulla facilisi. Donec justo urna, pretium eu dapibus ut, laoreet a nulla.
-
-Fusce et leo vitae eros finibus pretium. Maecenas rhoncus est ut nulla placerat feugiat. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris ut sem mauris. Aenean at turpis mauris. Vivamus non mauris eget sem interdum dignissim. Sed at magna ligula. Mauris egestas tortor eget iaculis porttitor. Aenean congue consectetur est sed blandit.
-
-Nulla et eros ac elit eleifend efficitur ut vel odio. Aenean ac leo id leo luctus laoreet. Nunc vulputate faucibus arcu, et tristique augue rhoncus vitae. Duis eget ipsum mi. In ullamcorper porta dolor quis suscipit. Suspendisse sed bibendum magna. Praesent interdum turpis id est elementum, non dignissim leo tempus. Proin eget posuere turpis. Suspendisse id rutrum urna. Pellentesque id ipsum a tellus varius ultricies vel eget nibh. Aliquam in molestie purus. Curabitur in diam nec nisl mattis fermentum blandit eu purus.
-
+The world ends after a fusion reactor explodes in the year 2186. this triggers a runaway greenhouse effect in the Earth's atmosphere that kills most humans and causes the world's economy to devolve. most complicated manufacturing gets taken over and destroyed. fast forward 1,000 years later to the year 3186, and you awaken as a heavily damaged android from SapienCorp, an old company that used to produce AI robots. you only wake up due to a 32-bit date overflow error that causes you to turn on and awaken a world with no real goals other than to repair yourself and explore.
