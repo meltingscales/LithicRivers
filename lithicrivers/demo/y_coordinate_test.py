@@ -12,7 +12,7 @@ x_coord = 10
 z_coord = -1  # Underground
 
 for y in range(-10, 11):
-    pos = VectorN(x_coord, y, z_coord)
+    pos = VectorN.create(x_coord, y, z_coord)
     tile = generator.generate_tile_for_position(pos)
     print(f"Position ({x_coord}, {y}, {z_coord}) -> {tile}")
 
@@ -23,7 +23,7 @@ print("=" * 60)
 z_coord = 0  # Surface
 
 for y in range(-10, 11):
-    pos = VectorN(x_coord, y, z_coord)
+    pos = VectorN.create(x_coord, y, z_coord)
     tile = generator.generate_tile_for_position(pos)
     print(f"Position ({x_coord}, {y}, {z_coord}) -> {tile}")
 
@@ -35,6 +35,6 @@ y_coord = 5
 z_coord = -1  # Underground
 
 for x in range(-10, 11):
-    pos = VectorN(x, y_coord, z_coord)
+    pos = VectorN.create(x, y_coord, z_coord)
     tile = generator.generate_tile_for_position(pos)
     print(f"Position ({x}, {y_coord}, {z_coord}) -> {tile}")

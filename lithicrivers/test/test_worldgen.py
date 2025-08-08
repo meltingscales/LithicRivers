@@ -74,7 +74,7 @@ class TestSeededWorldGenerator(OptimizedTestCase):
     def test_generate_tile_for_position_deterministic(self):
         """Test that the same position always generates the same tile with the same seed."""
         generator = SeededWorldGenerator(seed=42)
-        position = VectorN(10, 20, 0)
+        position = VectorN.create(10, 20, 0)
 
         tile1 = generator.generate_tile_for_position(position)
         tile2 = generator.generate_tile_for_position(position)
@@ -92,15 +92,15 @@ class TestSeededWorldGenerator(OptimizedTestCase):
         generator = SeededWorldGenerator(seed=42)
 
         # Surface level
-        surface_pos = VectorN(10, 20, 0)
+        surface_pos = VectorN.create(10, 20, 0)
         surface_tile = generator.generate_tile_for_position(surface_pos)
 
         # Sky level
-        sky_pos = VectorN(10, 20, 1)
+        sky_pos = VectorN.create(10, 20, 1)
         sky_tile = generator.generate_tile_for_position(sky_pos)
 
         # Underground level
-        underground_pos = VectorN(10, 20, -1)
+        underground_pos = VectorN.create(10, 20, -1)
         underground_tile = generator.generate_tile_for_position(underground_pos)
 
         # Different heights should generate different tiles (though not guaranteed)
@@ -112,7 +112,7 @@ class TestSeededWorldGenerator(OptimizedTestCase):
     def test_generate_world_data(self):
         """Test generating world data with a small radius for faster testing."""
         generator = SeededWorldGenerator(seed=42)
-        radius = VectorN(2, 2, 1)  # Smaller radius for faster testing
+        radius = VectorN.create(2, 2, 1)  # Smaller radius for faster testing
 
         world_data = generator.generate_world_data(radius)
 
@@ -136,14 +136,14 @@ class TestWorldGenerationFunctions(OptimizedTestCase):
 
     def test_generate_world_with_seed(self):
         """Test generating world data with a seed."""
-        radius = VectorN(2, 2, 1)  # Smaller radius for faster testing
+        radius = VectorN.create(2, 2, 1)  # Smaller radius for faster testing
         world_data = generate_world_with_seed(radius, seed=42)
         self.assertIsInstance(world_data, dict)
         self.assertGreater(len(world_data), 0)
 
     def test_generate_world_with_seed_deterministic(self):
         """Test that world generation is deterministic with the same seed."""
-        radius = VectorN(2, 2, 1)  # Smaller radius for faster testing
+        radius = VectorN.create(2, 2, 1)  # Smaller radius for faster testing
 
         world_data1 = generate_world_with_seed(radius, seed=42)
         world_data2 = generate_world_with_seed(radius, seed=42)
@@ -153,7 +153,7 @@ class TestWorldGenerationFunctions(OptimizedTestCase):
 
     def test_world_generation_includes_structures_deterministic(self):
         """Test that world generation includes structures and is deterministic."""
-        radius = VectorN(3, 3, 1)  # Smaller radius for faster testing
+        radius = VectorN.create(3, 3, 1)  # Smaller radius for faster testing
 
         # Generate two worlds with the same seed
         world_data1 = generate_world_with_seed(radius, seed=42)
@@ -188,7 +188,7 @@ class TestWorldGenerationFunctions(OptimizedTestCase):
 
     def test_structure_placement_deterministic(self):
         """Test that structure placement is deterministic across multiple generations."""
-        radius = VectorN(3, 3, 1)  # Smaller radius for faster testing
+        radius = VectorN.create(3, 3, 1)  # Smaller radius for faster testing
         seed = 12345
 
         # Generate multiple worlds with the same seed
@@ -243,7 +243,7 @@ class TestWorldGenerationFunctions(OptimizedTestCase):
 
     def test_generate_world_with_seed_different_seeds(self):
         """Test that different seeds produce different worlds."""
-        radius = VectorN(2, 2, 1)  # Smaller radius for faster testing
+        radius = VectorN.create(2, 2, 1)  # Smaller radius for faster testing
 
         world_data1 = generate_world_with_seed(radius, seed=42)
         world_data2 = generate_world_with_seed(radius, seed=12345)
@@ -266,7 +266,7 @@ class TestIntegrationWithGame(OptimizedTestCase):
 
         # Same seed should produce identical worlds
         # Compare tile data by checking specific positions
-        test_positions = [VectorN(0, 0, 0), VectorN(1, 1, 0), VectorN(-1, -1, 0)]
+        test_positions = [VectorN.create(0, 0, 0), VectorN.create(1, 1, 0), VectorN.create(-1, -1, 0)]
         for pos in test_positions:
             tile1 = world1.get_tile(pos)
             tile2 = world2.get_tile(pos)
@@ -284,10 +284,10 @@ class TestIntegrationWithGame(OptimizedTestCase):
         # Different seeds should produce different worlds
         # Compare tile data by checking specific positions that are more likely to differ
         test_positions = [
-            VectorN(7, 13, 0),
-            VectorN(-7, -13, 0),
-            VectorN(25, 25, 0),
-            VectorN(-25, -25, 0),
+            VectorN.create(7, 13, 0),
+            VectorN.create(-7, -13, 0),
+            VectorN.create(25, 25, 0),
+            VectorN.create(-25, -25, 0),
         ]
         differences_found = False
         for pos in test_positions:
@@ -310,7 +310,7 @@ class TestIntegrationWithGame(OptimizedTestCase):
 
         # Same seed should produce identical games
         # Compare tile data by checking specific positions
-        test_positions = [VectorN(0, 0, 0), VectorN(1, 1, 0), VectorN(-1, -1, 0)]
+        test_positions = [VectorN.create(0, 0, 0), VectorN.create(1, 1, 0), VectorN.create(-1, -1, 0)]
         for pos in test_positions:
             tile1 = game1.world.get_tile(pos)
             tile2 = game2.world.get_tile(pos)
@@ -321,10 +321,10 @@ class TestIntegrationWithGame(OptimizedTestCase):
         # Different seeds should produce different games
         # Use positions that are more likely to differ
         test_positions_diff = [
-            VectorN(7, 13, 0),
-            VectorN(-7, -13, 0),
-            VectorN(25, 25, 0),
-            VectorN(-25, -25, 0),
+            VectorN.create(7, 13, 0),
+            VectorN.create(-7, -13, 0),
+            VectorN.create(25, 25, 0),
+            VectorN.create(-25, -25, 0),
         ]
         differences_found = False
         for pos in test_positions_diff:

@@ -4,7 +4,7 @@ Structure generation system for placing predefined structures in the world.
 
 import json
 import os
-import random
+from lithicrivers.game.rng import SimpleRNG
 from pathlib import Path
 from typing import Optional
 
@@ -130,7 +130,7 @@ class StructureManager:
         structure_name: str,
         world_data: dict[str, Tile],
         base_position: VectorN,
-        rng: random.Random,
+        rng: SimpleRNG,
         force_placement: bool = False,
     ) -> bool:
         """
@@ -177,7 +177,7 @@ class StructureManager:
                     base_y = base_position.y if base_position.y is not None else 0
                     base_z = base_position.z if base_position.z is not None else 0
 
-                    world_pos = VectorN(
+                    world_pos = VectorN.create(
                         base_x + char_idx,
                         base_y + line_idx,
                         base_z + layer_idx,
@@ -200,7 +200,7 @@ class StructureManager:
         world_data: dict[str, Tile],
         chunk_center: VectorN,
         chunk_radius: int,
-        rng: random.Random,
+        rng: SimpleRNG,
     ) -> None:
         """
         Generate structures for a chunk of the world.
@@ -226,7 +226,7 @@ class StructureManager:
                 pos_y = center_y + rng.randint(-chunk_radius, chunk_radius)
                 pos_z = center_z + rng.randint(-chunk_radius, chunk_radius)
 
-                base_pos = VectorN(pos_x, pos_y, pos_z)
+                base_pos = VectorN.create(pos_x, pos_y, pos_z)
                 self.place_structure(structure_name, world_data, base_pos, rng)
 
 

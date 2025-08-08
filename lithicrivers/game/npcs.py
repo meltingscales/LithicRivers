@@ -163,7 +163,7 @@ class StumblingSheep(InteractiveEntity):
 
     def tick(self) -> None:
         """Move randomly every few ticks."""
-        import random
+        from lithicrivers.game.rng import SimpleRNG
 
         # Use deterministic randomness based on world seed and tick
         # This ensures the same behavior for the same seed
@@ -177,10 +177,10 @@ class StumblingSheep(InteractiveEntity):
 
         # Only use deterministic seeding if not in a test environment
         # This allows mocking to work in tests
-        if not hasattr(random, "_test_mode"):
-            random.seed(f"sheep_{self.position.serialize()}_{gametick}")
+        if not hasattr(SimpleRNG, "_test_mode"):
+            rng = SimpleRNG.create(f"sheep_{self.position.serialize()}_{gametick}")
 
-        if random.random() < 0.1:  # 10% chance to move each tick
+        if rng.random() < 0.1:  # 10% chance to move each tick
             directions = [VEC_NORTH, VEC_SOUTH, VEC_EAST, VEC_WEST]
-            direction = random.choice(directions)
+            direction = rng.choice(directions)
             self.move(direction)

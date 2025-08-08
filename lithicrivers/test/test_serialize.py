@@ -20,7 +20,7 @@ class TestSerialize(unittest.TestCase):
 
     def test_simple_ser(self):
         for i in range(-5, 5):
-            some_pos = VectorN(i, i, i)
+            some_pos = VectorN.create(i, i, i)
             some_tile = weighted_choice(
                 [1, 1, 1], [Tiles.tree(), Tiles.gold_ore(), Tiles.bedrock()]
             )

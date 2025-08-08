@@ -179,7 +179,7 @@ class TestFluidSpriteRendering(OptimizedTestCase):
 
     def test_water_sprite_scales(self):
         """Test water sprite rendering at all scales."""
-        water = Entities.water(VectorN(0, 0, 0))
+        water = Entities.water(VectorN.create(0, 0, 0))
 
         # Test scale 1 (1x1)
         sprite_1 = water.render_sprite(1)
@@ -195,7 +195,7 @@ class TestFluidSpriteRendering(OptimizedTestCase):
 
     def test_lava_sprite_scales(self):
         """Test lava sprite rendering at all scales."""
-        lava = Entities.lava(VectorN(0, 0, 0))
+        lava = Entities.lava(VectorN.create(0, 0, 0))
 
         # Test scale 1 (1x1)
         sprite_1 = lava.render_sprite(1)
@@ -211,7 +211,7 @@ class TestFluidSpriteRendering(OptimizedTestCase):
 
     def test_acid_sprite_scales(self):
         """Test acid sprite rendering at all scales."""
-        acid = Entities.acid(VectorN(0, 0, 0))
+        acid = Entities.acid(VectorN.create(0, 0, 0))
 
         # Test scale 1 (1x1)
         sprite_1 = acid.render_sprite(1)
@@ -227,7 +227,7 @@ class TestFluidSpriteRendering(OptimizedTestCase):
 
     def test_oil_sprite_scales(self):
         """Test oil sprite rendering at all scales."""
-        oil = Entities.oil(VectorN(0, 0, 0))
+        oil = Entities.oil(VectorN.create(0, 0, 0))
 
         # Test scale 1 (1x1)
         sprite_1 = oil.render_sprite(1)
@@ -243,7 +243,7 @@ class TestFluidSpriteRendering(OptimizedTestCase):
 
     def test_blood_sprite_scales(self):
         """Test blood sprite rendering at all scales."""
-        blood = Entities.blood(VectorN(0, 0, 0))
+        blood = Entities.blood(VectorN.create(0, 0, 0))
 
         # Test scale 1 (1x1)
         sprite_1 = blood.render_sprite(1)
@@ -259,7 +259,7 @@ class TestFluidSpriteRendering(OptimizedTestCase):
 
     def test_invalid_scales(self):
         """Test rendering at invalid scales."""
-        water = Entities.water(VectorN(0, 0, 0))
+        water = Entities.water(VectorN.create(0, 0, 0))
 
         # Test scale 0 (should throw exception)
         with self.assertRaises(ValueError):
@@ -272,11 +272,11 @@ class TestFluidSpriteRendering(OptimizedTestCase):
     def test_fluid_colors(self):
         """Test that fluids have correct colors."""
         fluids = [
-            (Entities.water(VectorN(0, 0, 0)), "blue"),
-            (Entities.lava(VectorN(0, 0, 0)), "red"),
-            (Entities.acid(VectorN(0, 0, 0)), "green"),
-            (Entities.oil(VectorN(0, 0, 0)), "yellow"),
-            (Entities.blood(VectorN(0, 0, 0)), "red"),
+            (Entities.water(VectorN.create(0, 0, 0)), "blue"),
+            (Entities.lava(VectorN.create(0, 0, 0)), "red"),
+            (Entities.acid(VectorN.create(0, 0, 0)), "green"),
+            (Entities.oil(VectorN.create(0, 0, 0)), "yellow"),
+            (Entities.blood(VectorN.create(0, 0, 0)), "red"),
         ]
 
         for fluid, expected_color in fluids:
@@ -310,7 +310,7 @@ class TestSpriteSystemIntegration(OptimizedTestCase):
         # Create a fluid with a non-existent sprite type
         # This should throw an exception since we no longer have fallbacks
         with self.assertRaises(ValueError):
-            Fluid("nonexistent", VectorN(0, 0, 0))
+            Fluid("nonexistent", VectorN.create(0, 0, 0))
 
 
 def run_sprite_system_tests():

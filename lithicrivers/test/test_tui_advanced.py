@@ -398,7 +398,7 @@ class TestUIIntegration(AdvancedUITestCase):
         InputHandler.handle_mining(mining_event, self.game, world_map)
 
         # Check game state - player should have moved east from initial position
-        initial_pos = VectorN(0, 0, 0)  # In testing mode, player starts at (0,0,0)
+        initial_pos = VectorN.create(0, 0, 0)  # In testing mode, player starts at (0,0,0)
         expected_pos = initial_pos + VEC_EAST  # Move east
         self.assertEqual(self.game.player.position, expected_pos)
 
@@ -464,7 +464,7 @@ class TestUIPerformance(AdvancedUITestCase):
         # Create a larger world
         for x in range(-5, 6):
             for y in range(-5, 6):
-                self.game.world.set_tile(VectorN(x, y, 0), Tiles.dirt())
+                self.game.world.set_tile(VectorN.create(x, y, 0), Tiles.dirt())
 
         widget = GameWidget(self.game)
         widget._frame = self.mock_frame

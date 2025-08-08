@@ -18,18 +18,30 @@ class VectorN(msgspec.Struct, frozen=False):
     dim_pos_map: ClassVar[dict[str, int]] = {"x": 0, "y": 1, "z": 2, "w": 3}
 
     @classmethod
-    def from_args(cls, *args: int) -> "VectorN":
-        return cls(dimension_values=tuple(args))
+    def create(cls, *args: int) -> "VectorN":
+        instance = cls()
 
-    def __post_init__(self):
-        # set x,y,z, etc based on available dimensions
-        for dim_name, dim_idx in self.dim_pos_map.items():
-            if dim_idx < len(self.dimension_values):
-                setattr(self, dim_name, self.dimension_values[dim_idx])
+        if len(args) >= 1:
+            instance.x = args[0]
+        if len(args) >= 2:
+            instance.y = args[1]
+        if len(args) >= 3:
+            instance.z = args[2]
+        if len(args) >= 4:
+            instance.w = args[3]
+
+        instance.dimension_values = tuple(args)
+
+        return instance
+
+    @classmethod
+    def from_args(cls, *args: int) -> "VectorN":
+        instance = cls.create(*args)
+        return instance
 
     def trim(self, new_size: int) -> "VectorN":
         """Trim VectorN down to smaller size."""
-        return VectorN.from_args(*self.as_list()[0:new_size])
+        return self.create(*self.as_list()[0:new_size])
 
     def dimension_order(self) -> int:
         """are we "1"d, "2"d, "3"d, etc"""
@@ -51,24 +63,24 @@ class VectorN(msgspec.Struct, frozen=False):
             )
 
     def __neg__(self) -> "VectorN":
-        return VectorN.from_args(*[(-1 * a) for a in self.dimension_values])
+        return self.create(*[(-1 * a) for a in self.dimension_values])
 
     def __add__(self, other: "VectorN") -> "VectorN":
         self.assert_same_dimension_order(other)
-        return VectorN.from_args(
+        return self.create(
             *[(a + b) for a, b in zip(self.dimension_values, other.dimension_values)]
         )
 
     def __sub__(self, other: "VectorN") -> "VectorN":
         self.assert_same_dimension_order(other)
-        return VectorN.from_args(*[(a - b) for a, b in zip(self.dimension_values, other.dimension_values)])
+        return self.create(*[(a - b) for a, b in zip(self.dimension_values, other.dimension_values)])
 
     def __mul__(self, other: Union[Any, int]) -> "VectorN":
         if isinstance(other, VectorN):
             self.assert_same_dimension_order(other)
-            return VectorN.from_args(*[(a * b) for a, b in zip(self.dimension_values, other.dimension_values)])
+            return self.create(*[(a * b) for a, b in zip(self.dimension_values, other.dimension_values)])
         else:
-            return VectorN.from_args(*[(a * other) for a in self.dimension_values])
+            return self.create(*[(a * other) for a in self.dimension_values])
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, VectorN):
@@ -143,14 +155,14 @@ class VectorN(msgspec.Struct, frozen=False):
         if isinstance(obj, VectorN):
             return obj
         elif isinstance(obj, list):
-            return VectorN(*obj)
+            return VectorN.create(*obj)
         elif isinstance(obj, str):
             obj = obj.strip()
             tokens = obj.split(",")
             ints = [int(x.strip()) for x in tokens]
-            return VectorN(*ints)
+            return VectorN.create(*ints)
         elif isinstance(obj, tuple):
-            return VectorN(*obj)
+            return VectorN.create(*obj)
         else:
             raise ValueError(f"Cannot deserialize object of type {type(obj)}")
 

@@ -781,7 +781,7 @@ class WorldMap(Frame):
         # Update viewport with new radius
         new_viewport = Viewport.generate_centered(
             self.game.player.position,
-            radius=VectorN(radius_x, radius_y, 0),
+            radius=VectorN.create(radius_x, radius_y, 0),
             scale=self.game.viewport.scale,
         )
         self.game.viewport = new_viewport
@@ -1791,7 +1791,7 @@ class InputHandler:
         # Check all adjacent positions for dropped items
         for dx in [-1, 0, 1]:
             for dy in [-1, 0, 1]:
-                check_pos = VectorN(
+                check_pos = VectorN.create(
                     game.player.position.x + dx,
                     game.player.position.y + dy,
                     game.player.position.z,

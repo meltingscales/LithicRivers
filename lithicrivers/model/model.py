@@ -146,7 +146,7 @@ class Viewport(msgspec.Struct, frozen=False):
 
         factor: float = 1 / new_scale
         # this fucks up the viewport but we can just let the game reset it
-        self.top_left = VectorN(0, 0)
+        self.top_left = VectorN.create(0, 0)
 
         # Handle None values safely
         original_size_x = (
@@ -156,7 +156,7 @@ class Viewport(msgspec.Struct, frozen=False):
             self.original_size.y if self.original_size.y is not None else 0
         )
 
-        self.lower_right = VectorN(
+        self.lower_right = VectorN.create(
             math.floor(factor * float(original_size_x)),
             math.floor(factor * float(original_size_y)),
         )
@@ -166,16 +166,16 @@ class Viewport(msgspec.Struct, frozen=False):
         self.lower_right += move_vec
 
     def shrink(self, n: int = 1) -> None:
-        self.top_left += VectorN(n, n, 0)
-        self.lower_right -= VectorN(n, n, 0)
+        self.top_left += VectorN.create(n, n, 0)
+        self.lower_right -= VectorN.create(n, n, 0)
 
     def shrink_horizontal(self, n: int = 1) -> None:
-        self.top_left += VectorN(n, 0, 0)
-        self.lower_right -= VectorN(n, 0, 0)
+        self.top_left += VectorN.create(n, 0, 0)
+        self.lower_right -= VectorN.create(n, 0, 0)
 
     def shrink_vertical(self, n: int = 1) -> None:
-        self.top_left += VectorN(0, n, 0)
-        self.lower_right -= VectorN(0, n, 0)
+        self.top_left += VectorN.create(0, n, 0)
+        self.lower_right -= VectorN.create(0, n, 0)
 
     def grow_horizontal(self, n: int = 1) -> None:
         self.shrink_horizontal(-n)
@@ -223,7 +223,7 @@ class Viewport(msgspec.Struct, frozen=False):
         return Viewport(self.top_left, self.lower_right, self.scale)
 
     def get_size(self) -> VectorN:
-        return VectorN(self.get_width(), self.get_height())
+        return VectorN.create(self.get_width(), self.get_height())
 
 
 class StopGameError(Exception):

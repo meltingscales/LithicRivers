@@ -3,9 +3,8 @@ Seeded world generation for deterministic world creation.
 This module provides seeded randomness for reproducible world generation.
 """
 
-import random
+from lithicrivers.game.rng import SimpleRNG
 import threading
-from dataclasses import dataclass
 from typing import Any, Optional
 
 import msgspec
@@ -22,7 +21,6 @@ from lithicrivers.structure_generator import create_structure_manager
 logger = get_logger(__name__)
 
 
-@dataclass
 class WorldSeed(msgspec.Struct, frozen=False):
     """Represents a world seed for deterministic generation."""
 
@@ -123,7 +121,7 @@ class ChunkCache(Cloneable, ShutDownable, msgspec.Struct, frozen=False):
         for x in range(start_x, start_x + chunk_size):
             for y in range(start_y, start_y + chunk_size):
                 for z in range(start_z, start_z + chunk_size):
-                    pos = VectorN(x, y, z)
+                    pos = VectorN.create(x, y, z)
                     tile = generator.generate_tile_for_position(pos)
                     chunk_data[pos.serialize()] = tile
 
@@ -140,7 +138,7 @@ class PerlinNoise:
     def __init__(self, seed: int):
         """Initialize perlin noise with a seed."""
         self.seed = seed
-        self.rng = random.Random(seed)
+        self.rng = SimpleRNG.create(seed)
         # Generate a permutation table for noise
         self.permutation = list(range(256))
         self.rng.shuffle(self.permutation)
@@ -249,16 +247,16 @@ class SeededWorldGenerator(Cloneable, ShutDownable, msgspec.Struct, frozen=False
     Similar to Minecraft's world generation system.
     """
 
-    seed: WorldSeed
-    rng: random.Random
-    perlin: PerlinNoise
-    structure_manager: StructureManager
-    procedural_generator: ProceduralGenerator
+    seed: WorldSeed = None
+    rng: SimpleRNG = None
+    perlin: PerlinNoise = None
+    structure_manager: "StructureManager" = None
+    procedural_generator: "ProceduralGenerator" = None
 
     @classmethod
     def create(cls, seed: int):
         instance = cls(seed=WorldSeed(seed))
-        instance.rng = random.Random(seed)
+        instance.rng = SimpleRNG.create(seed)
         instance.perlin = PerlinNoise(seed)
         instance.structure_manager = create_structure_manager()
         instance.procedural_generator = create_procedural_generator()
@@ -271,7 +269,7 @@ class SeededWorldGenerator(Cloneable, ShutDownable, msgspec.Struct, frozen=False
     def set_seed(self, seed: int) -> None:
         """Set a new seed for the generator."""
         self.seed = WorldSeed(seed)
-        self.rng = random.Random(seed)
+        self.rng = SimpleRNG.create(seed)
         self.perlin = PerlinNoise(seed)
 
     def seeded_weighted_choice(
@@ -302,7 +300,7 @@ class SeededWorldGenerator(Cloneable, ShutDownable, msgspec.Struct, frozen=False
 
         # Create a context-specific RNG for deterministic results
         context_seed = hash((self.seed.seed, context))
-        local_rng = random.Random(context_seed)
+        local_rng = SimpleRNG.create(context_seed)
 
         # Use the context-specific RNG for weighted selection
         return local_rng.choices(choices, weights=normalized_weights, k=1)[0]
@@ -437,14 +435,14 @@ class SeededWorldGenerator(Cloneable, ShutDownable, msgspec.Struct, frozen=False
         for x in range(start_x, start_x + chunk_size):
             for y in range(start_y, start_y + chunk_size):
                 for z in range(start_z, start_z + chunk_size):
-                    pos = VectorN(x, y, z)
+                    pos = VectorN.create(x, y, z)
                     tile = self.generate_tile_for_position(pos)
                     chunk_data[pos.serialize()] = tile
 
         # Generate structures for this chunk
-        chunk_center = VectorN(start_x, start_y, start_z)
+        chunk_center = VectorN.create(start_x, start_y, start_z)
         chunk_seed = hash((self.seed.seed, chunk_x, chunk_y, chunk_z))
-        chunk_rng = random.Random(chunk_seed)
+        chunk_rng = SimpleRNG.create(chunk_seed)
 
         # Generate structures in this chunk
         self.structure_manager.generate_structures_for_chunk(
@@ -481,7 +479,7 @@ class SeededWorldGenerator(Cloneable, ShutDownable, msgspec.Struct, frozen=False
         for z in range(-radius_z, radius_z):
             for y in range(-radius_y, radius_y):
                 for x in range(-radius_x, radius_x):
-                    pos = VectorN(x, y, z)
+                    pos = VectorN.create(x, y, z)
                     tile = self.generate_tile_for_position(pos)
                     world_data[pos.serialize()] = tile
 
@@ -516,13 +514,13 @@ class SeededWorldGenerator(Cloneable, ShutDownable, msgspec.Struct, frozen=False
                 for chunk_x in range(
                     -radius_x // chunk_size, radius_x // chunk_size + 1
                 ):
-                    chunk_center = VectorN(
+                    chunk_center = VectorN.create(
                         chunk_x * chunk_size, chunk_y * chunk_size, chunk_z * chunk_size
                     )
 
                     # Use chunk-specific seeding for deterministic structure placement
                     chunk_seed = hash((self.seed.seed, chunk_x, chunk_y, chunk_z))
-                    chunk_rng = random.Random(chunk_seed)
+                    chunk_rng = SimpleRNG.create(chunk_seed)
 
                     # Generate structures in this chunk
                     self.structure_manager.generate_structures_for_chunk(

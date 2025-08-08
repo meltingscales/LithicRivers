@@ -67,21 +67,21 @@ class RenderStuff(OptimizedTestCase):
         world_data = ChunkedWorldData()
 
         # Set tiles individually
-        world_data.set_tile(VectorN(0, 0, 0), Tiles.dirt())
-        world_data.set_tile(VectorN(1, 0, 0), Tiles.gold_ore())
-        world_data.set_tile(VectorN(0, 1, 0), Tiles.dirt())
-        world_data.set_tile(VectorN(1, 1, 0), Tiles.dirt())
+        world_data.set_tile(VectorN.create(0, 0, 0), Tiles.dirt())
+        world_data.set_tile(VectorN.create(1, 0, 0), Tiles.gold_ore())
+        world_data.set_tile(VectorN.create(0, 1, 0), Tiles.dirt())
+        world_data.set_tile(VectorN.create(1, 1, 0), Tiles.dirt())
 
         some_game.world.data = world_data
 
         # Move player out of the viewport so tiles are visible
-        some_game.player.position = VectorN(5, 5, 0)
+        some_game.player.position = VectorN.create(5, 5, 0)
 
         da_scale = 2
 
         rendered_viewport = some_game.render_world_viewport(
             viewport=Viewport(
-                top_left=VectorN(0, 0), lower_right=VectorN(1, 1), scale=da_scale
+                top_left=VectorN.create(0, 0), lower_right=VectorN.create(1, 1), scale=da_scale
             )
         )
 
@@ -96,23 +96,23 @@ class RenderStuff(OptimizedTestCase):
         from lithicrivers.model.vector import VectorN
 
         # Test that viewport can be created with different sizes
-        player_pos = VectorN(0, 0, 0)
+        player_pos = VectorN.create(0, 0, 0)
 
         # Test small viewport
-        small_viewport = Viewport.generate_centered(player_pos, radius=VectorN(5, 5, 0))
+        small_viewport = Viewport.generate_centered(player_pos, radius=VectorN.create(5, 5, 0))
         self.assertEqual(small_viewport.get_width(), 10)  # abs(5 - (-5)) = 10
         self.assertEqual(small_viewport.get_height(), 10)
 
         # Test larger viewport
         large_viewport = Viewport.generate_centered(
-            player_pos, radius=VectorN(15, 15, 0)
+            player_pos, radius=VectorN.create(15, 15, 0)
         )
         self.assertEqual(large_viewport.get_width(), 30)  # abs(15 - (-15)) = 30
         self.assertEqual(large_viewport.get_height(), 30)
 
         # Test that viewport respects scale
         scaled_viewport = Viewport.generate_centered(
-            player_pos, radius=VectorN(10, 10, 0), scale=2
+            player_pos, radius=VectorN.create(10, 10, 0), scale=2
         )
         self.assertEqual(scaled_viewport.scale, 2)
         self.assertEqual(scaled_viewport.get_width(), 20)  # abs(10 - (-10)) = 20
@@ -176,7 +176,7 @@ class RenderStuff(OptimizedTestCase):
         game = self.get_game(seed=DEFAULT_SEED)
 
         # Test accessing a tile far outside the initial world area
-        far_position = VectorN(1000, 1000, 0)
+        far_position = VectorN.create(1000, 1000, 0)
         tile = game.world.get_tile(far_position)
 
         # Should not be None (should generate a tile on-demand)

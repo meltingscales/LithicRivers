@@ -61,23 +61,23 @@ class TestDialogSystem(OptimizedTestCase):
     def test_world_entity_management(self):
         """Test that entities are properly managed in the world."""
         # Check that starter entities are added
-        self.assertIsNotNone(self.game.world.get_entity(VectorN(5, 5, 0)))  # NPC
+        self.assertIsNotNone(self.game.world.get_entity(VectorN.create(5, 5, 0)))  # NPC
         self.assertIsNotNone(
-            self.game.world.get_entity(VectorN(6, 5, 0))
+            self.game.world.get_entity(VectorN.create(6, 5, 0))
         )  # Test entity 1
         self.assertIsNotNone(
-            self.game.world.get_entity(VectorN(5, 6, 0))
+            self.game.world.get_entity(VectorN.create(5, 6, 0))
         )  # Test entity 2
 
         # Test entity retrieval
-        npc = self.game.world.get_entity(VectorN(5, 5, 0))
+        npc = self.game.world.get_entity(VectorN.create(5, 5, 0))
         self.assertIsInstance(npc, NPC)
         self.assertEqual(npc.name, "Elder Oak")
 
     def test_adjacent_entities_detection(self):
         """Test that adjacent entities are properly detected."""
         # Move player near the NPC
-        self.game.player.position = VectorN(4, 5, 0)  # Adjacent to NPC at (5, 5, 0)
+        self.game.player.position = VectorN.create(4, 5, 0)  # Adjacent to NPC at (5, 5, 0)
 
         adjacent = self.game.world.get_adjacent_entities(self.game.player.position)
         self.assertGreater(len(adjacent), 0)

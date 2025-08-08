@@ -2,7 +2,7 @@
 Tests for procedural dungeon generation.
 """
 
-import random
+from lithicrivers.game.rng import SimpleRNG
 
 from lithicrivers.game.core import Tiles
 from lithicrivers.model.vector import VectorN
@@ -31,7 +31,7 @@ class TestProceduralDungeonGenerator:
     def test_cave_system_generation(self):
         """Test cave system generation."""
         generator = ProceduralStructureGenerator()
-        rng = random.Random(42)  # Fixed seed for testing
+        rng = SimpleRNG.create(42)  # Fixed seed for testing
 
         layout = generator._generate_cave_system(10, 3, rng)
 
@@ -46,9 +46,9 @@ class TestProceduralDungeonGenerator:
     def test_dungeon_placement(self):
         """Test dungeon placement in world data."""
         generator = ProceduralStructureGenerator()
-        rng = random.Random(42)
+        rng = SimpleRNG.create(42)
         world_data = {}
-        base_position = VectorN(0, 0, -2)  # Underground position
+        base_position = VectorN.create(0, 0, -2)  # Underground position
 
         # Test cave system placement
         success = generator.generate_dungeon(
@@ -69,11 +69,11 @@ class TestProceduralDungeonGenerator:
     def test_depth_restrictions(self):
         """Test that dungeons respect depth restrictions."""
         generator = ProceduralStructureGenerator()
-        rng = random.Random(42)
+        rng = SimpleRNG.create(42)
         world_data = {}
 
         # Try to place a laboratory at surface level (should fail)
-        surface_position = VectorN(0, 0, 0)
+        surface_position = VectorN.create(0, 0, 0)
         success = generator.generate_dungeon(
             DungeonType.LABORATORY,
             surface_position,
@@ -96,9 +96,9 @@ class TestProceduralDungeonGenerator:
     def test_chunk_generation(self):
         """Test dungeon generation for chunks."""
         generator = ProceduralStructureGenerator()
-        rng = random.Random(42)
+        rng = SimpleRNG.create(42)
         world_data = {}
-        chunk_center = VectorN(0, 0, -3)
+        chunk_center = VectorN.create(0, 0, -3)
         chunk_radius = 8
 
         # Generate dungeons for chunk

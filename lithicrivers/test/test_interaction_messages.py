@@ -13,10 +13,10 @@ class TestInteractionMessages(OptimizedTestCase):
     def test_npc_interaction_message(self):
         """Test that NPC interaction shows the correct message."""
         # Move player near the NPC
-        self.game.player.position = VectorN(4, 5, 0)  # Adjacent to NPC at (5, 5, 0)
+        self.game.player.position = VectorN.create(4, 5, 0)  # Adjacent to NPC at (5, 5, 0)
 
         # Get the NPC
-        npc = self.game.world.get_entity(VectorN(5, 5, 0))
+        npc = self.game.world.get_entity(VectorN.create(5, 5, 0))
         self.assertIsNotNone(npc)
 
         # Get the conversation
@@ -27,7 +27,7 @@ class TestInteractionMessages(OptimizedTestCase):
     def test_entity_interaction_message(self):
         """Test that entity interaction shows the correct message."""
         # Move player near the test entities
-        self.game.player.position = VectorN(
+        self.game.player.position = VectorN.create(
             5, 5, 0
         )  # At NPC position, should see others
 
@@ -42,8 +42,8 @@ class TestInteractionMessages(OptimizedTestCase):
 
     def test_interaction_text_format(self):
         """Test that interaction text is properly formatted."""
-        entity1 = self.game.world.get_entity(VectorN(6, 5, 0))  # Crystal Shard
-        entity2 = self.game.world.get_entity(VectorN(5, 6, 0))  # Ancient Relic
+        entity1 = self.game.world.get_entity(VectorN.create(6, 5, 0))  # Crystal Shard
+        entity2 = self.game.world.get_entity(VectorN.create(5, 6, 0))  # Ancient Relic
 
         # Test interaction text
         text1 = entity1.interact()
