@@ -11,8 +11,33 @@ class SimpleRNG(Cloneable, ShutDownable, msgspec.Struct, frozen=False):
         instance = cls(state=seed)
         return instance
 
+    def shuffle(self, seq):
+        """In-place shuffle using Fisher-Yates algorithm."""
+        n = len(seq)
+        for i in range(n-1, 0, -1):
+            j = self.randint(0, i)
+            seq[i], seq[j] = seq[j], seq[i]
+
     def choices(self, seq, weights=None, k=1):
-        raise NotImplemented("todo lazy")
+        """Return a k-length list of elements chosen from seq, with optional weights."""
+        if weights is None:
+            return [self.choice(seq) for _ in range(k)]
+        # Normalize weights
+        total = sum(weights)
+        cum_weights = []
+        cumsum = 0
+        for w in weights:
+            cumsum += w
+            cum_weights.append(cumsum)
+        result = []
+        for _ in range(k):
+            x = self.random() * total
+            # Find the first cum_weight > x
+            for i, cw in enumerate(cum_weights):
+                if x < cw:
+                    result.append(seq[i])
+                    break
+        return result
 
     def choice(self, seq):
         return seq[self.randint(0, len(seq) - 1)]

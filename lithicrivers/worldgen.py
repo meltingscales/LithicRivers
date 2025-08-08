@@ -40,9 +40,8 @@ class WorldSeed(msgspec.Struct, frozen=False):
 class ChunkCache(Cloneable, ShutDownable, msgspec.Struct, frozen=False):
     """Thread-safe cache for pre-generated chunks."""
 
-    max_chunks: int
-    cache: dict[tuple[int, int, int], dict[str, Tile]]
-    lock: threading.RLock
+    max_chunks: int = None
+    cache: dict[tuple[int, int, int], dict[str, Tile]] = None
 
     @classmethod
     def create(cls, max_chunks: int = 100):
@@ -51,20 +50,22 @@ class ChunkCache(Cloneable, ShutDownable, msgspec.Struct, frozen=False):
         instance.lock = threading.RLock()
         return instance
 
-    def shutdown(self) -> None:
-        self.cache.clear()
-        self.lock.release()
-        self.lock = None
-
     def __getstate__(self) -> object:
         state = self.__dict__.copy()
         # Don't serialize the lock - we'll recreate it on load
-        del state["lock"]
+        if "lock" in state:
+            del state["lock"]
         return state
 
     def __setstate__(self, state: object) -> None:
         self.__dict__.update(state)
         self.lock = threading.RLock()
+
+
+    def shutdown(self) -> None:
+        self.cache.clear()
+        self.lock.release()
+        self.lock = None
 
     def get_chunk_key(self, pos: VectorN) -> tuple[int, int, int]:
         """Get chunk coordinates for a position."""
@@ -129,20 +130,26 @@ class ChunkCache(Cloneable, ShutDownable, msgspec.Struct, frozen=False):
             self.cache[(chunk_x, chunk_y, chunk_z)] = chunk_data
 
 
-class PerlinNoise:
+class PerlinNoise(msgspec.Struct, frozen=False):
     """
     A simple seeded perlin noise implementation for terrain generation.
     This provides smooth, continuous noise that's deterministic based on seed.
     """
 
-    def __init__(self, seed: int):
-        """Initialize perlin noise with a seed."""
-        self.seed = seed
-        self.rng = SimpleRNG.create(seed)
+    seed: int = None
+    rng: SimpleRNG = None
+    permutation: list[int] = None
+
+    @classmethod
+    def create(cls, seed: int):
+        instance = cls()
+        instance.seed = seed
+        instance.rng = SimpleRNG.create(seed)
         # Generate a permutation table for noise
-        self.permutation = list(range(256))
-        self.rng.shuffle(self.permutation)
-        self.permutation *= 2  # Duplicate for wrapping
+        instance.permutation = list(range(256))
+        instance.rng.shuffle(instance.permutation)
+        instance.permutation *= 2  # Duplicate for wrapping
+        return instance
 
     def _fade(self, t: float) -> float:
         """Fade function for smooth interpolation."""

@@ -4,6 +4,8 @@ Structure generation system for placing predefined structures in the world.
 
 import json
 import os
+
+import msgspec
 from lithicrivers.game.rng import SimpleRNG
 from pathlib import Path
 from typing import Optional
@@ -98,20 +100,26 @@ class StructureDefinition:
         return (width, height, depth)
 
 
-class StructureManager:
+class StructureManager(msgspec.Struct, frozen=False):
     """Manages loading and placing structures in the world."""
 
-    def __init__(self, structures_dir: Path):
-        self.structures_dir = structures_dir
-        self.structures: dict[str, StructureDefinition] = {}
-        self._load_structures()
+    structures_dir: str
+    structures: dict[str, StructureDefinition] = None
+
+    @classmethod
+    def create(cls, structures_dir: str):
+        instance = cls()
+        instance.structures_dir = structures_dir
+        instance.structures = {}
+        instance._load_structures()
+        return instance
 
     def _load_structures(self) -> None:
         """Load all structure definitions from the structures directory."""
-        if not self.structures_dir.exists():
+        if not Path(self.structures_dir).exists():
             return
 
-        for structure_dir in self.structures_dir.iterdir():
+        for structure_dir in Path(self.structures_dir).iterdir():
             if structure_dir.is_dir() and structure_dir.name.endswith(".lrstructure"):
                 try:
                     structure = StructureDefinition.load_from_directory(structure_dir)
@@ -253,7 +261,7 @@ def create_structure_manager(structures_dir: Optional[Path] = None) -> Structure
             current_dir = Path(__file__).parent
             structures_dir = current_dir / "data" / "structures"
 
-        _global_structure_manager = StructureManager(structures_dir)
+        _global_structure_manager = StructureManager(str(structures_dir))
         logger.info("Created singleton StructureManager instance")
 
     return _global_structure_manager
