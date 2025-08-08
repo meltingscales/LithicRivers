@@ -1,0 +1,13 @@
+- wasteland
+- android wakes up in a pile of rubble in what used to be a city
+- was shipped to the world as a replacement for a human worker, a few years before the fusion reactor explodes, so has no idea what's going on
+- expecting the date to be 2186, but it's 3186
+- examines boot logs and discovers a 32-bit date overflow error
+- quickly realizes with no geosats, there's no way to actually know the current date and 3186 is just what the system clock happened to be set to
+- then realizes with no geosats, due to how fast orbital decay happens, the GPS satellites have been not maintained for at least 20 years, so the GPS system is no longer functional
+- bargaining: "Maybe my GPS module is broken. There's no way that the world is 1,000 years old, and it'd be ridiculous for all of the GPS satellites to be destroyed."
+- looks at scrap around it, noticing the amount of rust 
+- tries to figure out what city it is, and realizes it's Seattle, WA
+- searches internal database for the past 1 year of newspaper headlines in Seattle, WA, and realizes that a fusion reactor was supposed to be turned on in a few months. Since I was deactivated before getting shipped out to Seattle, WA, I never got news feeds about the date past that.
+
+...TODO: add a news feed system with fake news articles that cut off past a certain date...
