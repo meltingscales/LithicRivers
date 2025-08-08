@@ -39,4 +39,5 @@ lithicrivers-saves
 # png files
 game-networkx.png
 game-cycle.png
+game-backrefs.png
 cycle-*.png

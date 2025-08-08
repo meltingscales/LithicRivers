@@ -246,5 +246,6 @@ clean: ## Clean build artifacts
 	rm -rf cycle-*.png
 	rm -rf game-backrefs.png
 	rm -rf game-networkx.png
+	rm -rf game-cycle.png
 	rm -rf *.speedscope
 	@echo "✅ Clean complete!" 
