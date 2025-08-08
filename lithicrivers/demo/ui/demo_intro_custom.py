@@ -8,7 +8,7 @@ Uses asciimatics to render each line slowly, applying
 settling on the final clean text.
 """
 
-GLITCH_FRAMES = 5  # Number of glitch frames for intro animation
+GLITCH_FRAMES = 10  # Number of glitch frames for intro animation
 
 from pathlib import Path
 from collections import deque
