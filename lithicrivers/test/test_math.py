@@ -3,7 +3,7 @@ import unittest
 from lithicrivers.model.vector import VectorN
 
 
-class TestVectorN.create(unittest.TestCase):
+class TestVectorN(unittest.TestCase):
     def test_simple(self):
         v1 = VectorN.create(1, 2, 0)
         self.assertEqual(v1.x, 1)

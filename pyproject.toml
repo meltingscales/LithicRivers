@@ -30,6 +30,9 @@ dev = [
     "py-spy",
     "bandit[toml]",
     "safety",
+    "matplotlib",
+    "networkx",
+    "msgspec",
 ]
 
 [build-system]
