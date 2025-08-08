@@ -145,6 +145,9 @@ demo-ui-credits: ## Run credits demo
 demo-ui-experimental: ## Run experimental demo
 	$(UV_CMD) run python lithicrivers/demo/ui/demo_experimental.py
 
+demo-ui-intro: ## Run intro demo
+	$(UV_CMD) run python lithicrivers/demo/ui/demo_intro_custom.py
+
 # Development tools
 generate-keychords: ## Generate platform-specific keychord mappings
 	@echo "🔧 Generating platform-specific keychord mappings..."
