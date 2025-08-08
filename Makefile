@@ -33,6 +33,7 @@ help: ## Show this help message
 	@echo "  demo-ui-file-browser 	 Run file browser demo"
 	@echo "  demo-ui-credits      	 Run credits demo"
 	@echo "  demo-ui-experimental 	 Run experimental demo"
+	@echo "  demo-ui-intro        	 Run intro demo"
 	@echo ""
 	@echo "🎮 GAME"
 	@echo "------"
