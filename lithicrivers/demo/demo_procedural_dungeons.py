@@ -24,7 +24,7 @@ def demo_dungeon_generation():
     print("=" * 50)
 
     # Create generator
-    generator = ProceduralStructureGenerator()
+    generator = ProceduralStructureGenerator.create()
 
     # Show available dungeon types
     print("\n📋 Available Dungeon Types:")

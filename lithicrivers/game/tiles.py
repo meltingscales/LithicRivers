@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Optional
 from lithicrivers.game.interfaces import SpriteRenderable
 from lithicrivers.model.generictype import T
 
+import msgspec
 if TYPE_CHECKING:
     from lithicrivers.game.entities import Item
 
@@ -42,14 +43,15 @@ def weighted_choice_dict(dict_weight: dict[float, T]) -> T:
     return weighted_choice(weights, choices)
 
 
-class Tile(SpriteRenderable):
-    def __init__(
-        self,
-        tileid: str,
-        desc: Optional[str] = None,
-        sprite_sheet: Optional[list[str]] = None,
-        drops: Optional[dict[float, "Item"]] = None,
-    ):
+class Tile(SpriteRenderable, msgspec.Struct, frozen=False):
+
+    tileid: str = None
+    sprite_sheet: list[str] = None
+    description: str = None
+    drops: dict[float, "Item"] = None
+
+    @classmethod
+    def create(cls, tileid: str, desc: str = None, sprite_sheet: list[str] = None, drops: dict[float, "Item"] = None):
         # Load sprites from external data if not provided
         if sprite_sheet is None:
             from lithicrivers.sprite_loader import get_sprite_loader
@@ -59,11 +61,8 @@ class Tile(SpriteRenderable):
                 tileid.lower().replace(" ", "_"), "tiles"
             )
             sprite_sheet = sprite_data.sprites
-
-        SpriteRenderable.__init__(self, sprite_sheet)
-        self.tileid = tileid
-        self.description = desc
-        self.drops = drops
+        instance = cls(tileid=tileid, description=desc, sprite_sheet=sprite_sheet, drops=drops)    
+        return instance
 
     def __str__(self) -> str:
         return f"<Tile '{self.tileid}': [{self.render_sprite(1)}]>"
@@ -114,7 +113,7 @@ class Tiles:
     def dirt() -> "Tile":
         from lithicrivers.game.entities import Items
 
-        return Tile(
+        return Tile.create(
             "Dirt",
             drops={0.99: Items.rock(), 0.01: Items.gold_nugget()},
         )
@@ -123,7 +122,7 @@ class Tiles:
     def tree() -> "Tile":
         from lithicrivers.game.entities import Items
 
-        return Tile(
+        return Tile.create(
             "Tree",
             drops={0.50: Items.stick(), 0.30: Items.log(), 0.20: Items.acorn()},
         )
@@ -132,28 +131,28 @@ class Tiles:
     def gold_ore() -> "Tile":
         from lithicrivers.game.entities import Items
 
-        return Tile(
+        return Tile.create(
             "Gold Ore",
             drops={0.9: Items.gold_nugget(), 0.1: Items.diamond()},
         )
 
     @staticmethod
     def cloud() -> "Tile":
-        return Tile("Cloud")
+        return Tile.create("Cloud")
 
     @staticmethod
     def bedrock() -> "Tile":
-        return Tile("Bedrock")
+        return Tile.create("Bedrock")
 
     @staticmethod
     def empty() -> "Tile":
-        return Tile("Empty")
+        return Tile.create("Empty")
 
     @staticmethod
     def iron_scrap() -> "Tile":
         from lithicrivers.game.entities import Items
 
-        return Tile(
+        return Tile.create(
             "Iron Scrap",
             drops={0.8: Items.iron_scrap(), 0.2: Items.gold_nugget()},
         )
@@ -162,7 +161,7 @@ class Tiles:
     def bone_block() -> "Tile":
         from lithicrivers.game.entities import Items
 
-        return Tile(
+        return Tile.create(
             "Bone Block",
             drops={0.7: Items.rock(), 0.3: Items.gold_nugget()},
         )
@@ -171,7 +170,7 @@ class Tiles:
     def door() -> "Tile":
         from lithicrivers.game.entities import Items
 
-        return Tile(
+        return Tile.create(
             "Door",
             drops={0.5: Items.rock()},
         )
@@ -180,7 +179,7 @@ class Tiles:
     def scrap_electronics() -> "Tile":
         from lithicrivers.game.entities import Items
 
-        return Tile(
+        return Tile.create(
             "Scrap Electronics",
             drops={0.6: Items.scrap_electronics(), 0.4: Items.gold_nugget()},
         )
@@ -189,7 +188,7 @@ class Tiles:
     def treasure() -> "Tile":
         from lithicrivers.game.entities import Items
 
-        return Tile(
+        return Tile.create(
             "buried_treasure",
             drops={0.3: Items.gold_nugget(), 0.7: Items.diamond()},
         )
@@ -198,7 +197,7 @@ class Tiles:
     def plasteel_scrap() -> "Tile":
         from lithicrivers.game.entities import Items
 
-        return Tile(
+        return Tile.create(
             "Plasteel Scrap",
             drops={0.8: Items.iron_scrap(), 0.2: Items.gold_nugget()},
         )

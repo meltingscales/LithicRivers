@@ -1,6 +1,6 @@
 from lithicrivers.worldgen import PerlinNoise
 
-noise = PerlinNoise(111)
+noise = PerlinNoise.create(111)
 
 print("Testing with fractional coordinates:")
 for i in range(10):
