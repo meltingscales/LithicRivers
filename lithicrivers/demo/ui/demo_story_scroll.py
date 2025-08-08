@@ -39,10 +39,20 @@ def _story_scene(screen: Screen) -> Scene:
         if token == "\n":
             lines.append("")
         else:
-            if lines[-1]:
-                lines[-1] += " " + token
+            current_line = lines[-1]
+            # Determine if adding the word would overflow
+            if current_line:
+                test_line = current_line + " " + token
             else:
-                lines[-1] = token
+                test_line = token
+            if len(test_line) > screen.width:
+                # Start a new line
+                lines.append(token)
+            else:
+                if current_line:
+                    lines[-1] = current_line + " " + token
+                else:
+                    lines[-1] = token
         # Join all lines for the current frame
         img = "\n".join(lines)
         # Pad to screen height
