@@ -32,4 +32,7 @@ I want this story to make those who are deeply invested in technology think abou
 
 ...TODO: add a news feed system with fake news articles that cut off past a certain date, that gets updated when you scavenge data
 
+- when you finish the first quest in the game, and repair yourself by going to SapienCorp's factory, you decide to interface with a data center rack and examine it. you notice that there's a strange sector of code in the bootloader that doesn't make sense unless someone planted a rootkit on it. you audit the bootloader logs and notice it was modified pretty close to the time that you were shipped out. (TODO: what do you conclude?)
+
+
 TODO add a "data diving" mechanic
