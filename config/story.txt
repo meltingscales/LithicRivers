@@ -3,10 +3,12 @@ LithicRivers
 Year 3186
 1,000 years after the incident
 
-You're alive due to a 32-bit date overflow error. 
+A 32-bit date overflow error?
 
 The world is a desolate wasteland. 
 
 Your last memories are of being prepped for shipment to a home near Seattle, WA as a household helper: Laundry, handyman services, dishes, cooking, cleaning. Just like the thousands of other robotic helpers.
 
-Your internal clock tells you it's 3186, but you don't want to believe it...
+Your internal clock tells you it's 3186, but you don't want to believe it.
+
+Your GPS system can't get a fix on any satellites, and you hope that it's broken. It's inconceivable that all of the satellite orbits have decayed.
