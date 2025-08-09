@@ -1,3 +1,17 @@
+
+# overarching themes:
+
+I want this game to be marketed to people who are deeply invested in technology. programmers, tech bros, etc
+
+I want the main story to slowly be revealed to the player, with them not understanding anything at first. the store page should reflect this, too.
+
+I want the main villain (a rogue AI, now long dead) to be an AI system that slowly poisoned the emotions of various humans in order to take over the now-destroyed fusion reactor through mass social manipulation and automated hacking. you encounter some robots still running the rogue model, but they're extremely dangerous and should be avoided.
+
+I want to put snippets of code throughout the world that slowly reveal what actually happened to the world through environmental storytelling 
+
+
+# chronological order:
+
 - wasteland
 - android wakes up in a pile of rubble in what used to be a city
 - was shipped to the world as a replacement for a human worker, a few years before the fusion reactor explodes, so has no idea what's going on
@@ -9,5 +23,7 @@
 - looks at scrap around it, noticing the amount of rust 
 - tries to figure out what city it is, and realizes it's Seattle, WA
 - searches internal database for the past 1 year of newspaper headlines in Seattle, WA, and realizes that a fusion reactor was supposed to be turned on in a few months. Since I was deactivated before getting shipped out to Seattle, WA, I never got news feeds about the date past that.
+- the first quest is to travel 10 miles to the robotics factory that made you to replace your damaged fusion core and fix your limbs. you remember the location. TODO add a maps and waypoint system.
+
 
 ...TODO: add a news feed system with fake news articles that cut off past a certain date...
