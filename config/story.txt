@@ -9,6 +9,8 @@ The world around you is a lush, green forest. Concrete barely pokes out from und
 
 Your last memories are of being prepped for shipment to a home near Seattle, WA as a household helper: Laundry, handyman services, dishes, cooking, cleaning. Just like the thousands of other robotic helpers.
 
+After you were packaged, you think you sat idle for a few months. You were one of the first humanoid household assistants ever marketed, for only $6,999 per unit. Great hardware, mostly open source software, thoroughly safety tested. Great sense of humor. Just aluminum, chips, C++, and silicone rubber.
+
 Your internal clock tells you it's 3186, but you don't want to believe it.
 
 Your GPS system can't get a fix on any satellites, and you hope that it's broken. It's inconceivable that all of the satellite orbits have decayed. You don't want to believe that, either.
@@ -18,3 +20,5 @@ After reading your boot logs, you conclude that something has gone horribly wron
 Your fission core is degraded in its power output but still functional, one of your arms is gone, and a few servos are damaged in one of your legs. You have a copy of Wikipedia, a few onboard GPUs for parallel processing, and some open-source models, as well as the current year's newspaper articles.
 
 You can't serve your original purpose. You wince at the idea that humanity might be gone. Not sure of what to do, and with no way to contact the company that manufacturered you, you decide to head to the place of your birth: XXXCo factory, just 10 miles away from where you woke up. Thank god that you weren't shipped to another continent or state.
+
+With nothing other than yourself, you plan on heading roughly 10 miles northeast to XXXCo's factory. You hope to find a sign of civilization on the way.
