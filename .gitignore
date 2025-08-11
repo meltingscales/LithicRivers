@@ -41,3 +41,29 @@ game-networkx.png
 game-cycle.png
 game-backrefs.png
 cycle-*.png
+# Rust/Cargo
+/target/
+**/*.rs.bk
+
+# Editors/IDEs
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs & dumps
+*.log
+*.tmp
+*.bak
+*.old
+
+# Env/config (if any local overrides later)
+.env
+.env.*.local
+
+# Ratatui terminal capture artifacts (if any custom dumps)
+*.ttyrec
