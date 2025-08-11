@@ -192,6 +192,7 @@
 
 ## MVP for steam release (2025 christmas release)
 
+- make 2d render background white so I can actually see rendered ASCII text
 - migrate to bevy/wgpu-based renderer. still support text mode, but allow player to switch. don't render in terminal, but render text mode within bevy.
 - in progress: visualize body parts in the body panel with a custom asciimatics class that extends Frame...
 - in progress: UI elements that let you select and repair body parts, and backend code that actually repairs the body part for a material cost.
