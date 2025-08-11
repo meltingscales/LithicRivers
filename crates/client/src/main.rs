@@ -1,10 +1,80 @@
 use bevy::prelude::*;
 use bevy::time::common_conditions::on_timer;
 use lithicrivers_core::Game;
+use lithicrivers_core::tiles::TileKind;
 use std::time::Duration;
 use std::collections::{HashMap, HashSet, VecDeque};
 use bevy::asset::LoadState;
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn div_floor_basics() {
+        assert_eq!(div_floor(0, 32), 0);
+        assert_eq!(div_floor(31, 32), 0);
+        assert_eq!(div_floor(32, 32), 1);
+        assert_eq!(div_floor(-1, 32), -1);
+        assert_eq!(div_floor(-32, 32), -1);
+        assert_eq!(div_floor(-33, 32), -2);
+    }
+
+    #[test]
+    fn world_to_chunk_edges() {
+        let c = world_to_chunk_2d(0, 0, 32);
+        assert_eq!(c.cx, 0); assert_eq!(c.cy, 0);
+        let c = world_to_chunk_2d(31, 31, 32);
+        assert_eq!(c.cx, 0); assert_eq!(c.cy, 0);
+        let c = world_to_chunk_2d(32, 0, 32);
+        assert_eq!(c.cx, 1); assert_eq!(c.cy, 0);
+        let c = world_to_chunk_2d(-1, -1, 32);
+        assert_eq!(c.cx, -1); assert_eq!(c.cy, -1);
+        let c = world_to_chunk_2d(-32, -32, 32);
+        assert_eq!(c.cx, -1); assert_eq!(c.cy, -1);
+        let c = world_to_chunk_2d(-33, -33, 32);
+        assert_eq!(c.cx, -2); assert_eq!(c.cy, -2);
+    }
+
+    #[test]
+    fn hash64_is_deterministic_and_changes() {
+        let s = 123u64;
+        let a = hash64(s, 0, 0);
+        let b = hash64(s, 0, 0);
+        assert_eq!(a, b);
+        let c = hash64(s, 1, 0);
+        let d = hash64(s, 0, 1);
+        assert_ne!(a, c);
+        assert_ne!(a, d);
+    }
+
+    #[test]
+    fn generate_chunk_is_deterministic() {
+        let cc = ChunkCoord2D { cx: 5, cy: -2 };
+        let a = generate_chunk_2d(9999, cc, 32, 32);
+        let b = generate_chunk_2d(9999, cc, 32, 32);
+        assert_eq!(a.w, b.w);
+        assert_eq!(a.tiles.len(), b.tiles.len());
+        for (i, (ta, tb)) in a.tiles.iter().zip(b.tiles.iter()).enumerate() {
+            assert_eq!(ta.kind as u8, tb.kind as u8, "tile mismatch at {}", i);
+        }
+    }
+
+    #[test]
+    fn tile_color_mapping_matches() {
+        assert_eq!(tile_color(TileKind::Rock), Color::rgb(0.4, 0.4, 0.45));
+        assert_eq!(tile_color(TileKind::Water), Color::rgb(0.2, 0.4, 0.8));
+        assert_eq!(tile_color(TileKind::Floor), Color::rgb(0.7, 0.7, 0.7));
+        assert_eq!(tile_color(TileKind::Grass), Color::rgb(0.6, 0.8, 0.6));
+    }
+
+    #[test]
+    fn demo_tile_at_is_stable() {
+        let k1 = demo_tile_at(3, -7);
+        let k2 = demo_tile_at(3, -7);
+        assert_eq!(k1 as u8, k2 as u8);
+    }
+}
 #[derive(Resource)]
 struct CoreGame(pub Game);
 
@@ -16,6 +86,37 @@ enum ViewMode {
     #[default]
     TwoD,
     ThreeD,
+}
+
+// Map shared TileKind to a Bevy Color (client-side concern)
+fn tile_color(kind: TileKind) -> Color {
+    match kind {
+        TileKind::Rock => Color::rgb(0.4, 0.4, 0.45),
+        TileKind::Water => Color::rgb(0.2, 0.4, 0.8),
+        TileKind::Floor => Color::rgb(0.7, 0.7, 0.7),
+        TileKind::Grass => Color::rgb(0.6, 0.8, 0.6),
+    }
+}
+
+// Very small deterministic demo for 3D using the same hashing approach
+fn demo_tile_at(x: i32, z: i32) -> TileKind {
+    // These constants mirror the 2D generate logic but keep it simple.
+    use rand::{Rng, SeedableRng};
+    use rand_chacha::ChaCha20Rng;
+    let seed = 12345u64; // demo seed; in future, pull WorldSeed
+    let cc = world_to_chunk_2d(x, z, 32);
+    let local_x = (x.rem_euclid(32)) as i32;
+    let local_z = (z.rem_euclid(32)) as i32;
+    // Seed RNG per chunk like 2D, then advance in a stable way for local cell
+    let mut rng = ChaCha20Rng::seed_from_u64(hash64(seed, cc.cx as i64, cc.cy as i64));
+    // Advance RNG index by a stable offset per local cell to keep distribution consistent
+    let steps = (local_z * 32 + local_x) as usize;
+    for _ in 0..steps { let _: f32 = rng.gen(); }
+    let r: f32 = rng.gen();
+    if r < 0.10 { TileKind::Rock }
+    else if r < 0.20 { TileKind::Water }
+    else if r < 0.50 { TileKind::Floor }
+    else { TileKind::Grass }
 }
 
 #[derive(Component)]
@@ -47,7 +148,7 @@ struct AsciiRoot; // Parent for all ASCII glyphs so we can clear easily
 struct ChunkCoord2D { cx: i32, cy: i32 }
 
 #[derive(Clone)]
-struct TileCell { ch: char, color: Color }
+struct TileCell { kind: TileKind }
 
 #[derive(Clone)]
 struct ChunkData2D {
@@ -150,15 +251,6 @@ fn setup_3d(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>, mut materi
         },
         View3D,
     ));
-    // Ground
-    commands.spawn((
-        PbrBundle {
-            mesh: meshes.add(Mesh::from(bevy::prelude::shape::Box::new(20.0, 0.2, 20.0))),
-            material: materials.add(Color::rgb(0.1, 0.2, 0.1).into()),
-            ..Default::default()
-        },
-        View3D,
-    ));
     // Player cube
     commands.spawn((
         PbrBundle {
@@ -170,6 +262,23 @@ fn setup_3d(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>, mut materi
         PlayerMarker,
         View3D,
     ));
+    // Simple demo ground of colored cubes representing tiles around origin
+    let size = 16i32; // half-extent
+    for gz in -size..=size {
+        for gx in -size..=size {
+            let kind = demo_tile_at(gx, gz);
+            let color = tile_color(kind);
+            commands.spawn((
+                PbrBundle {
+                    mesh: meshes.add(Mesh::from(bevy::prelude::shape::Box::new(0.95, 0.2, 0.95))),
+                    material: materials.add(color.into()),
+                    transform: Transform::from_xyz(gx as f32, 0.1, gz as f32),
+                    ..Default::default()
+                },
+                View3D,
+            ));
+        }
+    }
 }
 
 fn teardown_3d(mut commands: Commands, q: Query<Entity, With<View3D>>) {
@@ -298,11 +407,11 @@ fn generate_chunk_2d(seed: u64, cc: ChunkCoord2D, w: i32, h: i32) -> ChunkData2D
     for _y in 0..h {
         for _x in 0..w {
             let r: f32 = rng.gen();
-            let (ch, color) = if r < 0.10 { ('#', Color::rgb(0.4, 0.4, 0.45)) } // rock
-                              else if r < 0.20 { ('~', Color::rgb(0.2, 0.4, 0.8)) } // water
-                              else if r < 0.50 { ('.', Color::rgb(0.7, 0.7, 0.7)) } // floor
-                              else { (',', Color::rgb(0.6, 0.8, 0.6)) }; // grass
-            tiles.push(TileCell { ch, color });
+            let kind = if r < 0.10 { TileKind::Rock } // rock
+                       else if r < 0.20 { TileKind::Water } // water
+                       else if r < 0.50 { TileKind::Floor } // floor
+                       else { TileKind::Grass }; // grass
+            tiles.push(TileCell { kind });
         }
     }
     ChunkData2D { w, tiles }
@@ -359,7 +468,7 @@ fn render_ascii_2d(
                 let ly = ((wy.rem_euclid(cfg.chunk_size)) as i32) as usize;
                 let idx = ly * (chunk.w as usize) + lx;
                 if let Some(cell) = chunk.tiles.get(idx) {
-                    let text = Text::from_section(cell.ch.to_string(), TextStyle { font: active_font.clone(), font_size: cfg.tile_px, color: cell.color })
+                    let text = Text::from_section(cell.kind.glyph().to_string(), TextStyle { font: active_font.clone(), font_size: cfg.tile_px, color: tile_color(cell.kind) })
                         .with_alignment(TextAlignment::Center);
                     let tx = (vx - half_cols) as f32 * sx;
                     let ty = (vy - half_rows) as f32 * -sy; // y-down screen
