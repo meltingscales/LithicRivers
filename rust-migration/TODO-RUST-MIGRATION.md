@@ -1,4 +1,8 @@
-Awesome—here’s a simple, focused list of Rust dependencies and what you’ll use them for. I’ve grouped them and marked a minimal recommended set vs optional.
+Context: I'm going to be migrating my code from `python-old/` to `rust-migration/` and would like help setting up the rust environment. Package manager, makefile, etc.
+
+I'm going to try to migrate as much as possible from `python-old/` to `rust-migration/` myself, and I'll ask for help when I need it. I'll try to use the same file structure.
+
+Previous AI context for rust libs to use:
 
 Core TUI
 
