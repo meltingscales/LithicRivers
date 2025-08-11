@@ -300,12 +300,20 @@ fn teardown_3d(mut commands: Commands, q: Query<Entity, With<View3D>>) {
 }
 
 fn keyboard_input_system(keys: Res<Input<KeyCode>>, mut core: ResMut<CoreGame>) {
-    // Basic movement mapping for now; will be replaced by JSON-configured actions.
+    // Movement now uses numpad keys (cardinal + diagonal):
+    // 7 8 9
+    // 4 5 6
+    // 1 2 3
     let mut moved = false;
-    if keys.just_pressed(KeyCode::Up) { core.0.queue_player_move(0, -1); moved = true; }
-    if keys.just_pressed(KeyCode::Down) { core.0.queue_player_move(0, 1); moved = true; }
-    if keys.just_pressed(KeyCode::Left) { core.0.queue_player_move(-1, 0); moved = true; }
-    if keys.just_pressed(KeyCode::Right) { core.0.queue_player_move(1, 0); moved = true; }
+    if keys.just_pressed(KeyCode::Numpad8) { core.0.queue_player_move(0, -1); moved = true; } // up
+    if keys.just_pressed(KeyCode::Numpad2) { core.0.queue_player_move(0, 1); moved = true; } // down
+    if keys.just_pressed(KeyCode::Numpad4) { core.0.queue_player_move(-1, 0); moved = true; } // left
+    if keys.just_pressed(KeyCode::Numpad6) { core.0.queue_player_move(1, 0); moved = true; } // right
+    // Diagonals
+    if keys.just_pressed(KeyCode::Numpad7) { core.0.queue_player_move(-1, -1); moved = true; } // up-left
+    if keys.just_pressed(KeyCode::Numpad9) { core.0.queue_player_move(1, -1); moved = true; } // up-right
+    if keys.just_pressed(KeyCode::Numpad1) { core.0.queue_player_move(-1, 1); moved = true; } // down-left
+    if keys.just_pressed(KeyCode::Numpad3) { core.0.queue_player_move(1, 1); moved = true; } // down-right
     if moved { /* core tick will process the intent */ }
 }
 
