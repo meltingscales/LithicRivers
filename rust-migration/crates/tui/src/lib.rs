@@ -62,10 +62,37 @@ impl TuiApp {
         Ok(())
     }
 
-    pub fn poll_quit_event(timeout_ms: u64) -> Result<bool> {
+    pub fn handle_input(game: &mut Game, timeout_ms: u64) -> Result<bool> {
         if event::poll(std::time::Duration::from_millis(timeout_ms))? {
             if let Event::Key(k) = event::read()? {
-                if k.code == KeyCode::Char('q') { return Ok(true); }
+                match k.code {
+                    KeyCode::Esc | KeyCode::Char('q') => return Ok(true),
+                    // Arrow keys
+                    KeyCode::Up => game.queue_player_move(0, -1),
+                    KeyCode::Down => game.queue_player_move(0, 1),
+                    KeyCode::Left => game.queue_player_move(-1, 0),
+                    KeyCode::Right => game.queue_player_move(1, 0),
+                    // Numpad (reported as chars typically when numlock is on)
+                    KeyCode::Char('7') => game.queue_player_move(-1, -1),
+                    KeyCode::Char('8') => game.queue_player_move(0, -1),
+                    KeyCode::Char('9') => game.queue_player_move(1, -1),
+                    KeyCode::Char('4') => game.queue_player_move(-1, 0),
+                    KeyCode::Char('5') => { /* wait / no-op */ }
+                    KeyCode::Char('6') => game.queue_player_move(1, 0),
+                    KeyCode::Char('1') => game.queue_player_move(-1, 1),
+                    KeyCode::Char('2') => game.queue_player_move(0, 1),
+                    KeyCode::Char('3') => game.queue_player_move(1, 1),
+                    // vi-keys as a bonus
+                    KeyCode::Char('h') => game.queue_player_move(-1, 0),
+                    KeyCode::Char('j') => game.queue_player_move(0, 1),
+                    KeyCode::Char('k') => game.queue_player_move(0, -1),
+                    KeyCode::Char('l') => game.queue_player_move(1, 0),
+                    KeyCode::Char('y') => game.queue_player_move(-1, -1),
+                    KeyCode::Char('u') => game.queue_player_move(1, -1),
+                    KeyCode::Char('b') => game.queue_player_move(-1, 1),
+                    KeyCode::Char('n') => game.queue_player_move(1, 1),
+                    _ => {}
+                }
             }
         }
         Ok(false)

@@ -20,9 +20,13 @@ impl Game {
         let mut world = World::new();
         let mut res = Resources::new(seed);
         // Spawn a player entity with a Position
-        let player = world.spawn((Position { x: 0, y: 0, z: 0 }, Player));
+        let player = world.spawn((Position { x: 1, y: 1, z: 0 }, Player));
         res.player_entity = Some(player);
         Self { world, res }
+    }
+
+    pub fn queue_player_move(&mut self, dx: i32, dy: i32) {
+        self.res.player_move_intent = Some((dx, dy));
     }
 
     pub fn tick(&mut self) {

@@ -23,22 +23,11 @@ fn main() -> Result<()> {
     let mut game = Game::new(args.seed);
     let mut tui = TuiApp::new()?;
 
-    // Simple fixed-timestep loop (~30 FPS render, 100ms per tick)
-    let tick_ms = 100u64;
-    let mut last_tick = std::time::Instant::now();
-
+    // Simple loop: poll input, apply intent, tick once, render. ~100 FPS cap by sleep.
     loop {
-        // Tick
-        if last_tick.elapsed() >= std::time::Duration::from_millis(tick_ms) {
-            game.tick();
-            last_tick = std::time::Instant::now();
-        }
-
-        // Draw
+        if TuiApp::handle_input(&mut game, 10)? { break; }
+        game.tick();
         tui.draw_once(&game)?;
-
-        // Input: press 'q' to quit
-        if TuiApp::poll_quit_event(10)? { break; }
     }
 
     tui.teardown()?;
