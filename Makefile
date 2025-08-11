@@ -30,6 +30,10 @@ help: ## Show this help message
 	@echo "🔍 DEMO"
 	@echo "------"
 	@echo "  demo                 	 Run demo"
+	@echo "  demo-ui-file-browser 	 Run file browser demo"
+	@echo "  demo-ui-credits      	 Run credits demo"
+	@echo "  demo-ui-experimental 	 Run experimental demo"
+	@echo "  demo-ui-intro        	 Run intro demo"
 	@echo ""
 	@echo "🎮 GAME"
 	@echo "------"
@@ -133,6 +137,19 @@ test-profile-speedscope: generate-test-worlds ## Profile test suite with speedsc
 
 demo: ## Run all demos
 	$(UV_CMD) run python -m lithicrivers.demo.perlin_test
+
+
+demo-ui-file-browser: ## Run file browser demo
+	$(UV_CMD) run python lithicrivers/demo/ui/demo_file_browser.py
+
+demo-ui-credits: ## Run credits demo
+	$(UV_CMD) run python lithicrivers/demo/ui/demo_credits.py
+
+demo-ui-experimental: ## Run experimental demo
+	$(UV_CMD) run python lithicrivers/demo/ui/demo_experimental.py
+
+demo-ui-intro: ## Run intro demo
+	$(UV_CMD) run python lithicrivers/demo/ui/demo_intro_custom.py
 
 # Development tools
 generate-keychords: ## Generate platform-specific keychord mappings
