@@ -27,8 +27,8 @@ test:
 
 build:
 	cargo --version
-	cargo build
-	cargo build -p lithicrivers-client
+	cargo build -j $$(nproc)
+	cargo build -p lithicrivers-client -j $$(nproc)
 
 run: client
 
