@@ -10,6 +10,8 @@ pub struct Resources {
     pub gametick: u64,
     pub player_entity: Option<Entity>,
     pub world: world::World,
+    // Input intents (single-step for now)
+    pub player_move_intent: Option<(i32, i32)>,
 }
 
 impl Resources {
@@ -21,6 +23,7 @@ impl Resources {
             gametick: 0,
             player_entity: None,
             world: world::World::new(80, 24, seed),
+            player_move_intent: None,
         }
     }
 }
