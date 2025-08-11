@@ -188,6 +188,8 @@
 
 - stats/perf measurements throughout the game code that logs to some format...TBH speedscope is "good enough" but it could be useful long term to do this.
 
+- investigate github repo "gale93/sbixel"...
+
 ## MVP for steam release (2025 christmas release)
 
 - migrate to bevy/wgpu-based renderer. still support text mode, but allow player to switch. don't render in terminal, but render text mode within bevy.

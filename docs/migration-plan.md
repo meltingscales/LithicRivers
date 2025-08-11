@@ -12,19 +12,21 @@ This document captures high-level goals and a recommended rearchitecture for mig
 ## Target architecture
 - Workspace layout
   - `crates/core`: ECS, components, resources, systems, serialization, RNG helpers.
-  - `crates/tui`: ratatui/crossterm renderer and input glue; renders a ViewModel from `core`.
-  - `crates/app`: binary entrypoint; CLI, logging, game loop wiring.
+  - `crates/client`: Bevy app (wgpu) for rendering/input; provides 2D ASCII-style view and 3D colored-cubes view; consumes read-only state from `core`.
+  - `crates/app` (optional): if needed, additional binaries or tooling (CLI, headless sim, exporters).
 
-- ECS (hecs)
+- ECS (bevy_ecs)
   - Entities: IDs only.
   - Components: `Position`, `Renderable` (later), `Body`, `Inventory`, etc.
   - Resources (singletons): `World` (chunks, tiles, fluids), `Rng`, `MessageLog`, `Config`, `Keymap`.
   - Systems: movement, mining, inventory/pickup, AI/NPC, fluids, logging.
-  - Schedule: ordered systems per fixed-tick; render runs after sim.
+  - Schedule: ordered systems per fixed-tick in Bevy schedules; client rendering reads state after sim.
 
-- Rendering (ratatui)
-  - Immediate-mode terminal UI.
-  - Strictly read-only pass that consumes a prebuilt ViewModel from `core`.
+- Rendering (Bevy)
+  - Bevy (wgpu) client with two modes:
+    - 2D: ASCII-style map by rendering a grid of glyphs (bitmap font atlas) with per-glyph color; camera follows player.
+    - 3D: colored cubes (PBR) representing blocks/tiles; simple lighting; camera orbit/follow.
+  - Rendering is a strictly read-only pass that consumes a ViewModel or queries immutable state from `core`.
 
 - Determinism
   - `rand_chacha::ChaCha20Rng` as canonical RNG.

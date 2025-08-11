@@ -2,20 +2,19 @@ Context: I'm going to be migrating my code from `python-old/` to `rust-migration
 
 I'm going to try to migrate as much as possible from `python-old/` to `rust-migration/` myself, and I'll ask for help when I need it. I'll try to use the same file structure.
 
-Consider using `wgpu` for rendering instead of terminal-based rendering... This will allow us to render a 3D world, and also allow us to render a 2D world with proper lighting and shadows.  Also, we'd be able to capture all keyboard inputs we want.
+We're using a bevy ECS for the game logic. We are not using `ratatui` as there is no TUI anymore.
 
-Previous AI context for rust libs to use:
+Previous AI context for rust libs to use (updated for Bevy):
 
-Core TUI
+Client / Rendering
 
-ratatui (recommended): TUI layout, widgets, and rendering.
-crossterm (recommended): Terminal backend, input, and event handling.
+- bevy (recommended): Game engine with renderer (wgpu), ECS, input, assets, and scheduling.
+- bevy_ecs (in bevy): ECS used by Bevy for entities/components/systems.
+- bevy_pbr / bevy_sprite: For 3D colored cubes and 2D sprites/glyphs respectively.
+
 Simulation / Data model
 
-hecs or shipyard or bevy_ecs (pick one):
-hecs (recommended): Lightweight, fast ECS for entities/components.
-shipyard: Parallel-friendly ECS with good ergonomics.
-bevy_ecs: Feature-rich ECS extracted from Bevy.
+bevy_ecs (standard via Bevy): Use Bevy's ECS for entities/components/systems to stay aligned with the client.
 indexmap (recommended): HashMap/Set with stable iteration for determinism.
 smallvec (optional): Inline small vectors to reduce heap allocs.
 ahash (optional): Faster hash function for high-performance maps (use with care if you need strict determinism across platforms).
@@ -53,11 +52,14 @@ Compression (if you want smaller saves)
 zstd or flate2 (optional): Compress save files transparently.
 Minimal starter set (good defaults)
 
-TUI: ratatui, crossterm
-ECS: hecs
+Client: bevy (includes bevy_ecs, wgpu renderer, input)
 Serialization: serde, rmp-serde, serde_json
 RNG: rand, rand_chacha
 Concurrency: rayon
 Utilities: indexmap, thiserror, anyhow
 Logging: tracing, tracing-subscriber
 CLI: clap
+
+Notes for rendering modes in Bevy:
+- 2D ASCII-style: Use a bitmap font atlas or SDF font, render per-tile glyphs via `Text2dBundle`/custom glyph quads with per-glyph color; camera follows player.
+- 3D colored cubes: Use `PbrBundle` with box meshes per visible tile/voxel or instanced batching; basic light + frustum-culling.
