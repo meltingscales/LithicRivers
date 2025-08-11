@@ -2,6 +2,8 @@ Context: I'm going to be migrating my code from `python-old/` to `rust-migration
 
 I'm going to try to migrate as much as possible from `python-old/` to `rust-migration/` myself, and I'll ask for help when I need it. I'll try to use the same file structure.
 
+Consider using `wgpu` for rendering instead of terminal-based rendering... This will allow us to render a 3D world, and also allow us to render a 2D world with proper lighting and shadows.  Also, we'd be able to capture all keyboard inputs we want.
+
 Previous AI context for rust libs to use:
 
 Core TUI
