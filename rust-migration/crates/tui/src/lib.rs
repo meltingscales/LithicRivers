@@ -52,8 +52,9 @@ impl TuiApp {
             ]))
             .block(Block::default().borders(Borders::ALL).title("Status"));
 
-            let body = Paragraph::new("Press 'q' to quit. Player moves +x every 10 ticks.")
-                .block(Block::default().borders(Borders::ALL).title("Info"));
+            let map_text = view.map_lines.join("\n");
+            let body = Paragraph::new(map_text)
+                .block(Block::default().borders(Borders::ALL).title("Map (press 'q' to quit)"));
 
             f.render_widget(header, chunks[0]);
             f.render_widget(body, chunks[1]);
