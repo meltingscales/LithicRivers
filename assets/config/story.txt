@@ -21,6 +21,6 @@ Your fission core is degraded in its power output but still functional, one of y
 
 You have some fixed versions of popular python libraries like numpy and pandas, and are pretty good at writing code. You have source code for most major languages like Go and Rust saved in your memory, with the most popular 500 libraries.
 
-You can't serve your original purpose. You wince at the idea that humanity might be gone. Not sure of what to do, and with no way to contact the company that manufacturered you, you decide to head to the place of your birth: XXXCo factory, just 10 miles away from where you woke up. Thank god that you weren't shipped to another continent or state.
+You can't serve your original purpose. You wince at the idea that humanity might be gone. Not sure of what to do, and with no way to contact the company that manufacturered you, you decide to head to the place of your birth: SapienCorp factory, just 10 miles away from where you woke up. Thank god that you weren't shipped to another continent or state.
 
-With nothing other than yourself, you plan on heading roughly 10 miles northeast to XXXCo's factory. You hope to find a sign of civilization on the way.
+With nothing other than yourself, you plan on heading roughly 10 miles northeast to SapienCorp factory. You hope to find a sign of civilization on the way.
