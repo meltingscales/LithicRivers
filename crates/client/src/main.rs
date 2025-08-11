@@ -197,7 +197,6 @@ fn main() {
         .add_systems(OnEnter(ViewMode::ThreeD), setup_3d)
         .add_systems(OnExit(ViewMode::ThreeD), teardown_3d)
         .add_systems(Startup, load_ascii_font)
-        .add_systems(Update, (tick_core_sim).run_if(on_timer(Duration::from_secs_f32(1.0/60.0))))
         .add_systems(Update, keyboard_input_system)
         .add_systems(Update, toggle_view_mode)
         // 2D ASCII systems
@@ -314,7 +313,19 @@ fn keyboard_input_system(keys: Res<Input<KeyCode>>, mut core: ResMut<CoreGame>) 
     if keys.just_pressed(KeyCode::Numpad9) { core.0.queue_player_move(1, -1); moved = true; } // up-right
     if keys.just_pressed(KeyCode::Numpad1) { core.0.queue_player_move(-1, 1); moved = true; } // down-left
     if keys.just_pressed(KeyCode::Numpad3) { core.0.queue_player_move(1, 1); moved = true; } // down-right
-    if moved { /* core tick will process the intent */ }
+    if moved {
+        core.0.tick();
+        // For now, print tick and player pos as a heartbeat.
+        if let Some(e) = core.0.res.player_entity {
+            if let Ok(pos) = core.0.world.get::<&lithicrivers_core::components::Position>(e) {
+                info!("tick={}, player=({}, {}, {})", core.0.res.gametick, pos.x, pos.y, pos.z);
+            } else {
+                info!("tick={}", core.0.res.gametick);
+            }
+        } else {
+            info!("tick={}", core.0.res.gametick);
+        }
+    }
 }
 
 fn tick_core_sim(time: Res<Time>, mut timer: ResMut<FixedTickTimer>, mut core: ResMut<CoreGame>) {
