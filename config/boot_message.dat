@@ -37,6 +37,8 @@ SYSTEM NOTES:
 
 [ SUBSYSTEM DIAGNOSTICS ]
 - Limb Actuator Array: RIGHT LEG — Torque feedback mismatch detected (damaged servo chain)
+- Limb Actuator Array: LEFT LEG — Nominal voltage detected
+- Limb Actuator Array: RIGHT ARM — Nominal voltage detected
 - Limb Actuator Array: LEFT ARM — No signal detected (limb absent)
 - Fusion Power Module: Output at 42% nominal voltage (degraded reaction core)
 
