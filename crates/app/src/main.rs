@@ -1,7 +1,5 @@
 use anyhow::Result;
-use clap::Parser;
 use lithicrivers_core::Game;
-use lithicrivers_tui::TuiApp;
 use tracing_subscriber::{fmt, EnvFilter};
 
 #[derive(Parser, Debug)]
@@ -21,15 +19,6 @@ fn main() -> Result<()> {
     let args = Args::parse();
 
     let mut game = Game::new(args.seed);
-    let mut tui = TuiApp::new()?;
-
-    // Simple loop: poll input, apply intent, tick once, render. ~100 FPS cap by sleep.
-    loop {
-        if tui.handle_input(&mut game, 10)? { break; }
-        game.tick();
-        tui.draw_once(&mut game)?;
-    }
-
-    tui.teardown()?;
+    // TUI removed: game loop and rendering must be replaced with alternative logic or removed entirely.
     Ok(())
 }

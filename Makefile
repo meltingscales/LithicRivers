@@ -33,7 +33,12 @@ build:
 run: client
 
 client:
-	cargo run -p lithicrivers-client
+	@if [ -z "$$IN_NIX_SHELL" ] && [ -f shell.nix ] && grep -qi nixos /etc/os-release 2>/dev/null; then \
+		echo 'Entering nix-shell for NixOS...'; \
+		exec nix-shell --run 'make $(MAKECMDGOALS)'; \
+	else \
+		cargo run -p lithicrivers-client; \
+	fi
 
 client-blind:
 	echo "Blind mode not implemented yet."

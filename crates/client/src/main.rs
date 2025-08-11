@@ -175,7 +175,7 @@ struct FontHandles {
 
 fn main() {
     App::new()
-        .insert_resource(ClearColor(Color::rgb(0.02, 0.02, 0.04)))
+        .insert_resource(ClearColor(Color::rgb(1.0, 1.0, 1.0)))
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: "LithicRivers (Bevy client)".to_string(),
