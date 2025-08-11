@@ -22,5 +22,5 @@ elif command -v apk >/dev/null 2>&1; then
     wayland-dev wayland-protocols mesa-dev
 else
   echo "Unsupported package manager. Please install pkg-config and the X/Wayland/ALSA dev packages manually." >&2
-  exit 1
+  exit 0
 fi
