@@ -190,7 +190,7 @@
 
 ## MVP for steam release (2025 christmas release)
 
-- fix pickle vulnerability, rce - don't implement custom JSON serialization, but use msgspec...
+- migrate to bevy/wgpu-based renderer. still support text mode, but allow player to switch. don't render in terminal, but render text mode within bevy.
 - in progress: visualize body parts in the body panel with a custom asciimatics class that extends Frame...
 - in progress: UI elements that let you select and repair body parts, and backend code that actually repairs the body part for a material cost.
 - 🔄 **IN PROGRESS**: Block placement with body-based restrictions
