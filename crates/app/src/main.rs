@@ -25,7 +25,7 @@ fn main() -> Result<()> {
 
     // Simple loop: poll input, apply intent, tick once, render. ~100 FPS cap by sleep.
     loop {
-        if TuiApp::handle_input(&mut game, 10)? { break; }
+        if tui.handle_input(&mut game, 10)? { break; }
         game.tick();
         tui.draw_once(&game)?;
     }
