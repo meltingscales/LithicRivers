@@ -27,7 +27,7 @@ fn main() -> Result<()> {
     loop {
         if tui.handle_input(&mut game, 10)? { break; }
         game.tick();
-        tui.draw_once(&game)?;
+        tui.draw_once(&mut game)?;
     }
 
     tui.teardown()?;

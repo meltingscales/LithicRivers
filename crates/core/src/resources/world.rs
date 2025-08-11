@@ -1,6 +1,7 @@
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha20Rng;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 pub enum Tile {
@@ -9,47 +10,84 @@ pub enum Tile {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Chunk {
+    tiles: Vec<Tile>, // size CHUNK_SIZE * CHUNK_SIZE
+}
+
+impl Chunk {
+    fn new_filled(fill: Tile) -> Self {
+        Self { tiles: vec![fill; (CHUNK_SIZE as usize) * (CHUNK_SIZE as usize)] }
+    }
+    #[inline]
+    fn idx(tx: i32, ty: i32) -> usize { (ty as usize) * (CHUNK_SIZE as usize) + (tx as usize) }
+    #[inline]
+    fn get(&self, tx: i32, ty: i32) -> Tile { self.tiles[Self::idx(tx, ty)] }
+    #[inline]
+    fn set(&mut self, tx: i32, ty: i32, t: Tile) { let i = Self::idx(tx, ty); self.tiles[i] = t; }
+}
+
+pub const CHUNK_SIZE: i32 = 64;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct World {
-    pub width: usize,
-    pub height: usize,
-    pub depth: usize, // keep for future; for now we render z=0
-    tiles: Vec<Tile>, // z-major single layer for now (z=0)
+    pub seed: u64,
+    chunks: HashMap<(i64, i64), Chunk>,
 }
 
 impl World {
-    pub fn new(width: usize, height: usize, seed: u64) -> Self {
-        let depth = 1;
-        let mut w = Self {
-            width,
-            height,
-            depth,
-            tiles: vec![Tile::Floor; width * height],
-        };
-        w.generate(seed);
-        w
+    pub fn new(_width: usize, _height: usize, seed: u64) -> Self {
+        // Width/height kept for compatibility; world is effectively infinite.
+        Self { seed, chunks: HashMap::new() }
     }
 
-    fn idx(&self, x: usize, y: usize) -> usize { y * self.width + x }
+    fn ensure_chunk(&mut self, cx: i64, cy: i64) {
+        if self.chunks.contains_key(&(cx, cy)) { return; }
+        let mut chunk = Chunk::new_filled(Tile::Floor);
+        self.generate_chunk(cx, cy, &mut chunk);
+        self.chunks.insert((cx, cy), chunk);
+    }
 
-    fn generate(&mut self, seed: u64) {
-        // Simple deterministic map: border walls + a few seeded scatter walls
-        for x in 0..self.width {
-            self.set(x, 0, Tile::Wall);
-            self.set(x, self.height - 1, Tile::Wall);
-        }
-        for y in 0..self.height {
-            self.set(0, y, Tile::Wall);
-            self.set(self.width - 1, y, Tile::Wall);
-        }
-        let mut rng = ChaCha20Rng::seed_from_u64(seed ^ 0xC0FFEE);
-        let scatter = (self.width * self.height) / 20; // ~5%
+    fn generate_chunk(&self, cx: i64, cy: i64, chunk: &mut Chunk) {
+        // Deterministic generation based on world seed and chunk coords
+        let mut rng = ChaCha20Rng::seed_from_u64(self.mix_coords(cx, cy));
+        // Simple sprinkle of walls with ~5% density
+        let scatter = ((CHUNK_SIZE as usize) * (CHUNK_SIZE as usize)) / 20;
         for _ in 0..scatter {
-            let x = rng.gen_range(1..self.width - 1);
-            let y = rng.gen_range(1..self.height - 1);
-            self.set(x, y, Tile::Wall);
+            let tx = rng.gen_range(0..CHUNK_SIZE as i32);
+            let ty = rng.gen_range(0..CHUNK_SIZE as i32);
+            chunk.set(tx, ty, Tile::Wall);
         }
+        // Optional: add pseudo-caves or features later
     }
 
-    pub fn get(&self, x: usize, y: usize) -> Tile { self.tiles[self.idx(x, y)] }
-    pub fn set(&mut self, x: usize, y: usize, t: Tile) { let i = self.idx(x, y); self.tiles[i] = t; }
+    #[inline]
+    fn div_floor(a: i32, b: i32) -> i64 {
+        // floor division for negatives
+        let mut q = (a as i64) / (b as i64);
+        let r = (a as i64) % (b as i64);
+        if (r != 0) && ((r > 0) != (b as i64 > 0)) { q -= 1; }
+        q
+    }
+
+    #[inline]
+    fn mod_floor(a: i32, b: i32) -> i32 { let m = a % b; if m < 0 { m + b } else { m } }
+
+    fn mix_coords(&self, cx: i64, cy: i64) -> u64 {
+        // Zigzag encode signed to unsigned, then mix with seed
+        fn zz(x: i64) -> u64 { ((x << 1) ^ (x >> 63)) as u64 }
+        let mut v = self.seed.wrapping_mul(0x9E3779B185EBCA87);
+        v ^= zz(cx).wrapping_mul(0x94D049BB133111EB);
+        v = v.rotate_left(27) ^ zz(cy).wrapping_mul(0xD2B74407B1CE6E93);
+        v ^ 0xC0FFEE
+    }
+
+    pub fn get_tile(&mut self, x: i32, y: i32) -> Tile {
+        let cx = Self::div_floor(x, CHUNK_SIZE) as i64;
+        let cy = Self::div_floor(y, CHUNK_SIZE) as i64;
+        let tx = Self::mod_floor(x, CHUNK_SIZE);
+        let ty = Self::mod_floor(y, CHUNK_SIZE);
+        self.ensure_chunk(cx, cy);
+        let ch = self.chunks.get(&(cx, cy)).expect("chunk present");
+        ch.get(tx, ty)
+    }
 }

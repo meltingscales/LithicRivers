@@ -10,36 +10,42 @@ pub struct RenderView {
     pub map_lines: Vec<String>,
 }
 
-pub fn build_render_view(world: &World, res: &Resources) -> RenderView {
+pub fn build_render_view(world: &World, res: &mut Resources) -> RenderView {
     let mut player_pos = Position { x: 0, y: 0, z: 0 };
     if let Some(e) = res.player_entity {
         if let Ok(p) = world.get::<&Position>(e) {
             player_pos = *p;
         }
     }
-    // Build simple ASCII map from res.world at z=0
-    let mut lines = Vec::with_capacity(res.world.height);
-    for y in 0..res.world.height {
-        let mut row = String::with_capacity(res.world.width);
-        for x in 0..res.world.width {
-            let ch = match res.world.get(x, y) {
-                Tile::Wall => '#',
-                Tile::Floor => '.',
+    // Build a window around the player from the infinite world at z=0.
+    // Choose a generous default window; TUI will crop/scale it.
+    let win_w: i32 = 160;
+    let win_h: i32 = 80;
+    let half_w = win_w / 2;
+    let half_h = win_h / 2;
+    let center_x = player_pos.x;
+    let center_y = player_pos.y;
+
+    let top = center_y - half_h;
+    let left = center_x - half_w;
+
+    let mut lines: Vec<String> = Vec::with_capacity(win_h as usize);
+    for y in 0..win_h {
+        let wy = top + y;
+        let mut row = String::with_capacity(win_w as usize);
+        for x in 0..win_w {
+            let wx = left + x;
+            let ch = if player_pos.z == 0 && wx == center_x && wy == center_y {
+                '@'
+            } else {
+                match res.world.get_tile(wx, wy) {
+                    Tile::Wall => '#',
+                    Tile::Floor => '.',
+                }
             };
             row.push(ch);
         }
         lines.push(row);
-    }
-    // Overlay player '@' if within bounds (z ignored)
-    if player_pos.z == 0 {
-        let (px, py) = (player_pos.x, player_pos.y);
-        if px >= 0 && py >= 0 {
-            let (px, py) = (px as usize, py as usize);
-            if py < lines.len() && px < lines[py].len() {
-                let bytes = unsafe { lines[py].as_bytes_mut() };
-                bytes[px] = b'@';
-            }
-        }
     }
     RenderView { gametick: res.gametick, player_pos, map_lines: lines }
 }

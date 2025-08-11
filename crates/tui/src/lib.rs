@@ -13,6 +13,39 @@ pub struct TuiApp {
     zoom: u16, // 1, 2, or 3
 }
 
+#[cfg(test)]
+mod tests {
+    use super::build_scaled_view;
+
+    fn sample_window() -> Vec<String> {
+        // 9x5 window with player '@' at center (x=4,y=2)
+        let rows = vec![
+            ".........",
+            "..###....",
+            "....@....",
+            "....#....",
+            ".........",
+        ];
+        rows.into_iter().map(|s| s.to_string()).collect()
+    }
+
+    #[test]
+    fn center_crop_keeps_player_visible_zoom1() {
+        let window = sample_window();
+        // Area slightly smaller than window so we crop
+        let out = build_scaled_view(&window, 8, 5, 1);
+        assert!(out.contains('@'), "player '@' not visible in zoom1 cropped output:\n{}", out);
+    }
+
+    #[test]
+    fn scaling_zoom2_keeps_player_visible() {
+        let window = sample_window();
+        // At zoom=2, tiles = area/2. Choose area such that tiles are 4x3 (smaller than 9x5), forcing center crop
+        let out = build_scaled_view(&window, 8, 6, 2);
+        assert!(out.contains('@'), "player '@' not visible in zoom2 output:\n{}", out);
+    }
+}
+
 impl TuiApp {
     pub fn new() -> Result<Self> {
         let mut stdout = std::io::stdout();
@@ -40,7 +73,7 @@ impl TuiApp {
         Ok(())
     }
 
-    pub fn draw_once(&mut self, game: &Game) -> Result<()> {
+    pub fn draw_once(&mut self, game: &mut Game) -> Result<()> {
         let view = game.build_view();
         self.terminal.draw(|f| {
             let size = f.size();
@@ -64,7 +97,7 @@ impl TuiApp {
             let body_area = chunks[1];
             let inner_w = body_area.width.saturating_sub(2); // approx inside the block borders
             let inner_h = body_area.height.saturating_sub(2);
-            let map_text = build_scaled_view(&view.map_lines, view.player_pos.x, view.player_pos.y, inner_w, inner_h, self.zoom);
+            let map_text = build_scaled_view(&view.map_lines, inner_w, inner_h, self.zoom);
             let body = Paragraph::new(map_text)
                 .block(Block::default().borders(Borders::ALL).title("Map (press 'q' to quit)"));
 
@@ -120,35 +153,30 @@ impl TuiApp {
     }
 }
 
-fn build_scaled_view(map_lines: &Vec<String>, center_x: i32, center_y: i32, area_w: u16, area_h: u16, zoom: u16) -> String {
+fn build_scaled_view(map_lines: &Vec<String>, area_w: u16, area_h: u16, zoom: u16) -> String {
     let zoom = zoom.max(1).min(3);
     let tiles_w = std::cmp::max(1, (area_w as usize) / (zoom as usize));
     let tiles_h = std::cmp::max(1, (area_h as usize) / (zoom as usize));
     if map_lines.is_empty() { return String::new(); }
-    let world_h = map_lines.len() as isize;
-    let world_w = map_lines[0].chars().count() as isize;
-
-    let cx = center_x as isize;
-    let cy = center_y as isize;
-    let half_w = (tiles_w as isize) / 2;
-    let half_h = (tiles_h as isize) / 2;
-    let left = cx - half_w;
-    let top = cy - half_h;
+    let world_h = map_lines.len();
+    let world_w = map_lines[0].chars().count();
+    // Center-crop within the provided window so the player (at window center) stays visible
+    let start_x = if world_w > tiles_w { (world_w - tiles_w) / 2 } else { 0 };
+    let start_y = if world_h > tiles_h { (world_h - tiles_h) / 2 } else { 0 };
+    // We assume map_lines is already a window centered on the player.
+    // So we just scale and clamp to the available area.
 
     let mut out_lines: Vec<String> = Vec::new();
-    for ty in 0..tiles_h as isize {
+    for ty in 0..tiles_h as usize {
         // Build one tile row scaled horizontally
         let mut base_row = String::new();
-        let wy = top + ty;
-        for tx in 0..tiles_w as isize {
-            let wx = left + tx;
-            let ch = if wx >= 0 && wy >= 0 && wx < world_w && wy < world_h {
-                // Safe to index
-                let line = &map_lines[wy as usize];
-                line.chars().nth(wx as usize).unwrap_or(' ')
-            } else {
-                ' '
-            };
+        let wy = start_y + ty;
+        for tx in 0..tiles_w as usize {
+            let wx = start_x + tx;
+            let ch = if wy < world_h && wx < world_w {
+                let line = &map_lines[wy];
+                line.chars().nth(wx).unwrap_or(' ')
+            } else { ' ' };
             for _ in 0..zoom { base_row.push(ch); }
         }
         // Clamp to area width
