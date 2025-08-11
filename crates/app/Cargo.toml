@@ -5,7 +5,6 @@ edition = "2021"
 
 [dependencies]
 lithicrivers-core = { path = "../core" }
-lithicrivers-tui = { path = "../tui" }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
