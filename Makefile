@@ -1,4 +1,4 @@
-.PHONY: help install build run client fmt clippy toolchain
+.PHONY: help install build run client fmt clippy toolchain security test
 
 TOOLCHAIN ?= 1.75.0
 
@@ -9,12 +9,20 @@ help:
 	@echo "  run     - Run the project"
 	@echo "  fmt     - Format the code"
 	@echo "  clippy  - Run clippy"
+	@echo "  security - Run cargo audit"
 	@echo "  toolchain - Show the current toolchain"
+	@echo "  test    - Run tests"
 
 install:
 	rustup toolchain install $(TOOLCHAIN)
 	rustup override set $(TOOLCHAIN)
 	./scripts/install_dev_deps.sh
+
+security:
+	cargo audit
+
+test:
+	cargo test
 
 build:
 	cargo --version
