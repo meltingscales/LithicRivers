@@ -36,7 +36,7 @@ impl Game {
         move_player_system(&mut self.world, &mut self.res);
     }
 
-    pub fn build_view(&self) -> RenderView {
-        build_render_view(&self.world, &self.res)
+    pub fn build_view(&mut self) -> RenderView {
+        build_render_view(&self.world, &mut self.res)
     }
 }
