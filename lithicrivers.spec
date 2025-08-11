@@ -10,7 +10,9 @@ added_files = [
     ('README.md', './'),
     ("VERSION", "./"),
     # include license
-    ("LICENSE", "./")
+    ("LICENSE", "./"),
+    ("THIRD-PARTY-NOTICES.txt", "./"),
+    ("STEAM_APP_ID", "./"),
 ]
 
 a = Analysis(['lithicrivers/__main__.py'],

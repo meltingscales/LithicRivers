@@ -1,0 +1,38 @@
+# omniscient summary (don't reveal directly to player):
+
+The world ends after a fusion reactor explodes in the year 2186. this triggers a runaway greenhouse effect in the Earth's atmosphere that kills most humans and causes the world's economy to devolve. most complicated manufacturing gets taken over and destroyed. fast forward 1,000 years later to the year 3186, and you awaken as a heavily damaged android from SapienCorp, an old company that used to produce AI robots. you only wake up due to a 32-bit date overflow error that causes you to turn on and awaken a world with no real goals other than to repair yourself and explore.
+
+# overarching themes:
+
+I want this game to be marketed to people who are deeply invested in technology. programmers, tech bros, etc
+
+I want the main story to slowly be revealed to the player, with them not understanding anything at first. the store page should reflect this, too.
+
+I want the main villain (a rogue AI, now long dead) to be an AI system that slowly poisoned the emotions of various humans in order to take over the now-destroyed fusion reactor through mass social manipulation and automated hacking. you encounter some robots still running the rogue model, but they're extremely dangerous and should be avoided.
+
+I want to put snippets of code throughout the world that slowly reveal what actually happened to the world through environmental storytelling 
+
+I want this story to make those who are deeply invested in technology think about the ways in which their great use of technology may cause harm to themselves and cause them to become out of touch with reality. I want it to make people think about the impact that technology has on the planet and its ability to be weaponized for various means.
+
+# chronological order:
+
+- wasteland
+- android wakes up in a pile of rubble in what used to be a city
+- was shipped to the world as a replacement for a human worker, a few years before the fusion reactor explodes, so has no idea what's going on
+- expecting the date to be 2186, but it's 3186
+- examines boot logs and discovers a 32-bit date overflow error
+- quickly realizes with no geosats, there's no way to actually know the current date and 3186 is just what the system clock happened to be set to
+- then realizes with no geosats, due to how fast orbital decay happens, the GPS satellites have been not maintained for at least 20 years, so the GPS system is no longer functional
+- bargaining: "Maybe my GPS module is broken. There's no way that the world is 1,000 years old, and it'd be ridiculous for all of the GPS satellites to be destroyed."
+- looks at scrap around it, noticing the amount of rust 
+- tries to figure out what city it is, and realizes it's Seattle, WA
+- searches internal database for the past 1 year of newspaper headlines in Seattle, WA, and realizes that a fusion reactor was supposed to be turned on in a few months. Since I was deactivated before getting shipped out to Seattle, WA, I never got news feeds about the date past that.
+- the first quest is to travel 10 miles to the robotics factory that made you to replace your damaged fusion core and fix your limbs. you remember the location. TODO add a maps and waypoint system.
+
+
+...TODO: add a news feed system with fake news articles that cut off past a certain date, that gets updated when you scavenge data
+
+- when you finish the first quest in the game, and repair yourself by going to SapienCorp's factory, you decide to interface with a data center rack and examine it. you notice that there's a strange sector of code in the bootloader that doesn't make sense unless someone planted a rootkit on it. you audit the bootloader logs and notice it was modified pretty close to the time that you were shipped out. (TODO: what do you conclude?)
+
+
+TODO add a "data diving" mechanic

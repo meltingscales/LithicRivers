@@ -13,7 +13,6 @@
 - audio system
   - music
 - crafting
-- hunger
 - entities that move
 - fighting
 - explosions/fire
@@ -126,8 +125,6 @@
 
 - add a reference to hushy and lapfox Trax to the game somehow. music, sprites, items, tools, etc
 
-- actually establish the game's lore: the world ends after a fusion reactor explodes in the year 2186. this triggers a runaway greenhouse effect in the Earth's atmosphere that kills most humans and causes the world's economy to devolve. most complicated manufacturing gets taken over and destroyed. fast forward 1,000 years later to the year 3186, and you awaken as a heavily damaged android from SapienCorp, an old company that used to produce AI robots. you only wake up due to a 32-bit date overflow error that causes you to turn on and awaken in a desolate wasteland of a world with no real goals other than to repair yourself and explore.
-
 - modular body parts system like Qud, but more emphasis on crafting and modding
 
 - fuel cells of different types, jetpacks, antigravity (with extremely comedic "fall into space" mishaps), falling mechanic, electrical tools, gas powered tools
@@ -200,10 +197,11 @@
 - 🔄 **IN PROGRESS**: Push boxes that require certain body parts
 - 🔄 **IN PROGRESS**: Basic crafting system for body repairs
 - 🔄 **IN PROGRESS**: Procedural dungeons v2: Overhaul this and just copy the algorithm from https://www.gamedeveloper.com/programming/procedural-dungeon-generation-algorithm
+- finish working on `story.txt`...
 - in progress: steam API integration
 - ask ai: In @core.py , critique the `_generate_forced_structures` method. Is it possible it's not working as intended?
 - todo: changing chunk size seems to affect structure generation. fix this.
-- todo: cores are definitely being used by worldgen, but don't max out CPU. Why might this be? they only use like 8% CPU. (This is because of GIL. We need to switch to ProcessPoolExecutor.)
+- todo: cores are definitely being used by worldgen, but don't max out CPU. Why might this be? they only use like 8% CPU. (This is because of GIL. We need to switch to Rust or C/C++ lmao.)
 - todo: MANUAL TASK: Go into `worldgen.py` and make a way to force a specific structure to generate, then fix `_generate_forced_structures`... Don't use AI as it seems to get confused.
 - ask AI: How should I start doing steamworks/steamapi integration?
   - how should I do CICD for steam releases? I should document my tagging/branch rules.
