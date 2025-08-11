@@ -2405,6 +2405,8 @@ dependencies = [
  "anyhow",
  "bevy",
  "lithicrivers-core",
+ "rand",
+ "rand_chacha",
 ]
 
 [[package]]

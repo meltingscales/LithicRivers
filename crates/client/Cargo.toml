@@ -7,3 +7,5 @@ edition = "2021"
 bevy = { version = "0.12.1", default-features = true }
 anyhow = { workspace = true }
 lithicrivers-core = { path = "../core" }
+rand = "0.8"
+rand_chacha = "0.3"
