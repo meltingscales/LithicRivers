@@ -234,7 +234,12 @@ fn teardown_2d(mut commands: Commands, q: Query<Entity, With<View2D>>) {
     for e in &q { commands.entity(e).despawn_recursive(); }
 }
 
-fn setup_3d(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>, mut materials: ResMut<Assets<StandardMaterial>>) {
+fn setup_3d(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    loaded: Res<LoadedChunks2D>,
+) {
     // Camera
     commands.spawn((
         Camera3dBundle {
@@ -266,17 +271,26 @@ fn setup_3d(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>, mut materi
     let size = 16i32; // half-extent
     for gz in -size..=size {
         for gx in -size..=size {
-            let kind = demo_tile_at(gx, gz);
-            let color = tile_color(kind);
-            commands.spawn((
-                PbrBundle {
-                    mesh: meshes.add(Mesh::from(bevy::prelude::shape::Box::new(0.95, 0.2, 0.95))),
-                    material: materials.add(color.into()),
-                    transform: Transform::from_xyz(gx as f32, 0.1, gz as f32),
-                    ..Default::default()
-                },
-                View3D,
-            ));
+            // Use the shared loaded chunk data for tile type
+            let chunk_size = 32; // TODO: use config if needed
+            let cc = world_to_chunk_2d(gx, gz, chunk_size);
+            if let Some(chunk) = loaded.map.get(&cc) {
+                let lx = ((gx.rem_euclid(chunk_size)) as i32) as usize;
+                let lz = ((gz.rem_euclid(chunk_size)) as i32) as usize;
+                let idx = lz * (chunk.w as usize) + lx;
+                if let Some(cell) = chunk.tiles.get(idx) {
+                    let color = tile_color(cell.kind);
+                    commands.spawn((
+                        PbrBundle {
+                            mesh: meshes.add(Mesh::from(bevy::prelude::shape::Box::new(0.95, 0.2, 0.95))),
+                            material: materials.add(color.into()),
+                            transform: Transform::from_xyz(gx as f32, 0.1, gz as f32),
+                            ..Default::default()
+                        },
+                        View3D,
+                    ));
+                }
+            }
         }
     }
 }
