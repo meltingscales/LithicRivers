@@ -1,6 +1,6 @@
 .PHONY: help install build run client fmt clippy toolchain security test
 
-TOOLCHAIN ?= 1.75.0
+TOOLCHAIN ?= nightly
 
 help:
 	@echo "Available targets:"
@@ -16,6 +16,7 @@ help:
 install:
 	rustup toolchain install $(TOOLCHAIN)
 	rustup override set $(TOOLCHAIN)
+	rustup default $(TOOLCHAIN)
 	./scripts/install_dev_deps.sh
 
 security:
@@ -27,6 +28,7 @@ test:
 build:
 	cargo --version
 	cargo build
+	cargo build -p lithicrivers-client
 
 run: client
 
