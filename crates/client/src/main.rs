@@ -3,6 +3,7 @@ use bevy::input::mouse::{MouseMotion};
 use bevy::window::CursorGrabMode;
 use lithicrivers_core::Game;
 use lithicrivers_core::tiles::TileKind;
+use lithicrivers_core::resources::world::CHUNK_SIZE;
 use std::collections::{HashMap, HashSet, VecDeque};
 use bevy::asset::LoadState;
 
@@ -12,27 +13,27 @@ mod tests {
 
     #[test]
     fn div_floor_basics() {
-        assert_eq!(div_floor(0, 32), 0);
-        assert_eq!(div_floor(31, 32), 0);
-        assert_eq!(div_floor(32, 32), 1);
-        assert_eq!(div_floor(-1, 32), -1);
-        assert_eq!(div_floor(-32, 32), -1);
-        assert_eq!(div_floor(-33, 32), -2);
+        assert_eq!(div_floor(0, CHUNK_SIZE), 0);
+        assert_eq!(div_floor(CHUNK_SIZE - 1, CHUNK_SIZE), 0);
+        assert_eq!(div_floor(CHUNK_SIZE, CHUNK_SIZE), 1);
+        assert_eq!(div_floor(-1, CHUNK_SIZE), -1);
+        assert_eq!(div_floor(-CHUNK_SIZE, CHUNK_SIZE), -1);
+        assert_eq!(div_floor(-CHUNK_SIZE-1, CHUNK_SIZE), -2);
     }
 
     #[test]
     fn world_to_chunk_edges() {
-        let c = world_to_chunk_2d(0, 0, 32);
+        let c = world_to_chunk_2d(0, 0, CHUNK_SIZE);
         assert_eq!(c.cx, 0); assert_eq!(c.cy, 0);
-        let c = world_to_chunk_2d(31, 31, 32);
+        let c = world_to_chunk_2d(CHUNK_SIZE-1, CHUNK_SIZE-1, CHUNK_SIZE);
         assert_eq!(c.cx, 0); assert_eq!(c.cy, 0);
-        let c = world_to_chunk_2d(32, 0, 32);
+        let c = world_to_chunk_2d(CHUNK_SIZE, 0, CHUNK_SIZE);
         assert_eq!(c.cx, 1); assert_eq!(c.cy, 0);
-        let c = world_to_chunk_2d(-1, -1, 32);
+        let c = world_to_chunk_2d(-1, -1, CHUNK_SIZE);
         assert_eq!(c.cx, -1); assert_eq!(c.cy, -1);
-        let c = world_to_chunk_2d(-32, -32, 32);
+        let c = world_to_chunk_2d(-CHUNK_SIZE, -CHUNK_SIZE, CHUNK_SIZE);
         assert_eq!(c.cx, -1); assert_eq!(c.cy, -1);
-        let c = world_to_chunk_2d(-33, -33, 32);
+        let c = world_to_chunk_2d(-CHUNK_SIZE-1, -CHUNK_SIZE-1, CHUNK_SIZE);
         assert_eq!(c.cx, -2); assert_eq!(c.cy, -2);
     }
 
@@ -51,8 +52,8 @@ mod tests {
     #[test]
     fn generate_chunk_is_deterministic() {
         let cc = ChunkCoord2D { cx: 5, cy: -2 };
-        let a = generate_chunk_2d(9999, cc, 32, 32);
-        let b = generate_chunk_2d(9999, cc, 32, 32);
+        let a = generate_chunk_2d(9999, cc, CHUNK_SIZE, CHUNK_SIZE);
+        let b = generate_chunk_2d(9999, cc, CHUNK_SIZE, CHUNK_SIZE);
         assert_eq!(a.w, b.w);
         assert_eq!(a.tiles.len(), b.tiles.len());
         for (i, (ta, tb)) in a.tiles.iter().zip(b.tiles.iter()).enumerate() {
@@ -104,13 +105,13 @@ fn demo_tile_at(x: i32, z: i32) -> TileKind {
     use rand::{Rng, SeedableRng};
     use rand_chacha::ChaCha20Rng;
     let seed = 12345u64; // demo seed; in future, pull WorldSeed
-    let cc = world_to_chunk_2d(x, z, 32);
-    let local_x = (x.rem_euclid(32)) as i32;
-    let local_z = (z.rem_euclid(32)) as i32;
+    let cc = world_to_chunk_2d(x, z, CHUNK_SIZE);
+    let local_x = (x.rem_euclid(CHUNK_SIZE)) as i32;
+    let local_z = (z.rem_euclid(CHUNK_SIZE)) as i32;
     // Seed RNG per chunk like 2D, then advance in a stable way for local cell
     let mut rng = ChaCha20Rng::seed_from_u64(hash64(seed, cc.cx as i64, cc.cy as i64));
     // Advance RNG index by a stable offset per local cell to keep distribution consistent
-    let steps = (local_z * 32 + local_x) as usize;
+    let steps = (local_z * CHUNK_SIZE + local_x) as usize;
     for _ in 0..steps { let _: f32 = rng.gen(); }
     let r: f32 = rng.gen();
     if r < 0.10 { TileKind::Rock }
@@ -190,7 +191,7 @@ fn main() {
         .insert_resource(CoreGame(Game::new(12345)))
         .insert_resource(WorldSeed(12345))
         .insert_resource(FixedTickTimer(Timer::from_seconds(1.0/30.0, TimerMode::Repeating)))
-        .insert_resource(View2DConfig { tile_px: 16.0, cols: 80, rows: 45, chunk_size: 32, view_chunk_radius: 3 })
+        .insert_resource(View2DConfig { tile_px: 16.0, cols: 80, rows: 45, chunk_size: lithicrivers_core::resources::world::CHUNK_SIZE, view_chunk_radius: 3 })
         .insert_resource(LoadedChunks2D { map: HashMap::new(), lru: VecDeque::new(), capacity: 256 })
         .insert_resource(VisibleChunks2D(HashSet::new()))
         .init_resource::<FontHandles>()
@@ -648,6 +649,8 @@ fn load_ascii_font(mut fonts: ResMut<FontHandles>, asset_server: Res<AssetServer
 }
 
 fn world_to_chunk_2d(x: i32, y: i32, chunk: i32) -> ChunkCoord2D {
+    // NOTE: chunk argument should always be CHUNK_SIZE
+
     let fx = div_floor(x, chunk);
     let fy = div_floor(y, chunk);
     ChunkCoord2D { cx: fx, cy: fy }
@@ -707,6 +710,7 @@ fn ensure_chunks_loaded_2d(
 }
 
 fn generate_chunk_2d(seed: u64, cc: ChunkCoord2D, w: i32, h: i32) -> ChunkData2D {
+    // NOTE: w and h should always be CHUNK_SIZE
     use rand::{Rng, SeedableRng};
     use rand_chacha::ChaCha20Rng;
     // Position-based deterministic seeding
@@ -777,29 +781,22 @@ fn render_ascii_2d(
     for vy in 0..cfg.rows {
         for vx in 0..cfg.cols {
             let wx = start_x + vx; let wy = start_y + vy;
-            // Fetch tile from chunk
-            let cc = world_to_chunk_2d(wx, wy, cfg.chunk_size);
-            if let Some(chunk) = loaded.map.get(&cc) {
-                let lx = ((wx.rem_euclid(cfg.chunk_size)) as i32) as usize;
-                let ly = ((wy.rem_euclid(cfg.chunk_size)) as i32) as usize;
-                let idx = ly * (chunk.w as usize) + lx;
-                if let Some(cell) = chunk.tiles.get(idx) {
-                    let color = if Some((wx, wy)) == last_blocked {
-                        Color::RED
-                    } else {
-                        tile_color(cell.kind)
-                    };
-                    let text = Text::from_section(cell.kind.glyph().to_string(), TextStyle { font: active_font.clone(), font_size: cfg.tile_px, color })
-                        .with_alignment(TextAlignment::Center);
-                    let tx = (vx - half_cols) as f32 * sx;
-                    let ty = (vy - half_rows) as f32 * -sy; // y-down screen
-                    bundle.push((Text2dBundle {
-                        text,
-                        transform: Transform::from_translation(Vec3::new(tx, ty, 0.0)),
-                        ..Default::default()
-                    },));
-                }
-            }
+            // Fetch tile directly from authoritative world
+            let tile_kind = core.0.res.world.get_tile(wx, wy);
+            let color = if Some((wx, wy)) == last_blocked && !tile_kind.is_passable() {
+                Color::RED
+            } else {
+                tile_color(tile_kind)
+            };
+            let text = Text::from_section(tile_kind.glyph().to_string(), TextStyle { font: active_font.clone(), font_size: cfg.tile_px, color })
+                .with_alignment(TextAlignment::Center);
+            let tx = (vx - half_cols) as f32 * sx;
+            let ty = (vy - half_rows) as f32 * -sy; // y-down screen
+            bundle.push((Text2dBundle {
+                text,
+                transform: Transform::from_translation(Vec3::new(tx, ty, 0.0)),
+                ..Default::default()
+            },));
         }
     }
     // Spawn all glyphs as children
