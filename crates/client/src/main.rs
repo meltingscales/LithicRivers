@@ -1,8 +1,8 @@
 use bevy::prelude::*;
-use bevy::time::common_conditions::on_timer;
+use bevy::input::mouse::{MouseMotion};
+use bevy::window::CursorGrabMode;
 use lithicrivers_core::Game;
 use lithicrivers_core::tiles::TileKind;
-use std::time::Duration;
 use std::collections::{HashMap, HashSet, VecDeque};
 use bevy::asset::LoadState;
 
@@ -195,6 +195,7 @@ fn main() {
         .insert_resource(VisibleChunks2D(HashSet::new()))
         .init_resource::<FontHandles>()
         .add_state::<ViewMode>()
+        .init_resource::<Camera3DRotation>()
         .add_systems(OnEnter(ViewMode::TwoD), setup_2d)
         .add_systems(OnExit(ViewMode::TwoD), teardown_2d)
         .add_systems(OnEnter(ViewMode::ThreeD), setup_3d)
@@ -210,52 +211,92 @@ fn main() {
             render_ascii_2d,
         ).run_if(in_state(ViewMode::TwoD)))
         // 3D player marker update
+        .init_resource::<Last3DPos>()
         .add_systems(Update, update_player_marker_3d.run_if(in_state(ViewMode::ThreeD)))
-        // 3D camera follow player
+        .add_systems(Update, camera_3d_mouse_rotation.run_if(in_state(ViewMode::ThreeD)))
         .add_systems(Update, update_camera_3d_follow_player.run_if(in_state(ViewMode::ThreeD)))
-        // 3D chunk visibility and loading
+        .add_systems(Update, update_compass_ui.run_if(in_state(ViewMode::ThreeD)))
         .add_systems(Update, (
             update_visible_chunks_3d,
             ensure_chunks_loaded_3d,
         ).run_if(in_state(ViewMode::ThreeD)))
-        // 3D ground grid update
-        .init_resource::<Last3DPos>()
         .add_systems(Update, update_ground_3d.run_if(in_state(ViewMode::ThreeD)))
         .run();
 }
 
-fn setup_2d(mut commands: Commands, mut last2d: ResMut<Last2DPos>) {
-    // Camera
-    commands.spawn((Camera2dBundle::default(), View2D));
-    // Simple player marker as a white sprite '@'-like placeholder
-    commands.spawn((
-        SpriteBundle {
-            sprite: Sprite {
-                color: Color::rgb(0.9, 0.9, 0.9),
-                custom_size: Some(Vec2::splat(12.0)),
-                ..Default::default()
-            },
-            transform: Transform::from_translation(Vec3::new(0.0, 0.0, 0.0)),
-            ..Default::default()
-        },
-        PlayerMarker,
-        View2D,
-    ));
-    // Root for ASCII glyphs
-    commands.spawn((SpatialBundle::default(), AsciiRoot, View2D));
-    // Force re-render on first entry
-    *last2d = Last2DPos(i32::MIN, i32::MIN);
+#[derive(Resource, Debug)]
+struct Camera3DRotation {
+    yaw: f32,
+    pitch: f32,
+    mouse_held: bool,
 }
 
-fn teardown_2d(
-    mut commands: Commands,
-    q: Query<Entity, With<View2D>>,
-    mut last2d: ResMut<Last2DPos>,
-) {
-    for e in &q { commands.entity(e).despawn_recursive(); }
-    // Force re-render next time 2D is entered
-    *last2d = Last2DPos(i32::MIN, i32::MIN);
+impl Default for Camera3DRotation {
+    fn default() -> Self {
+        Self { yaw: 0.0, pitch: 0.0, mouse_held: false }
+    }
 }
+
+fn update_compass_ui(
+    rot: Res<Camera3DRotation>,
+    mut q: Query<&mut Text, With<CompassUI>>,
+) {
+    // Map yaw to NESW (0 = N, pi/2 = W, pi = S, 3pi/2 = E)
+    let yaw = rot.yaw;
+    let dirs = ["N", "E", "S", "W"];
+    // Calculate which direction is "up" (closest to camera forward)
+    let mut labels = [" ", " ", " ", " "];
+    // 0 = north (z-), +yaw is left (counterclockwise)
+    let angle = ((yaw + std::f32::consts::FRAC_PI_2 * 2.0) % (std::f32::consts::TAU) + std::f32::consts::TAU) % std::f32::consts::TAU;
+    let idx = ((4.0 * angle / std::f32::consts::TAU) + 0.5).floor() as usize % 4;
+    for i in 0..4 {
+        labels[(i + 4 - idx) % 4] = dirs[i];
+    }
+    // Compose ASCII compass
+    let compass = format!(
+        "  {}  \n{} + {}\n  {}  ",
+        labels[0], labels[3], labels[1], labels[2]
+    );
+    for mut text in &mut q {
+        text.sections[0].value = compass.clone();
+    }
+}
+
+fn camera_3d_mouse_rotation(
+    mut rot: ResMut<Camera3DRotation>,
+    mut mouse_events: EventReader<MouseMotion>,
+    mouse_btn: Res<Input<MouseButton>>,
+    mut windows: Query<&mut Window>,
+) {
+    // Only rotate if right mouse is held
+    let held = mouse_btn.pressed(MouseButton::Right);
+    rot.mouse_held = held;
+    if held {
+        let mut dx = 0.0;
+        let mut dy = 0.0;
+        for ev in mouse_events.read() {
+            dx += ev.delta.x;
+            dy += ev.delta.y;
+        }
+        rot.yaw -= dx * 0.01;
+        rot.pitch -= dy * 0.01;
+        rot.pitch = rot.pitch.clamp(-1.5, 1.5);
+        // Optionally grab cursor
+        if let Ok(mut window) = windows.get_single_mut() {
+            window.cursor.grab_mode = CursorGrabMode::Locked;
+            window.cursor.visible = false;
+        }
+    } else {
+        // Release cursor
+        if let Ok(mut window) = windows.get_single_mut() {
+            window.cursor.grab_mode = CursorGrabMode::None;
+            window.cursor.visible = true;
+        }
+    }
+}
+
+#[derive(Component)]
+struct CompassUI;
 
 fn setup_3d(
     mut commands: Commands,
@@ -292,16 +333,89 @@ fn setup_3d(
     ));
     // (Ground tiles are now spawned dynamically by update_ground_3d)
 
+    // Compass UI (NESW, top right)
+    commands.spawn((
+        NodeBundle {
+            style: Style {
+                width: Val::Px(120.0),
+                height: Val::Px(60.0),
+                top: Val::Px(10.0),
+                right: Val::Px(10.0),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                ..Default::default()
+            },
+            background_color: BackgroundColor(Color::NONE),
+            ..Default::default()
+        },
+        CompassUI,
+        View3D,
+    )).with_children(|parent| {
+        parent.spawn(TextBundle {
+            text: Text::from_section(
+                "  N  \nW + E\n  S  ",
+                TextStyle {
+                    font_size: 26.0,
+                    color: Color::BLACK,
+                    font: Handle::default(), // Will be replaced by UI font
+                },
+            ),
+            style: Style {
+                margin: UiRect::all(Val::Px(0.0)),
+                ..Default::default()
+            },
+            ..Default::default()
+        });
+    });
 }
 
 fn teardown_3d(
     mut commands: Commands,
     q: Query<Entity, With<View3D>>,
+    q_compass: Query<Entity, With<CompassUI>>,
     mut last3d: ResMut<Last3DPos>,
 ) {
-    for e in &q { commands.entity(e).despawn_recursive(); }
+    for e in &q {
+        commands.entity(e).despawn_recursive();
+    }
+    for e in &q_compass {
+        commands.entity(e).despawn_recursive();
+    }
     // Force re-render next time 3D is entered
     *last3d = Last3DPos(i32::MIN, i32::MIN);
+}
+
+fn setup_2d(mut commands: Commands, mut last2d: ResMut<Last2DPos>) {
+    // Camera
+    commands.spawn((Camera2dBundle::default(), View2D));
+    // Simple player marker as a white sprite '@'-like placeholder
+    commands.spawn((
+        SpriteBundle {
+            sprite: Sprite {
+                color: Color::rgb(0.9, 0.9, 0.9),
+                custom_size: Some(Vec2::splat(12.0)),
+                ..Default::default()
+            },
+            transform: Transform::from_translation(Vec3::new(0.0, 0.0, 0.0)),
+            ..Default::default()
+        },
+        PlayerMarker,
+        View2D,
+    ));
+    // Root for ASCII glyphs
+    commands.spawn((SpatialBundle::default(), AsciiRoot, View2D));
+    // Force re-render on first entry
+    *last2d = Last2DPos(i32::MIN, i32::MIN);
+}
+
+fn teardown_2d(
+    mut commands: Commands,
+    q: Query<Entity, With<View2D>>,
+    mut last2d: ResMut<Last2DPos>,
+) {
+    for e in &q { commands.entity(e).despawn_recursive(); }
+    // Force re-render next time 2D is entered
+    *last2d = Last2DPos(i32::MIN, i32::MIN);
 }
 
 // Update the 3D player marker's position to match the player's world position
@@ -372,18 +486,22 @@ fn ensure_chunks_loaded_3d(
 }
 
 
-// Make the 3D camera follow the fixed player marker at the origin (floating origin)
+// Make the 3D camera follow the fixed player marker at the origin (floating origin) and apply rotation
 fn update_camera_3d_follow_player(
     _core: Res<CoreGame>,
+    rot: Res<Camera3DRotation>,
     mut q: Query<&mut Transform, (With<Camera3d>, With<View3D>)>,
 ) {
     if let Ok(mut transform) = q.get_single_mut() {
-        let offset = Vec3::new(8.0, 8.0, 16.0);
+        let r = Quat::from_axis_angle(Vec3::Y, rot.yaw)
+            * Quat::from_axis_angle(Vec3::X, rot.pitch);
+        let offset = r * Vec3::new(8.0, 8.0, 16.0);
         let player_origin = Vec3::ZERO;
         transform.translation = player_origin + offset;
         transform.look_at(player_origin, Vec3::Y);
     }
 }
+
 
 // Only update the 3D ground grid when the player moves to a new tile
 #[derive(Resource, Default, Debug, Clone, Copy, PartialEq, Eq)]

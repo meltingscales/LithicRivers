@@ -21,6 +21,7 @@ pkgs.mkShell {
     pkgs.mesa
     pkgs.mold
     pkgs.binutils
+    pkgs.udev
   ];
   shellHook = ''
     export PKG_CONFIG_PATH=${pkgs.alsa-lib.dev}/lib/pkgconfig:${pkgs.openssl.dev}/lib/pkgconfig:$PKG_CONFIG_PATH
