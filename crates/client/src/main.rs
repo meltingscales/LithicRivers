@@ -184,7 +184,6 @@ struct VisibleChunks2D(HashSet<ChunkCoord2D>);
 #[derive(Resource, Default)]
 struct FontHandles {
     primary: Handle<Font>,   // assets/fonts/monospace.ttf
-    fallback: Handle<Font>,  // Bevy's built-in: fonts/FiraSans-Bold.ttf
     initiated: bool,
 }
 
@@ -603,6 +602,7 @@ fn keyboard_input_system(keys: Res<Input<KeyCode>>, mut core: ResMut<CoreGame>) 
     if keys.just_pressed(KeyCode::Numpad9) { core.0.queue_player_move(1, -1); moved = true; } // up-right
     if keys.just_pressed(KeyCode::Numpad1) { core.0.queue_player_move(-1, 1); moved = true; } // down-left
     if keys.just_pressed(KeyCode::Numpad3) { core.0.queue_player_move(1, 1); moved = true; } // down-right
+    if keys.just_pressed(KeyCode::Numpad5) { core.0.queue_player_move(0, 0); moved = true; } // center, same as waiting
     if moved {
         core.0.tick();
         // For now, print tick and player pos as a heartbeat.
@@ -655,10 +655,8 @@ fn load_ascii_font(mut fonts: ResMut<FontHandles>, asset_server: Res<AssetServer
     if !fonts.initiated {
         // Primary: look for a repo-provided mono font at assets/fonts/monospace.ttf
         fonts.primary = asset_server.load("fonts/monospace.ttf");
-        // Fallback: Bevy's bundled font. This path is available with default Bevy assets.
-        fonts.fallback = asset_server.load("fonts/FiraSans-Bold.ttf");
         fonts.initiated = true;
-        info!("Loading ASCII font: primary=assets/fonts/monospace.ttf, fallback=bevy fonts/FiraSans-Bold.ttf");
+        info!("Loading ASCII font: primary=assets/fonts/monospace.ttf");
     }
 }
 
@@ -775,37 +773,40 @@ fn render_ascii_2d(
     }
     if (px, py) == (last.0, last.1) { return; }
     last.0 = px; last.1 = py;
-    // Choose a usable font: prefer primary if loaded, else fallback if loaded, else wait.
+    // Choose a usable font: prefer primary if loaded, else wait.
     let font_handle: Option<Handle<Font>> = match asset_server.get_load_state(&fonts.primary) {
         Some(LoadState::Loaded) => Some(fonts.primary.clone()),
-        _ => match asset_server.get_load_state(&fonts.fallback) {
-            Some(LoadState::Loaded) => Some(fonts.fallback.clone()),
-            _ => None,
-        },
+        _ => None,
     };
     let Some(active_font) = font_handle else { return };
     let root = if let Ok(e) = root_q.get_single() { e } else { return };
     // Clear previous children
     commands.entity(root).despawn_descendants();
 
-    let half_cols = cfg.cols/2; let half_rows = cfg.rows/2;
-    let start_x = px - half_cols; let start_y = py - half_rows;
+    // Build view from core (includes entity glyph overlay)
+    let view = core.0.build_view();
+    let rows: i32 = view.map_lines.len() as i32;
+    if rows <= 0 { return; }
+    let cols: i32 = view.map_lines[0].chars().count() as i32;
+    let half_cols = cols/2; let half_rows = rows/2;
+    let start_x = view.player_pos.x - half_cols; let start_y = view.player_pos.y - half_rows;
     let sx = cfg.tile_px; let sy = cfg.tile_px;
-    let mut bundle = Vec::with_capacity((cfg.cols*cfg.rows) as usize);
-    for vy in 0..cfg.rows {
-        for vx in 0..cfg.cols {
-            let wx = start_x + vx; let wy = start_y + vy;
-            // Fetch tile directly from authoritative world
+    let mut bundle = Vec::with_capacity((rows*cols) as usize);
+    for (vy, line) in view.map_lines.iter().enumerate() {
+        for (vx, ch) in line.chars().enumerate() {
+            let vx_i = vx as i32; let vy_i = vy as i32;
+            let wx = start_x + vx_i; let wy = start_y + vy_i;
+            // Color from tile kind; glyph from view
             let tile_kind = core.0.res.world.get_tile(wx, wy);
             let color = if Some((wx, wy)) == last_blocked && !tile_kind.is_passable() {
                 Color::RED
             } else {
                 tile_color(tile_kind)
             };
-            let text = Text::from_section(tile_kind.glyph().to_string(), TextStyle { font: active_font.clone(), font_size: cfg.tile_px, color })
+            let text = Text::from_section(ch.to_string(), TextStyle { font: active_font.clone(), font_size: cfg.tile_px, color })
                 .with_alignment(TextAlignment::Center);
-            let tx = (vx - half_cols) as f32 * sx;
-            let ty = (vy - half_rows) as f32 * -sy; // y-down screen
+            let tx = (vx_i - half_cols) as f32 * sx;
+            let ty = (vy_i - half_rows) as f32 * -sy; // y-down screen
             bundle.push((Text2dBundle {
                 text,
                 transform: Transform::from_translation(Vec3::new(tx, ty, 0.0)),

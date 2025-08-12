@@ -21,8 +21,20 @@ impl Game {
         let mut world = World::new();
         let mut res = Resources::new(seed);
         // Spawn a player entity with a Position
-        let player = world.spawn((Position { x: 1, y: 1, z: 0 }, Player));
+        let player = world.spawn((
+            Position { x: 1, y: 1, z: 0 },
+            Player,
+            Glyph('@'),
+            BlocksMovement,
+        ));
         res.player_entity = Some(player);
+        // Spawn a simple StumblingSheep near the player (closer for visibility)
+        world.spawn((
+            Position { x: 2, y: 2, z: 0 },
+            Sheep,
+            Glyph('s'),
+            BlocksMovement,
+        ));
         Self { world, res }
     }
 
@@ -35,9 +47,10 @@ impl Game {
         // For now, just increment tick and maybe move the player slowly.
         self.res.gametick += 1;
         move_player_system(&mut self.world, &mut self.res);
+        stumbling_sheep_system(&mut self.world, &mut self.res);
     }
 
-    pub fn build_view(&mut self) -> RenderView {
-        build_render_view(&self.world, &mut self.res)
+    pub fn build_view(&self) -> RenderView {
+        build_render_view(&self.world, &self.res)
     }
 }

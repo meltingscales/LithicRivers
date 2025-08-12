@@ -1,6 +1,5 @@
-use crate::components::Position;
+use crate::components::{Glyph, Position};
 use crate::resources::Resources;
-use crate::tiles::TileKind;
 use hecs::{World};
 
 #[derive(Debug, Clone)]
@@ -10,7 +9,7 @@ pub struct RenderView {
     pub map_lines: Vec<String>,
 }
 
-pub fn build_render_view(world: &World, res: &mut Resources) -> RenderView {
+pub fn build_render_view(world: &World, res: &Resources) -> RenderView {
     let mut player_pos = Position { x: 0, y: 0, z: 0 };
     if let Some(e) = res.player_entity {
         if let Ok(p) = world.get::<&Position>(e) {
@@ -29,20 +28,26 @@ pub fn build_render_view(world: &World, res: &mut Resources) -> RenderView {
     let top = center_y - half_h;
     let left = center_x - half_w;
 
-    let mut lines: Vec<String> = Vec::with_capacity(win_h as usize);
+    // Build background from tiles
+    let mut buffer: Vec<Vec<char>> = vec![vec![' '; win_w as usize]; win_h as usize];
     for y in 0..win_h {
         let wy = top + y;
-        let mut row = String::with_capacity(win_w as usize);
         for x in 0..win_w {
             let wx = left + x;
-            let ch = if player_pos.z == 0 && wx == center_x && wy == center_y {
-                '@'
-            } else {
-                res.world.get_tile(wx, wy).glyph()
-            };
-            row.push(ch);
+            buffer[y as usize][x as usize] = res.world.get_tile(wx, wy).glyph();
         }
-        lines.push(row);
     }
+    // Overlay entities with Glyph in this window at the player's z
+    let z = player_pos.z;
+    for (_e, (pos, glyph)) in world.query::<(&Position, &Glyph)>().iter() {
+        if pos.z != z { continue; }
+        let vx = pos.x - left; let vy = pos.y - top;
+        if vx >= 0 && vx < win_w && vy >= 0 && vy < win_h {
+            buffer[vy as usize][vx as usize] = glyph.0;
+        }
+    }
+    // Convert to lines
+    let mut lines: Vec<String> = Vec::with_capacity(win_h as usize);
+    for y in 0..win_h { lines.push(buffer[y as usize].iter().collect()); }
     RenderView { gametick: res.gametick, player_pos, map_lines: lines }
 }
