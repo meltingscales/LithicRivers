@@ -126,6 +126,9 @@ struct View2D;
 struct View3D;
 
 #[derive(Component)]
+struct Ground3D;
+
+#[derive(Component)]
 struct PlayerMarker;
 
 // 2D ASCII view config and resources
@@ -200,11 +203,24 @@ fn main() {
         .add_systems(Update, keyboard_input_system)
         .add_systems(Update, toggle_view_mode)
         // 2D ASCII systems
+        .init_resource::<Last2DPos>()
         .add_systems(Update, (
             update_visible_chunks_2d,
             ensure_chunks_loaded_2d,
             render_ascii_2d,
         ).run_if(in_state(ViewMode::TwoD)))
+        // 3D player marker update
+        .add_systems(Update, update_player_marker_3d.run_if(in_state(ViewMode::ThreeD)))
+        // 3D camera follow player
+        .add_systems(Update, update_camera_3d_follow_player.run_if(in_state(ViewMode::ThreeD)))
+        // 3D chunk visibility and loading
+        .add_systems(Update, (
+            update_visible_chunks_3d,
+            ensure_chunks_loaded_3d,
+        ).run_if(in_state(ViewMode::ThreeD)))
+        // 3D ground grid update
+        .init_resource::<Last3DPos>()
+        .add_systems(Update, update_ground_3d.run_if(in_state(ViewMode::ThreeD)))
         .run();
 }
 
@@ -229,8 +245,14 @@ fn setup_2d(mut commands: Commands) {
     commands.spawn((SpatialBundle::default(), AsciiRoot, View2D));
 }
 
-fn teardown_2d(mut commands: Commands, q: Query<Entity, With<View2D>>) {
+fn teardown_2d(
+    mut commands: Commands,
+    q: Query<Entity, With<View2D>>,
+    mut last2d: ResMut<Last2DPos>,
+) {
     for e in &q { commands.entity(e).despawn_recursive(); }
+    // Force re-render next time 2D is entered
+    *last2d = Last2DPos(i32::MIN, i32::MIN);
 }
 
 fn setup_3d(
@@ -239,7 +261,7 @@ fn setup_3d(
     mut materials: ResMut<Assets<StandardMaterial>>,
     loaded: Res<LoadedChunks2D>,
 ) {
-    // Camera
+    // Camera (will be updated to follow player)
     commands.spawn((
         Camera3dBundle {
             transform: Transform::from_xyz(8.0, 8.0, 16.0).looking_at(Vec3::ZERO, Vec3::Y),
@@ -255,7 +277,7 @@ fn setup_3d(
         },
         View3D,
     ));
-    // Player cube
+    // Player cube (will be updated to match player position)
     commands.spawn((
         PbrBundle {
             mesh: meshes.add(Mesh::from(bevy::prelude::shape::Box::new(0.9, 0.9, 0.9))),
@@ -266,12 +288,140 @@ fn setup_3d(
         PlayerMarker,
         View3D,
     ));
-    // Simple demo ground of colored cubes representing tiles around origin
+    // (Ground tiles are now spawned dynamically by update_ground_3d)
+
+}
+
+fn teardown_3d(
+    mut commands: Commands,
+    q: Query<Entity, With<View3D>>,
+    mut last3d: ResMut<Last3DPos>,
+) {
+    for e in &q { commands.entity(e).despawn_recursive(); }
+    // Force re-render next time 3D is entered
+    *last3d = Last3DPos(i32::MIN, i32::MIN);
+}
+
+// Update the 3D player marker's position to match the player's world position
+fn update_player_marker_3d(
+    core: Res<CoreGame>,
+    mut q: Query<&mut Transform, (With<PlayerMarker>, With<View3D>)>,
+) {
+    if let Some(e) = core.0.res.player_entity {
+        if let Ok(pos) = core.0.world.get::<&lithicrivers_core::components::Position>(e) {
+            if let Ok(mut transform) = q.get_single_mut() {
+                // Y is height in 3D; use pos.x, pos.y for ground plane
+                transform.translation.x = pos.x as f32;
+                transform.translation.z = pos.y as f32;
+                // Keep the cube slightly above ground
+                transform.translation.y = 0.6;
+            }
+        }
+    }
+}
+
+// Update visible chunks for the 3D view (centered on player, radius matches 3D render size)
+fn update_visible_chunks_3d(
+    core: Res<CoreGame>,
+    mut vis: ResMut<VisibleChunks2D>,
+) {
+    // Use same chunk size and radius as the 3D render grid
+    let chunk_size = 32;
+    let view_chunk_radius = 2; // Could be made configurable
+    let mut center_x = 0i32;
+    let mut center_y = 0i32;
+    if let Some(e) = core.0.res.player_entity {
+        if let Ok(pos) = core.0.world.get::<&lithicrivers_core::components::Position>(e) {
+            center_x = pos.x;
+            center_y = pos.y;
+        }
+    }
+    let center_chunk = world_to_chunk_2d(center_x, center_y, chunk_size);
+    let mut newset = std::collections::HashSet::new();
+    for dy in -view_chunk_radius..=view_chunk_radius {
+        for dx in -view_chunk_radius..=view_chunk_radius {
+            newset.insert(ChunkCoord2D { cx: center_chunk.cx + dx, cy: center_chunk.cy + dy });
+        }
+    }
+    vis.0 = newset;
+}
+
+// Ensure visible chunks are loaded for the 3D view
+fn ensure_chunks_loaded_3d(
+    seed: Res<WorldSeed>,
+    vis: Res<VisibleChunks2D>,
+    mut loaded: ResMut<LoadedChunks2D>,
+) {
+    let chunk_size = 32;
+    for cc in vis.0.iter() {
+        if !loaded.map.contains_key(cc) {
+            let chunk = generate_chunk_2d(seed.0, *cc, chunk_size, chunk_size);
+            loaded.map.insert(*cc, chunk);
+            loaded.lru.push_back(*cc);
+        }
+    }
+    // Evict if over capacity (skip visible ones)
+    while loaded.map.len() > loaded.capacity {
+        if let Some(old) = loaded.lru.pop_front() {
+            if vis.0.contains(&old) {
+                loaded.lru.push_back(old);
+                break;
+            } else {
+                loaded.map.remove(&old);
+            }
+        } else { break; }
+    }
+}
+
+
+// Make the 3D camera follow the player position
+fn update_camera_3d_follow_player(
+    core: Res<CoreGame>,
+    mut q: Query<&mut Transform, (With<Camera3d>, With<View3D>)>,
+) {
+    if let Some(e) = core.0.res.player_entity {
+        if let Ok(pos) = core.0.world.get::<&lithicrivers_core::components::Position>(e) {
+            if let Ok(mut transform) = q.get_single_mut() {
+                // Camera offset: keep same relative offset as initial spawn
+                let offset = Vec3::new(8.0, 8.0, 16.0) - Vec3::ZERO;
+                let player_pos = Vec3::new(pos.x as f32, 0.0, pos.y as f32);
+                transform.translation = player_pos + offset;
+                transform.look_at(player_pos, Vec3::Y);
+            }
+        }
+    }
+}
+
+// Only update the 3D ground grid when the player moves to a new tile
+#[derive(Resource, Default, Debug, Clone, Copy, PartialEq, Eq)]
+struct Last3DPos(i32, i32);
+
+fn update_ground_3d(
+    core: Res<CoreGame>,
+    loaded: Res<LoadedChunks2D>,
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    q_ground: Query<Entity, With<Ground3D>>,
+    mut last: ResMut<Last3DPos>,
+) {
+    let mut px = 0i32;
+    let mut py = 0i32;
+    if let Some(e) = core.0.res.player_entity {
+        if let Ok(pos) = core.0.world.get::<&lithicrivers_core::components::Position>(e) {
+            px = pos.x; py = pos.y;
+        }
+    }
+    if (px, py) == (last.0, last.1) { return; }
+    last.0 = px; last.1 = py;
+    // Despawn all previous ground tiles
+    for e in &q_ground { commands.entity(e).despawn_recursive(); }
     let size = 16i32; // half-extent
-    for gz in -size..=size {
-        for gx in -size..=size {
-            // Use the shared loaded chunk data for tile type
-            let chunk_size = 32; // TODO: use config if needed
+    let chunk_size = 32;
+    for dz in -size..=size {
+        for dx in -size..=size {
+            let gx = px + dx;
+            let gz = py + dz;
             let cc = world_to_chunk_2d(gx, gz, chunk_size);
             if let Some(chunk) = loaded.map.get(&cc) {
                 let lx = ((gx.rem_euclid(chunk_size)) as i32) as usize;
@@ -286,6 +436,7 @@ fn setup_3d(
                             transform: Transform::from_xyz(gx as f32, 0.1, gz as f32),
                             ..Default::default()
                         },
+                        Ground3D,
                         View3D,
                     ));
                 }
@@ -294,9 +445,6 @@ fn setup_3d(
     }
 }
 
-fn teardown_3d(mut commands: Commands, q: Query<Entity, With<View3D>>) {
-    for e in &q { commands.entity(e).despawn_recursive(); }
-}
 
 fn keyboard_input_system(keys: Res<Input<KeyCode>>, mut core: ResMut<CoreGame>) {
     // Movement now uses numpad keys (cardinal + diagonal):
@@ -458,6 +606,10 @@ fn hash64(seed: u64, x: i64, y: i64) -> u64 {
     h ^ (h >> 33)
 }
 
+// Only rerender ASCII glyphs when the player moves to a new tile
+#[derive(Resource, Default, Debug, Clone, Copy, PartialEq, Eq)]
+struct Last2DPos(i32, i32);
+
 fn render_ascii_2d(
     core: Res<CoreGame>,
     cfg: Res<View2DConfig>,
@@ -466,7 +618,16 @@ fn render_ascii_2d(
     loaded: Res<LoadedChunks2D>,
     mut commands: Commands,
     root_q: Query<Entity, With<AsciiRoot>>,
+    mut last: ResMut<Last2DPos>,
 ) {
+    let mut px = 0i32; let mut py = 0i32;
+    if let Some(e) = core.0.res.player_entity {
+        if let Ok(pos) = core.0.world.get::<&lithicrivers_core::components::Position>(e) {
+            px = pos.x; py = pos.y;
+        }
+    }
+    if (px, py) == (last.0, last.1) { return; }
+    last.0 = px; last.1 = py;
     // Choose a usable font: prefer primary if loaded, else fallback if loaded, else wait.
     let font_handle: Option<Handle<Font>> = match asset_server.get_load_state(&fonts.primary) {
         Some(LoadState::Loaded) => Some(fonts.primary.clone()),
@@ -480,13 +641,6 @@ fn render_ascii_2d(
     // Clear previous children
     commands.entity(root).despawn_descendants();
 
-    // Determine player-centered camera origin in tile space
-    let mut px = 0i32; let mut py = 0i32;
-    if let Some(e) = core.0.res.player_entity {
-        if let Ok(pos) = core.0.world.get::<&lithicrivers_core::components::Position>(e) {
-            px = pos.x; py = pos.y;
-        }
-    }
     let half_cols = cfg.cols/2; let half_rows = cfg.rows/2;
     let start_x = px - half_cols; let start_y = py - half_rows;
     let sx = cfg.tile_px; let sy = cfg.tile_px;
@@ -519,3 +673,4 @@ fn render_ascii_2d(
         for (b,) in bundle.drain(..) { p.spawn(b); }
     });
 }
+
