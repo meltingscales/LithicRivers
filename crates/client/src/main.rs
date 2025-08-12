@@ -224,7 +224,7 @@ fn main() {
         .run();
 }
 
-fn setup_2d(mut commands: Commands) {
+fn setup_2d(mut commands: Commands, mut last2d: ResMut<Last2DPos>) {
     // Camera
     commands.spawn((Camera2dBundle::default(), View2D));
     // Simple player marker as a white sprite '@'-like placeholder
@@ -243,6 +243,8 @@ fn setup_2d(mut commands: Commands) {
     ));
     // Root for ASCII glyphs
     commands.spawn((SpatialBundle::default(), AsciiRoot, View2D));
+    // Force re-render on first entry
+    *last2d = Last2DPos(i32::MIN, i32::MIN);
 }
 
 fn teardown_2d(
@@ -304,19 +306,15 @@ fn teardown_3d(
 
 // Update the 3D player marker's position to match the player's world position
 fn update_player_marker_3d(
-    core: Res<CoreGame>,
+    _core: Res<CoreGame>,
     mut q: Query<&mut Transform, (With<PlayerMarker>, With<View3D>)>,
 ) {
-    if let Some(e) = core.0.res.player_entity {
-        if let Ok(pos) = core.0.world.get::<&lithicrivers_core::components::Position>(e) {
-            if let Ok(mut transform) = q.get_single_mut() {
-                // Y is height in 3D; use pos.x, pos.y for ground plane
-                transform.translation.x = pos.x as f32;
-                transform.translation.z = pos.y as f32;
-                // Keep the cube slightly above ground
-                transform.translation.y = 0.6;
-            }
-        }
+    if let Ok(mut transform) = q.get_single_mut() {
+        // Player marker stays at origin (center of world)
+        transform.translation.x = 0.0;
+        transform.translation.z = 0.0;
+        // Keep the cube slightly above ground
+        transform.translation.y = 0.6;
     }
 }
 
@@ -374,21 +372,16 @@ fn ensure_chunks_loaded_3d(
 }
 
 
-// Make the 3D camera follow the player position
+// Make the 3D camera follow the fixed player marker at the origin (floating origin)
 fn update_camera_3d_follow_player(
-    core: Res<CoreGame>,
+    _core: Res<CoreGame>,
     mut q: Query<&mut Transform, (With<Camera3d>, With<View3D>)>,
 ) {
-    if let Some(e) = core.0.res.player_entity {
-        if let Ok(pos) = core.0.world.get::<&lithicrivers_core::components::Position>(e) {
-            if let Ok(mut transform) = q.get_single_mut() {
-                // Camera offset: keep same relative offset as initial spawn
-                let offset = Vec3::new(8.0, 8.0, 16.0) - Vec3::ZERO;
-                let player_pos = Vec3::new(pos.x as f32, 0.0, pos.y as f32);
-                transform.translation = player_pos + offset;
-                transform.look_at(player_pos, Vec3::Y);
-            }
-        }
+    if let Ok(mut transform) = q.get_single_mut() {
+        let offset = Vec3::new(8.0, 8.0, 16.0);
+        let player_origin = Vec3::ZERO;
+        transform.translation = player_origin + offset;
+        transform.look_at(player_origin, Vec3::Y);
     }
 }
 
@@ -429,11 +422,12 @@ fn update_ground_3d(
                 let idx = lz * (chunk.w as usize) + lx;
                 if let Some(cell) = chunk.tiles.get(idx) {
                     let color = tile_color(cell.kind);
+                    // Translate ground tile by (-player.x, 0, -player.y)
                     commands.spawn((
                         PbrBundle {
                             mesh: meshes.add(Mesh::from(bevy::prelude::shape::Box::new(0.95, 0.2, 0.95))),
                             material: materials.add(color.into()),
-                            transform: Transform::from_xyz(gx as f32, 0.1, gz as f32),
+                            transform: Transform::from_xyz((gx - px) as f32, 0.1, (gz - py) as f32),
                             ..Default::default()
                         },
                         Ground3D,
