@@ -10,6 +10,9 @@ if command -v apt-get >/dev/null 2>&1; then
   # Smarter APT path: only install missing packages
   # Base dev deps for X/Wayland/ALSA + GL
   APT_PACKAGES=(
+    build-essential
+    binutils
+    mold
     pkg-config
     libasound2-dev
     libudev-dev
@@ -40,6 +43,12 @@ if command -v apt-get >/dev/null 2>&1; then
 elif command -v dnf >/dev/null 2>&1; then
   # Smarter DNF path: only install missing packages
   DNF_PACKAGES=(
+    gcc
+    gcc-c++
+    make
+    glibc-devel
+    binutils
+    mold
     pkgconf-pkg-config
     alsa-lib-devel
     libudev-devel
@@ -69,6 +78,10 @@ elif command -v dnf >/dev/null 2>&1; then
 elif command -v pacman >/dev/null 2>&1; then
   # Smarter pacman path: only install missing packages, sync DB if needed
   PACMAN_PACKAGES=(
+    gcc
+    make
+    binutils
+    mold
     pkgconf
     alsa-lib
     libudev0-shim
@@ -94,6 +107,8 @@ elif command -v pacman >/dev/null 2>&1; then
 elif command -v apk >/dev/null 2>&1; then
   # Smarter Alpine apk path: only install missing packages
   APK_PACKAGES=(
+    build-base
+    mold
     pkgconfig
     alsa-lib-dev
     eudev-dev
