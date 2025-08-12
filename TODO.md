@@ -211,6 +211,8 @@
 
 - save/load system where you can pick a save file from a list of saved games (build UI for this...)
 
+- For the rendering, wouldn't it be far more efficient to just render big patches of 3d objects/glypths, save them, and translate the 3d objects when the player moves? So the player actually never "moves", the world below them just gets translated on x/z.
+
 ## steam key giveaway list:
 - skomor123
 - noahnogueras@gmail.com

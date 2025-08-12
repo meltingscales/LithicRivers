@@ -3,6 +3,7 @@
 TOOLCHAIN ?= nightly
 
 help:
+	@echo "Note for NixOS: Please run 'nix-shell' before running any make targets."
 	@echo "Available targets:"
 	@echo "  install - Install dependencies"
 	@echo "  build   - Build the project"
