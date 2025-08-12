@@ -104,6 +104,7 @@ fn tile_color(kind: TileKind) -> Color {
 }
 
 // Very small deterministic demo for 3D using the same hashing approach
+#[cfg(test)]
 fn demo_tile_at(x: i32, z: i32) -> TileKind {
     // These constants mirror the 2D generate logic but keep it simple.
     use rand::{Rng, SeedableRng};
@@ -140,8 +141,8 @@ struct PlayerMarker;
 #[derive(Resource, Debug, Clone, Copy)]
 struct View2DConfig {
     tile_px: f32,
-    cols: i32,
-    rows: i32,
+    _cols: i32,
+    _rows: i32,
     chunk_size: i32,
     view_chunk_radius: i32,
 }
@@ -201,7 +202,7 @@ fn main() {
         .insert_resource(CoreGame(Game::new(12345)))
         .insert_resource(WorldSeed(12345))
         .insert_resource(FixedTickTimer(Timer::from_seconds(1.0/30.0, TimerMode::Repeating)))
-        .insert_resource(View2DConfig { tile_px: 16.0, cols: 80, rows: 45, chunk_size: lithicrivers_core::resources::world::CHUNK_SIZE, view_chunk_radius: 2 })
+        .insert_resource(View2DConfig { tile_px: 16.0, _cols: 80, _rows: 45, chunk_size: lithicrivers_core::resources::world::CHUNK_SIZE, view_chunk_radius: 2 })
         .insert_resource(View3DConfig { chunk_size: CHUNK_SIZE, view_chunk_radius: 2 })
         .insert_resource(LoadedChunks2D { map: HashMap::new(), lru: VecDeque::new(), capacity: 256 })
         .insert_resource(VisibleChunks2D(HashSet::new()))
@@ -317,7 +318,7 @@ fn setup_3d(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    loaded: Res<LoadedChunks2D>,
+    _loaded: Res<LoadedChunks2D>,
 ) {
     // Camera (will be updated to follow player)
     commands.spawn((
@@ -538,7 +539,7 @@ struct Last3DPos(i32, i32);
 
 fn update_ground_3d(
     core: Res<CoreGame>,
-    loaded: Res<LoadedChunks2D>,
+    _loaded: Res<LoadedChunks2D>,
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
@@ -563,7 +564,7 @@ fn update_ground_3d(
             let gx = px + dx;
             let gz = py + dz;
             let cc = world_to_chunk_2d(gx, gz, chunk_size);
-            if let Some(chunk) = loaded.map.get(&cc) {
+            if let Some(chunk) = _loaded.map.get(&cc) {
                 let lx = ((gx.rem_euclid(chunk_size)) as i32) as usize;
                 let lz = ((gz.rem_euclid(chunk_size)) as i32) as usize;
                 let idx = lz * (chunk.w as usize) + lx;
@@ -618,6 +619,7 @@ fn keyboard_input_system(keys: Res<Input<KeyCode>>, mut core: ResMut<CoreGame>) 
     }
 }
 
+#[allow(dead_code)]
 fn tick_core_sim(time: Res<Time>, mut timer: ResMut<FixedTickTimer>, mut core: ResMut<CoreGame>) {
     if timer.tick(time.delta()).just_finished() {
         core.0.tick();
@@ -758,7 +760,7 @@ fn render_ascii_2d(
     cfg: Res<View2DConfig>,
     fonts: Res<FontHandles>,
     asset_server: Res<AssetServer>,
-    loaded: Res<LoadedChunks2D>,
+    _loaded: Res<LoadedChunks2D>,
     mut commands: Commands,
     root_q: Query<Entity, With<AsciiRoot>>,
     mut last: ResMut<Last2DPos>,
