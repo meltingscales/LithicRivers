@@ -6,6 +6,8 @@ pub enum TileKind {
     Water,
     Floor,
     Grass,
+    Tree,
+    Air,
 }
 
 impl TileKind {
@@ -15,6 +17,8 @@ impl TileKind {
             TileKind::Water => '~',
             TileKind::Floor => '.',
             TileKind::Grass => ',',
+            TileKind::Tree => 't',
+            TileKind::Air => ' ',
         }
     }
     pub fn is_passable(self) -> bool {
@@ -23,6 +27,8 @@ impl TileKind {
             TileKind::Water => true, // You can adjust this if you want water to be impassable
             TileKind::Floor => true,
             TileKind::Grass => true,
+            TileKind::Tree => true,
+            TileKind::Air => true,
         }
     }
 }
@@ -37,11 +43,13 @@ mod tests {
         assert_eq!(TileKind::Water.glyph(), '~');
         assert_eq!(TileKind::Floor.glyph(), '.');
         assert_eq!(TileKind::Grass.glyph(), ',');
+        assert_eq!(TileKind::Tree.glyph(), 't');
+        assert_eq!(TileKind::Air.glyph(), ' ');
     }
 
     #[test]
     fn serde_roundtrip() {
-        let kinds = [TileKind::Rock, TileKind::Water, TileKind::Floor, TileKind::Grass];
+        let kinds = [TileKind::Rock, TileKind::Water, TileKind::Floor, TileKind::Grass, TileKind::Tree, TileKind::Air];
         for &k in &kinds {
             let s = serde_json::to_string(&k).expect("serialize");
             let k2: TileKind = serde_json::from_str(&s).expect("deserialize");

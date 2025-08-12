@@ -67,6 +67,8 @@ mod tests {
         assert_eq!(tile_color(TileKind::Water), Color::rgb(0.2, 0.4, 0.8));
         assert_eq!(tile_color(TileKind::Floor), Color::rgb(0.7, 0.7, 0.7));
         assert_eq!(tile_color(TileKind::Grass), Color::rgb(0.6, 0.8, 0.6));
+        assert_eq!(tile_color(TileKind::Tree), Color::rgb(0.6, 0.8, 0.6));
+        assert_eq!(tile_color(TileKind::Air), Color::rgb(0.7, 0.7, 0.7));
     }
 
     #[test]
@@ -96,6 +98,8 @@ fn tile_color(kind: TileKind) -> Color {
         TileKind::Water => Color::rgb(0.2, 0.4, 0.8),
         TileKind::Floor => Color::rgb(0.7, 0.7, 0.7),
         TileKind::Grass => Color::rgb(0.6, 0.8, 0.6),
+        TileKind::Tree => Color::rgb(0.6, 0.8, 0.6),
+        TileKind::Air => Color::rgb(0.7, 0.7, 0.7),
     }
 }
 
