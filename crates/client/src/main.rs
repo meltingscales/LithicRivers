@@ -747,6 +747,8 @@ fn render_ascii_2d(
     root_q: Query<Entity, With<AsciiRoot>>,
     mut last: ResMut<Last2DPos>,
 ) {
+    let last_blocked = core.0.res.last_blocked_tile;
+
     let mut px = 0i32; let mut py = 0i32;
     if let Some(e) = core.0.res.player_entity {
         if let Ok(pos) = core.0.world.get::<&lithicrivers_core::components::Position>(e) {
@@ -782,7 +784,12 @@ fn render_ascii_2d(
                 let ly = ((wy.rem_euclid(cfg.chunk_size)) as i32) as usize;
                 let idx = ly * (chunk.w as usize) + lx;
                 if let Some(cell) = chunk.tiles.get(idx) {
-                    let text = Text::from_section(cell.kind.glyph().to_string(), TextStyle { font: active_font.clone(), font_size: cfg.tile_px, color: tile_color(cell.kind) })
+                    let color = if Some((wx, wy)) == last_blocked {
+                        Color::RED
+                    } else {
+                        tile_color(cell.kind)
+                    };
+                    let text = Text::from_section(cell.kind.glyph().to_string(), TextStyle { font: active_font.clone(), font_size: cfg.tile_px, color })
                         .with_alignment(TextAlignment::Center);
                     let tx = (vx - half_cols) as f32 * sx;
                     let ty = (vy - half_rows) as f32 * -sy; // y-down screen

@@ -16,6 +16,8 @@ pub fn move_player_system(world: &mut World, res: &mut Resources) {
                     pos.y = ny;
                 } else {
                     info!("Blocked by {:?} at ({}, {})", t, nx, ny);
+                    // Set resource for last blocked tile
+                    res.last_blocked_tile = Some((nx, ny));
                 }
             }
         }
