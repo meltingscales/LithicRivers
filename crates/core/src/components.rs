@@ -10,6 +10,10 @@ pub struct Position {
 #[derive(Debug, Clone, Copy)]
 pub struct Player;
 
+/// Marker for all in-world game entities (parents Player, Sheep, etc.)
+#[derive(Debug, Clone, Copy)]
+pub struct GameEntity;
+
 /// Renderable glyph for ASCII views
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Glyph(pub char);
