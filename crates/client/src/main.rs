@@ -796,13 +796,20 @@ fn render_ascii_2d(
         for (vx, ch) in line.chars().enumerate() {
             let vx_i = vx as i32; let vy_i = vy as i32;
             let wx = start_x + vx_i; let wy = start_y + vy_i;
-            // Color from tile kind; glyph from view
+            // Color from tile kind; glyph from view, with special color for sheep 's'
             let tile_kind = core.0.res.world.get_tile(wx, wy);
-            let color = if Some((wx, wy)) == last_blocked && !tile_kind.is_passable() {
+            let mut color = if Some((wx, wy)) == last_blocked && !tile_kind.is_passable() {
                 Color::RED
             } else {
                 tile_color(tile_kind)
             };
+            // Make sheep pop: pulse a glowing yellow color for glyph 's' or 'S'
+            if ch == 's' || ch == 'S' {
+                // Simple pulse based on gametick to avoid needing Time
+                let phase = ((view.gametick % 30) as f32) / 30.0; // 0..1
+                let intensity = 0.7 + 0.3 * (std::f32::consts::TAU * phase).sin().abs();
+                color = Color::rgb(1.0 * intensity, 0.9 * intensity, 0.2 * intensity);
+            }
             let text = Text::from_section(ch.to_string(), TextStyle { font: active_font.clone(), font_size: cfg.tile_px, color })
                 .with_alignment(TextAlignment::Center);
             let tx = (vx_i - half_cols) as f32 * sx;

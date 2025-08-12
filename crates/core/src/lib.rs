@@ -23,6 +23,7 @@ impl Game {
         // Spawn a player entity with a Position
         let player = world.spawn((
             Position { x: 1, y: 1, z: 0 },
+            GameEntity,
             Player,
             Glyph('@'),
             BlocksMovement,
@@ -31,6 +32,7 @@ impl Game {
         // Spawn a simple StumblingSheep near the player (closer for visibility)
         world.spawn((
             Position { x: 2, y: 2, z: 0 },
+            GameEntity,
             Sheep,
             Glyph('s'),
             BlocksMovement,
