@@ -3,27 +3,23 @@ use rand_chacha::ChaCha20Rng;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-pub enum Tile {
-    Floor,
-    Wall,
-}
+use crate::tiles::TileKind;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Chunk {
-    tiles: Vec<Tile>, // size CHUNK_SIZE * CHUNK_SIZE
+    tiles: Vec<TileKind>, // size CHUNK_SIZE * CHUNK_SIZE
 }
 
 impl Chunk {
-    fn new_filled(fill: Tile) -> Self {
+    fn new_filled(fill: TileKind) -> Self {
         Self { tiles: vec![fill; (CHUNK_SIZE as usize) * (CHUNK_SIZE as usize)] }
     }
     #[inline]
     fn idx(tx: i32, ty: i32) -> usize { (ty as usize) * (CHUNK_SIZE as usize) + (tx as usize) }
     #[inline]
-    fn get(&self, tx: i32, ty: i32) -> Tile { self.tiles[Self::idx(tx, ty)] }
+    fn get(&self, tx: i32, ty: i32) -> TileKind { self.tiles[Self::idx(tx, ty)] }
     #[inline]
-    fn set(&mut self, tx: i32, ty: i32, t: Tile) { let i = Self::idx(tx, ty); self.tiles[i] = t; }
+    fn set(&mut self, tx: i32, ty: i32, t: TileKind) { let i = Self::idx(tx, ty); self.tiles[i] = t; }
 }
 
 pub const CHUNK_SIZE: i32 = 64;
@@ -42,7 +38,7 @@ impl World {
 
     fn ensure_chunk(&mut self, cx: i64, cy: i64) {
         if self.chunks.contains_key(&(cx, cy)) { return; }
-        let mut chunk = Chunk::new_filled(Tile::Floor);
+        let mut chunk = Chunk::new_filled(TileKind::Floor);
         self.generate_chunk(cx, cy, &mut chunk);
         self.chunks.insert((cx, cy), chunk);
     }
@@ -50,12 +46,12 @@ impl World {
     fn generate_chunk(&self, cx: i64, cy: i64, chunk: &mut Chunk) {
         // Deterministic generation based on world seed and chunk coords
         let mut rng = ChaCha20Rng::seed_from_u64(self.mix_coords(cx, cy));
-        // Simple sprinkle of walls with ~5% density
+        // Simple sprinkle of rocks with ~5% density
         let scatter = ((CHUNK_SIZE as usize) * (CHUNK_SIZE as usize)) / 20;
         for _ in 0..scatter {
             let tx = rng.gen_range(0..CHUNK_SIZE as i32);
             let ty = rng.gen_range(0..CHUNK_SIZE as i32);
-            chunk.set(tx, ty, Tile::Wall);
+            chunk.set(tx, ty, TileKind::Rock);
         }
         // Optional: add pseudo-caves or features later
     }
@@ -81,7 +77,7 @@ impl World {
         v ^ 0xC0FFEE
     }
 
-    pub fn get_tile(&mut self, x: i32, y: i32) -> Tile {
+    pub fn get_tile(&mut self, x: i32, y: i32) -> TileKind {
         let cx = Self::div_floor(x, CHUNK_SIZE) as i64;
         let cy = Self::div_floor(y, CHUNK_SIZE) as i64;
         let tx = Self::mod_floor(x, CHUNK_SIZE);

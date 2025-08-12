@@ -17,6 +17,14 @@ impl TileKind {
             TileKind::Grass => ',',
         }
     }
+    pub fn is_passable(self) -> bool {
+        match self {
+            TileKind::Rock => false,
+            TileKind::Water => true, // You can adjust this if you want water to be impassable
+            TileKind::Floor => true,
+            TileKind::Grass => true,
+        }
+    }
 }
 
 #[cfg(test)]

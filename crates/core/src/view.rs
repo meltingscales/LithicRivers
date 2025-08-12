@@ -1,6 +1,6 @@
 use crate::components::Position;
 use crate::resources::Resources;
-use crate::resources::world::Tile;
+use crate::tiles::TileKind;
 use hecs::{World};
 
 #[derive(Debug, Clone)]
@@ -38,10 +38,7 @@ pub fn build_render_view(world: &World, res: &mut Resources) -> RenderView {
             let ch = if player_pos.z == 0 && wx == center_x && wy == center_y {
                 '@'
             } else {
-                match res.world.get_tile(wx, wy) {
-                    Tile::Wall => '#',
-                    Tile::Floor => '.',
-                }
+                res.world.get_tile(wx, wy).glyph()
             };
             row.push(ch);
         }

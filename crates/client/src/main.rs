@@ -237,30 +237,33 @@ impl Default for Camera3DRotation {
     }
 }
 
+#[derive(Component, Clone, Copy)]
+struct CompassDir(char);
+
 fn update_compass_ui(
     rot: Res<Camera3DRotation>,
-    mut q: Query<&mut Text, With<CompassUI>>,
+    mut q: Query<(&mut Transform, &CompassDir, &mut Text)>,
 ) {
-    // Map yaw to NESW (0 = N, pi/2 = W, pi = S, 3pi/2 = E)
-    let yaw = rot.yaw;
-    let dirs = ["N", "E", "S", "W"];
-    // Calculate which direction is "up" (closest to camera forward)
-    let mut labels = [" ", " ", " ", " "];
-    // 0 = north (z-), +yaw is left (counterclockwise)
-    let angle = ((yaw + std::f32::consts::FRAC_PI_2 * 2.0) % (std::f32::consts::TAU) + std::f32::consts::TAU) % std::f32::consts::TAU;
-    let idx = ((4.0 * angle / std::f32::consts::TAU) + 0.5).floor() as usize % 4;
-    for i in 0..4 {
-        labels[(i + 4 - idx) % 4] = dirs[i];
-    }
-    // Compose ASCII compass
-    let compass = format!(
-        "  {}  \n{} + {}\n  {}  ",
-        labels[0], labels[3], labels[1], labels[2]
-    );
-    for mut text in &mut q {
-        text.sections[0].value = compass.clone();
+    // Place N, E, S, W in a circle, rotated by camera yaw
+    let radius = 40.0;
+    let base_angles = [0.0, std::f32::consts::FRAC_PI_2, std::f32::consts::PI, 3.0*std::f32::consts::FRAC_PI_2]; // N, E, S, W
+    for (mut transform, dir, mut text) in &mut q {
+        let i = match dir.0 {
+            'N' => 0,
+            'E' => 1,
+            'S' => 2,
+            'W' => 3,
+            _ => continue,
+        };
+        let angle = base_angles[i] - rot.yaw;
+        let x = radius * angle.sin();
+        let y = -radius * angle.cos(); // y down in UI
+        transform.translation = Vec3::new(x, y, 0.0);
+        transform.rotation = Quat::IDENTITY;
+        text.sections[0].value = dir.0.to_string();
     }
 }
+
 
 fn camera_3d_mouse_rotation(
     mut rot: ResMut<Camera3DRotation>,
@@ -338,11 +341,12 @@ fn setup_3d(
         NodeBundle {
             style: Style {
                 width: Val::Px(120.0),
-                height: Val::Px(60.0),
+                height: Val::Px(120.0),
                 top: Val::Px(10.0),
                 right: Val::Px(10.0),
                 justify_content: JustifyContent::Center,
                 align_items: AlignItems::Center,
+                position_type: PositionType::Absolute,
                 ..Default::default()
             },
             background_color: BackgroundColor(Color::NONE),
@@ -351,21 +355,32 @@ fn setup_3d(
         CompassUI,
         View3D,
     )).with_children(|parent| {
-        parent.spawn(TextBundle {
-            text: Text::from_section(
-                "  N  \nW + E\n  S  ",
-                TextStyle {
-                    font_size: 26.0,
-                    color: Color::BLACK,
-                    font: Handle::default(), // Will be replaced by UI font
-                },
-            ),
-            style: Style {
-                margin: UiRect::all(Val::Px(0.0)),
-                ..Default::default()
-            },
+        // Four separate TextBundles for N, E, S, W
+        let font = Handle::default(); // replaced at runtime
+        let style = Style {
+            position_type: PositionType::Absolute,
             ..Default::default()
-        });
+        };
+        parent.spawn((TextBundle {
+            text: Text::from_section("N", TextStyle { font: font.clone(), font_size: 26.0, color: Color::BLACK }),
+            style: style.clone(),
+            ..Default::default()
+        }, CompassDir('N')));
+        parent.spawn((TextBundle {
+            text: Text::from_section("E", TextStyle { font: font.clone(), font_size: 26.0, color: Color::BLACK }),
+            style: style.clone(),
+            ..Default::default()
+        }, CompassDir('E')));
+        parent.spawn((TextBundle {
+            text: Text::from_section("S", TextStyle { font: font.clone(), font_size: 26.0, color: Color::BLACK }),
+            style: style.clone(),
+            ..Default::default()
+        }, CompassDir('S')));
+        parent.spawn((TextBundle {
+            text: Text::from_section("W", TextStyle { font: font, font_size: 26.0, color: Color::BLACK }),
+            style: style,
+            ..Default::default()
+        }, CompassDir('W')));
     });
 }
 
@@ -388,22 +403,22 @@ fn teardown_3d(
 fn setup_2d(mut commands: Commands, mut last2d: ResMut<Last2DPos>) {
     // Camera
     commands.spawn((Camera2dBundle::default(), View2D));
-    // Simple player marker as a white sprite '@'-like placeholder
+    // Root for ASCII glyphs (spawned first, so marker is on top)
+    commands.spawn((SpatialBundle::default(), AsciiRoot, View2D));
+    // Player marker as a pink '@', drawn on top
     commands.spawn((
         SpriteBundle {
             sprite: Sprite {
-                color: Color::rgb(0.9, 0.9, 0.9),
+                color: Color::rgb(1.0, 0.2, 0.6), // pink
                 custom_size: Some(Vec2::splat(12.0)),
                 ..Default::default()
             },
-            transform: Transform::from_translation(Vec3::new(0.0, 0.0, 0.0)),
+            transform: Transform::from_translation(Vec3::new(0.0, 0.0, 10.0)), // z=10 to draw on top
             ..Default::default()
         },
         PlayerMarker,
         View2D,
     ));
-    // Root for ASCII glyphs
-    commands.spawn((SpatialBundle::default(), AsciiRoot, View2D));
     // Force re-render on first entry
     *last2d = Last2DPos(i32::MIN, i32::MIN);
 }
