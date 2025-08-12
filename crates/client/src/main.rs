@@ -142,6 +142,13 @@ struct View2DConfig {
     view_chunk_radius: i32,
 }
 
+// 3D view config (chunk-based limits)
+#[derive(Resource, Debug, Clone, Copy)]
+struct View3DConfig {
+    chunk_size: i32,
+    view_chunk_radius: i32,
+}
+
 #[derive(Resource, Debug, Clone, Copy)]
 struct WorldSeed(pub u64);
 
@@ -191,7 +198,8 @@ fn main() {
         .insert_resource(CoreGame(Game::new(12345)))
         .insert_resource(WorldSeed(12345))
         .insert_resource(FixedTickTimer(Timer::from_seconds(1.0/30.0, TimerMode::Repeating)))
-        .insert_resource(View2DConfig { tile_px: 16.0, cols: 80, rows: 45, chunk_size: lithicrivers_core::resources::world::CHUNK_SIZE, view_chunk_radius: 3 })
+        .insert_resource(View2DConfig { tile_px: 16.0, cols: 80, rows: 45, chunk_size: lithicrivers_core::resources::world::CHUNK_SIZE, view_chunk_radius: 2 })
+        .insert_resource(View3DConfig { chunk_size: CHUNK_SIZE, view_chunk_radius: 2 })
         .insert_resource(LoadedChunks2D { map: HashMap::new(), lru: VecDeque::new(), capacity: 256 })
         .insert_resource(VisibleChunks2D(HashSet::new()))
         .init_resource::<FontHandles>()
@@ -451,11 +459,12 @@ fn update_player_marker_3d(
 // Update visible chunks for the 3D view (centered on player, radius matches 3D render size)
 fn update_visible_chunks_3d(
     core: Res<CoreGame>,
+    cfg3d: Res<View3DConfig>,
     mut vis: ResMut<VisibleChunks2D>,
 ) {
-    // Use same chunk size and radius as the 3D render grid
-    let chunk_size = 32;
-    let view_chunk_radius = 2; // Could be made configurable
+    // Use configured chunk size and radius for 3D
+    let chunk_size = cfg3d.chunk_size;
+    let view_chunk_radius = cfg3d.view_chunk_radius;
     let mut center_x = 0i32;
     let mut center_y = 0i32;
     if let Some(e) = core.0.res.player_entity {
@@ -477,10 +486,11 @@ fn update_visible_chunks_3d(
 // Ensure visible chunks are loaded for the 3D view
 fn ensure_chunks_loaded_3d(
     seed: Res<WorldSeed>,
+    cfg3d: Res<View3DConfig>,
     vis: Res<VisibleChunks2D>,
     mut loaded: ResMut<LoadedChunks2D>,
 ) {
-    let chunk_size = 32;
+    let chunk_size = cfg3d.chunk_size;
     for cc in vis.0.iter() {
         if !loaded.map.contains_key(cc) {
             let chunk = generate_chunk_2d(seed.0, *cc, chunk_size, chunk_size);

@@ -9,3 +9,9 @@ anyhow = { workspace = true }
 lithicrivers-core = { path = "../core" }
 rand = "0.8"
 rand_chacha = "0.3"
+
+[features]
+default = []
+# Enable Bevy's built-in Tracy integration when building with `--features tracy`.
+# This requires the Tracy viewer to be running to connect.
+tracy = ["bevy/trace", "bevy/trace_tracy"]
