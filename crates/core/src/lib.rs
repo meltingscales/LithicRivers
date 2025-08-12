@@ -29,6 +29,8 @@ impl Game {
             BlocksMovement,
         ));
         res.player_entity = Some(player);
+        // Spawn debug fluid pools around player
+        crate::resources::fluids::spawn_debug_pools(&mut res.fluids, Position { x: 1, y: 1, z: 0 });
         // Spawn a simple StumblingSheep near the player (closer for visibility)
         world.spawn((
             Position { x: 2, y: 2, z: 0 },
@@ -50,6 +52,8 @@ impl Game {
         self.res.gametick += 1;
         move_player_system(&mut self.world, &mut self.res);
         stumbling_sheep_system(&mut self.world, &mut self.res);
+        // Process fluids
+        self.res.fluids.process_fluids(&self.res.world, self.res.gametick);
     }
 
     pub fn build_view(&self) -> RenderView {

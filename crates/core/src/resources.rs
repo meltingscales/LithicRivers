@@ -3,6 +3,7 @@ use rand::{SeedableRng};
 use rand_chacha::ChaCha20Rng;
 
 pub mod world;
+pub mod fluids;
 
 pub struct Resources {
     pub seed: u64,
@@ -10,6 +11,7 @@ pub struct Resources {
     pub gametick: u64,
     pub player_entity: Option<Entity>,
     pub world: world::World,
+    pub fluids: fluids::FluidManager, // Fluid system
     // Input intents (single-step for now)
     pub player_move_intent: Option<(i32, i32)>,
     pub last_blocked_tile: Option<(i32, i32)>,
@@ -24,6 +26,7 @@ impl Resources {
             gametick: 0,
             player_entity: None,
             world: world::World::new(80, 24, seed),
+            fluids: fluids::FluidManager::default(),
             player_move_intent: None,
             last_blocked_tile: None,
         }
