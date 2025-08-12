@@ -77,13 +77,18 @@ impl World {
         v ^ 0xC0FFEE
     }
 
-    pub fn get_tile(&mut self, x: i32, y: i32) -> TileKind {
+    pub fn get_tile(&self, x: i32, y: i32) -> TileKind {
         let cx = Self::div_floor(x, CHUNK_SIZE) as i64;
         let cy = Self::div_floor(y, CHUNK_SIZE) as i64;
         let tx = Self::mod_floor(x, CHUNK_SIZE);
         let ty = Self::mod_floor(y, CHUNK_SIZE);
-        self.ensure_chunk(cx, cy);
-        let ch = self.chunks.get(&(cx, cy)).expect("chunk present");
-        ch.get(tx, ty)
+        if let Some(ch) = self.chunks.get(&(cx, cy)) {
+            ch.get(tx, ty)
+        } else {
+            // Generate a local chunk for read-only purposes
+            let mut chunk = Chunk::new_filled(TileKind::Floor);
+            self.generate_chunk(cx, cy, &mut chunk);
+            chunk.get(tx, ty)
+        }
     }
 }
