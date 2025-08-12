@@ -8,7 +8,7 @@ fn main() -> Result<()> {
         .with_env_filter(EnvFilter::from_default_env())
         .try_init();
 
-    let mut game = Game::new(42u64);
+    let _game = Game::new(42u64);
     // TUI removed: game loop and rendering must be replaced with alternative logic or removed entirely.
     Ok(())
 }
