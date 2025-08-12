@@ -9,3 +9,15 @@ pub struct Position {
 
 #[derive(Debug, Clone, Copy)]
 pub struct Player;
+
+/// Renderable glyph for ASCII views
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct Glyph(pub char);
+
+/// Marker for a simple wandering sheep
+#[derive(Debug, Clone, Copy)]
+pub struct Sheep;
+
+/// Marker for entities that block movement
+#[derive(Debug, Clone, Copy)]
+pub struct BlocksMovement;
