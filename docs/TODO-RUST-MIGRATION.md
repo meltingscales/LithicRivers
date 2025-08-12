@@ -66,7 +66,6 @@ Notes for rendering modes in Bevy:
 
 # migration todo from python-old/
 
-- optimize 2d and 3d rendering...
 - sample UI demos for my own testing and brainstorming
 - Core game loop and ECS (entities, world, game state)
 - Chunked world storage and procedural world generation
