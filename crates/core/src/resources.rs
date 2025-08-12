@@ -12,6 +12,7 @@ pub struct Resources {
     pub world: world::World,
     // Input intents (single-step for now)
     pub player_move_intent: Option<(i32, i32)>,
+    pub last_blocked_tile: Option<(i32, i32)>,
 }
 
 impl Resources {
@@ -24,6 +25,7 @@ impl Resources {
             player_entity: None,
             world: world::World::new(80, 24, seed),
             player_move_intent: None,
+            last_blocked_tile: None,
         }
     }
 }
