@@ -1,8 +1,6 @@
-I'm using cursor, which can't run a TUI. If you want me to test the game TUI, please ask me to.
+You are allowed to run `make build` and `make install`, and also `make run-*`. This game now has a GUI client! The TUI has been removed.
 
-Don't ever run `make run`, because you don't have a terminal that's guaranteed to have space. Instead, tell me to run it.
-
-You ARE totally allowed to run `make build`, though. 
+Please avoid running `cargo clean`. It takes a long time to rebuild rust modules.
 
 Keep small copyrights inside of the main game code files. Make sure they exist if they aren't declared.
 
