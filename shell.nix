@@ -25,6 +25,6 @@ pkgs.mkShell {
   ];
   shellHook = ''
     export PKG_CONFIG_PATH=${pkgs.alsa-lib.dev}/lib/pkgconfig:${pkgs.openssl.dev}/lib/pkgconfig:$PKG_CONFIG_PATH
-n    export LD_LIBRARY_PATH=${pkgs.xorg.libX11}/lib:${pkgs.xorg.libXcursor}/lib:${pkgs.xorg.libXrandr}/lib:${pkgs.xorg.libXrender}/lib:${pkgs.xorg.libXi}/lib:${pkgs.vulkan-loader}/lib:${pkgs.mesa}/lib:${pkgs.udev}/lib:${pkgs.alsa-lib}/lib:$LD_LIBRARY_PATH
+    export LD_LIBRARY_PATH=${pkgs.xorg.libX11}/lib:${pkgs.xorg.libXcursor}/lib:${pkgs.xorg.libXrandr}/lib:${pkgs.xorg.libXrender}/lib:${pkgs.xorg.libXi}/lib:${pkgs.vulkan-loader}/lib:${pkgs.mesa}/lib:${pkgs.udev}/lib:${pkgs.alsa-lib}/lib:$LD_LIBRARY_PATH
   '';
 }
