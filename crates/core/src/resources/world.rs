@@ -36,13 +36,6 @@ impl World {
         Self { seed, chunks: HashMap::new() }
     }
 
-    fn ensure_chunk(&mut self, cx: i64, cy: i64) {
-        if self.chunks.contains_key(&(cx, cy)) { return; }
-        let mut chunk = Chunk::new_filled(TileKind::Floor);
-        self.generate_chunk(cx, cy, &mut chunk);
-        self.chunks.insert((cx, cy), chunk);
-    }
-
     fn generate_chunk(&self, cx: i64, cy: i64, chunk: &mut Chunk) {
         // Deterministic generation based on world seed and chunk coords
         let mut rng = ChaCha20Rng::seed_from_u64(self.mix_coords(cx, cy));
@@ -53,6 +46,23 @@ impl World {
             let ty = rng.gen_range(0..CHUNK_SIZE as i32);
             chunk.set(tx, ty, TileKind::Rock);
         }
+
+        // add a few water tiles
+        let scatter = ((CHUNK_SIZE as usize) * (CHUNK_SIZE as usize)) / 20;
+        for _ in 0..scatter {
+            let tx = rng.gen_range(0..CHUNK_SIZE as i32);
+            let ty = rng.gen_range(0..CHUNK_SIZE as i32);
+            chunk.set(tx, ty, TileKind::Water);
+        }
+
+        //add a few trees
+        let scatter = ((CHUNK_SIZE as usize) * (CHUNK_SIZE as usize)) / 20;
+        for _ in 0..scatter {
+            let tx = rng.gen_range(0..CHUNK_SIZE as i32);
+            let ty = rng.gen_range(0..CHUNK_SIZE as i32);
+            chunk.set(tx, ty, TileKind::Tree);
+        }
+
         // Optional: add pseudo-caves or features later
     }
 
