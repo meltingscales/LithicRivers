@@ -1,4 +1,4 @@
-.PHONY: help install build run client fmt clippy toolchain security test \
+.PHONY: help install build run-debug run-release client fmt clippy toolchain security test \
 	profile-flamegraph profile-tracy renderdoc
 
 TOOLCHAIN ?= nightly
@@ -29,8 +29,9 @@ help:
 	@echo "Available targets:"
 	@echo "BUILDING/DEV:"
 	@echo "  install - Install dependencies"
-	@echo "  build   - Build the project"
-	@echo "  run     - Run the project"
+	@echo "  build       - Build the project"
+	@echo "  run-debug   - Run the project (debug)"
+	@echo "  run-release - Run the project (release)"
 	@echo "PROFILING:"
 	@echo "  profile-flamegraph - CPU profile with cargo-flamegraph (perf)"
 	@echo "  profile-tracy      - Run with Tracy instrumentation (requires tracy feature/deps)"
@@ -60,10 +61,13 @@ build:
 	$(CARGO_ENV) build $(BUILD_FLAGS)
 	$(CARGO_ENV) build -p lithicrivers-client $(BUILD_FLAGS)
 
-run: client
+run-debug: client
 
 client:
 	$(CARGO_ENV) run -p lithicrivers-client
+
+run-release:
+	$(CARGO_ENV) run -p lithicrivers-client --release
 
 client-blind:
 	echo "Blind mode not implemented yet."
