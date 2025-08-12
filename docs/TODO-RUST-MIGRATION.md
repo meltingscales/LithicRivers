@@ -4,7 +4,7 @@ I'm going to try to migrate as much as possible from `python-old/` to `rust-migr
 
 We're using a bevy ECS for the game logic. We are not using `ratatui` as there is no TUI anymore.
 
-Previous AI context for rust libs to use (updated for Bevy):
+# Rust libraries breakdown
 
 Client / Rendering
 
@@ -63,3 +63,27 @@ CLI: clap
 Notes for rendering modes in Bevy:
 - 2D ASCII-style: Use a bitmap font atlas or SDF font, render per-tile glyphs via `Text2dBundle`/custom glyph quads with per-glyph color; camera follows player.
 - 3D colored cubes: Use `PbrBundle` with box meshes per visible tile/voxel or instanced batching; basic light + frustum-culling.
+
+# migration todo from python-old/
+
+- Core game loop and ECS (entities, world, game state)
+- Chunked world storage and procedural world generation
+- Player and NPCs (movement, state, rendering)
+- Tile system (tiles, fluids, drops, destructible, tile types)
+- Items and inventory system
+- Body/health system (body parts, wounds, repair)
+- Message log and event system
+- Keymap and input handling (configurable keybinds)
+- Config/settings management
+- Save/load system (game saves, metadata, snapshots)
+- Procedural dungeon and structure generator
+- Fluid simulation (fluids, pools, flow logic)
+- UI panels and overlays (inventory, help, body, map, etc.)
+- Color and sprite/glyph management
+- Scripting/demo/test utilities (test worlds, test dungeons)
+- Tests: simulation, worldgen, serialization, rendering
+- Example/demo scripts (procedural dungeons, intro, credits)
+- File browser and developer tools
+- CLI entrypoints and main loop
+- sprites `.lrsprite/` format
+- structures `.lrstructure/` format
