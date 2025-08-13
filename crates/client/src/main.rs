@@ -216,7 +216,7 @@ struct AsciiGrid { cols: i32, rows: i32, initialized: bool }
 
 fn main() {
     App::new()
-        .insert_resource(ClearColor(Color::rgb(1.0, 1.0, 1.0)))
+        .insert_resource(ClearColor(Color::rgb(0.4, 0.4, 0.4)))
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: "LithicRivers (Bevy client)".to_string(),
@@ -922,6 +922,15 @@ fn render_ascii_2d(
     let _span_compute = info_span!("compute_cells").entered();
     use std::collections::HashMap as StdHashMap;
     let mut char_index_cache: StdHashMap<char, usize> = StdHashMap::new();
+    // Normalize any non-ASCII or unsupported glyphs to an ASCII fallback present in the atlas
+    let mut normalize = |c: char| -> char {
+        match c {
+            ' ' => '.',                    // show ground instead of invisible space
+            '≈' | '≋' => '~',              // water waves -> '~'
+            '█' | '■' | '▲' | '∎' => '#',  // walls/rocks -> '#'
+            _ => if c.is_ascii() { c } else { '.' },
+        }
+    };
     for (vy, line) in view.map_lines.iter().enumerate() {
         for (vx, ch) in line.chars().enumerate() {
             let vx_i = vx as i32; let vy_i = vy as i32;
@@ -931,14 +940,14 @@ fn render_ascii_2d(
                 // water
                 '~' | '≈' | '≋' => Color::rgb(0.3, 0.5, 1.0),
                 // grass / foliage
-                '.' | '"' | '`' | '"' | '"' | '"' | '"' | '"' => Color::rgb(0.4, 0.8, 0.4),
+                '.' | '"' | '`' | '"' | '"' | '"' | '"' | '"' | ' ' => Color::rgb(0.4, 0.8, 0.4),
                 '"' | '^' | 't' | 'T' => Color::rgb(0.4, 0.8, 0.4),
                 // dirt / sand
                 ',' | ':' | ';' => Color::rgb(0.9, 0.9, 0.2),
                 // rock / walls
                 '#' | '█' | '■' | '▲' | '∎' => Color::rgb(0.7, 0.7, 0.7),
                 // default
-                _ => Color::WHITE,
+                _ => Color::BLACK,
             };
             // Blocked override
             if Some((wx, wy)) == last_blocked { color = Color::RED; }
@@ -948,8 +957,9 @@ fn render_ascii_2d(
                 let intensity = 0.7 + 0.3 * (std::f32::consts::TAU * phase).sin().abs();
                 color = Color::rgb(1.0 * intensity, 0.9 * intensity, 0.2 * intensity);
             }
-            let atlas_index = *char_index_cache.entry(ch)
-                .or_insert_with(|| *atlas.map.get(&ch).unwrap_or(&0usize));
+            let nch = normalize(ch);
+            let atlas_index = *char_index_cache.entry(nch)
+                .or_insert_with(|| *atlas.map.get(&nch).unwrap_or(&0usize));
             let tx = (vx_i - half_cols) as f32 * sx;
             let ty = (vy_i - half_rows) as f32 * -sy;
             computed.push(CellData { index: atlas_index, color, tx, ty });
