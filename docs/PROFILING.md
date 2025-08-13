@@ -1,0 +1,2 @@
+- use tracy
+- also read https://github.com/bevyengine/bevy/blob/main/docs/profiling.md

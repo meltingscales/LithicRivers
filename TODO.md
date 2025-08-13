@@ -191,10 +191,7 @@
 - investigate github repo "gale93/sbixel"...
 
 ## MVP for steam release (2025 christmas release)
-
-
-- get tracy to actually work...
-  - https://github.com/bevyengine/bevy/blob/main/docs/profiling.md
+  
 - migrate all of the code from python-old/ to rust...
 - make 2d render background white so I can actually see rendered ASCII text
 - migrate to bevy/wgpu-based renderer. still support text mode, but allow player to switch. don't render in terminal, but render text mode within bevy.
