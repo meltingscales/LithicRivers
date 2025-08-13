@@ -64,7 +64,6 @@ mod tests {
     #[test]
     fn tile_color_mapping_matches() {
         assert_eq!(tile_color(TileKind::Rock), Color::rgb(0.4, 0.4, 0.45));
-        assert_eq!(tile_color(TileKind::Water), Color::rgb(0.2, 0.4, 0.8));
         assert_eq!(tile_color(TileKind::Floor), Color::rgb(0.7, 0.7, 0.7));
         assert_eq!(tile_color(TileKind::Grass), Color::rgb(0.6, 0.8, 0.6));
         assert_eq!(tile_color(TileKind::Tree), Color::rgb(0.6, 0.8, 0.6));
@@ -95,7 +94,6 @@ enum ViewMode {
 fn tile_color(kind: TileKind) -> Color {
     match kind {
         TileKind::Rock => Color::rgb(0.4, 0.4, 0.45),
-        TileKind::Water => Color::rgb(0.2, 0.4, 0.8),
         TileKind::Floor => Color::rgb(0.7, 0.7, 0.7),
         TileKind::Grass => Color::rgb(0.6, 0.8, 0.6),
         TileKind::Tree => Color::rgb(0.6, 0.8, 0.6),
@@ -120,7 +118,6 @@ fn demo_tile_at(x: i32, z: i32) -> TileKind {
     for _ in 0..steps { let _: f32 = rng.gen(); }
     let r: f32 = rng.gen();
     if r < 0.10 { TileKind::Rock }
-    else if r < 0.20 { TileKind::Water }
     else if r < 0.50 { TileKind::Floor }
     else { TileKind::Grass }
 }
@@ -734,7 +731,6 @@ fn generate_chunk_2d(seed: u64, cc: ChunkCoord2D, w: i32, h: i32) -> ChunkData2D
         for _x in 0..w {
             let r: f32 = rng.gen();
             let kind = if r < 0.10 { TileKind::Rock } // rock
-                       else if r < 0.20 { TileKind::Water } // water
                        else if r < 0.50 { TileKind::Floor } // floor
                        else { TileKind::Grass }; // grass
             tiles.push(TileCell { kind });
@@ -799,14 +795,21 @@ fn render_ascii_2d(
             let vx_i = vx as i32; let vy_i = vy as i32;
             let wx = start_x + vx_i; let wy = start_y + vy_i;
             // Color from tile kind; glyph from view, with special color for sheep 's'
-            let tile_kind = core.0.res.world.get_tile(wx, wy);
-            let mut color = if Some((wx, wy)) == last_blocked && !tile_kind.is_passable() {
+            let kind = core.0.res.world.get_tile(wx, wy);
+            // Overlay dynamic fluid if present
+            let fluid = core.0.res.fluids.get_fluid(lithicrivers_core::components::Position { x: wx, y: wy, z: 0 });
+            let glyph = if fluid.is_some() {
+                '~'
+            } else {
+                kind.glyph()
+            };
+            let mut color = if Some((wx, wy)) == last_blocked && !kind.is_passable() {
                 Color::RED
             } else {
-                tile_color(tile_kind)
+                tile_color(kind)
             };
             // Make sheep pop: pulse a glowing yellow color for glyph 's' or 'S'
-            if ch == 's' || ch == 'S' {
+            if glyph == 's' || glyph == 'S' {
                 // Simple pulse based on gametick to avoid needing Time
                 let phase = ((view.gametick % 30) as f32) / 30.0; // 0..1
                 let intensity = 0.7 + 0.3 * (std::f32::consts::TAU * phase).sin().abs();

@@ -47,14 +47,6 @@ impl World {
             chunk.set(tx, ty, TileKind::Rock);
         }
 
-        // add a few water tiles
-        let scatter = ((CHUNK_SIZE as usize) * (CHUNK_SIZE as usize)) / 20;
-        for _ in 0..scatter {
-            let tx = rng.gen_range(0..CHUNK_SIZE as i32);
-            let ty = rng.gen_range(0..CHUNK_SIZE as i32);
-            chunk.set(tx, ty, TileKind::Water);
-        }
-
         //add a few trees
         let scatter = ((CHUNK_SIZE as usize) * (CHUNK_SIZE as usize)) / 20;
         for _ in 0..scatter {
