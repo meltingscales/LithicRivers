@@ -9,6 +9,8 @@ pub enum TileKind {
     Air,
 }
 
+pub static TILE_KIND_STRS: &[&str] = &["rock", "dirt", "grass", "tree", "air"];
+
 impl TileKind {
     pub fn sprite_key(self) -> &'static str {
         match self {
@@ -17,6 +19,16 @@ impl TileKind {
             TileKind::Grass => "grass",
             TileKind::Tree => "tree",
             TileKind::Air => "air",
+        }
+    }
+    pub fn from_str(s: &str) -> Option<TileKind> {
+        match s {
+            "rock" => Some(TileKind::Rock),
+            "dirt" => Some(TileKind::Dirt),
+            "grass" => Some(TileKind::Grass),
+            "tree" => Some(TileKind::Tree),
+            "air" => Some(TileKind::Air),
+            _ => None,
         }
     }
 

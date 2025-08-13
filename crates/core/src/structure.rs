@@ -43,9 +43,16 @@ impl StructureDefinition {
             .filter(|layer| !layer.is_empty())
             .collect();
 
+        let blocks: HashMap<String, String> = serde_json::from_value(data["blocks"].clone()).expect("blocks must be a map");
+        // Validate all tile kinds
+        for (symbol, tile_str) in &blocks {
+            if TileKind::from_str(tile_str).is_none() {
+                panic!("Unknown tile kind '{}' for symbol '{}' in structure '{}'. Valid: {}", tile_str, symbol, name, crate::tiles::TILE_KIND_STRS.join(", "));
+            }
+        }
         Self {
             name,
-            blocks: serde_json::from_value(data["blocks"].clone()).expect("blocks must be a map"),
+            blocks,
             layers,
             gen_biomes: data["gen_biomes"].as_str().unwrap_or("").to_string(),
             gen_chance: data["gen_chance"].as_f64().unwrap_or(1.0) as f32,
@@ -55,13 +62,6 @@ impl StructureDefinition {
     }
 
     pub fn get_tile_for_symbol(&self, symbol: &str) -> Option<TileKind> {
-        self.blocks.get(symbol).and_then(|tile_str| match tile_str.as_str() {
-            "rock" => Some(TileKind::Rock),
-            "dirt" => Some(TileKind::Dirt),
-            "grass" => Some(TileKind::Grass),
-            "tree" => Some(TileKind::Tree),
-            "air" => Some(TileKind::Air),
-            _ => None,
-        })
+        self.blocks.get(symbol).and_then(|tile_str| TileKind::from_str(tile_str))
     }
 }
