@@ -4,12 +4,27 @@
 TOOLCHAIN ?= nightly
 
 # Helpers to avoid duplication
+# Resolve the pinned toolchain and standardize env/flags in one place
 # RUN: invoke binaries with the pinned toolchain
 RUN := rustup run $(TOOLCHAIN)
-# CARGO: plain cargo under nightly
-CARGO := $(RUN) cargo
-# CARGO_ENV: cargo with nightly-only flags required by some deps using --check-cfg
-CARGO_ENV := $(RUN) env RUSTFLAGS='-Z unstable-options' RUSTC_BOOTSTRAP=1 cargo
+
+# Export the rustc from the pinned toolchain so cargo doesn't accidentally use /usr/bin/rustc
+RUSTC_BIN := $(shell rustup which --toolchain $(TOOLCHAIN) rustc)
+export RUSTC := $(RUSTC_BIN)
+
+# Common flags/env
+LOCKFILE_FLAG := -Z next-lockfile-bump
+RUSTFLAGS_COMMON := -Z unstable-options
+BOOTSTRAP := 1
+
+# Cargo helpers
+CARGO_BASE := $(RUN) cargo
+CARGO := $(CARGO_BASE)
+# cargo with nightly-only flags required by some deps using --check-cfg
+CARGO_ENV := RUSTFLAGS='$(RUSTFLAGS_COMMON)' RUSTC_BOOTSTRAP=$(BOOTSTRAP) $(CARGO_BASE)
+# cargo with lockfile v4 parsing enabled
+CARGOZ := $(CARGO_BASE) $(LOCKFILE_FLAG)
+CARGOZ_ENV := RUSTFLAGS='$(RUSTFLAGS_COMMON)' RUSTC_BOOTSTRAP=$(BOOTSTRAP) $(CARGO_BASE) $(LOCKFILE_FLAG)
 
 BUILD_FLAGS := -j `nproc`
 
@@ -48,26 +63,27 @@ install:
 	rustup toolchain install $(TOOLCHAIN)
 	rustup override set $(TOOLCHAIN)
 	rustup default $(TOOLCHAIN)
+	$(CARGO) install flamegraph
 	./scripts/install_dev_deps.sh
 
 security:
-	$(CARGO_ENV) audit
+	$(CARGOZ_ENV) audit
 
 test:
-	$(CARGO_ENV) test
+	$(CARGOZ_ENV) test
 
 build:
 	$(CARGO) --version
-	$(CARGO_ENV) build $(BUILD_FLAGS)
-	$(CARGO_ENV) build -p lithicrivers-client $(BUILD_FLAGS)
+	$(CARGOZ_ENV) build $(BUILD_FLAGS)
+	$(CARGOZ_ENV) build -p lithicrivers-client $(BUILD_FLAGS)
 
 run-debug: client
 
 client:
-	$(CARGO_ENV) run -p lithicrivers-client
+	$(CARGOZ_ENV) run -p lithicrivers-client
 
 run-release:
-	$(CARGO_ENV) run -p lithicrivers-client --release
+	$(CARGOZ_ENV) run -p lithicrivers-client --release
 
 client-blind:
 	echo "Blind mode not implemented yet."
@@ -77,34 +93,17 @@ fmt:
 	$(CARGO_ENV) fmt --all
 
 clippy:
-	$(CARGO_ENV) clippy --all-targets --all-features -D warnings
+	$(CARGOZ_ENV) clippy --all-targets --all-features -D warnings
 
 toolchain:
 	rustup show
 
 # -------------------- Profiling helpers --------------------
 
-# Verify external profiling tools are present. This target intentionally fails
-# with clear instructions if tools are missing. It does not auto-install.
-profile-deps:
-	@ok=1; \
-	if ! command -v cargo-flamegraph >/dev/null 2>&1; then \
-	  echo "❌ Missing cargo-flamegraph. Install with: 'cargo install flamegraph --locked'"; \
-	  echo "   Note: cargo-flamegraph >=0.6.8 needs rustc>=1.78. For older toolchains, try '--version 0.6.7 --locked'"; \
-	  ok=0; \
-	fi; \
-	if ! command -v renderdoccmd >/dev/null 2>&1; then \
-	  echo "⚠️  renderdoccmd not found. Install RenderDoc to use 'make renderdoc'."; \
-	fi; \
-	if [ $$ok -ne 1 ]; then \
-	  exit 1; \
-	fi
-
-# cargo-flamegraph (Linux perf). Requires: cargo-flamegraph, perf permissions.
-profile-flamegraph: profile-deps
+profile-flamegraph:
 	@echo " Running cargo-flamegraph (using perf). You may need elevated perf permissions."
-	RUSTFLAGS='-Z unstable-options -g' RUSTC_BOOTSTRAP=1 $(CARGO) flamegraph -p lithicrivers-client
-	RUSTC_BOOTSTRAP=1 $(CARGO) flamegraph -p lithicrivers-client --release
+	$(CARGOZ_ENV) flamegraph -p lithicrivers-client
+	$(CARGOZ_ENV) flamegraph -p lithicrivers-client --release
 
 # Tracy live profiler. Requires: tracy viewer and enabling tracy instrumentation in code.
 # By default this enables a Cargo feature named 'tracy'. Wire your client/crates to use
@@ -112,9 +111,9 @@ profile-flamegraph: profile-deps
 profile-tracy:
 	@echo " Running client with Tracy instrumentation (feature 'tracy')."
 	@echo " Launch tracy viewer with 'tracy &' before running this."
-	$(CARGO_ENV) run -p lithicrivers-client --features tracy --release
+	$(CARGOZ_ENV) run -p lithicrivers-client --features tracy --release
 
 # RenderDoc GPU capture. Requires: renderdoccmd available in PATH.
-renderdoc: profile-deps
+renderdoc:
 	@echo " Launching client under RenderDoc. Close app to finish capture."
-	renderdoccmd capture -- $(CARGO_ENV) run -p lithicrivers-client --release
+	renderdoccmd capture -- $(CARGOZ_ENV) run -p lithicrivers-client --release
