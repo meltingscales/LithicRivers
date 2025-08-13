@@ -84,10 +84,10 @@ impl FluidManager {
     }
 }
 
-// Debug utility to spawn pools near a given position
+// Debug utility to spawn exactly 4 pools in a cross around the center
 pub fn spawn_debug_pools(fm: &mut FluidManager, center: Position) {
     let offsets = [
-        (0, 0), (2, 0), (-2, 0), (0, 2), (0, -2), (1, 1), (-1, -1)
+        (1, 0), (-1, 0), (0, 1), (0, -1)
     ];
     for (dx, dy) in offsets.iter() {
         let pos = Position { x: center.x + dx, y: center.y + dy, z: center.z };
