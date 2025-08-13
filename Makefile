@@ -111,6 +111,7 @@ profile-flamegraph: profile-deps
 # bevy_tracy or tracing-tracy under this feature.
 profile-tracy:
 	@echo " Running client with Tracy instrumentation (feature 'tracy')."
+	@echo " Launch tracy viewer with 'tracy &' before running this."
 	$(CARGO_ENV) run -p lithicrivers-client --features tracy --release
 
 # RenderDoc GPU capture. Requires: renderdoccmd available in PATH.
