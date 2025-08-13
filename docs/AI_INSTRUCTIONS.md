@@ -1,5 +1,7 @@
 You are allowed to run `make build` and `make install`, and also `make run-*`. This game now has a GUI client! The TUI has been removed.
 
+You should use `rustup` to run `cargo` and other tools.
+
 Please avoid running `cargo clean`. It takes a long time to rebuild rust modules.
 
 Keep small copyrights inside of the main game code files. Make sure they exist if they aren't declared.
