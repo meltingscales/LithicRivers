@@ -131,8 +131,9 @@ mod tests {
     use super::*;
     #[test]
     fn test_load_water_sprite() {
-        let mut loader = SpriteLoader::new(None);
-        let sprite = loader.load_sprite("water", "fluids").expect("load water sprite");
+        let asset_path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("assets/sprites");
+        let mut loader = SpriteLoader::new(Some(&asset_path));
+        let sprite = loader.load_sprite("water", "fluids");
         println!("Loaded sprite: {:?}", sprite);
         for (i, s) in sprite.sprites.iter().enumerate() {
             println!("Scale {}:\n{}", i + 1, s);
