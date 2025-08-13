@@ -78,7 +78,6 @@ Notes for rendering modes in Bevy:
 - Config/settings management
 - Save/load system (game saves, metadata, snapshots)
 - Procedural dungeon and structure generator
-- Fluid simulation (fluids, pools, flow logic)
 - UI panels and overlays (inventory, help, body, map, etc.)
 - Color and sprite/glyph management
 - Scripting/demo/test utilities (test worlds, test dungeons)
