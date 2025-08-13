@@ -1,6 +1,6 @@
 {
   "blocks": {
-    ".": "empty",
+    ".": "air",
     "S": "plasteel_scrap",
     "C": "scrap_electronics",
     "E": "treasure"

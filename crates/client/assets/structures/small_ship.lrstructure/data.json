@@ -1,6 +1,6 @@
 {
   "blocks": {
-    ".": "empty",
+    ".": "air",
     "X": "iron_scrap",
     "A": "door",
     "e": "scrap_electronics"

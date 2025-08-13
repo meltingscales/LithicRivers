@@ -100,6 +100,13 @@ fn tile_color(kind: TileKind) -> Color {
         TileKind::Grass => Color::rgb(0.6, 0.8, 0.6),
         TileKind::Tree => Color::rgb(0.6, 0.8, 0.6),
         TileKind::Air => Color::rgb(0.7, 0.7, 0.7),
+        TileKind::BoneBlock => Color::rgb(0.7, 0.7, 0.7),
+        TileKind::IronScrap => Color::rgb(0.7, 0.7, 0.7),
+        TileKind::Door => Color::rgb(0.7, 0.7, 0.7),
+        TileKind::Bedrock => Color::rgb(0.7, 0.7, 0.7),
+        TileKind::ScrapElectronics => Color::rgb(0.7, 0.7, 0.7),
+        TileKind::PlasteelScrap => Color::rgb(0.7, 0.7, 0.7),
+        TileKind::Treasure => Color::rgb(0.7, 0.7, 0.7),
     }
 }
 
