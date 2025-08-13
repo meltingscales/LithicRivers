@@ -1,6 +1,6 @@
 {
   "blocks": {
-    ".": "empty",
+    ".": "air",
     "X": "iron_scrap",
     "T": "treasure"
   },

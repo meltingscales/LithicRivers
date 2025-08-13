@@ -1,6 +1,6 @@
 {
   "blocks": {
-    ".": "empty",
+    ".": "air",
     "B": "bone_block"
   },
   "gen_biomes": "ALL",
