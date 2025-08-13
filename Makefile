@@ -111,6 +111,9 @@ profile-flamegraph:
 profile-tracy:
 	@echo " Running client with Tracy instrumentation (feature 'tracy')."
 	@echo " Launch tracy viewer with 'tracy &' before running this."
+	@echo " You'll need to build tracy from source."
+	@echo " Make sure you use Tracy v0.10 - newer versions will not work."
+	@echo " https://github.com/wolfpld/tracy"
 	$(CARGOZ_ENV) run -p lithicrivers-client --features tracy --release
 
 # RenderDoc GPU capture. Requires: renderdoccmd available in PATH.
