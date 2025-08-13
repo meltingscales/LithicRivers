@@ -2348,6 +2348,7 @@ dependencies = [
 name = "lithicrivers-client"
 version = "0.1.0"
 dependencies = [
+ "ab_glyph",
  "anyhow",
  "bevy",
  "lithicrivers-core",

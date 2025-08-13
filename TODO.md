@@ -192,6 +192,7 @@
 
 ## MVP for steam release (2025 christmas release)
   
+- "I'd like to change @render_ascii_2d  so that it uses a texture atlas (generated from our @monospace.ttf  font) instead of rendering a bunch of Text objects. I think it'd make our render a lot faster. Currently it takes 1 whole second per call of render_ascii_2d."
 - migrate all of the code from python-old/ to rust...
 - make 2d render background white so I can actually see rendered ASCII text
 - migrate to bevy/wgpu-based renderer. still support text mode, but allow player to switch. don't render in terminal, but render text mode within bevy.

@@ -1,13 +1,19 @@
 use bevy::prelude::*;
+use bevy::sprite::{TextureAtlas, TextureAtlasSprite, SpriteSheetBundle};
 use bevy::input::mouse::{MouseMotion};
 use bevy::window::CursorGrabMode;
 use lithicrivers_core::Game;
 use lithicrivers_core::tiles::TileKind;
 use lithicrivers_core::resources::world::CHUNK_SIZE;
 use std::collections::{HashMap, HashSet, VecDeque};
-use bevy::asset::LoadState;
+use bevy::render::texture::ImageSampler;
+use bevy::utils::tracing::info_span;
+use bevy::render::render_resource::Extent3d;
 mod sprite_loader;
 use crate::sprite_loader::{SpriteLoader, SpriteData};
+use ab_glyph::{FontArc, PxScale, point};
+use ab_glyph::Font as AbGlyphFont;
+use bevy::text::Font as BevyFont;
 
 #[cfg(test)]
 mod tests {
@@ -165,6 +171,8 @@ struct WorldSeed(pub u64);
 
 #[derive(Component)]
 struct AsciiRoot; // Parent for all ASCII glyphs so we can clear easily
+#[derive(Component)]
+struct AsciiCell(usize); // row-major index within the visible grid
 
 #[derive(Hash, Eq, PartialEq, Copy, Clone, Debug)]
 struct ChunkCoord2D { cx: i32, cy: i32 }
@@ -190,9 +198,21 @@ struct VisibleChunks2D(HashSet<ChunkCoord2D>);
 
 #[derive(Resource, Default)]
 struct FontHandles {
-    primary: Handle<Font>,   // assets/fonts/monospace.ttf
+    primary: Handle<BevyFont>,   // assets/fonts/monospace.ttf
     initiated: bool,
 }
+
+// Prebaked ASCII atlas generated from monospace.ttf for fast 2D rendering
+#[derive(Resource, Default)]
+struct AsciiAtlas {
+    atlas: Handle<TextureAtlas>,
+    // map ascii char -> atlas index
+    map: HashMap<char, usize>,
+    built: bool,
+}
+
+#[derive(Resource, Default, Debug, Clone, Copy, PartialEq, Eq)]
+struct AsciiGrid { cols: i32, rows: i32, initialized: bool }
 
 fn main() {
     App::new()
@@ -208,6 +228,10 @@ fn main() {
         .insert_resource(CoreGame(Game::new(12345)))
         .insert_resource(WorldSeed(12345))
         .insert_resource(FixedTickTimer(Timer::from_seconds(1.0/30.0, TimerMode::Repeating)))
+        .init_resource::<AsciiAtlas>()
+        .init_resource::<Last2DPos>()
+        .init_resource::<Camera3DRotation>()
+        .init_resource::<AsciiGrid>()
         .insert_resource(View2DConfig { tile_px: 16.0, _cols: 80, _rows: 45, chunk_size: lithicrivers_core::resources::world::CHUNK_SIZE, view_chunk_radius: 2 })
         .insert_resource(View3DConfig { chunk_size: CHUNK_SIZE, view_chunk_radius: 2 })
         .insert_resource(LoadedChunks2D { map: HashMap::new(), lru: VecDeque::new(), capacity: 256 })
@@ -215,23 +239,22 @@ fn main() {
         .init_resource::<FontHandles>()
         .insert_resource(SpriteLoader::new(None))
         .add_state::<ViewMode>()
-        .init_resource::<Camera3DRotation>()
+        // Build ASCII atlas once at startup
+        .add_systems(Startup, build_ascii_atlas)
+        // Common input and mode toggling
+        .add_systems(Update, (toggle_view_mode, keyboard_input_system))
+        // 2D view lifecycle
         .add_systems(OnEnter(ViewMode::TwoD), setup_2d)
         .add_systems(OnExit(ViewMode::TwoD), teardown_2d)
-        .add_systems(OnEnter(ViewMode::ThreeD), setup_3d)
-        .add_systems(OnExit(ViewMode::ThreeD), teardown_3d)
-        .add_systems(Startup, load_ascii_font)
-        .add_systems(Update, keyboard_input_system)
-        .add_systems(Update, toggle_view_mode)
-        // 2D ASCII systems
-        .init_resource::<Last2DPos>()
+        // 2D update systems
         .add_systems(Update, (
             update_visible_chunks_2d,
             ensure_chunks_loaded_2d,
             render_ascii_2d,
         ).run_if(in_state(ViewMode::TwoD)))
-        // 3D player marker update
-        .init_resource::<Last3DPos>()
+        // 3D lifecycle
+        .add_systems(OnEnter(ViewMode::ThreeD), setup_3d)
+        .add_systems(OnExit(ViewMode::ThreeD), teardown_3d)
         .add_systems(Update, update_player_marker_3d.run_if(in_state(ViewMode::ThreeD)))
         .add_systems(Update, camera_3d_mouse_rotation.run_if(in_state(ViewMode::ThreeD)))
         .add_systems(Update, update_camera_3d_follow_player.run_if(in_state(ViewMode::ThreeD)))
@@ -243,7 +266,6 @@ fn main() {
         .add_systems(Update, update_ground_3d.run_if(in_state(ViewMode::ThreeD)))
         .run();
 }
-
 #[derive(Resource, Debug)]
 struct Camera3DRotation {
     yaw: f32,
@@ -259,6 +281,8 @@ impl Default for Camera3DRotation {
 
 #[derive(Component, Clone, Copy)]
 struct CompassDir(char);
+#[derive(Component)]
+struct CompassUI;
 
 fn update_compass_ui(
     rot: Res<Camera3DRotation>,
@@ -317,9 +341,6 @@ fn camera_3d_mouse_rotation(
         }
     }
 }
-
-#[derive(Component)]
-struct CompassUI;
 
 fn setup_3d(
     mut commands: Commands,
@@ -421,6 +442,7 @@ fn teardown_3d(
 }
 
 fn setup_2d(mut commands: Commands, mut last2d: ResMut<Last2DPos>) {
+    info!("setup_2d: creating camera, root, and player marker");
     // Camera
     commands.spawn((Camera2dBundle::default(), View2D));
     // Root for ASCII glyphs (spawned first, so marker is on top)
@@ -560,7 +582,7 @@ fn update_ground_3d(
             px = pos.x; py = pos.y;
         }
     }
-    if (px, py) == (last.0, last.1) { return; }
+    if (px, py) == (last.0, last.1) { info!("render_ascii_2d: unchanged player pos, skip"); return; }
     last.0 = px; last.1 = py;
     // Despawn all previous ground tiles
     for e in &q_ground { commands.entity(e).despawn_recursive(); }
@@ -669,6 +691,101 @@ fn load_ascii_font(mut fonts: ResMut<FontHandles>, asset_server: Res<AssetServer
     }
 }
 
+// Build a single RGBA8 atlas of ASCII glyphs (space..tilde) from the monospace.ttf
+fn build_ascii_atlas(
+    mut atlas: ResMut<AsciiAtlas>,
+    mut images: ResMut<Assets<Image>>,
+    mut atlases: ResMut<Assets<TextureAtlas>>,
+    cfg: Res<View2DConfig>,
+) {
+    info!("build_ascii_atlas: starting (built={})", atlas.built);
+    if atlas.built { return; }
+    // Load font bytes directly; try common repo-relative locations
+    let candidate_paths = [
+        "crates/client/assets/fonts/monospace.ttf", // when running from repo root
+        "assets/fonts/monospace.ttf",               // when CWD is client crate
+    ];
+    let mut bytes_opt: Option<Vec<u8>> = None;
+    for p in candidate_paths.iter() {
+        match std::fs::read(p) {
+            Ok(b) => { info!("build_ascii_atlas: loaded font from {}", p); bytes_opt = Some(b); break; }
+            Err(_) => { trace!("build_ascii_atlas: font not at {}", p); }
+        }
+    }
+    let Some(bytes) = bytes_opt else {
+        warn!("build_ascii_atlas: could not find monospace.ttf in expected paths; skipping atlas build");
+        return;
+    };
+    let Ok(font) = FontArc::try_from_vec(bytes) else {
+        warn!("Failed to parse monospace.ttf; skipping atlas build");
+        return;
+    };
+
+    let tile = cfg.tile_px as u32;
+    // Grid pack ASCII 32..=126 into 16x6 cells
+    let cols = 16u32;
+    let rows = 6u32;
+    let cell_w = tile;
+    let cell_h = tile;
+    let img_w = cols * cell_w;
+    let img_h = rows * cell_h;
+    let mut pixels = vec![0u8; (img_w * img_h * 4) as usize];
+
+    // Choose scale to fit height with some margin
+    let scale = PxScale { x: (tile as f32) * 0.9, y: (tile as f32) * 0.9 };
+    let y_baseline = (cell_h as f32) * 0.75; // adjust baseline for typical ascenders/descenders
+
+    let mut map = HashMap::new();
+    let mut index = 0usize;
+    for code in 32u8..=126u8 {
+        let ch = code as char;
+        let col = (index as u32) % cols;
+        let row = (index as u32) / cols;
+        let origin_x = (col * cell_w) as i32;
+        let origin_y = (row * cell_h) as i32;
+
+        let glyph_id = font.glyph_id(ch);
+        let glyph = glyph_id.with_scale(scale);
+        if let Some(outlined) = font.outline_glyph(glyph) {
+            let bounds = outlined.px_bounds();
+            outlined.draw(|x, y, v| {
+                let gx = origin_x + x as i32 + ((cell_w as i32) / 2 - ((bounds.max.x - bounds.min.x) as i32)/2);
+                let gy = origin_y + y as i32 + ((cell_h as i32) / 2 - ((bounds.max.y - bounds.min.y) as i32)/2);
+                if gx < 0 || gy < 0 { return; }
+                let gx = gx as u32; let gy = gy as u32;
+                if gx >= img_w || gy >= img_h { return; }
+                let idx = ((gy * img_w + gx) * 4) as usize;
+                let a = (v.clamp(0.0, 1.0) * 255.0) as u8;
+                // White glyph with alpha (premultiplied not required here; Bevy expects straight alpha by default)
+                pixels[idx + 0] = 255;
+                pixels[idx + 1] = 255;
+                pixels[idx + 2] = 255;
+                pixels[idx + 3] = a;
+            });
+        }
+        map.insert(ch, index);
+        index += 1;
+    }
+
+    // Create Image
+    let mut image = Image::new_fill(
+        Extent3d { width: img_w, height: img_h, depth_or_array_layers: 1 },
+        bevy::render::render_resource::TextureDimension::D2,
+        &pixels,
+        bevy::render::render_resource::TextureFormat::Rgba8UnormSrgb,
+    );
+    image.sampler = ImageSampler::nearest();
+    let texture = images.add(image);
+    // Build TextureAtlas (image + grid layout)
+    let atlas_asset = TextureAtlas::from_grid(texture.clone(), Vec2::new(cell_w as f32, cell_h as f32), cols as usize, rows as usize, None, None);
+    let atlas_handle = atlases.add(atlas_asset);
+
+    atlas.atlas = atlas_handle;
+    atlas.map = map;
+    atlas.built = true;
+    info!("ASCII atlas built: {}x{}, cells={}x{}", img_w, img_h, cols, rows);
+}
+
 fn world_to_chunk_2d(x: i32, y: i32, chunk: i32) -> ChunkCoord2D {
     // NOTE: chunk argument should always be CHUNK_SIZE
 
@@ -732,6 +849,7 @@ fn ensure_chunks_loaded_2d(
 
 fn generate_chunk_2d(seed: u64, cc: ChunkCoord2D, w: i32, h: i32) -> ChunkData2D {
     // NOTE: w and h should always be CHUNK_SIZE
+
     use rand::{Rng, SeedableRng};
     use rand_chacha::ChaCha20Rng;
     // Position-based deterministic seeding
@@ -764,14 +882,17 @@ struct Last2DPos(i32, i32);
 fn render_ascii_2d(
     core: Res<CoreGame>,
     cfg: Res<View2DConfig>,
-    fonts: Res<FontHandles>,
-    asset_server: Res<AssetServer>,
+    _fonts: Res<FontHandles>,
+    _asset_server: Res<AssetServer>,
     _loaded: Res<LoadedChunks2D>,
     mut commands: Commands,
     root_q: Query<Entity, With<AsciiRoot>>,
     mut last: ResMut<Last2DPos>,
-    mut sprite_loader: ResMut<SpriteLoader>,
+    atlas: Res<AsciiAtlas>,
+    mut grid: ResMut<AsciiGrid>,
+    mut q_cells: Query<(&AsciiCell, &mut TextureAtlasSprite, &mut Transform), With<View2D>>,
 ) {
+    info!("render_ascii_2d: enter, atlas_built={}, last=({}, {})", atlas.built, last.0, last.1);
     let last_blocked = core.0.res.last_blocked_tile;
 
     let mut px = 0i32; let mut py = 0i32;
@@ -782,73 +903,95 @@ fn render_ascii_2d(
     }
     if (px, py) == (last.0, last.1) { return; }
     last.0 = px; last.1 = py;
-    // Choose a usable font: prefer primary if loaded, else wait.
-    let font_handle: Option<Handle<Font>> = match asset_server.get_load_state(&fonts.primary) {
-        Some(LoadState::Loaded) => Some(fonts.primary.clone()),
-        _ => None,
-    };
-    let Some(active_font) = font_handle else { return };
-    let root = if let Ok(e) = root_q.get_single() { e } else { return };
-    // Clear previous children
-    commands.entity(root).despawn_descendants();
+    // Require atlas to be built
+    if !atlas.built { info!("render_ascii_2d: atlas not built yet, skip"); return; }
+    let root = if let Ok(e) = root_q.get_single() { e } else { info!("render_ascii_2d: no AsciiRoot found, skip"); return };
 
     // Build view from core (includes entity glyph overlay)
     let view = core.0.build_view();
     let rows: i32 = view.map_lines.len() as i32;
-    if rows <= 0 { return; }
+    if rows <= 0 { info!("render_ascii_2d: empty view rows, skip"); return; }
     let cols: i32 = view.map_lines[0].chars().count() as i32;
     let half_cols = cols/2; let half_rows = rows/2;
     let start_x = view.player_pos.x - half_cols; let start_y = view.player_pos.y - half_rows;
     let sx = cfg.tile_px; let sy = cfg.tile_px;
-    let mut bundle = Vec::with_capacity((rows*cols) as usize);
+
+    // Prepare computed per-cell data in row-major order
+    struct CellData { index: usize, color: Color, tx: f32, ty: f32 }
+    let mut computed: Vec<CellData> = Vec::with_capacity((rows*cols) as usize);
+    let _span_compute = info_span!("compute_cells").entered();
+    use std::collections::HashMap as StdHashMap;
+    let mut char_index_cache: StdHashMap<char, usize> = StdHashMap::new();
     for (vy, line) in view.map_lines.iter().enumerate() {
         for (vx, ch) in line.chars().enumerate() {
             let vx_i = vx as i32; let vy_i = vy as i32;
             let wx = start_x + vx_i; let wy = start_y + vy_i;
-            // Color from tile kind; glyph from view, with special color for sheep 's'
-            let kind = core.0.res.world.get_tile(wx, wy);
-            let fluid = core.0.res.fluids.get_fluid(lithicrivers_core::components::Position { x: wx, y: wy, z: 0 });
-            let (sprite_name, sprite_category) = if let Some(fluid) = &fluid {
-                (fluid.fluid_type.sprite_key().to_string(), "fluids")
-            } else {
-                (kind.sprite_key().to_string(), "tiles")
+            // Cheap color from glyph heuristic; special cases override below
+            let mut color = match ch {
+                // water
+                '~' | '≈' | '≋' => Color::rgb(0.3, 0.5, 1.0),
+                // grass / foliage
+                '.' | '"' | '`' | '"' | '"' | '"' | '"' | '"' => Color::rgb(0.4, 0.8, 0.4),
+                '"' | '^' | 't' | 'T' => Color::rgb(0.4, 0.8, 0.4),
+                // dirt / sand
+                ',' | ':' | ';' => Color::rgb(0.9, 0.9, 0.2),
+                // rock / walls
+                '#' | '█' | '■' | '▲' | '∎' => Color::rgb(0.7, 0.7, 0.7),
+                // default
+                _ => Color::WHITE,
             };
-            let sprite = sprite_loader.load_sprite(&sprite_name, sprite_category);
-            let sprite_glyph = sprite.sprites.get(0).cloned().unwrap_or_else(|| ch.to_string());
-            let mut color = if Some((wx, wy)) == last_blocked && !kind.is_passable() {
-                Color::RED
-            } else {
-                // Use sprite color if available, else fallback
-                match sprite.color.as_str() {
-                    "blue" => Color::rgb(0.3, 0.5, 1.0),
-                    "green" => Color::rgb(0.4, 0.8, 0.4),
-                    "yellow" => Color::rgb(0.9, 0.9, 0.2),
-                    "gray" => Color::rgb(0.7, 0.7, 0.7),
-                    "white" => Color::WHITE,
-                    "red" => Color::rgb(1.0, 0.3, 0.3),
-                    _ => tile_color(kind),
-                }
-            };
-            // Make sheep pop: pulse a glowing yellow color for glyph 's' or 'S'
+            // Blocked override
+            if Some((wx, wy)) == last_blocked { color = Color::RED; }
+            // Make sheep pop
             if ch == 's' || ch == 'S' {
                 let phase = ((view.gametick % 30) as f32) / 30.0;
                 let intensity = 0.7 + 0.3 * (std::f32::consts::TAU * phase).sin().abs();
                 color = Color::rgb(1.0 * intensity, 0.9 * intensity, 0.2 * intensity);
             }
-            let text = Text::from_section(sprite_glyph.clone(), TextStyle { font: active_font.clone(), font_size: cfg.tile_px, color })
-                .with_alignment(TextAlignment::Center);
+            let atlas_index = *char_index_cache.entry(ch)
+                .or_insert_with(|| *atlas.map.get(&ch).unwrap_or(&0usize));
             let tx = (vx_i - half_cols) as f32 * sx;
             let ty = (vy_i - half_rows) as f32 * -sy;
-            bundle.push((Text2dBundle {
-                text,
-                transform: Transform::from_translation(Vec3::new(tx, ty, 0.0)),
-                ..Default::default()
-            },));
+            computed.push(CellData { index: atlas_index, color, tx, ty });
         }
     }
-    // Spawn all glyphs as children
-    commands.entity(root).with_children(|p| {
-        for (b,) in bundle.drain(..) { p.spawn(b); }
-    });
-}
+    drop(_span_compute);
+    // If grid not initialized or dimensions changed, (re)spawn grid once
+    if !grid.initialized || grid.cols != cols || grid.rows != rows {
+        info!("render_ascii_2d: (re)spawning grid {}x{}", cols, rows);
+        commands.entity(root).despawn_descendants();
+        commands.entity(root).with_children(|p| {
+            for (i, cell) in computed.iter().enumerate() {
+                p.spawn((
+                    SpriteSheetBundle {
+                        texture_atlas: atlas.atlas.clone(),
+                        sprite: TextureAtlasSprite {
+                            index: cell.index,
+                            color: cell.color,
+                            custom_size: Some(Vec2::splat(cfg.tile_px)),
+                            ..Default::default()
+                        },
+                        transform: Transform::from_translation(Vec3::new(cell.tx, cell.ty, 0.0)),
+                        ..Default::default()
+                    },
+                    AsciiCell(i),
+                    View2D,
+                ));
+            }
+        });
+        grid.cols = cols; grid.rows = rows; grid.initialized = true;
+        return;
+    }
 
+    // Fast path: update existing cell sprites in-place
+    let _span_update = info_span!("update_cells").entered();
+    for (cell, mut sprite, mut transform) in q_cells.iter_mut() {
+        if let Some(cd) = computed.get(cell.0) {
+            sprite.index = cd.index;
+            sprite.color = cd.color;
+            transform.translation.x = cd.tx;
+            transform.translation.y = cd.ty;
+        }
+    }
+    drop(_span_update);
+}
