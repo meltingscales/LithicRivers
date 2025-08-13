@@ -4,6 +4,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 use crate::tiles::TileKind;
+use crate::structure::StructureDefinition;
+use std::path::PathBuf;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Chunk {
@@ -37,6 +39,23 @@ impl World {
     }
 
     fn generate_chunk(&self, cx: i64, cy: i64, chunk: &mut Chunk) {
+        // Place fixed demo structures at/near spawn (0,0 chunk only)
+        if cx == 0 && cy == 0 {
+            let structure_names = [
+                "giant_corpse.lrstructure",
+                "small_ship.lrstructure",
+                "small_temple.lrstructure",
+                "starter_ship.lrstructure",
+            ];
+            let asset_root = PathBuf::from("crates/client/assets/structures");
+            let offsets = [(8, 8), (20, 40), (40, 20), (32, 32)];
+            for (name, &(ox, oy)) in structure_names.iter().zip(offsets.iter()) {
+                let struct_dir = asset_root.join(name);
+                let structure = StructureDefinition::load_from_directory(&struct_dir);
+                Self::apply_structure(chunk, &structure, ox, oy);
+            }
+        }
+
         // Deterministic generation based on world seed and chunk coords
         let mut rng = ChaCha20Rng::seed_from_u64(self.mix_coords(cx, cy));
         // Simple sprinkle of rocks with ~5% density
@@ -91,6 +110,24 @@ impl World {
             let mut chunk = Chunk::new_filled(TileKind::Dirt);
             self.generate_chunk(cx, cy, &mut chunk);
             chunk.get(tx, ty)
+        }
+    }
+
+    fn apply_structure(chunk: &mut Chunk, structure: &StructureDefinition, ox: i32, oy: i32) {
+        for (z, layer) in structure.layers.iter().enumerate() {
+            for (y, line) in layer.lines().enumerate() {
+                for (x, ch) in line.chars().enumerate() {
+                    if ch == ' ' { continue; }
+                    let symbol = ch.to_string();
+                    if let Some(tile) = structure.get_tile_for_symbol(&symbol) {
+                        let tx = ox + x as i32;
+                        let ty = oy + y as i32;
+                        if tx >= 0 && tx < CHUNK_SIZE && ty >= 0 && ty < CHUNK_SIZE {
+                            chunk.set(tx, ty, tile);
+                        }
+                    }
+                }
+            }
         }
     }
 }
