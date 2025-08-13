@@ -6,6 +6,8 @@ use lithicrivers_core::tiles::TileKind;
 use lithicrivers_core::resources::world::CHUNK_SIZE;
 use std::collections::{HashMap, HashSet, VecDeque};
 use bevy::asset::LoadState;
+mod sprite_loader;
+use crate::sprite_loader::{SpriteLoader, SpriteData};
 
 #[cfg(test)]
 mod tests {
@@ -64,7 +66,7 @@ mod tests {
     #[test]
     fn tile_color_mapping_matches() {
         assert_eq!(tile_color(TileKind::Rock), Color::rgb(0.4, 0.4, 0.45));
-        assert_eq!(tile_color(TileKind::Floor), Color::rgb(0.7, 0.7, 0.7));
+        assert_eq!(tile_color(TileKind::Dirt), Color::rgb(0.7, 0.7, 0.7));
         assert_eq!(tile_color(TileKind::Grass), Color::rgb(0.6, 0.8, 0.6));
         assert_eq!(tile_color(TileKind::Tree), Color::rgb(0.6, 0.8, 0.6));
         assert_eq!(tile_color(TileKind::Air), Color::rgb(0.7, 0.7, 0.7));
@@ -94,7 +96,7 @@ enum ViewMode {
 fn tile_color(kind: TileKind) -> Color {
     match kind {
         TileKind::Rock => Color::rgb(0.4, 0.4, 0.45),
-        TileKind::Floor => Color::rgb(0.7, 0.7, 0.7),
+        TileKind::Dirt => Color::rgb(0.7, 0.7, 0.7),
         TileKind::Grass => Color::rgb(0.6, 0.8, 0.6),
         TileKind::Tree => Color::rgb(0.6, 0.8, 0.6),
         TileKind::Air => Color::rgb(0.7, 0.7, 0.7),
@@ -118,7 +120,7 @@ fn demo_tile_at(x: i32, z: i32) -> TileKind {
     for _ in 0..steps { let _: f32 = rng.gen(); }
     let r: f32 = rng.gen();
     if r < 0.10 { TileKind::Rock }
-    else if r < 0.50 { TileKind::Floor }
+    else if r < 0.50 { TileKind::Dirt }
     else { TileKind::Grass }
 }
 
@@ -204,6 +206,7 @@ fn main() {
         .insert_resource(LoadedChunks2D { map: HashMap::new(), lru: VecDeque::new(), capacity: 256 })
         .insert_resource(VisibleChunks2D(HashSet::new()))
         .init_resource::<FontHandles>()
+        .insert_resource(SpriteLoader::new(None))
         .add_state::<ViewMode>()
         .init_resource::<Camera3DRotation>()
         .add_systems(OnEnter(ViewMode::TwoD), setup_2d)
@@ -731,7 +734,7 @@ fn generate_chunk_2d(seed: u64, cc: ChunkCoord2D, w: i32, h: i32) -> ChunkData2D
         for _x in 0..w {
             let r: f32 = rng.gen();
             let kind = if r < 0.10 { TileKind::Rock } // rock
-                       else if r < 0.50 { TileKind::Floor } // floor
+                       else if r < 0.50 { TileKind::Dirt } // dirt
                        else { TileKind::Grass }; // grass
             tiles.push(TileCell { kind });
         }
@@ -760,6 +763,7 @@ fn render_ascii_2d(
     mut commands: Commands,
     root_q: Query<Entity, With<AsciiRoot>>,
     mut last: ResMut<Last2DPos>,
+    mut sprite_loader: ResMut<SpriteLoader>,
 ) {
     let last_blocked = core.0.res.last_blocked_tile;
 
@@ -796,29 +800,38 @@ fn render_ascii_2d(
             let wx = start_x + vx_i; let wy = start_y + vy_i;
             // Color from tile kind; glyph from view, with special color for sheep 's'
             let kind = core.0.res.world.get_tile(wx, wy);
-            // Overlay dynamic fluid if present
             let fluid = core.0.res.fluids.get_fluid(lithicrivers_core::components::Position { x: wx, y: wy, z: 0 });
-            let glyph = if fluid.is_some() {
-                '~'
+            let (sprite_name, sprite_category) = if let Some(fluid) = &fluid {
+                (fluid.fluid_type.sprite_key().to_string(), "fluids")
             } else {
-                kind.glyph()
+                (kind.sprite_key().to_string(), "tiles")
             };
+            let sprite = sprite_loader.load_sprite(&sprite_name, sprite_category);
+            let sprite_glyph = sprite.sprites.get(0).cloned().unwrap_or_else(|| ch.to_string());
             let mut color = if Some((wx, wy)) == last_blocked && !kind.is_passable() {
                 Color::RED
             } else {
-                tile_color(kind)
+                // Use sprite color if available, else fallback
+                match sprite.color.as_str() {
+                    "blue" => Color::rgb(0.3, 0.5, 1.0),
+                    "green" => Color::rgb(0.4, 0.8, 0.4),
+                    "yellow" => Color::rgb(0.9, 0.9, 0.2),
+                    "gray" => Color::rgb(0.7, 0.7, 0.7),
+                    "white" => Color::WHITE,
+                    "red" => Color::rgb(1.0, 0.3, 0.3),
+                    _ => tile_color(kind),
+                }
             };
             // Make sheep pop: pulse a glowing yellow color for glyph 's' or 'S'
-            if glyph == 's' || glyph == 'S' {
-                // Simple pulse based on gametick to avoid needing Time
-                let phase = ((view.gametick % 30) as f32) / 30.0; // 0..1
+            if ch == 's' || ch == 'S' {
+                let phase = ((view.gametick % 30) as f32) / 30.0;
                 let intensity = 0.7 + 0.3 * (std::f32::consts::TAU * phase).sin().abs();
                 color = Color::rgb(1.0 * intensity, 0.9 * intensity, 0.2 * intensity);
             }
-            let text = Text::from_section(ch.to_string(), TextStyle { font: active_font.clone(), font_size: cfg.tile_px, color })
+            let text = Text::from_section(sprite_glyph.clone(), TextStyle { font: active_font.clone(), font_size: cfg.tile_px, color })
                 .with_alignment(TextAlignment::Center);
             let tx = (vx_i - half_cols) as f32 * sx;
-            let ty = (vy_i - half_rows) as f32 * -sy; // y-down screen
+            let ty = (vy_i - half_rows) as f32 * -sy;
             bundle.push((Text2dBundle {
                 text,
                 transform: Transform::from_translation(Vec3::new(tx, ty, 0.0)),

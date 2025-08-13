@@ -9,6 +9,15 @@ pub enum FluidType {
     // Add more fluid types as needed
 }
 
+impl FluidType {
+    pub fn sprite_key(&self) -> &'static str {
+        match self {
+            FluidType::Water => "water",
+            // Add more fluids as needed
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Fluid {
     pub fluid_type: FluidType,
@@ -169,7 +178,7 @@ impl FluidManager {
         let t = world.get_tile(pos.x, pos.y);
         // Only allow on non-solid tiles
         match t {
-            crate::tiles::TileKind::Rock | crate::tiles::TileKind::Tree => false,
+            crate::tiles::TileKind::Rock | crate::tiles::TileKind::Tree => false, //TODO make this configurable, i.e. "TileKind.is_solid"
             _ => {
                 // Don't overfill
                 match self.fluids.get(pos) {
@@ -184,7 +193,7 @@ impl FluidManager {
 // Debug utility to spawn some pools in a cross around the center
 pub fn spawn_debug_pools(fm: &mut FluidManager, center: Position) {
     let offsets = [
-        (2, 2), (5,5)
+        (2, 2), (5, 5)
     ];
     for (dx, dy) in offsets.iter() {
         let pos = Position { x: center.x + dx, y: center.y + dy, z: center.z };

@@ -88,7 +88,7 @@ impl World {
             ch.get(tx, ty)
         } else {
             // Generate a local chunk for read-only purposes
-            let mut chunk = Chunk::new_filled(TileKind::Floor);
+            let mut chunk = Chunk::new_filled(TileKind::Dirt);
             self.generate_chunk(cx, cy, &mut chunk);
             chunk.get(tx, ty)
         }
