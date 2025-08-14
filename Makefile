@@ -76,6 +76,9 @@ build:
 	$(CARGO) --version
 	$(CARGOZ_ENV) build $(BUILD_FLAGS)
 	$(CARGOZ_ENV) build -p lithicrivers-client $(BUILD_FLAGS)
+	$(CARGOZ_ENV) build -p lithicrivers-core $(BUILD_FLAGS)
+	$(CARGOZ_ENV) build $(BUILD_FLAGS) --features tracy
+	
 
 run-debug: client
 

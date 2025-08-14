@@ -922,13 +922,15 @@ fn render_ascii_2d(
     let _span_compute = info_span!("compute_cells").entered();
     use std::collections::HashMap as StdHashMap;
     let mut char_index_cache: StdHashMap<char, usize> = StdHashMap::new();
-    // Normalize any non-ASCII or unsupported glyphs to an ASCII fallback present in the atlas
+    // Panic on any non-ASCII/unsupported glyphs so issues surface immediately (space maps to '.')
     let mut normalize = |c: char| -> char {
         match c {
-            ' ' => '.',                    // show ground instead of invisible space
-            '≈' | '≋' => '~',              // water waves -> '~'
-            '█' | '■' | '▲' | '∎' => '#',  // walls/rocks -> '#'
-            _ => if c.is_ascii() { c } else { '.' },
+            ' ' => '.', // show ground instead of invisible space
+            _ if c.is_ascii() => c,
+            _ => panic!(
+                "Unsupported glyph encountered in render_ascii_2d::normalize: U+{:04X} '{}'",
+                c as u32, c
+            ),
         }
     };
     for (vy, line) in view.map_lines.iter().enumerate() {
