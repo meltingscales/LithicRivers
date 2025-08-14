@@ -935,11 +935,14 @@ fn render_ascii_2d(
             let tile_sprite = sprite_loader.load_sprite(kind.sprite_key(), "tiles");
             let mut ch = tile_sprite.sprites.get(0)
                 .and_then(|s| s.chars().next())
-                .unwrap_or('.');
+                .unwrap_or('?');
             let mut color = color_for_tile(kind);
-            // Overlay fluid
+            // Overlay fluid (use sprite loader + palette)
             if let Some(fluid) = core.0.res.fluids.get_fluid(lithicrivers_core::components::Position { x: wx, y: wy, z: 0 }) {
-                ch = '~';
+                let fluid_sprite = sprite_loader.load_sprite(fluid.fluid_type.sprite_key(), "fluids");
+                ch = fluid_sprite.sprites.get(0)
+                    .and_then(|s| s.chars().next())
+                    .unwrap_or('?');
                 color = color_for_fluid(fluid.fluid_type);
                 fluid_overlays += 1;
             }
