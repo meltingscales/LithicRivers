@@ -3,6 +3,7 @@ pub mod resources;
 pub mod systems;
 pub mod view;
 pub mod tiles;
+pub mod palette;
 mod structure;
 
 use components::*;

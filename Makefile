@@ -85,10 +85,10 @@ build:
 run-debug: client
 
 client:
-	$(CARGOZ_ENV) run -p lithicrivers-client
+	$(CARGOZ_ENV) run -p lithicrivers-client --bin lithicrivers-client
 
 run-release:
-	$(CARGOZ_ENV) run -p lithicrivers-client --release
+	$(CARGOZ_ENV) run -p lithicrivers-client --bin lithicrivers-client --release
 
 # Run the ASCII atlas demo (renders the full atlas in a separate window)
 demo-atlas:
