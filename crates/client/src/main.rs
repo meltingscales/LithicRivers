@@ -892,7 +892,7 @@ fn render_ascii_2d(
     mut grid: ResMut<AsciiGrid>,
     mut q_cells: Query<(&AsciiCell, &mut TextureAtlasSprite, &mut Transform), With<View2D>>,
 ) {
-    info!("render_ascii_2d: enter, atlas_built={}, last=({}, {})", atlas.built, last.0, last.1);
+    debug!("render_ascii_2d: enter, atlas_built={}, last=({}, {})", atlas.built, last.0, last.1);
     let last_blocked = core.0.res.last_blocked_tile;
 
     let mut px = 0i32; let mut py = 0i32;
