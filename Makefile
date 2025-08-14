@@ -47,6 +47,8 @@ help:
 	@echo "  build       - Build the project"
 	@echo "  run-debug   - Run the project (debug)"
 	@echo "  run-release - Run the project (release)"
+	@echo "DEMOS:"
+	@echo "  demo_atlas  - Run the ASCII atlas demo"
 	@echo "PROFILING:"
 	@echo "  profile-flamegraph - CPU profile with cargo-flamegraph (perf)"
 	@echo "  profile-tracy      - Run with Tracy instrumentation (requires tracy feature/deps)"
@@ -78,7 +80,7 @@ build:
 	$(CARGOZ_ENV) build -p lithicrivers-client $(BUILD_FLAGS)
 	$(CARGOZ_ENV) build -p lithicrivers-core $(BUILD_FLAGS)
 	$(CARGOZ_ENV) build $(BUILD_FLAGS) --features tracy
-	
+
 
 run-debug: client
 
@@ -87,6 +89,10 @@ client:
 
 run-release:
 	$(CARGOZ_ENV) run -p lithicrivers-client --release
+
+# Run the ASCII atlas demo (renders the full atlas in a separate window)
+demo-atlas:
+	$(CARGOZ_ENV) run -p lithicrivers-client --bin demo_atlas
 
 client-blind:
 	echo "Blind mode not implemented yet."
