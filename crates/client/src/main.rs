@@ -923,6 +923,9 @@ fn render_ascii_2d(
             ),
         }
     };
+    // Counters for debug logging
+    let mut entity_overlays: usize = 0;
+    let mut fluid_overlays: usize = 0;
     for (vy, line) in view.map_lines.iter().enumerate() {
         for (vx, ch_core) in line.chars().enumerate() {
             let vx_i = vx as i32; let vy_i = vy as i32;
@@ -938,10 +941,12 @@ fn render_ascii_2d(
             if let Some(fluid) = core.0.res.fluids.get_fluid(lithicrivers_core::components::Position { x: wx, y: wy, z: 0 }) {
                 ch = '~';
                 color = color_for_fluid(fluid.fluid_type);
+                fluid_overlays += 1;
             }
             // Overlay from core map_lines (entities with Glyph etc.)
             if ch_core != ' ' {
                 ch = ch_core;
+                entity_overlays += 1;
             }
             // Blocked override
             if Some((wx, wy)) == last_blocked { color = Color::RED; }
@@ -960,6 +965,17 @@ fn render_ascii_2d(
         }
     }
     drop(_span_compute);
+    // Per-render logging: how many sprites/cells will render and overlays applied
+    let total_cells = computed.len();
+    info!(
+        "render_ascii_2d: cells={}, tiles={} (grid {}x{}), entities_overlayed={}, fluids_overlayed={}",
+        total_cells,
+        (rows * cols) as usize,
+        cols,
+        rows,
+        entity_overlays,
+        fluid_overlays
+    );
     // If grid not initialized or dimensions changed, (re)spawn grid once
     if !grid.initialized || grid.cols != cols || grid.rows != rows {
         info!("render_ascii_2d: (re)spawning grid {}x{}", cols, rows);
