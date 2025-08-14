@@ -18,8 +18,8 @@ pub fn build_render_view(world: &World, res: &Resources) -> RenderView {
     }
     // Build a window around the player from the infinite world at z=0.
     // Choose a generous default window; TUI will crop/scale it.
-    let win_w: i32 = 160;
-    let win_h: i32 = 80;
+    let win_w: i32 = 50;
+    let win_h: i32 = 50;
     let half_w = win_w / 2;
     let half_h = win_h / 2;
     let center_x = player_pos.x;
