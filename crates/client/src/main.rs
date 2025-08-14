@@ -16,6 +16,7 @@ use ab_glyph::Font as AbGlyphFont;
 use bevy::text::Font as BevyFont;
 mod palette;
 use crate::palette::color_for_tile;
+use crate::palette::color_for_fluid;
 
 #[cfg(test)]
 mod tests {
@@ -215,6 +216,7 @@ fn main() {
         .insert_resource(CoreGame(Game::new(12345)))
         .insert_resource(WorldSeed(12345))
         .insert_resource(FixedTickTimer(Timer::from_seconds(1.0/30.0, TimerMode::Repeating)))
+        .insert_resource(SpriteLoader::new(None))
         .init_resource::<AsciiAtlas>()
         .init_resource::<Last2DPos>()
         .init_resource::<Camera3DRotation>()
@@ -878,6 +880,7 @@ fn render_ascii_2d(
     atlas: Res<AsciiAtlas>,
     mut grid: ResMut<AsciiGrid>,
     mut q_cells: Query<(&AsciiCell, &mut TextureAtlasSprite, &mut Transform), With<View2D>>,
+    mut sprite_loader: ResMut<SpriteLoader>,
 ) {
     debug!("render_ascii_2d: enter, atlas_built={}, last=({}, {})", atlas.built, last.0, last.1);
     let last_blocked = core.0.res.last_blocked_tile;
@@ -921,23 +924,25 @@ fn render_ascii_2d(
         }
     };
     for (vy, line) in view.map_lines.iter().enumerate() {
-        for (vx, ch) in line.chars().enumerate() {
+        for (vx, ch_core) in line.chars().enumerate() {
             let vx_i = vx as i32; let vy_i = vy as i32;
             let wx = start_x + vx_i; let wy = start_y + vy_i;
-            // Cheap color from glyph heuristic; special cases override below
-            let mut color = match ch {
-                // water
-                '~' | '≈' | '≋' => Color::rgb(0.3, 0.5, 1.0),
-                // grass / foliage
-                '.' | '"' | '`' | '"' | '"' | '"' | '"' | '"' | ' ' => Color::rgb(0.4, 0.8, 0.4),
-                '"' | '^' | 't' | 'T' => Color::rgb(0.4, 0.8, 0.4),
-                // dirt / sand
-                ',' | ':' | ';' => Color::rgb(0.9, 0.9, 0.2),
-                // rock / walls
-                '#' | '█' | '■' | '▲' | '∎' => Color::rgb(0.7, 0.7, 0.7),
-                // default
-                _ => Color::BLACK,
-            };
+            // Base from tile using sprite loader and palette
+            let kind = core.0.res.world.get_tile(wx, wy);
+            let tile_sprite = sprite_loader.load_sprite(kind.sprite_key(), "tiles");
+            let mut ch = tile_sprite.sprites.get(0)
+                .and_then(|s| s.chars().next())
+                .unwrap_or('.');
+            let mut color = color_for_tile(kind);
+            // Overlay fluid
+            if let Some(fluid) = core.0.res.fluids.get_fluid(lithicrivers_core::components::Position { x: wx, y: wy, z: 0 }) {
+                ch = '~';
+                color = color_for_fluid(fluid.fluid_type);
+            }
+            // Overlay from core map_lines (entities with Glyph etc.)
+            if ch_core != ' ' {
+                ch = ch_core;
+            }
             // Blocked override
             if Some((wx, wy)) == last_blocked { color = Color::RED; }
             // Make sheep pop
