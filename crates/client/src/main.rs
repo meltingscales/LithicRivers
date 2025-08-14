@@ -14,6 +14,8 @@ use crate::sprite_loader::{SpriteLoader, SpriteData};
 use ab_glyph::{FontArc, PxScale, point};
 use ab_glyph::Font as AbGlyphFont;
 use bevy::text::Font as BevyFont;
+mod palette;
+use crate::palette::color_for_tile;
 
 #[cfg(test)]
 mod tests {
@@ -98,23 +100,8 @@ enum ViewMode {
     ThreeD,
 }
 
-// Map shared TileKind to a Bevy Color (client-side concern)
-fn tile_color(kind: TileKind) -> Color {
-    match kind {
-        TileKind::Rock => Color::rgb(0.4, 0.4, 0.45),
-        TileKind::Dirt => Color::rgb(0.7, 0.7, 0.7),
-        TileKind::Grass => Color::rgb(0.6, 0.8, 0.6),
-        TileKind::Tree => Color::rgb(0.6, 0.8, 0.6),
-        TileKind::Air => Color::rgb(0.7, 0.7, 0.7),
-        TileKind::BoneBlock => Color::rgb(0.7, 0.7, 0.7),
-        TileKind::IronScrap => Color::rgb(0.7, 0.7, 0.7),
-        TileKind::Door => Color::rgb(0.7, 0.7, 0.7),
-        TileKind::Bedrock => Color::rgb(0.7, 0.7, 0.7),
-        TileKind::ScrapElectronics => Color::rgb(0.7, 0.7, 0.7),
-        TileKind::PlasteelScrap => Color::rgb(0.7, 0.7, 0.7),
-        TileKind::Treasure => Color::rgb(0.7, 0.7, 0.7),
-    }
-}
+// Map shared TileKind to a Bevy Color (delegates to client palette)
+fn tile_color(kind: TileKind) -> Color { color_for_tile(kind) }
 
 // Very small deterministic demo for 3D using the same hashing approach
 #[cfg(test)]

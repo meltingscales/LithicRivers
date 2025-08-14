@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use crate::components::Position;
 use crate::resources::world::World;
+use crate::palette::PaletteKey;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum FluidType {
@@ -14,6 +15,11 @@ impl FluidType {
         match self {
             FluidType::Water => "water",
             // Add more fluids as needed
+        }
+    }
+    pub fn palette_key(&self) -> PaletteKey {
+        match self {
+            FluidType::Water => PaletteKey::Water,
         }
     }
 }
