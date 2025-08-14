@@ -94,6 +94,14 @@ run-release:
 demo-atlas:
 	$(CARGOZ_ENV) run -p lithicrivers-client --bin demo_atlas
 
+# Run the Inventory UI demo
+demo-inventory:
+	$(CARGOZ_ENV) run -p lithicrivers-client --bin demo_inventory
+
+# Run the Body/Repair UI demo
+demo-body:
+	$(CARGOZ_ENV) run -p lithicrivers-client --bin demo_body
+
 client-blind:
 	echo "Blind mode not implemented yet."
 	exit 1
