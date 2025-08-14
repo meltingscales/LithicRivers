@@ -17,4 +17,8 @@ pub enum PaletteKey {
     Treasure,
     // Fluids
     Water,
+    Oil,
+    Blood,
+    Acid,
+    Lava,
 }

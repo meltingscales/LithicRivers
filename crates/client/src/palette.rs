@@ -20,6 +20,10 @@ pub fn color_for_key(key: PaletteKey) -> Color {
         PaletteKey::Treasure => Color::rgb(0.7, 0.7, 0.7),
         // Fluids
         PaletteKey::Water => Color::rgb(0.3, 0.5, 1.0),
+        PaletteKey::Oil => Color::rgb(0.6, 0.6, 0.6),
+        PaletteKey::Blood => Color::rgb(0.6, 0.1, 0.1),
+        PaletteKey::Acid => Color::rgb(0.6, 0.6, 0.6),
+        PaletteKey::Lava => Color::rgb(0.6, 0.6, 0.6),
     }
 }
 

@@ -7,6 +7,10 @@ use crate::palette::PaletteKey;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum FluidType {
     Water,
+    Blood,
+    Oil,
+    Acid,
+    Lava,
     // Add more fluid types as needed
 }
 
@@ -14,12 +18,19 @@ impl FluidType {
     pub fn sprite_key(&self) -> &'static str {
         match self {
             FluidType::Water => "water",
-            // Add more fluids as needed
+            FluidType::Blood => "blood",
+            FluidType::Oil => "oil",
+            FluidType::Acid => "acid",
+            FluidType::Lava => "lava",
         }
     }
     pub fn palette_key(&self) -> PaletteKey {
         match self {
             FluidType::Water => PaletteKey::Water,
+            FluidType::Blood => PaletteKey::Blood,
+            FluidType::Oil => PaletteKey::Oil,
+            FluidType::Acid => PaletteKey::Acid,
+            FluidType::Lava => PaletteKey::Lava,
         }
     }
 }
@@ -205,4 +216,8 @@ pub fn spawn_debug_pools(fm: &mut FluidManager, center: Position) {
         let pos = Position { x: center.x + dx, y: center.y + dy, z: center.z };
         fm.add_fluid(Fluid::new(FluidType::Water, pos, 500));
     }
+
+    // spawn some lava
+    let pos = Position { x: center.x + 7, y: center.y + 7, z: center.z };
+    fm.add_fluid(Fluid::new(FluidType::Lava, pos, 500));
 }
