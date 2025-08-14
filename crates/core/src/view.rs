@@ -34,16 +34,8 @@ pub fn build_render_view(world: &World, res: &Resources) -> RenderView {
         let wy = top + y;
         for x in 0..win_w {
             let wx = left + x;
-            // Rendering is now handled in the client crate (sprite_loader)
-buffer[y as usize][x as usize] = ' ';
-            // Overlay fluid glyph if fluid exists at this position (z=0)
-            if let Some(fluid) = res.fluids.get_fluid(crate::components::Position { x: wx, y: wy, z: 0 }) {
-                // For now, always '~' for water
-                buffer[y as usize][x as usize] = match fluid.fluid_type {
-                    crate::resources::fluids::FluidType::Water => '~',
-                    // Add more fluid types here
-                };
-            }
+            // Rendering is now handled in the client crate (sprite_loader). Background stays as space.
+            buffer[y as usize][x as usize] = ' ';
         }
     }
     // Overlay entities with Glyph in this window at the player's z
