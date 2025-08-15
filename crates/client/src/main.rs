@@ -14,6 +14,9 @@ use crate::sprite_loader::{SpriteLoader, SpriteData};
 use ab_glyph::{FontArc, PxScale, point};
 use ab_glyph::Font as AbGlyphFont;
 use bevy::text::Font as BevyFont;
+mod palette;
+use crate::palette::color_for_tile;
+use crate::palette::color_for_fluid;
 
 #[cfg(test)]
 mod tests {
@@ -98,23 +101,8 @@ enum ViewMode {
     ThreeD,
 }
 
-// Map shared TileKind to a Bevy Color (client-side concern)
-fn tile_color(kind: TileKind) -> Color {
-    match kind {
-        TileKind::Rock => Color::rgb(0.4, 0.4, 0.45),
-        TileKind::Dirt => Color::rgb(0.7, 0.7, 0.7),
-        TileKind::Grass => Color::rgb(0.6, 0.8, 0.6),
-        TileKind::Tree => Color::rgb(0.6, 0.8, 0.6),
-        TileKind::Air => Color::rgb(0.7, 0.7, 0.7),
-        TileKind::BoneBlock => Color::rgb(0.7, 0.7, 0.7),
-        TileKind::IronScrap => Color::rgb(0.7, 0.7, 0.7),
-        TileKind::Door => Color::rgb(0.7, 0.7, 0.7),
-        TileKind::Bedrock => Color::rgb(0.7, 0.7, 0.7),
-        TileKind::ScrapElectronics => Color::rgb(0.7, 0.7, 0.7),
-        TileKind::PlasteelScrap => Color::rgb(0.7, 0.7, 0.7),
-        TileKind::Treasure => Color::rgb(0.7, 0.7, 0.7),
-    }
-}
+// Map shared TileKind to a Bevy Color (delegates to client palette)
+fn tile_color(kind: TileKind) -> Color { color_for_tile(kind) }
 
 // Very small deterministic demo for 3D using the same hashing approach
 #[cfg(test)]
@@ -228,6 +216,7 @@ fn main() {
         .insert_resource(CoreGame(Game::new(12345)))
         .insert_resource(WorldSeed(12345))
         .insert_resource(FixedTickTimer(Timer::from_seconds(1.0/30.0, TimerMode::Repeating)))
+        .insert_resource(SpriteLoader::new(None))
         .init_resource::<AsciiAtlas>()
         .init_resource::<Last2DPos>()
         .init_resource::<Camera3DRotation>()
@@ -891,8 +880,9 @@ fn render_ascii_2d(
     atlas: Res<AsciiAtlas>,
     mut grid: ResMut<AsciiGrid>,
     mut q_cells: Query<(&AsciiCell, &mut TextureAtlasSprite, &mut Transform), With<View2D>>,
+    mut sprite_loader: ResMut<SpriteLoader>,
 ) {
-    info!("render_ascii_2d: enter, atlas_built={}, last=({}, {})", atlas.built, last.0, last.1);
+    debug!("render_ascii_2d: enter, atlas_built={}, last=({}, {})", atlas.built, last.0, last.1);
     let last_blocked = core.0.res.last_blocked_tile;
 
     let mut px = 0i32; let mut py = 0i32;
@@ -922,33 +912,45 @@ fn render_ascii_2d(
     let _span_compute = info_span!("compute_cells").entered();
     use std::collections::HashMap as StdHashMap;
     let mut char_index_cache: StdHashMap<char, usize> = StdHashMap::new();
-    // Normalize any non-ASCII or unsupported glyphs to an ASCII fallback present in the atlas
+    // Panic on any non-ASCII/unsupported glyphs so issues surface immediately (space maps to '.')
     let mut normalize = |c: char| -> char {
         match c {
-            ' ' => '.',                    // show ground instead of invisible space
-            '≈' | '≋' => '~',              // water waves -> '~'
-            '█' | '■' | '▲' | '∎' => '#',  // walls/rocks -> '#'
-            _ => if c.is_ascii() { c } else { '.' },
+            ' ' => '.', // show ground instead of invisible space
+            _ if c.is_ascii() => c,
+            _ => panic!(
+                "Unsupported glyph encountered in render_ascii_2d::normalize: U+{:04X} '{}'",
+                c as u32, c
+            ),
         }
     };
+    // Counters for debug logging
+    let mut entity_overlays: usize = 0;
+    let mut fluid_overlays: usize = 0;
     for (vy, line) in view.map_lines.iter().enumerate() {
-        for (vx, ch) in line.chars().enumerate() {
+        for (vx, ch_core) in line.chars().enumerate() {
             let vx_i = vx as i32; let vy_i = vy as i32;
             let wx = start_x + vx_i; let wy = start_y + vy_i;
-            // Cheap color from glyph heuristic; special cases override below
-            let mut color = match ch {
-                // water
-                '~' | '≈' | '≋' => Color::rgb(0.3, 0.5, 1.0),
-                // grass / foliage
-                '.' | '"' | '`' | '"' | '"' | '"' | '"' | '"' | ' ' => Color::rgb(0.4, 0.8, 0.4),
-                '"' | '^' | 't' | 'T' => Color::rgb(0.4, 0.8, 0.4),
-                // dirt / sand
-                ',' | ':' | ';' => Color::rgb(0.9, 0.9, 0.2),
-                // rock / walls
-                '#' | '█' | '■' | '▲' | '∎' => Color::rgb(0.7, 0.7, 0.7),
-                // default
-                _ => Color::BLACK,
-            };
+            // Base from tile using sprite loader and palette
+            let kind = core.0.res.world.get_tile(wx, wy);
+            let tile_sprite = sprite_loader.load_sprite(kind.sprite_key(), "tiles");
+            let mut ch = tile_sprite.sprites.get(0)
+                .and_then(|s| s.chars().next())
+                .unwrap_or('?');
+            let mut color = color_for_tile(kind);
+            // Overlay fluid (use sprite loader + palette)
+            if let Some(fluid) = core.0.res.fluids.get_fluid(lithicrivers_core::components::Position { x: wx, y: wy, z: 0 }) {
+                let fluid_sprite = sprite_loader.load_sprite(fluid.fluid_type.sprite_key(), "fluids");
+                ch = fluid_sprite.sprites.get(0)
+                    .and_then(|s| s.chars().next())
+                    .unwrap_or('?');
+                color = color_for_fluid(fluid.fluid_type);
+                fluid_overlays += 1;
+            }
+            // Overlay from core map_lines (entities with Glyph etc.)
+            if ch_core != ' ' {
+                ch = ch_core;
+                entity_overlays += 1;
+            }
             // Blocked override
             if Some((wx, wy)) == last_blocked { color = Color::RED; }
             // Make sheep pop
@@ -966,6 +968,17 @@ fn render_ascii_2d(
         }
     }
     drop(_span_compute);
+    // Per-render logging: how many sprites/cells will render and overlays applied
+    let total_cells = computed.len();
+    info!(
+        "render_ascii_2d: cells={}, tiles={} (grid {}x{}), entities_overlayed={}, fluids_overlayed={}",
+        total_cells,
+        (rows * cols) as usize,
+        cols,
+        rows,
+        entity_overlays,
+        fluid_overlays
+    );
     // If grid not initialized or dimensions changed, (re)spawn grid once
     if !grid.initialized || grid.cols != cols || grid.rows != rows {
         info!("render_ascii_2d: (re)spawning grid {}x{}", cols, rows);
