@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use crate::palette::PaletteKey;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum TileKind {
@@ -33,6 +34,22 @@ impl TileKind {
             TileKind::ScrapElectronics => "scrap_electronics",
             TileKind::PlasteelScrap => "plasteel_scrap",
             TileKind::Treasure => "treasure",
+        }
+    }
+    pub fn palette_key(self) -> PaletteKey {
+        match self {
+            TileKind::Rock => PaletteKey::Rock,
+            TileKind::Dirt => PaletteKey::Dirt,
+            TileKind::Grass => PaletteKey::Grass,
+            TileKind::Tree => PaletteKey::Tree,
+            TileKind::Air => PaletteKey::Air,
+            TileKind::BoneBlock => PaletteKey::BoneBlock,
+            TileKind::IronScrap => PaletteKey::IronScrap,
+            TileKind::Door => PaletteKey::Door,
+            TileKind::Bedrock => PaletteKey::Bedrock,
+            TileKind::ScrapElectronics => PaletteKey::ScrapElectronics,
+            TileKind::PlasteelScrap => PaletteKey::PlasteelScrap,
+            TileKind::Treasure => PaletteKey::Treasure,
         }
     }
     pub fn from_str(s: &str) -> Option<TileKind> {
