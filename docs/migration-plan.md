@@ -56,7 +56,7 @@ This document captures high-level goals and a recommended rearchitecture for mig
 6. NPC/AI & messaging
    - Tickable NPC components; message log system.
 7. Worldgen
-   - Position-based seeding; parallel generation with `rayon`; deterministic outputs.
+   - Position-based seeding; parallel generation with `std::thread`; deterministic outputs.
 8. Performance passes
    - Profile hotspots; consider `parking_lot`, SIMD, chunk partitioning with deterministic reductions.
 

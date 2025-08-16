@@ -116,7 +116,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
     }
 }
 
-fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
+fn ui(f: &mut Frame, app: &App) {
     let size = f.size();
     
     // Create a block for the inventory
@@ -147,25 +147,36 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
         .alignment(Alignment::Center);
     f.render_widget(title, grid_layout[0]);
 
-    // Create a 4x4 grid for the inventory items
-    let grid = Grid::new()
-        .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Length(8),
-            Constraint::Length(8),
-            Constraint::Length(8),
-            Constraint::Length(8),
-        ]);
+    // Create a 4x4 grid layout for the inventory items using nested Layouts
+    let row_constraints = [
+        Constraint::Percentage(25),
+        Constraint::Percentage(25),
+        Constraint::Percentage(25),
+        Constraint::Percentage(25),
+    ];
+    let col_constraints = [
+        Constraint::Percentage(25),
+        Constraint::Percentage(25),
+        Constraint::Percentage(25),
+        Constraint::Percentage(25),
+    ];
 
-    // Create the inventory slots
-    let mut rows = Vec::new();
+    let row_areas = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints(row_constraints)
+        .split(grid_layout[1]);
+
     for row in 0..4 {
-        let mut cells = Vec::new();
+        let col_areas = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints(col_constraints)
+            .split(row_areas[row]);
+
         for col in 0..4 {
             let idx = row * 4 + col;
             let item = &app.inventory[idx];
             let is_selected = app.selected == Some(idx);
-            
+
             let (text, style) = match item {
                 Some(item) => (
                     format!("\n {}", item),
@@ -176,34 +187,28 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
                     Style::default().fg(Color::DarkGray),
                 ),
             };
-            
-            let mut block = Block::default()
-                .borders(Borders::ALL);
-                
+
+            let mut block = Block::default().borders(Borders::ALL);
             if is_selected {
                 block = block
                     .border_style(Style::default().fg(Color::Yellow))
                     .title_style(Style::default().fg(Color::Yellow));
             }
-            
-            let cell = block
+
+            let cell_block = block
                 .title(format!(" {} ", idx + 1))
                 .title_alignment(Alignment::Right)
                 .padding(Padding::new(1, 1, 1, 1));
-                
+
             let paragraph = Paragraph::new(text)
-                .block(cell)
+                .block(cell_block)
                 .style(style)
                 .alignment(Alignment::Center);
-                
-            cells.push(paragraph);
+
+            f.render_widget(Paragraph::new(""), col_areas[col]); // clear cell
+            f.render_widget(paragraph, col_areas[col]);
         }
-        rows.push(Row::new(cells).height(6));
     }
-    
-    // Render the grid
-    let grid = grid.rows(rows);
-    f.render_widget(grid, grid_layout[1]);
     
     // Render controls
     let controls = Paragraph::new("←→↑↓/hjkl: Navigate | q: Quit")
