@@ -1,4 +1,4 @@
-You are allowed to run `make build` and `make install`, and also `make run-*`. This game now has a GUI client! The TUI has been removed.
+You are allowed to run `just build` and `just install`, and also `just run-*`. This game was going to use a GUI (bevy), but I decided that `ratatui` would be faster, so we're back to using a TUI.
 
 You should use `rustup` to run `cargo` and other tools.
 
@@ -9,6 +9,8 @@ Keep small copyrights inside of the main game code files. Make sure they exist i
 Guiding principles:
 
 - All randomly-generated choices, actions, damage, loot, worldgen, etc - should be fully deterministic and based on world seed and world tick. This means that this game should be fully TAS-able for any specific initial seed (and version of game code). Always use the seed and any permutation (when appropriate) of XYZ coordinate, biome, or other seeded randomness to generate anything "random".
+
+- This game renders using ASCII text.
 
 - TODO.md contains a big, unedited list of my long-term goals with this game. By no means do we need to implement all of them. I will likely cut or edit parts of the TODO. I just want to focus on the section called "MVP for steam release (2026)".
 
