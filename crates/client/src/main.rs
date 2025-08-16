@@ -14,7 +14,7 @@ use ratatui::{
 use std::{
     error::Error,
     io,
-    time::{Duration, Instant},
+    time::Duration,
 };
 
 use lithicrivers_core::resources::world::CHUNK_SIZE;
@@ -29,8 +29,6 @@ struct App {
     game: Game,
     sprite_loader: SpriteLoader,
     should_quit: bool,
-    tick_rate: Duration,
-    last_tick: Instant,
 }
 
 impl App {
@@ -39,17 +37,11 @@ impl App {
             game: Game::new(12345),
             sprite_loader: SpriteLoader::new(None),
             should_quit: false,
-            tick_rate: Duration::from_millis(250),
-            last_tick: Instant::now(),
         }
     }
 
     fn on_tick(&mut self) {
-        // Auto-tick the game at regular intervals
-        if self.last_tick.elapsed() >= self.tick_rate {
-            self.game.tick();
-            self.last_tick = Instant::now();
-        }
+        // Turn-based: do not auto-tick. Ticks only occur on player actions in handle_input().
     }
 
     fn handle_input(&mut self, key: KeyCode) -> Result<(), Box<dyn Error>> {

@@ -1,1 +1,6 @@
 Thank you to Peter Brittain for making asciimatics. https://github.com/peterbrittain/asciimatics
+asciimatics was originally used for the Python version of this game, but was ported to ratatui for the Rust version. Rust was used for performance reasons. Both asciimatics and ratatui are amazing projects.
+
+Thank you to Kaya for supplying this game's music.
+
+Thank you to gadgetgo for the idea for the game's combat system.
