@@ -1,4 +1,4 @@
-use bevy::prelude::Color;
+use ratatui::style::Color;
 use lithicrivers_core::palette::PaletteKey;
 use lithicrivers_core::tiles::TileKind;
 use lithicrivers_core::resources::fluids::FluidType;
@@ -6,24 +6,24 @@ use lithicrivers_core::resources::fluids::FluidType;
 pub fn color_for_key(key: PaletteKey) -> Color {
     match key {
         // Tiles
-        PaletteKey::Rock => Color::rgb(0.4, 0.4, 0.45),
-        PaletteKey::Dirt => Color::rgb(0.7, 0.7, 0.7),
-        PaletteKey::Grass => Color::rgb(0.6, 0.8, 0.6),
-        PaletteKey::Tree => Color::rgb(0.6, 0.8, 0.6),
-        PaletteKey::Air => Color::rgb(0.7, 0.7, 0.7),
-        PaletteKey::BoneBlock => Color::rgb(0.7, 0.7, 0.7),
-        PaletteKey::IronScrap => Color::rgb(0.7, 0.7, 0.7),
-        PaletteKey::Door => Color::rgb(0.7, 0.7, 0.7),
-        PaletteKey::Bedrock => Color::rgb(0.7, 0.7, 0.7),
-        PaletteKey::ScrapElectronics => Color::rgb(0.7, 0.7, 0.7),
-        PaletteKey::PlasteelScrap => Color::rgb(0.7, 0.7, 0.7),
-        PaletteKey::Treasure => Color::rgb(0.7, 0.7, 0.7),
+        PaletteKey::Rock => Color::Rgb(102, 102, 115), // 0.4, 0.4, 0.45 * 255
+        PaletteKey::Dirt => Color::Rgb(178, 178, 178), // 0.7, 0.7, 0.7 * 255
+        PaletteKey::Grass => Color::Rgb(153, 204, 153), // 0.6, 0.8, 0.6 * 255
+        PaletteKey::Tree => Color::Rgb(153, 204, 153), // 0.6, 0.8, 0.6 * 255
+        PaletteKey::Air => Color::Rgb(178, 178, 178), // 0.7, 0.7, 0.7 * 255
+        PaletteKey::BoneBlock => Color::Rgb(178, 178, 178),
+        PaletteKey::IronScrap => Color::Rgb(178, 178, 178),
+        PaletteKey::Door => Color::Rgb(178, 178, 178),
+        PaletteKey::Bedrock => Color::Rgb(178, 178, 178),
+        PaletteKey::ScrapElectronics => Color::Rgb(178, 178, 178),
+        PaletteKey::PlasteelScrap => Color::Rgb(178, 178, 178),
+        PaletteKey::Treasure => Color::Rgb(178, 178, 178),
         // Fluids
-        PaletteKey::Water => Color::rgb(0.3, 0.5, 1.0),
-        PaletteKey::Oil => Color::rgb(0.6, 0.6, 0.6),
-        PaletteKey::Blood => Color::rgb(0.6, 0.1, 0.1),
-        PaletteKey::Acid => Color::rgb(0.6, 0.6, 0.6),
-        PaletteKey::Lava => Color::rgb(0.6, 0.6, 0.6),
+        PaletteKey::Water => Color::Rgb(76, 127, 255), // 0.3, 0.5, 1.0 * 255
+        PaletteKey::Oil => Color::Rgb(153, 153, 153), // 0.6, 0.6, 0.6 * 255
+        PaletteKey::Blood => Color::Rgb(153, 25, 25), // 0.6, 0.1, 0.1 * 255
+        PaletteKey::Acid => Color::Rgb(153, 153, 153),
+        PaletteKey::Lava => Color::Rgb(153, 153, 153),
     }
 }
 

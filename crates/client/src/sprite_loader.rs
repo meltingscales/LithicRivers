@@ -20,9 +20,6 @@ pub struct SpriteData {
     pub sprites: Vec<String>, // Each entry is a sprite at a different scale
 }
 
-use bevy::prelude::Resource;
-
-#[derive(Resource)]
 pub struct SpriteLoader {
     pub data_path: PathBuf,
     sprite_cache: HashMap<String, SpriteData>,

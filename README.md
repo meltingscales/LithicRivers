@@ -37,11 +37,11 @@ Currently we support:
 
 ## Running
 
-    make run
+    just run
 
 ## building/release
 
-    make build
+    just build
     ls ./dist/
 
 ## notes
