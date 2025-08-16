@@ -10,7 +10,9 @@ Guiding principles:
 
 - All randomly-generated choices, actions, damage, loot, worldgen, etc - should be fully deterministic and based on world seed and world tick. This means that this game should be fully TAS-able for any specific initial seed (and version of game code). Always use the seed and any permutation (when appropriate) of XYZ coordinate, biome, or other seeded randomness to generate anything "random".
 
-- This is supposed to be a mix between Caves of Qud, Factorio, and Minecraft.
+- This is supposed to be a mix between Caves of Qud, Factorio, and Minecraft. 
+  - Cataclysm Dark Days Ahead is another fantastic game.
+  - Gnomoria was cool.
 
 - This game renders using ASCII text.
 
