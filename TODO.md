@@ -193,6 +193,17 @@
   - ui
   - fighting
 
+- sandboxed python programming: simple interface
+  - examples of dead robots with sample programs, i.e.
+    - TreeCutter.py
+    - StripMiner.py
+    - Sentry.py
+
+- waypoint and map system
+
+- "backup body" system for continuing after death
+  - ...or using portable nukes without consequences...
+
 - reintegrate speedscope for ratatui and rust build
 
 - migrate all of the code from python-old/ to rust...
