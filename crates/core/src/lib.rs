@@ -46,12 +46,15 @@ impl Game {
 
     pub fn queue_player_move(&mut self, dx: i32, dy: i32) {
         self.res.player_move_intent = Some((dx, dy));
+        // Set the move cost so the next tick advances by this many ticks
+        self.res.pending_tick_increase = Some(self.res.move_cost_ticks());
     }
 
     pub fn tick(&mut self) {
         // In the future, run an ordered system schedule.
         // For now, just increment tick and maybe move the player slowly.
-        self.res.gametick += 1;
+        let inc = self.res.pending_tick_increase.take().unwrap_or(1);
+        self.res.gametick = self.res.gametick.saturating_add(inc);
         move_player_system(&mut self.world, &mut self.res);
         stumbling_sheep_system(&mut self.world, &mut self.res);
         // Process fluids
