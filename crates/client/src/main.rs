@@ -17,13 +17,13 @@ use std::{
     time::{Duration, Instant},
 };
 
-use lithicrivers_core::Game;
-use lithicrivers_core::tiles::TileKind;
 use lithicrivers_core::resources::world::CHUNK_SIZE;
+use lithicrivers_core::tiles::TileKind;
+use lithicrivers_core::Game;
 mod sprite_loader;
-use crate::sprite_loader::{SpriteLoader, SpriteData};
+use crate::sprite_loader::{SpriteData, SpriteLoader};
 mod palette;
-use crate::palette::{color_for_tile, color_for_fluid};
+use crate::palette::{color_for_fluid, color_for_tile};
 
 struct App {
     game: Game,
@@ -145,10 +145,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn run_app<B: Backend>(
-    terminal: &mut Terminal<B>,
-    app: &mut App,
-) -> Result<(), Box<dyn Error>> {
+fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<(), Box<dyn Error>> {
     loop {
         terminal.draw(|f| ui(f, app))?;
 
@@ -208,45 +205,56 @@ fn ui(f: &mut Frame, app: &mut App) {
 fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
     // Get the game view from the core
     let view = app.game.build_view();
-    
+
     // Create the game display text
     let mut lines = Vec::new();
-    
+
     // Add game info
-    lines.push(Line::from(vec![
-        Span::styled(
-            format!("Tick: {} | Player: ({}, {})", 
-                view.gametick, 
-                view.player_pos.x, 
-                view.player_pos.y
-            ),
-            Style::default().fg(Color::White)
-        )
-    ]));
+    lines.push(Line::from(vec![Span::styled(
+        format!(
+            "Tick: {} | Player: ({}, {})",
+            view.gametick, view.player_pos.x, view.player_pos.y
+        ),
+        Style::default().fg(Color::White),
+    )]));
     lines.push(Line::from("")); // Empty line
-    
+
     // Render the map
     for (y, line) in view.map_lines.iter().enumerate() {
         let mut spans = Vec::new();
         for (x, ch) in line.chars().enumerate() {
             let world_x = view.player_pos.x - (view.map_lines[0].len() as i32 / 2) + x as i32;
             let world_y = view.player_pos.y - (view.map_lines.len() as i32 / 2) + y as i32;
-            
+
             // Get tile info for coloring
             let tile_kind = app.game.res.world.get_tile(world_x, world_y);
             let ratatui_color = tile_kind_to_ratatui_color(tile_kind);
-            
+
             // Check for fluids
-            let fluid_pos = lithicrivers_core::components::Position { x: world_x, y: world_y, z: 0 };
+            let fluid_pos = lithicrivers_core::components::Position {
+                x: world_x,
+                y: world_y,
+                z: 0,
+            };
             if let Some(fluid) = app.game.res.fluids.get_fluid(fluid_pos) {
                 let fluid_color = fluid_type_to_ratatui_color(fluid.fluid_type);
-                spans.push(Span::styled(ch.to_string(), Style::default().fg(fluid_color)));
+                spans.push(Span::styled(
+                    ch.to_string(),
+                    Style::default().fg(fluid_color),
+                ));
             } else if ch != ' ' {
                 // Entity overlay (player, sheep, etc.)
-                let entity_color = if ch == '@' { Color::Magenta } 
-                                 else if ch == 's' || ch == 'S' { Color::Yellow }
-                                 else { Color::White };
-                spans.push(Span::styled(ch.to_string(), Style::default().fg(entity_color)));
+                let entity_color = if ch == '@' {
+                    Color::Magenta
+                } else if ch == 's' || ch == 'S' {
+                    Color::Yellow
+                } else {
+                    Color::White
+                };
+                spans.push(Span::styled(
+                    ch.to_string(),
+                    Style::default().fg(entity_color),
+                ));
             } else {
                 // Regular tile
                 let display_char = match tile_kind {
@@ -257,12 +265,15 @@ fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
                     TileKind::Air => ' ',
                     _ => '?',
                 };
-                spans.push(Span::styled(display_char.to_string(), Style::default().fg(ratatui_color)));
+                spans.push(Span::styled(
+                    display_char.to_string(),
+                    Style::default().fg(ratatui_color),
+                ));
             }
         }
         lines.push(Line::from(spans));
     }
-    
+
     let paragraph = Paragraph::new(lines)
         .block(
             Block::default()
@@ -271,7 +282,7 @@ fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
                 .style(Style::default().fg(Color::White)),
         )
         .wrap(Wrap { trim: false });
-    
+
     f.render_widget(paragraph, area);
 }
 
@@ -286,13 +297,15 @@ fn tile_kind_to_ratatui_color(kind: TileKind) -> Color {
     }
 }
 
-fn fluid_type_to_ratatui_color(fluid_type: lithicrivers_core::resources::fluids::FluidType) -> Color {
+fn fluid_type_to_ratatui_color(
+    fluid_type: lithicrivers_core::resources::fluids::FluidType,
+) -> Color {
     use lithicrivers_core::resources::fluids::FluidType;
     match fluid_type {
         FluidType::Water => Color::Blue,
         FluidType::Oil => Color::Rgb(64, 64, 64), // Dark gray
         FluidType::Blood => Color::Red,
         FluidType::Acid => Color::Rgb(255, 255, 0), // Bright yellow
-        FluidType::Lava => Color::Rgb(255, 69, 0), // Red-orange
+        FluidType::Lava => Color::Rgb(255, 69, 0),  // Red-orange
     }
 }

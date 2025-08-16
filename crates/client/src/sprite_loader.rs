@@ -50,10 +50,20 @@ impl SpriteLoader {
         let sprites_file = sprite_path.join("sprites.txt");
         // Check for missing files and throw a clear error
         if !data_file.exists() {
-            panic!("Missing data.json for sprite '{}' in category '{}': {}", sprite_name, category, data_file.display());
+            panic!(
+                "Missing data.json for sprite '{}' in category '{}': {}",
+                sprite_name,
+                category,
+                data_file.display()
+            );
         }
         if !sprites_file.exists() {
-            panic!("Missing sprites.txt for sprite '{}' in category '{}': {}", sprite_name, category, sprites_file.display());
+            panic!(
+                "Missing sprites.txt for sprite '{}' in category '{}': {}",
+                sprite_name,
+                category,
+                sprites_file.display()
+            );
         }
         // Load metadata
         let metadata: SpriteMetadata = {
@@ -85,23 +95,23 @@ impl SpriteLoader {
         self.sprite_cache.get(&cache_key).unwrap()
     }
 
-    fn validate_sprite_dimensions(
-        sprites: &Vec<String>,
-        sprite_name: &str,
-        category: &str,
-    ) {
+    fn validate_sprite_dimensions(sprites: &Vec<String>, sprite_name: &str, category: &str) {
         for (i, sprite) in sprites.iter().enumerate() {
             if sprite.is_empty() {
                 panic!(
                     "Sprite '{}' in '{}' category has empty sprite at scale {}",
-                    sprite_name, category, i + 1
+                    sprite_name,
+                    category,
+                    i + 1
                 );
             }
             let lines: Vec<&str> = sprite.split('\n').collect();
             if lines.is_empty() {
                 panic!(
                     "Sprite '{}' in '{}' category has no lines at scale {}",
-                    sprite_name, category, i + 1
+                    sprite_name,
+                    category,
+                    i + 1
                 );
             }
             let line_lengths: Vec<usize> = lines.iter().map(|l| l.len()).collect();

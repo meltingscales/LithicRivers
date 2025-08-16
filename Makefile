@@ -1,4 +1,10 @@
-.PHONY: message
+.DEFAULT_GOAL := help
 
-message:
-	@echo "Please use 'just' instead of 'make'."
+.PHONY: help
+help:
+	@just
+
+# Pass-through: `make <target>` -> `just <target>`
+# Extra args can be passed as: `make <target> ARGS="--release"`
+%:
+	@just $@ $(ARGS)

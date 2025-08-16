@@ -18,10 +18,7 @@ pub fn move_player_system(world: &mut World, res: &mut Resources) {
                 // Check tile passability and blocking entities
                 let mut blocked = !t.is_passable();
                 if !blocked {
-                    for (_e, (epos, _bm)) in world
-                        .query::<(&Position, &BlocksMovement)>()
-                        .iter()
-                    {
+                    for (_e, (epos, _bm)) in world.query::<(&Position, &BlocksMovement)>().iter() {
                         if epos.z == cz && epos.x == nx && epos.y == ny {
                             blocked = true;
                             break;
@@ -65,21 +62,29 @@ pub fn stumbling_sheep_system(world: &mut World, res: &mut Resources) {
             3 => (0, 1),
             _ => (0, -1),
         };
-        if dx == 0 && dy == 0 { continue; }
+        if dx == 0 && dy == 0 {
+            continue;
+        }
         let nx = pos.x + dx;
         let ny = pos.y + dy;
         let t = res.world.get_tile(nx, ny);
-        if !t.is_passable() { continue; }
+        if !t.is_passable() {
+            continue;
+        }
         // Avoid stepping into another blocking entity
         let mut occupied = false;
         for (_oe, (op, _bm)) in world.query::<(&Position, &BlocksMovement)>().iter() {
             if _oe != e && op.z == pos.z && op.x == nx && op.y == ny {
-                occupied = true; break;
+                occupied = true;
+                break;
             }
         }
-        if occupied { continue; }
+        if occupied {
+            continue;
+        }
         if let Ok(mut mypos) = world.get::<&mut Position>(e) {
-            mypos.x = nx; mypos.y = ny;
+            mypos.x = nx;
+            mypos.y = ny;
         }
     }
 }

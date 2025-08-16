@@ -1,14 +1,10 @@
-use std::{io, time::Duration};
 use crossterm::{
     event::{self, Event, KeyCode, KeyEventKind},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
-use ratatui::{
-    prelude::*,
-    symbols::border,
-    widgets::*,
-};
+use ratatui::{prelude::*, symbols::border, widgets::*};
+use std::{io, time::Duration};
 
 #[derive(Debug, Default)]
 struct BodyPart {
@@ -25,12 +21,30 @@ impl App {
     fn new() -> Self {
         Self {
             body_parts: vec![
-                BodyPart { name: "Head", hp: 0.7 },
-                BodyPart { name: "Torso", hp: 0.9 },
-                BodyPart { name: "Left Arm", hp: 0.5 },
-                BodyPart { name: "Right Arm", hp: 0.85 },
-                BodyPart { name: "Left Leg", hp: 0.6 },
-                BodyPart { name: "Right Leg", hp: 0.95 },
+                BodyPart {
+                    name: "Head",
+                    hp: 0.7,
+                },
+                BodyPart {
+                    name: "Torso",
+                    hp: 0.9,
+                },
+                BodyPart {
+                    name: "Left Arm",
+                    hp: 0.5,
+                },
+                BodyPart {
+                    name: "Right Arm",
+                    hp: 0.85,
+                },
+                BodyPart {
+                    name: "Left Leg",
+                    hp: 0.6,
+                },
+                BodyPart {
+                    name: "Right Leg",
+                    hp: 0.95,
+                },
             ],
             should_quit: false,
         }

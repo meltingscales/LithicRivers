@@ -1,14 +1,10 @@
-use std::{io, time::Duration};
 use crossterm::{
     event::{self, Event, KeyCode, KeyEventKind},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
-use ratatui::{
-    prelude::*,
-    symbols::border,
-    widgets::*,
-};
+use ratatui::{prelude::*, symbols::border, widgets::*};
+use std::{io, time::Duration};
 
 struct App {
     inventory: Vec<Option<&'static str>>,
@@ -20,10 +16,22 @@ impl App {
     fn new() -> Self {
         Self {
             inventory: vec![
-                Some("Rusty Knife"), Some("Bandage"), None, None,
-                Some("Scrap"), None, Some("Seed"), None,
-                None, None, None, Some("Battery"),
-                None, Some("Water"), None, None,
+                Some("Rusty Knife"),
+                Some("Bandage"),
+                None,
+                None,
+                Some("Scrap"),
+                None,
+                Some("Seed"),
+                None,
+                None,
+                None,
+                None,
+                Some("Battery"),
+                None,
+                Some("Water"),
+                None,
+                None,
             ],
             selected: None,
             should_quit: false,
@@ -95,7 +103,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
                             } else {
                                 app.selected = Some(0);
                             }
-                        },
+                        }
                         KeyCode::Up | KeyCode::Char('k') => {
                             if let Some(selected) = app.selected {
                                 let new_selected = selected.saturating_sub(4);
@@ -103,7 +111,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
                             } else {
                                 app.selected = Some(0);
                             }
-                        },
+                        }
                         _ => {}
                     }
                 }
@@ -118,7 +126,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
 
 fn ui(f: &mut Frame, app: &App) {
     let size = f.size();
-    
+
     // Create a block for the inventory
     let block = Block::default()
         .borders(Borders::ALL)
@@ -130,7 +138,7 @@ fn ui(f: &mut Frame, app: &App) {
     // Create a centered area for the inventory
     let inner = block.inner(Rect::new(0, 0, size.width, size.height));
     let area = centered_rect(70, 70, inner);
-    
+
     // Create a grid layout for the inventory
     let grid_layout = Layout::default()
         .direction(Direction::Vertical)
@@ -143,7 +151,11 @@ fn ui(f: &mut Frame, app: &App) {
 
     // Render the title
     let title = Paragraph::new("Inventory (demo)")
-        .style(Style::default().fg(Color::White).add_modifier(Modifier::BOLD))
+        .style(
+            Style::default()
+                .fg(Color::White)
+                .add_modifier(Modifier::BOLD),
+        )
         .alignment(Alignment::Center);
     f.render_widget(title, grid_layout[0]);
 
@@ -209,13 +221,13 @@ fn ui(f: &mut Frame, app: &App) {
             f.render_widget(paragraph, col_areas[col]);
         }
     }
-    
+
     // Render controls
     let controls = Paragraph::new("←→↑↓/hjkl: Navigate | q: Quit")
         .style(Style::default().fg(Color::Gray))
         .alignment(Alignment::Center);
     f.render_widget(controls, grid_layout[2]);
-    
+
     // Render the border last to be on top
     f.render_widget(block, area);
 }

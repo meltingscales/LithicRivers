@@ -3,8 +3,8 @@ use rand_chacha::ChaCha20Rng;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use crate::tiles::TileKind;
 use crate::structure::StructureDefinition;
+use crate::tiles::TileKind;
 use std::path::PathBuf;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -14,14 +14,23 @@ pub struct Chunk {
 
 impl Chunk {
     fn new_filled(fill: TileKind) -> Self {
-        Self { tiles: vec![fill; (CHUNK_SIZE as usize) * (CHUNK_SIZE as usize)] }
+        Self {
+            tiles: vec![fill; (CHUNK_SIZE as usize) * (CHUNK_SIZE as usize)],
+        }
     }
     #[inline]
-    fn idx(tx: i32, ty: i32) -> usize { (ty as usize) * (CHUNK_SIZE as usize) + (tx as usize) }
+    fn idx(tx: i32, ty: i32) -> usize {
+        (ty as usize) * (CHUNK_SIZE as usize) + (tx as usize)
+    }
     #[inline]
-    fn get(&self, tx: i32, ty: i32) -> TileKind { self.tiles[Self::idx(tx, ty)] }
+    fn get(&self, tx: i32, ty: i32) -> TileKind {
+        self.tiles[Self::idx(tx, ty)]
+    }
     #[inline]
-    fn set(&mut self, tx: i32, ty: i32, t: TileKind) { let i = Self::idx(tx, ty); self.tiles[i] = t; }
+    fn set(&mut self, tx: i32, ty: i32, t: TileKind) {
+        let i = Self::idx(tx, ty);
+        self.tiles[i] = t;
+    }
 }
 
 pub const CHUNK_SIZE: i32 = 64;
@@ -35,7 +44,10 @@ pub struct World {
 impl World {
     pub fn new(_width: usize, _height: usize, seed: u64) -> Self {
         // Width/height kept for compatibility; world is effectively infinite.
-        Self { seed, chunks: HashMap::new() }
+        Self {
+            seed,
+            chunks: HashMap::new(),
+        }
     }
 
     fn generate_chunk(&self, cx: i64, cy: i64, chunk: &mut Chunk) {
@@ -82,16 +94,27 @@ impl World {
         // floor division for negatives
         let mut q = (a as i64) / (b as i64);
         let r = (a as i64) % (b as i64);
-        if (r != 0) && ((r > 0) != (b as i64 > 0)) { q -= 1; }
+        if (r != 0) && ((r > 0) != (b as i64 > 0)) {
+            q -= 1;
+        }
         q
     }
 
     #[inline]
-    fn mod_floor(a: i32, b: i32) -> i32 { let m = a % b; if m < 0 { m + b } else { m } }
+    fn mod_floor(a: i32, b: i32) -> i32 {
+        let m = a % b;
+        if m < 0 {
+            m + b
+        } else {
+            m
+        }
+    }
 
     fn mix_coords(&self, cx: i64, cy: i64) -> u64 {
         // Zigzag encode signed to unsigned, then mix with seed
-        fn zz(x: i64) -> u64 { ((x << 1) ^ (x >> 63)) as u64 }
+        fn zz(x: i64) -> u64 {
+            ((x << 1) ^ (x >> 63)) as u64
+        }
         let mut v = self.seed.wrapping_mul(0x9E3779B185EBCA87);
         v ^= zz(cx).wrapping_mul(0x94D049BB133111EB);
         v = v.rotate_left(27) ^ zz(cy).wrapping_mul(0xD2B74407B1CE6E93);
@@ -117,7 +140,9 @@ impl World {
         for (z, layer) in structure.layers.iter().enumerate() {
             for (y, line) in layer.lines().enumerate() {
                 for (x, ch) in line.chars().enumerate() {
-                    if ch == ' ' { continue; }
+                    if ch == ' ' {
+                        continue;
+                    }
                     let symbol = ch.to_string();
                     if let Some(tile) = structure.get_tile_for_symbol(&symbol) {
                         let tx = ox + x as i32;

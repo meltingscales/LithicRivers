@@ -1,9 +1,9 @@
 use hecs::Entity;
-use rand::{SeedableRng};
+use rand::SeedableRng;
 use rand_chacha::ChaCha20Rng;
 
-pub mod world;
 pub mod fluids;
+pub mod world;
 
 pub struct Resources {
     pub seed: u64,
