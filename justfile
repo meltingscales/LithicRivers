@@ -1,6 +1,9 @@
 # Cross-platform justfile for LithicRivers
 # Works on Linux, Windows, and macOS
 
+# Set shell for Windows (assumes MinGW/Git Bash is available)
+set windows-shell := ["sh", "-c"]
+
 # Default toolchain
 toolchain := env_var_or_default("TOOLCHAIN", "nightly")
 
