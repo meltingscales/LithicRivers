@@ -1,6 +1,6 @@
 # omniscient summary (don't reveal directly to player):
 
-The world ends after a fusion reactor explodes in the year 2186. this triggers a runaway greenhouse effect in the Earth's atmosphere that kills most humans and causes the world's economy to devolve. most complicated manufacturing gets taken over and destroyed. fast forward 1,000 years later to the year 3186, and you awaken as a heavily damaged android from SapienCorp, an old company that used to produce AI robots. you only wake up due to a 32-bit date overflow error that causes you to turn on and awaken a world with no real goals other than to repair yourself and explore.
+The world ends after a fusion reactor explodes in the year 2186. this triggers a runaway greenhouse effect in the Earth's atmosphere that kills most humans and causes the world's economy to devolve. most complicated manufacturing gets taken over and destroyed. Because of the frost, your internal clock says it's only 100 years after the delivery date, but it's actually closer to 1,000 years. fast forward 1,000 years later to the year 3186, and you awaken as a heavily damaged android from SapienCorp, an old company that used to produce AI robots. you only wake up due to a 32-bit date overflow error that causes you to turn on and awaken a world with no real goals other than to repair yourself and explore.
 
 # overarching themes:
 

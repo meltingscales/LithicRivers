@@ -1,7 +1,7 @@
 LithicRivers
 
-Year 3186
-1,000 years after delivery
+Year 2286
+100 years after delivery
 
 A 32-bit date overflow error? What?
 
@@ -11,7 +11,7 @@ Your last memories are of being prepped for shipment to a home near Seattle, WA 
 
 After you were packaged, you think you sat idle for a few months. You were one of the first humanoid household assistants ever marketed, for only $6,999 per unit. Great hardware, mostly open source software, thoroughly safety tested. Great sense of humor. Just aluminum, chips, C++, and silicone rubber.
 
-Your internal clock tells you it's 3186, but you don't want to believe it.
+Your internal clock tells you it's 2286, but you don't want to believe it.
 
 Your GPS system can't get a fix on any satellites, and you hope that it's broken. It's inconceivable that all of the satellite orbits have decayed. You don't want to believe that, either.
 

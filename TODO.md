@@ -184,18 +184,33 @@
 
 - GPU-accelerated worldgen: Option to use GPU for Perlin noise/worldgen calculations while maintaining determinism (compute shaders with fixed-point math or controlled floating-point precision)
 
-- perlin noise map caching: brainstorm on potential speedup. find way to invalidate when worldgen algorithm changes.
-
-- stats/perf measurements throughout the game code that logs to some format...TBH speedscope is "good enough" but it could be useful long term to do this.
-
 - investigate github repo "gale93/sbixel"...
 
 ## MVP for steam release (2025 christmas release)
   
-- "I'd like to change @render_ascii_2d  so that it uses a texture atlas (generated from our @monospace.ttf  font) instead of rendering a bunch of Text objects. I think it'd make our render a lot faster. Currently it takes 1 whole second per call of render_ascii_2d."
+- consider using cardboard/paper cutouts to model the game system
+  - inventory pages
+  - ui
+  - fighting
+
+- reintegrate speedscope for ratatui and rust build
+
 - migrate all of the code from python-old/ to rust...
-- make 2d render background white so I can actually see rendered ASCII text
-- migrate to bevy/wgpu-based renderer. still support text mode, but allow player to switch. don't render in terminal, but render text mode within bevy.
+- migrate to ratatui
+- tutorial system that can be re-activated
+  - context-aware tutorial
+- game checkpointing, branching saves
+  - "This feels very useful. You can access this memory any time in XYZ menu."
+  - `git log --graph` style view
+- john: What are the challenges or hazards?
+  - puzzles
+  - exploration
+    - specialty bodies with:
+      - more limb slots
+      - more attachments
+      - jetpacks (fuel, electric)
+  - hazards
+  - grappling hooks/shooting
 - in progress: visualize body parts in the body panel with a custom asciimatics class that extends Frame...
 - in progress: UI elements that let you select and repair body parts, and backend code that actually repairs the body part for a material cost.
 - 🔄 **IN PROGRESS**: Block placement with body-based restrictions
@@ -204,10 +219,6 @@
 - 🔄 **IN PROGRESS**: Procedural dungeons v2: Overhaul this and just copy the algorithm from https://www.gamedeveloper.com/programming/procedural-dungeon-generation-algorithm
 - finish working on `story.txt`...
 - in progress: steam API integration
-- ask ai: In @core.py , critique the `_generate_forced_structures` method. Is it possible it's not working as intended?
-- todo: changing chunk size seems to affect structure generation. fix this.
-- todo: cores are definitely being used by worldgen, but don't max out CPU. Why might this be? they only use like 8% CPU. (This is because of GIL. We need to switch to Rust or C/C++ lmao.)
-- todo: MANUAL TASK: Go into `worldgen.py` and make a way to force a specific structure to generate, then fix `_generate_forced_structures`... Don't use AI as it seems to get confused.
 - ask AI: How should I start doing steamworks/steamapi integration?
   - how should I do CICD for steam releases? I should document my tagging/branch rules.
 
