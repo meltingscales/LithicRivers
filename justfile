@@ -16,7 +16,12 @@ cpu_count := if os() == "windows" {
 
 # Rust toolchain helpers
 run_cmd := "rustup run " + toolchain
-rustc_bin := `rustup which --toolchain ` + toolchain + ` rustc 2>/dev/null || echo rustc`
+# Get path to rustc for the current toolchain
+rustc_bin := if os() == "windows" {
+    `where rustc 2>nul || echo rustc`
+} else {
+    `which rustc 2>/dev/null || echo rustc`
+}
 
 # Common flags/env
 lockfile_flag := "-Z next-lockfile-bump"
