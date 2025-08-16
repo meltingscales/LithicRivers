@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::components::Position;
-use crate::palette::PaletteKey;
+use crate::palettekey::PaletteKey;
 use crate::resources::world::World;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

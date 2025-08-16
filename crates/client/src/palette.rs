@@ -1,4 +1,4 @@
-use lithicrivers_core::palette::PaletteKey;
+use lithicrivers_core::palettekey::PaletteKey;
 use lithicrivers_core::resources::fluids::FluidType;
 use lithicrivers_core::tiles::TileKind;
 use ratatui::style::Color;
@@ -18,6 +18,8 @@ pub fn color_for_key(key: PaletteKey) -> Color {
         PaletteKey::ScrapElectronics => Color::Rgb(178, 178, 178),
         PaletteKey::PlasteelScrap => Color::Rgb(178, 178, 178),
         PaletteKey::Treasure => Color::Rgb(178, 178, 178),
+        // Entities
+        PaletteKey::Player => Color::Magenta,
         // Fluids
         PaletteKey::Water => Color::Rgb(76, 127, 255), // 0.3, 0.5, 1.0 * 255
         PaletteKey::Oil => Color::Rgb(153, 153, 153),  // 0.6, 0.6, 0.6 * 255

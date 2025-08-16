@@ -21,4 +21,6 @@ pub enum PaletteKey {
     Blood,
     Acid,
     Lava,
+    // Entities
+    Player,
 }

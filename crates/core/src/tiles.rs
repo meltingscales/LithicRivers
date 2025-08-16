@@ -1,4 +1,4 @@
-use crate::palette::PaletteKey;
+use crate::palettekey::PaletteKey;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]

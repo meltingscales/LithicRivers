@@ -17,11 +17,10 @@ use std::{
     time::Duration,
 };
 
-use lithicrivers_core::resources::world::CHUNK_SIZE;
 use lithicrivers_core::tiles::TileKind;
 use lithicrivers_core::Game;
 mod sprite_loader;
-use crate::sprite_loader::{SpriteData, SpriteLoader};
+use crate::sprite_loader::{sprite_for_fluid, sprite_for_tile, SpriteData, SpriteLoader};
 mod palette;
 use crate::palette::{color_for_fluid, color_for_tile};
 
@@ -30,6 +29,32 @@ struct App {
     sprite_loader: SpriteLoader,
     should_quit: bool,
 }
+
+fn parse_color_string(s: &str) -> Option<Color> {
+    // Support #RRGGBB
+    let s = s.trim();
+    if let Some(hex) = s.strip_prefix('#') {
+        if hex.len() == 6 {
+            if let (Ok(r), Ok(g), Ok(b)) = (
+                u8::from_str_radix(&hex[0..2], 16),
+                u8::from_str_radix(&hex[2..4], 16),
+                u8::from_str_radix(&hex[4..6], 16),
+            ) {
+                return Some(Color::Rgb(r, g, b));
+            }
+        }
+    }
+    None
+}
+
+fn first_sprite_char(sd: &SpriteData) -> char {
+    if let Some(first) = sd.sprites.first() {
+        first.chars().next().unwrap_or(' ')
+    } else {
+        ' '
+    }
+}
+
 
 impl App {
     fn new() -> App {
@@ -218,9 +243,9 @@ fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
             let world_x = view.player_pos.x - (view.map_lines[0].len() as i32 / 2) + x as i32;
             let world_y = view.player_pos.y - (view.map_lines.len() as i32 / 2) + y as i32;
 
-            // Get tile info for coloring
+            // Get tile info for coloring/sprites
             let tile_kind = app.game.res.world.get_tile(world_x, world_y);
-            let ratatui_color = tile_kind_to_ratatui_color(tile_kind);
+            let ratatui_color = color_for_tile(tile_kind);
 
             // Check for fluids
             let fluid_pos = lithicrivers_core::components::Position {
@@ -229,13 +254,13 @@ fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
                 z: 0,
             };
             if let Some(fluid) = app.game.res.fluids.get_fluid(fluid_pos) {
-                let fluid_color = fluid_type_to_ratatui_color(fluid.fluid_type);
-                spans.push(Span::styled(
-                    ch.to_string(),
-                    Style::default().fg(fluid_color),
-                ));
+                // Try sprite for fluid
+                let (glyph, color) = sprite_for_fluid(&mut app.sprite_loader, fluid.fluid_type)
+                    .unwrap_or_else(|| ('~', color_for_fluid(fluid.fluid_type)));
+                spans.push(Span::styled(glyph.to_string(), Style::default().fg(color)));
             } else if ch != ' ' {
                 // Entity overlay (player, sheep, etc.)
+                // For now, keep simple fallback colors for entities
                 let entity_color = if ch == '@' {
                     Color::Magenta
                 } else if ch == 's' || ch == 'S' {
@@ -243,24 +268,12 @@ fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
                 } else {
                     Color::White
                 };
-                spans.push(Span::styled(
-                    ch.to_string(),
-                    Style::default().fg(entity_color),
-                ));
+                spans.push(Span::styled(ch.to_string(), Style::default().fg(entity_color)));
             } else {
                 // Regular tile
-                let display_char = match tile_kind {
-                    TileKind::Rock => '#',
-                    TileKind::Dirt => '.',
-                    TileKind::Grass => ',',
-                    TileKind::Tree => 'T',
-                    TileKind::Air => ' ',
-                    _ => '?',
-                };
-                spans.push(Span::styled(
-                    display_char.to_string(),
-                    Style::default().fg(ratatui_color),
-                ));
+                let (glyph, color) = sprite_for_tile(&mut app.sprite_loader, tile_kind)
+                    .unwrap_or_else(|| panic!("Could not find sprite for tile kind: {:?}", tile_kind));
+                spans.push(Span::styled(glyph.to_string(), Style::default().fg(color)));
             }
         }
         lines.push(Line::from(spans));
@@ -278,26 +291,3 @@ fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
     f.render_widget(paragraph, area);
 }
 
-fn tile_kind_to_ratatui_color(kind: TileKind) -> Color {
-    match kind {
-        TileKind::Rock => Color::Gray,
-        TileKind::Dirt => Color::Rgb(139, 69, 19), // Brown
-        TileKind::Grass => Color::Green,
-        TileKind::Tree => Color::Rgb(34, 139, 34), // Forest green
-        TileKind::Air => Color::White,
-        _ => Color::White,
-    }
-}
-
-fn fluid_type_to_ratatui_color(
-    fluid_type: lithicrivers_core::resources::fluids::FluidType,
-) -> Color {
-    use lithicrivers_core::resources::fluids::FluidType;
-    match fluid_type {
-        FluidType::Water => Color::Blue,
-        FluidType::Oil => Color::Rgb(64, 64, 64), // Dark gray
-        FluidType::Blood => Color::Red,
-        FluidType::Acid => Color::Rgb(255, 255, 0), // Bright yellow
-        FluidType::Lava => Color::Rgb(255, 69, 0),  // Red-orange
-    }
-}
