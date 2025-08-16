@@ -3,6 +3,9 @@ use std::collections::HashMap;
 use std::fs;
 use std::io::{self, Read};
 use std::path::{Path, PathBuf};
+use lithicrivers_core::tiles::TileKind;
+use ratatui::prelude::Color;
+use crate::palette::{color_for_fluid, color_for_tile};
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct SpriteMetadata {
@@ -132,6 +135,77 @@ impl SpriteLoader {
         }
     }
 }
+
+fn first_sprite_char(sd: &SpriteData) -> char {
+    if let Some(first) = sd.sprites.first() {
+        first.chars().next().unwrap_or(' ')
+    } else {
+        ' '
+    }
+}
+
+fn parse_color_string(s: &str) -> Option<Color> {
+    // Support #RRGGBB
+    let s = s.trim();
+    if let Some(hex) = s.strip_prefix('#') {
+        if hex.len() == 6 {
+            if let (Ok(r), Ok(g), Ok(b)) = (
+                u8::from_str_radix(&hex[0..2], 16),
+                u8::from_str_radix(&hex[2..4], 16),
+                u8::from_str_radix(&hex[4..6], 16),
+            ) {
+                return Some(Color::Rgb(r, g, b));
+            }
+        }
+    }
+    None
+}
+
+pub fn sprite_for_tile(loader: &mut SpriteLoader, kind: TileKind) -> Option<(char, Color)> {
+    let (category, name) = ("tiles",
+        match kind {
+            TileKind::Rock => "rock",
+            TileKind::Dirt => "dirt",
+            TileKind::Grass => "grass",
+            TileKind::Tree => "tree",
+            TileKind::Air => "air",
+            TileKind::BoneBlock => "bone_block",
+            TileKind::IronScrap => "iron_scrap",
+            TileKind::Door => "door",
+            TileKind::Bedrock => "bedrock",
+            TileKind::ScrapElectronics => "scrap_electronics",
+            TileKind::PlasteelScrap => "plasteel_scrap",
+            TileKind::Treasure => "treasure",
+            _ => return None,
+        }
+    );
+    let sd = loader.load_sprite(name, category);
+    let ch = first_sprite_char(sd);
+    let color = parse_color_string(&sd.color).unwrap_or_else(|| color_for_tile(kind));
+    Some((ch, color))
+}
+
+pub fn sprite_for_fluid(
+    loader: &mut SpriteLoader,
+    fluid_type: lithicrivers_core::resources::fluids::FluidType,
+) -> Option<(char, Color)> {
+    use lithicrivers_core::resources::fluids::FluidType;
+    let (category, name) = ("fluids",
+        match fluid_type {
+            FluidType::Water => "water",
+            FluidType::Oil => "oil",
+            FluidType::Blood => "blood",
+            FluidType::Acid => "acid",
+            FluidType::Lava => "lava",
+        }
+    );
+    let sd = loader.load_sprite(name, category);
+    let ch = first_sprite_char(sd);
+    let color = parse_color_string(&sd.color)
+        .unwrap_or_else(|| color_for_fluid(fluid_type));
+    Some((ch, color))
+}
+
 
 #[cfg(test)]
 mod tests {

@@ -1,5 +1,5 @@
 pub mod components;
-pub mod palette;
+pub mod palettekey;
 pub mod resources;
 mod structure;
 pub mod systems;
