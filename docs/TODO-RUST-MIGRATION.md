@@ -35,6 +35,7 @@ We're using ratatui for the terminal user interface. We are not using Bevy for p
 ## Concurrency / Performance
 
 - rayon (recommended): Data-parallel iteration for worldgen/sim steps.
+- Actually, let's use std::thread for now.
 - crossbeam (optional): Channels, deques, and concurrency utilities.
 - parking_lot (optional): Faster locks than std for hotspots.
 
@@ -63,7 +64,7 @@ We're using ratatui for the terminal user interface. We are not using Bevy for p
 - ECS: hecs (lightweight ECS)
 - Serialization: serde, rmp-serde, serde_json
 - RNG: rand, rand_chacha
-- Concurrency: rayon
+- Concurrency: std::thread
 - Utilities: indexmap, thiserror, anyhow
 - Logging: tracing, tracing-subscriber
 - CLI: clap

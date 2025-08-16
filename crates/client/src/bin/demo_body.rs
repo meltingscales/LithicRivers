@@ -79,7 +79,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
     }
 }
 
-fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
+fn ui(f: &mut Frame, app: &App) {
     let size = f.size();
     let block = Block::default()
         .borders(Borders::ALL)
@@ -91,7 +91,20 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
     let inner = block.inner(Rect::new(0, 0, size.width, size.height));
     let area = centered_rect(80, 60, inner);
 
-    let body_parts = app.body_parts.iter().map(|part| {
+    // Split area into vertical rows for each body part
+    let constraints: Vec<Constraint> = (0..app.body_parts.len())
+        .map(|_| Constraint::Length(3))
+        .collect();
+    let rows = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints(constraints)
+        .split(area);
+
+    // Clear content area
+    f.render_widget(Clear, area);
+
+    // Render each gauge in its own row
+    for (i, part) in app.body_parts.iter().enumerate() {
         let gauge = Gauge::default()
             .block(Block::default().borders(Borders::NONE))
             .gauge_style(Style::default().fg(match part.hp {
@@ -102,17 +115,11 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
             .ratio(part.hp as f64)
             .label(format!("{:>9}: {:.0}%", part.name, part.hp * 100.0));
 
-        ListItem::new("").child(Box::new(gauge))
-    }).collect::<Vec<_>>();
+        f.render_widget(gauge, rows[i]);
+    }
 
-    let list = List::new(body_parts)
-        .block(block)
-        .style(Style::default().fg(Color::White))
-        .highlight_style(Style::default().add_modifier(Modifier::BOLD))
-        .highlight_symbol(">");
-
-    f.render_widget(Clear, area);
-    f.render_widget(list, area);
+    // Render the border last so it appears on top
+    f.render_widget(block, area);
 }
 
 fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {

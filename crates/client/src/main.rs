@@ -168,7 +168,7 @@ fn run_app<B: Backend>(
     }
 }
 
-fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
+fn ui(f: &mut Frame, app: &mut App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .margin(1)
@@ -205,7 +205,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
     f.render_widget(controls, chunks[2]);
 }
 
-fn render_game_view<B: Backend>(f: &mut Frame<B>, app: &mut App, area: Rect) {
+fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
     // Get the game view from the core
     let view = app.game.build_view();
     
