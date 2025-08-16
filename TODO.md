@@ -186,8 +186,17 @@
 
 - investigate github repo "gale93/sbixel"...
 
+- investigate how dwarf fortress does vertical combat...
+
 - fight system that is basically just chrono trigger, limit to 3 enemies so players dont get fucked
   - if you decide to "Escape", there's a "BattleDelay" timer that prevents you from re-engaging with an enemy for about 600 ticks.
+  - Tackle is a move
+    - It has a 800 tick cooldown
+    - It ALWAYS pushes an enemy back 2 spaces
+    - You move into the enemy's original space
+    - It 50% of the time will make an enemy Stunned for 600 ticks
+
+- fights only occur on the same Z-level, no 3d combat. just like qud.
 
 ## MVP for steam release (2025 christmas release)
   
