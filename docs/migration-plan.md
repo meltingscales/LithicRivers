@@ -12,20 +12,20 @@ This document captures high-level goals and a recommended rearchitecture for mig
 ## Target architecture
 - Workspace layout
   - `crates/core`: ECS, components, resources, systems, serialization, RNG helpers.
-  - `crates/client`: Bevy app (wgpu) for rendering/input; provides 2D ASCII-style view and 3D colored-cubes view; consumes read-only state from `core`.
+  - `crates/client`: ratatui TUI app for terminal rendering/input; provides ASCII-style terminal view; consumes read-only state from `core`.
   - `crates/app` (optional): if needed, additional binaries or tooling (CLI, headless sim, exporters).
 
-- ECS (bevy_ecs)
+- ECS (hecs)
   - Entities: IDs only.
   - Components: `Position`, `Renderable` (later), `Body`, `Inventory`, etc.
   - Resources (singletons): `World` (chunks, tiles, fluids), `Rng`, `MessageLog`, `Config`, `Keymap`.
   - Systems: movement, mining, inventory/pickup, AI/NPC, fluids, logging.
-  - Schedule: ordered systems per fixed-tick in Bevy schedules; client rendering reads state after sim.
+  - Schedule: ordered systems per fixed-tick with custom scheduling; client rendering reads state after sim.
 
-- Rendering (Bevy)
-  - Bevy (wgpu) client with two modes:
-    - 2D: ASCII-style map by rendering a grid of glyphs (bitmap font atlas) with per-glyph color; camera follows player.
-    - 3D: colored cubes (PBR) representing blocks/tiles; simple lighting; camera orbit/follow.
+- Rendering (ratatui)
+  - ratatui terminal client with ASCII-style interface:
+    - Map view: ASCII-style map using terminal characters with colors; viewport follows player.
+    - UI panels: Inventory, status, message log, and other game panels using ratatui widgets.
   - Rendering is a strictly read-only pass that consumes a ViewModel or queries immutable state from `core`.
 
 - Determinism
@@ -44,7 +44,7 @@ This document captures high-level goals and a recommended rearchitecture for mig
 
 ## Migration phases (incremental)
 1. Skeleton & minimal loop (DONE)
-   - Workspace, crates, deps; minimal ECS with a `Player` that moves deterministically; ratatui “hello world”.
+   - Workspace, crates, deps; minimal ECS with a `Player` that moves deterministically; ratatui "hello world".
 2. Core data shapes
    - Tiles/Items/Entities as enums/IDs; basic components/resources; chunked world grid resource.
 3. Save/Load
@@ -62,6 +62,6 @@ This document captures high-level goals and a recommended rearchitecture for mig
 
 ## Next steps
 - Build and run the scaffold: `cd rust-migration && cargo run -p lithicrivers` (press `q` to quit).
-- Define the `World` resource (chunks/tiles) and a basic `Renderable` component; render a simple map.
+- Define the `World` resource (chunks/tiles) and a basic `Renderable` component; render a simple ASCII map in the terminal.
 - Introduce a `Config` resource and CLI flags mirroring Python settings.
 - Add serde save/load for the minimal state (player position, tick).
