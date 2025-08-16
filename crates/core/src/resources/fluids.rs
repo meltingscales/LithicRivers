@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
 use crate::components::Position;
-use crate::resources::world::World;
 use crate::palette::PaletteKey;
+use crate::resources::world::World;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum FluidType {
@@ -108,7 +108,7 @@ impl FluidManager {
             (0, -1, 0), // North
             (1, 0, 0),  // East
             (-1, 0, 0), // West
-            (0, 0, 1), // Down (z+1)
+            (0, 0, 1),  // Down (z+1)
         ];
         // Work on a snapshot to avoid borrow issues
         let fluids_snapshot: Vec<_> = self.fluids.iter().map(|(p, f)| (*p, f.clone())).collect();
@@ -126,13 +126,18 @@ impl FluidManager {
                 }
                 continue;
             }
-            let spread_amount = std::cmp::min(fluid.amount - fluid.spread_threshold, fluid.viscosity);
+            let spread_amount =
+                std::cmp::min(fluid.amount - fluid.spread_threshold, fluid.viscosity);
             if spread_amount == 0 {
                 continue;
             }
             let mut valid_targets = vec![];
             for (dx, dy, dz) in directions.iter() {
-                let target = Position { x: pos.x + dx, y: pos.y + dy, z: pos.z + dz };
+                let target = Position {
+                    x: pos.x + dx,
+                    y: pos.y + dy,
+                    z: pos.z + dz,
+                };
                 if self.can_hold_fluid(world, &target, fluid.fluid_type) {
                     valid_targets.push(target);
                 }
@@ -153,20 +158,25 @@ impl FluidManager {
             let mut distributed = 0;
             for (i, target) in valid_targets.iter().enumerate() {
                 let mut amt = amount_per;
-                if (i as u32) < remainder { amt += 1; }
+                if (i as u32) < remainder {
+                    amt += 1;
+                }
                 if amt > 0 {
-                    to_add.push((target.clone(), Fluid {
-                        fluid_type: fluid.fluid_type,
-                        position: *target,
-                        amount: amt,
-                        max_amount: fluid.max_amount,
-                        settled: false,
-                        spread_threshold: fluid.spread_threshold,
-                        stability_counter: 0,
-                        viscosity: fluid.viscosity,
-                        last_spread_tick: gametick,
-                        settlement_threshold: fluid.settlement_threshold,
-                    }));
+                    to_add.push((
+                        target.clone(),
+                        Fluid {
+                            fluid_type: fluid.fluid_type,
+                            position: *target,
+                            amount: amt,
+                            max_amount: fluid.max_amount,
+                            settled: false,
+                            spread_threshold: fluid.spread_threshold,
+                            stability_counter: 0,
+                            viscosity: fluid.viscosity,
+                            last_spread_tick: gametick,
+                            settlement_threshold: fluid.settlement_threshold,
+                        },
+                    ));
                     distributed += amt;
                 }
             }
@@ -199,8 +209,13 @@ impl FluidManager {
             _ => {
                 // Don't overfill
                 match self.fluids.get(pos) {
-                    Some(existing) if existing.fluid_type == fluid_type && existing.amount >= existing.max_amount => false,
-                    _ => true
+                    Some(existing)
+                        if existing.fluid_type == fluid_type
+                            && existing.amount >= existing.max_amount =>
+                    {
+                        false
+                    }
+                    _ => true,
                 }
             }
         }
@@ -209,15 +224,21 @@ impl FluidManager {
 
 // Debug utility to spawn some pools in a cross around the center
 pub fn spawn_debug_pools(fm: &mut FluidManager, center: Position) {
-    let offsets = [
-        (2, 2), (5, 5)
-    ];
+    let offsets = [(2, 2), (5, 5)];
     for (dx, dy) in offsets.iter() {
-        let pos = Position { x: center.x + dx, y: center.y + dy, z: center.z };
+        let pos = Position {
+            x: center.x + dx,
+            y: center.y + dy,
+            z: center.z,
+        };
         fm.add_fluid(Fluid::new(FluidType::Water, pos, 500));
     }
 
     // spawn some lava
-    let pos = Position { x: center.x + 7, y: center.y + 7, z: center.z };
+    let pos = Position {
+        x: center.x + 7,
+        y: center.y + 7,
+        z: center.z,
+    };
     fm.add_fluid(Fluid::new(FluidType::Lava, pos, 500));
 }

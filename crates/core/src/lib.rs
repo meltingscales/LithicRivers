@@ -1,10 +1,10 @@
 pub mod components;
-pub mod resources;
-pub mod systems;
-pub mod view;
-pub mod tiles;
 pub mod palette;
+pub mod resources;
 mod structure;
+pub mod systems;
+pub mod tiles;
+pub mod view;
 
 use components::*;
 use resources::*;
@@ -55,7 +55,9 @@ impl Game {
         move_player_system(&mut self.world, &mut self.res);
         stumbling_sheep_system(&mut self.world, &mut self.res);
         // Process fluids
-        self.res.fluids.process_fluids(&self.res.world, self.res.gametick);
+        self.res
+            .fluids
+            .process_fluids(&self.res.world, self.res.gametick);
     }
 
     pub fn build_view(&self) -> RenderView {

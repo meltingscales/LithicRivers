@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use crate::palette::PaletteKey;
+use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum TileKind {
@@ -17,7 +17,20 @@ pub enum TileKind {
     Treasure,
 }
 
-pub static TILE_KIND_STRS: &[&str] = &["rock", "dirt", "grass", "tree", "air", "bone_block", "iron_scrap", "door", "bedrock", "scrap_electronics", "plasteel_scrap", "treasure"];
+pub static TILE_KIND_STRS: &[&str] = &[
+    "rock",
+    "dirt",
+    "grass",
+    "tree",
+    "air",
+    "bone_block",
+    "iron_scrap",
+    "door",
+    "bedrock",
+    "scrap_electronics",
+    "plasteel_scrap",
+    "treasure",
+];
 
 impl TileKind {
     pub fn sprite_key(self) -> &'static str {
@@ -94,7 +107,20 @@ mod tests {
 
     #[test]
     fn serde_roundtrip() {
-        let kinds = [TileKind::Rock, TileKind::Dirt, TileKind::Grass, TileKind::Tree, TileKind::Air, TileKind::BoneBlock, TileKind::IronScrap, TileKind::Door, TileKind::Bedrock, TileKind::ScrapElectronics, TileKind::PlasteelScrap, TileKind::Treasure];
+        let kinds = [
+            TileKind::Rock,
+            TileKind::Dirt,
+            TileKind::Grass,
+            TileKind::Tree,
+            TileKind::Air,
+            TileKind::BoneBlock,
+            TileKind::IronScrap,
+            TileKind::Door,
+            TileKind::Bedrock,
+            TileKind::ScrapElectronics,
+            TileKind::PlasteelScrap,
+            TileKind::Treasure,
+        ];
         for &k in &kinds {
             let s = serde_json::to_string(&k).expect("serialize");
             let k2: TileKind = serde_json::from_str(&s).expect("deserialize");

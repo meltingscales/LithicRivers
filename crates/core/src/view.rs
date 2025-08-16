@@ -1,6 +1,6 @@
 use crate::components::{Glyph, Position};
 use crate::resources::Resources;
-use hecs::{World};
+use hecs::World;
 
 #[derive(Debug, Clone)]
 pub struct RenderView {
@@ -41,14 +41,23 @@ pub fn build_render_view(world: &World, res: &Resources) -> RenderView {
     // Overlay entities with Glyph in this window at the player's z
     let z = player_pos.z;
     for (_e, (pos, glyph)) in world.query::<(&Position, &Glyph)>().iter() {
-        if pos.z != z { continue; }
-        let vx = pos.x - left; let vy = pos.y - top;
+        if pos.z != z {
+            continue;
+        }
+        let vx = pos.x - left;
+        let vy = pos.y - top;
         if vx >= 0 && vx < win_w && vy >= 0 && vy < win_h {
             buffer[vy as usize][vx as usize] = glyph.0;
         }
     }
     // Convert to lines
     let mut lines: Vec<String> = Vec::with_capacity(win_h as usize);
-    for y in 0..win_h { lines.push(buffer[y as usize].iter().collect()); }
-    RenderView { gametick: res.gametick, player_pos, map_lines: lines }
+    for y in 0..win_h {
+        lines.push(buffer[y as usize].iter().collect());
+    }
+    RenderView {
+        gametick: res.gametick,
+        player_pos,
+        map_lines: lines,
+    }
 }
