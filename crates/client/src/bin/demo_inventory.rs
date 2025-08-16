@@ -1,111 +1,236 @@
-use bevy::prelude::*;
+use std::{io, time::Duration};
+use crossterm::{
+    event::{self, Event, KeyCode, KeyEventKind},
+    execute,
+    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+};
+use ratatui::{
+    prelude::*,
+    symbols::border,
+    widgets::*,
+};
 
-#[derive(Component)]
-struct Repairable;
-
-#[derive(Resource, Default)]
-struct Inventory(Vec<Option<&'static str>>);
-
-fn main() {
-    App::new()
-        .insert_resource(ClearColor(Color::rgb(0.1, 0.1, 0.12)))
-        .insert_resource(Inventory(vec![
-            Some("Rusty Knife"), Some("Bandage"), None, None,
-            Some("Scrap"), None, Some("Seed"), None,
-            None, None, None, Some("Battery"),
-            None, Some("Water"), None, None,
-        ]))
-        .add_plugins(DefaultPlugins
-            .set(WindowPlugin {
-            primary_window: Some(Window {
-                title: "LithicRivers Demo - Inventory".into(),
-                resolution: (800.0, 600.0).into(),
-                ..default()
-            }),
-            ..default()
-        })
-            .set(bevy::asset::AssetPlugin { file_path: "assets".into(), ..default() })
-        )
-        .add_systems(Startup, setup_inventory_ui)
-        .run();
+struct App {
+    inventory: Vec<Option<&'static str>>,
+    selected: Option<usize>,
+    should_quit: bool,
 }
 
-fn setup_inventory_ui(mut commands: Commands, inv: Res<Inventory>, asset_server: Res<AssetServer>) {
-    // Load a bundled monospace font from the repo's assets
-    let font: Handle<Font> = asset_server.load("fonts/monospace.ttf");
+impl App {
+    fn new() -> Self {
+        Self {
+            inventory: vec![
+                Some("Rusty Knife"), Some("Bandage"), None, None,
+                Some("Scrap"), None, Some("Seed"), None,
+                None, None, None, Some("Battery"),
+                None, Some("Water"), None, None,
+            ],
+            selected: None,
+            should_quit: false,
+        }
+    }
 
-    // Root node
-    commands.spawn(Camera2dBundle::default());
-    commands.spawn(NodeBundle {
-        style: Style {
-            width: Val::Percent(100.0),
-            height: Val::Percent(100.0),
-            justify_content: JustifyContent::Center,
-            align_items: AlignItems::Center,
-            ..default()
-        },
-        background_color: Color::NONE.into(),
-        ..default()
-    }).with_children(|root| {
-        // Panel
-        root.spawn(NodeBundle {
-            style: Style {
-                width: Val::Px(520.0),
-                height: Val::Px(420.0),
-                flex_direction: FlexDirection::Column,
-                row_gap: Val::Px(8.0),
-                column_gap: Val::Px(8.0),
-                padding: UiRect::all(Val::Px(12.0)),
-                ..default()
-            },
-            background_color: Color::rgba(0.12, 0.14, 0.18, 0.95).into(),
-            ..default()
-        }).with_children(|panel| {
-            // Title
-            panel.spawn(TextBundle::from_section(
-                "Inventory (demo)",
-                TextStyle { font: font.clone(), font_size: 24.0, color: Color::WHITE },
-            ));
-            // Grid 4x4
-            panel.spawn(NodeBundle {
-                style: Style {
-                    width: Val::Percent(100.0),
-                    height: Val::Px(340.0),
-                    display: Display::Grid,
-                    grid_template_columns: vec![GridTrack::fr(1.0); 4],
-                    grid_template_rows: vec![GridTrack::fr(1.0); 4],
-                    row_gap: Val::Px(8.0),
-                    column_gap: Val::Px(8.0),
-                    ..default()
-                },
-                background_color: Color::NONE.into(),
-                ..default()
-            }).with_children(|grid| {
-                for i in 0..16 {
-                    let item = inv.0[i].unwrap_or("");
-                    grid.spawn(NodeBundle {
-                        style: Style {
-                            justify_content: JustifyContent::Center,
-                            align_items: AlignItems::Center,
-                            ..default()
-                        },
-                        background_color: Color::rgba(0.18, 0.2, 0.26, 1.0).into(),
-                        ..default()
-                    }).with_children(|slot| {
-                        if !item.is_empty() {
-                            slot.spawn(TextBundle::from_section(
-                                item,
-                                TextStyle { font: font.clone(), font_size: 18.0, color: Color::rgb(0.9, 0.9, 0.95) },
-                            ));
-                        } else {
-                            slot.spawn(TextBundle::from_section(
-                                "(empty)",
-                                TextStyle { font: font.clone(), font_size: 16.0, color: Color::rgb(0.5, 0.5, 0.55) },
-                            ));
-                        }
-                    });
+    fn next(&mut self) {
+        let i = match self.selected {
+            Some(i) => (i + 1) % self.inventory.len(),
+            None => 0,
+        };
+        self.selected = Some(i);
+    }
+
+    fn previous(&mut self) {
+        let i = match self.selected {
+            Some(i) => {
+                if i == 0 {
+                    self.inventory.len() - 1
+                } else {
+                    i - 1
                 }
-            });
-        });
-    });
+            }
+            None => 0,
+        };
+        self.selected = Some(i);
+    }
+}
+
+fn main() -> io::Result<()> {
+    // Setup terminal
+    enable_raw_mode()?;
+    let mut stdout = io::stdout();
+    execute!(stdout, EnterAlternateScreen)?;
+    let backend = CrosstermBackend::new(stdout);
+    let mut terminal = Terminal::new(backend)?;
+
+    // Create app and run it
+    let app = App::new();
+    let res = run_app(&mut terminal, app);
+
+    // Restore terminal
+    disable_raw_mode()?;
+    execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
+    terminal.show_cursor()?;
+
+    if let Err(err) = res {
+        println!("{err:?}")
+    }
+
+    Ok(())
+}
+
+fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<()> {
+    loop {
+        terminal.draw(|f| ui(f, &app))?;
+
+        if event::poll(Duration::from_millis(50))? {
+            if let Event::Key(key) = event::read()? {
+                if key.kind == KeyEventKind::Press {
+                    match key.code {
+                        KeyCode::Char('q') => app.should_quit = true,
+                        KeyCode::Right | KeyCode::Char('l') => app.next(),
+                        KeyCode::Left | KeyCode::Char('h') => app.previous(),
+                        KeyCode::Down | KeyCode::Char('j') => {
+                            if let Some(selected) = app.selected {
+                                let new_selected = (selected + 4).min(app.inventory.len() - 1);
+                                app.selected = Some(new_selected);
+                            } else {
+                                app.selected = Some(0);
+                            }
+                        },
+                        KeyCode::Up | KeyCode::Char('k') => {
+                            if let Some(selected) = app.selected {
+                                let new_selected = selected.saturating_sub(4);
+                                app.selected = Some(new_selected);
+                            } else {
+                                app.selected = Some(0);
+                            }
+                        },
+                        _ => {}
+                    }
+                }
+            }
+        }
+
+        if app.should_quit {
+            return Ok(());
+        }
+    }
+}
+
+fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
+    let size = f.size();
+    
+    // Create a block for the inventory
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .border_set(border::THICK)
+        .title(" Inventory ")
+        .title_alignment(Alignment::Center)
+        .border_style(Style::default().fg(Color::LightBlue));
+
+    // Create a centered area for the inventory
+    let inner = block.inner(Rect::new(0, 0, size.width, size.height));
+    let area = centered_rect(70, 70, inner);
+    
+    // Create a grid layout for the inventory
+    let grid_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Length(3), // Title
+            Constraint::Min(1),    // Grid
+            Constraint::Length(3), // Controls
+        ])
+        .split(area);
+
+    // Render the title
+    let title = Paragraph::new("Inventory (demo)")
+        .style(Style::default().fg(Color::White).add_modifier(Modifier::BOLD))
+        .alignment(Alignment::Center);
+    f.render_widget(title, grid_layout[0]);
+
+    // Create a 4x4 grid for the inventory items
+    let grid = Grid::new()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Length(8),
+            Constraint::Length(8),
+            Constraint::Length(8),
+            Constraint::Length(8),
+        ]);
+
+    // Create the inventory slots
+    let mut rows = Vec::new();
+    for row in 0..4 {
+        let mut cells = Vec::new();
+        for col in 0..4 {
+            let idx = row * 4 + col;
+            let item = &app.inventory[idx];
+            let is_selected = app.selected == Some(idx);
+            
+            let (text, style) = match item {
+                Some(item) => (
+                    format!("\n {}", item),
+                    Style::default().fg(Color::LightGreen),
+                ),
+                None => (
+                    "\n (empty)".to_string(),
+                    Style::default().fg(Color::DarkGray),
+                ),
+            };
+            
+            let mut block = Block::default()
+                .borders(Borders::ALL);
+                
+            if is_selected {
+                block = block
+                    .border_style(Style::default().fg(Color::Yellow))
+                    .title_style(Style::default().fg(Color::Yellow));
+            }
+            
+            let cell = block
+                .title(format!(" {} ", idx + 1))
+                .title_alignment(Alignment::Right)
+                .padding(Padding::new(1, 1, 1, 1));
+                
+            let paragraph = Paragraph::new(text)
+                .block(cell)
+                .style(style)
+                .alignment(Alignment::Center);
+                
+            cells.push(paragraph);
+        }
+        rows.push(Row::new(cells).height(6));
+    }
+    
+    // Render the grid
+    let grid = grid.rows(rows);
+    f.render_widget(grid, grid_layout[1]);
+    
+    // Render controls
+    let controls = Paragraph::new("←→↑↓/hjkl: Navigate | q: Quit")
+        .style(Style::default().fg(Color::Gray))
+        .alignment(Alignment::Center);
+    f.render_widget(controls, grid_layout[2]);
+    
+    // Render the border last to be on top
+    f.render_widget(block, area);
+}
+
+fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
+    let popup_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Percentage((100 - percent_y) / 2),
+            Constraint::Percentage(percent_y),
+            Constraint::Percentage((100 - percent_y) / 2),
+        ])
+        .split(r);
+
+    Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage((100 - percent_x) / 2),
+            Constraint::Percentage(percent_x),
+            Constraint::Percentage((100 - percent_x) / 2),
+        ])
+        .split(popup_layout[1])[1]
 }
