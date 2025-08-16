@@ -192,6 +192,7 @@
   - inventory pages
   - ui
   - fighting
+    - dogs get attracted to food/organic matter
 
 - sandboxed python programming: simple interface
   - examples of dead robots with sample programs, i.e.

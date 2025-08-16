@@ -95,6 +95,10 @@ client:
 run-release:
     {{cargoz_env}} run -p lithicrivers-client --bin lithicrivers-client --release
 
+# Run the Intro demo
+demo-intro:
+    {{cargoz_env}} run -p lithicrivers-client --bin demo_intro
+
 # Run the Inventory UI demo
 demo-inventory:
     {{cargoz_env}} run -p lithicrivers-client --bin demo_inventory
