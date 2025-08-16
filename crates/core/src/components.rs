@@ -25,3 +25,5 @@ pub struct Sheep;
 /// Marker for entities that block movement
 #[derive(Debug, Clone, Copy)]
 pub struct BlocksMovement;
+
+// Body lives in `crate::model::body` now.

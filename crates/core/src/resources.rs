@@ -34,20 +34,4 @@ impl Resources {
             pending_tick_increase: None,
         }
     }
-
-    /// Placeholder for a future body-based speed system.
-    /// In the Python version this comes from player.get_walk_speed_modifier().
-    /// For now, return 1.0 (no modification).
-    pub fn walk_speed_modifier(&self) -> f32 {
-        1.0
-    }
-
-    /// Compute the tick cost for a single player move, applying speed modifiers.
-    /// Base is 200 ticks; higher speed reduces cost.
-    pub fn move_cost_ticks(&self) -> u64 {
-        let base: f32 = 200.0;
-        let modifier = self.walk_speed_modifier().max(0.01);
-        let cost = (base / modifier).round();
-        cost.max(1.0) as u64
-    }
 }
