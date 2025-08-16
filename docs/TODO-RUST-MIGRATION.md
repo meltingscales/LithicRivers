@@ -2,67 +2,75 @@ Context: I'm going to be migrating my code from `python-old/` to `rust-migration
 
 I'm going to try to migrate as much as possible from `python-old/` to `rust-migration/` myself, and I'll ask for help when I need it. I'll try to use the same file structure.
 
-We're using a bevy ECS for the game logic. We are not using `ratatui` as there is no TUI anymore.
+We're using ratatui for the terminal user interface. We are not using Bevy for performance reasons.
 
 # Rust libraries breakdown
 
-Client / Rendering
+## Client / Rendering
 
-- bevy (recommended): Game engine with renderer (wgpu), ECS, input, assets, and scheduling.
-- bevy_ecs (in bevy): ECS used by Bevy for entities/components/systems.
-- bevy_pbr / bevy_sprite: For 3D colored cubes and 2D sprites/glyphs respectively.
+- ratatui (recommended): Terminal user interface library for rich TUI applications.
+- crossterm (via ratatui): Cross-platform terminal manipulation for input/output.
+- tui-textarea (optional): Text input widgets for ratatui.
 
-Simulation / Data model
+## Simulation / Data model
 
-bevy_ecs (standard via Bevy): Use Bevy's ECS for entities/components/systems to stay aligned with the client.
-indexmap (recommended): HashMap/Set with stable iteration for determinism.
-smallvec (optional): Inline small vectors to reduce heap allocs.
-ahash (optional): Faster hash function for high-performance maps (use with care if you need strict determinism across platforms).
-Serialization / Save system
+- hecs (recommended): Lightweight ECS for entities/components/systems without the overhead of Bevy.
+- indexmap (recommended): HashMap/Set with stable iteration for determinism.
+- smallvec (optional): Inline small vectors to reduce heap allocs.
+- ahash (optional): Faster hash function for high-performance maps (use with care if you need strict determinism across platforms).
 
-serde (recommended): Core serialization framework.
-rmp-serde (recommended): MessagePack format for compact saves.
-serde_json (optional): Human-readable saves, debugging.
-bincode (optional): Very fast binary serialization.
-rkyv (optional, advanced): Zero-copy serialization for maximal load speed.
-RNG / Determinism
+## Serialization / Save system
 
-rand (recommended): RNG traits and utilities.
-rand_chacha (recommended): Seedable deterministic RNG (ChaCha20).
-Concurrency / Performance
+- serde (recommended): Core serialization framework.
+- rmp-serde (recommended): MessagePack format for compact saves.
+- serde_json (optional): Human-readable saves, debugging.
+- bincode (optional): Very fast binary serialization.
+- rkyv (optional, advanced): Zero-copy serialization for maximal load speed.
 
-rayon (recommended): Data-parallel iteration for worldgen/sim steps.
-crossbeam (optional): Channels, deques, and concurrency utilities.
-parking_lot (optional): Faster locks than std for hotspots.
-CLI / Config / Logging
+## RNG / Determinism
 
-clap (recommended): CLI args and subcommands.
-toml (optional): Config files (settings, keybinds).
-tracing + tracing-subscriber (recommended): Structured logging and spans.
-thiserror (recommended): Easy custom error types.
-anyhow (recommended): Ergonomic error handling in app code.
-Testing / Bench / Profiling
+- rand (recommended): RNG traits and utilities.
+- rand_chacha (recommended): Seedable deterministic RNG (ChaCha20).
 
-insta (optional): Snapshot tests for rendered frames or map slices.
-proptest (optional): Property-based tests for generators/sim invariants.
-criterion (optional): Micro-benchmarks for hot loops (fluids, updates).
-pprof (pprof-rs) or cargo-flamegraph (optional): Profiling.
-Compression (if you want smaller saves)
+## Concurrency / Performance
 
-zstd or flate2 (optional): Compress save files transparently.
-Minimal starter set (good defaults)
+- rayon (recommended): Data-parallel iteration for worldgen/sim steps.
+- crossbeam (optional): Channels, deques, and concurrency utilities.
+- parking_lot (optional): Faster locks than std for hotspots.
 
-Client: bevy (includes bevy_ecs, wgpu renderer, input)
-Serialization: serde, rmp-serde, serde_json
-RNG: rand, rand_chacha
-Concurrency: rayon
-Utilities: indexmap, thiserror, anyhow
-Logging: tracing, tracing-subscriber
-CLI: clap
+## CLI / Config / Logging
 
-Notes for rendering modes in Bevy:
-- 2D ASCII-style: Use a bitmap font atlas or SDF font, render per-tile glyphs via `Text2dBundle`/custom glyph quads with per-glyph color; camera follows player.
-- 3D colored cubes: Use `PbrBundle` with box meshes per visible tile/voxel or instanced batching; basic light + frustum-culling.
+- clap (recommended): CLI args and subcommands.
+- toml (optional): Config files (settings, keybinds).
+- tracing + tracing-subscriber (recommended): Structured logging and spans.
+- thiserror (recommended): Easy custom error types.
+- anyhow (recommended): Ergonomic error handling in app code.
+
+## Testing / Bench / Profiling
+
+- insta (optional): Snapshot tests for rendered frames or map slices.
+- proptest (optional): Property-based tests for generators/sim invariants.
+- criterion (optional): Micro-benchmarks for hot loops (fluids, updates).
+- pprof (pprof-rs) or cargo-flamegraph (optional): Profiling.
+
+## Compression (if you want smaller saves)
+
+- zstd or flate2 (optional): Compress save files transparently.
+
+## Minimal starter set (good defaults)
+
+- Client: ratatui (terminal UI), crossterm (terminal control)
+- ECS: hecs (lightweight ECS)
+- Serialization: serde, rmp-serde, serde_json
+- RNG: rand, rand_chacha
+- Concurrency: rayon
+- Utilities: indexmap, thiserror, anyhow
+- Logging: tracing, tracing-subscriber
+- CLI: clap
+
+Notes for rendering modes in ratatui:
+- ASCII-style TUI: Use ratatui widgets and custom drawing for map tiles with colors and symbols; viewport follows player.
+- Rich terminal UI: Utilize ratatui's built-in widgets (Block, Paragraph, List, etc.) for inventory, menus, and HUD elements.
 
 # migration todo from python-old/
 
