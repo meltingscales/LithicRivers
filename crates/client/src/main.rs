@@ -183,23 +183,18 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<(), 
 fn ui(f: &mut Frame, app: &mut App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
-        .margin(1)
+        .margin(0)
         .constraints([
-            Constraint::Length(3),
-            Constraint::Min(0),
-            Constraint::Length(3),
+            Constraint::Length(1),        // Title line
+            Constraint::Min(0),           // World viewport
+            Constraint::Length(3),        // Bottom bar with borders
         ])
         .split(f.size());
 
     // Title
     let title = Paragraph::new("LithicRivers (Ratatui Client)")
         .style(Style::default().fg(Color::Cyan))
-        .alignment(Alignment::Center)
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .style(Style::default().fg(Color::White)),
-        );
+        .alignment(Alignment::Center);
     f.render_widget(title, chunks[0]);
 
     // Game view
@@ -212,6 +207,7 @@ fn ui(f: &mut Frame, app: &mut App) {
         .block(
             Block::default()
                 .borders(Borders::ALL)
+                .title("Status & Controls")
                 .style(Style::default().fg(Color::White)),
         );
     f.render_widget(controls, chunks[2]);
@@ -224,43 +220,50 @@ fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
     // Create the game display text
     let mut lines = Vec::new();
 
-    // Add game info
-    lines.push(Line::from(vec![Span::styled(
-        format!(
-            "Tick: {} | Player: ({}, {})",
-            view.gametick, view.player_pos.x, view.player_pos.y
-        ),
-        Style::default().fg(Color::White),
-    )]));
-    lines.push(Line::from("")); // Empty line
+    // Render the map; height = full area, width = min(area width, provided view width)
+    let view_h = view.map_lines.len();
+    let view_w = if view_h > 0 { view.map_lines[0].len() } else { 0 };
+    let target_cols = std::cmp::min(area.width as usize, view_w);
+    let target_rows = area.height as usize;
 
-    // Render the map
-    for (y, line) in view.map_lines.iter().enumerate() {
-        let mut spans = Vec::new();
-        for (x, ch) in line.chars().enumerate() {
-            let world_x = view.player_pos.x - (view.map_lines[0].len() as i32 / 2) + x as i32;
-            let world_y = view.player_pos.y - (view.map_lines.len() as i32 / 2) + y as i32;
+    // Dimensions of the provided view window
+    let view_h = view_h;
+    let view_w = view_w;
 
-            // Get tile info for coloring/sprites
+    for row in 0..target_rows {
+        let mut spans = Vec::with_capacity(target_cols);
+        for col in 0..target_cols {
+            let world_x = view.player_pos.x - (target_cols as i32 / 2) + col as i32;
+            let world_y = view.player_pos.y - (target_rows as i32 / 2) + row as i32;
+
+            // Base tile color/glyph
             let tile_kind = app.game.res.world.get_tile(world_x, world_y);
 
-            // Check for fluids
-            let fluid_pos = lithicrivers_core::components::Position {
-                x: world_x,
-                y: world_y,
-                z: 0,
-            };
+            // Overlay from fluids/entities when within original view bounds
+            let rel_x = (world_x - (view.player_pos.x - (view_w as i32 / 2))) as isize;
+            let rel_y = (world_y - (view.player_pos.y - (view_h as i32 / 2))) as isize;
+
+            // Check fluids first
+            let fluid_pos = lithicrivers_core::components::Position { x: world_x, y: world_y, z: 0 };
             if let Some(fluid) = app.game.res.fluids.get_fluid(fluid_pos) {
-                // Try sprite for fluid
                 let (glyph, color) = sprite_for_fluid(&mut app.sprite_loader, fluid.fluid_type)
                     .unwrap_or_else(|| panic!("Could not find sprite for fluid type: {:?}", fluid.fluid_type));
                 spans.push(Span::styled(glyph.to_string(), Style::default().fg(color)));
-            } else if ch != ' ' {
-                // Entity overlay (player, sheep, etc.) - colors from entity .lrsprite data.json
-                let entity_color = color_for_entity(&mut app.sprite_loader, ch);
-                spans.push(Span::styled(ch.to_string(), Style::default().fg(entity_color)));
-            } else {
-                // Regular tile
+                continue;
+            }
+
+            // If within the original view window, use its overlay character for entities
+            let mut used_overlay = false;
+            if rel_x >= 0 && rel_y >= 0 && (rel_y as usize) < view_h && (rel_x as usize) < view_w {
+                let ch = view.map_lines[rel_y as usize].chars().nth(rel_x as usize).unwrap_or(' ');
+                if ch != ' ' {
+                    let entity_color = color_for_entity(&mut app.sprite_loader, ch);
+                    spans.push(Span::styled(ch.to_string(), Style::default().fg(entity_color)));
+                    used_overlay = true;
+                }
+            }
+
+            if !used_overlay {
                 let (glyph, color) = sprite_for_tile(&mut app.sprite_loader, tile_kind)
                     .unwrap_or_else(|| panic!("Could not find sprite for tile kind: {:?}", tile_kind));
                 spans.push(Span::styled(glyph.to_string(), Style::default().fg(color)));
@@ -270,14 +273,22 @@ fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
     }
 
     let paragraph = Paragraph::new(lines)
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .title("Game World")
-                .style(Style::default().fg(Color::White)),
-        )
+        .block(Block::default())
         .wrap(Wrap { trim: false });
 
-    f.render_widget(paragraph, area);
+    // Center horizontally if we're narrower than available area
+    let render_width = target_cols as u16;
+    let render_area = if render_width < area.width {
+        Rect {
+            x: area.x + (area.width - render_width) / 2,
+            y: area.y,
+            width: render_width,
+            height: area.height,
+        }
+    } else {
+        area
+    };
+
+    f.render_widget(paragraph, render_area);
 }
 
