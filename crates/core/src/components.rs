@@ -27,3 +27,61 @@ pub struct Sheep;
 pub struct BlocksMovement;
 
 // Body lives in `crate::model::body` now.
+
+// -----------------------------
+// Items & Inventory Components
+// -----------------------------
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, Eq, PartialEq, Hash)]
+pub enum ItemKind {
+    Wood,
+    Acorn,
+    Stick,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ItemStack {
+    pub kind: ItemKind,
+    pub qty: u32,
+}
+
+impl ItemStack {
+    pub fn new(kind: ItemKind, qty: u32) -> Self {
+        Self { kind, qty }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Inventory {
+    pub slots: Vec<ItemStack>,
+    pub max_slots: usize,
+}
+
+impl Default for Inventory {
+    fn default() -> Self {
+        Self {
+            slots: Vec::new(),
+            max_slots: 20,
+        }
+    }
+}
+
+impl Inventory {
+    pub fn add(&mut self, kind: ItemKind, qty: u32) {
+        if qty == 0 { return; }
+        if let Some(s) = self.slots.iter_mut().find(|s| s.kind == kind) {
+            s.qty = s.qty.saturating_add(qty);
+            return;
+        }
+        if self.slots.len() < self.max_slots {
+            self.slots.push(ItemStack::new(kind, qty));
+        }
+    }
+}
+
+/// World entity representing an item lying on the ground
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct DroppedItem {
+    pub kind: ItemKind,
+    pub qty: u32,
+}
