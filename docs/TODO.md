@@ -1,10 +1,7 @@
-# old but still important TODO
+# LithicRivers Development Priorities
 
-- GH actions
-  - can I unify the 4 release actions? hopefully
-  - simplify files? :P
-  - https://stackoverflow.com/questions/63148639/create-dependencies-between-jobs-in-github-actions
-  - https://www.edwardthomson.com/blog/github_actions_17_dependent_jobs.html
+## Steam MVP (Target: December 2024)
+See [STEAM-MVP.md](STEAM-MVP.md) for the complete release plan.
 
 ## game
 - add procedurally generated catgirls

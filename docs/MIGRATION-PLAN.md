@@ -1,19 +1,23 @@
-# LithicRivers Rust Migration Plan
+# LithicRivers Architecture
 
-This document captures high-level goals and the rearchitecture for migrating from the Python codebase (`python-old/`) to Rust (workspace under `crates/`).
+> **Note:** This document focuses on the technical architecture. For release planning, see [STEAM-MVP.md](STEAM-MVP.md).
 
-## High-level goals
-- Preserve core gameplay concepts while improving performance, determinism, and maintainability.
-- Adopt a data-oriented/ECS architecture to align with Rust’s ownership and borrowing model.
-- Keep the simulation loop deterministic and decouple it from rendering.
-- Maintain chunked world data and the integer-based fluid system with “settled” optimization.
-- Provide robust, secure serialization with `serde` and compact saves via MessagePack.
+## High-level Goals
+- **Performance**: Optimize for smooth gameplay on target hardware
+- **Maintainability**: Clean, documented code with clear separation of concerns
+- **Modularity**: Components should be loosely coupled where possible
+- **Determinism**: Game state must be fully deterministic for replay/TAS support
+
+## Core Architecture
+- **ECS (Entity Component System)**: Using `hecs` for game object management
+- **Deterministic Simulation**: Fixed timestep game loop
+- **Chunked World**: 3D grid-based world with efficient loading/unloading
+- **Serialization**: `serde` with MessagePack for save games
 
 ## Target architecture
 - Workspace layout
   - `crates/core`: ECS, components, resources, systems, RNG helpers, tiles, view model, structure loading.
   - `crates/client`: ratatui TUI for terminal rendering/input; consumes read-only state from `core` and loads sprites from assets.
-  - `crates/app` (optional): additional binaries or tooling (CLI, headless sim, exporters).
 
 - ECS (hecs)
   - Entities: IDs only.
