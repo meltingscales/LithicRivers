@@ -5,7 +5,7 @@ use std::io::{self, Read};
 use std::path::{Path, PathBuf};
 use lithicrivers_core::tiles::TileKind;
 use ratatui::prelude::Color;
-use crate::palette::{color_for_fluid, color_for_tile};
+// All color data must come from data.json in each .lrsprite. No hardcoded fallbacks.
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct SpriteMetadata {
@@ -181,7 +181,12 @@ pub fn sprite_for_tile(loader: &mut SpriteLoader, kind: TileKind) -> Option<(cha
     );
     let sd = loader.load_sprite(name, category);
     let ch = first_sprite_char(sd);
-    let color = parse_color_string(&sd.color).unwrap_or_else(|| color_for_tile(kind));
+    let color = parse_color_string(&sd.color).unwrap_or_else(|| {
+        panic!(
+            "Missing or invalid RGB color in data.json for tile sprite '{}::{}' (expected #RRGGBB)",
+            category, name
+        )
+    });
     Some((ch, color))
 }
 
@@ -201,9 +206,33 @@ pub fn sprite_for_fluid(
     );
     let sd = loader.load_sprite(name, category);
     let ch = first_sprite_char(sd);
-    let color = parse_color_string(&sd.color)
-        .unwrap_or_else(|| color_for_fluid(fluid_type));
+    let color = parse_color_string(&sd.color).unwrap_or_else(|| {
+        panic!(
+            "Missing or invalid RGB color in data.json for fluid sprite '{}::{}' (expected #RRGGBB)",
+            category, name
+        )
+    });
     Some((ch, color))
+}
+
+pub fn color_for_entity(loader: &mut SpriteLoader, ch: char) -> Color {
+    // Map entity glyphs to sprite names in assets/sprites/entities/<name>.lrsprite
+    let (category, name) = ("entities",
+        if ch == '@' {
+            "player"
+        } else if ch == 's' || ch == 'S' {
+            "sheep"
+        } else {
+            "entity_generic"
+        }
+    );
+    let sd = loader.load_sprite(name, category);
+    parse_color_string(&sd.color).unwrap_or_else(|| {
+        panic!(
+            "Missing or invalid RGB color in data.json for entity sprite '{}::{}' (expected #RRGGBB)",
+            category, name
+        )
+    })
 }
 
 

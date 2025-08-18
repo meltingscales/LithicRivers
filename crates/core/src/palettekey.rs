@@ -23,4 +23,6 @@ pub enum PaletteKey {
     Lava,
     // Entities
     Player,
+    EntityGeneric,
+    Sheep,
 }

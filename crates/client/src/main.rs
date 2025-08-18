@@ -17,12 +17,10 @@ use std::{
     time::Duration,
 };
 
-use lithicrivers_core::tiles::TileKind;
+// use lithicrivers_core::tiles::TileKind; // Not needed directly here
 use lithicrivers_core::Game;
 mod sprite_loader;
-use crate::sprite_loader::{sprite_for_fluid, sprite_for_tile, SpriteData, SpriteLoader};
-mod palette;
-use crate::palette::{color_for_fluid, color_for_tile};
+use crate::sprite_loader::{sprite_for_fluid, sprite_for_tile, SpriteData, SpriteLoader, color_for_entity};
 
 struct App {
     game: Game,
@@ -245,7 +243,6 @@ fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
 
             // Get tile info for coloring/sprites
             let tile_kind = app.game.res.world.get_tile(world_x, world_y);
-            let ratatui_color = color_for_tile(tile_kind);
 
             // Check for fluids
             let fluid_pos = lithicrivers_core::components::Position {
@@ -256,18 +253,11 @@ fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
             if let Some(fluid) = app.game.res.fluids.get_fluid(fluid_pos) {
                 // Try sprite for fluid
                 let (glyph, color) = sprite_for_fluid(&mut app.sprite_loader, fluid.fluid_type)
-                    .unwrap_or_else(|| ('~', color_for_fluid(fluid.fluid_type)));
+                    .unwrap_or_else(|| panic!("Could not find sprite for fluid type: {:?}", fluid.fluid_type));
                 spans.push(Span::styled(glyph.to_string(), Style::default().fg(color)));
             } else if ch != ' ' {
-                // Entity overlay (player, sheep, etc.)
-                // For now, keep simple fallback colors for entities
-                let entity_color = if ch == '@' {
-                    Color::Magenta
-                } else if ch == 's' || ch == 'S' {
-                    Color::Yellow
-                } else {
-                    Color::White
-                };
+                // Entity overlay (player, sheep, etc.) - colors from entity .lrsprite data.json
+                let entity_color = color_for_entity(&mut app.sprite_loader, ch);
                 spans.push(Span::styled(ch.to_string(), Style::default().fg(entity_color)));
             } else {
                 // Regular tile
