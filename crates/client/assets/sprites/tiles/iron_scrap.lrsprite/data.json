@@ -1,5 +1,5 @@
 {
     "name": "Iron Scrap",
-    "color": "gray",
+    "color": "#808080",
     "description": "Iron scrap that can be mined for metal resources"
 } 

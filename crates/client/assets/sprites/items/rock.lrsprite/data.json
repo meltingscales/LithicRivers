@@ -1,5 +1,5 @@
 {
     "name": "Rock",
-    "color": "gray",
+    "color": "#808080",
     "description": "A basic rock that can be used for building"
 } 

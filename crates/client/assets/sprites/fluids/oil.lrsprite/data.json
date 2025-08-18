@@ -1,6 +1,6 @@
 {
   "name": "oil",
-  "color": "yellow",
+  "color": "#FFFF00",
   "description": "Slick oil",
   "scales": [1, 2, 3]
 } 

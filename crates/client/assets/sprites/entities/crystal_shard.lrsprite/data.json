@@ -1,6 +1,6 @@
 {
     "name": "Crystal Shard",
-    "color": "blue",
+    "color": "#0000FF",
     "description": "A glowing crystal shard that pulses with energy",
     "sprites": [
         "C",
