@@ -128,3 +128,23 @@ toolchain:
 renderdoc:
     @echo "Launching client under RenderDoc. Close app to finish capture."
     renderdoccmd capture -- {{cargoz_env}} run -p lithicrivers-client --release
+
+# --------------------
+# Profiling (Flamegraph)
+# --------------------
+
+# Install tooling required for cargo-flamegraph
+profile-setup:
+    cargo install flamegraph --version 0.6.5 --locked
+    cargo install inferno --locked
+    echo "Make sure 'perf' is installed. You may just want to compile it from source."
+    sudo sysctl kernel.perf_event_paranoid=1
+    sudo sysctl kernel.kptr_restrict=0
+
+# Run the client under cargo-flamegraph. Interact, then quit with 'q'.
+profile-client-flamegraph:
+    # Force frame pointers; enable debug info in release for better symbolization; use stable toolchain
+    RUSTUP_TOOLCHAIN=stable CARGO_PROFILE_RELEASE_DEBUG=true RUSTC_BOOTSTRAP={{bootstrap}} RUSTFLAGS='-C force-frame-pointers=yes {{rustflags_common}}' cargo flamegraph -p lithicrivers-client --bin lithicrivers-client --release
+    @echo "Flamegraph written to flamegraph.svg (and perf.data)."
+    perf script -i perf.data > profile.linux-perf.txt
+    @echo "You can upload profile.linux-perf.txt to https://speedscope.app/"
