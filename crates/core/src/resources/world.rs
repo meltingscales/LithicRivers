@@ -136,6 +136,42 @@ impl World {
         }
     }
 
+    // Cached variant: generate-if-absent and store in self.chunks, then return tile.
+    pub fn get_tile_cached(&mut self, x: i32, y: i32) -> TileKind {
+        let cx = Self::div_floor(x, CHUNK_SIZE) as i64;
+        let cy = Self::div_floor(y, CHUNK_SIZE) as i64;
+        let tx = Self::mod_floor(x, CHUNK_SIZE);
+        let ty = Self::mod_floor(y, CHUNK_SIZE);
+        self.ensure_chunk(cx, cy);
+        self.chunks
+            .get(&(cx, cy))
+            .expect("chunk must exist after ensure_chunk")
+            .get(tx, ty)
+    }
+
+    // Ensure a chunk exists in cache by generating and inserting if absent.
+    pub fn ensure_chunk(&mut self, cx: i64, cy: i64) {
+        if self.chunks.contains_key(&(cx, cy)) {
+            return;
+        }
+        let mut chunk = Chunk::new_filled(TileKind::Dirt);
+        self.generate_chunk(cx, cy, &mut chunk);
+        self.chunks.insert((cx, cy), chunk);
+    }
+
+    // Prefetch all chunks overlapping the given rect [left..=right] x [top..=bottom]
+    pub fn prefetch_rect(&mut self, left: i32, top: i32, right: i32, bottom: i32) {
+        let min_cx = Self::div_floor(left, CHUNK_SIZE) as i64;
+        let max_cx = Self::div_floor(right, CHUNK_SIZE) as i64;
+        let min_cy = Self::div_floor(top, CHUNK_SIZE) as i64;
+        let max_cy = Self::div_floor(bottom, CHUNK_SIZE) as i64;
+        for cy in min_cy..=max_cy {
+            for cx in min_cx..=max_cx {
+                self.ensure_chunk(cx, cy);
+            }
+        }
+    }
+
     fn apply_structure(chunk: &mut Chunk, structure: &StructureDefinition, ox: i32, oy: i32) {
         for (z, layer) in structure.layers.iter().enumerate() {
             for (y, line) in layer.lines().enumerate() {

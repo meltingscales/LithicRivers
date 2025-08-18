@@ -208,14 +208,21 @@ fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
     let view_h = view_h;
     let view_w = view_w;
 
+    // Compute world-space bounds for current viewport and prefetch chunks
+    let left = view.player_pos.x - (target_cols as i32 / 2);
+    let top = view.player_pos.y - (target_rows as i32 / 2);
+    let right = left + target_cols as i32 - 1;
+    let bottom = top + target_rows as i32 - 1;
+    app.game.res.world.prefetch_rect(left, top, right, bottom);
+
     for row in 0..target_rows {
         let mut spans = Vec::with_capacity(target_cols);
         for col in 0..target_cols {
-            let world_x = view.player_pos.x - (target_cols as i32 / 2) + col as i32;
-            let world_y = view.player_pos.y - (target_rows as i32 / 2) + row as i32;
+            let world_x = left + col as i32;
+            let world_y = top + row as i32;
 
             // Base tile color/glyph
-            let tile_kind = app.game.res.world.get_tile(world_x, world_y);
+            let tile_kind = app.game.res.world.get_tile_cached(world_x, world_y);
 
             // Overlay from fluids/entities when within original view bounds
             let rel_x = (world_x - (view.player_pos.x - (view_w as i32 / 2))) as isize;
