@@ -159,6 +159,18 @@ impl World {
         self.chunks.insert((cx, cy), chunk);
     }
 
+    /// Mutate a tile at world coordinates, generating and caching the chunk if needed.
+    pub fn set_tile_cached(&mut self, x: i32, y: i32, t: TileKind) {
+        let cx = Self::div_floor(x, CHUNK_SIZE) as i64;
+        let cy = Self::div_floor(y, CHUNK_SIZE) as i64;
+        let tx = Self::mod_floor(x, CHUNK_SIZE);
+        let ty = Self::mod_floor(y, CHUNK_SIZE);
+        self.ensure_chunk(cx, cy);
+        if let Some(ch) = self.chunks.get_mut(&(cx, cy)) {
+            ch.set(tx, ty, t);
+        }
+    }
+
     // Prefetch all chunks overlapping the given rect [left..=right] x [top..=bottom]
     pub fn prefetch_rect(&mut self, left: i32, top: i32, right: i32, bottom: i32) {
         let min_cx = Self::div_floor(left, CHUNK_SIZE) as i64;

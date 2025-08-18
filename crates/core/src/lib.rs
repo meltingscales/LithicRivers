@@ -32,6 +32,7 @@ impl Game {
             Body::default(),
             Glyph('@'),
             BlocksMovement,
+            Inventory::default(),
         ));
         res.player_entity = Some(player);
         // Spawn debug fluid pools around player
@@ -70,7 +71,10 @@ impl Game {
         // For now, just increment tick and maybe move the player slowly.
         let inc = self.res.pending_tick_increase.take().unwrap_or(1);
         self.res.gametick = self.res.gametick.saturating_add(inc);
+        // Mining before movement so mining happens on current tile
+        mining_system(&mut self.world, &mut self.res);
         move_player_system(&mut self.world, &mut self.res);
+        pickup_system(&mut self.world, &mut self.res);
         stumbling_sheep_system(&mut self.world, &mut self.res);
         // Process fluids
         self.res
@@ -80,5 +84,22 @@ impl Game {
 
     pub fn build_view(&self) -> RenderView {
         build_render_view(&self.world, &self.res)
+    }
+
+    pub fn queue_mine(&mut self) {
+        self.res.mining_intent = true;
+        // Set an action cost similar to moving; could use Body modifiers later
+        let mult: f32 = if let Some(e) = self.res.player_entity {
+            if let Ok(body) = self.world.get::<&Body>(e) {
+                body.walk_speed_modifier()
+            } else {
+                1.0
+            }
+        } else {
+            1.0
+        };
+        let base: f32 = 300.0; // slightly slower than a normal move
+        let cost = (base / mult.max(0.01)).round().max(1.0) as u64;
+        self.res.pending_tick_increase = Some(cost);
     }
 }

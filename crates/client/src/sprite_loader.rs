@@ -20,6 +20,7 @@ pub struct SpriteData {
     pub color: String,
     pub description: String,
     pub sprites: Vec<String>, // Each entry is a sprite at a different scale
+    pub item_art: Option<String>, // Optional 12x8 (or similar) ASCII art for items
 }
 
 pub struct SpriteLoader {
@@ -50,6 +51,7 @@ impl SpriteLoader {
             .join(format!("{}.lrsprite", sprite_name));
         let data_file = sprite_path.join("data.json");
         let sprites_file = sprite_path.join("sprites.txt");
+        let item_art_file = sprite_path.join("item_art.txt");
         // Check for missing files and throw a clear error
         if !data_file.exists() {
             panic!(
@@ -92,6 +94,9 @@ impl SpriteLoader {
             color: metadata.color,
             description: metadata.description,
             sprites,
+            item_art: if item_art_file.exists() {
+                Some(fs::read_to_string(&item_art_file).expect("Failed to read item_art.txt"))
+            } else { None },
         };
         self.sprite_cache.insert(cache_key.clone(), sprite_data);
         self.sprite_cache.get(&cache_key).unwrap()

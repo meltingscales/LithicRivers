@@ -50,6 +50,11 @@ impl App {
             KeyCode::Char('q') => {
                 self.should_quit = true;
             }
+            // Mining
+            KeyCode::Char('m') => {
+                self.game.queue_mine();
+                self.game.tick();
+            }
             // Movement using numpad keys (cardinal + diagonal)
             KeyCode::Char('8') => {
                 self.game.queue_player_move(0, -1);
@@ -179,7 +184,7 @@ fn ui(f: &mut Frame, app: &mut App) {
     render_game_view(f, app, chunks[1]);
 
     // Status/Controls
-    let controls = Paragraph::new("Controls: Arrow keys or numpad (1-9) to move, 'q' to quit")
+    let controls = Paragraph::new("Controls: Move with arrows or numpad (1-9). Mine with 'm'. Quit with 'q'.")
         .style(Style::default().fg(Color::Yellow))
         .alignment(Alignment::Center)
         .block(

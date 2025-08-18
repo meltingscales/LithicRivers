@@ -17,6 +17,8 @@ pub struct Resources {
     pub last_blocked_tile: Option<(i32, i32)>,
     // If set, the next tick will advance by this many ticks (e.g., move/action cost)
     pub pending_tick_increase: Option<u64>,
+    // Mining intent: when set, player will mine the current tile on next tick
+    pub mining_intent: bool,
 }
 
 impl Resources {
@@ -32,6 +34,7 @@ impl Resources {
             player_move_intent: None,
             last_blocked_tile: None,
             pending_tick_increase: None,
+            mining_intent: false,
         }
     }
 }

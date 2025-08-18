@@ -1,4 +1,4 @@
-use crate::components::{BlocksMovement, Position, Sheep};
+use crate::components::{BlocksMovement, DroppedItem, Inventory, ItemKind, Player, Position, Sheep};
 use crate::resources::Resources;
 use hecs::World;
 use tracing::info;
@@ -38,6 +38,63 @@ pub fn move_player_system(world: &mut World, res: &mut Resources) {
                 }
             }
         }
+    }
+}
+
+/// Process mining intent: if the player requested mining, act on current tile.
+pub fn mining_system(world: &mut World, res: &mut Resources) {
+    if !res.mining_intent {
+        return;
+    }
+    res.mining_intent = false;
+    let Some(player_e) = res.player_entity else { return };
+    let Ok(pos) = world.get::<&Position>(player_e) else { return };
+    let (x, y, _z) = (pos.x, pos.y, pos.z);
+    // End immutable borrow before mutating the world
+    drop(pos);
+    let t = res.world.get_tile_cached(x, y);
+    use crate::tiles::TileKind;
+    match t {
+        TileKind::Tree => {
+            // Chop tree: convert to Dirt and drop Wood
+            res.world.set_tile_cached(x, y, TileKind::Dirt);
+            // Spawn a DroppedItem entity at player's tile
+            let _ = world.spawn((
+                Position { x, y, z: 0 },
+                DroppedItem { kind: ItemKind::Wood, qty: 1 },
+            ));
+        }
+        _ => {
+            // No-op for other tiles for now
+        }
+    }
+}
+
+/// When the player is on the same tile as any DroppedItem, pick it up into Inventory.
+pub fn pickup_system(world: &mut World, res: &mut Resources) {
+    let Some(player_e) = res.player_entity else { return };
+    let Ok(ppos) = world.get::<&Position>(player_e) else { return };
+    let (px, py, pz) = (ppos.x, ppos.y, ppos.z);
+    // collect targets first to avoid borrowing issues
+    let mut pickups: Vec<(hecs::Entity, DroppedItem)> = Vec::new();
+    for (e, (ipos, di)) in world.query::<(&Position, &DroppedItem)>().iter() {
+        if ipos.x == px && ipos.y == py && ipos.z == pz {
+            pickups.push((e, *di));
+        }
+    }
+    // End immutable borrow before mutating inventory/despawning
+    drop(ppos);
+    if pickups.is_empty() {
+        return;
+    }
+    if let Ok(mut inv) = world.get::<&mut Inventory>(player_e) {
+        for (_e, di) in &pickups {
+            inv.add(di.kind, di.qty);
+        }
+    }
+    // Now safe to mutate world again
+    for (e, _di) in pickups {
+        let _ = world.despawn(e);
     }
 }
 

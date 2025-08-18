@@ -1,6 +1,6 @@
 # LithicRivers Rust Migration Plan
 
-This document captures high-level goals and a recommended rearchitecture for migrating from the Python codebase (`python-old/`) to Rust (`rust-migration/`).
+This document captures high-level goals and the rearchitecture for migrating from the Python codebase (`python-old/`) to Rust (workspace under `crates/`).
 
 ## High-level goals
 - Preserve core gameplay concepts while improving performance, determinism, and maintainability.
@@ -11,9 +11,9 @@ This document captures high-level goals and a recommended rearchitecture for mig
 
 ## Target architecture
 - Workspace layout
-  - `crates/core`: ECS, components, resources, systems, serialization, RNG helpers.
-  - `crates/client`: ratatui TUI app for terminal rendering/input; provides ASCII-style terminal view; consumes read-only state from `core`.
-  - `crates/app` (optional): if needed, additional binaries or tooling (CLI, headless sim, exporters).
+  - `crates/core`: ECS, components, resources, systems, RNG helpers, tiles, view model, structure loading.
+  - `crates/client`: ratatui TUI for terminal rendering/input; consumes read-only state from `core` and loads sprites from assets.
+  - `crates/app` (optional): additional binaries or tooling (CLI, headless sim, exporters).
 
 - ECS (hecs)
   - Entities: IDs only.
@@ -22,11 +22,10 @@ This document captures high-level goals and a recommended rearchitecture for mig
   - Systems: movement, mining, inventory/pickup, AI/NPC, fluids, logging.
   - Schedule: ordered systems per fixed-tick with custom scheduling; client rendering reads state after sim.
 
-- Rendering (ratatui)
-  - ratatui terminal client with ASCII-style interface:
-    - Map view: ASCII-style map using terminal characters with colors; viewport follows player.
-    - UI panels: Inventory, status, message log, and other game panels using ratatui widgets.
-  - Rendering is a strictly read-only pass that consumes a ViewModel or queries immutable state from `core`.
+- Rendering (ratatui + sprite assets)
+  - TUI client renders colored ASCII using sprite metadata in `crates/client/assets/sprites/**/<name>.lrsprite`.
+  - `crates/client/src/sprite_loader.rs` loads `data.json` + `sprites.txt` per sprite to choose a glyph and color.
+  - `crates/core/src/view.rs` builds a read-only window of entity glyphs around the player; client overlays tiles/fluids/entities and prefetches chunks.
 
 - Determinism
   - `rand_chacha::ChaCha20Rng` as canonical RNG.
@@ -35,33 +34,36 @@ This document captures high-level goals and a recommended rearchitecture for mig
   - Single-threaded sim by default; parallelize worldgen or chunk-partitioned work carefully.
 
 - Serialization
-  - `serde` + `rmp-serde` for compact saves; `serde_json` for debug.
-  - JSON saves optional for readability; MessagePack for production.
+  - Rust: Not implemented yet. Target is `serde` with `rmp-serde` (MessagePack) for production and `serde_json` for debug.
+  - Python (legacy): uses `msgspec` with MessagePack containers (`SavedGameData`, `SaveMetadata`).
 
 ## Data-model mapping from Python
-- Keep: chunked world grid; integer fluids with settled flags; message log; event-like outcomes (as queued resources); seeded worldgen.
-- Change: replace class hierarchies with components; move behavior into systems; replace ad-hoc listeners with ECS-friendly queues/schedule ordering.
+- Keep: chunked world grid; integer fluids with settled flags; seeded worldgen; entity glyphs; deterministic tick loop.
+- Change: replace class hierarchies with ECS components/systems; event listeners become ordered systems/queues.
 
 ## Migration phases (incremental)
-1. Skeleton & minimal loop (DONE)
-   - Workspace, crates, deps; minimal ECS with a `Player` that moves deterministically; ratatui "hello world".
-2. Core data shapes
-   - Tiles/Items/Entities as enums/IDs; basic components/resources; chunked world grid resource.
-3. Save/Load
-   - serde structs and versioning; JSON debug mode; MessagePack production.
-4. Interaction & mining
-   - Input → intents resource → movement/mining systems; inventory and drops.
-5. Fluids
-   - Port integer fluid model; settled optimization; frontier processing per chunk.
-6. NPC/AI & messaging
-   - Tickable NPC components; message log system.
-7. Worldgen
-   - Position-based seeding; parallel generation with `std::thread`; deterministic outputs.
-8. Performance passes
-   - Profile hotspots; consider `parking_lot`, SIMD, chunk partitioning with deterministic reductions.
+1. Skeleton & minimal loop — DONE
+   - `crates/core` with `Game` and ECS (`hecs`), deterministic RNG; `crates/client` ratatui app with input handling.
+2. Core data shapes — PARTIAL
+   - Components: `Position`, `Player`, `Glyph`, `BlocksMovement`, `Sheep`; model `Body` present.
+   - Resources: `Resources` with `World`, RNG, intents, fluids, tick; view builder exists.
+   - Tiles: `TileKind` enum implemented; palette keys wired to sprites.
+3. Save/Load — TODO
+   - Implement `serde` data structs and versioning in `core`; add client commands to save/load.
+4. Interaction & mining — PARTIAL
+   - Input → `player_move_intent` → `move_player_system()` implemented. Mining/inventory not yet.
+5. Fluids — DONE (initial)
+   - Integer fluids with `settled` optimization, thresholds/viscosity, directional spread, per-tick processing.
+6. NPC/AI & messaging — PARTIAL
+   - Simple `stumbling_sheep_system()` provides deterministic wandering. Message log not yet.
+7. Worldgen — PARTIAL
+   - Infinite chunked world; deterministic per-chunk sprinkle; loads example structures in chunk (0,0) from `crates/client/assets/structures/*`.
+8. Performance passes — TODO
+   - Add profiling, consider chunk-frontier fluid processing, data layout tweaks.
 
 ## Next steps
-- Build and run the scaffold: `cd rust-migration && cargo run -p lithicrivers` (press `q` to quit).
-- Define the `World` resource (chunks/tiles) and a basic `Renderable` component; render a simple ASCII map in the terminal.
-- Introduce a `Config` resource and CLI flags mirroring Python settings.
-- Add serde save/load for the minimal state (player position, tick).
+- Build and run the client: `just build` then `just client` (press `q` to quit).
+- Implement Rust save/load in `crates/core` using `serde` + `rmp-serde`; add keybinds in client for save/load.
+- Add mining: tile interaction system, inventory/dropped items; sprite assets for items.
+- Flesh out worldgen: position-based seeding for structures/dungeons independent of chunk size; move demo placements into seeded generators.
+- Add message log resource and UI panel; surface blocked-move feedback from `Resources.last_blocked_tile`.
