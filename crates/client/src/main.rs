@@ -1,5 +1,5 @@
 use crossterm::{
-    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEventKind},
+    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEventKind, MouseEvent, MouseEventKind},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
@@ -25,6 +25,8 @@ struct App {
     game: Game,
     sprite_loader: SpriteLoader,
     should_quit: bool,
+    // UI state: remember bottom menu rect for click handling
+    bottom_menu_rect: Option<Rect>,
 }
 
 impl App {
@@ -38,6 +40,7 @@ impl App {
             game,
             sprite_loader,
             should_quit: false,
+            bottom_menu_rect: None,
         }
     }
 
@@ -92,24 +95,38 @@ impl App {
                 self.game.queue_player_move(0, 0);
                 self.game.tick();
             }
-            // Arrow keys as alternative
-            KeyCode::Up => {
-                self.game.queue_player_move(0, -1);
-                self.game.tick();
-            }
-            KeyCode::Down => {
-                self.game.queue_player_move(0, 1);
-                self.game.tick();
-            }
-            KeyCode::Left => {
-                self.game.queue_player_move(-1, 0);
-                self.game.tick();
-            }
-            KeyCode::Right => {
-                self.game.queue_player_move(1, 0);
-                self.game.tick();
-            }
             _ => {}
+        }
+        Ok(())
+    }
+
+    fn handle_mouse(&mut self, me: MouseEvent) -> Result<(), Box<dyn Error>> {
+        if let MouseEventKind::Down(_btn) = me.kind {
+            if let Some(rect) = self.bottom_menu_rect {
+                // Convert to u16 to i32 safely
+                let mx = me.column as i32;
+                let my = me.row as i32;
+                let rx = rect.x as i32;
+                let ry = rect.y as i32;
+                let rw = rect.width as i32;
+                let rh = rect.height as i32;
+                if mx >= rx && mx < rx + rw && my >= ry && my < ry + rh {
+                    // Map to three simple menu regions: [Mine] [Inventory] [Quit]
+                    let third = rw / 3;
+                    let relx = mx - rx;
+                    if relx < third {
+                        // Mine
+                        self.game.queue_mine();
+                        self.game.tick();
+                    } else if relx < third * 2 {
+                        // Inventory (not implemented)
+                        self.game.res.log("Inventory panel (WIP)");
+                    } else {
+                        // Quit
+                        self.should_quit = true;
+                    }
+                }
+            }
         }
         Ok(())
     }
@@ -148,10 +165,16 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<(), 
         terminal.draw(|f| ui(f, app))?;
 
         if crossterm::event::poll(Duration::from_millis(50))? {
-            if let Event::Key(key) = event::read()? {
-                if key.kind == KeyEventKind::Press {
-                    app.handle_input(key.code)?;
+            match event::read()? {
+                Event::Key(key) => {
+                    if key.kind == KeyEventKind::Press {
+                        app.handle_input(key.code)?;
+                    }
                 }
+                Event::Mouse(me) => {
+                    app.handle_mouse(me)?;
+                }
+                _ => {}
             }
         }
 
@@ -164,13 +187,14 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<(), 
 }
 
 fn ui(f: &mut Frame, app: &mut App) {
-    let chunks = Layout::default()
+    let root_chunks = Layout::default()
         .direction(Direction::Vertical)
         .margin(0)
         .constraints([
             Constraint::Length(1),        // Title line
-            Constraint::Min(0),           // World viewport
-            Constraint::Length(3),        // Bottom bar with borders
+            Constraint::Min(0),           // Main area (map + inventory)
+            Constraint::Length(5),        // Message log
+            Constraint::Length(1),        // Bottom menu bar
         ])
         .split(f.size());
 
@@ -178,22 +202,28 @@ fn ui(f: &mut Frame, app: &mut App) {
     let title = Paragraph::new("LithicRivers (Ratatui Client)")
         .style(Style::default().fg(Color::Cyan))
         .alignment(Alignment::Center);
-    f.render_widget(title, chunks[0]);
+    f.render_widget(title, root_chunks[0]);
 
-    // Game view
-    render_game_view(f, app, chunks[1]);
+    // Main area split into map (left) and inventory (right)
+    let main_chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Min(20),           // map area
+            Constraint::Length(24),        // inventory panel
+        ])
+        .split(root_chunks[1]);
 
-    // Status/Controls
-    let controls = Paragraph::new("Controls: Move with arrows or numpad (1-9). Mine with 'm'. Quit with 'q'.")
-        .style(Style::default().fg(Color::Yellow))
-        .alignment(Alignment::Center)
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .title("Status & Controls")
-                .style(Style::default().fg(Color::White)),
-        );
-    f.render_widget(controls, chunks[2]);
+    // Game view (map)
+    render_game_view(f, app, main_chunks[0]);
+
+    // Inventory panel (blank for now)
+    render_inventory_panel(f, app, main_chunks[1]);
+
+    // Message log
+    render_message_log(f, app, root_chunks[2]);
+
+    // Bottom menu bar
+    render_bottom_menu(f, app, root_chunks[3]);
 }
 
 fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
@@ -267,5 +297,54 @@ fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
         .wrap(Wrap { trim: false });
 
     f.render_widget(paragraph, area);
+}
+
+fn render_inventory_panel(f: &mut Frame, _app: &mut App, area: Rect) {
+    let content = Paragraph::new("(Inventory WIP)")
+        .style(Style::default().fg(Color::White))
+        .alignment(Alignment::Left)
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title("Inventory")
+                .style(Style::default().fg(Color::White)),
+        );
+    f.render_widget(content, area);
+}
+
+fn render_message_log(f: &mut Frame, app: &mut App, area: Rect) {
+    let mut lines: Vec<Line> = Vec::new();
+    let start = if app.game.res.messages.len() > area.height as usize {
+        app.game.res.messages.len() - area.height as usize
+    } else { 0 };
+    for msg in app.game.res.messages.iter().skip(start) {
+        lines.push(Line::from(Span::raw(msg.clone())));
+    }
+    let paragraph = Paragraph::new(lines)
+        .style(Style::default().fg(Color::Gray))
+        .alignment(Alignment::Left)
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title("Messages")
+                .style(Style::default().fg(Color::White)),
+        );
+    f.render_widget(paragraph, area);
+}
+
+fn render_bottom_menu(f: &mut Frame, app: &mut App, area: Rect) {
+    // Remember for click handling
+    app.bottom_menu_rect = Some(area);
+    let text = Line::from(vec![
+        Span::styled(" [Mine] ", Style::default().fg(Color::Green)),
+        Span::raw(" "),
+        Span::styled(" [Inventory] ", Style::default().fg(Color::Yellow)),
+        Span::raw(" "),
+        Span::styled(" [Quit] ", Style::default().fg(Color::Red)),
+    ]);
+    let para = Paragraph::new(text)
+        .alignment(Alignment::Center)
+        .block(Block::default().borders(Borders::ALL).title("Menu"));
+    f.render_widget(para, area);
 }
 

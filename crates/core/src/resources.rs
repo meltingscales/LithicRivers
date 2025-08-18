@@ -19,6 +19,8 @@ pub struct Resources {
     pub pending_tick_increase: Option<u64>,
     // Mining intent: when set, player will mine the current tile on next tick
     pub mining_intent: bool,
+    // Simple message log for UI
+    pub messages: Vec<String>,
 }
 
 impl Resources {
@@ -35,6 +37,16 @@ impl Resources {
             last_blocked_tile: None,
             pending_tick_increase: None,
             mining_intent: false,
+            messages: Vec::new(),
+        }
+    }
+
+    pub fn log<S: Into<String>>(&mut self, msg: S) {
+        let m = msg.into();
+        self.messages.push(format!("[{}] {}", self.gametick, m));
+        if self.messages.len() > 200 {
+            let overflow = self.messages.len() - 200;
+            self.messages.drain(0..overflow);
         }
     }
 }
