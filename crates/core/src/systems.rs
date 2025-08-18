@@ -63,6 +63,7 @@ pub fn mining_system(world: &mut World, res: &mut Resources) {
                 Position { x, y, z: 0 },
                 DroppedItem { kind: ItemKind::Wood, qty: 1 },
             ));
+            res.log("You chop the tree. (+1 Wood)");
         }
         _ => {
             // No-op for other tiles for now
@@ -88,8 +89,13 @@ pub fn pickup_system(world: &mut World, res: &mut Resources) {
         return;
     }
     if let Ok(mut inv) = world.get::<&mut Inventory>(player_e) {
+        let mut total = 0u32;
         for (_e, di) in &pickups {
             inv.add(di.kind, di.qty);
+            total += di.qty;
+        }
+        if total > 0 {
+            res.log(format!("Picked up {} Wood", total));
         }
     }
     // Now safe to mutate world again
