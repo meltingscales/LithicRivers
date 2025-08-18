@@ -1,11 +1,13 @@
+use std::collections::HashMap;
+use std::path::PathBuf;
+
+use noise::{NoiseFn, Perlin, Seedable};
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha20Rng;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 use crate::structure::StructureDefinition;
 use crate::tiles::TileKind;
-use std::path::PathBuf;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Chunk {
@@ -68,25 +70,90 @@ impl World {
             }
         }
 
-        // Deterministic generation based on world seed and chunk coords
+        // Create Perlin noise generators with different seeds for different features
+        let perlin = Perlin::new(self.seed as u32);
+        let biome_noise = Perlin::new(self.seed as u32 % 0x10000);
+        let feature_noise = Perlin::new(self.seed as u32 % 0x20000);
+
+        // Generate terrain using Perlin noise
+        for y in 0..CHUNK_SIZE {
+            for x in 0..CHUNK_SIZE {
+                // Calculate world coordinates
+                let wx = (cx as f64 * CHUNK_SIZE as f64) + x as f64;
+                let wy = (cy as f64 * CHUNK_SIZE as f64) + y as f64;
+                
+                // Generate base terrain height (0.0 to 1.0)
+                let scale = 0.01; // Adjust this to change the scale of the terrain features
+                let height = perlin.get([wx * scale, wy * scale, 0.0]);
+                let height = (height + 1.0) * 0.5; // Convert from [-1, 1] to [0, 1]
+                
+                // Generate biome value
+                let biome_scale = 0.005; // Larger scale for biomes (bigger areas)
+                let biome_value = biome_noise.get([wx * biome_scale, wy * biome_scale, 0.0]);
+                
+                // Generate feature value
+                let feature_scale = 0.05; // Smaller scale for features
+                let feature_value = feature_noise.get([wx * feature_scale, wy * feature_scale, 0.0]);
+                
+                // Determine base tile type based on height
+                let base_tile = if height < 0.3 {
+                    // Water or beach
+                    if height < 0.28 {
+                        TileKind::Air // Water (handled by fluid system)
+                    } else {
+                        TileKind::Dirt // Beach
+                    }
+                } else if height < 0.4 {
+                    // Grassland or forest
+                    if biome_value > 0.3 {
+                        TileKind::Grass
+                    } else {
+                        TileKind::Dirt
+                    }
+                } else if height < 0.7 {
+                    // Hills with some rocks
+                    if feature_value > 0.5 {
+                        TileKind::Rock
+                    } else {
+                        TileKind::Grass
+                    }
+                } else {
+                    // Mountains
+                    TileKind::Rock
+                };
+                
+                // Add trees and other features
+                let mut tile = base_tile;
+                if base_tile == TileKind::Grass || base_tile == TileKind::Dirt {
+                    // Only place trees on grass or dirt
+                    if biome_value > 0.0 && feature_value > 0.7 && height > 0.35 && height < 0.8 {
+                        tile = TileKind::Tree;
+                    }
+                    // Add some rocks on grass
+                    else if feature_value < -0.7 && height > 0.4 && height < 0.9 {
+                        tile = TileKind::Rock;
+                    }
+                }
+                
+                chunk.set(x, y, tile);
+            }
+        }
+        
+        // Add some rare resources
         let mut rng = ChaCha20Rng::seed_from_u64(self.mix_coords(cx, cy));
-        // Simple sprinkle of rocks with ~5% density
-        let scatter = ((CHUNK_SIZE as usize) * (CHUNK_SIZE as usize)) / 20;
-        for _ in 0..scatter {
-            let tx = rng.gen_range(0..CHUNK_SIZE as i32);
-            let ty = rng.gen_range(0..CHUNK_SIZE as i32);
-            chunk.set(tx, ty, TileKind::Rock);
+        let rare_resources = [
+            (TileKind::IronScrap, 0.95), // 5% chance per chunk
+            (TileKind::ScrapElectronics, 0.98), // 2% chance per chunk
+            (TileKind::PlasteelScrap, 0.99), // 1% chance per chunk
+        ];
+        
+        for (resource, threshold) in rare_resources.iter() {
+            if rng.gen::<f64>() > *threshold {
+                let x = rng.gen_range(0..CHUNK_SIZE as i32);
+                let y = rng.gen_range(0..CHUNK_SIZE as i32);
+                chunk.set(x, y, *resource);
+            }
         }
-
-        //add a few trees
-        let scatter = ((CHUNK_SIZE as usize) * (CHUNK_SIZE as usize)) / 20;
-        for _ in 0..scatter {
-            let tx = rng.gen_range(0..CHUNK_SIZE as i32);
-            let ty = rng.gen_range(0..CHUNK_SIZE as i32);
-            chunk.set(tx, ty, TileKind::Tree);
-        }
-
-        // Optional: add pseudo-caves or features later
     }
 
     #[inline]

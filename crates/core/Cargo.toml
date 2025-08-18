@@ -11,6 +11,7 @@ serde_json = { workspace = true }
 indexmap = { workspace = true }
 rand = { workspace = true }
 rand_chacha = { workspace = true }
+noise = "0.8"
 thiserror = { workspace = true }
 anyhow = { workspace = true }
 tracing = { workspace = true }
