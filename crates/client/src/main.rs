@@ -220,10 +220,10 @@ fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
     // Create the game display text
     let mut lines = Vec::new();
 
-    // Render the map; height = full area, width = min(area width, provided view width)
+    // Render the map to exactly the panel's area
     let view_h = view.map_lines.len();
     let view_w = if view_h > 0 { view.map_lines[0].len() } else { 0 };
-    let target_cols = std::cmp::min(area.width as usize, view_w);
+    let target_cols = area.width as usize;
     let target_rows = area.height as usize;
 
     // Dimensions of the provided view window
@@ -276,19 +276,6 @@ fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
         .block(Block::default())
         .wrap(Wrap { trim: false });
 
-    // Center horizontally if we're narrower than available area
-    let render_width = target_cols as u16;
-    let render_area = if render_width < area.width {
-        Rect {
-            x: area.x + (area.width - render_width) / 2,
-            y: area.y,
-            width: render_width,
-            height: area.height,
-        }
-    } else {
-        area
-    };
-
-    f.render_widget(paragraph, render_area);
+    f.render_widget(paragraph, area);
 }
 
