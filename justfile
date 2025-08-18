@@ -30,9 +30,11 @@ bootstrap := "1"
 
 # Cargo helpers
 cargo_base := run_cmd + " cargo"
-cargo_env := "RUSTFLAGS='" + rustflags_common + "' RUSTC_BOOTSTRAP=" + bootstrap + " " + cargo_base
+# Ensure rustdoc also receives -Z unstable-options so that Cargo's --check-cfg flags work in doctests
+rustdocflags_common := "-Z unstable-options"
+cargo_env := "RUSTFLAGS='" + rustflags_common + "' RUSTDOCFLAGS='" + rustdocflags_common + "' RUSTC_BOOTSTRAP=" + bootstrap + " " + cargo_base
 cargoz := cargo_base + " " + lockfile_flag
-cargoz_env := "RUSTFLAGS='" + rustflags_common + "' RUSTC_BOOTSTRAP=" + bootstrap + " " + cargo_base + " " + lockfile_flag
+cargoz_env := "RUSTFLAGS='" + rustflags_common + "' RUSTDOCFLAGS='" + rustdocflags_common + "' RUSTC_BOOTSTRAP=" + bootstrap + " " + cargo_base + " " + lockfile_flag
 
 build_flags := "-j " + cpu_count
 

@@ -67,12 +67,12 @@ impl App {
             KeyCode::Enter | KeyCode::Char(' ') => {
                 self.activate_menu();
             }
-            // Cycle menu with left/right (4 tabs)
+            // Cycle menu with left/right (5 tabs)
             KeyCode::Left => {
-                if self.menu_index == 0 { self.menu_index = 3; } else { self.menu_index -= 1; }
+                if self.menu_index == 0 { self.menu_index = 4; } else { self.menu_index -= 1; }
             }
             KeyCode::Right => {
-                self.menu_index = (self.menu_index + 1) % 4;
+                self.menu_index = (self.menu_index + 1) % 5;
             }
             // Mining
             KeyCode::Char('m') => {
@@ -134,6 +134,19 @@ impl App {
             KeyCode::Char('0') => {
                 self.scale = Scale::Small;
             }
+            // Save/Load (debug): 'S' to save JSON, 'L' to load JSON
+            KeyCode::Char('S') => {
+                match self.game.save_json("save.json") {
+                    Ok(_) => self.game.res.log("Saved to save.json"),
+                    Err(e) => self.game.res.log(format!("Save failed: {}", e)),
+                }
+            }
+            KeyCode::Char('L') => {
+                match self.game.load_json("save.json") {
+                    Ok(_) => self.game.res.log("Loaded from save.json"),
+                    Err(e) => self.game.res.log(format!("Load failed: {}", e)),
+                }
+            }
             _ => {}
         }
         Ok(())
@@ -150,10 +163,10 @@ impl App {
                 let rw = rect.width as i32;
                 let rh = rect.height as i32;
                 if mx >= rx && mx < rx + rw && my >= ry && my < ry + rh {
-                    // Map click to tab index (4 tabs)
-                    let seg = rw / 4;
+                    // Map click to tab index (5 tabs)
+                    let seg = rw / 5;
                     let relx = mx - rx;
-                    self.menu_index = if relx < seg { 0 } else if relx < seg * 2 { 1 } else if relx < seg * 3 { 2 } else { 3 };
+                    self.menu_index = if relx < seg { 0 } else if relx < seg * 2 { 1 } else if relx < seg * 3 { 2 } else if relx < seg * 4 { 3 } else { 4 };
                     self.activate_menu();
                 }
             }
@@ -171,6 +184,9 @@ impl App {
             }
             2 => { // Inventory (placeholder)
                 self.game.res.log("Inventory panel (WIP)");
+            }
+            3 => { // Menu
+                self.game.res.log("Menu panel active (press S to Save, L to Load)");
             }
             _ => { // Quit
                 self.should_quit = true;
@@ -269,6 +285,9 @@ fn ui(f: &mut Frame, app: &mut App) {
     } else if app.menu_index == 2 {
         // Inventory: fullscreen inventory panel
         render_inventory_panel(f, app, root_chunks[1]);
+    } else if app.menu_index == 3 {
+        // Menu: save/load panel
+        render_menu_panel(f, app, root_chunks[1]);
     } else {
         // Quit selected: do nothing special here; run loop will exit
     }
@@ -412,6 +431,7 @@ fn render_bottom_menu(f: &mut Frame, app: &mut App, area: Rect) {
         Span::styled(" World ", Style::default().fg(Color::Green)),
         Span::styled(" Body ", Style::default().fg(Color::LightBlue)),
         Span::styled(" Inventory ", Style::default().fg(Color::Yellow)),
+        Span::styled(" Menu ", Style::default().fg(Color::Magenta)),
         Span::styled(" Quit ", Style::default().fg(Color::Red)),
     ];
     let tabs = Tabs::new(titles)
@@ -420,6 +440,28 @@ fn render_bottom_menu(f: &mut Frame, app: &mut App, area: Rect) {
         .style(Style::default().fg(Color::White))
         .highlight_style(Style::default().fg(Color::Cyan));
     f.render_widget(tabs, area);
+}
+
+fn render_menu_panel(f: &mut Frame, app: &mut App, area: Rect) {
+    let mut lines: Vec<Line> = Vec::new();
+    lines.push(Line::from(Span::styled("Game Menu", Style::default().fg(Color::Cyan))));
+    lines.push(Line::from(""));
+    lines.push(Line::from(Span::raw("S - Save to save.json")));
+    lines.push(Line::from(Span::raw("L - Load from save.json")));
+    lines.push(Line::from(Span::raw("Q - Quit")));
+    lines.push(Line::from(""));
+    lines.push(Line::from(Span::raw(format!("Seed: {}", app.game.res.seed))));
+    lines.push(Line::from(Span::raw(format!("Tick: {}", app.game.res.gametick))));
+    if let Some(e) = app.game.res.player_entity {
+        if let Ok(pos) = app.game.world.get::<&lithicrivers_core::components::Position>(e) {
+            lines.push(Line::from(Span::raw(format!("Player: ({}, {}, {})", pos.x, pos.y, pos.z))));
+        }
+    }
+    let block = Block::default().borders(Borders::ALL).title("Menu");
+    let inner = block.inner(area);
+    let p = Paragraph::new(lines).alignment(Alignment::Left);
+    f.render_widget(p, inner);
+    f.render_widget(block, area);
 }
 
 fn render_body_panel(f: &mut Frame, app: &mut App, area: Rect) {

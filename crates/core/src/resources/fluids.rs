@@ -3,8 +3,9 @@ use std::collections::HashMap;
 use crate::components::Position;
 use crate::palettekey::PaletteKey;
 use crate::resources::world::World;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum FluidType {
     Water,
     Blood,
@@ -35,7 +36,7 @@ impl FluidType {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Fluid {
     pub fluid_type: FluidType,
     pub position: Position,
@@ -66,7 +67,7 @@ impl Fluid {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct FluidManager {
     pub fluids: HashMap<Position, Fluid>,
 }

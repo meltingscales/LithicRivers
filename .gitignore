@@ -72,3 +72,6 @@ Thumbs.db
 perf.data
 flamegraph.svg
 profile.linux-perf.txt
+
+# saves
+save.json

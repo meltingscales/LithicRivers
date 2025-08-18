@@ -6,6 +6,7 @@ pub mod systems;
 pub mod tiles;
 pub mod view;
 pub mod model;
+pub mod save_load;
 
 use components::*;
 use resources::*;
@@ -101,5 +102,19 @@ impl Game {
         let base: f32 = 300.0; // slightly slower than a normal move
         let cost = (base / mult.max(0.01)).round().max(1.0) as u64;
         self.res.pending_tick_increase = Some(cost);
+    }
+
+    // Convenience save/load wrappers
+    pub fn save_json<P: AsRef<std::path::Path>>(&self, path: P) -> anyhow::Result<()> {
+        crate::save_load::save_game_json(self, path)
+    }
+    pub fn load_json<P: AsRef<std::path::Path>>(&mut self, path: P) -> anyhow::Result<()> {
+        crate::save_load::load_game_json(self, path)
+    }
+    pub fn save_msgpack<P: AsRef<std::path::Path>>(&self, path: P) -> anyhow::Result<()> {
+        crate::save_load::save_game_msgpack(self, path)
+    }
+    pub fn load_msgpack<P: AsRef<std::path::Path>>(&mut self, path: P) -> anyhow::Result<()> {
+        crate::save_load::load_game_msgpack(self, path)
     }
 }
