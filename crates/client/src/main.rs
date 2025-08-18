@@ -8,7 +8,7 @@ use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, Paragraph, Wrap},
+    widgets::{Block, Borders, Paragraph, Wrap, Tabs},
     Frame, Terminal,
 };
 use std::{
@@ -27,6 +27,7 @@ struct App {
     should_quit: bool,
     // UI state: remember bottom menu rect for click handling
     bottom_menu_rect: Option<Rect>,
+    menu_index: usize,
 }
 
 impl App {
@@ -41,6 +42,7 @@ impl App {
             sprite_loader,
             should_quit: false,
             bottom_menu_rect: None,
+            menu_index: 0,
         }
     }
 
@@ -52,6 +54,17 @@ impl App {
         match key {
             KeyCode::Char('q') => {
                 self.should_quit = true;
+            }
+            // Activate selected menu by Enter/Space
+            KeyCode::Enter | KeyCode::Char(' ') => {
+                self.activate_menu();
+            }
+            // Cycle menu with left/right
+            KeyCode::Left => {
+                if self.menu_index == 0 { self.menu_index = 2; } else { self.menu_index -= 1; }
+            }
+            KeyCode::Right => {
+                self.menu_index = (self.menu_index + 1) % 3;
             }
             // Mining
             KeyCode::Char('m') => {
@@ -111,24 +124,30 @@ impl App {
                 let rw = rect.width as i32;
                 let rh = rect.height as i32;
                 if mx >= rx && mx < rx + rw && my >= ry && my < ry + rh {
-                    // Map to three simple menu regions: [Mine] [Inventory] [Quit]
+                    // Map click to tab index (3 tabs)
                     let third = rw / 3;
                     let relx = mx - rx;
-                    if relx < third {
-                        // Mine
-                        self.game.queue_mine();
-                        self.game.tick();
-                    } else if relx < third * 2 {
-                        // Inventory (not implemented)
-                        self.game.res.log("Inventory panel (WIP)");
-                    } else {
-                        // Quit
-                        self.should_quit = true;
-                    }
+                    self.menu_index = if relx < third { 0 } else if relx < third * 2 { 1 } else { 2 };
+                    self.activate_menu();
                 }
             }
         }
         Ok(())
+    }
+
+    fn activate_menu(&mut self) {
+        match self.menu_index {
+            0 => { // Mine
+                self.game.queue_mine();
+                self.game.tick();
+            }
+            1 => { // Inventory (placeholder)
+                self.game.res.log("Inventory panel (WIP)");
+            }
+            _ => { // Quit
+                self.should_quit = true;
+            }
+        }
     }
 }
 
@@ -194,7 +213,7 @@ fn ui(f: &mut Frame, app: &mut App) {
             Constraint::Length(1),        // Title line
             Constraint::Min(0),           // Main area (map + inventory)
             Constraint::Length(5),        // Message log
-            Constraint::Length(1),        // Bottom menu bar
+            Constraint::Length(3),        // Bottom menu bar (needs 3 for borders + content)
         ])
         .split(f.size());
 
@@ -335,16 +354,16 @@ fn render_message_log(f: &mut Frame, app: &mut App, area: Rect) {
 fn render_bottom_menu(f: &mut Frame, app: &mut App, area: Rect) {
     // Remember for click handling
     app.bottom_menu_rect = Some(area);
-    let text = Line::from(vec![
-        Span::styled(" [Mine] ", Style::default().fg(Color::Green)),
-        Span::raw(" "),
-        Span::styled(" [Inventory] ", Style::default().fg(Color::Yellow)),
-        Span::raw(" "),
-        Span::styled(" [Quit] ", Style::default().fg(Color::Red)),
-    ]);
-    let para = Paragraph::new(text)
-        .alignment(Alignment::Center)
-        .block(Block::default().borders(Borders::ALL).title("Menu"));
-    f.render_widget(para, area);
+    let titles = vec![
+        Span::styled(" Mine ", Style::default().fg(Color::Green)),
+        Span::styled(" Inventory ", Style::default().fg(Color::Yellow)),
+        Span::styled(" Quit ", Style::default().fg(Color::Red)),
+    ];
+    let tabs = Tabs::new(titles)
+        .block(Block::default().borders(Borders::ALL).title("Menu"))
+        .select(app.menu_index)
+        .style(Style::default().fg(Color::White))
+        .highlight_style(Style::default().fg(Color::Cyan));
+    f.render_widget(tabs, area);
 }
 
