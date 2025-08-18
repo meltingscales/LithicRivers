@@ -45,7 +45,7 @@ This document captures high-level goals and the rearchitecture for migrating fro
 ## Migration phases (incremental)
 1. ✅ Skeleton & minimal loop — DONE
    - `crates/core` with `Game` and ECS (`hecs`), deterministic RNG; `crates/client` ratatui app with input handling.
-2. 🚧 Core data shapes — PARTIAL
+2. ✅ Core data shapes — DONE
    - Components: `Position`, `Player`, `Glyph`, `BlocksMovement`, `Sheep`; model `Body` present.
    - Resources: `Resources` with `World`, RNG, intents, fluids, tick; view builder exists.
    - Tiles: `TileKind` enum implemented; palette keys wired to sprites.
