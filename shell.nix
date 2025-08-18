@@ -24,6 +24,8 @@ pkgs.mkShell {
     pkgs.udev
     pkgs.tracy
     pkgs.cargo-flamegraph
+    pkgs.alsa-lib
+    pkgs.alsa-oss
   ];
   shellHook = ''
     export PKG_CONFIG_PATH=${pkgs.alsa-lib.dev}/lib/pkgconfig:${pkgs.openssl.dev}/lib/pkgconfig:$PKG_CONFIG_PATH
