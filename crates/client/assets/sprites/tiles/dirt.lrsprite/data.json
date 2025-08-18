@@ -1,5 +1,5 @@
 {
     "name": "Dirt",
-    "color": "brown",
+    "color": "#964B00",
     "description": "Basic dirt that can be mined for resources"
 } 
