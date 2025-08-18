@@ -137,9 +137,8 @@ impl App {
 
     fn activate_menu(&mut self) {
         match self.menu_index {
-            0 => { // Mine
-                self.game.queue_mine();
-                self.game.tick();
+            0 => { // World (already active view)
+                self.game.res.log("World map active");
             }
             1 => { // Inventory (placeholder)
                 self.game.res.log("Inventory panel (WIP)");
@@ -355,7 +354,7 @@ fn render_bottom_menu(f: &mut Frame, app: &mut App, area: Rect) {
     // Remember for click handling
     app.bottom_menu_rect = Some(area);
     let titles = vec![
-        Span::styled(" Mine ", Style::default().fg(Color::Green)),
+        Span::styled(" World ", Style::default().fg(Color::Green)),
         Span::styled(" Inventory ", Style::default().fg(Color::Yellow)),
         Span::styled(" Quit ", Style::default().fg(Color::Red)),
     ];
