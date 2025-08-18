@@ -19,6 +19,7 @@ use std::{
 
 use lithicrivers_core::Game;
 mod sprite_loader;
+mod audio;
 use crate::sprite_loader::{
     sprite_block_for_entity, sprite_block_for_fluid, sprite_block_for_tile,
     SpriteLoader, Scale,
@@ -35,6 +36,7 @@ struct App {
     bottom_menu_rect: Option<Rect>,
     menu_index: usize,
     scale: Scale,
+    audio: audio::AudioManager,
 }
 
 impl App {
@@ -44,11 +46,26 @@ impl App {
         let mut sprite_loader = SpriteLoader::new(None);
         // Preload all assets to eliminate runtime I/O during rendering
         sprite_loader.preload_all();
+        
+        // Initialize audio manager
+        let mut audio = audio::AudioManager::new().unwrap_or_else(|e| {
+            panic!("Failed to initialize audio: {}", e);
+        });
+
+        // Register and play the opening music
+        let track = audio::AudioTrack::new("crates/client/assets/sound/music/opening.mp3")
+            .with_volume(0.5);
+        audio.register_track("opening", track);
+        if let Err(e) = audio.play_track("opening") {
+            panic!("Failed to play music: {}", e);
+        }
+        
         App {
             game,
             sprite_loader,
             should_quit: false,
             bottom_menu_rect: None,
+            audio,
             menu_index: 0,
             scale: Scale::Small,
         }
