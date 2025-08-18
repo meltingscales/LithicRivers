@@ -8,7 +8,7 @@ use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, Paragraph, Wrap, Tabs},
+    widgets::{Block, Borders, Paragraph, Wrap, Tabs, Gauge, Clear},
     Frame, Terminal,
 };
 use std::{
@@ -21,6 +21,12 @@ use lithicrivers_core::Game;
 mod sprite_loader;
 use crate::sprite_loader::{sprite_for_fluid, sprite_for_tile, SpriteLoader, color_for_entity};
 
+#[derive(Debug, Default, Clone, Copy)]
+struct BodyPart<'a> {
+    name: &'a str,
+    hp: f32, // 0.0 - 1.0
+}
+
 struct App {
     game: Game,
     sprite_loader: SpriteLoader,
@@ -28,6 +34,7 @@ struct App {
     // UI state: remember bottom menu rect for click handling
     bottom_menu_rect: Option<Rect>,
     menu_index: usize,
+    body_parts: Vec<BodyPart<'static>>, // temporary demo data
 }
 
 impl App {
@@ -43,6 +50,14 @@ impl App {
             should_quit: false,
             bottom_menu_rect: None,
             menu_index: 0,
+            body_parts: vec![
+                BodyPart { name: "Head", hp: 0.7 },
+                BodyPart { name: "Torso", hp: 0.9 },
+                BodyPart { name: "Left Arm", hp: 0.5 },
+                BodyPart { name: "Right Arm", hp: 0.85 },
+                BodyPart { name: "Left Leg", hp: 0.6 },
+                BodyPart { name: "Right Leg", hp: 0.95 },
+            ],
         }
     }
 
@@ -59,12 +74,12 @@ impl App {
             KeyCode::Enter | KeyCode::Char(' ') => {
                 self.activate_menu();
             }
-            // Cycle menu with left/right
+            // Cycle menu with left/right (4 tabs)
             KeyCode::Left => {
-                if self.menu_index == 0 { self.menu_index = 2; } else { self.menu_index -= 1; }
+                if self.menu_index == 0 { self.menu_index = 3; } else { self.menu_index -= 1; }
             }
             KeyCode::Right => {
-                self.menu_index = (self.menu_index + 1) % 3;
+                self.menu_index = (self.menu_index + 1) % 4;
             }
             // Mining
             KeyCode::Char('m') => {
@@ -124,10 +139,10 @@ impl App {
                 let rw = rect.width as i32;
                 let rh = rect.height as i32;
                 if mx >= rx && mx < rx + rw && my >= ry && my < ry + rh {
-                    // Map click to tab index (3 tabs)
-                    let third = rw / 3;
+                    // Map click to tab index (4 tabs)
+                    let seg = rw / 4;
                     let relx = mx - rx;
-                    self.menu_index = if relx < third { 0 } else if relx < third * 2 { 1 } else { 2 };
+                    self.menu_index = if relx < seg { 0 } else if relx < seg * 2 { 1 } else if relx < seg * 3 { 2 } else { 3 };
                     self.activate_menu();
                 }
             }
@@ -140,7 +155,10 @@ impl App {
             0 => { // World (already active view)
                 self.game.res.log("World map active");
             }
-            1 => { // Inventory (placeholder)
+            1 => { // Body (placeholder data)
+                self.game.res.log("Body panel active");
+            }
+            2 => { // Inventory (placeholder)
                 self.game.res.log("Inventory panel (WIP)");
             }
             _ => { // Quit
@@ -222,20 +240,27 @@ fn ui(f: &mut Frame, app: &mut App) {
         .alignment(Alignment::Center);
     f.render_widget(title, root_chunks[0]);
 
-    // Main area split into map (left) and inventory (right)
-    let main_chunks = Layout::default()
-        .direction(Direction::Horizontal)
-        .constraints([
-            Constraint::Min(20),           // map area
-            Constraint::Length(24),        // inventory panel
-        ])
-        .split(root_chunks[1]);
-
-    // Game view (map)
-    render_game_view(f, app, main_chunks[0]);
-
-    // Inventory panel (blank for now)
-    render_inventory_panel(f, app, main_chunks[1]);
+    // Main area depends on selected tab
+    if app.menu_index == 0 {
+        // World: map with inventory sidebar
+        let main_chunks = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([
+                Constraint::Min(20),
+                Constraint::Length(24),
+            ])
+            .split(root_chunks[1]);
+        render_game_view(f, app, main_chunks[0]);
+        render_inventory_panel(f, app, main_chunks[1]);
+    } else if app.menu_index == 1 {
+        // Body: fullscreen body panel
+        render_body_panel(f, app, root_chunks[1]);
+    } else if app.menu_index == 2 {
+        // Inventory: fullscreen inventory panel
+        render_inventory_panel(f, app, root_chunks[1]);
+    } else {
+        // Quit selected: do nothing special here; run loop will exit
+    }
 
     // Message log
     render_message_log(f, app, root_chunks[2]);
@@ -355,6 +380,7 @@ fn render_bottom_menu(f: &mut Frame, app: &mut App, area: Rect) {
     app.bottom_menu_rect = Some(area);
     let titles = vec![
         Span::styled(" World ", Style::default().fg(Color::Green)),
+        Span::styled(" Body ", Style::default().fg(Color::LightBlue)),
         Span::styled(" Inventory ", Style::default().fg(Color::Yellow)),
         Span::styled(" Quit ", Style::default().fg(Color::Red)),
     ];
@@ -364,5 +390,39 @@ fn render_bottom_menu(f: &mut Frame, app: &mut App, area: Rect) {
         .style(Style::default().fg(Color::White))
         .highlight_style(Style::default().fg(Color::Cyan));
     f.render_widget(tabs, area);
+}
+
+fn render_body_panel(f: &mut Frame, app: &mut App, area: Rect) {
+    // Outer block
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .title("Body")
+        .style(Style::default().fg(Color::White));
+
+    let inner = block.inner(area);
+
+    // Layout: one row per body part, fixed height 2-3 each
+    let constraints: Vec<Constraint> = (0..app.body_parts.len())
+        .map(|_| Constraint::Length(3))
+        .collect();
+    let rows = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints(constraints)
+        .split(inner);
+
+    // Clear inner and render gauges
+    f.render_widget(Clear, inner);
+    for (i, part) in app.body_parts.iter().enumerate() {
+        let color = if part.hp > 0.7 { Color::Green } else if part.hp > 0.3 { Color::Yellow } else { Color::Red };
+        let gauge = Gauge::default()
+            .block(Block::default().borders(Borders::NONE))
+            .gauge_style(Style::default().fg(color))
+            .ratio(part.hp as f64)
+            .label(format!("{:>9}: {:.0}%", part.name, part.hp * 100.0));
+        if i < rows.len() { f.render_widget(gauge, rows[i]); }
+    }
+
+    // Render border last
+    f.render_widget(block, area);
 }
 
