@@ -8,7 +8,7 @@ use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, Paragraph, Wrap, Tabs, Gauge, Clear},
+    widgets::{Block, Borders, Paragraph, Wrap, Tabs},
     Frame, Terminal,
 };
 use std::{
@@ -21,11 +21,8 @@ use lithicrivers_core::Game;
 mod sprite_loader;
 use crate::sprite_loader::{sprite_for_fluid, sprite_for_tile, SpriteLoader, color_for_entity};
 
-#[derive(Debug, Default, Clone, Copy)]
-struct BodyPart<'a> {
-    name: &'a str,
-    hp: f32, // 0.0 - 1.0
-}
+use lithicrivers_core::model::body::{Body, BodyPart, BodyPartState};
+use lithicrivers_core::components::{Inventory as InvComp, ItemKind};
 
 struct App {
     game: Game,
@@ -34,7 +31,6 @@ struct App {
     // UI state: remember bottom menu rect for click handling
     bottom_menu_rect: Option<Rect>,
     menu_index: usize,
-    body_parts: Vec<BodyPart<'static>>, // temporary demo data
 }
 
 impl App {
@@ -50,14 +46,6 @@ impl App {
             should_quit: false,
             bottom_menu_rect: None,
             menu_index: 0,
-            body_parts: vec![
-                BodyPart { name: "Head", hp: 0.7 },
-                BodyPart { name: "Torso", hp: 0.9 },
-                BodyPart { name: "Left Arm", hp: 0.5 },
-                BodyPart { name: "Right Arm", hp: 0.85 },
-                BodyPart { name: "Left Leg", hp: 0.6 },
-                BodyPart { name: "Right Leg", hp: 0.95 },
-            ],
         }
     }
 
@@ -155,7 +143,7 @@ impl App {
             0 => { // World (already active view)
                 self.game.res.log("World map active");
             }
-            1 => { // Body (placeholder data)
+            1 => { // Body
                 self.game.res.log("Body panel active");
             }
             2 => { // Inventory (placeholder)
@@ -342,8 +330,24 @@ fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
     f.render_widget(paragraph, area);
 }
 
-fn render_inventory_panel(f: &mut Frame, _app: &mut App, area: Rect) {
-    let content = Paragraph::new("(Inventory WIP)")
+fn render_inventory_panel(f: &mut Frame, app: &mut App, area: Rect) {
+    let mut lines: Vec<Line> = Vec::new();
+    if let Some(e) = app.game.res.player_entity {
+        if let Ok(inv) = app.game.world.get::<&InvComp>(e) {
+            if inv.slots.is_empty() {
+                lines.push(Line::from(Span::raw("(Empty)")));
+            } else {
+                for s in &inv.slots {
+                    lines.push(Line::from(Span::raw(format!("{} x{}", kind_name(s.kind), s.qty))));
+                }
+            }
+        } else {
+            lines.push(Line::from(Span::raw("(No Inventory component)")));
+        }
+    } else {
+        lines.push(Line::from(Span::raw("(No player)")));
+    }
+    let content = Paragraph::new(lines)
         .style(Style::default().fg(Color::White))
         .alignment(Alignment::Left)
         .block(
@@ -393,36 +397,44 @@ fn render_bottom_menu(f: &mut Frame, app: &mut App, area: Rect) {
 }
 
 fn render_body_panel(f: &mut Frame, app: &mut App, area: Rect) {
-    // Outer block
-    let block = Block::default()
-        .borders(Borders::ALL)
-        .title("Body")
-        .style(Style::default().fg(Color::White));
-
-    let inner = block.inner(area);
-
-    // Layout: one row per body part, fixed height 2-3 each
-    let constraints: Vec<Constraint> = (0..app.body_parts.len())
-        .map(|_| Constraint::Length(3))
-        .collect();
-    let rows = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints(constraints)
-        .split(inner);
-
-    // Clear inner and render gauges
-    f.render_widget(Clear, inner);
-    for (i, part) in app.body_parts.iter().enumerate() {
-        let color = if part.hp > 0.7 { Color::Green } else if part.hp > 0.3 { Color::Yellow } else { Color::Red };
-        let gauge = Gauge::default()
-            .block(Block::default().borders(Borders::NONE))
-            .gauge_style(Style::default().fg(color))
-            .ratio(part.hp as f64)
-            .label(format!("{:>9}: {:.0}%", part.name, part.hp * 100.0));
-        if i < rows.len() { f.render_widget(gauge, rows[i]); }
+    // Fetch player's Body from ECS
+    let mut lines: Vec<Line> = Vec::new();
+    if let Some(e) = app.game.res.player_entity {
+        if let Ok(body) = app.game.world.get::<&Body>(e) {
+            let mut parts: Vec<&BodyPart> = body.parts.values().collect();
+            parts.sort_by_key(|p| p.part_type as i32);
+            for p in parts {
+                let state = match p.state {
+                    BodyPartState::Missing => "Missing",
+                    BodyPartState::Damaged => "Damaged",
+                    BodyPartState::Functional => "Functional",
+                    BodyPartState::Enhanced => "Enhanced",
+                };
+                lines.push(Line::from(Span::raw(format!("{:>9}: {}", p.name, state))));
+            }
+        } else {
+            lines.push(Line::from(Span::raw("(No Body component)")));
+        }
     }
+    if lines.is_empty() {
+        lines.push(Line::from(Span::raw("(No Body data)")));
+    }
+    let para = Paragraph::new(lines)
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title("Body")
+                .style(Style::default().fg(Color::White)),
+        )
+        .alignment(Alignment::Left);
+    f.render_widget(para, area);
+}
 
-    // Render border last
-    f.render_widget(block, area);
+fn kind_name(kind: ItemKind) -> &'static str {
+    match kind {
+        ItemKind::Wood => "Wood",
+        ItemKind::Acorn => "Acorn",
+        ItemKind::Stick => "Stick",
+    }
 }
 
