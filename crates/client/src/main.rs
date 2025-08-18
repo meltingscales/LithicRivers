@@ -19,7 +19,10 @@ use std::{
 
 use lithicrivers_core::Game;
 mod sprite_loader;
-use crate::sprite_loader::{sprite_for_fluid, sprite_for_tile, SpriteLoader, color_for_entity};
+use crate::sprite_loader::{
+    sprite_block_for_entity, sprite_block_for_fluid, sprite_block_for_tile,
+    SpriteLoader, Scale,
+};
 
 use lithicrivers_core::model::body::{Body, BodyPart, BodyPartState, BodyPartType};
 use lithicrivers_core::components::{Inventory as InvComp, ItemKind};
@@ -31,6 +34,7 @@ struct App {
     // UI state: remember bottom menu rect for click handling
     bottom_menu_rect: Option<Rect>,
     menu_index: usize,
+    scale: Scale,
 }
 
 impl App {
@@ -46,6 +50,7 @@ impl App {
             should_quit: false,
             bottom_menu_rect: None,
             menu_index: 0,
+            scale: Scale::Small,
         }
     }
 
@@ -110,6 +115,24 @@ impl App {
             KeyCode::Char('5') => {
                 self.game.queue_player_move(0, 0);
                 self.game.tick();
+            }
+            // Zoom controls: '=' zoom in, '-' zoom out, '0' reset
+            KeyCode::Char('=') | KeyCode::Char('+') => {
+                self.scale = match self.scale {
+                    Scale::Small => Scale::Medium,
+                    Scale::Medium => Scale::Large,
+                    Scale::Large => Scale::Large,
+                };
+            }
+            KeyCode::Char('-') => {
+                self.scale = match self.scale {
+                    Scale::Large => Scale::Medium,
+                    Scale::Medium => Scale::Small,
+                    Scale::Small => Scale::Small,
+                };
+            }
+            KeyCode::Char('0') => {
+                self.scale = Scale::Small;
             }
             _ => {}
         }
@@ -297,9 +320,10 @@ fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
             // Check fluids first
             let fluid_pos = lithicrivers_core::components::Position { x: world_x, y: world_y, z: 0 };
             if let Some(fluid) = app.game.res.fluids.get_fluid(fluid_pos) {
-                let (glyph, color) = sprite_for_fluid(&mut app.sprite_loader, fluid.fluid_type)
+                let (block, color) = sprite_block_for_fluid(&mut app.sprite_loader, fluid.fluid_type, app.scale)
                     .unwrap_or_else(|| panic!("Could not find sprite for fluid type: {:?}", fluid.fluid_type));
-                spans.push(Span::styled(glyph.to_string(), Style::default().fg(color)));
+                let ch = block.chars().next().unwrap_or(' ');
+                spans.push(Span::styled(ch.to_string(), Style::default().fg(color)));
                 continue;
             }
 
@@ -308,16 +332,18 @@ fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
             if rel_x >= 0 && rel_y >= 0 && (rel_y as usize) < view_h && (rel_x as usize) < view_w {
                 let ch = view.map_lines[rel_y as usize].chars().nth(rel_x as usize).unwrap_or(' ');
                 if ch != ' ' {
-                    let entity_color = color_for_entity(&mut app.sprite_loader, ch);
-                    spans.push(Span::styled(ch.to_string(), Style::default().fg(entity_color)));
+                    let (block, color) = sprite_block_for_entity(&mut app.sprite_loader, ch, app.scale);
+                    let ech = block.chars().next().unwrap_or(' ');
+                    spans.push(Span::styled(ech.to_string(), Style::default().fg(color)));
                     used_overlay = true;
                 }
             }
 
             if !used_overlay {
-                let (glyph, color) = sprite_for_tile(&mut app.sprite_loader, tile_kind)
+                let (block, color) = sprite_block_for_tile(&mut app.sprite_loader, tile_kind, app.scale)
                     .unwrap_or_else(|| panic!("Could not find sprite for tile kind: {:?}", tile_kind));
-                spans.push(Span::styled(glyph.to_string(), Style::default().fg(color)));
+                let ch = block.chars().next().unwrap_or(' ');
+                spans.push(Span::styled(ch.to_string(), Style::default().fg(color)));
             }
         }
         lines.push(Line::from(spans));

@@ -6,12 +6,53 @@ use lithicrivers_core::tiles::TileKind;
 use ratatui::prelude::Color;
 // All color data must come from data.json in each .lrsprite. No hardcoded fallbacks.
 
+#[derive(Debug, Clone, Copy)]
+pub enum Scale {
+    Small,  // 1x1
+    Medium, // 2x2
+    Large,  // 3x3
+}
+
 #[derive(Debug, Clone, Deserialize)]
 pub struct SpriteMetadata {
     pub name: String,
     pub color: String,
     pub description: String,
     pub scales: Option<Vec<u32>>, // Not strictly needed for loading, but present in JSON
+}
+
+// Multi-scale: return the full sprite block string (may be multi-line) and color
+pub fn sprite_block_for_tile(
+    loader: &mut SpriteLoader,
+    kind: TileKind,
+    scale: Scale,
+) -> Option<(String, Color)> {
+    let (category, name) = ("tiles",
+        match kind {
+            TileKind::Rock => "rock",
+            TileKind::Dirt => "dirt",
+            TileKind::Grass => "grass",
+            TileKind::Tree => "tree",
+            TileKind::Air => "air",
+            TileKind::BoneBlock => "bone_block",
+            TileKind::IronScrap => "iron_scrap",
+            TileKind::Door => "door",
+            TileKind::Bedrock => "bedrock",
+            TileKind::ScrapElectronics => "scrap_electronics",
+            TileKind::PlasteelScrap => "plasteel_scrap",
+            TileKind::Treasure => "treasure",
+            _ => return None,
+        }
+    );
+    let sd = loader.load_sprite(name, category);
+    let block = sprite_block_for_scale(sd, scale).to_string();
+    let color = parse_color_string(&sd.color).unwrap_or_else(|| {
+        panic!(
+            "Missing or invalid RGB color in data.json for tile sprite '{}::{}' (expected #RRGGBB)",
+            category, name
+        )
+    });
+    Some((block, color))
 }
 
 #[derive(Debug, Clone)]
@@ -187,6 +228,41 @@ fn first_sprite_char(sd: &SpriteData) -> char {
     }
 }
 
+fn sprite_block_for_scale(sd: &SpriteData, scale: Scale) -> &str {
+    match scale {
+        Scale::Small => sd
+            .sprites
+            .get(0)
+            .map(|s| s.as_str())
+            .unwrap_or_else(|| panic!("Missing sprite for scale Small: {}", sd.name)),
+        Scale::Medium => sd
+            .sprites
+            .get(1)
+            .map(|s| s.as_str())
+            .unwrap_or_else(|| {
+                sd.sprites
+                    .get(0)
+                    .map(|s| s.as_str())
+                    .unwrap_or_else(|| panic!("Missing sprite for scale Medium: {}", sd.name))
+            }),
+        Scale::Large => sd
+            .sprites
+            .get(2)
+            .map(|s| s.as_str())
+            .unwrap_or_else(|| {
+                sd.sprites
+                    .get(1)
+                    .map(|s| s.as_str())
+                    .unwrap_or_else(|| {
+                        sd.sprites
+                            .get(0)
+                            .map(|s| s.as_str())
+                            .unwrap_or_else(|| panic!("Missing sprite for scale Large: {}", sd.name))
+                    })
+            }),
+    }
+}
+
 fn parse_color_string(s: &str) -> Option<Color> {
     // Support #RRGGBB
     let s = s.trim();
@@ -233,6 +309,33 @@ pub fn sprite_for_tile(loader: &mut SpriteLoader, kind: TileKind) -> Option<(cha
     Some((ch, color))
 }
 
+// Multi-scale: return the full sprite block string (may be multi-line) and color for fluids
+pub fn sprite_block_for_fluid(
+    loader: &mut SpriteLoader,
+    fluid_type: lithicrivers_core::resources::fluids::FluidType,
+    scale: Scale,
+) -> Option<(String, Color)> {
+    use lithicrivers_core::resources::fluids::FluidType;
+    let (category, name) = ("fluids",
+        match fluid_type {
+            FluidType::Water => "water",
+            FluidType::Oil => "oil",
+            FluidType::Blood => "blood",
+            FluidType::Acid => "acid",
+            FluidType::Lava => "lava",
+        }
+    );
+    let sd = loader.load_sprite(name, category);
+    let block = sprite_block_for_scale(sd, scale).to_string();
+    let color = parse_color_string(&sd.color).unwrap_or_else(|| {
+        panic!(
+            "Missing or invalid RGB color in data.json for fluid sprite '{}::{}' (expected #RRGGBB)",
+            category, name
+        )
+    });
+    Some((block, color))
+}
+
 pub fn sprite_for_fluid(
     loader: &mut SpriteLoader,
     fluid_type: lithicrivers_core::resources::fluids::FluidType,
@@ -276,6 +379,32 @@ pub fn color_for_entity(loader: &mut SpriteLoader, ch: char) -> Color {
             category, name
         )
     })
+}
+
+// Multi-scale: return the full sprite block string (may be multi-line) and color for entities
+pub fn sprite_block_for_entity(
+    loader: &mut SpriteLoader,
+    ch: char,
+    scale: Scale,
+) -> (String, Color) {
+    let (category, name) = ("entities",
+        if ch == '@' {
+            "player"
+        } else if ch == 's' || ch == 'S' {
+            "sheep"
+        } else {
+            "entity_generic"
+        }
+    );
+    let sd = loader.load_sprite(name, category);
+    let block = sprite_block_for_scale(sd, scale).to_string();
+    let color = parse_color_string(&sd.color).unwrap_or_else(|| {
+        panic!(
+            "Missing or invalid RGB color in data.json for entity sprite '{}::{}' (expected #RRGGBB)",
+            category, name
+        )
+    });
+    (block, color)
 }
 
 
