@@ -2,8 +2,7 @@
 
 ## Small temp list
 - make the game 3D.
-- Moving up/down in the world with hotkeys
-- audio system, music and sound effects
+  - Moving up/down in the world with hotkeys
 
 ## Core Gameplay Loop (Must Have)
 - [ ] Basic world generation with multiple biomes
@@ -26,7 +25,7 @@
 
 ## Polish & UX
 - [ ] Tutorial/intro sequence
-- [ ] Basic sound effects
+- [ ] Basic sound effects, not just music
 - [ ] Main menu with new game/load game
 - [ ] Basic UI feedback for player actions
 
