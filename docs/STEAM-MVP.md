@@ -1,6 +1,7 @@
 # Steam MVP Release Plan (Target: December 2024)
 
 ## Small temp list
+- make the game 3D.
 - Moving up/down in the world with hotkeys
 - audio system, music and sound effects
 - Let's change the world generation to use perlin noise. Make sure to read @docs.

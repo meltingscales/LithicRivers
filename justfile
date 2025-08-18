@@ -108,6 +108,14 @@ demo-intro:
 demo-inventory:
     {{cargoz_env}} run -p lithicrivers-client --bin demo_inventory
 
+# Run the Sprite Test demo
+demo-sprite-test:
+    {{cargoz_env}} run -p lithicrivers-client --bin beezzaroll_sprite_test
+
+# Run the Color Test demo
+demo-color-test:
+    {{cargoz_env}} run -p lithicrivers-client --bin beezzaroll_color_test
+
 # Run the Body/Repair UI demo
 demo-body:
     {{cargoz_env}} run -p lithicrivers-client --bin demo_body

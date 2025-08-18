@@ -12,6 +12,12 @@ For licensing inquiries or source code access, please contact: **HenryFBP@gmail.
 
 See [LICENSE](LICENSE) for full terms.
 
+## Libraries
+
+- Rust v1.76.1
+- Crossterm v0.27.0
+- Ratatui v0.26.3
+
 ## Play the game
 
 Visit <https://github.com/HenryFBP/LithicRivers/releases> to download a release for your platform.
