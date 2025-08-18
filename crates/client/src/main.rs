@@ -21,7 +21,7 @@ use lithicrivers_core::Game;
 mod sprite_loader;
 use crate::sprite_loader::{sprite_for_fluid, sprite_for_tile, SpriteLoader, color_for_entity};
 
-use lithicrivers_core::model::body::{Body, BodyPart, BodyPartState};
+use lithicrivers_core::model::body::{Body, BodyPart, BodyPartState, BodyPartType};
 use lithicrivers_core::components::{Inventory as InvComp, ItemKind};
 
 struct App {
@@ -397,37 +397,112 @@ fn render_bottom_menu(f: &mut Frame, app: &mut App, area: Rect) {
 }
 
 fn render_body_panel(f: &mut Frame, app: &mut App, area: Rect) {
-    // Fetch player's Body from ECS
-    let mut lines: Vec<Line> = Vec::new();
+    // Split area: left ASCII overview, right list
+    let chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Length(28),
+            Constraint::Min(20),
+        ])
+        .split(area);
+
+    // Build from ECS
+    let mut list_lines: Vec<Line> = Vec::new();
+    let mut ascii_lines_opt: Option<Vec<Line<'static>>> = None;
     if let Some(e) = app.game.res.player_entity {
         if let Ok(body) = app.game.world.get::<&Body>(e) {
+            // Build list
             let mut parts: Vec<&BodyPart> = body.parts.values().collect();
             parts.sort_by_key(|p| p.part_type as i32);
             for p in parts {
-                let state = match p.state {
-                    BodyPartState::Missing => "Missing",
-                    BodyPartState::Damaged => "Damaged",
-                    BodyPartState::Functional => "Functional",
-                    BodyPartState::Enhanced => "Enhanced",
+                let (label, color) = match p.state {
+                    BodyPartState::Missing => ("Missing", Color::DarkGray),
+                    BodyPartState::Damaged => ("Damaged", Color::Yellow),
+                    BodyPartState::Functional => ("Functional", Color::Green),
+                    BodyPartState::Enhanced => ("Enhanced", Color::Cyan),
                 };
-                lines.push(Line::from(Span::raw(format!("{:>9}: {}", p.name, state))));
+                list_lines.push(Line::from(Span::styled(
+                    format!("{:>9}: {}", p.name, label),
+                    Style::default().fg(color),
+                )));
             }
-        } else {
-            lines.push(Line::from(Span::raw("(No Body component)")));
+            // Build ASCII from borrowed body
+            ascii_lines_opt = Some(build_body_ascii(&*body));
         }
     }
-    if lines.is_empty() {
-        lines.push(Line::from(Span::raw("(No Body data)")));
+    if list_lines.is_empty() {
+        list_lines.push(Line::from(Span::raw("(No Body data)")));
     }
-    let para = Paragraph::new(lines)
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .title("Body")
-                .style(Style::default().fg(Color::White)),
-        )
-        .alignment(Alignment::Left);
-    f.render_widget(para, area);
+
+    // Left: ASCII overview
+    let ascii_block = Block::default().borders(Borders::ALL).title("Body");
+    let ascii_inner = ascii_block.inner(chunks[0]);
+    let ascii_lines = ascii_lines_opt.unwrap_or_else(|| vec![Line::from(Span::raw("(No Body)"))]);
+    let ascii_para = Paragraph::new(ascii_lines).alignment(Alignment::Left);
+    f.render_widget(ascii_para, ascii_inner);
+    f.render_widget(ascii_block, chunks[0]);
+
+    // Right: textual list
+    let list_para = Paragraph::new(list_lines)
+        .alignment(Alignment::Left)
+        .block(Block::default().borders(Borders::ALL).title("Parts"));
+    f.render_widget(list_para, chunks[1]);
+}
+
+fn build_body_ascii(body: &Body) -> Vec<Line<'static>> {
+    // Simple 13x13 schematic using markers for parts:
+    // H head, X torso, A/a arms, L/l legs, space background
+    let art = [
+        "      HHH     ",
+        "     HHHHH    ",
+        "      HHH     ",
+        "   A  XXX  a  ",
+        "  A  XXXXX  a ",
+        " A   XXXXX   a",
+        "     XXXXX    ",
+        "     XXXXX    ",
+        "     XX XX    ",
+        "     L   l    ",
+        "     L   l    ",
+        "     L   l    ",
+        "    L     l   ",
+    ];
+
+    // Helper to get state color by marker
+    let color_for = |marker: char| -> Color {
+        let (part_type, present) = match marker {
+            'H' => (BodyPartType::Head, true),
+            'X' => (BodyPartType::Torso, true),
+            'A' => (BodyPartType::LeftArm, true),
+            'a' => (BodyPartType::RightArm, true),
+            'L' => (BodyPartType::LeftLeg, true),
+            'l' => (BodyPartType::RightLeg, true),
+            _ => (BodyPartType::Head, false),
+        };
+        if !present { return Color::DarkGray; }
+        let state = body.parts.get(&part_type).map(|p| p.state).unwrap_or(BodyPartState::Missing);
+        match state {
+            BodyPartState::Missing => Color::Black,
+            BodyPartState::Damaged => Color::Red,
+            BodyPartState::Functional => Color::Green,
+            BodyPartState::Enhanced => Color::Cyan,
+        }
+    };
+
+    let mut out: Vec<Line> = Vec::new();
+    for row in art {        
+        let mut spans: Vec<Span> = Vec::new();
+        for ch in row.chars() {
+            if ch == ' ' {
+                spans.push(Span::raw(" "));
+            } else {
+                let color = color_for(ch);
+                spans.push(Span::styled("█", Style::default().fg(color)));
+            }
+        }
+        out.push(Line::from(spans));
+    }
+    out
 }
 
 fn kind_name(kind: ItemKind) -> &'static str {
