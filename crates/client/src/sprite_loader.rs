@@ -1,7 +1,6 @@
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs;
-use std::io::{self, Read};
 use std::path::{Path, PathBuf};
 use lithicrivers_core::tiles::TileKind;
 use ratatui::prelude::Color;
@@ -96,6 +95,45 @@ impl SpriteLoader {
         };
         self.sprite_cache.insert(cache_key.clone(), sprite_data);
         self.sprite_cache.get(&cache_key).unwrap()
+    }
+
+    // Discover and preload all sprites under data_path, scanning categories and *.lrsprite folders.
+    pub fn preload_all(&mut self) {
+        if !self.data_path.exists() {
+            panic!(
+                "Sprite assets path does not exist: {}",
+                self.data_path.display()
+            );
+        }
+        let Ok(categories) = fs::read_dir(&self.data_path) else { return };
+        for cat_entry in categories.flatten() {
+            let cat_path = cat_entry.path();
+            if !cat_path.is_dir() {
+                continue;
+            }
+            let category = match cat_path.file_name().and_then(|s| s.to_str()) {
+                Some(name) => name.to_string(),
+                None => continue,
+            };
+            self.preload_category(&category);
+        }
+    }
+
+    // Preload a single category by loading all <name>.lrsprite directories within it.
+    pub fn preload_category(&mut self, category: &str) {
+        let cat_dir = self.data_path.join(category);
+        let Ok(entries) = fs::read_dir(&cat_dir) else { return };
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if !path.is_dir() {
+                continue;
+            }
+            let Some(fname) = path.file_name().and_then(|s| s.to_str()) else { continue };
+            if let Some(name) = fname.strip_suffix(".lrsprite") {
+                // Will fill cache or validate
+                let _ = self.load_sprite(name, category);
+            }
+        }
     }
 
     fn validate_sprite_dimensions(sprites: &Vec<String>, sprite_name: &str, category: &str) {

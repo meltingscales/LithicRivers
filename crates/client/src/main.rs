@@ -6,9 +6,9 @@ use crossterm::{
 use ratatui::{
     backend::{Backend, CrosstermBackend},
     layout::{Alignment, Constraint, Direction, Layout, Rect},
-    style::{Color, Modifier, Style},
-    text::{Line, Span, Text},
-    widgets::{Block, Borders, Clear, Paragraph, Wrap},
+    style::{Color, Style},
+    text::{Line, Span},
+    widgets::{Block, Borders, Paragraph, Wrap},
     Frame, Terminal,
 };
 use std::{
@@ -17,10 +17,9 @@ use std::{
     time::Duration,
 };
 
-// use lithicrivers_core::tiles::TileKind; // Not needed directly here
 use lithicrivers_core::Game;
 mod sprite_loader;
-use crate::sprite_loader::{sprite_for_fluid, sprite_for_tile, SpriteData, SpriteLoader, color_for_entity};
+use crate::sprite_loader::{sprite_for_fluid, sprite_for_tile, SpriteLoader, color_for_entity};
 
 struct App {
     game: Game,
@@ -28,37 +27,16 @@ struct App {
     should_quit: bool,
 }
 
-fn parse_color_string(s: &str) -> Option<Color> {
-    // Support #RRGGBB
-    let s = s.trim();
-    if let Some(hex) = s.strip_prefix('#') {
-        if hex.len() == 6 {
-            if let (Ok(r), Ok(g), Ok(b)) = (
-                u8::from_str_radix(&hex[0..2], 16),
-                u8::from_str_radix(&hex[2..4], 16),
-                u8::from_str_radix(&hex[4..6], 16),
-            ) {
-                return Some(Color::Rgb(r, g, b));
-            }
-        }
-    }
-    None
-}
-
-fn first_sprite_char(sd: &SpriteData) -> char {
-    if let Some(first) = sd.sprites.first() {
-        first.chars().next().unwrap_or(' ')
-    } else {
-        ' '
-    }
-}
-
-
 impl App {
     fn new() -> App {
+        // Initialize game and sprite loader
+        let game = Game::new(12345);
+        let mut sprite_loader = SpriteLoader::new(None);
+        // Preload all assets to eliminate runtime I/O during rendering
+        sprite_loader.preload_all();
         App {
-            game: Game::new(12345),
-            sprite_loader: SpriteLoader::new(None),
+            game,
+            sprite_loader,
             should_quit: false,
         }
     }
