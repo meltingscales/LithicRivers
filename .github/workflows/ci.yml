@@ -27,11 +27,15 @@ jobs:
 
       - name: Build on Windows
         if: matrix.os == 'windows-latest'
-        run: just --justfile justfile.windows build
+        run: |
+          choco install just
+          just --justfile justfile.windows build
 
       - name: Build on Linux
         if: matrix.os == 'ubuntu-latest'
-        run: just build
+        run: |
+          apt install just
+          just build
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
