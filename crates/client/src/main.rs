@@ -112,34 +112,106 @@ impl App {
             KeyCode::Char('8') => {
                 self.game.queue_player_move(0, -1);
                 self.game.tick();
+                if let Some(e) = self.game.res.player_entity {
+                    if let Ok(pos) = self
+                        .game
+                        .world
+                        .get::<&lithicrivers_core::components::Position>(e)
+                    {
+                        self.game.res.view_z = pos.z;
+                    }
+                }
             }
             KeyCode::Char('2') => {
                 self.game.queue_player_move(0, 1);
                 self.game.tick();
+                if let Some(e) = self.game.res.player_entity {
+                    if let Ok(pos) = self
+                        .game
+                        .world
+                        .get::<&lithicrivers_core::components::Position>(e)
+                    {
+                        self.game.res.view_z = pos.z;
+                    }
+                }
             }
             KeyCode::Char('4') => {
                 self.game.queue_player_move(-1, 0);
                 self.game.tick();
+                if let Some(e) = self.game.res.player_entity {
+                    if let Ok(pos) = self
+                        .game
+                        .world
+                        .get::<&lithicrivers_core::components::Position>(e)
+                    {
+                        self.game.res.view_z = pos.z;
+                    }
+                }
             }
             KeyCode::Char('6') => {
                 self.game.queue_player_move(1, 0);
                 self.game.tick();
+                if let Some(e) = self.game.res.player_entity {
+                    if let Ok(pos) = self
+                        .game
+                        .world
+                        .get::<&lithicrivers_core::components::Position>(e)
+                    {
+                        self.game.res.view_z = pos.z;
+                    }
+                }
             }
             KeyCode::Char('7') => {
                 self.game.queue_player_move(-1, -1);
                 self.game.tick();
+                if let Some(e) = self.game.res.player_entity {
+                    if let Ok(pos) = self
+                        .game
+                        .world
+                        .get::<&lithicrivers_core::components::Position>(e)
+                    {
+                        self.game.res.view_z = pos.z;
+                    }
+                }
             }
             KeyCode::Char('9') => {
                 self.game.queue_player_move(1, -1);
                 self.game.tick();
+                if let Some(e) = self.game.res.player_entity {
+                    if let Ok(pos) = self
+                        .game
+                        .world
+                        .get::<&lithicrivers_core::components::Position>(e)
+                    {
+                        self.game.res.view_z = pos.z;
+                    }
+                }
             }
             KeyCode::Char('1') => {
                 self.game.queue_player_move(-1, 1);
                 self.game.tick();
+                if let Some(e) = self.game.res.player_entity {
+                    if let Ok(pos) = self
+                        .game
+                        .world
+                        .get::<&lithicrivers_core::components::Position>(e)
+                    {
+                        self.game.res.view_z = pos.z;
+                    }
+                }
             }
             KeyCode::Char('3') => {
                 self.game.queue_player_move(1, 1);
                 self.game.tick();
+                if let Some(e) = self.game.res.player_entity {
+                    if let Ok(pos) = self
+                        .game
+                        .world
+                        .get::<&lithicrivers_core::components::Position>(e)
+                    {
+                        self.game.res.view_z = pos.z;
+                    }
+                }
             }
             KeyCode::Char('5') => {
                 self.game.queue_player_move(0, 0);
@@ -156,10 +228,28 @@ impl App {
             KeyCode::Char('<') => {
                 self.game.queue_player_move_z(1);
                 self.game.tick();
+                if let Some(e) = self.game.res.player_entity {
+                    if let Ok(pos) = self
+                        .game
+                        .world
+                        .get::<&lithicrivers_core::components::Position>(e)
+                    {
+                        self.game.res.view_z = pos.z;
+                    }
+                }
             }
             KeyCode::Char('>') => {
                 self.game.queue_player_move_z(-1);
                 self.game.tick();
+                if let Some(e) = self.game.res.player_entity {
+                    if let Ok(pos) = self
+                        .game
+                        .world
+                        .get::<&lithicrivers_core::components::Position>(e)
+                    {
+                        self.game.res.view_z = pos.z;
+                    }
+                }
             }
             // Zoom controls: '=' zoom in, '-' zoom out, '0' reset
             KeyCode::Char('=') | KeyCode::Char('+') => {
