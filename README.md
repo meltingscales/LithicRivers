@@ -54,6 +54,7 @@ Currently we support:
 
 ### Windows
 
+    just --justfile justfile.windows install
     just --justfile justfile.windows build
     just --justfile justfile.windows run
 
