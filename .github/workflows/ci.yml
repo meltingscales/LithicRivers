@@ -10,7 +10,7 @@ on:
 jobs:
   build:
     runs-on: ${{ matrix.os }}
-    if: github.ref == 'refs/heads/release'
+    if: github.ref == 'refs/heads/release' || github.ref == 'refs/heads/rust-migration'
     strategy:
       fail-fast: false
       matrix:
@@ -42,7 +42,7 @@ jobs:
   steam-upload-ubuntu:
     needs: build
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/release' && vars.ENABLE_STEAM_UPLOAD == 'true'
+    if: github.ref == 'refs/heads/release' || github.ref == 'refs/heads/rust-migration' && vars.ENABLE_STEAM_UPLOAD == 'true'
     env:
       STEAM_USERNAME: ${{ secrets.STEAM_USERNAME }}
       STEAM_PASSWORD: ${{ secrets.STEAM_PASSWORD }}
