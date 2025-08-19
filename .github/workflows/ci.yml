@@ -15,6 +15,10 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
+    env:
+      RUSTC_WRAPPER: sccache
+      SCCACHE_CACHE_SIZE: 5G
+      CARGO_INCREMENTAL: 0
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -22,8 +26,32 @@ jobs:
       - name: Set up Rust toolchain (nightly)
         uses: dtolnay/rust-toolchain@nightly
 
+      - name: Install sccache (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y sccache
+
+      - name: Install sccache (Windows)
+        if: matrix.os == 'windows-latest'
+        run: choco install sccache
+
+      - name: Cache sccache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/sccache
+            C:\\Users\\runneradmin\\AppData\\Local\\Mozilla\\sccache
+            C:\\Users\\runneradmin\\AppData\\Local\\sccache
+          key: sccache-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            sccache-${{ runner.os }}-
+
       - name: Cache cargo builds
         uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+          shared-key: ${{ runner.os }}-nightly
 
       - name: Build on Windows
         if: matrix.os == 'windows-latest'
