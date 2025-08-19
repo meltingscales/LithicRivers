@@ -2,12 +2,14 @@
 
 ## Small temp list
 
-- make the built binary use its packaged assets, not filesystem assets
+- make the built binary use its packaged assets, not filesystem assets, so it doesnt panic when its a lone exe
 
 ## Core Gameplay Loop (Must Have)
 - [ ] Basic world generation with multiple biomes
   - [ ] At least 3 distinct biome bands with tile/feature differences
-  - [ ] Deterministic by seed across Z-slices
+    - [ ] structure generation that's unique across biomes
+    - [ ] underground "Lithic Rivers" biome that's molten lava and rare ore, and dangerous mining bots
+    - [ ] Deterministic by seed across Z-slices
 - [ ] Player movement and basic interactions
   - [ ] Numpad movement plus '<'/'>' vertical movement
   - [ ] Mining action with SFX and message log feedback
