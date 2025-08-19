@@ -34,7 +34,8 @@ jobs:
       - name: Build on Linux
         if: matrix.os == 'ubuntu-latest'
         run: |
-          apt install just
+          sudo apt install just
+          sudo bash scripts/install_dev_deps.sh
           just build
 
       - name: Upload artifacts
