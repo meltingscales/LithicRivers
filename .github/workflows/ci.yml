@@ -85,7 +85,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: dist-${{ matrix.os }}
+          name: lithicrivers-${{ github.ref }}-${{ github.sha }}-${{ matrix.os }}
           path: artifacts/
 
   steam-upload-ubuntu:
