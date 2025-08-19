@@ -1,18 +1,30 @@
 # Windows-specific justfile for LithicRivers
 # Focused on core build and run functionality
 
-# Set shell to use cmd.exe
-set shell := ["cmd.exe", "/c"]
+# Set shell to use PowerShell
+set shell := ["powershell.exe", "-NoProfile", "-Command"]
 
 # Default toolchain (can be overridden)
 toolchain := "stable"
 
-# CPU count
-cpu_count := "%NUMBER_OF_PROCESSORS%"
+# CPU count (PowerShell environment reference)
+cpu_count := "$env:NUMBER_OF_PROCESSORS"
 
 # Build in debug mode (default)
 build:
     cargo build --workspace -j {{cpu_count}}
+
+stage-artifacts: build
+    Remove-Item -Recurse -Force artifacts -ErrorAction SilentlyContinue
+    New-Item -ItemType Directory -Force -Path artifacts | Out-Null
+    $bins = @(
+      'target/debug/lithicrivers-client.exe',
+      'target/debug/demo_inventory.exe',
+      'target/debug/demo_body.exe',
+      'target/debug/beezzaroll_color_test.exe',
+      'target/debug/beezzaroll_sprite_test.exe'
+    )
+    foreach ($b in $bins) { if (Test-Path $b) { Copy-Item -Force $b artifacts/ } }
 
 # Build in release mode
 build-release:

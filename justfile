@@ -88,6 +88,16 @@ build: fmt
     {{cargoz_env}} build -p lithicrivers-core {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin lithicrivers-client {{build_flags}}
 
+stage-artifacts: build
+    rm -rf artifacts/
+    mkdir -p artifacts/
+    cp -f target/debug/lithicrivers-client artifacts/
+    cp -f target/debug/demo_inventory artifacts/
+    cp -f target/debug/demo_body artifacts/
+    cp -f target/debug/demo_inventory artifacts/
+    cp -f target/debug/beezzaroll_color_test artifacts/
+    cp -f target/debug/beezzaroll_sprite_test artifacts/
+
 ## Optional: build demo binaries (may require ratatui API updates)
 build-demos: fmt
     {{cargoz_env}} build -p lithicrivers-client --bin demo_inventory {{build_flags}}
