@@ -409,6 +409,9 @@ fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
     let view_h = view_h;
     let view_w = view_w;
 
+    // Sync world generation Z with current view slice
+    app.game.res.world.set_generation_z(app.game.res.view_z);
+
     // Compute world-space bounds for current viewport and prefetch chunks
     let left = view.player_pos.x - (target_cols as i32 / 2);
     let top = view.player_pos.y - (target_rows as i32 / 2);

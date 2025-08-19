@@ -40,6 +40,8 @@ pub const CHUNK_SIZE: i32 = 64;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct World {
     pub seed: u64,
+    // Z slice to use for generation-time noise sampling
+    pub gen_z: i32,
     chunks: HashMap<(i64, i64), Chunk>,
 }
 
@@ -48,7 +50,17 @@ impl World {
         // Width/height kept for compatibility; world is effectively infinite.
         Self {
             seed,
+            gen_z: 0,
             chunks: HashMap::new(),
+        }
+    }
+
+    /// Set the Z slice that generation should use when sampling 3D noise.
+    /// Clears cached chunks when Z changes so slices regenerate with new noise.
+    pub fn set_generation_z(&mut self, z: i32) {
+        if self.gen_z != z {
+            self.gen_z = z;
+            self.clear_cache();
         }
     }
 
@@ -75,7 +87,8 @@ impl World {
         let biome_noise = Perlin::new(self.seed as u32 % 0x10000);
         let feature_noise = Perlin::new(self.seed as u32 % 0x20000);
 
-        // Generate terrain using Perlin noise
+        // Generate terrain using Perlin noise. Incorporate Z to get vertical variation.
+        let zf = self.gen_z as f64;
         for y in 0..CHUNK_SIZE {
             for x in 0..CHUNK_SIZE {
                 // Calculate world coordinates
@@ -84,17 +97,18 @@ impl World {
 
                 // Generate base terrain height (0.0 to 1.0)
                 let scale = 0.01; // Adjust this to change the scale of the terrain features
-                let height = perlin.get([wx * scale, wy * scale, 0.0]);
+                let height = perlin.get([wx * scale, wy * scale, zf * scale]);
                 let height = (height + 1.0) * 0.5; // Convert from [-1, 1] to [0, 1]
 
                 // Generate biome value
                 let biome_scale = 0.005; // Larger scale for biomes (bigger areas)
-                let biome_value = biome_noise.get([wx * biome_scale, wy * biome_scale, 0.0]);
+                let biome_value =
+                    biome_noise.get([wx * biome_scale, wy * biome_scale, zf * biome_scale]);
 
                 // Generate feature value
                 let feature_scale = 0.05; // Smaller scale for features
                 let feature_value =
-                    feature_noise.get([wx * feature_scale, wy * feature_scale, 0.0]);
+                    feature_noise.get([wx * feature_scale, wy * feature_scale, zf * feature_scale]);
 
                 // Determine base tile type based on height
                 let base_tile = if height < 0.3 {
