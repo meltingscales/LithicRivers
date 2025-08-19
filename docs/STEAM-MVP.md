@@ -2,6 +2,7 @@
 
 ## Small temp list
 - make the game world 3d.
+  - note that we will still just be using ratatui to render, just different slices of the world.
   - note that the game world is infinite.
   - chunks are 3d and should be lazy-loaded like normal.
   - moving up/down should be handled by the same function that moves you laterally
