@@ -12,23 +12,23 @@ cpu_count := "%NUMBER_OF_PROCESSORS%"
 
 # Build in debug mode (default)
 build:
-    cargo build --workspace
+    cargo build --workspace -j {{cpu_count}}
 
 # Build in release mode
 build-release:
-    cargo build --release --workspace
+    cargo build --release --workspace -j {{cpu_count}}
 
 # Run debug build
 run:
-    cargo run -p lithicrivers-client --bin lithicrivers-client
+    cargo run -p lithicrivers-client --bin lithicrivers-client -j {{cpu_count}}
 
 # Run release build
 run-release:
-    cargo run --release -p lithicrivers-client --bin lithicrivers-client
+    cargo run --release -p lithicrivers-client --bin lithicrivers-client -j {{cpu_count}}
 
 # Run tests
 test:
-    cargo test --workspace
+    cargo test --workspace -j {{cpu_count}}
 
 # Clean build artifacts
 clean:
