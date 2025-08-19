@@ -1,10 +1,15 @@
 use lithicrivers_core::tiles::TileKind;
 use ratatui::prelude::Color;
 use serde::Deserialize;
+use std::borrow::Cow;
 use std::collections::HashMap;
-use std::fs;
 use std::path::{Path, PathBuf};
+
+use rust_embed::RustEmbed;
 // All color data must come from data.json in each .lrsprite. No hardcoded fallbacks.
+#[derive(RustEmbed)]
+#[folder = "assets/"]
+struct EmbeddedAssets;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Scale {
@@ -82,42 +87,31 @@ impl SpriteLoader {
         }
     }
 
+    fn get_embedded_text(path: &str) -> String {
+        let asset =
+            EmbeddedAssets::get(path).unwrap_or_else(|| panic!("Missing embedded asset: {}", path));
+        match asset.data {
+            Cow::Borrowed(b) => String::from_utf8(b.to_vec()).expect("embedded text not UTF-8"),
+            Cow::Owned(v) => String::from_utf8(v).expect("embedded text not UTF-8"),
+        }
+    }
+
     pub fn load_sprite(&mut self, sprite_name: &str, category: &str) -> &SpriteData {
         let cache_key = format!("{}/{}", category, sprite_name);
         if self.sprite_cache.contains_key(&cache_key) {
             return self.sprite_cache.get(&cache_key).unwrap();
         }
-        let sprite_path = self
-            .data_path
-            .join(category)
-            .join(format!("{}.lrsprite", sprite_name));
-        let data_file = sprite_path.join("data.json");
-        let sprites_file = sprite_path.join("sprites.txt");
-        let item_art_file = sprite_path.join("item_art.txt");
-        // Check for missing files and throw a clear error
-        if !data_file.exists() {
-            panic!(
-                "Missing data.json for sprite '{}' in category '{}': {}",
-                sprite_name,
-                category,
-                data_file.display()
-            );
-        }
-        if !sprites_file.exists() {
-            panic!(
-                "Missing sprites.txt for sprite '{}' in category '{}': {}",
-                sprite_name,
-                category,
-                sprites_file.display()
-            );
-        }
-        // Load metadata
-        let metadata: SpriteMetadata = {
-            let file = fs::File::open(&data_file).expect("Failed to open data.json");
-            serde_json::from_reader(file).expect("Failed to parse data.json")
-        };
-        // Load sprite lines
-        let content = fs::read_to_string(&sprites_file).expect("Failed to read sprites.txt");
+        // Embedded asset paths
+        let base = format!("sprites/{}/{}.lrsprite/", category, sprite_name);
+        let data_path = format!("{}data.json", base);
+        let sprites_path = format!("{}sprites.txt", base);
+        let item_art_path = format!("{}item_art.txt", base);
+
+        // Load metadata from embedded assets
+        let metadata: SpriteMetadata = serde_json::from_str(&Self::get_embedded_text(&data_path))
+            .expect("Failed to parse embedded data.json");
+        // Load sprite lines from embedded assets
+        let content = Self::get_embedded_text(&sprites_path);
         let lines: Vec<&str> = content.lines().collect();
         // Group lines into sprites by scale (same as Python logic)
         let sprites = if lines.len() >= 6 {
@@ -136,58 +130,60 @@ impl SpriteLoader {
             color: metadata.color,
             description: metadata.description,
             sprites,
-            item_art: if item_art_file.exists() {
-                Some(fs::read_to_string(&item_art_file).expect("Failed to read item_art.txt"))
-            } else {
-                None
-            },
+            item_art: EmbeddedAssets::get(&item_art_path).map(|d| match d.data {
+                Cow::Borrowed(b) => String::from_utf8(b.to_vec()).expect("item_art not UTF-8"),
+                Cow::Owned(v) => String::from_utf8(v).expect("item_art not UTF-8"),
+            }),
         };
         self.sprite_cache.insert(cache_key.clone(), sprite_data);
         self.sprite_cache.get(&cache_key).unwrap()
     }
 
-    // Discover and preload all sprites under data_path, scanning categories and *.lrsprite folders.
+    // Discover and preload all sprites from embedded assets under sprites/<category>/<name>.lrsprite/
     pub fn preload_all(&mut self) {
-        if !self.data_path.exists() {
-            panic!(
-                "Sprite assets path does not exist: {}",
-                self.data_path.display()
-            );
-        }
-        let Ok(categories) = fs::read_dir(&self.data_path) else {
-            return;
-        };
-        for cat_entry in categories.flatten() {
-            let cat_path = cat_entry.path();
-            if !cat_path.is_dir() {
+        use std::collections::BTreeSet;
+        let mut seen: BTreeSet<(String, String)> = BTreeSet::new();
+        for file in EmbeddedAssets::iter() {
+            let path = file.as_ref();
+            if !path.starts_with("sprites/") {
                 continue;
             }
-            let category = match cat_path.file_name().and_then(|s| s.to_str()) {
-                Some(name) => name.to_string(),
-                None => continue,
-            };
-            self.preload_category(&category);
+            // Expect: sprites/<category>/<name>.lrsprite/<file>
+            let parts: Vec<&str> = path.split('/').collect();
+            if parts.len() < 4 {
+                continue;
+            }
+            let category = parts[1];
+            let name_with_ext = parts[2];
+            if let Some(name) = name_with_ext.strip_suffix(".lrsprite") {
+                seen.insert((category.to_string(), name.to_string()));
+            }
+        }
+        for (category, name) in seen {
+            let _ = self.load_sprite(&name, &category);
         }
     }
 
-    // Preload a single category by loading all <name>.lrsprite directories within it.
+    // Preload a single category from embedded assets.
     pub fn preload_category(&mut self, category: &str) {
-        let cat_dir = self.data_path.join(category);
-        let Ok(entries) = fs::read_dir(&cat_dir) else {
-            return;
-        };
-        for entry in entries.flatten() {
-            let path = entry.path();
-            if !path.is_dir() {
+        use std::collections::BTreeSet;
+        let mut seen: BTreeSet<String> = BTreeSet::new();
+        let prefix = format!("sprites/{}/", category);
+        for file in EmbeddedAssets::iter() {
+            let path = file.as_ref();
+            if !path.starts_with(&prefix) {
                 continue;
             }
-            let Some(fname) = path.file_name().and_then(|s| s.to_str()) else {
+            let parts: Vec<&str> = path.split('/').collect();
+            if parts.len() < 3 {
                 continue;
-            };
-            if let Some(name) = fname.strip_suffix(".lrsprite") {
-                // Will fill cache or validate
-                let _ = self.load_sprite(name, category);
             }
+            if let Some(name) = parts[2].strip_suffix(".lrsprite") {
+                seen.insert(name.to_string());
+            }
+        }
+        for name in seen {
+            let _ = self.load_sprite(&name, category);
         }
     }
 
@@ -330,12 +326,8 @@ mod tests {
     use super::*;
     #[test]
     fn test_load_water_sprite() {
-        let asset_path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("assets/sprites");
-        let mut loader = SpriteLoader::new(Some(&asset_path));
+        let mut loader = SpriteLoader::new(None);
         let sprite = loader.load_sprite("water", "fluids");
-        println!("Loaded sprite: {:?}", sprite);
-        for (i, s) in sprite.sprites.iter().enumerate() {
-            println!("Scale {}:\n{}", i + 1, s);
-        }
+        assert!(!sprite.sprites.is_empty());
     }
 }

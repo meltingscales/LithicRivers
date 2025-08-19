@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::path::PathBuf;
 
 use noise::{NoiseFn, Perlin};
 use rand::{Rng, SeedableRng};
@@ -73,11 +72,9 @@ impl World {
                 "small_temple.lrstructure",
                 "starter_ship.lrstructure",
             ];
-            let asset_root = PathBuf::from("crates/client/assets/structures");
             let offsets = [(8, 8), (20, 40), (40, 20), (32, 32)];
             for (name, &(ox, oy)) in structure_names.iter().zip(offsets.iter()) {
-                let struct_dir = asset_root.join(name);
-                let structure = StructureDefinition::load_from_directory(&struct_dir);
+                let structure = StructureDefinition::load_from_embedded(name);
                 Self::apply_structure(chunk, &structure, ox, oy);
             }
         }

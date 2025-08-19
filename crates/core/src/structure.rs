@@ -1,7 +1,10 @@
 use serde::Deserialize;
+use std::borrow::Cow;
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
+
+use rust_embed::RustEmbed;
 
 use crate::tiles::TileKind;
 
@@ -15,7 +18,69 @@ pub struct StructureDefinition {
     pub y_layer_gen_range: Vec<i32>,
 }
 
+#[derive(RustEmbed)]
+#[folder = "../client/assets/"]
+struct EmbeddedAssets;
+
 impl StructureDefinition {
+    /// Load from embedded assets (panics on failure). `structure_name` is the
+    /// folder name such as "starter_ship.lrstructure" under assets/structures/.
+    pub fn load_from_embedded(structure_name: &str) -> Self {
+        let base = format!("structures/{}/", structure_name);
+
+        let data_path = format!("{}data.json", base);
+        let shape_path = format!("{}shape_layers.txt", base);
+
+        let data_file = EmbeddedAssets::get(&data_path)
+            .unwrap_or_else(|| panic!("Missing embedded {}", data_path));
+        let shape_file = EmbeddedAssets::get(&shape_path)
+            .unwrap_or_else(|| panic!("Missing embedded {}", shape_path));
+
+        let data: serde_json::Value = serde_json::from_slice(match data_file.data {
+            Cow::Borrowed(b) => b,
+            Cow::Owned(ref v) => v.as_slice(),
+        })
+        .expect("Failed to parse embedded data.json");
+
+        let shape_content = match shape_file.data {
+            Cow::Borrowed(b) => String::from_utf8(b.to_vec()).expect("shape_layers not UTF-8"),
+            Cow::Owned(v) => String::from_utf8(v).expect("shape_layers not UTF-8"),
+        };
+
+        let layers: Vec<String> = shape_content
+            .split("~~~~~")
+            .map(|layer| layer.trim().to_string())
+            .filter(|layer| !layer.is_empty())
+            .collect();
+
+        let blocks: HashMap<String, String> =
+            serde_json::from_value(data["blocks"].clone()).expect("blocks must be a map");
+        for (symbol, tile_str) in &blocks {
+            if TileKind::from_str(tile_str).is_none() {
+                panic!(
+                    "Unknown tile kind '{}' for symbol '{}' in structure '{}'. Valid: {}",
+                    tile_str,
+                    symbol,
+                    structure_name,
+                    crate::tiles::TILE_KIND_STRS.join(", ")
+                );
+            }
+        }
+
+        Self {
+            name: structure_name.replace(".lrstructure", ""),
+            blocks,
+            layers,
+            gen_biomes: data["gen_biomes"].as_str().unwrap_or("").to_string(),
+            gen_chance: data["gen_chance"].as_f64().unwrap_or(1.0) as f32,
+            y_layer_gen_range: data["y_layer_gen_range"]
+                .as_array()
+                .unwrap_or(&vec![])
+                .iter()
+                .map(|v| v.as_i64().unwrap_or(0) as i32)
+                .collect(),
+        }
+    }
     pub fn load_from_directory<P: AsRef<Path>>(structure_dir: P) -> Self {
         let structure_dir = structure_dir.as_ref();
         let name = structure_dir
