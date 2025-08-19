@@ -14,7 +14,7 @@ cpu_count := "$env:NUMBER_OF_PROCESSORS"
 build:
     cargo build --workspace -j {{cpu_count}}
 
-stage-artifacts: build
+stage-artifacts: build build-demos
     Remove-Item -Recurse -Force artifacts -ErrorAction SilentlyContinue
     New-Item -ItemType Directory -Force -Path artifacts | Out-Null
     $bins = @(
@@ -26,9 +26,11 @@ stage-artifacts: build
     )
     foreach ($b in $bins) { if (Test-Path $b) { Copy-Item -Force $b artifacts/ } }
 
-# Build in release mode
-build-release:
-    cargo build --release --workspace -j {{cpu_count}}
+build-demos:
+    cargo build -p lithicrivers-client --bin demo_inventory {{build_flags}}
+    cargo build -p lithicrivers-client --bin demo_body {{build_flags}}
+    cargo build -p lithicrivers-client --bin beezzaroll_color_test {{build_flags}}
+    cargo build -p lithicrivers-client --bin beezzaroll_sprite_test {{build_flags}}
 
 # Run debug build
 run:

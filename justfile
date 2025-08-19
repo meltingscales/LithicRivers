@@ -88,7 +88,7 @@ build: fmt
     {{cargoz_env}} build -p lithicrivers-core {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin lithicrivers-client {{build_flags}}
 
-stage-artifacts: build
+stage-artifacts: build build-demos
     rm -rf artifacts/
     mkdir -p artifacts/
     cp -f target/debug/lithicrivers-client artifacts/
@@ -102,6 +102,8 @@ stage-artifacts: build
 build-demos: fmt
     {{cargoz_env}} build -p lithicrivers-client --bin demo_inventory {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin demo_body {{build_flags}}
+    {{cargoz_env}} build -p lithicrivers-client --bin beezzaroll_color_test {{build_flags}}
+    {{cargoz_env}} build -p lithicrivers-client --bin beezzaroll_sprite_test {{build_flags}}
 
 # Run debug build (alias for client)
 run-debug: client
