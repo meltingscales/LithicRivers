@@ -2,7 +2,6 @@
 
 ## Small temp list
 
-- make the built binary use its packaged assets, not filesystem assets, so it doesnt panic when its a lone exe
 - fix windows exe consuming keystrokes way too fast (should we switch shells on windows?? does this only happen because im in a vm??)
 
 ## Core Gameplay Loop (Must Have)

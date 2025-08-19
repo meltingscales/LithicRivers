@@ -37,6 +37,63 @@ struct App {
     audio: audio::AudioManager,
 }
 
+fn render_help_panel(f: &mut Frame, _app: &mut App, area: Rect) {
+    let mut lines: Vec<Line> = Vec::new();
+    lines.push(Line::from(Span::styled(
+        "Controls",
+        Style::default().fg(Color::Cyan),
+    )));
+    lines.push(Line::from(""));
+    // Movement
+    lines.push(Line::from(Span::raw("Movement (Numpad):")));
+    lines.push(Line::from(Span::raw("  7 8 9  - diagonals/cardinals")));
+    lines.push(Line::from(Span::raw("  4 5 6  - 5 to wait")));
+    lines.push(Line::from(Span::raw("  1 2 3")));
+    lines.push(Line::from(""));
+    // Vertical
+    lines.push(Line::from(Span::raw("Vertical movement:")));
+    lines.push(Line::from(Span::raw("  <  - move up a Z-level")));
+    lines.push(Line::from(Span::raw("  >  - move down a Z-level")));
+    lines.push(Line::from(Span::raw(
+        "  PageUp/PageDown - change viewed Z slice",
+    )));
+    lines.push(Line::from(""));
+    // Actions
+    lines.push(Line::from(Span::raw("Actions:")));
+    lines.push(Line::from(Span::raw("  m  - mine (plays SFX on success)")));
+    lines.push(Line::from(""));
+    // Zoom
+    lines.push(Line::from(Span::raw("Zoom:")));
+    lines.push(Line::from(Span::raw("  =/+ - zoom in")));
+    lines.push(Line::from(Span::raw("  -   - zoom out")));
+    lines.push(Line::from(Span::raw("  0   - reset zoom")));
+    lines.push(Line::from(""));
+    // Save/Load
+    lines.push(Line::from(Span::raw("Save/Load:")));
+    lines.push(Line::from(Span::raw("  S - save to save.json")));
+    lines.push(Line::from(Span::raw("  L - load from save.json")));
+    lines.push(Line::from(""));
+    // Menu
+    lines.push(Line::from(Span::raw("Menu navigation:")));
+    lines.push(Line::from(Span::raw(
+        "  Left/Right - switch tabs (World, Body, Inventory, Menu, Help, Quit)",
+    )));
+    lines.push(Line::from(Span::raw(
+        "  Enter/Space - activate selected tab",
+    )));
+    lines.push(Line::from(Span::raw("  Mouse - click tab labels")));
+    lines.push(Line::from(""));
+    // Quit
+    lines.push(Line::from(Span::raw("General:")));
+    lines.push(Line::from(Span::raw("  q - quit")));
+
+    let block = Block::default().borders(Borders::ALL).title("Help");
+    let inner = block.inner(area);
+    let p = Paragraph::new(lines).alignment(Alignment::Left);
+    f.render_widget(p, inner);
+    f.render_widget(block, area);
+}
+
 impl App {
     fn new() -> App {
         // Initialize game and sprite loader
@@ -101,16 +158,16 @@ impl App {
             KeyCode::Enter | KeyCode::Char(' ') => {
                 self.activate_menu();
             }
-            // Cycle menu with left/right (5 tabs)
+            // Cycle menu with left/right (6 tabs)
             KeyCode::Left => {
                 if self.menu_index == 0 {
-                    self.menu_index = 4;
+                    self.menu_index = 5;
                 } else {
                     self.menu_index -= 1;
                 }
             }
             KeyCode::Right => {
-                self.menu_index = (self.menu_index + 1) % 5;
+                self.menu_index = (self.menu_index + 1) % 6;
             }
             // Mining
             KeyCode::Char('m') => {
@@ -230,8 +287,8 @@ impl App {
                 let rw = rect.width as i32;
                 let rh = rect.height as i32;
                 if mx >= rx && mx < rx + rw && my >= ry && my < ry + rh {
-                    // Map click to tab index (5 tabs)
-                    let seg = rw / 5;
+                    // Map click to tab index (6 tabs)
+                    let seg = rw / 6;
                     let relx = mx - rx;
                     self.menu_index = if relx < seg {
                         0
@@ -241,8 +298,10 @@ impl App {
                         2
                     } else if relx < seg * 4 {
                         3
-                    } else {
+                    } else if relx < seg * 5 {
                         4
+                    } else {
+                        5
                     };
                     self.activate_menu();
                 }
@@ -270,6 +329,10 @@ impl App {
                 self.game
                     .res
                     .log("Menu panel active (press S to Save, L to Load)");
+            }
+            4 => {
+                // Help
+                self.game.res.log("Help panel active");
             }
             _ => {
                 // Quit
@@ -377,6 +440,9 @@ fn ui(f: &mut Frame, app: &mut App) {
     } else if app.menu_index == 3 {
         // Menu: save/load panel
         render_menu_panel(f, app, root_chunks[1]);
+    } else if app.menu_index == 4 {
+        // Help: controls
+        render_help_panel(f, app, root_chunks[1]);
     } else {
         // Quit selected: do nothing special here; run loop will exit
     }
@@ -551,6 +617,7 @@ fn render_bottom_menu(f: &mut Frame, app: &mut App, area: Rect) {
         Span::styled(" Body ", Style::default().fg(Color::LightBlue)),
         Span::styled(" Inventory ", Style::default().fg(Color::Yellow)),
         Span::styled(" Menu ", Style::default().fg(Color::Magenta)),
+        Span::styled(" Help ", Style::default().fg(Color::White)),
         Span::styled(" Quit ", Style::default().fg(Color::Red)),
     ];
     let tabs = Tabs::new(titles)
