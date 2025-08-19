@@ -26,59 +26,89 @@ impl AudioTrack {
     }
 }
 
-/// Manages audio playback with support for multiple tracks
+/// Manages audio playback with support for music and sound effects
 pub struct AudioManager {
     _stream: OutputStream,
-    sink: Sink,
-    tracks: HashMap<String, AudioTrack>,
+    music_sink: Sink,
+    sfx_sink: Sink,
+    music_tracks: HashMap<String, AudioTrack>,
+    sfx_tracks: HashMap<String, AudioTrack>,
 }
 
 impl AudioManager {
     /// Create a new AudioManager
     pub fn new() -> Result<Self> {
         let (_stream, stream_handle) = OutputStream::try_default()?;
-        let sink = Sink::try_new(&stream_handle)?;
+        let music_sink = Sink::try_new(&stream_handle)?;
+        let sfx_sink = Sink::try_new(&stream_handle)?;
         
         Ok(Self {
             _stream,
-            sink,
-            tracks: HashMap::new(),
+            music_sink,
+            sfx_sink,
+            music_tracks: HashMap::new(),
+            sfx_tracks: HashMap::new(),
         })
     }
 
-    /// Register a new audio track with a given name
-    pub fn register_track<S: Into<String>>(&mut self, name: S, track: AudioTrack) {
-        self.tracks.insert(name.into(), track);
+    /// Register a new music track
+    pub fn register_music<S: Into<String>>(&mut self, name: S, track: AudioTrack) {
+        self.music_tracks.insert(name.into(), track);
     }
 
-    /// Play a registered track by name
-    pub fn play_track(&mut self, name: &str) -> Result<()> {
-        if let Some(track) = self.tracks.get(name) {
+    /// Register a new sound effect
+    pub fn register_sound_effect<S: Into<String>>(&mut self, name: S, track: AudioTrack) {
+        self.sfx_tracks.insert(name.into(), track);
+    }
+
+    /// Play a music track (stops any currently playing music)
+    pub fn play_music(&mut self, name: &str) -> Result<()> {
+        if let Some(track) = self.music_tracks.get(name) {
             let file = File::open(&track.path)?;
             let source = Decoder::new(BufReader::new(file))?;
             
-            // Stop any currently playing track
-            self.sink.stop();
+            self.music_sink.stop();
+            self.music_sink.append(source.repeat_infinite().amplify(track.volume));
+        }
+        Ok(())
+    }
+
+    /// Play a sound effect (can play simultaneously with music)
+    pub fn play_sound_effect(&mut self, name: &str) -> Result<()> {
+        if let Some(track) = self.sfx_tracks.get(name) {
+            let file = File::open(&track.path)?;
+            let source = Decoder::new(BufReader::new(file))?;
             
-            // Play the new track
-            self.sink.append(source.repeat_infinite().amplify(track.volume));
+            // Play the sound effect without stopping music
+            self.sfx_sink.append(source.amplify(track.volume));
         }
-        
         Ok(())
     }
 
-    /// Stop the currently playing track
-    pub fn stop(&mut self) {
-        self.sink.stop();
+    /// Stop all audio
+    pub fn stop_all(&mut self) {
+        self.music_sink.stop();
+        self.sfx_sink.stop();
     }
 
-    /// Set the volume for a specific track
-    pub fn set_track_volume(&mut self, name: &str, volume: f32) -> Result<()> {
-        if let Some(track) = self.tracks.get_mut(name) {
-            track.volume = volume.clamp(0.0, 1.0);
-            self.sink.set_volume(volume);
-        }
-        Ok(())
+    /// Stop only the music
+    pub fn stop_music(&mut self) {
+        self.music_sink.stop();
+    }
+
+    /// Stop all sound effects
+    pub fn stop_sound_effects(&mut self) {
+        self.sfx_sink.stop();
+    }
+
+    /// Set the music volume (0.0 to 1.0)
+    pub fn set_music_volume(&mut self, volume: f32) {
+        self.music_sink.set_volume(volume.clamp(0.0, 1.0));
+    }
+
+    /// Set the sound effects volume (0.0 to 1.0)
+    pub fn set_sfx_volume(&mut self, volume: f32) {
+        self.sfx_sink.set_volume(volume.clamp(0.0, 1.0));
     }
 
 

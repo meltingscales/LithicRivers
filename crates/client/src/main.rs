@@ -52,13 +52,20 @@ impl App {
             panic!("Failed to initialize audio: {}", e);
         });
 
+        // Set volumes
+        audio.set_music_volume(0.5);
+        audio.set_sfx_volume(0.7);
+
         // Register and play the opening music
-        let track = audio::AudioTrack::new("crates/client/assets/sound/music/opening.mp3")
-            .with_volume(0.5);
-        audio.register_track("opening", track);
-        if let Err(e) = audio.play_track("opening") {
+        let music_track = audio::AudioTrack::new("crates/client/assets/sound/music/opening.mp3");
+        audio.register_music("opening", music_track);
+        if let Err(e) = audio.play_music("opening") {
             panic!("Failed to play music: {}", e);
         }
+
+        // Example: Register a sound effect
+        // let effect_track = audio::AudioTrack::new("crates/client/assets/sound/effects/click.wav");
+        // audio.register_sound_effect("click", effect_track);
         
         App {
             game,
