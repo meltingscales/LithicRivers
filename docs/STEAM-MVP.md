@@ -1,8 +1,11 @@
 # Steam MVP Release Plan (Target: December 2024)
 
 ## Small temp list
-- make the game 3D.
-  - Moving up/down in the world with hotkeys
+- make the game world 3d.
+  - note that the game world is infinite.
+  - chunks are 3d and should be lazy-loaded like normal.
+  - moving up/down should be handled by the same function that moves you laterally
+  - Moving up/down in the world with hotkeys close to the numpad
 
 ## Core Gameplay Loop (Must Have)
 - [ ] Basic world generation with multiple biomes
