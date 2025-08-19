@@ -78,7 +78,7 @@ clean:
     rm -f target/debug/lithicrivers-client
 
 # Build the project
-build:
+build: fmt
     {{cargo_base}} --version
     # Build only the stable targets to keep `just build` green
     {{cargoz_env}} build -p lithicrivers-core {{build_flags}}

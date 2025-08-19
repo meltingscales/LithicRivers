@@ -105,7 +105,7 @@ impl App {
                 self.game.queue_mine();
                 let mining_success = self.game.tick();
                 if mining_success {
-                    self.audio.play_sound_effect("wood_crack");
+                    let _ = self.audio.play_sound_effect("wood_crack");
                 }
             }
             // Movement using numpad keys (cardinal + diagonal)
