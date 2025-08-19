@@ -277,7 +277,12 @@ mod tests {
 
 // JSON helpers for debug
 pub fn save_game_json<P: AsRef<Path>>(game: &crate::Game, path: P) -> Result<()> {
-    let data = SaveData::from_game(game)?;
+    let mut data = SaveData::from_game(game)?;
+    // JSON cannot encode non-string HashMap keys.
+    // Strip caches that use tuple/struct keys to make debug JSON workable.
+    data.world.clear_cache();
+    // Debug JSON: omit fluids (Position keys) to avoid non-string-key maps.
+    data.fluids = Default::default();
     let f = File::create(path.as_ref()).with_context(|| format!("create {:?}", path.as_ref()))?;
     let writer = BufWriter::new(f);
     serde_json::to_writer_pretty(writer, &data).context("serialize json")?;

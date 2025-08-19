@@ -251,6 +251,12 @@ impl World {
         }
     }
 
+    /// Clear any cached chunks. Useful before JSON serialization, since
+    /// serde_json cannot encode non-string map keys like (i64, i64).
+    pub fn clear_cache(&mut self) {
+        self.chunks.clear();
+    }
+
     fn apply_structure(chunk: &mut Chunk, structure: &StructureDefinition, ox: i32, oy: i32) {
         for (z, layer) in structure.layers.iter().enumerate() {
             for (y, line) in layer.lines().enumerate() {
