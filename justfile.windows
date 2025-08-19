@@ -15,10 +15,7 @@ build:
     cargo build --workspace -j {{cpu_count}}
 
 stage-artifacts: build build-demos
-    Remove-Item -Recurse -Force artifacts -ErrorAction SilentlyContinue
-    New-Item -ItemType Directory -Force -Path artifacts | Out-Null
-    $bins = @('target/debug/lithicrivers-client.exe','target/debug/demo_inventory.exe','target/debug/demo_body.exe','target/debug/beezzaroll_color_test.exe','target/debug/beezzaroll_sprite_test.exe')
-    foreach ($b in $bins) { if (Test-Path $b) { Copy-Item -Force $b artifacts/ } }
+    powershell.exe scripts/stage-artifacts.ps1
 
 build-demos:
     cargo build -p lithicrivers-client --bin demo_inventory
