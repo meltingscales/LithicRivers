@@ -30,6 +30,7 @@ jobs:
         run: |
           choco install just
           just --justfile justfile.windows build
+          just --justfile justfile.windows stage-artifacts
 
       - name: Build on Linux
         if: matrix.os == 'ubuntu-latest'
@@ -37,12 +38,13 @@ jobs:
           sudo apt install just
           sudo bash scripts/install_dev_deps.sh
           just build
+          just stage-artifacts
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: dist-${{ matrix.os }}
-          path: target/**
+          path: artifacts/
 
   steam-upload-ubuntu:
     needs: build
