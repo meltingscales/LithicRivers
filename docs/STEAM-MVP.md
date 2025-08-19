@@ -4,6 +4,8 @@
 
 - fix windows exe consuming keystrokes way too fast (should we switch shells on windows?? does this only happen because im in a vm??)
 
+- saving/loading doesnt save changes to the world, we need to serialize all chunks that have been generated
+
 ## Core Gameplay Loop (Must Have)
 - [ ] Basic world generation with multiple biomes
   - [ ] At least 3 distinct biome bands with tile/feature differences
