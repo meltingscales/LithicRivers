@@ -63,9 +63,8 @@ impl App {
             panic!("Failed to play music: {}", e);
         }
 
-        // Example: Register a sound effect
-        // let effect_track = audio::AudioTrack::new("crates/client/assets/sound/effects/click.wav");
-        // audio.register_sound_effect("click", effect_track);
+        let wood_crack = audio::AudioTrack::new("crates/client/assets/sound/effects/wood_crack.mp3");
+        audio.register_sound_effect("wood_crack", wood_crack);
         
         App {
             game,
@@ -101,7 +100,10 @@ impl App {
             // Mining
             KeyCode::Char('m') => {
                 self.game.queue_mine();
-                self.game.tick();
+                let mining_success = self.game.tick();
+                if mining_success {
+                    self.audio.play_sound_effect("wood_crack");
+                }
             }
             // Movement using numpad keys (cardinal + diagonal)
             KeyCode::Char('8') => {

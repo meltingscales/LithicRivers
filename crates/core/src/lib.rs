@@ -67,20 +67,26 @@ impl Game {
         self.res.pending_tick_increase = Some(cost);
     }
 
-    pub fn tick(&mut self) {
+    /// Advance the game state by one tick.
+    /// Returns true if mining was successful during this tick, false otherwise.
+    pub fn tick(&mut self) -> bool {
         // In the future, run an ordered system schedule.
         // For now, just increment tick and maybe move the player slowly.
         let inc = self.res.pending_tick_increase.take().unwrap_or(1);
         self.res.gametick = self.res.gametick.saturating_add(inc);
-        // Mining before movement so mining happens on current tile
-        mining_system(&mut self.world, &mut self.res);
+        
+        // Process systems
+        let mining_success = mining_system(&mut self.world, &mut self.res);
         move_player_system(&mut self.world, &mut self.res);
         pickup_system(&mut self.world, &mut self.res);
         stumbling_sheep_system(&mut self.world, &mut self.res);
+        
         // Process fluids
         self.res
             .fluids
             .process_fluids(&self.res.world, self.res.gametick);
+            
+        mining_success
     }
 
     pub fn build_view(&self) -> RenderView {
