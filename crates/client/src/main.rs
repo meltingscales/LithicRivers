@@ -1,5 +1,8 @@
 use crossterm::{
-    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEventKind, MouseEvent, MouseEventKind},
+    event::{
+        self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEventKind, MouseEvent,
+        MouseEventKind,
+    },
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
@@ -8,25 +11,20 @@ use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, Paragraph, Wrap, Tabs},
+    widgets::{Block, Borders, Paragraph, Tabs, Wrap},
     Frame, Terminal,
 };
-use std::{
-    error::Error,
-    io,
-    time::Duration,
-};
+use std::{error::Error, io, time::Duration};
 
 use lithicrivers_core::Game;
-mod sprite_loader;
 mod audio;
+mod sprite_loader;
 use crate::sprite_loader::{
-    sprite_block_for_entity, sprite_block_for_fluid, sprite_block_for_tile,
-    SpriteLoader, Scale,
+    sprite_block_for_entity, sprite_block_for_fluid, sprite_block_for_tile, Scale, SpriteLoader,
 };
 
-use lithicrivers_core::model::body::{Body, BodyPart, BodyPartState, BodyPartType};
 use lithicrivers_core::components::{Inventory as InvComp, ItemKind};
+use lithicrivers_core::model::body::{Body, BodyPart, BodyPartState, BodyPartType};
 
 struct App {
     game: Game,
@@ -46,7 +44,7 @@ impl App {
         let mut sprite_loader = SpriteLoader::new(None);
         // Preload all assets to eliminate runtime I/O during rendering
         sprite_loader.preload_all();
-        
+
         // Initialize audio manager
         let mut audio = audio::AudioManager::new().unwrap_or_else(|e| {
             panic!("Failed to initialize audio: {}", e);
@@ -63,9 +61,10 @@ impl App {
             panic!("Failed to play music: {}", e);
         }
 
-        let wood_crack = audio::AudioTrack::new("crates/client/assets/sound/effects/wood_crack.mp3");
+        let wood_crack =
+            audio::AudioTrack::new("crates/client/assets/sound/effects/wood_crack.mp3");
         audio.register_sound_effect("wood_crack", wood_crack);
-        
+
         App {
             game,
             sprite_loader,
@@ -92,7 +91,11 @@ impl App {
             }
             // Cycle menu with left/right (5 tabs)
             KeyCode::Left => {
-                if self.menu_index == 0 { self.menu_index = 4; } else { self.menu_index -= 1; }
+                if self.menu_index == 0 {
+                    self.menu_index = 4;
+                } else {
+                    self.menu_index -= 1;
+                }
             }
             KeyCode::Right => {
                 self.menu_index = (self.menu_index + 1) % 5;
@@ -192,7 +195,17 @@ impl App {
                     // Map click to tab index (5 tabs)
                     let seg = rw / 5;
                     let relx = mx - rx;
-                    self.menu_index = if relx < seg { 0 } else if relx < seg * 2 { 1 } else if relx < seg * 3 { 2 } else if relx < seg * 4 { 3 } else { 4 };
+                    self.menu_index = if relx < seg {
+                        0
+                    } else if relx < seg * 2 {
+                        1
+                    } else if relx < seg * 3 {
+                        2
+                    } else if relx < seg * 4 {
+                        3
+                    } else {
+                        4
+                    };
                     self.activate_menu();
                 }
             }
@@ -202,19 +215,26 @@ impl App {
 
     fn activate_menu(&mut self) {
         match self.menu_index {
-            0 => { // World (already active view)
+            0 => {
+                // World (already active view)
                 self.game.res.log("World map active");
             }
-            1 => { // Body
+            1 => {
+                // Body
                 self.game.res.log("Body panel active");
             }
-            2 => { // Inventory (placeholder)
+            2 => {
+                // Inventory (placeholder)
                 self.game.res.log("Inventory panel (WIP)");
             }
-            3 => { // Menu
-                self.game.res.log("Menu panel active (press S to Save, L to Load)");
+            3 => {
+                // Menu
+                self.game
+                    .res
+                    .log("Menu panel active (press S to Save, L to Load)");
             }
-            _ => { // Quit
+            _ => {
+                // Quit
                 self.should_quit = true;
             }
         }
@@ -226,11 +246,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     std::panic::set_hook(Box::new(|info| {
         let _ = disable_raw_mode();
         let mut stdout = io::stdout();
-        let _ = execute!(
-            stdout,
-            LeaveAlternateScreen,
-            DisableMouseCapture
-        );
+        let _ = execute!(stdout, LeaveAlternateScreen, DisableMouseCapture);
         eprintln!("\n\nPanic: {info}");
     }));
 
@@ -292,10 +308,10 @@ fn ui(f: &mut Frame, app: &mut App) {
         .direction(Direction::Vertical)
         .margin(0)
         .constraints([
-            Constraint::Length(1),        // Title line
-            Constraint::Min(0),           // Main area (map + inventory)
-            Constraint::Length(5),        // Message log
-            Constraint::Length(3),        // Bottom menu bar (needs 3 for borders + content)
+            Constraint::Length(1), // Title line
+            Constraint::Min(0),    // Main area (map + inventory)
+            Constraint::Length(5), // Message log
+            Constraint::Length(3), // Bottom menu bar (needs 3 for borders + content)
         ])
         .split(f.size());
 
@@ -310,10 +326,7 @@ fn ui(f: &mut Frame, app: &mut App) {
         // World: map with inventory sidebar
         let main_chunks = Layout::default()
             .direction(Direction::Horizontal)
-            .constraints([
-                Constraint::Min(20),
-                Constraint::Length(24),
-            ])
+            .constraints([Constraint::Min(20), Constraint::Length(24)])
             .split(root_chunks[1]);
         render_game_view(f, app, main_chunks[0]);
         render_inventory_panel(f, app, main_chunks[1]);
@@ -346,7 +359,11 @@ fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
 
     // Render the map to exactly the panel's area
     let view_h = view.map_lines.len();
-    let view_w = if view_h > 0 { view.map_lines[0].len() } else { 0 };
+    let view_w = if view_h > 0 {
+        view.map_lines[0].len()
+    } else {
+        0
+    };
     let target_cols = area.width as usize;
     let target_rows = area.height as usize;
 
@@ -375,10 +392,20 @@ fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
             let rel_y = (world_y - (view.player_pos.y - (view_h as i32 / 2))) as isize;
 
             // Check fluids first
-            let fluid_pos = lithicrivers_core::components::Position { x: world_x, y: world_y, z: 0 };
+            let fluid_pos = lithicrivers_core::components::Position {
+                x: world_x,
+                y: world_y,
+                z: 0,
+            };
             if let Some(fluid) = app.game.res.fluids.get_fluid(fluid_pos) {
-                let (block, color) = sprite_block_for_fluid(&mut app.sprite_loader, fluid.fluid_type, app.scale)
-                    .unwrap_or_else(|| panic!("Could not find sprite for fluid type: {:?}", fluid.fluid_type));
+                let (block, color) =
+                    sprite_block_for_fluid(&mut app.sprite_loader, fluid.fluid_type, app.scale)
+                        .unwrap_or_else(|| {
+                            panic!(
+                                "Could not find sprite for fluid type: {:?}",
+                                fluid.fluid_type
+                            )
+                        });
                 let ch = block.chars().next().unwrap_or(' ');
                 spans.push(Span::styled(ch.to_string(), Style::default().fg(color)));
                 continue;
@@ -387,9 +414,13 @@ fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
             // If within the original view window, use its overlay character for entities
             let mut used_overlay = false;
             if rel_x >= 0 && rel_y >= 0 && (rel_y as usize) < view_h && (rel_x as usize) < view_w {
-                let ch = view.map_lines[rel_y as usize].chars().nth(rel_x as usize).unwrap_or(' ');
+                let ch = view.map_lines[rel_y as usize]
+                    .chars()
+                    .nth(rel_x as usize)
+                    .unwrap_or(' ');
                 if ch != ' ' {
-                    let (block, color) = sprite_block_for_entity(&mut app.sprite_loader, ch, app.scale);
+                    let (block, color) =
+                        sprite_block_for_entity(&mut app.sprite_loader, ch, app.scale);
                     let ech = block.chars().next().unwrap_or(' ');
                     spans.push(Span::styled(ech.to_string(), Style::default().fg(color)));
                     used_overlay = true;
@@ -397,8 +428,11 @@ fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
             }
 
             if !used_overlay {
-                let (block, color) = sprite_block_for_tile(&mut app.sprite_loader, tile_kind, app.scale)
-                    .unwrap_or_else(|| panic!("Could not find sprite for tile kind: {:?}", tile_kind));
+                let (block, color) =
+                    sprite_block_for_tile(&mut app.sprite_loader, tile_kind, app.scale)
+                        .unwrap_or_else(|| {
+                            panic!("Could not find sprite for tile kind: {:?}", tile_kind)
+                        });
                 let ch = block.chars().next().unwrap_or(' ');
                 spans.push(Span::styled(ch.to_string(), Style::default().fg(color)));
             }
@@ -421,7 +455,11 @@ fn render_inventory_panel(f: &mut Frame, app: &mut App, area: Rect) {
                 lines.push(Line::from(Span::raw("(Empty)")));
             } else {
                 for s in &inv.slots {
-                    lines.push(Line::from(Span::raw(format!("{} x{}", kind_name(s.kind), s.qty))));
+                    lines.push(Line::from(Span::raw(format!(
+                        "{} x{}",
+                        kind_name(s.kind),
+                        s.qty
+                    ))));
                 }
             }
         } else {
@@ -446,7 +484,9 @@ fn render_message_log(f: &mut Frame, app: &mut App, area: Rect) {
     let mut lines: Vec<Line> = Vec::new();
     let start = if app.game.res.messages.len() > area.height as usize {
         app.game.res.messages.len() - area.height as usize
-    } else { 0 };
+    } else {
+        0
+    };
     for msg in app.game.res.messages.iter().skip(start) {
         lines.push(Line::from(Span::raw(msg.clone())));
     }
@@ -482,17 +522,33 @@ fn render_bottom_menu(f: &mut Frame, app: &mut App, area: Rect) {
 
 fn render_menu_panel(f: &mut Frame, app: &mut App, area: Rect) {
     let mut lines: Vec<Line> = Vec::new();
-    lines.push(Line::from(Span::styled("Game Menu", Style::default().fg(Color::Cyan))));
+    lines.push(Line::from(Span::styled(
+        "Game Menu",
+        Style::default().fg(Color::Cyan),
+    )));
     lines.push(Line::from(""));
     lines.push(Line::from(Span::raw("S - Save to save.json")));
     lines.push(Line::from(Span::raw("L - Load from save.json")));
     lines.push(Line::from(Span::raw("Q - Quit")));
     lines.push(Line::from(""));
-    lines.push(Line::from(Span::raw(format!("Seed: {}", app.game.res.seed))));
-    lines.push(Line::from(Span::raw(format!("Tick: {}", app.game.res.gametick))));
+    lines.push(Line::from(Span::raw(format!(
+        "Seed: {}",
+        app.game.res.seed
+    ))));
+    lines.push(Line::from(Span::raw(format!(
+        "Tick: {}",
+        app.game.res.gametick
+    ))));
     if let Some(e) = app.game.res.player_entity {
-        if let Ok(pos) = app.game.world.get::<&lithicrivers_core::components::Position>(e) {
-            lines.push(Line::from(Span::raw(format!("Player: ({}, {}, {})", pos.x, pos.y, pos.z))));
+        if let Ok(pos) = app
+            .game
+            .world
+            .get::<&lithicrivers_core::components::Position>(e)
+        {
+            lines.push(Line::from(Span::raw(format!(
+                "Player: ({}, {}, {})",
+                pos.x, pos.y, pos.z
+            ))));
         }
     }
     let block = Block::default().borders(Borders::ALL).title("Menu");
@@ -506,10 +562,7 @@ fn render_body_panel(f: &mut Frame, app: &mut App, area: Rect) {
     // Split area: left ASCII overview, right list
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
-        .constraints([
-            Constraint::Length(28),
-            Constraint::Min(20),
-        ])
+        .constraints([Constraint::Length(28), Constraint::Min(20)])
         .split(area);
 
     // Build from ECS
@@ -585,8 +638,14 @@ fn build_body_ascii(body: &Body) -> Vec<Line<'static>> {
             'l' => (BodyPartType::RightLeg, true),
             _ => (BodyPartType::Head, false),
         };
-        if !present { return Color::DarkGray; }
-        let state = body.parts.get(&part_type).map(|p| p.state).unwrap_or(BodyPartState::Missing);
+        if !present {
+            return Color::DarkGray;
+        }
+        let state = body
+            .parts
+            .get(&part_type)
+            .map(|p| p.state)
+            .unwrap_or(BodyPartState::Missing);
         match state {
             BodyPartState::Missing => Color::Black,
             BodyPartState::Damaged => Color::Red,
@@ -596,7 +655,7 @@ fn build_body_ascii(body: &Body) -> Vec<Line<'static>> {
     };
 
     let mut out: Vec<Line> = Vec::new();
-    for row in art {        
+    for row in art {
         let mut spans: Vec<Span> = Vec::new();
         for ch in row.chars() {
             if ch == ' ' {
@@ -618,4 +677,3 @@ fn kind_name(kind: ItemKind) -> &'static str {
         ItemKind::Stick => "Stick",
     }
 }
-

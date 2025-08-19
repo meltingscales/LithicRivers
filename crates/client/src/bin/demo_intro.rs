@@ -7,8 +7,7 @@ use ratatui::{prelude::*, symbols::border, widgets::*};
 use std::{
     cmp::max,
     collections::VecDeque,
-    fs,
-    io,
+    fs, io,
     path::Path,
     time::{Duration, Instant},
 };
@@ -219,7 +218,7 @@ fn build_intro_images(size: Rect) -> Vec<String> {
                     if l.len() as u16 > available_width {
                         l.truncate(available_width as usize);
                     }
-                    while (l.len() as u16)  < available_width {
+                    while (l.len() as u16) < available_width {
                         l.push(' ');
                     }
                     l
@@ -249,7 +248,7 @@ fn build_intro_images(size: Rect) -> Vec<String> {
                 if l.len() as u16 > available_width {
                     l.truncate(available_width as usize);
                 }
-                while (l.len() as u16)  < available_width {
+                while (l.len() as u16) < available_width {
                     l.push(' ');
                 }
                 l
@@ -298,7 +297,9 @@ fn corrupt_text(line: &str, rate: f32, seed: u64) -> String {
         let r = rng.next_f32();
         if r < rate {
             // Replace with a visible ASCII glitch char
-            let glyphs: &[char] = &['#', '%', '@', '*', '+', '=', 'x', 'X', '?', '!', '/', '\\', '~', '-', '_'];
+            let glyphs: &[char] = &[
+                '#', '%', '@', '*', '+', '=', 'x', 'X', '?', '!', '/', '\\', '~', '-', '_',
+            ];
             let idx = (rng.next_u32() as usize) % glyphs.len();
             out.push(glyphs[idx]);
         } else {
@@ -336,4 +337,3 @@ impl SplitMix64 {
         (v as f32) / (u32::MAX as f32 + 1.0)
     }
 }
-

@@ -36,15 +36,15 @@ impl App {
             char_set: 0,
         }
     }
-    
+
     fn toggle_hex(&mut self) {
         self.show_hex = !self.show_hex;
     }
-    
+
     fn next_char_set(&mut self) {
         self.char_set = (self.char_set + 1) % 4;
     }
-    
+
     fn get_character_set(&self) -> &'static [char] {
         match self.char_set {
             0 => &[
@@ -59,10 +59,10 @@ impl App {
                 'y', 'z', '{', '|', '}', '~', '⌂', 'Ç', 'ü', 'é', 'â', 'ä', 'à', 'å', 'ç', 'ê',
                 'ë', 'è', 'ï', 'î', 'ì', 'Ä', 'Å', 'É', 'æ', 'Æ', 'ô', 'ö', 'ò', 'û', 'ù', 'ÿ',
                 'Ö', 'Ü', '¢', '£', '¥', '₧', 'ƒ', 'á', 'í', 'ó', 'ú', 'ñ', 'Ñ', 'ª', 'º', '¿',
-                '!', '"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', ',', '-', '.', '/',
-                '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ':', ';', '<', '=', '>', '?',
-                '@', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O',
-                'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '[', '\\', ']', '^', '_',
+                '!', '"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', ',', '-', '.', '/', '0',
+                '1', '2', '3', '4', '5', '6', '7', '8', '9', ':', ';', '<', '=', '>', '?', '@',
+                'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
+                'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '[', '\\', ']', '^', '_',
             ],
             1 => &[
                 '╭', '─', '╮', '│', '╯', '─', '╰', '│', '┏', '━', '┓', '┃', '┛', '━', '┗', '┃',
@@ -100,10 +100,12 @@ impl App {
                 'α', 'ß', 'Γ', 'π', 'Σ', 'σ', 'µ', 'τ', 'Φ', 'Θ', 'Ω', 'δ', '∞', 'φ', 'ε', '∩',
                 '≡', '±', '≥', '≤', '⌠', '⌡', '÷', '≈', '°', '∙', '·', '√', 'ⁿ', '²', '■', ' ',
             ],
-            _ => &['█', '▓', '▒', '░', '■', '□', '▪', '▫', '▬', '▲', '▼', '◄', '►', '●', '○', '•'],
+            _ => &[
+                '█', '▓', '▒', '░', '■', '□', '▪', '▫', '▬', '▲', '▼', '◄', '►', '●', '○', '•',
+            ],
         }
     }
-    
+
     fn next_fg_color(&mut self) {
         self.fg_color = match self.fg_color {
             Color::Black => Color::DarkGray,
@@ -124,7 +126,7 @@ impl App {
             _ => Color::Black,
         };
     }
-    
+
     fn prev_fg_color(&mut self) {
         self.fg_color = match self.fg_color {
             Color::DarkGray => Color::Black,
@@ -145,7 +147,7 @@ impl App {
             _ => Color::White,
         };
     }
-    
+
     fn next_bg_color(&mut self) {
         self.bg_color = match self.bg_color {
             Color::Black => Color::DarkGray,
@@ -166,7 +168,7 @@ impl App {
             _ => Color::Black,
         };
     }
-    
+
     fn prev_bg_color(&mut self) {
         self.bg_color = match self.bg_color {
             Color::DarkGray => Color::Black,
@@ -187,7 +189,7 @@ impl App {
             _ => Color::Black,
         };
     }
-    
+
     fn get_color_name(color: Color) -> &'static str {
         match color {
             Color::Black => "Black",
@@ -223,7 +225,7 @@ fn main() -> Result<()> {
 
 fn run_app<B: Backend>(terminal: &mut Terminal<B>) -> io::Result<()> {
     let mut app = App::new();
-    
+
     loop {
         terminal.draw(|f| ui(f, &app))?;
 
@@ -261,29 +263,29 @@ fn restore_terminal(mut terminal: Terminal<CrosstermBackend<Stdout>>) -> Result<
 
 fn ui(f: &mut Frame, app: &App) {
     let size = f.size();
-    
+
     // Main border
     let block = Block::default()
         .borders(Borders::ALL)
         .title(" ASCII Character Set Viewer ")
         .title_alignment(Alignment::Center);
-        
+
     let inner = block.inner(size);
     f.render_widget(block, size);
-    
+
     // Create a grid of characters from the current character set
     let mut grid = String::new();
     let chars = app.get_character_set();
     let chars_len = chars.len();
-    
+
     if chars_len == 0 {
         return;
     }
-    
+
     // Calculate rows and columns to fit the terminal
     let cols = (inner.width as usize).min(32); // Max 32 columns
     let rows = (inner.height as usize).saturating_sub(4).max(1); // Leave space for controls
-    
+
     for row in 0..rows {
         for col in 0..cols {
             let idx = (row * cols + col) % chars_len;
@@ -296,13 +298,13 @@ fn ui(f: &mut Frame, app: &App) {
         }
         grid.push('\n');
     }
-    
+
     // Display the character grid
     let grid_para = Paragraph::new(grid)
         .fg(app.fg_color)
         .bg(app.bg_color)
         .block(Block::default().borders(Borders::NONE));
-    
+
     // Display current colors and controls
     let info = format!(
         "FG: {} (←/→) | BG: {} (↑/↓) | Chars: {} | Mode: {} | 'h': Toggle Hex | 'c': Cycle Chars | 'q': Quit",
@@ -311,18 +313,16 @@ fn ui(f: &mut Frame, app: &App) {
         ["Blocks", "Boxes", "CP437", "Emoji"][app.char_set],
         if app.show_hex { "Hex" } else { "Char" }
     );
-    
-    let info_para = Paragraph::new(info)
-        .block(Block::default()
+
+    let info_para = Paragraph::new(info).block(
+        Block::default()
             .borders(Borders::TOP)
-            .style(Style::default().fg(Color::Gray)));
-    
+            .style(Style::default().fg(Color::Gray)),
+    );
+
     // Layout
-    let chunks = Layout::vertical([
-        Constraint::Min(1),
-        Constraint::Length(3),
-    ]).split(inner);
-    
+    let chunks = Layout::vertical([Constraint::Min(1), Constraint::Length(3)]).split(inner);
+
     f.render_widget(grid_para, chunks[0]);
     f.render_widget(info_para, chunks[1]);
 }

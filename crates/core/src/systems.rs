@@ -1,4 +1,4 @@
-use crate::components::{BlocksMovement, DroppedItem, Inventory, ItemKind, Player, Position, Sheep};
+use crate::components::{BlocksMovement, DroppedItem, Inventory, ItemKind, Position, Sheep};
 use crate::resources::Resources;
 use hecs::World;
 use tracing::info;
@@ -14,7 +14,7 @@ pub fn move_player_system(world: &mut World, res: &mut Resources) {
 
                 let nx = cx + dx;
                 let ny = cy + dy;
-                let nz = cz;  // Keep same Z-level for now
+                let nz = cz; // Keep same Z-level for now
                 let t = res.world.get_tile_cached(nx, ny);
                 // Check tile passability and blocking entities
                 let mut blocked = !t.is_passable();
@@ -50,8 +50,12 @@ pub fn mining_system(world: &mut World, res: &mut Resources) -> bool {
         return false;
     }
     res.mining_intent = false;
-    let Some(player_e) = res.player_entity else { return false };
-    let Ok(pos) = world.get::<&Position>(player_e) else { return false };
+    let Some(player_e) = res.player_entity else {
+        return false;
+    };
+    let Ok(pos) = world.get::<&Position>(player_e) else {
+        return false;
+    };
     let (x, y, z) = (pos.x, pos.y, pos.z);
     // End immutable borrow before mutating the world
     drop(pos);
@@ -64,7 +68,10 @@ pub fn mining_system(world: &mut World, res: &mut Resources) -> bool {
             // Spawn a DroppedItem entity at player's tile
             let _ = world.spawn((
                 Position { x, y, z },
-                DroppedItem { kind: ItemKind::Wood, qty: 1 },
+                DroppedItem {
+                    kind: ItemKind::Wood,
+                    qty: 1,
+                },
             ));
             res.log("You chop the tree. (+1 Wood)");
             true
@@ -78,18 +85,22 @@ pub fn mining_system(world: &mut World, res: &mut Resources) -> bool {
 
 /// When the player is on the same tile as any DroppedItem, pick it up into Inventory.
 pub fn pickup_system(world: &mut World, res: &mut Resources) {
-    let Some(player_e) = res.player_entity else { return };
-    
+    let Some(player_e) = res.player_entity else {
+        return;
+    };
+
     // Get player position and immediately drop the borrow
     let (px, py, pz) = {
-        let Ok(ppos) = world.get::<&Position>(player_e) else { return };
+        let Ok(ppos) = world.get::<&Position>(player_e) else {
+            return;
+        };
         (ppos.x, ppos.y, ppos.z)
     };
-    
+
     // Collect item entities to pick up
     let mut pickups: Vec<hecs::Entity> = Vec::new();
     let mut items: Vec<DroppedItem> = Vec::new();
-    
+
     // First pass: collect items and their entities
     for (e, (ipos, di)) in world.query::<(&Position, &DroppedItem)>().iter() {
         if ipos.x == px && ipos.y == py && ipos.z == pz {
@@ -97,12 +108,12 @@ pub fn pickup_system(world: &mut World, res: &mut Resources) {
             items.push(*di);
         }
     }
-    
+
     // Early return if nothing to pick up
     if pickups.is_empty() {
         return;
     }
-    
+
     // Process inventory updates
     if let Ok(mut inv) = world.get::<&mut Inventory>(player_e) {
         let mut total = 0u32;
@@ -114,7 +125,7 @@ pub fn pickup_system(world: &mut World, res: &mut Resources) {
             res.log(format!("Picked up {} Wood", total));
         }
     }
-    
+
     // Remove the picked up items from the world
     for e in pickups {
         let _ = world.despawn(e);
@@ -147,14 +158,14 @@ pub fn stumbling_sheep_system(world: &mut World, res: &mut Resources) {
         }
         let nx = pos.x + dx;
         let ny = pos.y + dy;
-        let nz = pos.z;  // Sheep stay on the same Z-level
-        
+        let nz = pos.z; // Sheep stay on the same Z-level
+
         // Check if the target tile is passable
         let t = res.world.get_tile(nx, ny);
         if !t.is_passable() {
             continue;
         }
-        
+
         // Avoid stepping into another blocking entity
         let mut occupied = false;
         for (other_e, (other_pos, _)) in world.query::<(&Position, &BlocksMovement)>().iter() {

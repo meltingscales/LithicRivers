@@ -8,9 +8,10 @@ use serde::{Deserialize, Serialize};
 
 use crate::components::{BlocksMovement, Glyph, Inventory, Player, Position, Sheep};
 use crate::model::body::Body; // currently not persisted (MVP)
-use crate::resources::{self, Resources};
+use crate::resources::fluids::Fluid;
 use crate::resources::fluids::FluidManager;
 use crate::resources::world::World as TileWorld;
+use crate::resources::Resources;
 
 pub const SAVE_VERSION: u32 = 1;
 
@@ -42,13 +43,21 @@ impl SaveData {
         let mut sheep: Vec<SheepSave> = Vec::new();
         for (_e, (pos, maybe_player, maybe_inventory, maybe_sheep)) in game
             .world
-            .query::<(&Position, Option<&Player>, Option<&Inventory>, Option<&Sheep>)>()
+            .query::<(
+                &Position,
+                Option<&Player>,
+                Option<&Inventory>,
+                Option<&Sheep>,
+            )>()
             .iter()
         {
             if maybe_player.is_some() {
                 // inventory may be missing if something went wrong; default it
                 let inv = maybe_inventory.cloned().unwrap_or_default();
-                player_save = Some(PlayerSave { pos: *pos, inventory: inv });
+                player_save = Some(PlayerSave {
+                    pos: *pos,
+                    inventory: inv,
+                });
             } else if maybe_sheep.is_some() {
                 sheep.push(SheepSave { pos: *pos });
             }
@@ -92,6 +101,50 @@ impl SaveData {
     }
 }
 
+// JSON-friendly mirror that encodes fluids' hashmap as a Vec of entries
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct SaveDataJson {
+    pub version: u32,
+    pub seed: u64,
+    pub gametick: u64,
+    pub world: TileWorld,
+    pub fluids: Vec<(Position, Fluid)>,
+    pub player: PlayerSave,
+    pub sheep: Vec<SheepSave>,
+}
+
+impl From<SaveData> for SaveDataJson {
+    fn from(mut s: SaveData) -> Self {
+        // Before JSON, clear world cache that uses tuple keys
+        s.world.clear_cache();
+        let fluids_vec: Vec<(Position, Fluid)> = s.fluids.fluids.into_iter().collect();
+        SaveDataJson {
+            version: s.version,
+            seed: s.seed,
+            gametick: s.gametick,
+            world: s.world,
+            fluids: fluids_vec,
+            player: s.player,
+            sheep: s.sheep,
+        }
+    }
+}
+
+impl From<SaveDataJson> for SaveData {
+    fn from(j: SaveDataJson) -> Self {
+        let fluids_map = j.fluids.into_iter().collect();
+        SaveData {
+            version: j.version,
+            seed: j.seed,
+            gametick: j.gametick,
+            world: j.world,
+            fluids: FluidManager { fluids: fluids_map },
+            player: j.player,
+            sheep: j.sheep,
+        }
+    }
+}
+
 // MessagePack (rmp-serde)
 pub fn save_game_msgpack<P: AsRef<Path>>(game: &crate::Game, path: P) -> Result<()> {
     let data = SaveData::from_game(game)?;
@@ -107,7 +160,11 @@ pub fn load_game_msgpack<P: AsRef<Path>>(game: &mut crate::Game, path: P) -> Res
     let data: SaveData = rmp_serde::decode::from_read(reader).context("deserialize msgpack")?;
     if data.version != SAVE_VERSION {
         // For now, require exact match
-        anyhow::bail!("Unsupported save version: {} (expected {})", data.version, SAVE_VERSION);
+        anyhow::bail!(
+            "Unsupported save version: {} (expected {})",
+            data.version,
+            SAVE_VERSION
+        );
     }
     data.apply_to_game(game)
 }
@@ -277,24 +334,25 @@ mod tests {
 
 // JSON helpers for debug
 pub fn save_game_json<P: AsRef<Path>>(game: &crate::Game, path: P) -> Result<()> {
-    let mut data = SaveData::from_game(game)?;
-    // JSON cannot encode non-string HashMap keys.
-    // Strip caches that use tuple/struct keys to make debug JSON workable.
-    data.world.clear_cache();
-    // Debug JSON: omit fluids (Position keys) to avoid non-string-key maps.
-    data.fluids = Default::default();
+    let data = SaveData::from_game(game)?;
+    let data_json: SaveDataJson = data.into();
     let f = File::create(path.as_ref()).with_context(|| format!("create {:?}", path.as_ref()))?;
     let writer = BufWriter::new(f);
-    serde_json::to_writer_pretty(writer, &data).context("serialize json")?;
+    serde_json::to_writer_pretty(writer, &data_json).context("serialize json")?;
     Ok(())
 }
 
 pub fn load_game_json<P: AsRef<Path>>(game: &mut crate::Game, path: P) -> Result<()> {
     let f = File::open(path.as_ref()).with_context(|| format!("open {:?}", path.as_ref()))?;
     let reader = BufReader::new(f);
-    let data: SaveData = serde_json::from_reader(reader).context("deserialize json")?;
-    if data.version != SAVE_VERSION {
-        anyhow::bail!("Unsupported save version: {} (expected {})", data.version, SAVE_VERSION);
+    let data_json: SaveDataJson = serde_json::from_reader(reader).context("deserialize json")?;
+    if data_json.version != SAVE_VERSION {
+        anyhow::bail!(
+            "Unsupported save version: {} (expected {})",
+            data_json.version,
+            SAVE_VERSION
+        );
     }
+    let data: SaveData = data_json.into();
     data.apply_to_game(game)
 }

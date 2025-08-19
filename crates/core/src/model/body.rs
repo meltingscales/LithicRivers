@@ -75,7 +75,11 @@ impl Body {
                     count += 1;
                 }
             }
-            if count > 0 { sum / count as f32 } else { 0.0 }
+            if count > 0 {
+                sum / count as f32
+            } else {
+                0.0
+            }
         }
     }
 }
@@ -101,8 +105,18 @@ impl Default for Body {
                 },
             );
         };
-        insert(BodyPartType::Head, BodyPartState::Functional, "Head", "Standard cranial unit");
-        insert(BodyPartType::Torso, BodyPartState::Functional, "Torso", "Reinforced chassis");
+        insert(
+            BodyPartType::Head,
+            BodyPartState::Functional,
+            "Head",
+            "Standard cranial unit",
+        );
+        insert(
+            BodyPartType::Torso,
+            BodyPartState::Functional,
+            "Torso",
+            "Reinforced chassis",
+        );
         insert(
             BodyPartType::LeftArm,
             BodyPartState::Missing,

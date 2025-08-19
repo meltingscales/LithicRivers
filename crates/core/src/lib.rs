@@ -1,18 +1,18 @@
 pub mod components;
+pub mod model;
 pub mod palettekey;
 pub mod resources;
+pub mod save_load;
 mod structure;
 pub mod systems;
 pub mod tiles;
 pub mod view;
-pub mod model;
-pub mod save_load;
 
 use components::*;
+use model::body::Body;
 use resources::*;
 use systems::*;
 use view::*;
-use model::body::Body;
 
 use hecs::World;
 
@@ -74,18 +74,18 @@ impl Game {
         // For now, just increment tick and maybe move the player slowly.
         let inc = self.res.pending_tick_increase.take().unwrap_or(1);
         self.res.gametick = self.res.gametick.saturating_add(inc);
-        
+
         // Process systems
         let mining_success = mining_system(&mut self.world, &mut self.res);
         move_player_system(&mut self.world, &mut self.res);
         pickup_system(&mut self.world, &mut self.res);
         stumbling_sheep_system(&mut self.world, &mut self.res);
-        
+
         // Process fluids
         self.res
             .fluids
             .process_fluids(&self.res.world, self.res.gametick);
-            
+
         mining_success
     }
 
