@@ -41,6 +41,15 @@ pub fn move_player_system(world: &mut World, res: &mut Resources) {
             }
         }
     }
+
+    // Handle vertical movement intent separately (no terrain checks yet)
+    if let Some(dz) = res.player_move_intent_z.take() {
+        if let Some(player_e) = res.player_entity {
+            if let Ok(mut pos_mut) = world.get::<&mut Position>(player_e) {
+                pos_mut.z = pos_mut.z.saturating_add(dz);
+            }
+        }
+    }
 }
 
 /// Process mining intent: if the player requested mining, act on current tile.

@@ -123,4 +123,22 @@ impl Game {
     pub fn load_msgpack<P: AsRef<std::path::Path>>(&mut self, path: P) -> anyhow::Result<()> {
         crate::save_load::load_game_msgpack(self, path)
     }
+
+    /// Queue a vertical movement for the player by dz levels.
+    pub fn queue_player_move_z(&mut self, dz: i32) {
+        self.res.player_move_intent_z = Some(dz);
+        // Use same base cost as lateral movement for now
+        let mult: f32 = if let Some(e) = self.res.player_entity {
+            if let Ok(body) = self.world.get::<&Body>(e) {
+                body.walk_speed_modifier()
+            } else {
+                1.0
+            }
+        } else {
+            1.0
+        };
+        let base: f32 = 200.0;
+        let cost = (base / mult.max(0.01)).round().max(1.0) as u64;
+        self.res.pending_tick_increase = Some(cost);
+    }
 }

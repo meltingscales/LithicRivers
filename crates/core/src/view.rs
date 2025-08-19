@@ -16,7 +16,7 @@ pub fn build_render_view(world: &World, res: &Resources) -> RenderView {
             player_pos = *p;
         }
     }
-    // Build a window around the player from the infinite world at z=0.
+    // Build a window around the player at the currently viewed Z slice.
     // Choose a generous default window; TUI will crop/scale it.
     let win_w: i32 = 50;
     let win_h: i32 = 50;
@@ -38,8 +38,8 @@ pub fn build_render_view(world: &World, res: &Resources) -> RenderView {
             buffer[y as usize][x as usize] = ' ';
         }
     }
-    // Overlay entities with Glyph in this window at the player's z
-    let z = player_pos.z;
+    // Overlay entities with Glyph in this window at the viewed z
+    let z = res.view_z;
     for (_e, (pos, glyph)) in world.query::<(&Position, &Glyph)>().iter() {
         if pos.z != z {
             continue;
