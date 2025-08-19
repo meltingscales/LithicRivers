@@ -145,6 +145,22 @@ impl App {
                 self.game.queue_player_move(0, 0);
                 self.game.tick();
             }
+            // Z-level viewing: PageUp/PageDown change viewed slice
+            KeyCode::PageUp => {
+                self.game.res.view_z = self.game.res.view_z.saturating_add(1);
+            }
+            KeyCode::PageDown => {
+                self.game.res.view_z = self.game.res.view_z.saturating_sub(1);
+            }
+            // Vertical movement: '<' up, '>' down (like DF variants)
+            KeyCode::Char('<') => {
+                self.game.queue_player_move_z(1);
+                self.game.tick();
+            }
+            KeyCode::Char('>') => {
+                self.game.queue_player_move_z(-1);
+                self.game.tick();
+            }
             // Zoom controls: '=' zoom in, '-' zoom out, '0' reset
             KeyCode::Char('=') | KeyCode::Char('+') => {
                 self.scale = match self.scale {
@@ -395,7 +411,7 @@ fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
             let fluid_pos = lithicrivers_core::components::Position {
                 x: world_x,
                 y: world_y,
-                z: 0,
+                z: app.game.res.view_z,
             };
             if let Some(fluid) = app.game.res.fluids.get_fluid(fluid_pos) {
                 let (block, color) =
@@ -538,6 +554,10 @@ fn render_menu_panel(f: &mut Frame, app: &mut App, area: Rect) {
     lines.push(Line::from(Span::raw(format!(
         "Tick: {}",
         app.game.res.gametick
+    ))));
+    lines.push(Line::from(Span::raw(format!(
+        "View Z: {}",
+        app.game.res.view_z
     ))));
     if let Some(e) = app.game.res.player_entity {
         if let Ok(pos) = app

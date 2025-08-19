@@ -21,6 +21,10 @@ pub struct Resources {
     pub mining_intent: bool,
     // Simple message log for UI
     pub messages: Vec<String>,
+    // Current viewed Z level (slice) for ASCII rendering
+    pub view_z: i32,
+    // Vertical movement intent (dz)
+    pub player_move_intent_z: Option<i32>,
 }
 
 impl Resources {
@@ -38,6 +42,8 @@ impl Resources {
             pending_tick_increase: None,
             mining_intent: false,
             messages: Vec::new(),
+            view_z: 0,
+            player_move_intent_z: None,
         }
     }
 
