@@ -25,21 +25,27 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Build on Windows
+        if: matrix.os == 'windows-latest'
         run: just --justfile justfile.windows build
 
       - name: Build on Linux
+        if: matrix.os == 'ubuntu-latest'
         run: just build
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: dist-${{ matrix.os }}
-          path: dist/**
+          path: target/**
 
-  steam-upload:
+  steam-upload-ubuntu:
     needs: build
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/release' && vars.ENABLE_STEAM_UPLOAD == 'true'
+    env:
+      STEAM_USERNAME: ${{ secrets.STEAM_USERNAME }}
+      STEAM_PASSWORD: ${{ secrets.STEAM_PASSWORD }}
+      STEAM_APP_ID: ${{ secrets.STEAM_APP_ID }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -53,11 +59,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y steamcmd
 
       - name: Upload to Steam (SteamPipe)
-        if: ${{ secrets.STEAM_USERNAME && secrets.STEAM_PASSWORD && secrets.STEAM_APP_ID }}
-        env:
-          STEAM_USERNAME: ${{ secrets.STEAM_USERNAME }}
-          STEAM_PASSWORD: ${{ secrets.STEAM_PASSWORD }}
-          STEAM_APP_ID: ${{ secrets.STEAM_APP_ID }}
+        if: env.STEAM_USERNAME != ''
         run: |
           steamcmd +login "$STEAM_USERNAME" "$STEAM_PASSWORD" \
                    +run_app_build_http scripts/app_build.vdf \
