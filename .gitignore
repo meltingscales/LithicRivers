@@ -68,6 +68,9 @@ Thumbs.db
 # Ratatui terminal capture artifacts (if any custom dumps)
 *.ttyrec
 
+# built data
+artifacts/
+
 # perf
 perf.data
 flamegraph.svg
@@ -75,3 +78,4 @@ profile.linux-perf.txt
 
 # saves
 save.json
+
