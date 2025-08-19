@@ -53,8 +53,8 @@ impl App {
         });
 
         // Set volumes
-        audio.set_music_volume(0.5);
-        audio.set_sfx_volume(0.7);
+        audio.set_music_volume(0.60);
+        audio.set_sfx_volume(0.35);
 
         // Register and play the opening music
         let music_track = audio::AudioTrack::new("crates/client/assets/sound/music/opening.mp3");
