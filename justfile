@@ -1,27 +1,16 @@
 # Cross-platform justfile for LithicRivers
-# Works on Linux, Windows, and macOS
-
-# Set shell for Windows (assumes MinGW/Git Bash is available)
-set windows-shell := ["sh", "-c"]
+# Works on Linux and MacOS.
 
 # Default toolchain
 toolchain := env_var_or_default("TOOLCHAIN", "nightly")
 
 # Cross-platform CPU count detection
-cpu_count := if os() == "windows" { 
-    env_var_or_default("NUMBER_OF_PROCESSORS", "4") 
-} else { 
-    `nproc 2>/dev/null || echo 4` 
-}
+cpu_count := `nproc 2>/dev/null || echo 4`
 
 # Rust toolchain helpers
 run_cmd := "rustup run " + toolchain
 # Get path to rustc for the current toolchain
-rustc_bin := if os() == "windows" {
-    `where rustc 2>nul || echo rustc`
-} else {
-    `which rustc 2>/dev/null || echo rustc`
-}
+rustc_bin := `which rustc 2>/dev/null || echo rustc`
 
 # Common flags/env
 lockfile_flag := "-Z next-lockfile-bump"
@@ -48,23 +37,6 @@ install:
     rustup override set {{toolchain}}
     rustup default {{toolchain}}
     @just _install-dev-deps
-
-# Cross-platform dev dependencies installation
-_install-dev-deps:
-    #!/usr/bin/env sh
-    if [ "{{os()}}" = "windows" ]; then
-        if [ -f "scripts/install_dev_deps.cmd" ]; then
-            ./scripts/install_dev_deps.cmd
-        else
-            echo "Warning: scripts/install_dev_deps.cmd not found"
-        fi
-    else
-        if [ -f "scripts/install_dev_deps.sh" ]; then
-            ./scripts/install_dev_deps.sh
-        else
-            echo "Warning: scripts/install_dev_deps.sh not found"
-        fi
-    fi
 
 # Run security audit
 security:
