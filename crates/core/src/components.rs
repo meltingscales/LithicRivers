@@ -68,7 +68,9 @@ impl Default for Inventory {
 
 impl Inventory {
     pub fn add(&mut self, kind: ItemKind, qty: u32) {
-        if qty == 0 { return; }
+        if qty == 0 {
+            return;
+        }
         if let Some(s) = self.slots.iter_mut().find(|s| s.kind == kind) {
             s.qty = s.qty.saturating_add(qty);
             return;

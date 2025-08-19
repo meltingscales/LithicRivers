@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 
-use noise::{NoiseFn, Perlin, Seedable};
+use noise::{NoiseFn, Perlin};
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha20Rng;
 use serde::{Deserialize, Serialize};
@@ -81,20 +81,21 @@ impl World {
                 // Calculate world coordinates
                 let wx = (cx as f64 * CHUNK_SIZE as f64) + x as f64;
                 let wy = (cy as f64 * CHUNK_SIZE as f64) + y as f64;
-                
+
                 // Generate base terrain height (0.0 to 1.0)
                 let scale = 0.01; // Adjust this to change the scale of the terrain features
                 let height = perlin.get([wx * scale, wy * scale, 0.0]);
                 let height = (height + 1.0) * 0.5; // Convert from [-1, 1] to [0, 1]
-                
+
                 // Generate biome value
                 let biome_scale = 0.005; // Larger scale for biomes (bigger areas)
                 let biome_value = biome_noise.get([wx * biome_scale, wy * biome_scale, 0.0]);
-                
+
                 // Generate feature value
                 let feature_scale = 0.05; // Smaller scale for features
-                let feature_value = feature_noise.get([wx * feature_scale, wy * feature_scale, 0.0]);
-                
+                let feature_value =
+                    feature_noise.get([wx * feature_scale, wy * feature_scale, 0.0]);
+
                 // Determine base tile type based on height
                 let base_tile = if height < 0.3 {
                     // Water or beach
@@ -121,7 +122,7 @@ impl World {
                     // Mountains
                     TileKind::Rock
                 };
-                
+
                 // Add trees and other features
                 let mut tile = base_tile;
                 if base_tile == TileKind::Grass || base_tile == TileKind::Dirt {
@@ -134,19 +135,19 @@ impl World {
                         tile = TileKind::Rock;
                     }
                 }
-                
+
                 chunk.set(x, y, tile);
             }
         }
-        
+
         // Add some rare resources
         let mut rng = ChaCha20Rng::seed_from_u64(self.mix_coords(cx, cy));
         let rare_resources = [
-            (TileKind::IronScrap, 0.95), // 5% chance per chunk
+            (TileKind::IronScrap, 0.95),        // 5% chance per chunk
             (TileKind::ScrapElectronics, 0.98), // 2% chance per chunk
-            (TileKind::PlasteelScrap, 0.99), // 1% chance per chunk
+            (TileKind::PlasteelScrap, 0.99),    // 1% chance per chunk
         ];
-        
+
         for (resource, threshold) in rare_resources.iter() {
             if rng.gen::<f64>() > *threshold {
                 let x = rng.gen_range(0..CHUNK_SIZE as i32);

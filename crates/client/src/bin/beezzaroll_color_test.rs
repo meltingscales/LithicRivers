@@ -233,8 +233,9 @@ fn render_indexed_grayscale(frame: &mut Frame, area: Rect) {
     let areas = Layout::vertical([
         Constraint::Length(1), // 232 - 243
         Constraint::Length(1), // 244 - 255
-    ]).split(area);
-    
+    ])
+    .split(area);
+
     for area in areas.iter() {
         let cells = Layout::horizontal([Constraint::Length(6); 12]).split(*area);
         for cell in cells.iter() {

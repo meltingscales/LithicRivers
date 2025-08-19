@@ -192,7 +192,7 @@ impl FluidManager {
             }
         }
         // Add new/merged fluids
-        for (pos, fluid) in to_add {
+        for (_pos, fluid) in to_add {
             self.add_fluid(fluid);
         }
         for pos in to_remove {
@@ -201,7 +201,6 @@ impl FluidManager {
     }
 
     fn can_hold_fluid(&self, world: &World, pos: &Position, fluid_type: FluidType) -> bool {
-        use crate::resources::world::CHUNK_SIZE;
         // Only allow fluid in-bounds and on passable tiles
         let t = world.get_tile(pos.x, pos.y);
         // Only allow on non-solid tiles
