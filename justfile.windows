@@ -1,0 +1,41 @@
+# Windows-specific justfile for LithicRivers
+# Focused on core build and run functionality
+
+# Set shell to use cmd.exe
+set shell := ["cmd.exe", "/c"]
+
+# Default toolchain (can be overridden)
+toolchain := "stable"
+
+# CPU count
+cpu_count := "%NUMBER_OF_PROCESSORS%"
+
+# Build in debug mode (default)
+build:
+    cargo build --workspace
+
+# Build in release mode
+build-release:
+    cargo build --release --workspace
+
+# Run debug build
+run:
+    cargo run -p lithicrivers-client --bin lithicrivers-client
+
+# Run release build
+run-release:
+    cargo run --release -p lithicrivers-client --bin lithicrivers-client
+
+# Run tests
+test:
+    cargo test --workspace
+
+# Clean build artifacts
+clean:
+    cargo clean
+
+# Install Rust toolchain
+install:
+    rustup toolchain install stable
+    rustup default stable
+    rustup target add wasm32-unknown-unknown

@@ -45,12 +45,19 @@ Currently we support:
 
     just run
 
-## building/release
+## Building
+
+### Linux
 
     just build
     ls ./dist/
 
-## notes
+### Windows
+
+    just --justfile justfile.windows build
+    just --justfile justfile.windows run
+
+## Notes
 
 - https://github.com/peterbrittain/asciimatics/blob/v1.13/samples/tab_demo.py
 - https://stackoverflow.com/questions/9575409/calling-parent-class-init-with-multiple-inheritance-whats-the-right-way/50465583#50465583
@@ -63,5 +70,4 @@ Currently we support:
 
 ## Known issues
 
-- Feature: ESC key handling versus SHIFT-NUMPAD5, etc? #395 https://github.com/peterbrittain/asciimatics/issues/395
-- ESC delay: https://asciimatics.readthedocs.io/en/stable/troubleshooting.html#there-s-a-big-delay-when-i-press-escape
+None!
