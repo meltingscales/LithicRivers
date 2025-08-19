@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
     env:
       RUSTC_WRAPPER: sccache
       SCCACHE_CACHE_SIZE: 5G
@@ -36,11 +36,17 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: choco install sccache
 
+      - name: Install sccache (macOS)
+        if: matrix.os == 'macos-latest'
+        run: brew install sccache
+
       - name: Cache sccache
         uses: actions/cache@v4
         with:
           path: |
             ~/.cache/sccache
+            ~/Library/Caches/Mozilla.sccache
+            ~/Library/Caches/sccache
             C:\\Users\\runneradmin\\AppData\\Local\\Mozilla\\sccache
             C:\\Users\\runneradmin\\AppData\\Local\\sccache
           key: sccache-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
@@ -65,6 +71,14 @@ jobs:
         run: |
           sudo apt install just
           sudo bash scripts/install_dev_deps.sh
+          just build
+          just stage-artifacts
+
+      - name: Build on macOS
+        if: matrix.os == 'macos-latest'
+        run: |
+          brew update
+          brew install just
           just build
           just stage-artifacts
 
