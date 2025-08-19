@@ -79,13 +79,17 @@ clean:
 
 # Build the project
 build: fmt
+    cp -f STEAM_APP_ID crates/client/assets/config/STEAM_APP_ID
+    cp -f VERSION crates/client/assets/config/VERSION
+    cp -f LICENSE crates/client/assets/config/LICENSE
+    cp -f THIRD-PARTY-NOTICES.txt crates/client/assets/config/THIRD-PARTY-NOTICES.txt
     {{cargo_base}} --version
     # Build only the stable targets to keep `just build` green
     {{cargoz_env}} build -p lithicrivers-core {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin lithicrivers-client {{build_flags}}
 
 ## Optional: build demo binaries (may require ratatui API updates)
-build-demos:
+build-demos: fmt
     {{cargoz_env}} build -p lithicrivers-client --bin demo_inventory {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin demo_body {{build_flags}}
 
