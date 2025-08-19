@@ -162,16 +162,16 @@ impl App {
             }
             // Save/Load (debug): 'S' to save JSON, 'L' to load JSON
             KeyCode::Char('S') => {
-                match self.game.save_json("save.json") {
-                    Ok(_) => self.game.res.log("Saved to save.json"),
-                    Err(e) => self.game.res.log(format!("Save failed: {}", e)),
-                }
+                self.game
+                    .save_json("save.json")
+                    .expect("Save failed: JSON serialization error");
+                self.game.res.log("Saved to save.json");
             }
             KeyCode::Char('L') => {
-                match self.game.load_json("save.json") {
-                    Ok(_) => self.game.res.log("Loaded from save.json"),
-                    Err(e) => self.game.res.log(format!("Load failed: {}", e)),
-                }
+                self.game
+                    .load_json("save.json")
+                    .expect("Load failed: JSON deserialization error");
+                self.game.res.log("Loaded from save.json");
             }
             _ => {}
         }
@@ -222,6 +222,18 @@ impl App {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
+    // Ensure we restore the terminal if a panic occurs
+    std::panic::set_hook(Box::new(|info| {
+        let _ = disable_raw_mode();
+        let mut stdout = io::stdout();
+        let _ = execute!(
+            stdout,
+            LeaveAlternateScreen,
+            DisableMouseCapture
+        );
+        eprintln!("\n\nPanic: {info}");
+    }));
+
     // Setup terminal
     enable_raw_mode()?;
     let mut stdout = io::stdout();
