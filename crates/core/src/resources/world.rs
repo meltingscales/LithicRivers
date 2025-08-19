@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use noise::{NoiseFn, Perlin};
 use rand::{Rng, SeedableRng};
@@ -11,6 +11,78 @@ use crate::tiles::TileKind;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Chunk {
     tiles: Vec<TileKind>, // size CHUNK_SIZE * CHUNK_SIZE
+}
+
+impl World {
+    /// Deterministic post-process that adds small clusters of trees (10-20 tiles)
+    /// onto suitable ground (grass/dirt). Uses a seeded RNG derived from
+    /// seed, chunk coords, and current gen_z so results are deterministic.
+    fn add_tree_clusters(&self, cx: i64, cy: i64, chunk: &mut Chunk) {
+        // Distinct salt so RNG stream differs from other features
+        let salt: u64 = 0x7B1E_CA11_u64 ^ (self.gen_z as u64).wrapping_mul(0x9E37);
+        let mut rng = ChaCha20Rng::seed_from_u64(self.mix_coords(cx, cy) ^ salt);
+
+        // 0-2 clusters per chunk, biased toward 0/1
+        let cluster_count = match rng.gen_range(0..100) {
+            0..=60 => 0,
+            61..=90 => 1,
+            _ => 2,
+        };
+
+        for _ in 0..cluster_count {
+            // Pick a random starting point on acceptable ground
+            let mut attempts = 0;
+            let (sx, sy) = loop {
+                attempts += 1;
+                if attempts > 32 {
+                    // Give up if we can't find a good start
+                    break (rng.gen_range(0..CHUNK_SIZE), rng.gen_range(0..CHUNK_SIZE));
+                }
+                let x = rng.gen_range(0..CHUNK_SIZE);
+                let y = rng.gen_range(0..CHUNK_SIZE);
+                let base = chunk.get(x, y);
+                if base == TileKind::Grass || base == TileKind::Dirt || base == TileKind::Tree {
+                    break (x, y);
+                }
+            };
+
+            // Grow a blob via random frontier expansion
+            let target = rng.gen_range(10..=20);
+            let mut placed = 0usize;
+            let mut visited: HashSet<(i32, i32)> = HashSet::new();
+            let mut frontier: Vec<(i32, i32)> = vec![(sx, sy)];
+            visited.insert((sx, sy));
+
+            while placed < target && !frontier.is_empty() {
+                let idx = rng.gen_range(0..frontier.len());
+                let (x, y) = frontier.swap_remove(idx);
+
+                // Only place on acceptable tiles
+                let t = chunk.get(x, y);
+                if t == TileKind::Grass || t == TileKind::Dirt || t == TileKind::Tree {
+                    chunk.set(x, y, TileKind::Tree);
+                    placed += 1;
+                }
+
+                // Expand 4-neighborhood with a mild bias
+                let neighbors = [(1, 0), (-1, 0), (0, 1), (0, -1)];
+                for (dx, dy) in neighbors {
+                    let nx = x + dx;
+                    let ny = y + dy;
+                    if nx >= 0 && nx < CHUNK_SIZE && ny >= 0 && ny < CHUNK_SIZE {
+                        let key = (nx, ny);
+                        if !visited.contains(&key) {
+                            visited.insert(key);
+                            // Probability controls blob compactness
+                            if rng.gen::<f32>() < 0.7 {
+                                frontier.push(key);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 impl Chunk {
@@ -150,6 +222,9 @@ impl World {
                 chunk.set(x, y, tile);
             }
         }
+
+        // Post-worldgen step: add small tree clusters (diffuse noise blobs)
+        self.add_tree_clusters(cx, cy, chunk);
 
         // Add some rare resources
         let mut rng = ChaCha20Rng::seed_from_u64(self.mix_coords(cx, cy));
