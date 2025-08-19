@@ -14,7 +14,12 @@ use ratatui::{
     widgets::{Block, Borders, Paragraph, Tabs, Wrap},
     Frame, Terminal,
 };
+use rust_embed::RustEmbed;
 use std::{error::Error, io, time::Duration};
+
+#[derive(RustEmbed)]
+#[folder = "assets/"]
+struct EmbeddedAssets;
 
 use lithicrivers_core::Game;
 mod audio;
@@ -35,6 +40,9 @@ struct App {
     menu_index: usize,
     scale: Scale,
     audio: audio::AudioManager,
+    // Credits panel state
+    credits_text: String,
+    credits_scroll: u16,
 }
 
 fn render_help_panel(f: &mut Frame, _app: &mut App, area: Rect) {
@@ -94,6 +102,18 @@ fn render_help_panel(f: &mut Frame, _app: &mut App, area: Rect) {
     f.render_widget(block, area);
 }
 
+fn render_credits_panel(f: &mut Frame, app: &mut App, area: Rect) {
+    // Build a scrollable paragraph from preloaded embedded text
+    let block = Block::default().borders(Borders::ALL).title("Credits");
+    let inner = block.inner(area);
+    let para = Paragraph::new(app.credits_text.clone())
+        .alignment(Alignment::Left)
+        .wrap(Wrap { trim: false })
+        .scroll((app.credits_scroll, 0));
+    f.render_widget(para, inner);
+    f.render_widget(block, area);
+}
+
 impl App {
     fn new() -> App {
         // Initialize game and sprite loader
@@ -122,6 +142,23 @@ impl App {
             audio::AudioTrack::new("crates/client/assets/sound/effects/wood_crack.mp3");
         audio.register_sound_effect("wood_crack", wood_crack);
 
+        // Build credits text from embedded config files
+        let version = EmbeddedAssets::get("config/VERSION")
+            .map(|d| String::from_utf8_lossy(&d.data).to_string())
+            .unwrap_or_else(|| "(missing VERSION)".to_string());
+        let app_id = EmbeddedAssets::get("config/STEAM_APP_ID")
+            .map(|d| String::from_utf8_lossy(&d.data).to_string())
+            .unwrap_or_else(|| "(missing STEAM_APP_ID)".to_string());
+        let credits_body = EmbeddedAssets::get("config/credits.txt")
+            .map(|d| String::from_utf8_lossy(&d.data).to_string())
+            .unwrap_or_else(|| "(missing credits.txt)".to_string());
+        let credits_text = format!(
+            "Version: {}\nSTEAM_APP_ID: {}\n\n{}",
+            version.trim(),
+            app_id.trim(),
+            credits_body
+        );
+
         App {
             game,
             sprite_loader,
@@ -130,6 +167,8 @@ impl App {
             audio,
             menu_index: 0,
             scale: Scale::Small,
+            credits_text,
+            credits_scroll: 0,
         }
     }
 
@@ -158,16 +197,16 @@ impl App {
             KeyCode::Enter | KeyCode::Char(' ') => {
                 self.activate_menu();
             }
-            // Cycle menu with left/right (6 tabs)
+            // Cycle menu with left/right (7 tabs)
             KeyCode::Left => {
                 if self.menu_index == 0 {
-                    self.menu_index = 5;
+                    self.menu_index = 6;
                 } else {
                     self.menu_index -= 1;
                 }
             }
             KeyCode::Right => {
-                self.menu_index = (self.menu_index + 1) % 6;
+                self.menu_index = (self.menu_index + 1) % 7;
             }
             // Mining
             KeyCode::Char('m') => {
@@ -258,6 +297,31 @@ impl App {
             KeyCode::Char('0') => {
                 self.scale = Scale::Small;
             }
+            // Credits panel scrolling
+            KeyCode::Up => {
+                if self.menu_index == 5 {
+                    self.credits_scroll = self.credits_scroll.saturating_sub(1);
+                }
+            }
+            KeyCode::Down => {
+                if self.menu_index == 5 {
+                    self.credits_scroll = self.credits_scroll.saturating_add(1);
+                }
+            }
+            KeyCode::PageUp => {
+                if self.menu_index == 5 {
+                    self.credits_scroll = self.credits_scroll.saturating_sub(10);
+                } else {
+                    self.game.res.view_z = self.game.res.view_z.saturating_add(1);
+                }
+            }
+            KeyCode::PageDown => {
+                if self.menu_index == 5 {
+                    self.credits_scroll = self.credits_scroll.saturating_add(10);
+                } else {
+                    self.game.res.view_z = self.game.res.view_z.saturating_sub(1);
+                }
+            }
             // Save/Load (debug): 'S' to save JSON, 'L' to load JSON
             KeyCode::Char('S') => {
                 self.game
@@ -287,8 +351,8 @@ impl App {
                 let rw = rect.width as i32;
                 let rh = rect.height as i32;
                 if mx >= rx && mx < rx + rw && my >= ry && my < ry + rh {
-                    // Map click to tab index (6 tabs)
-                    let seg = rw / 6;
+                    // Map click to tab index (7 tabs)
+                    let seg = rw / 7;
                     let relx = mx - rx;
                     self.menu_index = if relx < seg {
                         0
@@ -300,8 +364,10 @@ impl App {
                         3
                     } else if relx < seg * 5 {
                         4
-                    } else {
+                    } else if relx < seg * 6 {
                         5
+                    } else {
+                        6
                     };
                     self.activate_menu();
                 }
@@ -333,6 +399,12 @@ impl App {
             4 => {
                 // Help
                 self.game.res.log("Help panel active");
+            }
+            5 => {
+                // Credits
+                self.game
+                    .res
+                    .log("Credits panel active (Up/Down to scroll)");
             }
             _ => {
                 // Quit
@@ -443,6 +515,9 @@ fn ui(f: &mut Frame, app: &mut App) {
     } else if app.menu_index == 4 {
         // Help: controls
         render_help_panel(f, app, root_chunks[1]);
+    } else if app.menu_index == 5 {
+        // Credits: scrollable
+        render_credits_panel(f, app, root_chunks[1]);
     } else {
         // Quit selected: do nothing special here; run loop will exit
     }
@@ -618,6 +693,7 @@ fn render_bottom_menu(f: &mut Frame, app: &mut App, area: Rect) {
         Span::styled(" Inventory ", Style::default().fg(Color::Yellow)),
         Span::styled(" Menu ", Style::default().fg(Color::Magenta)),
         Span::styled(" Help ", Style::default().fg(Color::White)),
+        Span::styled(" Credits ", Style::default().fg(Color::Gray)),
         Span::styled(" Quit ", Style::default().fg(Color::Red)),
     ];
     let tabs = Tabs::new(titles)
