@@ -1,25 +1,38 @@
 # Steam MVP Release Plan (Target: December 2024)
 
 ## Small temp list
-- make the game world 3d.
-  - note that we will still just be using ratatui to render, just different slices of the world.
-  - note that the game world is infinite.
-  - chunks are 3d and should be lazy-loaded like normal.
-  - moving up/down should be handled by the same function that moves you laterally
-  - Moving up/down in the world with hotkeys close to the numpad
+
+- make the built binary use its packaged assets, not filesystem assets
 
 ## Core Gameplay Loop (Must Have)
 - [ ] Basic world generation with multiple biomes
+  - [ ] At least 3 distinct biome bands with tile/feature differences
+  - [ ] Deterministic by seed across Z-slices
 - [ ] Player movement and basic interactions
+  - [ ] Numpad movement plus '<'/'>' vertical movement
+  - [ ] Mining action with SFX and message log feedback
 - [ ] Simple crafting system
+  - [ ] 3 starter recipes (stick, plank, torch) with deterministic outputs
 - [ ] Day/night cycle
+  - [ ] Full cycle length ~10–20 minutes with visual cue
 - [ ] Basic survival mechanics (damage, repair, body parts)
+  - [ ] Body panel shows part states; player can incur and repair at least 1 damage type
 
 ## Technical Requirements
-- [ ] Stable save/load system
+- [x] Stable save/load system
+- [x] 3D world slices (Z-level viewing and vertical movement)
+  - [x] View snaps to player Z after movement (toggle later if needed)
+  - [x] Worldgen Perlin noise includes Z; slices deterministic by seed
 - [ ] Windows build pipeline
+  - [ ] CI job builds Windows artifacts
+  - [ ] Smoke test launch on artifact
+  - [ ] Upload artifacts to Releases (draft)
 - [ ] Basic settings/controls menu
+  - [ ] Rebind keys (movement, vertical, snap toggle)
+  - [ ] Volume sliders (music/sfx)
 - [ ] Performance optimizations for target hardware
+  - [ ] Profiling budget: ~60 FPS at 80x24; ≤16 ms tick under normal load
+  - [ ] Identify top 2 hotspots and add targeted optimizations
 
 ## Steam Integration
 - [ ] Steamworks SDK integration
@@ -34,15 +47,15 @@
 - [ ] Basic UI feedback for player actions
 
 ## Post-MVP (After Release)
-- Multiplayer support
-- Advanced crafting system
-- More biomes and world features
-- Advanced AI behaviors
-- Expanded building mechanics
+- [ ] Multiplayer support
+- [ ] Advanced crafting system
+- [ ] More biomes and world features
+- [ ] Advanced AI behaviors
+- [ ] Expanded building mechanics
 
 ## Timeline
-- September: Core gameplay implementation
-- October: Steam integration and performance
-- November: Polish and bug fixing
-- Early December: Beta testing
-- Mid-December: Release
+- [ ] September: Core gameplay implementation
+- [ ] October: Steam integration and performance
+- [ ] November: Polish and bug fixing
+- [ ] Early December: Beta testing
+- [ ] Mid-December: Release
