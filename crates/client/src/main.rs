@@ -261,13 +261,7 @@ impl App {
                 self.game.queue_player_move(0, 0);
                 self.game.tick();
             }
-            // Z-level viewing: PageUp/PageDown change viewed slice
-            KeyCode::PageUp => {
-                self.game.res.view_z = self.game.res.view_z.saturating_add(1);
-            }
-            KeyCode::PageDown => {
-                self.game.res.view_z = self.game.res.view_z.saturating_sub(1);
-            }
+            // Z-level viewing and Credits scrolling are handled below with conditional PageUp/PageDown arms
             // Vertical movement: '<' up, '>' down (like DF variants)
             KeyCode::Char('<') => {
                 self.game.queue_player_move_z(1);
