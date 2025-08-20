@@ -237,7 +237,7 @@ impl FluidManager {
             return;
         }
         // Same river field as terrain: large smooth noise with offsets
-        let rivers_scale = 0.003;
+        let rivers_scale = 0.004;
         let perlin = Perlin::new((world.seed as u32) ^ 0xB10E);
         // Sample a coarse grid to avoid overfilling, place heavier lava in core channels
         for ly in (0..CHUNK_SIZE).step_by(2) {
@@ -251,9 +251,9 @@ impl FluidManager {
                     let zf = world.gen_z as f64;
                     let river_val = perlin.get([wxf * rivers_scale + 1000.0, wyf * rivers_scale - 1000.0, zf * rivers_scale]);
                     let d = river_val.abs();
-                    if d < 0.06 {
+                    if d < 0.03 {
                         // Core/banks: place lava; amount proportional to closeness
-                        let base = if d < 0.03 { 800 } else { 500 };
+                        let base = if d < 0.015 { 800 } else { 500 };
                         let pos = Position { x: wx, y: wy, z: world.gen_z };
                         let mut lava = Fluid::new(FluidType::Lava, pos, base);
                         // Thicker lava: higher viscosity -> slower spread
