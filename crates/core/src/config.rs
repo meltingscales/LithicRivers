@@ -137,11 +137,24 @@ impl ConfigManager {
                 "RESET_VIEWPORT": ["r"],
                 "SLIDE_VIEWPORT_WEST": ["["],
                 "SLIDE_VIEWPORT_EAST": ["]"],
-                "TOGGLE_VIEWPORT": ["v"]
+                "TOGGLE_VIEWPORT": ["v"],
+                "VIEW_Z_UP": ["PAGEUP"],
+                "VIEW_Z_DOWN": ["PAGEDOWN"]
             },
-            "scale": {"SCALE_UP": ["=", "+"], "SCALE_DOWN": ["-"]},
+            "scale": {"SCALE_UP": ["=", "+"], "SCALE_DOWN": ["-"], "SCALE_RESET": ["0"]},
             "action": {"MINE": ["u"], "INTERACT": ["i"], "PICKUP_ITEMS": ["g"]},
-            "ui": {"CLOSE_HELP_MENU": ["ESCAPE"], "OPEN_COMMAND_MENU": ["/"]},
+            "ui": {
+                "CLOSE_HELP_MENU": ["ESCAPE"],
+                "OPEN_COMMAND_MENU": ["/"],
+                "MENU_ACTIVATE": ["ENTER", "SPACE"],
+                "MENU_PREV": ["LEFT"],
+                "MENU_NEXT": ["RIGHT"],
+                "CREDITS_SCROLL_UP": ["UP"],
+                "CREDITS_SCROLL_DOWN": ["DOWN"],
+                "SAVE_JSON": ["S"],
+                "LOAD_JSON": ["L"],
+                "QUIT": ["q"]
+            },
             "inventory": {"DROP_ITEM": ["d"], "DESTROY_ITEM": ["x"], "CHEAT_DUPLICATE_ITEM": ["."]}
         });
         let settings = serde_json::json!({
@@ -153,7 +166,7 @@ impl ConfigManager {
                 "SNAPSHOTS_FOLDER": "lithicrivers-saves/snapshots",
                 "DEVELOPER_MODE": true,
                 "DEFAULT_SEED": 4669201609u64,
-                "DEFAULT_PLAYER_NAME": "Inigo Montoya"
+                "DEFAULT_PLAYER_NAME": "melty"
             },
             "world": {
                 "DEFAULT_SIZE_RADIUS": {"production": [50, 50, 3], "testing": [3, 3, 1]},

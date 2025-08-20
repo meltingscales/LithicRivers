@@ -58,7 +58,11 @@ impl Game {
         );
         // Spawn a simple StumblingSheep near the player (closer for visibility)
         world.spawn((
-            Position { x: 2, y: 2, z: 0 },
+            Position {
+                x: sx + 2,
+                y: sy + 2,
+                z: sz,
+            },
             GameEntity,
             Sheep,
             Glyph('s'),
