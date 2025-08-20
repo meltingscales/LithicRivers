@@ -110,6 +110,7 @@ jobs:
       - name: Upload to Steam (SteamPipe)
         if: env.STEAM_USERNAME != ''
         run: |
+          APPVDF="$(realpath scripts/app_build_linux.vdf)"
           steamcmd +login "$STEAM_USERNAME" "$STEAM_PASSWORD" \
-                   +run_app_build_http scripts/app_build.vdf \
+                   +run_app_build_http $APPVDF \
                    +quit

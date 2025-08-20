@@ -3,13 +3,13 @@
 
 "DepotBuild"
 {
-    "DepotID"       "YOUR_DEPOT_ID_MACOS"
+    "DepotID"       "3940722"
 
     // Content root is inherited from AppBuild's ContentRoot (.)
     // Map all files in artifacts/ to the depot root
     "FileMapping"
     {
-        "LocalPath"   "artifacts/*"
+        "LocalPath"   "../artifacts/*"
         "DepotPath"   "."
         "Recursive"   "1"
     }
