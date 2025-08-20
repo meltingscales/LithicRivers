@@ -12,12 +12,12 @@
     {
         "3940723"  
         {
-			"FileMapping"
-			{
-				"LocalPath" "*" // all files from contentroot folder
-				"DepotPath" "." // mapped into the root of the depot
-				"recursive" "1" // include all subfolders
-			}
+            "FileMapping"
+            {
+                "LocalPath" "*" // all files from contentroot folder
+                "DepotPath" "." // mapped into the root of the depot
+                "recursive" "1" // include all subfolders
+            }
         }
     }
 }
