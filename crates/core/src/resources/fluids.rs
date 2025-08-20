@@ -1,8 +1,9 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use crate::components::Position;
 use crate::palettekey::PaletteKey;
-use crate::resources::world::World;
+use crate::resources::world::{World, CHUNK_SIZE};
+use noise::{NoiseFn, Perlin};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -34,6 +35,7 @@ impl FluidType {
             FluidType::Lava => PaletteKey::Lava,
         }
     }
+
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -70,6 +72,8 @@ impl Fluid {
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct FluidManager {
     pub fluids: HashMap<Position, Fluid>,
+    // Track which (cx,cy,z) chunks have had Lithic lava seeded to avoid duplicates
+    pub seeded_lava_chunks: HashSet<(i64, i64, i32)>,
 }
 
 impl FluidManager {
@@ -219,6 +223,49 @@ impl FluidManager {
                 }
             }
         }
+    }
+
+    /// Deterministically seed lava in the Lithic Rivers biome for a specific chunk at the
+    /// world's current generation Z. Idempotent via seeded_lava_chunks.
+    pub fn seed_lithic_lava_for_chunk(&mut self, world: &World, cx: i64, cy: i64) {
+        // Only at depth z<=-5
+        if world.gen_z > -5 {
+            return;
+        }
+        let key = (cx, cy, world.gen_z);
+        if self.seeded_lava_chunks.contains(&key) {
+            return;
+        }
+        // Same river field as terrain: large smooth noise with offsets
+        let rivers_scale = 0.003;
+        let perlin = Perlin::new((world.seed as u32) ^ 0xB10E);
+        // Sample a coarse grid to avoid overfilling, place heavier lava in core channels
+        for ly in (0..CHUNK_SIZE).step_by(2) {
+            for lx in (0..CHUNK_SIZE).step_by(2) {
+                let wx = (cx as i32 * CHUNK_SIZE + lx) as i32;
+                let wy = (cy as i32 * CHUNK_SIZE + ly) as i32;
+                // Only seed where the tile is open space (air), so lava flows
+                if matches!(world.get_tile(wx, wy), crate::tiles::TileKind::Air) {
+                    let wxf = wx as f64;
+                    let wyf = wy as f64;
+                    let zf = world.gen_z as f64;
+                    let river_val = perlin.get([wxf * rivers_scale + 1000.0, wyf * rivers_scale - 1000.0, zf * rivers_scale]);
+                    let d = river_val.abs();
+                    if d < 0.06 {
+                        // Core/banks: place lava; amount proportional to closeness
+                        let base = if d < 0.03 { 800 } else { 500 };
+                        let pos = Position { x: wx, y: wy, z: world.gen_z };
+                        let mut lava = Fluid::new(FluidType::Lava, pos, base);
+                        // Thicker lava: higher viscosity -> slower spread
+                        lava.viscosity = 6;
+                        lava.spread_threshold = 8;
+                        lava.settlement_threshold = 10;
+                        self.add_fluid(lava);
+                    }
+                }
+            }
+        }
+        self.seeded_lava_chunks.insert(key);
     }
 }
 

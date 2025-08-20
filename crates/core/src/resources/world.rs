@@ -18,20 +18,28 @@ enum BiomeBand {
 
 impl World {
     #[inline]
-    fn biome_for(&self, wy: f64, zf: f64) -> BiomeBand {
-        // Simple latitudinal bands by Y with underground override.
-        // Deterministic by world seed through use of Perlin elsewhere; bands are stable by coord.
-        if self.gen_z >= 5 {
+    fn biome_for(&self, wx: f64, wy: f64, zf: f64) -> BiomeBand {
+        // Depth rule: Lithic Rivers only below or equal to -5 depth levels.
+        if self.gen_z <= -5 {
             return BiomeBand::LithicRivers;
         }
-        // Normalize wy into a repeating band every ~2048 world units
-        let band_scale = 1.0 / 2048.0;
-        let v = (wy * band_scale).floor() as i64;
-        match ((v % 3 + 3) % 3) as i32 {
-            0 => BiomeBand::Plains,
-            1 => BiomeBand::Forest,
-            _ => BiomeBand::Rocky,
+        // Smooth, large-scale 3D noise to decide surface biome; depends on X, Y and Z.
+        let scale = 0.0015; // large features
+        let noise = Perlin::new((self.seed as u32) ^ 0xB10E);
+        let v = noise.get([wx * scale, wy * scale, zf * scale]); // [-1,1]
+        // Map v into three overlapping ranges; choose the closest center
+        let centers = [-0.75f64, 0.0, 0.75];
+        let labels = [BiomeBand::Plains, BiomeBand::Forest, BiomeBand::Rocky];
+        let mut best = 0usize;
+        let mut best_d = f64::INFINITY;
+        for (i, c) in centers.iter().enumerate() {
+            let d = (v - *c).abs();
+            if d < best_d {
+                best_d = d;
+                best = i;
+            }
         }
+        labels[best]
     }
 }
 
@@ -190,7 +198,7 @@ impl World {
                 // Calculate world coordinates
                 let wx = (cx as f64 * CHUNK_SIZE as f64) + x as f64;
                 let wy = (cy as f64 * CHUNK_SIZE as f64) + y as f64;
-                let band = self.biome_for(wy, zf);
+                let band = self.biome_for(wx, wy, zf);
 
                 // Generate base terrain height (0.0 to 1.0)
                 let scale = 0.01; // Adjust this to change the scale of the terrain features
@@ -230,8 +238,24 @@ impl World {
                         if height < 0.25 { TileKind::Dirt } else { TileKind::Rock }
                     }
                     BiomeBand::LithicRivers => {
-                        // Underground: predominantly rock; fluids system will add lava later
-                        if feature_value < -0.9 { TileKind::Bedrock } else { TileKind::Rock }
+                        // Underground Lithic Rivers: carve meandering channels using smooth noise.
+                        // Later, fluids system can fill channels with Lava.
+                        let rivers_scale = 0.003; // very large, smooth features
+                        let river_val = biome_noise.get([wx * rivers_scale + 1000.0, wy * rivers_scale - 1000.0, zf * rivers_scale]);
+                        let d = river_val.abs();
+                        // Core river: open space
+                        if d < 0.03 {
+                            TileKind::Air
+                        } else if d < 0.06 {
+                            // Banks: mostly open with some rock pillars
+                            if feature_value > -0.2 { TileKind::Air } else { TileKind::Rock }
+                        } else if d < 0.10 {
+                            // Edges: rocky rim; occasional bedrock
+                            if feature_value < -0.85 { TileKind::Bedrock } else { TileKind::Rock }
+                        } else {
+                            // Away from rivers: rocky crust with rare air pockets
+                            if feature_value > 0.97 { TileKind::Air } else { TileKind::Rock }
+                        }
                     }
                 };
 
@@ -251,8 +275,16 @@ impl World {
                         if base_tile == TileKind::Rock && feature_value > 0.8 { tile = TileKind::IronScrap; }
                     }
                     BiomeBand::LithicRivers => {
-                        // Occasional air pockets to break monotony
-                        if feature_value > 0.95 { tile = TileKind::Air; }
+                        // Enrich ore near river edges: where distance band is around rim
+                        let rivers_scale = 0.003;
+                        let river_val = biome_noise.get([wx * rivers_scale + 1000.0, wy * rivers_scale - 1000.0, zf * rivers_scale]);
+                        let d = river_val.abs();
+                        if (0.055..0.11).contains(&d) && tile == TileKind::Rock {
+                            if feature_value > 0.85 { tile = TileKind::IronScrap; }
+                            if feature_value < -0.9 { tile = TileKind::PlasteelScrap; }
+                        }
+                        // Preserve some pockets in crust
+                        if d >= 0.10 && feature_value > 0.985 { tile = TileKind::Air; }
                     }
                 }
 
@@ -265,7 +297,7 @@ impl World {
 
         // Add some rare resources; boost frequencies in Lithic Rivers
         let mut rng = ChaCha20Rng::seed_from_u64(self.mix_coords(cx, cy));
-        let (p_iron, p_elec, p_plasteel) = if self.gen_z >= 5 { (0.15, 0.07, 0.03) } else { (0.05, 0.02, 0.01) };
+        let (p_iron, p_elec, p_plasteel) = if self.gen_z <= -5 { (0.15, 0.07, 0.03) } else { (0.05, 0.02, 0.01) };
         let rare_resources = [
             (TileKind::IronScrap, p_iron),
             (TileKind::ScrapElectronics, p_elec),
@@ -280,7 +312,9 @@ impl World {
         }
 
         // Per-biome structures (lightweight, distinct flavor). Low chance per chunk.
-        let band_for_chunk = self.biome_for(cy as f64 * CHUNK_SIZE as f64, zf);
+        let center_wx = (cx as f64 * CHUNK_SIZE as f64) + (CHUNK_SIZE as f64 * 0.5);
+        let center_wy = (cy as f64 * CHUNK_SIZE as f64) + (CHUNK_SIZE as f64 * 0.5);
+        let band_for_chunk = self.biome_for(center_wx, center_wy, zf);
         let roll: f64 = rng.gen();
         if roll < 0.05 {
             let (name, ox, oy) = match band_for_chunk {

@@ -167,7 +167,7 @@ impl From<SaveDataJson> for SaveData {
             seed: j.seed,
             gametick: j.gametick,
             world: j.world.into(),
-            fluids: FluidManager { fluids: fluids_map },
+            fluids: FluidManager { fluids: fluids_map, seeded_lava_chunks: Default::default() },
             player: j.player,
             sheep: j.sheep,
         }
