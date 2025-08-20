@@ -1,0 +1,23 @@
+// SteamPipe App Build - macOS only
+
+"AppBuild"
+{
+    "AppID"        "950938"
+    "Desc"         "macOS-only build"
+    "BuildOutput"  "./steampipe_out/"
+    "ContentRoot"  "./artifacts/"
+    "SetLive"      "public"
+
+    "Depots"
+    {
+        "3940722"  
+        {
+				"FileMapping"
+				{
+					"LocalPath" "*" // all files from contentroot folder
+					"DepotPath" "." // mapped into the root of the depot
+					"recursive" "1" // include all subfolders
+				}
+        }
+    }
+}
