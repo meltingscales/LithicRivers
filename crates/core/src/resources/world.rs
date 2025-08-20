@@ -238,22 +238,40 @@ impl World {
                         if height < 0.25 { TileKind::Dirt } else { TileKind::Rock }
                     }
                     BiomeBand::LithicRivers => {
-                        // Underground Lithic Rivers: thinner channels using smooth noise.
-                        let rivers_scale = 0.004; // slightly faster variation for narrower bands
-                        let river_val = biome_noise.get([wx * rivers_scale + 1000.0, wy * rivers_scale - 1000.0, zf * rivers_scale]);
-                        let d = river_val.abs();
-                        // Core river: open space
-                        if d < 0.015 {
+                        // Horizontal Lithic Rivers (left-right) with cave-like features.
+                        // Build a horizontal stripe field by sampling along Y with an X/Z-dependent offset.
+                        let meander = biome_noise.get([wx * 0.02, zf * 0.02, 17.0]); // [-1,1]
+                        let y_adj = wy + meander * 5.0; // up to ~5 tiles vertical wobble
+                        let period = 22.0; // tiles between river centerlines
+                        let t = (y_adj / period).fract(); // [0,1)
+                        let tri = (t - 0.5).abs(); // distance to center in [0,0.5]
+                        let d_tiles = tri * period; // distance in tiles from nearest river center
+
+                        // Cave noise to make smaller features and open spaces
+                        let cave_coarse = biome_noise.get([wx * 0.03 + 300.0, wy * 0.03 - 300.0, zf * 0.03]);
+                        let cave_fine = biome_noise.get([wx * 0.10 - 700.0, wy * 0.10 + 700.0, zf * 0.10]);
+                        let cave_mix = 0.6 * cave_coarse + 0.4 * cave_fine; // [-1,1]
+
+                        // Determine terrain by distance to river and cave field
+                        if d_tiles < 2.0 {
+                            // Core: 0-2 tiles from center -> clear channel for lava flow
                             TileKind::Air
-                        } else if d < 0.03 {
-                            // Banks: mostly open with some rock pillars
-                            if feature_value > -0.3 { TileKind::Air } else { TileKind::Rock }
-                        } else if d < 0.05 {
-                            // Edges: rocky rim; occasional bedrock
-                            if feature_value < -0.9 { TileKind::Bedrock } else { TileKind::Rock }
+                        } else if d_tiles < 3.0 {
+                            // Banks: 2-3 tiles -> mostly air with occasional rock pillars
+                            if feature_value > -0.35 { TileKind::Air } else { TileKind::Rock }
+                        } else if d_tiles < 4.0 {
+                            // Rim: rocky edge with rare bedrock
+                            if feature_value < -0.93 { TileKind::Bedrock } else { TileKind::Rock }
                         } else {
-                            // Away from rivers: rocky crust with rare air pockets
-                            if feature_value > 0.992 { TileKind::Air } else { TileKind::Rock }
+                            // Away from rivers: mix of rock and caves producing Minecraft-like caverns
+                            // Open where cave noise is high; keep some structure via feature_value
+                            if cave_mix > 0.55 || (cave_mix > 0.35 && feature_value > 0.75) {
+                                TileKind::Air
+                            } else if feature_value < -0.97 {
+                                TileKind::Bedrock
+                            } else {
+                                TileKind::Rock
+                            }
                         }
                     }
                 };
@@ -274,16 +292,26 @@ impl World {
                         if base_tile == TileKind::Rock && feature_value > 0.8 { tile = TileKind::IronScrap; }
                     }
                     BiomeBand::LithicRivers => {
-                        // Enrich ore near river edges: where distance band is around rim
-                        let rivers_scale = 0.004;
-                        let river_val = biome_noise.get([wx * rivers_scale + 1000.0, wy * rivers_scale - 1000.0, zf * rivers_scale]);
-                        let d = river_val.abs();
-                        if (0.045..0.06).contains(&d) && tile == TileKind::Rock {
+                        // Ore enrichment near rim based on horizontal stripe distance
+                        let meander = biome_noise.get([wx * 0.02, zf * 0.02, 17.0]);
+                        let y_adj = wy + meander * 5.0;
+                        let period = 22.0;
+                        let t = (y_adj / period).fract();
+                        let tri = (t - 0.5).abs();
+                        let d_tiles = tri * period; // distance in tiles to nearest river centerline
+
+                        if (3.0..4.0).contains(&d_tiles) && tile == TileKind::Rock {
                             if feature_value > 0.88 { tile = TileKind::IronScrap; }
                             if feature_value < -0.92 { tile = TileKind::PlasteelScrap; }
                         }
-                        // Preserve some pockets in crust
-                        if d >= 0.05 && feature_value > 0.995 { tile = TileKind::Air; }
+
+                        // Additional small caves away from rivers based on cave noise
+                        if d_tiles >= 4.0 {
+                            let cave_coarse = biome_noise.get([wx * 0.03 + 300.0, wy * 0.03 - 300.0, zf * 0.03]);
+                            let cave_fine = biome_noise.get([wx * 0.10 - 700.0, wy * 0.10 + 700.0, zf * 0.10]);
+                            let cave_mix = 0.6 * cave_coarse + 0.4 * cave_fine;
+                            if cave_mix > 0.60 && tile == TileKind::Rock { tile = TileKind::Air; }
+                        }
                     }
                 }
 
