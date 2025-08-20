@@ -103,10 +103,33 @@ impl Game {
             }
         }
 
-        // Process fluids
-        self.res
-            .fluids
-            .process_fluids(&self.res.world, self.res.gametick);
+        // Process fluids (clamped to nearby chunks if we know player position)
+        if let Some(e) = self.res.player_entity {
+            if let Ok(pos) = self.world.get::<&Position>(e) {
+                let cx0 = (pos.x).div_euclid(resources::world::CHUNK_SIZE) as i64;
+                let cy0 = (pos.y).div_euclid(resources::world::CHUNK_SIZE) as i64;
+                let min_cx = cx0 - 1;
+                let max_cx = cx0 + 1;
+                let min_cy = cy0 - 1;
+                let max_cy = cy0 + 1;
+                self.res.fluids.process_fluids_clamped(
+                    &self.res.world,
+                    self.res.gametick,
+                    min_cx,
+                    min_cy,
+                    max_cx,
+                    max_cy,
+                );
+            } else {
+                self.res
+                    .fluids
+                    .process_fluids(&self.res.world, self.res.gametick);
+            }
+        } else {
+            self.res
+                .fluids
+                .process_fluids(&self.res.world, self.res.gametick);
+        }
 
         mining_success
     }
