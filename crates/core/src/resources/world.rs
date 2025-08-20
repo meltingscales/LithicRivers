@@ -344,6 +344,20 @@ impl World {
         self.chunks.clear();
     }
 
+    /// Export cached chunks as a vector of entries for JSON-friendly serialization.
+    /// Each entry is ((cx, cy), Chunk).
+    pub fn chunks_to_vec(&self) -> Vec<((i64, i64), Chunk)> {
+        self.chunks
+            .iter()
+            .map(|(k, v)| (*k, v.clone()))
+            .collect()
+    }
+
+    /// Replace cached chunks from a vector produced by `chunks_to_vec`.
+    pub fn set_chunks_from_vec(&mut self, entries: Vec<((i64, i64), Chunk)>) {
+        self.chunks = entries.into_iter().collect();
+    }
+
     fn apply_structure(chunk: &mut Chunk, structure: &StructureDefinition, ox: i32, oy: i32) {
         for (z, layer) in structure.layers.iter().enumerate() {
             for (y, line) in layer.lines().enumerate() {

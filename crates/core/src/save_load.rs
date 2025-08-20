@@ -11,6 +11,7 @@ use crate::model::body::Body; // currently not persisted (MVP)
 use crate::resources::fluids::Fluid;
 use crate::resources::fluids::FluidManager;
 use crate::resources::world::World as TileWorld;
+use crate::resources::world::Chunk as TileChunk;
 use crate::resources::Resources;
 
 pub const SAVE_VERSION: u32 = 1;
@@ -101,28 +102,56 @@ impl SaveData {
     }
 }
 
-// JSON-friendly mirror that encodes fluids' hashmap as a Vec of entries
+// JSON-friendly mirrors that encode maps as Vec entries
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct WorldJson {
+    pub seed: u64,
+    pub gen_z: i32,
+    pub chunks: Vec<((i64, i64), TileChunk)>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct SaveDataJson {
     pub version: u32,
     pub seed: u64,
     pub gametick: u64,
-    pub world: TileWorld,
+    pub world: WorldJson,
     pub fluids: Vec<(Position, Fluid)>,
     pub player: PlayerSave,
     pub sheep: Vec<SheepSave>,
 }
 
+impl From<TileWorld> for WorldJson {
+    fn from(w: TileWorld) -> Self {
+        // Preserve cached chunks rather than clearing.
+        let chunks = w.chunks_to_vec();
+        WorldJson {
+            seed: w.seed,
+            gen_z: w.gen_z,
+            chunks,
+        }
+    }
+}
+
+impl From<WorldJson> for TileWorld {
+    fn from(j: WorldJson) -> Self {
+        let mut w = TileWorld::new(0, 0, j.seed);
+        // Set gen_z directly to avoid clearing inserted chunks
+        w.gen_z = j.gen_z;
+        w.set_chunks_from_vec(j.chunks);
+        w
+    }
+}
+
 impl From<SaveData> for SaveDataJson {
     fn from(mut s: SaveData) -> Self {
-        // Before JSON, clear world cache that uses tuple keys
-        s.world.clear_cache();
+        // Convert fluids map and world cached chunks to JSON-friendly forms
         let fluids_vec: Vec<(Position, Fluid)> = s.fluids.fluids.into_iter().collect();
         SaveDataJson {
             version: s.version,
             seed: s.seed,
             gametick: s.gametick,
-            world: s.world,
+            world: s.world.into(),
             fluids: fluids_vec,
             player: s.player,
             sheep: s.sheep,
@@ -137,7 +166,7 @@ impl From<SaveDataJson> for SaveData {
             version: j.version,
             seed: j.seed,
             gametick: j.gametick,
-            world: j.world,
+            world: j.world.into(),
             fluids: FluidManager { fluids: fluids_map },
             player: j.player,
             sheep: j.sheep,
@@ -267,18 +296,32 @@ mod tests {
         let mut game = crate::Game::new(seed);
         simulate_movement_only(&mut game);
 
+        // Mutate a tile in a cached chunk to ensure it persists through JSON
+        if let Some(e) = game.res.player_entity {
+            if let Ok(pos) = game.world.get::<&Position>(e) {
+                // Ensure chunk is cached and then set a unique tile
+                let before = game.res.world.get_tile_cached(pos.x, pos.y);
+                let new_tile = if before == crate::tiles::TileKind::Rock {
+                    crate::tiles::TileKind::Dirt
+                } else {
+                    crate::tiles::TileKind::Rock
+                };
+                game.res.world.set_tile_cached(pos.x, pos.y, new_tile);
+            }
+        }
+
         // Snapshot key expectations
         let player_pos_before = if let Some(e) = game.res.player_entity {
             *game.world.get::<&Position>(e).unwrap()
         } else {
             panic!("no player entity");
         };
-        // Avoid any operations that would cache world chunks, since JSON cannot encode tuple keys.
-
-        // JSON roundtrip in-memory
+        // JSON roundtrip in-memory (use JSON-friendly mirror)
         let data = SaveData::from_game(&game).expect("save");
-        let s = serde_json::to_string(&data).expect("to json");
-        let decoded: SaveData = serde_json::from_str(&s).expect("from json");
+        let data_json: SaveDataJson = data.into();
+        let s = serde_json::to_string(&data_json).expect("to json");
+        let decoded_json: SaveDataJson = serde_json::from_str(&s).expect("from json");
+        let decoded: SaveData = decoded_json.into();
 
         let mut loaded = crate::Game::new(0);
         decoded.apply_to_game(&mut loaded).expect("apply");
@@ -294,6 +337,11 @@ mod tests {
             panic!("no player entity after load");
         };
         assert_eq!(player_pos_after, player_pos_before);
+
+        // Verify the mutated tile persisted
+        let tile_after = loaded.res.world.get_tile_cached(player_pos_after.x, player_pos_after.y);
+        let tile_before = game.res.world.get_tile_cached(player_pos_before.x, player_pos_before.y);
+        assert_eq!(tile_after, tile_before);
 
         // Basic invariants
         assert_eq!(loaded.res.seed, seed);
