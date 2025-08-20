@@ -6,11 +6,9 @@
 
 - fix steam_cmd for steam release... see https://stackoverflow.com/questions/79740593/steamworks-vague-steamcmd-error-when-publishing
 
-- copy our lithicrivers.config_manager object and settings into our rust codebase, to allow configuring settings
-  - make sure a fresh config file gets created alongside the executable if it doesn't exist, and if we're not running in a dev environment, just like the python version does
-  - make sure we display where we're pulling config from (external or embedded) in the settings menu
+- reduce the amount of fluid in the Lithic Rivers biome, make a "spawn_lava"/"spawn_water"/etc method that just creates 1 standard block of lava with a slightly-lower-than-average volume so it doesnt spread like crazy as it currently does
 
-- reduce the amount of fluid in the Lithic Rivers biome, make a "spawn_lava" method that just creates 1 standard block of lava with a slightly-lower-than-average volume so it doesnt spread like crazy
+- also clamp process_fluids_clamped so that it only does up to 50,000 fluid updates per tick, and quits with a warning if it hits that limit...
 
 - add some more empty space to the Lithic Rivers biome, carve out meandering "cave room" and "empty river" paths using noise/erosion plus thick vectors
 

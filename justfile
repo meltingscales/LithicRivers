@@ -47,8 +47,8 @@ test:
     {{cargoz_env}} test
 
 clean:
-    rm -f target/debug/lithicrivers-client
-    rm -f target/debug/config/lithicrivers-config.json
+    rm -f  target/debug/lithicrivers-client
+    rm -rf target/debug/config/
 
 # Build the project
 build: fmt clean
