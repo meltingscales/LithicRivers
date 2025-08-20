@@ -118,7 +118,7 @@ jobs:
                    +quit
 
   github-release-ubuntu:
-    name: Create GitHub Release
+    name: Create GitHub Release (Ubuntu)
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -144,7 +144,7 @@ jobs:
             artifacts/**/*
 
   github-release-windows:
-    name: Create GitHub Release
+    name: Create GitHub Release (Windows)
     needs: build
     runs-on: windows-latest
     steps:
@@ -170,7 +170,7 @@ jobs:
             artifacts/**/*
 
   github-release-macos:
-    name: Create GitHub Release
+    name: Create GitHub Release (macOS)
     needs: build
     runs-on: macos-latest
     steps:
