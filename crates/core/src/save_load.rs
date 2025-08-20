@@ -10,8 +10,8 @@ use crate::components::{BlocksMovement, Glyph, Inventory, Player, Position, Shee
 use crate::model::body::Body; // currently not persisted (MVP)
 use crate::resources::fluids::Fluid;
 use crate::resources::fluids::FluidManager;
-use crate::resources::world::World as TileWorld;
 use crate::resources::world::Chunk as TileChunk;
+use crate::resources::world::World as TileWorld;
 use crate::resources::Resources;
 
 pub const SAVE_VERSION: u32 = 1;
@@ -167,7 +167,10 @@ impl From<SaveDataJson> for SaveData {
             seed: j.seed,
             gametick: j.gametick,
             world: j.world.into(),
-            fluids: FluidManager { fluids: fluids_map, seeded_lava_chunks: Default::default() },
+            fluids: FluidManager {
+                fluids: fluids_map,
+                seeded_lava_chunks: Default::default(),
+            },
             player: j.player,
             sheep: j.sheep,
         }
@@ -339,8 +342,14 @@ mod tests {
         assert_eq!(player_pos_after, player_pos_before);
 
         // Verify the mutated tile persisted
-        let tile_after = loaded.res.world.get_tile_cached(player_pos_after.x, player_pos_after.y);
-        let tile_before = game.res.world.get_tile_cached(player_pos_before.x, player_pos_before.y);
+        let tile_after = loaded
+            .res
+            .world
+            .get_tile_cached(player_pos_after.x, player_pos_after.y);
+        let tile_before = game
+            .res
+            .world
+            .get_tile_cached(player_pos_before.x, player_pos_before.y);
         assert_eq!(tile_after, tile_before);
 
         // Basic invariants

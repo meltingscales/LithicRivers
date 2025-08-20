@@ -27,7 +27,7 @@ impl World {
         let scale = 0.0015; // large features
         let noise = Perlin::new((self.seed as u32) ^ 0xB10E);
         let v = noise.get([wx * scale, wy * scale, zf * scale]); // [-1,1]
-        // Map v into three overlapping ranges; choose the closest center
+                                                                 // Map v into three overlapping ranges; choose the closest center
         let centers = [-0.75f64, 0.0, 0.75];
         let labels = [BiomeBand::Plains, BiomeBand::Forest, BiomeBand::Rocky];
         let mut best = 0usize;
@@ -219,23 +219,47 @@ impl World {
                 let base_tile = match band {
                     BiomeBand::Plains => {
                         if height < 0.30 {
-                            if height < 0.27 { TileKind::Air } else { TileKind::Dirt }
+                            if height < 0.27 {
+                                TileKind::Air
+                            } else {
+                                TileKind::Dirt
+                            }
                         } else if height < 0.55 {
-                            if biome_value > 0.0 { TileKind::Grass } else { TileKind::Dirt }
+                            if biome_value > 0.0 {
+                                TileKind::Grass
+                            } else {
+                                TileKind::Dirt
+                            }
                         } else if height < 0.8 {
-                            if feature_value > 0.6 { TileKind::Rock } else { TileKind::Grass }
-                        } else { TileKind::Rock }
+                            if feature_value > 0.6 {
+                                TileKind::Rock
+                            } else {
+                                TileKind::Grass
+                            }
+                        } else {
+                            TileKind::Rock
+                        }
                     }
                     BiomeBand::Forest => {
                         if height < 0.28 {
-                            if height < 0.26 { TileKind::Air } else { TileKind::Dirt }
+                            if height < 0.26 {
+                                TileKind::Air
+                            } else {
+                                TileKind::Dirt
+                            }
                         } else if height < 0.7 {
                             // more vegetated
                             TileKind::Grass
-                        } else { TileKind::Rock }
+                        } else {
+                            TileKind::Rock
+                        }
                     }
                     BiomeBand::Rocky => {
-                        if height < 0.25 { TileKind::Dirt } else { TileKind::Rock }
+                        if height < 0.25 {
+                            TileKind::Dirt
+                        } else {
+                            TileKind::Rock
+                        }
                     }
                     BiomeBand::LithicRivers => {
                         // Horizontal Lithic Rivers (left-right) with cave-like features.
@@ -248,8 +272,10 @@ impl World {
                         let d_tiles = tri * period; // distance in tiles from nearest river center
 
                         // Cave noise to make smaller features and open spaces
-                        let cave_coarse = biome_noise.get([wx * 0.03 + 300.0, wy * 0.03 - 300.0, zf * 0.03]);
-                        let cave_fine = biome_noise.get([wx * 0.10 - 700.0, wy * 0.10 + 700.0, zf * 0.10]);
+                        let cave_coarse =
+                            biome_noise.get([wx * 0.03 + 300.0, wy * 0.03 - 300.0, zf * 0.03]);
+                        let cave_fine =
+                            biome_noise.get([wx * 0.10 - 700.0, wy * 0.10 + 700.0, zf * 0.10]);
                         let cave_mix = 0.6 * cave_coarse + 0.4 * cave_fine; // [-1,1]
 
                         // Determine terrain by distance to river and cave field
@@ -258,10 +284,18 @@ impl World {
                             TileKind::Air
                         } else if d_tiles < 3.0 {
                             // Banks: 2-3 tiles -> mostly air with occasional rock pillars
-                            if feature_value > -0.35 { TileKind::Air } else { TileKind::Rock }
+                            if feature_value > -0.35 {
+                                TileKind::Air
+                            } else {
+                                TileKind::Rock
+                            }
                         } else if d_tiles < 4.0 {
                             // Rim: rocky edge with rare bedrock
-                            if feature_value < -0.93 { TileKind::Bedrock } else { TileKind::Rock }
+                            if feature_value < -0.93 {
+                                TileKind::Bedrock
+                            } else {
+                                TileKind::Rock
+                            }
                         } else {
                             // Away from rivers: mix of rock and caves producing Minecraft-like caverns
                             // Open where cave noise is high; keep some structure via feature_value
@@ -281,7 +315,11 @@ impl World {
                 match band {
                     BiomeBand::Plains | BiomeBand::Forest => {
                         if base_tile == TileKind::Grass || base_tile == TileKind::Dirt {
-                            if biome_value > 0.1 && feature_value > 0.65 && height > 0.33 && height < 0.85 {
+                            if biome_value > 0.1
+                                && feature_value > 0.65
+                                && height > 0.33
+                                && height < 0.85
+                            {
                                 tile = TileKind::Tree;
                             } else if feature_value < -0.75 && height > 0.4 && height < 0.9 {
                                 tile = TileKind::Rock;
@@ -289,7 +327,9 @@ impl World {
                         }
                     }
                     BiomeBand::Rocky => {
-                        if base_tile == TileKind::Rock && feature_value > 0.8 { tile = TileKind::IronScrap; }
+                        if base_tile == TileKind::Rock && feature_value > 0.8 {
+                            tile = TileKind::IronScrap;
+                        }
                     }
                     BiomeBand::LithicRivers => {
                         // Ore enrichment near rim based on horizontal stripe distance
@@ -301,16 +341,24 @@ impl World {
                         let d_tiles = tri * period; // distance in tiles to nearest river centerline
 
                         if (3.0..4.0).contains(&d_tiles) && tile == TileKind::Rock {
-                            if feature_value > 0.88 { tile = TileKind::IronScrap; }
-                            if feature_value < -0.92 { tile = TileKind::PlasteelScrap; }
+                            if feature_value > 0.88 {
+                                tile = TileKind::IronScrap;
+                            }
+                            if feature_value < -0.92 {
+                                tile = TileKind::PlasteelScrap;
+                            }
                         }
 
                         // Additional small caves away from rivers based on cave noise
                         if d_tiles >= 4.0 {
-                            let cave_coarse = biome_noise.get([wx * 0.03 + 300.0, wy * 0.03 - 300.0, zf * 0.03]);
-                            let cave_fine = biome_noise.get([wx * 0.10 - 700.0, wy * 0.10 + 700.0, zf * 0.10]);
+                            let cave_coarse =
+                                biome_noise.get([wx * 0.03 + 300.0, wy * 0.03 - 300.0, zf * 0.03]);
+                            let cave_fine =
+                                biome_noise.get([wx * 0.10 - 700.0, wy * 0.10 + 700.0, zf * 0.10]);
                             let cave_mix = 0.6 * cave_coarse + 0.4 * cave_fine;
-                            if cave_mix > 0.60 && tile == TileKind::Rock { tile = TileKind::Air; }
+                            if cave_mix > 0.60 && tile == TileKind::Rock {
+                                tile = TileKind::Air;
+                            }
                         }
                     }
                 }
@@ -324,7 +372,11 @@ impl World {
 
         // Add some rare resources; boost frequencies in Lithic Rivers
         let mut rng = ChaCha20Rng::seed_from_u64(self.mix_coords(cx, cy));
-        let (p_iron, p_elec, p_plasteel) = if self.gen_z <= -5 { (0.15, 0.07, 0.03) } else { (0.05, 0.02, 0.01) };
+        let (p_iron, p_elec, p_plasteel) = if self.gen_z <= -5 {
+            (0.15, 0.07, 0.03)
+        } else {
+            (0.05, 0.02, 0.01)
+        };
         let rare_resources = [
             (TileKind::IronScrap, p_iron),
             (TileKind::ScrapElectronics, p_elec),
@@ -345,10 +397,26 @@ impl World {
         let roll: f64 = rng.gen();
         if roll < 0.05 {
             let (name, ox, oy) = match band_for_chunk {
-                BiomeBand::Plains => ("small_temple.lrstructure", rng.gen_range(0..CHUNK_SIZE) as i32, rng.gen_range(0..CHUNK_SIZE) as i32),
-                BiomeBand::Forest => ("giant_corpse.lrstructure", rng.gen_range(0..CHUNK_SIZE) as i32, rng.gen_range(0..CHUNK_SIZE) as i32),
-                BiomeBand::Rocky => ("small_ship.lrstructure", rng.gen_range(0..CHUNK_SIZE) as i32, rng.gen_range(0..CHUNK_SIZE) as i32),
-                BiomeBand::LithicRivers => ("small_temple.lrstructure", rng.gen_range(0..CHUNK_SIZE) as i32, rng.gen_range(0..CHUNK_SIZE) as i32),
+                BiomeBand::Plains => (
+                    "small_temple.lrstructure",
+                    rng.gen_range(0..CHUNK_SIZE) as i32,
+                    rng.gen_range(0..CHUNK_SIZE) as i32,
+                ),
+                BiomeBand::Forest => (
+                    "giant_corpse.lrstructure",
+                    rng.gen_range(0..CHUNK_SIZE) as i32,
+                    rng.gen_range(0..CHUNK_SIZE) as i32,
+                ),
+                BiomeBand::Rocky => (
+                    "small_ship.lrstructure",
+                    rng.gen_range(0..CHUNK_SIZE) as i32,
+                    rng.gen_range(0..CHUNK_SIZE) as i32,
+                ),
+                BiomeBand::LithicRivers => (
+                    "small_temple.lrstructure",
+                    rng.gen_range(0..CHUNK_SIZE) as i32,
+                    rng.gen_range(0..CHUNK_SIZE) as i32,
+                ),
             };
             let structure = StructureDefinition::load_from_embedded(name);
             Self::apply_structure(chunk, &structure, ox, oy);
@@ -459,10 +527,7 @@ impl World {
     /// Export cached chunks as a vector of entries for JSON-friendly serialization.
     /// Each entry is ((cx, cy), Chunk).
     pub fn chunks_to_vec(&self) -> Vec<((i64, i64), Chunk)> {
-        self.chunks
-            .iter()
-            .map(|(k, v)| (*k, v.clone()))
-            .collect()
+        self.chunks.iter().map(|(k, v)| (*k, v.clone())).collect()
     }
 
     /// Replace cached chunks from a vector produced by `chunks_to_vec`.
