@@ -238,19 +238,23 @@ impl FluidManager {
             (0, -1, 0), // North
             (1, 0, 0),  // East
             (-1, 0, 0), // West
-                        // NOTE: clamp to current Z slice: no vertical spread in clamped mode
+            (0, 0, 1),  // Down one slice (higher z)
+            (0, 0, -1), // Up one slice (lower z)
         ];
         let in_range = |x: i32, y: i32| -> bool {
             let cx = (x).div_euclid(CHUNK_SIZE) as i64;
             let cy = (y).div_euclid(CHUNK_SIZE) as i64;
             cx >= min_cx && cx <= max_cx && cy >= min_cy && cy <= max_cy
         };
+        // Define allowed Z band around current generation slice
+        let z_min = world.gen_z - 2;
+        let z_max = world.gen_z + 2;
         // Snapshot to avoid borrow issues
         let fluids_snapshot: Vec<_> = self.fluids.iter().map(|(p, f)| (*p, f.clone())).collect();
         let mut processed: usize = 0;
         for (pos, mut fluid) in fluids_snapshot {
-            // Only process fluids in the same Z slice and within the chunk range
-            if pos.z != world.gen_z || !in_range(pos.x, pos.y) {
+            // Only process fluids within the Z band and chunk range
+            if pos.z < z_min || pos.z > z_max || !in_range(pos.x, pos.y) {
                 continue;
             }
             processed += 1;
@@ -279,8 +283,8 @@ impl FluidManager {
                     y: pos.y + dy,
                     z: pos.z + dz,
                 };
-                // Restrict to current Z and chunk range
-                if target.z != world.gen_z || !in_range(target.x, target.y) {
+                // Restrict to Z band and chunk range
+                if target.z < z_min || target.z > z_max || !in_range(target.x, target.y) {
                     continue;
                 }
                 if self.can_hold_fluid(world, &target, fluid.fluid_type) {
