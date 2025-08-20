@@ -1,4 +1,5 @@
 pub mod components;
+pub mod config;
 pub mod model;
 pub mod palettekey;
 pub mod resources;
@@ -25,9 +26,19 @@ impl Game {
     pub fn new(seed: u64) -> Self {
         let mut world = World::new();
         let mut res = Resources::new(seed);
+        // Determine starting position from config (production environment)
+        let [sx, sy, sz] =
+            res.config
+                .get_vector_setting("world", "DEFAULT_PLAYER_POSITION", "production");
+        res.view_z = sz;
+        res.world.set_generation_z(sz);
         // Spawn a player entity with a Position
         let player = world.spawn((
-            Position { x: 1, y: 1, z: 0 },
+            Position {
+                x: sx,
+                y: sy,
+                z: sz,
+            },
             GameEntity,
             Player,
             Body::default(),
@@ -37,7 +48,14 @@ impl Game {
         ));
         res.player_entity = Some(player);
         // Spawn debug fluid pools around player
-        crate::resources::fluids::spawn_debug_pools(&mut res.fluids, Position { x: 1, y: 1, z: 0 });
+        crate::resources::fluids::spawn_debug_pools(
+            &mut res.fluids,
+            Position {
+                x: sx,
+                y: sy,
+                z: sz,
+            },
+        );
         // Spawn a simple StumblingSheep near the player (closer for visibility)
         world.spawn((
             Position { x: 2, y: 2, z: 0 },
