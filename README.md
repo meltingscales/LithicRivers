@@ -68,6 +68,7 @@ Currently we support:
 - https://github.com/meysam81/notable-newts
 - https://github.com/JnyJny/GameOfLife
 - https://github.com/VedantKhairnar/The-Maze-Runner
+- https://muffinman.io/blog/invaders/
 
 ## Known issues
 
