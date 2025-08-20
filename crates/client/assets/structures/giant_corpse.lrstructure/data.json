@@ -1,0 +1,9 @@
+{
+  "blocks": {
+    ".": "air",
+    "B": "bone_block"
+  },
+  "gen_biomes": "ALL",
+  "gen_chance": 0.05,
+  "y_layer_gen_range": [-1, 1]
+} 

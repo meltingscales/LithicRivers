@@ -1,0 +1,46 @@
+# Windows-specific justfile for LithicRivers
+# Focused on core build and run functionality
+
+# Set shell to use PowerShell
+set shell := ["powershell.exe", "-NoProfile", "-Command"]
+
+# Default toolchain (can be overridden)
+toolchain := "stable"
+
+# CPU count (PowerShell environment reference)
+cpu_count := "$env:NUMBER_OF_PROCESSORS"
+
+# Build in debug mode (default)
+build:
+    cargo build --workspace -j {{cpu_count}}
+
+stage-artifacts: build build-demos
+    powershell.exe scripts/stage-artifacts.ps1
+
+build-demos:
+    cargo build -p lithicrivers-client --bin demo_inventory
+    cargo build -p lithicrivers-client --bin demo_body
+    cargo build -p lithicrivers-client --bin beezzaroll_color_test
+    cargo build -p lithicrivers-client --bin beezzaroll_sprite_test
+
+# Run debug build
+run:
+    cargo run -p lithicrivers-client --bin lithicrivers-client -j {{cpu_count}}
+
+# Run release build
+run-release:
+    cargo run --release -p lithicrivers-client --bin lithicrivers-client -j {{cpu_count}}
+
+# Run tests
+test:
+    cargo test --workspace -j {{cpu_count}}
+
+# Clean build artifacts
+clean:
+    cargo clean
+
+# Install Rust toolchain
+install:
+    rustup toolchain install stable
+    rustup default stable
+    rustup target add wasm32-unknown-unknown

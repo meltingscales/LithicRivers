@@ -1,0 +1,70 @@
+use crate::components::{Glyph, Position};
+use crate::resources::Resources;
+use hecs::World;
+
+#[derive(Debug, Clone)]
+pub struct RenderView {
+    pub gametick: u64,
+    pub player_pos: Position,
+    pub map_lines: Vec<String>,
+}
+
+pub fn build_render_view(world: &World, res: &Resources) -> RenderView {
+    let mut player_pos = Position { x: 0, y: 0, z: 0 };
+    if let Some(e) = res.player_entity {
+        if let Ok(p) = world.get::<&Position>(e) {
+            player_pos = *p;
+        }
+    }
+    // Build a window around the player at the currently viewed Z slice.
+    // Radius can be configured; default is 25 -> 50x50 window.
+    let radius: i32 = res
+        .config
+        .get_setting("viewport", "VIEWPORT_RADIUS")
+        .and_then(|v| v.as_i64())
+        .map(|v| v as i32)
+        .unwrap_or(25)
+        .max(1);
+    let win_w: i32 = radius * 2;
+    let win_h: i32 = radius * 2;
+    let half_w = win_w / 2;
+    let half_h = win_h / 2;
+    let center_x = player_pos.x;
+    let center_y = player_pos.y;
+
+    let top = center_y - half_h;
+    let left = center_x - half_w;
+
+    // Build background from tiles
+    let mut buffer: Vec<Vec<char>> = vec![vec![' '; win_w as usize]; win_h as usize];
+    for y in 0..win_h {
+        let wy = top + y;
+        for x in 0..win_w {
+            let wx = left + x;
+            // Rendering is now handled in the client crate (sprite_loader). Background stays as space.
+            buffer[y as usize][x as usize] = ' ';
+        }
+    }
+    // Overlay entities with Glyph in this window at the viewed z
+    let z = res.view_z;
+    for (_e, (pos, glyph)) in world.query::<(&Position, &Glyph)>().iter() {
+        if pos.z != z {
+            continue;
+        }
+        let vx = pos.x - left;
+        let vy = pos.y - top;
+        if vx >= 0 && vx < win_w && vy >= 0 && vy < win_h {
+            buffer[vy as usize][vx as usize] = glyph.0;
+        }
+    }
+    // Convert to lines
+    let mut lines: Vec<String> = Vec::with_capacity(win_h as usize);
+    for y in 0..win_h {
+        lines.push(buffer[y as usize].iter().collect());
+    }
+    RenderView {
+        gametick: res.gametick,
+        player_pos,
+        map_lines: lines,
+    }
+}

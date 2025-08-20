@@ -1,0 +1,268 @@
+"""
+Structure generation system for placing predefined structures in the world.
+"""
+
+import json
+import os
+
+import msgspec
+from lithicrivers.game.rng import SimpleRNG
+from pathlib import Path
+from typing import Optional
+
+from lithicrivers.game.core import Tile, Tiles
+from lithicrivers.logging_config import get_logger
+from lithicrivers.model.vector import VectorN
+
+logger = get_logger(__name__)
+
+
+class StructureDefinition(msgspec.Struct, frozen=False):
+    """Represents a structure definition loaded from files."""
+
+    name: str
+    blocks: dict[str, str]
+    layers: list[str]
+    gen_biomes: str
+    gen_chance: float
+    y_layer_gen_range: list[int]
+
+    @classmethod
+    def create(cls, name: str, blocks: dict[str, str], layers: list[str], gen_biomes: str, gen_chance: float, y_layer_gen_range: list[int]):
+        return cls(
+            name=name,
+            blocks=blocks,
+            layers=layers,
+            gen_biomes=gen_biomes,
+            gen_chance=gen_chance,
+            y_layer_gen_range=y_layer_gen_range,
+        )
+
+    @classmethod
+    def load_from_directory(cls, structure_dir: Path) -> "StructureDefinition":
+        """Load a structure definition from a directory."""
+        name = structure_dir.name.replace(".lrstructure", "")
+
+        # Load data.json
+        data_file = structure_dir / "data.json"
+        with open(data_file) as f:
+            data = json.load(f)
+
+        # Load shape_layers.txt
+        shape_file = structure_dir / "shape_layers.txt"
+        with open(shape_file) as f:
+            shape_content = f.read().strip()
+
+        # Parse layers (separated by ~~~~~)
+        layers = [
+            layer.strip() for layer in shape_content.split("~~~~~") if layer.strip()
+        ]
+
+        return cls.create(
+            name=name,
+            blocks=data["blocks"],
+            layers=layers,
+            gen_biomes=data["gen_biomes"],
+            gen_chance=data["gen_chance"],
+            y_layer_gen_range=data["y_layer_gen_range"],
+        )
+
+    def get_tile_for_symbol(self, symbol: str) -> Tile:
+        """Get the tile corresponding to a symbol in the structure."""
+        tile_name = self.blocks.get(symbol, "empty")
+
+        # Map tile names to Tile objects
+        tile_map = {
+            "empty": Tiles.empty(),
+            "iron_scrap": Tiles.iron_scrap(),
+            "bone_block": Tiles.bone_block(),
+            "door": Tiles.door(),
+            "scrap_electronics": Tiles.scrap_electronics(),
+            "treasure": Tiles.treasure(),
+            "dirt": Tiles.dirt(),
+            "tree": Tiles.tree(),
+            "gold_ore": Tiles.gold_ore(),
+            "bedrock": Tiles.bedrock(),
+        }
+
+        return tile_map.get(tile_name, Tiles.empty())
+
+    def get_dimensions(self) -> tuple[int, int, int]:
+        """Get the dimensions of the structure (width, height, depth)."""
+        if not self.layers:
+            return (0, 0, 0)
+
+        # Width is the length of the longest line
+        width = max(len(line) for layer in self.layers for line in layer.split("\n"))
+        # Height is the number of layers
+        height = len(self.layers)
+        # Depth is the maximum number of lines in any layer
+        depth = max(len(layer.split("\n")) for layer in self.layers)
+
+        return (width, height, depth)
+
+
+class StructureManager(msgspec.Struct, frozen=False):
+    """Manages loading and placing structures in the world."""
+
+    structures_dir: str
+    structures: dict[str, StructureDefinition] = None
+
+    @classmethod
+    def create(cls, structures_dir: str):
+        instance = cls(structures_dir=structures_dir)
+        instance.structures = {}
+        instance._load_structures()
+        return instance
+
+    def _load_structures(self) -> None:
+        """Load all structure definitions from the structures directory."""
+        if not Path(self.structures_dir).exists():
+            return
+
+        for structure_dir in Path(self.structures_dir).iterdir():
+            if structure_dir.is_dir() and structure_dir.name.endswith(".lrstructure"):
+                try:
+                    structure = StructureDefinition.load_from_directory(structure_dir)
+                    self.structures[structure.name] = structure
+                except Exception as e:
+                    logger.warning(
+                        f"Failed to load structure {structure_dir.name}: {e}"
+                    )
+
+    def get_available_structures(self) -> list[str]:
+        """Get list of available structure names."""
+        return list(self.structures.keys())
+
+    def place_structure(
+        self,
+        structure_name: str,
+        world_data: dict[str, Tile],
+        base_position: VectorN,
+        rng: SimpleRNG,
+        force_placement: bool = False,
+    ) -> bool:
+        """
+        Place a structure at the given position in the world.
+
+        Args:
+            structure_name: Name of the structure to place
+            world_data: World data dictionary
+            base_position: Base position to place the structure
+            rng: Random number generator for consistency
+            force_placement: If True, bypass random chance check
+
+        Returns:
+            True if structure was placed successfully, False otherwise
+        """
+        if structure_name not in self.structures:
+            return False
+
+        structure = self.structures[structure_name]
+
+        # Check if we should generate this structure based on chance (unless forced)
+        if not force_placement and rng.random() > structure.gen_chance:
+            return False
+
+        # Check if base position is within the allowed y-layer range
+        # Handle None values safely
+        base_z = base_position.z if base_position.z is not None else 0
+        if not (
+            structure.y_layer_gen_range[0] <= base_z <= structure.y_layer_gen_range[1]
+        ):
+            return False
+
+        # Place the structure
+        tiles_placed = 0
+        for layer_idx, layer in enumerate(structure.layers):
+            layer_lines = layer.split("\n")
+            for line_idx, line in enumerate(layer_lines):
+                for char_idx, char in enumerate(line):
+                    if char == ".":
+                        continue  # Skip empty spaces
+
+                    # Calculate world position - handle None values safely
+                    base_x = base_position.x if base_position.x is not None else 0
+                    base_y = base_position.y if base_position.y is not None else 0
+                    base_z = base_position.z if base_position.z is not None else 0
+
+                    world_pos = VectorN.create(
+                        base_x + char_idx,
+                        base_y + line_idx,
+                        base_z + layer_idx,
+                    )
+
+                    # Get the tile for this character
+                    tile = structure.get_tile_for_symbol(char)
+
+                    # Place the tile in the world
+                    world_data[world_pos.serialize()] = tile
+                    tiles_placed += 1
+
+        logger.debug(
+            f"Placed {tiles_placed} tiles for {structure_name} at {base_position}"
+        )
+        return True
+
+    def generate_structures_for_chunk(
+        self,
+        world_data: dict[str, Tile],
+        chunk_center: VectorN,
+        chunk_radius: int,
+        rng: SimpleRNG,
+    ) -> None:
+        """
+        Generate structures for a chunk of the world.
+
+        Args:
+            world_data: World data dictionary
+            chunk_center: Center of the chunk
+            chunk_radius: Radius of the chunk
+            rng: Random number generator for consistency
+        """
+        # Try to place each structure
+        for structure_name in self.structures:
+            # Generate multiple potential positions within the chunk
+            # Use fewer attempts during testing to speed up tests
+            attempts = 3 if os.environ.get("TESTING") == "1" else 10
+            for _ in range(attempts):
+                # Random position within chunk - handle None values safely
+                center_x = chunk_center.x if chunk_center.x is not None else 0
+                center_y = chunk_center.y if chunk_center.y is not None else 0
+                center_z = chunk_center.z if chunk_center.z is not None else 0
+
+                pos_x = center_x + rng.randint(-chunk_radius, chunk_radius)
+                pos_y = center_y + rng.randint(-chunk_radius, chunk_radius)
+                pos_z = center_z + rng.randint(-chunk_radius, chunk_radius)
+
+                base_pos = VectorN.create(pos_x, pos_y, pos_z)
+                self.place_structure(structure_name, world_data, base_pos, rng)
+
+
+# Global singleton instance
+_global_structure_manager = None
+
+
+def create_structure_manager(structures_dir: Optional[Path] = None) -> StructureManager:
+    """
+    Get or create the singleton structure manager instance.
+
+    Args:
+        structures_dir: Optional custom structures directory.
+                      Only used on first creation.
+
+    Returns:
+        The singleton StructureManager instance
+    """
+    global _global_structure_manager
+
+    if _global_structure_manager is None:
+        if structures_dir is None:
+            # Use the default structures directory
+            current_dir = Path(__file__).parent
+            structures_dir = current_dir / "data" / "structures"
+
+        _global_structure_manager = StructureManager.create(structures_dir=str(structures_dir))
+        logger.info("Created singleton StructureManager instance")
+
+    return _global_structure_manager
