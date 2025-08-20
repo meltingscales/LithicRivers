@@ -85,14 +85,22 @@ impl Keybinds {
                 }
             }
         }
+
+        tracing::info!(target: "game", "built keybind map: {:?}", map);
         Self { map }
     }
 
     fn matches(&self, category: &str, action: &str, key: &KeyCode) -> bool {
         let k = format!("{}:{}", category, action);
+
+        // tracing::info!(target: "game", "self.map: {:?}", self.map);
+        // tracing::info!(target: "game", "k: {:?}", k);
+        // tracing::info!(target: "game", "key: {:?}", key);
+
         if let Some(list) = self.map.get(&k) {
             for c in list {
                 if c == key {
+                    // tracing::info!(target: "game", "match!");
                     return true;
                 }
             }
@@ -299,9 +307,8 @@ impl App {
     }
 
     fn handle_input(&mut self, key: KeyCode) -> Result<(), Box<dyn Error>> {
-
         // log key to log
-        tracing::info!(target: "game", "key pressed: {}", key);
+        // tracing::info!(target: "game", "key pressed: {:?}", key);
 
         // First, handle configurable keybind actions
         if self.keybinds.matches("movement", "MOVE_NORTH", &key) {

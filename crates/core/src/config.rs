@@ -36,6 +36,11 @@ impl ConfigManager {
                 (defaults, ConfigSourceKind::EmbeddedDefaults)
             }
         };
+
+        tracing::info!(target: "game", "loaded config: {:?}", data);
+        tracing::info!(target: "game", "config source: {:?}", source);
+        tracing::info!(target: "game", "config file path: {:?}", file_path);
+
         Self {
             data,
             file_path,
@@ -130,8 +135,8 @@ impl ConfigManager {
                 "MOVE_SOUTHWEST": ["NUMPAD_1"],
                 "MOVE_SOUTH": ["NUMPAD_2"],
                 "MOVE_SOUTHEAST": ["NUMPAD_3"],
-                "MOVE_UP": ["q"],
-                "MOVE_DOWN": ["e"]
+                "MOVE_UP": ["<"],
+                "MOVE_DOWN": [">"]
             },
             "viewport": {
                 "RESET_VIEWPORT": ["r"],
@@ -153,7 +158,7 @@ impl ConfigManager {
                 "CREDITS_SCROLL_DOWN": ["DOWN"],
                 "SAVE_JSON": ["S"],
                 "LOAD_JSON": ["L"],
-                "QUIT": ["q"]
+                "QUIT": []
             },
             "inventory": {"DROP_ITEM": ["d"], "DESTROY_ITEM": ["x"], "CHEAT_DUPLICATE_ITEM": ["."]}
         });
