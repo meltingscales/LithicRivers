@@ -17,11 +17,23 @@ build:
 stage-artifacts: build build-demos
     powershell.exe scripts/stage-artifacts.ps1
 
+build-release:
+    cargo build --workspace --release -j {{cpu_count}}
+
+stage-artifacts-release: build-release build-demos-release
+    powershell.exe scripts/stage-artifacts-release.ps1
+
 build-demos:
     cargo build -p lithicrivers-client --bin demo_inventory
     cargo build -p lithicrivers-client --bin demo_body
     cargo build -p lithicrivers-client --bin beezzaroll_color_test
     cargo build -p lithicrivers-client --bin beezzaroll_sprite_test
+
+build-demos-release:
+    cargo build -p lithicrivers-client --bin demo_inventory --release
+    cargo build -p lithicrivers-client --bin demo_body --release
+    cargo build -p lithicrivers-client --bin beezzaroll_color_test --release
+    cargo build -p lithicrivers-client --bin beezzaroll_sprite_test --release
 
 # Run debug build
 run:
