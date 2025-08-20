@@ -6,6 +6,10 @@
 
 - fix steam_cmd for steam release... see https://stackoverflow.com/questions/79740593/steamworks-vague-steamcmd-error-when-publishing
 
+- copy our lithicrivers.config_manager object and settings into our rust codebase, to allow configuring settings
+  - make sure a fresh config file gets created alongside the executable if it doesn't exist, and if we're not running in a dev environment
+  - make sure we display where we're pulling config from (external or embedded) in the settings menu
+
 ## Core Gameplay Loop (Must Have)
 - [ ] Basic world generation with multiple biomes
   - [ ] At least 3 distinct biome bands with tile/feature differences
