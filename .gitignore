@@ -70,6 +70,7 @@ Thumbs.db
 
 # built data
 artifacts/
+steampipe_out/
 
 # perf
 perf.data
