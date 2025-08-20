@@ -48,9 +48,10 @@ test:
 
 clean:
     rm -f target/debug/lithicrivers-client
+    rm -f target/debug/config/lithicrivers-config.json
 
 # Build the project
-build: fmt
+build: fmt clean
     cp -f STEAM_APP_ID crates/client/assets/config/STEAM_APP_ID
     cp -f VERSION crates/client/assets/config/VERSION
     cp -f LICENSE crates/client/assets/config/LICENSE
