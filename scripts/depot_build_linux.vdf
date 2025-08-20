@@ -1,0 +1,16 @@
+// Linux depot build configuration
+// Replace DepotID with your real Linux depot ID
+
+"DepotBuild"
+{
+    "DepotID"       "YOUR_DEPOT_ID_LINUX"
+
+    // Content root is inherited from AppBuild's ContentRoot (.)
+    // Map all files in artifacts/ to the depot root
+    "FileMapping"
+    {
+        "LocalPath"   "artifacts/*"
+        "DepotPath"   "."
+        "Recursive"   "1"
+    }
+}
