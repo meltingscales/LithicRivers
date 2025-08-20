@@ -238,23 +238,22 @@ impl World {
                         if height < 0.25 { TileKind::Dirt } else { TileKind::Rock }
                     }
                     BiomeBand::LithicRivers => {
-                        // Underground Lithic Rivers: carve meandering channels using smooth noise.
-                        // Later, fluids system can fill channels with Lava.
-                        let rivers_scale = 0.003; // very large, smooth features
+                        // Underground Lithic Rivers: thinner channels using smooth noise.
+                        let rivers_scale = 0.004; // slightly faster variation for narrower bands
                         let river_val = biome_noise.get([wx * rivers_scale + 1000.0, wy * rivers_scale - 1000.0, zf * rivers_scale]);
                         let d = river_val.abs();
                         // Core river: open space
-                        if d < 0.03 {
+                        if d < 0.015 {
                             TileKind::Air
-                        } else if d < 0.06 {
+                        } else if d < 0.03 {
                             // Banks: mostly open with some rock pillars
-                            if feature_value > -0.2 { TileKind::Air } else { TileKind::Rock }
-                        } else if d < 0.10 {
+                            if feature_value > -0.3 { TileKind::Air } else { TileKind::Rock }
+                        } else if d < 0.05 {
                             // Edges: rocky rim; occasional bedrock
-                            if feature_value < -0.85 { TileKind::Bedrock } else { TileKind::Rock }
+                            if feature_value < -0.9 { TileKind::Bedrock } else { TileKind::Rock }
                         } else {
                             // Away from rivers: rocky crust with rare air pockets
-                            if feature_value > 0.97 { TileKind::Air } else { TileKind::Rock }
+                            if feature_value > 0.992 { TileKind::Air } else { TileKind::Rock }
                         }
                     }
                 };
@@ -276,15 +275,15 @@ impl World {
                     }
                     BiomeBand::LithicRivers => {
                         // Enrich ore near river edges: where distance band is around rim
-                        let rivers_scale = 0.003;
+                        let rivers_scale = 0.004;
                         let river_val = biome_noise.get([wx * rivers_scale + 1000.0, wy * rivers_scale - 1000.0, zf * rivers_scale]);
                         let d = river_val.abs();
-                        if (0.055..0.11).contains(&d) && tile == TileKind::Rock {
-                            if feature_value > 0.85 { tile = TileKind::IronScrap; }
-                            if feature_value < -0.9 { tile = TileKind::PlasteelScrap; }
+                        if (0.045..0.06).contains(&d) && tile == TileKind::Rock {
+                            if feature_value > 0.88 { tile = TileKind::IronScrap; }
+                            if feature_value < -0.92 { tile = TileKind::PlasteelScrap; }
                         }
                         // Preserve some pockets in crust
-                        if d >= 0.10 && feature_value > 0.985 { tile = TileKind::Air; }
+                        if d >= 0.05 && feature_value > 0.995 { tile = TileKind::Air; }
                     }
                 }
 
