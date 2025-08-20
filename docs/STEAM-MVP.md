@@ -7,10 +7,24 @@
 - fix steam_cmd for steam release... see https://stackoverflow.com/questions/79740593/steamworks-vague-steamcmd-error-when-publishing
 
 - copy our lithicrivers.config_manager object and settings into our rust codebase, to allow configuring settings
-  - make sure a fresh config file gets created alongside the executable if it doesn't exist, and if we're not running in a dev environment
+  - make sure a fresh config file gets created alongside the executable if it doesn't exist, and if we're not running in a dev environment, just like the python version does
   - make sure we display where we're pulling config from (external or embedded) in the settings menu
 
-- heavily clamp `process_fluids` to prevent it from using too much CPU. only let it run in the adjacent chunks of the player.
+- reduce the amount of fluid in the Lithic Rivers biome, make a "spawn_lava" method that just creates 1 standard block of lava with a slightly-lower-than-average volume so it doesnt spread like crazy
+
+- add some more empty space to the Lithic Rivers biome, carve out meandering "cave room" and "empty river" paths using noise/erosion plus thick vectors
+
+- arboreal biome
+- frozen wasteland biome
+- lush forest biome with springs and pools, and ruins
+- nuked city biome
+- abandoned mine biome
+
+- forced structure spawns just like the python version
+  - crashed ship
+  - abandoned factory
+  - abandoned research station
+
 
 ## Core Gameplay Loop (Must Have)
 - [ ] Basic world generation with multiple biomes
@@ -27,6 +41,7 @@
   - [ ] Full cycle length ~10–20 minutes with visual cue
 - [ ] Basic survival mechanics (damage, repair, body parts)
   - [ ] Body panel shows part states; player can incur and repair at least 1 damage type
+- [ ] NPC interactions and conversations just like the python version
 
 ## Technical Requirements
 - [x] Stable save/load system
