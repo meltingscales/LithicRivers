@@ -28,6 +28,7 @@ struct EmbeddedAssets;
 
 use lithicrivers_core::config::ConfigManager;
 use lithicrivers_core::Game;
+use std::collections::HashMap;
 mod audio;
 mod sprite_loader;
 use crate::sprite_loader::{
@@ -51,6 +52,90 @@ struct App {
     credits_scroll: u16,
     // Logging info
     log_full_path: String,
+    keybinds: Keybinds,
+}
+
+#[derive(Debug, Clone)]
+struct Keybinds {
+    // key: "category:ACTION" => list of KeyCodes
+    map: HashMap<String, Vec<KeyCode>>,
+}
+
+impl Keybinds {
+    fn from_config(cfg: &ConfigManager) -> Self {
+        let mut map: HashMap<String, Vec<KeyCode>> = HashMap::new();
+        if let Some(obj) = cfg.data.keybinds.as_object() {
+            for (category, actions) in obj.iter() {
+                if let Some(act_obj) = actions.as_object() {
+                    for (action, arr) in act_obj.iter() {
+                        let mut codes: Vec<KeyCode> = Vec::new();
+                        if let Some(list) = arr.as_array() {
+                            for v in list {
+                                if let Some(s) = v.as_str() {
+                                    if let Some(code) = Self::parse_keycode(s) {
+                                        codes.push(code);
+                                    }
+                                }
+                            }
+                        }
+                        if !codes.is_empty() {
+                            map.insert(format!("{}:{}", category, action), codes);
+                        }
+                    }
+                }
+            }
+        }
+        Self { map }
+    }
+
+    fn matches(&self, category: &str, action: &str, key: &KeyCode) -> bool {
+        let k = format!("{}:{}", category, action);
+        if let Some(list) = self.map.get(&k) {
+            for c in list {
+                if c == key {
+                    return true;
+                }
+            }
+        }
+        false
+    }
+
+    fn parse_keycode(s: &str) -> Option<KeyCode> {
+        // Single character mappings
+        if s.len() == 1 {
+            let ch = s.chars().next().unwrap();
+            return Some(KeyCode::Char(ch));
+        }
+        match s {
+            // Common named keys
+            "ESCAPE" => Some(KeyCode::Esc),
+            "ENTER" => Some(KeyCode::Enter),
+            "SPACE" => Some(KeyCode::Char(' ')),
+            "TAB" => Some(KeyCode::Tab),
+            "BACKSPACE" => Some(KeyCode::Backspace),
+
+            // Arrows and paging
+            "UP" => Some(KeyCode::Up),
+            "DOWN" => Some(KeyCode::Down),
+            "LEFT" => Some(KeyCode::Left),
+            "RIGHT" => Some(KeyCode::Right),
+            "PAGEUP" | "PAGE_UP" => Some(KeyCode::PageUp),
+            "PAGEDOWN" | "PAGE_DOWN" => Some(KeyCode::PageDown),
+
+            // Numpad (map to equivalent characters)
+            "NUMPAD_1" => Some(KeyCode::Char('1')),
+            "NUMPAD_2" => Some(KeyCode::Char('2')),
+            "NUMPAD_3" => Some(KeyCode::Char('3')),
+            "NUMPAD_4" => Some(KeyCode::Char('4')),
+            "NUMPAD_5" => Some(KeyCode::Char('5')),
+            "NUMPAD_6" => Some(KeyCode::Char('6')),
+            "NUMPAD_7" => Some(KeyCode::Char('7')),
+            "NUMPAD_8" => Some(KeyCode::Char('8')),
+            "NUMPAD_9" => Some(KeyCode::Char('9')),
+
+            _ => None,
+        }
+    }
 }
 
 fn render_help_panel(f: &mut Frame, _app: &mut App, area: Rect) {
@@ -176,6 +261,9 @@ impl App {
         let today = Local::now().format("%Y-%m-%d").to_string();
         let log_full_path = format!("{}/LithicRivers.log.{}", log_dir_abs, today);
 
+        // Build keybinds from game config
+        let keybinds = Keybinds::from_config(&game.res.config);
+
         App {
             game,
             sprite_loader,
@@ -187,6 +275,7 @@ impl App {
             credits_text,
             credits_scroll: 0,
             log_full_path,
+            keybinds,
         }
     }
     fn new() -> App {
@@ -210,154 +299,176 @@ impl App {
     }
 
     fn handle_input(&mut self, key: KeyCode) -> Result<(), Box<dyn Error>> {
-        match key {
-            KeyCode::Char('q') => {
-                self.game.res.log("Quit requested (q)");
-                tracing::info!(target: "game", "quit_requested input=q tick={} ", self.game.res.gametick);
-                self.should_quit = true;
-            }
-            // Activate selected menu by Enter/Space
-            KeyCode::Enter | KeyCode::Char(' ') => {
-                self.activate_menu();
-            }
-            // Cycle menu with left/right (7 tabs)
-            KeyCode::Left => {
-                if self.menu_index == 0 {
-                    self.menu_index = 6;
-                } else {
-                    self.menu_index -= 1;
-                }
-            }
-            KeyCode::Right => {
-                self.menu_index = (self.menu_index + 1) % 7;
-            }
-            // Mining
-            KeyCode::Char('m') => {
-                self.game.queue_mine();
-                let mining_success = self.game.tick();
-                if mining_success {
-                    let _ = self.audio.play_sound_effect("wood_crack");
-                }
-            }
-            // Movement using numpad keys (cardinal + diagonal)
-            KeyCode::Char('8') => {
-                self.game.queue_player_move(0, -1);
-                self.game.tick();
-                self.snap_view_to_player_z();
-            }
-            KeyCode::Char('2') => {
-                self.game.queue_player_move(0, 1);
-                self.game.tick();
-                self.snap_view_to_player_z();
-            }
-            KeyCode::Char('4') => {
-                self.game.queue_player_move(-1, 0);
-                self.game.tick();
-                self.snap_view_to_player_z();
-            }
-            KeyCode::Char('6') => {
-                self.game.queue_player_move(1, 0);
-                self.game.tick();
-                self.snap_view_to_player_z();
-            }
-            KeyCode::Char('7') => {
-                self.game.queue_player_move(-1, -1);
-                self.game.tick();
-                self.snap_view_to_player_z();
-            }
-            KeyCode::Char('9') => {
-                self.game.queue_player_move(1, -1);
-                self.game.tick();
-                self.snap_view_to_player_z();
-            }
-            KeyCode::Char('1') => {
-                self.game.queue_player_move(-1, 1);
-                self.game.tick();
-                self.snap_view_to_player_z();
-            }
-            KeyCode::Char('3') => {
-                self.game.queue_player_move(1, 1);
-                self.game.tick();
-                self.snap_view_to_player_z();
-            }
-            KeyCode::Char('5') => {
-                self.game.queue_player_move(0, 0);
-                self.game.tick();
-            }
-            // Z-level viewing and Credits scrolling are handled below with conditional PageUp/PageDown arms
-            // Vertical movement: '<' up, '>' down (like DF variants)
-            KeyCode::Char('<') => {
-                self.game.queue_player_move_z(1);
-                self.game.tick();
-                self.snap_view_to_player_z();
-            }
-            KeyCode::Char('>') => {
-                self.game.queue_player_move_z(-1);
-                self.game.tick();
-                self.snap_view_to_player_z();
-            }
-            // Zoom controls: '=' zoom in, '-' zoom out, '0' reset
-            KeyCode::Char('=') | KeyCode::Char('+') => {
-                self.scale = match self.scale {
-                    Scale::Small => Scale::Medium,
-                    Scale::Medium => Scale::Large,
-                    Scale::Large => Scale::Large,
-                };
-            }
-            KeyCode::Char('-') => {
-                self.scale = match self.scale {
-                    Scale::Large => Scale::Medium,
-                    Scale::Medium => Scale::Small,
-                    Scale::Small => Scale::Small,
-                };
-            }
-            KeyCode::Char('0') => {
-                self.scale = Scale::Small;
-            }
-            // Credits panel scrolling
-            KeyCode::Up => {
-                if self.menu_index == 5 {
-                    self.credits_scroll = self.credits_scroll.saturating_sub(1);
-                }
-            }
-            KeyCode::Down => {
-                if self.menu_index == 5 {
-                    self.credits_scroll = self.credits_scroll.saturating_add(1);
-                }
-            }
-            KeyCode::PageUp => {
-                if self.menu_index == 5 {
-                    self.credits_scroll = self.credits_scroll.saturating_sub(10);
-                } else {
-                    self.game.res.view_z = self.game.res.view_z.saturating_add(1);
-                }
-            }
-            KeyCode::PageDown => {
-                if self.menu_index == 5 {
-                    self.credits_scroll = self.credits_scroll.saturating_add(10);
-                } else {
-                    self.game.res.view_z = self.game.res.view_z.saturating_sub(1);
-                }
-            }
-            // Save/Load (debug): 'S' to save JSON, 'L' to load JSON
-            KeyCode::Char('S') => {
-                tracing::info!(target: "game", "save_begin path=save.json tick={}", self.game.res.gametick);
-                self.game
-                    .save_json("save.json")
-                    .expect("Save failed: JSON serialization error");
-                self.game.res.log("Saved to save.json");
-                tracing::info!(target: "game", "save_end path=save.json tick={}", self.game.res.gametick);
-            }
-            KeyCode::Char('L') => {
-                tracing::info!(target: "game", "load_begin path=save.json tick={}", self.game.res.gametick);
-                self.game
-                    .load_json("save.json")
-                    .expect("Load failed: JSON deserialization error");
-                self.game.res.log("Loaded from save.json");
-                tracing::info!(target: "game", "load_end path=save.json tick={}", self.game.res.gametick);
-            }
-            _ => {}
+
+        // log key to log
+        tracing::info!(target: "game", "key pressed: {}", key);
+
+        // First, handle configurable keybind actions
+        if self.keybinds.matches("movement", "MOVE_NORTH", &key) {
+            self.game.queue_player_move(0, -1);
+            self.game.tick();
+            self.snap_view_to_player_z();
+            return Ok(());
         }
+        if self.keybinds.matches("movement", "MOVE_SOUTH", &key) {
+            self.game.queue_player_move(0, 1);
+            self.game.tick();
+            self.snap_view_to_player_z();
+            return Ok(());
+        }
+        if self.keybinds.matches("movement", "MOVE_WEST", &key) {
+            self.game.queue_player_move(-1, 0);
+            self.game.tick();
+            self.snap_view_to_player_z();
+            return Ok(());
+        }
+        if self.keybinds.matches("movement", "MOVE_EAST", &key) {
+            self.game.queue_player_move(1, 0);
+            self.game.tick();
+            self.snap_view_to_player_z();
+            return Ok(());
+        }
+        if self.keybinds.matches("movement", "MOVE_NORTHWEST", &key) {
+            self.game.queue_player_move(-1, -1);
+            self.game.tick();
+            self.snap_view_to_player_z();
+            return Ok(());
+        }
+        if self.keybinds.matches("movement", "MOVE_NORTHEAST", &key) {
+            self.game.queue_player_move(1, -1);
+            self.game.tick();
+            self.snap_view_to_player_z();
+            return Ok(());
+        }
+        if self.keybinds.matches("movement", "MOVE_SOUTHWEST", &key) {
+            self.game.queue_player_move(-1, 1);
+            self.game.tick();
+            self.snap_view_to_player_z();
+            return Ok(());
+        }
+        if self.keybinds.matches("movement", "MOVE_SOUTHEAST", &key) {
+            self.game.queue_player_move(1, 1);
+            self.game.tick();
+            self.snap_view_to_player_z();
+            return Ok(());
+        }
+        if self.keybinds.matches("movement", "WAIT", &key) {
+            self.game.queue_player_move(0, 0);
+            self.game.tick();
+            return Ok(());
+        }
+        if self.keybinds.matches("movement", "MOVE_UP", &key) {
+            self.game.queue_player_move_z(1);
+            self.game.tick();
+            self.snap_view_to_player_z();
+            return Ok(());
+        }
+        if self.keybinds.matches("movement", "MOVE_DOWN", &key) {
+            self.game.queue_player_move_z(-1);
+            self.game.tick();
+            self.snap_view_to_player_z();
+            return Ok(());
+        }
+        if self.keybinds.matches("action", "MINE", &key) {
+            self.game.queue_mine();
+            let mining_success = self.game.tick();
+            if mining_success {
+                self.snap_view_to_player_z();
+            }
+            return Ok(());
+        }
+        if self.keybinds.matches("scale", "SCALE_UP", &key) {
+            self.scale = match self.scale {
+                Scale::Small => Scale::Medium,
+                Scale::Medium => Scale::Large,
+                Scale::Large => Scale::Large,
+            };
+            return Ok(());
+        }
+        if self.keybinds.matches("scale", "SCALE_DOWN", &key) {
+            self.scale = match self.scale {
+                Scale::Large => Scale::Medium,
+                Scale::Medium => Scale::Small,
+                Scale::Small => Scale::Small,
+            };
+            return Ok(());
+        }
+        if self.keybinds.matches("scale", "SCALE_RESET", &key) {
+            self.scale = Scale::Small;
+            return Ok(());
+        }
+        // UI: Quit
+        if self.keybinds.matches("ui", "QUIT", &key) {
+            self.game.res.log("Quit requested (keybind)");
+            tracing::info!(target: "game", "quit_requested tick={}", self.game.res.gametick);
+            self.should_quit = true;
+            return Ok(());
+        }
+        // UI: Menu activation and paging
+        if self.keybinds.matches("ui", "MENU_ACTIVATE", &key) {
+            self.activate_menu();
+            return Ok(());
+        }
+        if self.keybinds.matches("ui", "MENU_PREV", &key) {
+            if self.menu_index == 0 {
+                self.menu_index = 6;
+            } else {
+                self.menu_index -= 1;
+            }
+            return Ok(());
+        }
+        if self.keybinds.matches("ui", "MENU_NEXT", &key) {
+            self.menu_index = (self.menu_index + 1) % 7;
+            return Ok(());
+        }
+        // Credits scroll
+        if self.menu_index == 5 {
+            if self.keybinds.matches("ui", "CREDITS_SCROLL_UP", &key) {
+                self.credits_scroll = self.credits_scroll.saturating_sub(1);
+                return Ok(());
+            }
+            if self.keybinds.matches("ui", "CREDITS_SCROLL_DOWN", &key) {
+                self.credits_scroll = self.credits_scroll.saturating_add(1);
+                return Ok(());
+            }
+        }
+        // View Z slice up/down
+        if self.keybinds.matches("viewport", "VIEW_Z_UP", &key) {
+            if self.menu_index == 5 {
+                self.credits_scroll = self.credits_scroll.saturating_sub(10);
+            } else {
+                self.game.res.view_z = self.game.res.view_z.saturating_add(1);
+            }
+            return Ok(());
+        }
+        if self.keybinds.matches("viewport", "VIEW_Z_DOWN", &key) {
+            if self.menu_index == 5 {
+                self.credits_scroll = self.credits_scroll.saturating_add(10);
+            } else {
+                self.game.res.view_z = self.game.res.view_z.saturating_sub(1);
+            }
+            return Ok(());
+        }
+        // Save/Load via config
+        if self.keybinds.matches("ui", "SAVE_JSON", &key) {
+            tracing::info!(target: "game", "save_begin path=save.json tick={}", self.game.res.gametick);
+            self.game
+                .save_json("save.json")
+                .map_err(|e| format!("save_json error: {:?}", e))?;
+            self.game.res.log("Saved to save.json");
+            tracing::info!(target: "game", "save_end path=save.json tick={}", self.game.res.gametick);
+            return Ok(());
+        }
+        if self.keybinds.matches("ui", "LOAD_JSON", &key) {
+            tracing::info!(target: "game", "load_begin path=save.json tick={}", self.game.res.gametick);
+            self.game
+                .load_json("save.json")
+                .map_err(|e| format!("load_json error: {:?}", e))?;
+            self.game.res.log("Loaded from save.json");
+            tracing::info!(target: "game", "load_end path=save.json tick={}", self.game.res.gametick);
+            return Ok(());
+        }
+
         Ok(())
     }
 
@@ -768,9 +879,9 @@ fn render_menu_panel(f: &mut Frame, app: &mut App, area: Rect) {
         Style::default().fg(Color::Cyan),
     )));
     lines.push(Line::from(""));
-    lines.push(Line::from(Span::raw("S - Save to save.json")));
-    lines.push(Line::from(Span::raw("L - Load from save.json")));
-    lines.push(Line::from(Span::raw("Q - Quit")));
+    lines.push(Line::from(Span::raw(
+        "Use configured keybinds to Save/Load/Quit (see config).",
+    )));
     lines.push(Line::from(""));
     // Config source
     lines.push(Line::from(Span::styled(

@@ -17,7 +17,9 @@
       "RESET_VIEWPORT": ["r"],
       "SLIDE_VIEWPORT_WEST": ["["],
       "SLIDE_VIEWPORT_EAST": ["]"],
-      "TOGGLE_VIEWPORT": ["v"]
+      "TOGGLE_VIEWPORT": ["v"],
+      "VIEW_Z_UP": ["UP"],
+      "VIEW_Z_DOWN": ["DOWN"]
     },
     "scale": {
       "SCALE_UP": ["=", "+"],
@@ -30,7 +32,12 @@
     },
     "ui": {
       "CLOSE_HELP_MENU": ["ESCAPE"],
-      "OPEN_COMMAND_MENU": ["/"]
+      "OPEN_COMMAND_MENU": ["/"],
+      "MENU_ACTIVATE": ["ENTER"],
+      "MENU_PREV": ["LEFT"],
+      "MENU_NEXT": ["RIGHT"],
+      "CREDITS_SCROLL_UP": ["UP"],
+      "CREDITS_SCROLL_DOWN": ["DOWN"]
     },
     "inventory": {
       "DROP_ITEM": ["d"],
@@ -47,7 +54,7 @@
       "LOGGINGLEVEL": "INFO",
       "DEVELOPER_MODE": true,
       "DEFAULT_SEED": 4669201609,
-      "DEFAULT_PLAYER_NAME": "Inigo Montoya"
+      "DEFAULT_PLAYER_NAME": "melty"
     },
     "world": {
       "DEFAULT_SIZE_RADIUS": {
