@@ -4,8 +4,6 @@
 
 - fix windows exe consuming keystrokes way too fast (should we switch shells on windows?? does this only happen because im in a vm??)
 
-- saving/loading doesnt save changes to the world, we need to serialize all chunks that have been generated
-
 - fix steam_cmd for steam release... see https://stackoverflow.com/questions/79740593/steamworks-vague-steamcmd-error-when-publishing
 
 ## Core Gameplay Loop (Must Have)
@@ -13,7 +11,7 @@
   - [ ] At least 3 distinct biome bands with tile/feature differences
     - [ ] structure generation that's unique across biomes
     - [ ] underground "Lithic Rivers" biome that's molten lava and rare ore, and dangerous mining bots
-    - [ ] Deterministic by seed across Z-slices
+    - [x] Deterministic by seed across Z-slices
 - [ ] Player movement and basic interactions
   - [ ] Numpad movement plus '<'/'>' vertical movement
   - [ ] Mining action with SFX and message log feedback
