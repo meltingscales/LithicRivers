@@ -61,6 +61,16 @@ build: fmt clean
     {{cargoz_env}} build -p lithicrivers-core {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin lithicrivers-client {{build_flags}}
 
+# Build the project in release mode
+build-release: fmt clean
+    cp -f STEAM_APP_ID crates/client/assets/config/STEAM_APP_ID
+    cp -f VERSION crates/client/assets/config/VERSION
+    cp -f LICENSE crates/client/assets/config/LICENSE
+    cp -f THIRD-PARTY-NOTICES.txt crates/client/assets/config/THIRD-PARTY-NOTICES.txt
+    {{cargo_base}} --version
+    {{cargoz_env}} build -p lithicrivers-core --release {{build_flags}}
+    {{cargoz_env}} build -p lithicrivers-client --bin lithicrivers-client --release {{build_flags}}
+
 stage-artifacts: build build-demos
     rm -rf artifacts/
     mkdir -p artifacts/
@@ -71,12 +81,29 @@ stage-artifacts: build build-demos
     cp -f target/debug/beezzaroll_color_test artifacts/
     cp -f target/debug/beezzaroll_sprite_test artifacts/
 
+# Stage release artifacts
+stage-artifacts-release: build-release build-demos-release
+    rm -rf artifacts/
+    mkdir -p artifacts/
+    cp -f target/release/lithicrivers-client artifacts/
+    cp -f target/release/demo_inventory artifacts/
+    cp -f target/release/demo_body artifacts/
+    cp -f target/release/beezzaroll_color_test artifacts/
+    cp -f target/release/beezzaroll_sprite_test artifacts/
+
 ## Optional: build demo binaries (may require ratatui API updates)
 build-demos: fmt
     {{cargoz_env}} build -p lithicrivers-client --bin demo_inventory {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin demo_body {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin beezzaroll_color_test {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin beezzaroll_sprite_test {{build_flags}}
+
+# Optional: build demo binaries (release)
+build-demos-release: fmt
+    {{cargoz_env}} build -p lithicrivers-client --bin demo_inventory --release {{build_flags}}
+    {{cargoz_env}} build -p lithicrivers-client --bin demo_body --release {{build_flags}}
+    {{cargoz_env}} build -p lithicrivers-client --bin beezzaroll_color_test --release {{build_flags}}
+    {{cargoz_env}} build -p lithicrivers-client --bin beezzaroll_sprite_test --release {{build_flags}}
 
 # Run debug build (alias for client)
 run-debug: client
