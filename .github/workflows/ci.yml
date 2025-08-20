@@ -119,6 +119,7 @@ jobs:
 
   github-release-ubuntu:
     name: Create GitHub Release (Ubuntu)
+    continue-on-error: true
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -145,6 +146,7 @@ jobs:
 
   github-release-windows:
     name: Create GitHub Release (Windows)
+    continue-on-error: true
     needs: build
     runs-on: windows-latest
     steps:
@@ -171,6 +173,7 @@ jobs:
 
   github-release-macos:
     name: Create GitHub Release (macOS)
+    continue-on-error: true
     needs: build
     runs-on: macos-latest
     steps:
