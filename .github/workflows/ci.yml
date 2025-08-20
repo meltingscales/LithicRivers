@@ -104,6 +104,7 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
+          name: lithicrivers-${{ github.ref_name }}-${{ github.sha }}-ubuntu-latest
           path: artifacts
 
       - name: Install steamcmd
@@ -129,6 +130,7 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
+          name: lithicrivers-${{ github.ref_name }}-${{ github.sha }}-ubuntu-latest
           path: artifacts
 
       - name: Create GitHub Release and upload assets
@@ -156,6 +158,7 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
+          name: lithicrivers-${{ github.ref_name }}-${{ github.sha }}-windows-latest
           path: artifacts
 
       - name: Create GitHub Release and upload assets
@@ -183,6 +186,7 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
+          name: lithicrivers-${{ github.ref_name }}-${{ github.sha }}-macos-latest
           path: artifacts
 
       - name: Create GitHub Release and upload assets
