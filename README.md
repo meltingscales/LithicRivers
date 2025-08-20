@@ -12,6 +12,12 @@ For licensing inquiries or source code access, please contact: **HenryFBP@gmail.
 
 See [LICENSE](LICENSE) for full terms.
 
+## Libraries
+
+- Rust v1.76.1
+- Crossterm v0.27.0
+- Ratatui v0.26.3
+
 ## Play the game
 
 Visit <https://github.com/HenryFBP/LithicRivers/releases> to download a release for your platform.
@@ -37,14 +43,22 @@ Currently we support:
 
 ## Running
 
-    make run
+    just run
 
-## building/release
+## Building
 
-    make build
+### Linux
+
+    just build
     ls ./dist/
 
-## notes
+### Windows
+
+    just --justfile justfile.windows install
+    just --justfile justfile.windows build
+    just --justfile justfile.windows run
+
+## Notes
 
 - https://github.com/peterbrittain/asciimatics/blob/v1.13/samples/tab_demo.py
 - https://stackoverflow.com/questions/9575409/calling-parent-class-init-with-multiple-inheritance-whats-the-right-way/50465583#50465583
@@ -54,8 +68,8 @@ Currently we support:
 - https://github.com/meysam81/notable-newts
 - https://github.com/JnyJny/GameOfLife
 - https://github.com/VedantKhairnar/The-Maze-Runner
+- https://muffinman.io/blog/invaders/
 
 ## Known issues
 
-- Feature: ESC key handling versus SHIFT-NUMPAD5, etc? #395 https://github.com/peterbrittain/asciimatics/issues/395
-- ESC delay: https://asciimatics.readthedocs.io/en/stable/troubleshooting.html#there-s-a-big-delay-when-i-press-escape
+None!

@@ -1,0 +1,6 @@
+{
+  "name": "water",
+  "color": "#0000FF",
+  "description": "Flowing water",
+  "scales": [1, 2, 3]
+} 

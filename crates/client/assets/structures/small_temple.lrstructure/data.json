@@ -1,0 +1,10 @@
+{
+  "blocks": {
+    ".": "air",
+    "X": "iron_scrap",
+    "T": "treasure"
+  },
+  "gen_biomes": "ALL",
+  "gen_chance": 0.08,
+  "y_layer_gen_range": [-1, 1]
+} 

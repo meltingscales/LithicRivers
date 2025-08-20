@@ -1,0 +1,6 @@
+{
+  "name": "lava",
+  "color": "#FF0000",
+  "description": "Molten lava",
+  "scales": [1, 2, 3]
+} 

@@ -1,0 +1,6 @@
+{
+  "name": "blood",
+  "color": "#FF0000",
+  "description": "Dark blood",
+  "scales": [1, 2, 3]
+} 

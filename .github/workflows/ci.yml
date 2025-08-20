@@ -3,156 +3,113 @@ name: "Simplified CI/CD"
 
 on:
   push:
-    branches: [main, develop, release]
-    tags-ignore: ["*"]
-  pull_request:
-    branches: [main]
+    branches:
+      - release
 
 jobs:
-  # Always run tests
-  test:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    env:
+      RUSTC_WRAPPER: sccache
+      SCCACHE_CACHE_SIZE: 5G
+      CARGO_INCREMENTAL: 0
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Rust toolchain (nightly)
+        uses: dtolnay/rust-toolchain@nightly
+
+      - name: Install sccache (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y sccache
+
+      - name: Install sccache (Windows)
+        if: matrix.os == 'windows-latest'
+        run: choco install sccache
+
+      - name: Install sccache (macOS)
+        if: matrix.os == 'macos-latest'
+        run: brew install sccache
+
+      - name: Cache sccache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/sccache
+            ~/Library/Caches/Mozilla.sccache
+            ~/Library/Caches/sccache
+            C:\\Users\\runneradmin\\AppData\\Local\\Mozilla\\sccache
+            C:\\Users\\runneradmin\\AppData\\Local\\sccache
+          key: sccache-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            sccache-${{ runner.os }}-
+
+      - name: Cache cargo builds
+        uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+          shared-key: ${{ runner.os }}-nightly
+
+      - name: Build on Windows
+        if: matrix.os == 'windows-latest'
+        run: |
+          choco install just
+          just --justfile justfile.windows build
+          just --justfile justfile.windows stage-artifacts
+
+      - name: Build on Linux
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt install just
+          sudo bash scripts/install_dev_deps.sh
+          just build
+          just stage-artifacts
+
+      - name: Build on macOS
+        if: matrix.os == 'macos-latest'
+        run: |
+          brew update
+          brew install just
+          just build
+          just stage-artifacts
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: lithicrivers-${{ github.ref_name }}-${{ github.sha }}-${{ matrix.os }}
+          path: artifacts/
+
+  steam-upload-ubuntu:
+    needs: build
     runs-on: ubuntu-latest
-    
+    if: vars.ENABLE_STEAM_UPLOAD == 'true'
+    env:
+      STEAM_USERNAME: ${{ secrets.STEAM_USERNAME }}
+      STEAM_PASSWORD: ${{ secrets.STEAM_PASSWORD }}
+      STEAM_APP_ID: ${{ secrets.STEAM_APP_ID }}
     steps:
-      - name: "Checkout source code"
-        uses: "actions/checkout@v2.4.0"
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: "Install uv"
-        uses: "astral-sh/setup-uv@v1"
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
         with:
-          version: "latest"
+          path: artifacts
 
-      - name: "Cache dependencies"
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/uv
-          key: ${{ runner.os }}-uv-${{ hashFiles('**/pyproject.toml') }}
-          restore-keys: |
-            ${{ runner.os }}-uv-
+      - name: Install steamcmd
+        run: sudo apt-get update && sudo apt-get install -y steamcmd
 
-      - name: "Install dependencies"
-        run: "make install"
-
-      - name: "Run tests with coverage"
-        run: "make test-lcov"
-
-      - name: "Coveralls"
-        uses: coverallsapp/github-action@master
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
-  # Security checks
-  security:
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: "Checkout source code"
-        uses: "actions/checkout@v2.4.0"
-
-      - name: "Install uv"
-        uses: "astral-sh/setup-uv@v1"
-        with:
-          version: "latest"
-
-      - name: "Cache dependencies"
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/uv
-          key: ${{ runner.os }}-uv-${{ hashFiles('**/pyproject.toml') }}
-          restore-keys: |
-            ${{ runner.os }}-uv-
-
-      - name: "Install dependencies"
-        run: "make install"
-
-      - name: "Run security checks"
-        run: "make security"
-
-      - name: "Upload security report"
-        uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: security-report
-          path: security-report.json
-
-  # Build for Ubuntu (release branch only)
-  build-ubuntu:
-    needs: [test, security]
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/release'
-    
-    steps:
-      - name: "Checkout source code"
-        uses: "actions/checkout@v2.4.0"
-
-      - name: "Install uv"
-        uses: "astral-sh/setup-uv@v1"
-        with:
-          version: "latest"
-
-      - name: "Cache dependencies"
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/uv
-          key: ${{ runner.os }}-uv-${{ hashFiles('**/pyproject.toml') }}
-          restore-keys: |
-            ${{ runner.os }}-uv-
-
-      - name: "Install dependencies"
-        run: "make install"
-
-      - name: "Run tests"
-        run: "make test"
-
-      - name: "Build executable"
-        run: "make build"
-
-      - name: "Create Ubuntu release"
-        uses: "marvinpinto/action-automatic-releases@latest"
-        with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "latest-ubuntu"
-          prerelease: true
-          title: "Development Build Ubuntu"
-          files: "dist/*"
-
-  # Build for Windows (release branch only)
-  build-windows:
-    needs: [test, security]
-    runs-on: windows-latest
-    if: github.ref == 'refs/heads/release'
-    
-    steps:
-      - name: "Checkout source code"
-        uses: "actions/checkout@v2.4.0"
-
-      - name: "Install uv"
-        uses: "astral-sh/setup-uv@v1"
-        with:
-          version: "latest"
-
-      - name: "Cache dependencies"
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/uv
-          key: ${{ runner.os }}-uv-${{ hashFiles('**/pyproject.toml') }}
-          restore-keys: |
-            ${{ runner.os }}-uv-
-
-      - name: "Install dependencies"
-        run: "./scripts/setup.cmd"
-
-      - name: "Run tests"
-        run: "./scripts/test.cmd"
-
-      - name: "Build executable"
-        run: "./scripts/generate_exe.cmd"
-
-      - name: "Create Windows release"
-        uses: "marvinpinto/action-automatic-releases@latest"
-        with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "latest-windows"
-          prerelease: true
-          title: "Development Build Windows"
-          files: "dist/*" 
+      - name: Upload to Steam (SteamPipe)
+        if: env.STEAM_USERNAME != ''
+        run: |
+          APPVDF="$(realpath scripts/app_build_linux.vdf)"
+          steamcmd +login "$STEAM_USERNAME" "$STEAM_PASSWORD" \
+                   +run_app_build_http $APPVDF \
+                   +quit

@@ -1,0 +1,11 @@
+{
+  "blocks": {
+    ".": "air",
+    "S": "plasteel_scrap",
+    "C": "scrap_electronics",
+    "E": "treasure"
+  },
+  "gen_biomes": "ALL",
+  "gen_chance": 0.01,
+  "y_layer_gen_range": [0, 0]
+}
