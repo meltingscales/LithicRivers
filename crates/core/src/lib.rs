@@ -1,5 +1,6 @@
 pub mod components;
 pub mod config;
+pub mod default_config;
 pub mod model;
 pub mod palettekey;
 pub mod resources;
