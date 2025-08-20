@@ -35,7 +35,6 @@ impl FluidType {
             FluidType::Lava => PaletteKey::Lava,
         }
     }
-
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -259,7 +258,11 @@ impl FluidManager {
                     if d_tiles < 3.0 {
                         // Core/banks: place lava; amount proportional to closeness
                         let base = if d_tiles < 2.0 { 800 } else { 500 };
-                        let pos = Position { x: wx, y: wy, z: world.gen_z };
+                        let pos = Position {
+                            x: wx,
+                            y: wy,
+                            z: world.gen_z,
+                        };
                         let mut lava = Fluid::new(FluidType::Lava, pos, base);
                         // Thicker lava: higher viscosity -> slower spread
                         lava.viscosity = 6;
