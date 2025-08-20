@@ -1,0 +1,1 @@
+@echo Please use just --justfile justfile.windows
