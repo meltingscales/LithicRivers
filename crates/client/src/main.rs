@@ -26,6 +26,7 @@ use tracing_appender as _tracing_appender_hidden; // avoid "unused extern crate"
 #[folder = "assets/"]
 struct EmbeddedAssets;
 
+use lithicrivers_core::config::ConfigManager;
 use lithicrivers_core::Game;
 mod audio;
 mod sprite_loader;
@@ -122,9 +123,9 @@ fn render_credits_panel(f: &mut Frame, app: &mut App, area: Rect) {
 }
 
 impl App {
-    fn new() -> App {
+    fn new_with_seed(seed: u64) -> App {
         // Initialize game and sprite loader
-        let game = Game::new(12345);
+        let game = Game::new(seed);
         let mut sprite_loader = SpriteLoader::new(None);
         // Preload all assets to eliminate runtime I/O during rendering
         sprite_loader.preload_all();
@@ -187,6 +188,9 @@ impl App {
             credits_scroll: 0,
             log_full_path,
         }
+    }
+    fn new() -> App {
+        Self::new_with_seed(12345)
     }
 
     fn on_tick(&mut self) {
@@ -434,11 +438,23 @@ impl App {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
+    // Load configuration to determine logging and seed before starting app
+    let cm = ConfigManager::new();
+    let log_level = cm
+        .get_setting("game", "LOGGINGLEVEL")
+        .and_then(|v| v.as_str())
+        .unwrap_or("INFO");
+    let seed_val: u64 = cm
+        .get_setting("game", "DEFAULT_SEED")
+        .and_then(|v| v.as_u64())
+        .unwrap_or(12345);
+
     // Initialize tracing to write logs to LithicRivers.log (rotated daily)
     {
         let file_appender = _tracing_appender_hidden::rolling::daily(".", "LithicRivers.log");
         let (non_blocking, _guard) = _tracing_appender_hidden::non_blocking(file_appender);
-        let filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
+        let filter = EnvFilter::try_from_default_env()
+            .unwrap_or_else(|_| EnvFilter::new(log_level.to_lowercase()));
         tracing_subscriber::fmt()
             .with_env_filter(filter)
             .with_writer(non_blocking)
@@ -464,7 +480,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut terminal = Terminal::new(backend)?;
 
     // Create app and run it
-    let mut app = App::new();
+    let mut app = App::new_with_seed(seed_val);
     let res = run_app(&mut terminal, &mut app);
 
     // Restore terminal
@@ -755,6 +771,28 @@ fn render_menu_panel(f: &mut Frame, app: &mut App, area: Rect) {
     lines.push(Line::from(Span::raw("S - Save to save.json")));
     lines.push(Line::from(Span::raw("L - Load from save.json")));
     lines.push(Line::from(Span::raw("Q - Quit")));
+    lines.push(Line::from(""));
+    // Config source
+    lines.push(Line::from(Span::styled(
+        "Configuration:",
+        Style::default().fg(Color::Cyan),
+    )));
+    lines.push(Line::from(Span::raw(format!(
+        "  {}",
+        app.game.res.config.source_label()
+    ))));
+    lines.push(Line::from(Span::raw(format!(
+        "  Player: {}",
+        app.game.res.player_name
+    ))));
+    lines.push(Line::from(Span::raw(format!(
+        "  Developer mode: {}",
+        if app.game.res.developer_mode {
+            "ON"
+        } else {
+            "OFF"
+        }
+    ))));
     lines.push(Line::from(""));
     // Logging location information
     lines.push(Line::from(Span::raw("Logging:")));

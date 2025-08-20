@@ -1,3 +1,4 @@
+use crate::config::ConfigManager;
 use hecs::Entity;
 use rand::SeedableRng;
 use rand_chacha::ChaCha20Rng;
@@ -13,6 +14,9 @@ pub struct Resources {
     pub player_entity: Option<Entity>,
     pub world: world::World,
     pub fluids: fluids::FluidManager, // Fluid system
+    pub config: ConfigManager,
+    pub developer_mode: bool,
+    pub player_name: String,
     // Input intents (single-step for now)
     pub player_move_intent: Option<(i32, i32)>,
     pub last_blocked_tile: Option<(i32, i32)>,
@@ -31,6 +35,16 @@ pub struct Resources {
 impl Resources {
     pub fn new(seed: u64) -> Self {
         let rng = ChaCha20Rng::seed_from_u64(seed);
+        let cfg = ConfigManager::new();
+        let developer_mode = cfg
+            .get_setting("game", "DEVELOPER_MODE")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
+        let player_name = cfg
+            .get_setting("game", "DEFAULT_PLAYER_NAME")
+            .and_then(|v| v.as_str())
+            .unwrap_or("Player")
+            .to_string();
         Self {
             seed,
             rng,
@@ -38,6 +52,9 @@ impl Resources {
             player_entity: None,
             world: world::World::new(80, 24, seed),
             fluids: fluids::FluidManager::default(),
+            config: cfg,
+            developer_mode,
+            player_name,
             player_move_intent: None,
             last_blocked_tile: None,
             pending_tick_increase: None,
