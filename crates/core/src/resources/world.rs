@@ -8,6 +8,33 @@ use serde::{Deserialize, Serialize};
 use crate::structure::StructureDefinition;
 use crate::tiles::TileKind;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum BiomeBand {
+    Plains,
+    Forest,
+    Rocky,
+    LithicRivers, // underground lava/rare ore biome
+}
+
+impl World {
+    #[inline]
+    fn biome_for(&self, wy: f64, zf: f64) -> BiomeBand {
+        // Simple latitudinal bands by Y with underground override.
+        // Deterministic by world seed through use of Perlin elsewhere; bands are stable by coord.
+        if self.gen_z >= 5 {
+            return BiomeBand::LithicRivers;
+        }
+        // Normalize wy into a repeating band every ~2048 world units
+        let band_scale = 1.0 / 2048.0;
+        let v = (wy * band_scale).floor() as i64;
+        match ((v % 3 + 3) % 3) as i32 {
+            0 => BiomeBand::Plains,
+            1 => BiomeBand::Forest,
+            _ => BiomeBand::Rocky,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Chunk {
     tiles: Vec<TileKind>, // size CHUNK_SIZE * CHUNK_SIZE
@@ -156,13 +183,14 @@ impl World {
         let biome_noise = Perlin::new(self.seed as u32 % 0x10000);
         let feature_noise = Perlin::new(self.seed as u32 % 0x20000);
 
-        // Generate terrain using Perlin noise. Incorporate Z to get vertical variation.
+        // Generate terrain using Perlin noise. Incorporate Z to get vertical variation and bands.
         let zf = self.gen_z as f64;
         for y in 0..CHUNK_SIZE {
             for x in 0..CHUNK_SIZE {
                 // Calculate world coordinates
                 let wx = (cx as f64 * CHUNK_SIZE as f64) + x as f64;
                 let wy = (cy as f64 * CHUNK_SIZE as f64) + y as f64;
+                let band = self.biome_for(wy, zf);
 
                 // Generate base terrain height (0.0 to 1.0)
                 let scale = 0.01; // Adjust this to change the scale of the terrain features
@@ -179,43 +207,52 @@ impl World {
                 let feature_value =
                     feature_noise.get([wx * feature_scale, wy * feature_scale, zf * feature_scale]);
 
-                // Determine base tile type based on height
-                let base_tile = if height < 0.3 {
-                    // Water or beach
-                    if height < 0.28 {
-                        TileKind::Air // Water (handled by fluid system)
-                    } else {
-                        TileKind::Dirt // Beach
+                // Determine base tile type based on height and biome band
+                let base_tile = match band {
+                    BiomeBand::Plains => {
+                        if height < 0.30 {
+                            if height < 0.27 { TileKind::Air } else { TileKind::Dirt }
+                        } else if height < 0.55 {
+                            if biome_value > 0.0 { TileKind::Grass } else { TileKind::Dirt }
+                        } else if height < 0.8 {
+                            if feature_value > 0.6 { TileKind::Rock } else { TileKind::Grass }
+                        } else { TileKind::Rock }
                     }
-                } else if height < 0.4 {
-                    // Grassland or forest
-                    if biome_value > 0.3 {
-                        TileKind::Grass
-                    } else {
-                        TileKind::Dirt
+                    BiomeBand::Forest => {
+                        if height < 0.28 {
+                            if height < 0.26 { TileKind::Air } else { TileKind::Dirt }
+                        } else if height < 0.7 {
+                            // more vegetated
+                            TileKind::Grass
+                        } else { TileKind::Rock }
                     }
-                } else if height < 0.7 {
-                    // Hills with some rocks
-                    if feature_value > 0.5 {
-                        TileKind::Rock
-                    } else {
-                        TileKind::Grass
+                    BiomeBand::Rocky => {
+                        if height < 0.25 { TileKind::Dirt } else { TileKind::Rock }
                     }
-                } else {
-                    // Mountains
-                    TileKind::Rock
+                    BiomeBand::LithicRivers => {
+                        // Underground: predominantly rock; fluids system will add lava later
+                        if feature_value < -0.9 { TileKind::Bedrock } else { TileKind::Rock }
+                    }
                 };
 
-                // Add trees and other features
+                // Add trees and other features depending on band
                 let mut tile = base_tile;
-                if base_tile == TileKind::Grass || base_tile == TileKind::Dirt {
-                    // Only place trees on grass or dirt
-                    if biome_value > 0.0 && feature_value > 0.7 && height > 0.35 && height < 0.8 {
-                        tile = TileKind::Tree;
+                match band {
+                    BiomeBand::Plains | BiomeBand::Forest => {
+                        if base_tile == TileKind::Grass || base_tile == TileKind::Dirt {
+                            if biome_value > 0.1 && feature_value > 0.65 && height > 0.33 && height < 0.85 {
+                                tile = TileKind::Tree;
+                            } else if feature_value < -0.75 && height > 0.4 && height < 0.9 {
+                                tile = TileKind::Rock;
+                            }
+                        }
                     }
-                    // Add some rocks on grass
-                    else if feature_value < -0.7 && height > 0.4 && height < 0.9 {
-                        tile = TileKind::Rock;
+                    BiomeBand::Rocky => {
+                        if base_tile == TileKind::Rock && feature_value > 0.8 { tile = TileKind::IronScrap; }
+                    }
+                    BiomeBand::LithicRivers => {
+                        // Occasional air pockets to break monotony
+                        if feature_value > 0.95 { tile = TileKind::Air; }
                     }
                 }
 
@@ -226,20 +263,34 @@ impl World {
         // Post-worldgen step: add small tree clusters (diffuse noise blobs)
         self.add_tree_clusters(cx, cy, chunk);
 
-        // Add some rare resources
+        // Add some rare resources; boost frequencies in Lithic Rivers
         let mut rng = ChaCha20Rng::seed_from_u64(self.mix_coords(cx, cy));
+        let (p_iron, p_elec, p_plasteel) = if self.gen_z >= 5 { (0.15, 0.07, 0.03) } else { (0.05, 0.02, 0.01) };
         let rare_resources = [
-            (TileKind::IronScrap, 0.95),        // 5% chance per chunk
-            (TileKind::ScrapElectronics, 0.98), // 2% chance per chunk
-            (TileKind::PlasteelScrap, 0.99),    // 1% chance per chunk
+            (TileKind::IronScrap, p_iron),
+            (TileKind::ScrapElectronics, p_elec),
+            (TileKind::PlasteelScrap, p_plasteel),
         ];
-
-        for (resource, threshold) in rare_resources.iter() {
-            if rng.gen::<f64>() > *threshold {
+        for (resource, p) in rare_resources.iter() {
+            if rng.gen::<f64>() < *p {
                 let x = rng.gen_range(0..CHUNK_SIZE as i32);
                 let y = rng.gen_range(0..CHUNK_SIZE as i32);
                 chunk.set(x, y, *resource);
             }
+        }
+
+        // Per-biome structures (lightweight, distinct flavor). Low chance per chunk.
+        let band_for_chunk = self.biome_for(cy as f64 * CHUNK_SIZE as f64, zf);
+        let roll: f64 = rng.gen();
+        if roll < 0.05 {
+            let (name, ox, oy) = match band_for_chunk {
+                BiomeBand::Plains => ("small_temple.lrstructure", rng.gen_range(0..CHUNK_SIZE) as i32, rng.gen_range(0..CHUNK_SIZE) as i32),
+                BiomeBand::Forest => ("giant_corpse.lrstructure", rng.gen_range(0..CHUNK_SIZE) as i32, rng.gen_range(0..CHUNK_SIZE) as i32),
+                BiomeBand::Rocky => ("small_ship.lrstructure", rng.gen_range(0..CHUNK_SIZE) as i32, rng.gen_range(0..CHUNK_SIZE) as i32),
+                BiomeBand::LithicRivers => ("small_temple.lrstructure", rng.gen_range(0..CHUNK_SIZE) as i32, rng.gen_range(0..CHUNK_SIZE) as i32),
+            };
+            let structure = StructureDefinition::load_from_embedded(name);
+            Self::apply_structure(chunk, &structure, ox, oy);
         }
     }
 
