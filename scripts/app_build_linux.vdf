@@ -1,0 +1,15 @@
+// SteamPipe App Build - Linux only
+
+"AppBuild"
+{
+    "AppID"        "950938"
+    "Desc"         "Linux-only build"
+    "BuildOutput"  "steampipe_out"
+    "ContentRoot"  "."
+    "SetLive"      "public"
+
+    "Depots"
+    {
+        "3940723"  "depot_build_linux.vdf"
+    }
+}
