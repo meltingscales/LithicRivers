@@ -218,6 +218,145 @@ impl FluidManager {
         );
     }
 
+    /// Process fluids but clamp work to a chunk range [min_cx..=max_cx] x [min_cy..=max_cy]
+    /// and only for the current world's generation Z slice. This reduces CPU usage by
+    /// limiting updates to the player's vicinity.
+    pub fn process_fluids_clamped(
+        &mut self,
+        world: &World,
+        gametick: u64,
+        min_cx: i64,
+        min_cy: i64,
+        max_cx: i64,
+        max_cy: i64,
+    ) {
+        let start = Instant::now();
+        let mut to_remove = vec![];
+        let mut to_add = vec![];
+        let directions = [
+            (0, 1, 0),  // South
+            (0, -1, 0), // North
+            (1, 0, 0),  // East
+            (-1, 0, 0), // West
+                        // NOTE: clamp to current Z slice: no vertical spread in clamped mode
+        ];
+        let in_range = |x: i32, y: i32| -> bool {
+            let cx = (x).div_euclid(CHUNK_SIZE) as i64;
+            let cy = (y).div_euclid(CHUNK_SIZE) as i64;
+            cx >= min_cx && cx <= max_cx && cy >= min_cy && cy <= max_cy
+        };
+        // Snapshot to avoid borrow issues
+        let fluids_snapshot: Vec<_> = self.fluids.iter().map(|(p, f)| (*p, f.clone())).collect();
+        let mut processed: usize = 0;
+        for (pos, mut fluid) in fluids_snapshot {
+            // Only process fluids in the same Z slice and within the chunk range
+            if pos.z != world.gen_z || !in_range(pos.x, pos.y) {
+                continue;
+            }
+            processed += 1;
+            if fluid.amount == 0 {
+                to_remove.push(pos);
+                continue;
+            }
+            if fluid.settled || fluid.amount < fluid.spread_threshold {
+                fluid.stability_counter += 1;
+                if fluid.stability_counter >= fluid.settlement_threshold {
+                    if let Some(f) = self.fluids.get_mut(&pos) {
+                        f.settled = true;
+                    }
+                }
+                continue;
+            }
+            let spread_amount =
+                std::cmp::min(fluid.amount - fluid.spread_threshold, fluid.viscosity);
+            if spread_amount == 0 {
+                continue;
+            }
+            let mut valid_targets = vec![];
+            for (dx, dy, dz) in directions.iter() {
+                let target = Position {
+                    x: pos.x + dx,
+                    y: pos.y + dy,
+                    z: pos.z + dz,
+                };
+                // Restrict to current Z and chunk range
+                if target.z != world.gen_z || !in_range(target.x, target.y) {
+                    continue;
+                }
+                if self.can_hold_fluid(world, &target, fluid.fluid_type) {
+                    valid_targets.push(target);
+                }
+            }
+            if valid_targets.is_empty() {
+                // No spread possible, increase stability
+                if let Some(f) = self.fluids.get_mut(&pos) {
+                    f.stability_counter += 1;
+                    if f.stability_counter >= f.settlement_threshold {
+                        f.settled = true;
+                    }
+                }
+                continue;
+            }
+            // Distribute spread_amount among valid targets
+            let amount_per = spread_amount / valid_targets.len() as u32;
+            let remainder = spread_amount % valid_targets.len() as u32;
+            let mut distributed = 0;
+            for (i, target) in valid_targets.iter().enumerate() {
+                let mut amt = amount_per;
+                if (i as u32) < remainder {
+                    amt += 1;
+                }
+                if amt > 0 {
+                    to_add.push((
+                        *target,
+                        Fluid {
+                            fluid_type: fluid.fluid_type,
+                            position: *target,
+                            amount: amt,
+                            max_amount: fluid.max_amount,
+                            settled: false,
+                            spread_threshold: fluid.spread_threshold,
+                            stability_counter: 0,
+                            viscosity: fluid.viscosity,
+                            last_spread_tick: gametick,
+                            settlement_threshold: fluid.settlement_threshold,
+                        },
+                    ));
+                    distributed += amt;
+                }
+            }
+            // Subtract what was spread from this fluid
+            if let Some(f) = self.fluids.get_mut(&pos) {
+                if f.amount >= distributed {
+                    f.amount -= distributed;
+                    f.settled = false;
+                    f.stability_counter = 0;
+                    f.last_spread_tick = gametick;
+                }
+            }
+        }
+        for (_pos, fluid) in to_add {
+            self.add_fluid(fluid);
+        }
+        for pos in to_remove {
+            self.fluids.remove(&pos);
+        }
+        let elapsed_ms = start.elapsed().as_millis();
+        info!(
+            target: "fluids",
+            "process_fluids_clamped tick={} z={} processed={} count={} duration_ms={} range=({}, {})-({}, {})",
+            gametick,
+            world.gen_z,
+            processed,
+            self.fluids.len(),
+            elapsed_ms,
+            min_cx,
+            min_cy,
+            max_cx,
+            max_cy
+        );
+    }
+
     fn can_hold_fluid(&self, world: &World, pos: &Position, fluid_type: FluidType) -> bool {
         // Only allow fluid in-bounds and on passable tiles
         let t = world.get_tile(pos.x, pos.y);
