@@ -15,6 +15,10 @@ rand_chacha = "0.3"
 rodio = "0.17"
 cpal = "0.15"
 rust-embed = "8"
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+tracing-appender = "0.2"
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
 
 [features]
 default = []

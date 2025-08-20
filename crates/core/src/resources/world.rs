@@ -1,4 +1,6 @@
 use std::collections::{HashMap, HashSet};
+use std::time::Instant;
+use tracing::info;
 
 use noise::{NoiseFn, Perlin};
 use rand::{Rng, SeedableRng};
@@ -488,9 +490,20 @@ impl World {
         if self.chunks.contains_key(&(cx, cy)) {
             return;
         }
+        let start = Instant::now();
         let mut chunk = Chunk::new_filled(TileKind::Dirt);
         self.generate_chunk(cx, cy, &mut chunk);
+        let dur_ms = start.elapsed().as_millis();
         self.chunks.insert((cx, cy), chunk);
+        info!(
+            target: "world",
+            "chunk_generated cx={} cy={} gen_z={} size={}ms cache_size={}",
+            cx,
+            cy,
+            self.gen_z,
+            dur_ms,
+            self.chunks.len()
+        );
     }
 
     /// Mutate a tile at world coordinates, generating and caching the chunk if needed.

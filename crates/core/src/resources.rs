@@ -1,6 +1,7 @@
 use hecs::Entity;
 use rand::SeedableRng;
 use rand_chacha::ChaCha20Rng;
+use tracing::info;
 
 pub mod fluids;
 pub mod world;
@@ -50,6 +51,8 @@ impl Resources {
     pub fn log<S: Into<String>>(&mut self, msg: S) {
         let m = msg.into();
         self.messages.push(format!("[{}] {}", self.gametick, m));
+        // Also forward to tracing for persistent logs
+        info!(target: "game", "msg tick={} {}", self.gametick, m);
         if self.messages.len() > 200 {
             let overflow = self.messages.len() - 200;
             self.messages.drain(0..overflow);
