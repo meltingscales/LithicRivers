@@ -12,8 +12,6 @@
 
 - heavily clamp `process_fluids` to prevent it from using too much CPU. only let it run in the adjacent chunks of the player.
 
-- add some sort of logging to `LithicRivers.log` to allow us to see what's going on in the game. Things like chunk load stats, time to generate chunks, `process_fluids` runtime, etc.
-
 ## Core Gameplay Loop (Must Have)
 - [ ] Basic world generation with multiple biomes
   - [ ] At least 3 distinct biome bands with tile/feature differences

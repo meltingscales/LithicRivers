@@ -1,4 +1,6 @@
 use std::collections::{HashMap, HashSet};
+use std::time::Instant;
+use tracing::info;
 
 use crate::components::Position;
 use crate::palettekey::PaletteKey;
@@ -105,6 +107,7 @@ impl FluidManager {
     }
 
     pub fn process_fluids(&mut self, world: &World, gametick: u64) {
+        let start = Instant::now();
         let mut to_remove = vec![];
         let mut to_add = vec![];
         let directions = [
@@ -116,7 +119,9 @@ impl FluidManager {
         ];
         // Work on a snapshot to avoid borrow issues
         let fluids_snapshot: Vec<_> = self.fluids.iter().map(|(p, f)| (*p, f.clone())).collect();
+        let mut processed: usize = 0;
         for (pos, mut fluid) in fluids_snapshot {
+            processed += 1;
             if fluid.amount == 0 {
                 to_remove.push(pos);
                 continue;
@@ -201,6 +206,16 @@ impl FluidManager {
         for pos in to_remove {
             self.fluids.remove(&pos);
         }
+        let elapsed_ms = start.elapsed().as_millis();
+        info!(
+            target: "fluids",
+            "process_fluids tick={} z={} processed={} count={} duration_ms={}",
+            gametick,
+            world.gen_z,
+            processed,
+            self.fluids.len(),
+            elapsed_ms
+        );
     }
 
     fn can_hold_fluid(&self, world: &World, pos: &Position, fluid_type: FluidType) -> bool {

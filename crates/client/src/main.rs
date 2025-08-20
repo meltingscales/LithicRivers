@@ -16,6 +16,11 @@ use ratatui::{
 };
 use rust_embed::RustEmbed;
 use std::{error::Error, io, time::Duration};
+use tracing_subscriber::EnvFilter;
+
+// Tracing file appender for log file output
+use chrono::Local;
+use tracing_appender as _tracing_appender_hidden; // avoid "unused extern crate" lint
 
 #[derive(RustEmbed)]
 #[folder = "assets/"]
@@ -43,6 +48,8 @@ struct App {
     // Credits panel state
     credits_text: String,
     credits_scroll: u16,
+    // Logging info
+    log_full_path: String,
 }
 
 fn render_help_panel(f: &mut Frame, _app: &mut App, area: Rect) {
@@ -159,6 +166,15 @@ impl App {
             credits_body
         );
 
+        // Determine absolute logging directory and concrete file name for today
+        let log_dir_abs = std::env::current_dir()
+            .ok()
+            .and_then(|p| p.canonicalize().ok())
+            .map(|p| p.to_string_lossy().to_string())
+            .unwrap_or_else(|| ".".to_string());
+        let today = Local::now().format("%Y-%m-%d").to_string();
+        let log_full_path = format!("{}/LithicRivers.log.{}", log_dir_abs, today);
+
         App {
             game,
             sprite_loader,
@@ -169,6 +185,7 @@ impl App {
             scale: Scale::Small,
             credits_text,
             credits_scroll: 0,
+            log_full_path,
         }
     }
 
@@ -191,6 +208,8 @@ impl App {
     fn handle_input(&mut self, key: KeyCode) -> Result<(), Box<dyn Error>> {
         match key {
             KeyCode::Char('q') => {
+                self.game.res.log("Quit requested (q)");
+                tracing::info!(target: "game", "quit_requested input=q tick={} ", self.game.res.gametick);
                 self.should_quit = true;
             }
             // Activate selected menu by Enter/Space
@@ -318,16 +337,20 @@ impl App {
             }
             // Save/Load (debug): 'S' to save JSON, 'L' to load JSON
             KeyCode::Char('S') => {
+                tracing::info!(target: "game", "save_begin path=save.json tick={}", self.game.res.gametick);
                 self.game
                     .save_json("save.json")
                     .expect("Save failed: JSON serialization error");
                 self.game.res.log("Saved to save.json");
+                tracing::info!(target: "game", "save_end path=save.json tick={}", self.game.res.gametick);
             }
             KeyCode::Char('L') => {
+                tracing::info!(target: "game", "load_begin path=save.json tick={}", self.game.res.gametick);
                 self.game
                     .load_json("save.json")
                     .expect("Load failed: JSON deserialization error");
                 self.game.res.log("Loaded from save.json");
+                tracing::info!(target: "game", "load_end path=save.json tick={}", self.game.res.gametick);
             }
             _ => {}
         }
@@ -402,6 +425,8 @@ impl App {
             }
             _ => {
                 // Quit
+                self.game.res.log("Quit requested (menu)");
+                tracing::info!(target: "game", "quit_requested input=menu tick={}", self.game.res.gametick);
                 self.should_quit = true;
             }
         }
@@ -409,6 +434,20 @@ impl App {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
+    // Initialize tracing to write logs to LithicRivers.log (rotated daily)
+    {
+        let file_appender = _tracing_appender_hidden::rolling::daily(".", "LithicRivers.log");
+        let (non_blocking, _guard) = _tracing_appender_hidden::non_blocking(file_appender);
+        let filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
+        tracing_subscriber::fmt()
+            .with_env_filter(filter)
+            .with_writer(non_blocking)
+            .with_ansi(false)
+            .init();
+        // Keep _guard alive for program lifetime to ensure logs flush properly
+        let _ = Box::leak(Box::new(_guard));
+    }
+
     // Ensure we restore the terminal if a panic occurs
     std::panic::set_hook(Box::new(|info| {
         let _ = disable_raw_mode();
@@ -465,6 +504,14 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<(), 
         app.on_tick();
 
         if app.should_quit {
+            app.game.res.log("Shutting down...");
+            tracing::info!(
+                target: "game",
+                "shutdown tick={} view_z={} seed={}",
+                app.game.res.gametick,
+                app.game.res.view_z,
+                app.game.res.seed
+            );
             return Ok(());
         }
     }
@@ -708,6 +755,13 @@ fn render_menu_panel(f: &mut Frame, app: &mut App, area: Rect) {
     lines.push(Line::from(Span::raw("S - Save to save.json")));
     lines.push(Line::from(Span::raw("L - Load from save.json")));
     lines.push(Line::from(Span::raw("Q - Quit")));
+    lines.push(Line::from(""));
+    // Logging location information
+    lines.push(Line::from(Span::raw("Logging:")));
+    lines.push(Line::from(Span::raw(format!(
+        "  Path: {}",
+        app.log_full_path
+    ))));
     lines.push(Line::from(""));
     lines.push(Line::from(Span::raw(format!(
         "Seed: {}",
