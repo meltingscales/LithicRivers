@@ -107,7 +107,7 @@ impl SaveData {
 struct WorldJson {
     pub seed: u64,
     pub gen_z: i32,
-    pub chunks: Vec<((i64, i64), TileChunk)>,
+    pub chunks: Vec<((i64, i64, i64), TileChunk)>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -240,7 +240,9 @@ mod tests {
         // Ensure a tree underfoot, then mine it (should drop Wood and convert to Dirt)
         if let Some(e) = game.res.player_entity {
             if let Ok(pos) = game.world.get::<&Position>(e) {
-                game.res.world.set_tile_cached(pos.x, pos.y, TileKind::Tree);
+                game.res
+                    .world
+                    .set_tile_cached(pos.x, pos.y, pos.z, TileKind::Tree);
             }
         }
         game.queue_mine();
@@ -303,13 +305,15 @@ mod tests {
         if let Some(e) = game.res.player_entity {
             if let Ok(pos) = game.world.get::<&Position>(e) {
                 // Ensure chunk is cached and then set a unique tile
-                let before = game.res.world.get_tile_cached(pos.x, pos.y);
+                let before = game.res.world.get_tile_cached(pos.x, pos.y, pos.z);
                 let new_tile = if before == crate::tiles::TileKind::Rock {
                     crate::tiles::TileKind::Dirt
                 } else {
                     crate::tiles::TileKind::Rock
                 };
-                game.res.world.set_tile_cached(pos.x, pos.y, new_tile);
+                game.res
+                    .world
+                    .set_tile_cached(pos.x, pos.y, pos.z, new_tile);
             }
         }
 
@@ -342,14 +346,16 @@ mod tests {
         assert_eq!(player_pos_after, player_pos_before);
 
         // Verify the mutated tile persisted
-        let tile_after = loaded
-            .res
-            .world
-            .get_tile_cached(player_pos_after.x, player_pos_after.y);
-        let tile_before = game
-            .res
-            .world
-            .get_tile_cached(player_pos_before.x, player_pos_before.y);
+        let tile_after = loaded.res.world.get_tile_cached(
+            player_pos_after.x,
+            player_pos_after.y,
+            player_pos_after.z,
+        );
+        let tile_before = game.res.world.get_tile_cached(
+            player_pos_before.x,
+            player_pos_before.y,
+            player_pos_before.z,
+        );
         assert_eq!(tile_after, tile_before);
 
         // Basic invariants

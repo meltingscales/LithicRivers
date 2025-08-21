@@ -22,7 +22,7 @@ impl World {
     #[inline]
     fn biome_for(&self, wx: f64, wy: f64, zf: f64) -> BiomeBand {
         // Depth rule: Lithic Rivers only below or equal to -5 depth levels.
-        if self.gen_z <= -5 {
+        if zf <= -5.0 {
             return BiomeBand::LithicRivers;
         }
         // Smooth, large-scale 3D noise to decide surface biome; depends on X, Y and Z.
@@ -150,7 +150,7 @@ pub struct World {
     pub seed: u64,
     // Z slice to use for generation-time noise sampling
     pub gen_z: i32,
-    chunks: HashMap<(i64, i64), Chunk>,
+    chunks: HashMap<(i64, i64, i64), Chunk>,
 }
 
 impl World {
@@ -172,7 +172,7 @@ impl World {
         }
     }
 
-    fn generate_chunk(&self, cx: i64, cy: i64, chunk: &mut Chunk) {
+    fn generate_chunk(&self, cx: i64, cy: i64, cz: i64, chunk: &mut Chunk) {
         // Place fixed demo structures at/near spawn (0,0 chunk only)
         if cx == 0 && cy == 0 {
             let structure_names = [
@@ -194,7 +194,8 @@ impl World {
         let feature_noise = Perlin::new(self.seed as u32 % 0x20000);
 
         // Generate terrain using Perlin noise. Incorporate Z to get vertical variation and bands.
-        let zf = self.gen_z as f64;
+        // Use the center Z of this chunk slice as the sampled Z plane.
+        let zf = (cz as f64) * (CHUNK_SIZE as f64) + (CHUNK_SIZE as f64 * 0.5);
         for y in 0..CHUNK_SIZE {
             for x in 0..CHUNK_SIZE {
                 // Calculate world coordinates
@@ -374,7 +375,7 @@ impl World {
 
         // Add some rare resources; boost frequencies in Lithic Rivers
         let mut rng = ChaCha20Rng::seed_from_u64(self.mix_coords(cx, cy));
-        let (p_iron, p_elec, p_plasteel) = if self.gen_z <= -5 {
+        let (p_iron, p_elec, p_plasteel) = if cz <= -5 {
             (0.15, 0.07, 0.03)
         } else {
             (0.05, 0.02, 0.01)
@@ -457,44 +458,48 @@ impl World {
         v ^ 0xC0FFEE
     }
 
-    pub fn get_tile(&self, x: i32, y: i32) -> TileKind {
+    pub fn get_tile(&self, x: i32, y: i32, z: i32) -> TileKind {
         let cx = Self::div_floor(x, CHUNK_SIZE) as i64;
         let cy = Self::div_floor(y, CHUNK_SIZE) as i64;
+        let cz = Self::div_floor(z, CHUNK_SIZE) as i64;
         let tx = Self::mod_floor(x, CHUNK_SIZE);
         let ty = Self::mod_floor(y, CHUNK_SIZE);
-        if let Some(ch) = self.chunks.get(&(cx, cy)) {
+        let _tz = Self::mod_floor(z, CHUNK_SIZE);
+        if let Some(ch) = self.chunks.get(&(cx, cy, cz)) {
             ch.get(tx, ty)
         } else {
             // Generate a local chunk for read-only purposes
             let mut chunk = Chunk::new_filled(TileKind::Dirt);
-            self.generate_chunk(cx, cy, &mut chunk);
+            self.generate_chunk(cx, cy, cz, &mut chunk);
             chunk.get(tx, ty)
         }
     }
 
     // Cached variant: generate-if-absent and store in self.chunks, then return tile.
-    pub fn get_tile_cached(&mut self, x: i32, y: i32) -> TileKind {
+    pub fn get_tile_cached(&mut self, x: i32, y: i32, z: i32) -> TileKind {
         let cx = Self::div_floor(x, CHUNK_SIZE) as i64;
         let cy = Self::div_floor(y, CHUNK_SIZE) as i64;
+        let cz = Self::div_floor(z, CHUNK_SIZE) as i64;
         let tx = Self::mod_floor(x, CHUNK_SIZE);
         let ty = Self::mod_floor(y, CHUNK_SIZE);
-        self.ensure_chunk(cx, cy);
+        let _tz = Self::mod_floor(z, CHUNK_SIZE);
+        self.ensure_chunk(cx, cy, cz);
         self.chunks
-            .get(&(cx, cy))
+            .get(&(cx, cy, cz))
             .expect("chunk must exist after ensure_chunk")
             .get(tx, ty)
     }
 
     // Ensure a chunk exists in cache by generating and inserting if absent.
-    pub fn ensure_chunk(&mut self, cx: i64, cy: i64) {
-        if self.chunks.contains_key(&(cx, cy)) {
+    pub fn ensure_chunk(&mut self, cx: i64, cy: i64, cz: i64) {
+        if self.chunks.contains_key(&(cx, cy, cz)) {
             return;
         }
         let start = Instant::now();
         let mut chunk = Chunk::new_filled(TileKind::Dirt);
-        self.generate_chunk(cx, cy, &mut chunk);
+        self.generate_chunk(cx, cy, cz, &mut chunk);
         let dur_ms = start.elapsed().as_millis();
-        self.chunks.insert((cx, cy), chunk);
+        self.chunks.insert((cx, cy, cz), chunk);
         info!(
             target: "world",
             "chunk_generated cx={} cy={} gen_z={} size={}ms cache_size={}",
@@ -507,26 +512,29 @@ impl World {
     }
 
     /// Mutate a tile at world coordinates, generating and caching the chunk if needed.
-    pub fn set_tile_cached(&mut self, x: i32, y: i32, t: TileKind) {
+    pub fn set_tile_cached(&mut self, x: i32, y: i32, z: i32, t: TileKind) {
         let cx = Self::div_floor(x, CHUNK_SIZE) as i64;
         let cy = Self::div_floor(y, CHUNK_SIZE) as i64;
+        let cz = Self::div_floor(z, CHUNK_SIZE) as i64;
         let tx = Self::mod_floor(x, CHUNK_SIZE);
         let ty = Self::mod_floor(y, CHUNK_SIZE);
-        self.ensure_chunk(cx, cy);
-        if let Some(ch) = self.chunks.get_mut(&(cx, cy)) {
+        let _tz = Self::mod_floor(z, CHUNK_SIZE);
+        self.ensure_chunk(cx, cy, cz);
+        if let Some(ch) = self.chunks.get_mut(&(cx, cy, cz)) {
             ch.set(tx, ty, t);
         }
     }
 
-    // Prefetch all chunks overlapping the given rect [left..=right] x [top..=bottom]
-    pub fn prefetch_rect(&mut self, left: i32, top: i32, right: i32, bottom: i32) {
+    // Prefetch all chunks overlapping the given rect at a z-level [left..=right] x [top..=bottom]
+    pub fn prefetch_rect(&mut self, left: i32, top: i32, right: i32, bottom: i32, z: i32) {
         let min_cx = Self::div_floor(left, CHUNK_SIZE) as i64;
         let max_cx = Self::div_floor(right, CHUNK_SIZE) as i64;
         let min_cy = Self::div_floor(top, CHUNK_SIZE) as i64;
         let max_cy = Self::div_floor(bottom, CHUNK_SIZE) as i64;
+        let cz = Self::div_floor(z, CHUNK_SIZE) as i64;
         for cy in min_cy..=max_cy {
             for cx in min_cx..=max_cx {
-                self.ensure_chunk(cx, cy);
+                self.ensure_chunk(cx, cy, cz);
             }
         }
     }
@@ -538,19 +546,20 @@ impl World {
     }
 
     /// Export cached chunks as a vector of entries for JSON-friendly serialization.
-    /// Each entry is ((cx, cy), Chunk).
-    pub fn chunks_to_vec(&self) -> Vec<((i64, i64), Chunk)> {
+    /// Each entry is ((cx, cy, cz), Chunk).
+    pub fn chunks_to_vec(&self) -> Vec<((i64, i64, i64), Chunk)> {
         self.chunks.iter().map(|(k, v)| (*k, v.clone())).collect()
     }
 
     /// Replace cached chunks from a vector produced by `chunks_to_vec`.
-    pub fn set_chunks_from_vec(&mut self, entries: Vec<((i64, i64), Chunk)>) {
+    pub fn set_chunks_from_vec(&mut self, entries: Vec<((i64, i64, i64), Chunk)>) {
         self.chunks = entries.into_iter().collect();
     }
 
     fn apply_structure(chunk: &mut Chunk, structure: &StructureDefinition, ox: i32, oy: i32) {
-        for (z, layer) in structure.layers.iter().enumerate() {
-            for (y, line) in layer.lines().enumerate() {
+        // For now, apply only the first Z layer of the structure into this 2D chunk slice.
+        if let Some(layer0) = structure.layers.get(0) {
+            for (y, line) in layer0.lines().enumerate() {
                 for (x, ch) in line.chars().enumerate() {
                     if ch == ' ' {
                         continue;

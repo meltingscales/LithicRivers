@@ -17,7 +17,7 @@ pub fn move_player_system(world: &mut World, res: &mut Resources) {
                 let nx = cx + dx;
                 let ny = cy + dy;
                 let nz = cz; // Keep same Z-level for now
-                let t = res.world.get_tile_cached(nx, ny);
+                let t = res.world.get_tile_cached(nx, ny, nz);
                 // Check tile passability and blocking entities
                 let mut blocked = !t.is_passable();
                 if !blocked {
@@ -70,12 +70,12 @@ pub fn mining_system(world: &mut World, res: &mut Resources) -> bool {
     let (x, y, z) = (pos.x, pos.y, pos.z);
     // End immutable borrow before mutating the world
     drop(pos);
-    let t = res.world.get_tile_cached(x, y);
+    let t = res.world.get_tile_cached(x, y, z);
     use crate::tiles::TileKind;
     match t {
         TileKind::Tree => {
             // Chop tree: convert to Dirt and drop Wood
-            res.world.set_tile_cached(x, y, TileKind::Dirt);
+            res.world.set_tile_cached(x, y, z, TileKind::Dirt);
             // Spawn a DroppedItem entity at player's tile
             let _ = world.spawn((
                 Position { x, y, z },
@@ -179,7 +179,7 @@ pub fn stumbling_sheep_system(world: &mut World, res: &mut Resources) {
         let nz = pos.z; // Sheep stay on the same Z-level
 
         // Check if the target tile is passable
-        let t = res.world.get_tile(nx, ny);
+        let t = res.world.get_tile(nx, ny, nz);
         if !t.is_passable() {
             continue;
         }
