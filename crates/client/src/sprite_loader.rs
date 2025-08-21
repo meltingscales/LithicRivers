@@ -208,29 +208,6 @@ impl SpriteLoader {
         }
     }
 
-    // Preload a single category from embedded assets.
-    pub fn preload_category(&mut self, category: &str) {
-        use std::collections::BTreeSet;
-        let mut seen: BTreeSet<String> = BTreeSet::new();
-        let prefix = format!("sprites/{}/", category);
-        for file in EmbeddedAssets::iter() {
-            let path = file.as_ref();
-            if !path.starts_with(&prefix) {
-                continue;
-            }
-            let parts: Vec<&str> = path.split('/').collect();
-            if parts.len() < 3 {
-                continue;
-            }
-            if let Some(name) = parts[2].strip_suffix(".lrsprite") {
-                seen.insert(name.to_string());
-            }
-        }
-        for name in seen {
-            let _ = self.load_sprite(&name, category);
-        }
-    }
-
     fn validate_12x8sprite_dimensions(
         sprite_blocks: &Vec<String>,
         sprite_name: &str,
