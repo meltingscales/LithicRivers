@@ -860,6 +860,20 @@ fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
             // Base tile color/glyph
             let tile_kind = app.game.res.world.get_tile_cached(world_x, world_y);
 
+            // render look mode cursor first
+            //TODO make this blink and cycle through overlapping tiles/entities
+            if app.look_mode
+                && world_x == app.look_cursor.x
+                && world_y == app.look_cursor.y
+                && app.game.res.view_z == app.look_cursor.z
+            {
+                spans.push(Span::styled(
+                    "*".to_string(),
+                    Style::default().fg(Color::Magenta),
+                ));
+                continue;
+            }
+
             // Check fluids first
             let fluid_pos = lithicrivers_core::components::Position {
                 x: world_x,
@@ -891,19 +905,7 @@ fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
                             panic!("Could not find sprite for tile kind: {:?}", tile_kind)
                         });
                 let ch = block.chars().next().unwrap_or(' ');
-                // If Look mode cursor is here, highlight it
-                if app.look_mode
-                    && world_x == app.look_cursor.x
-                    && world_y == app.look_cursor.y
-                    && app.game.res.view_z == app.look_cursor.z
-                {
-                    spans.push(Span::styled(
-                        "*".to_string(),
-                        Style::default().fg(Color::Magenta),
-                    ));
-                } else {
-                    spans.push(Span::styled(ch.to_string(), Style::default().fg(color)));
-                }
+                spans.push(Span::styled(ch.to_string(), Style::default().fg(color)));
             }
         }
         lines.push(Line::from(spans));
