@@ -2,6 +2,10 @@
 
 ## Small temp list
 
+- structure gen seems like it gets "stretched" across infinite z?
+
+- worldgen z doesnt vary when it should, all z layers are the same. its likely our perlin noise just needs some data.
+
 - inventory panel should have some 8x12 art and flavor text for selected item
   - "d"rop
   - "." duplicate (debug)
