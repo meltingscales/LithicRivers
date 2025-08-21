@@ -191,6 +191,7 @@ jobs:
           prerelease: true
           files: |
             artifacts/**/*
+            CHANGELOG.txt
 
   github-release-windows:
     name: Create GitHub Release (Windows)
@@ -239,6 +240,7 @@ jobs:
           prerelease: true
           files: |
             artifacts/**/*
+            CHANGELOG.txt
 
   github-release-macos:
     name: Create GitHub Release (macOS)
@@ -290,3 +292,4 @@ jobs:
           prerelease: true
           files: |
             artifacts/**/*
+            CHANGELOG.txt

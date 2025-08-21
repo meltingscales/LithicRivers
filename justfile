@@ -55,21 +55,25 @@ git-data:
     git rev-parse HEAD > GIT_SHA
     git rev-parse --abbrev-ref HEAD > GIT_BRANCH
 
-# Build the project
-build: fmt clean git-data
+copy-config-data:
+    cp -f CHANGELOG.txt crates/client/assets/config/CHANGELOG.txt
     cp -f STEAM_APP_ID crates/client/assets/config/STEAM_APP_ID
     cp -f VERSION crates/client/assets/config/VERSION
     cp -f GIT_SHA crates/client/assets/config/GIT_SHA
     cp -f GIT_BRANCH crates/client/assets/config/GIT_BRANCH
     cp -f LICENSE crates/client/assets/config/LICENSE
     cp -f THIRD-PARTY-NOTICES.txt crates/client/assets/config/THIRD-PARTY-NOTICES.txt
+
+# Build the project
+build: fmt clean git-data copy-config-data
     {{cargo_base}} --version
     # Build only the stable targets to keep `just build` green
     {{cargoz_env}} build -p lithicrivers-core {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin lithicrivers-client {{build_flags}}
 
 # Build the project in release mode
-build-release: fmt clean git-data
+build-release: fmt clean git-data copy-config-data
+    cp -f CHANGELOG.txt crates/client/assets/config/CHANGELOG.txt
     cp -f STEAM_APP_ID crates/client/assets/config/STEAM_APP_ID
     cp -f VERSION crates/client/assets/config/VERSION
     cp -f GIT_SHA crates/client/assets/config/GIT_SHA
