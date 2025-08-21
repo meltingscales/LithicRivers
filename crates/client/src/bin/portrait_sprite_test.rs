@@ -1,6 +1,6 @@
+use std::error::Error;
 use std::io::{self, Stdout};
 use std::time::Duration;
-use std::error::Error;
 
 use crossterm::{
     event::{self, Event, KeyCode},
@@ -130,11 +130,13 @@ fn ui(f: &mut Frame, app: &App) {
     f.render_widget(portrait_para, centered);
 
     // Footer with controls
-    let footer = Paragraph::new(Line::from(vec![
-        "←/→ or p/n to cycle • q to quit".into(),
-    ]))
-    .alignment(Alignment::Center)
-    .block(Block::default().borders(Borders::TOP).border_style(Style::default().fg(Color::DarkGray)));
+    let footer = Paragraph::new(Line::from(vec!["←/→ or p/n to cycle • q to quit".into()]))
+        .alignment(Alignment::Center)
+        .block(
+            Block::default()
+                .borders(Borders::TOP)
+                .border_style(Style::default().fg(Color::DarkGray)),
+        );
 
     f.render_widget(footer, chunks[1]);
 }
@@ -145,7 +147,12 @@ fn center_rect_exact(w: u16, h: u16, area: Rect) -> Rect {
     let h = h.min(area.height);
     let x = area.x + (area.width.saturating_sub(w)) / 2;
     let y = area.y + (area.height.saturating_sub(h)) / 2;
-    Rect { x, y, width: w, height: h }
+    Rect {
+        x,
+        y,
+        width: w,
+        height: h,
+    }
 }
 
 // Render Mandelbrot set into an ASCII buffer sized (w x h)
@@ -185,7 +192,9 @@ fn render_mandelbrot(w: usize, h: usize, cx: f64, cy: f64, scale: f64) -> String
             };
             out.push(palette[idx]);
         }
-        if j + 1 < h { out.push('\n'); }
+        if j + 1 < h {
+            out.push('\n');
+        }
     }
     out
 }

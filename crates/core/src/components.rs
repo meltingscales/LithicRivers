@@ -87,3 +87,19 @@ pub struct DroppedItem {
     pub kind: ItemKind,
     pub qty: u32,
 }
+
+/// Data-driven sprite reference for renderers to pick correct art
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SpriteRef {
+    pub category: String,
+    pub name: String,
+}
+
+impl SpriteRef {
+    pub fn new(category: &str, name: &str) -> Self {
+        Self {
+            category: category.to_string(),
+            name: name.to_string(),
+        }
+    }
+}

@@ -18,6 +18,23 @@ pub enum Scale {
     Large,  // 3x3
 }
 
+// Multi-scale: return the full sprite block string (may be multi-line) and color for a SpriteRef
+pub fn sprite_block_for_spriteref(
+    loader: &mut SpriteLoader,
+    sr: &lithicrivers_core::components::SpriteRef,
+    scale: Scale,
+) -> (String, Color) {
+    let sd = loader.load_by_spriteref(sr);
+    let block = sprite_block_for_scale(sd, scale).to_string();
+    let color = parse_color_string(&sd.color).unwrap_or_else(|| {
+        panic!(
+            "Missing or invalid RGB color in data.json for sprite '{}::{}' (expected #RRGGBB)",
+            sr.category, sr.name
+        )
+    });
+    (block, color)
+}
+
 #[derive(Debug, Clone, Deserialize)]
 pub struct SpriteMetadata {
     pub name: String,
@@ -69,10 +86,9 @@ pub struct SpriteData {
 
     pub sprites: Vec<String>, // Each entry is a sprite at a different scale
     // Example sprites content: ["x", "xx\nxx", "xxx\nxxx\nxxx"]
-
     pub art12x8_sprites: Vec<String>, // Required 12x8 (or similar) ASCII art for items.
-    // Example: 12 lines of 8-char-long-lines each, separated by newlines.
-    // Example: ["xxxxxx", "xxxxxx", "xxxxxx", "xxxxxx", "xxxxxx", "xxxxxx", "xxxxxx", "xxxxxx", "xxxxxx", "xxxxxx", "xxxxxx", "xxxxxx"]
+                                      // Example: 12 lines of 8-char-long-lines each, separated by newlines.
+                                      // Example: ["xxxxxx", "xxxxxx", "xxxxxx", "xxxxxx", "xxxxxx", "xxxxxx", "xxxxxx", "xxxxxx", "xxxxxx", "xxxxxx", "xxxxxx", "xxxxxx"]
 }
 
 pub struct SpriteLoader {
@@ -138,7 +154,10 @@ impl SpriteLoader {
             };
             vec![text]
         } else {
-            panic!("Missing required 12x8 art for sprite '{}::{}'", category, sprite_name);
+            panic!(
+                "Missing required 12x8 art for sprite '{}::{}'",
+                category, sprite_name
+            );
         };
 
         let sprite_data = SpriteData {
@@ -151,9 +170,17 @@ impl SpriteLoader {
 
         // Validate art12x8_sprites
         Self::validate_12x8sprite_dimensions(&sprite_data.art12x8_sprites, sprite_name, category);
-        
+
         self.sprite_cache.insert(cache_key.clone(), sprite_data);
         self.sprite_cache.get(&cache_key).unwrap()
+    }
+
+    // Convenience: load by a SpriteRef component (category + name)
+    pub fn load_by_spriteref(
+        &mut self,
+        sr: &lithicrivers_core::components::SpriteRef,
+    ) -> &SpriteData {
+        self.load_sprite(&sr.name, &sr.category)
     }
 
     // Discover and preload all sprites from embedded assets under sprites/<category>/<name>.lrsprite/
@@ -204,7 +231,11 @@ impl SpriteLoader {
         }
     }
 
-    fn validate_12x8sprite_dimensions(sprite_blocks: &Vec<String>, sprite_name: &str, category: &str) {
+    fn validate_12x8sprite_dimensions(
+        sprite_blocks: &Vec<String>,
+        sprite_name: &str,
+        category: &str,
+    ) {
         if sprite_blocks.is_empty() {
             // Optional for now; nothing to validate
             return;
@@ -220,7 +251,10 @@ impl SpriteLoader {
             if lines.len() != 8 {
                 panic!(
                     "Sprite '{}::{}' 12x8 art has {} lines at entry {}, expected 8",
-                    category, sprite_name, lines.len(), i
+                    category,
+                    sprite_name,
+                    lines.len(),
+                    i
                 );
             }
             let line_lengths: Vec<usize> = lines.iter().map(|l| l.len()).collect();
@@ -347,32 +381,7 @@ pub fn sprite_block_for_fluid(
     Some((block, color))
 }
 
-// Multi-scale: return the full sprite block string (may be multi-line) and color for entities
-pub fn sprite_block_for_entity(
-    loader: &mut SpriteLoader,
-    ch: char,
-    scale: Scale,
-) -> (String, Color) {
-    let (category, name) = (
-        "entities",
-        if ch == '@' {
-            "player"
-        } else if ch == 's' || ch == 'S' {
-            "sheep"
-        } else {
-            "entity_generic"
-        },
-    );
-    let sd = loader.load_sprite(name, category);
-    let block = sprite_block_for_scale(sd, scale).to_string();
-    let color = parse_color_string(&sd.color).unwrap_or_else(|| {
-        panic!(
-            "Missing or invalid RGB color in data.json for entity sprite '{}::{}' (expected #RRGGBB)",
-            category, name
-        )
-    });
-    (block, color)
-}
+// (removed) sprite_block_for_entity: legacy glyph-based mapping has been replaced by SpriteRef-driven rendering.
 
 #[cfg(test)]
 mod tests {

@@ -47,6 +47,7 @@ impl Game {
             Player,
             Body::default(),
             Glyph('@'),
+            SpriteRef::new("entities", "player"),
             BlocksMovement,
             Inventory::default(),
         ));
@@ -70,6 +71,7 @@ impl Game {
             GameEntity,
             Sheep,
             Glyph('s'),
+            SpriteRef::new("entities", "sheep"),
             BlocksMovement,
         ));
         Self { world, res }
