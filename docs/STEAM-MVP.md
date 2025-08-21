@@ -2,11 +2,14 @@
 
 ## Small temp list
 
-- based on the value of `world_seed % 1` will randomly spawn a friendly Greyhound dog named either Kopi or FortyNiner that follows you around and attacks anything that attacks you. If you finish the game with the dog alive and in  your party, you get a free copy of the game to give to a friend, as well as some poetry about my early childhood and my thoughts about my favorite music artists like lapfox trax and 4lung.
+- inventory panel should have some 8x12 art and flavor text for selected item
+  - "d"rop
+  - "." duplicate (debug)
+  - "x" destroy
 
-- "l" will be bound to toggle "Look" mode where you can view specific entity/fluid/block information. In Look mode, the movement keys move a cursor instead of the player. The right hand panel also gets switched to a "Look at" panel that shows the information of the entity/fluid/block the cursor is over. Similar to caves of qud.
+- make the currently selected menu item different visually somehow. Make all menu items white and make the selected one blue.
 
-- make the currently selected menu item different visually somehow.
+- make the "Quit" menu have text when it's selected, just like the other menus.
 
 - All keybinds should be shown in the help panel.
   - TODO- make render_help_panel draw keybind names from the config
@@ -39,9 +42,11 @@
     - [ ] structure generation that's unique across biomes
     - [ ] underground "Lithic Rivers" biome that's molten lava and rare ore, and dangerous mining bots
     - [x] Deterministic by seed across Z-slices
-- [ ] Player movement and basic interactions
-  - [ ] Numpad movement plus '<'/'>' vertical movement
-  - [ ] Mining action with SFX and message log feedback
+- [x] Player movement and basic interactions
+  - [x] Numpad movement plus '<'/'>' vertical movement
+  - [x] Mining action with SFX and message log feedback
+  - [ ] Make building/placing blocks/mining fun and fast!
+    - [ ] vim-style build/break toggle?
 - [ ] Simple crafting system
   - [ ] 3 starter recipes (stick, plank, torch) with deterministic outputs
 - [ ] Day/night cycle
@@ -55,12 +60,12 @@
 - [x] 3D world slices (Z-level viewing and vertical movement)
   - [x] View snaps to player Z after movement (toggle later if needed)
   - [x] Worldgen Perlin noise includes Z; slices deterministic by seed
-- [ ] Windows build pipeline
-  - [ ] CI job builds Windows artifacts
-  - [ ] Smoke test launch on artifact
-  - [ ] Upload artifacts to Releases (draft)
-- [ ] Basic settings/controls menu
-  - [ ] Rebind keys (movement, vertical, snap toggle)
+- [x] Windows build pipeline
+  - [x] CI job builds Windows artifacts
+  - [x] Smoke test launch on artifact
+  - [x] Upload artifacts to Releases (draft)
+- [x] Basic settings/controls menu
+  - [x] Rebind keys (movement, vertical, snap toggle)
   - [ ] Volume sliders (music/sfx)
 - [ ] Performance optimizations for target hardware
   - [ ] Profiling budget: ~60 FPS at 80x24; ≤16 ms tick under normal load

@@ -185,6 +185,8 @@ See [STEAM-MVP.md](STEAM-MVP.md) for the complete release plan.
 
 - investigate how dwarf fortress does vertical combat...
 
+- based on the value of `world_seed % 1` will randomly spawn a friendly Greyhound dog named either Kopi or FortyNiner that follows you around and attacks anything that attacks you. If you finish the game with the dog alive and in  your party, you get a free copy of the game to give to a friend, as well as some poetry about my early childhood and my thoughts about my favorite music artists like lapfox trax and 4lung.
+
 - fight system that is basically just chrono trigger, limit to 3 enemies so players dont get fucked
   - if you decide to "Escape", there's a "BattleDelay" timer that prevents you from re-engaging with an enemy for about 600 ticks.
   - Tackle is a move
