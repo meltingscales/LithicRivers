@@ -173,23 +173,6 @@ impl World {
     }
 
     fn generate_chunk(&self, cx: i64, cy: i64, cz: i64, chunk: &mut Chunk) {
-        // Place fixed demo structures at/near spawn (0,0 chunk only)
-        if cx == 0 && cy == 0 {
-            info!(target: "world", "Placing demo structures at chunk ({}, {})", cx, cy);
-            let structure_names = [
-                "giant_corpse.lrstructure",
-                "small_ship.lrstructure",
-                "small_temple.lrstructure",
-                "starter_ship.lrstructure",
-            ];
-            let offsets = [(8, 8), (20, 40), (40, 20), (32, 32)];
-            for (name, &(ox, oy)) in structure_names.iter().zip(offsets.iter()) {
-                let structure = StructureDefinition::load_from_embedded(name);
-                Self::apply_structure(chunk, &structure, ox, oy);
-                info!(target: "world", "Placed structure {} at ({}, {})", name, ox, oy);
-            }
-        }
-
         // Create Perlin noise generators with different seeds for different features
         let perlin = Perlin::new(self.seed as u32);
         let biome_noise = Perlin::new(self.seed as u32 % 0x10000);
@@ -395,37 +378,7 @@ impl World {
             }
         }
 
-        // Per-biome structures (lightweight, distinct flavor). Low chance per chunk.
-        let center_wx = (cx as f64 * CHUNK_SIZE as f64) + (CHUNK_SIZE as f64 * 0.5);
-        let center_wy = (cy as f64 * CHUNK_SIZE as f64) + (CHUNK_SIZE as f64 * 0.5);
-        let band_for_chunk = self.biome_for(center_wx, center_wy, zf);
-        let roll: f64 = rng.gen();
-        if roll < 0.05 {
-            let (name, ox, oy) = match band_for_chunk {
-                BiomeBand::Plains => (
-                    "small_temple.lrstructure",
-                    rng.gen_range(0..CHUNK_SIZE) as i32,
-                    rng.gen_range(0..CHUNK_SIZE) as i32,
-                ),
-                BiomeBand::Forest => (
-                    "giant_corpse.lrstructure",
-                    rng.gen_range(0..CHUNK_SIZE) as i32,
-                    rng.gen_range(0..CHUNK_SIZE) as i32,
-                ),
-                BiomeBand::Rocky => (
-                    "small_ship.lrstructure",
-                    rng.gen_range(0..CHUNK_SIZE) as i32,
-                    rng.gen_range(0..CHUNK_SIZE) as i32,
-                ),
-                BiomeBand::LithicRivers => (
-                    "small_temple.lrstructure",
-                    rng.gen_range(0..CHUNK_SIZE) as i32,
-                    rng.gen_range(0..CHUNK_SIZE) as i32,
-                ),
-            };
-            let structure = StructureDefinition::load_from_embedded(name);
-            Self::apply_structure(chunk, &structure, ox, oy);
-        }
+        // Note: structure placement is handled in ensure_chunk() via world-level writes
     }
 
     #[inline]
@@ -511,6 +464,57 @@ impl World {
             dur_ms,
             self.chunks.len()
         );
+
+        // World-level structure placement so edits can cross chunk boundaries and z layers
+        // 1) Fixed demo structures near spawn on (0,0)
+        if cx == 0 && cy == 0 {
+            info!(target: "world", "Placing demo structures at chunk ({}, {})", cx, cy);
+            let structure_names = [
+                "giant_corpse.lrstructure",
+                "small_ship.lrstructure",
+                "small_temple.lrstructure",
+                "starter_ship.lrstructure",
+            ];
+            let offsets = [(8, 8), (20, 40), (40, 20), (32, 32)];
+            for (name, &(ox, oy)) in structure_names.iter().zip(offsets.iter()) {
+                let structure = StructureDefinition::load_from_embedded(name);
+                self.apply_structure_world(cx, cy, cz, &structure, ox, oy);
+                info!(target: "world", "Placed structure {} at ({}, {})", name, ox, oy);
+            }
+        }
+
+        // 2) Per-biome structure with low probability
+        let center_wx = (cx as f64 * CHUNK_SIZE as f64) + (CHUNK_SIZE as f64 * 0.5);
+        let center_wy = (cy as f64 * CHUNK_SIZE as f64) + (CHUNK_SIZE as f64 * 0.5);
+        let zf = (cz as f64) * (CHUNK_SIZE as f64) + (CHUNK_SIZE as f64 * 0.5);
+        let band_for_chunk = self.biome_for(center_wx, center_wy, zf);
+        let mut rng = ChaCha20Rng::seed_from_u64(self.mix_coords(cx, cy));
+        if rng.gen::<f64>() < 0.05 {
+            let (name, ox, oy) = match band_for_chunk {
+                BiomeBand::Plains => (
+                    "small_temple.lrstructure",
+                    rng.gen_range(0..CHUNK_SIZE) as i32,
+                    rng.gen_range(0..CHUNK_SIZE) as i32,
+                ),
+                BiomeBand::Forest => (
+                    "giant_corpse.lrstructure",
+                    rng.gen_range(0..CHUNK_SIZE) as i32,
+                    rng.gen_range(0..CHUNK_SIZE) as i32,
+                ),
+                BiomeBand::Rocky => (
+                    "small_ship.lrstructure",
+                    rng.gen_range(0..CHUNK_SIZE) as i32,
+                    rng.gen_range(0..CHUNK_SIZE) as i32,
+                ),
+                BiomeBand::LithicRivers => (
+                    "small_temple.lrstructure",
+                    rng.gen_range(0..CHUNK_SIZE) as i32,
+                    rng.gen_range(0..CHUNK_SIZE) as i32,
+                ),
+            };
+            let structure = StructureDefinition::load_from_embedded(name);
+            self.apply_structure_world(cx, cy, cz, &structure, ox, oy);
+        }
     }
 
     /// Mutate a tile at world coordinates, generating and caching the chunk if needed.
@@ -525,6 +529,66 @@ impl World {
         if let Some(ch) = self.chunks.get_mut(&(cx, cy, cz)) {
             ch.set(tx, ty, t);
         }
+    }
+
+    /// Apply a structure using WORLD coordinates so placement can cross chunk boundaries
+    /// and span multiple vertical layers (Z). Each structure layer `li` is written to
+    /// world Z = `cz * CHUNK_SIZE + li`.
+    pub fn apply_structure_world(
+        &mut self,
+        cx: i64,
+        cy: i64,
+        cz: i64,
+        structure: &StructureDefinition,
+        ox: i32,
+        oy: i32,
+    ) {
+        let wx0 = (cx as i32) * CHUNK_SIZE;
+        let wy0 = (cy as i32) * CHUNK_SIZE;
+        let wz0 = (cz as i32) * CHUNK_SIZE;
+
+        let mut edits: usize = 0;
+        for (li, layer) in structure.layers.iter().enumerate() {
+            for (y, line) in layer.lines().enumerate() {
+                for (x, ch) in line.chars().enumerate() {
+                    if ch == ' ' {
+                        continue;
+                    }
+                    let symbol = ch.to_string();
+                    if let Some(tile) = structure.get_tile_for_symbol(&symbol) {
+                        let tx = wx0 + ox + x as i32;
+                        let ty = wy0 + oy + y as i32;
+                        let tz = wz0 + li as i32;
+
+                        // if the structure wants to use existing worldgen,
+                        // don't overwrite it
+                        if tile == TileKind::ExistingWorldgen {
+                            // do nothing
+                        } else {
+                            self.set_tile_cached(tx, ty, tz, tile);
+                        }
+                        edits += 1;
+                    }
+                }
+            }
+            info!(
+                target: "world",
+                "apply_structure_world layer {} applied for '{}'",
+                li,
+                structure.name
+            );
+        }
+        info!(
+            target: "world",
+            "apply_structure_world '{}' edits={} at chunk=({}, {}, {}) offsets=({}, {})",
+            structure.name,
+            edits,
+            cx,
+            cy,
+            cz,
+            ox,
+            oy
+        );
     }
 
     // Prefetch all chunks overlapping the given rect at a z-level [left..=right] x [top..=bottom]
@@ -556,26 +620,5 @@ impl World {
     /// Replace cached chunks from a vector produced by `chunks_to_vec`.
     pub fn set_chunks_from_vec(&mut self, entries: Vec<((i64, i64, i64), Chunk)>) {
         self.chunks = entries.into_iter().collect();
-    }
-
-    fn apply_structure(chunk: &mut Chunk, structure: &StructureDefinition, ox: i32, oy: i32) {
-        // For now, apply only the first Z layer of the structure into this 2D chunk slice.
-        if let Some(layer0) = structure.layers.get(0) {
-            for (y, line) in layer0.lines().enumerate() {
-                for (x, ch) in line.chars().enumerate() {
-                    if ch == ' ' {
-                        continue;
-                    }
-                    let symbol = ch.to_string();
-                    if let Some(tile) = structure.get_tile_for_symbol(&symbol) {
-                        let tx = ox + x as i32;
-                        let ty = oy + y as i32;
-                        if tx >= 0 && tx < CHUNK_SIZE && ty >= 0 && ty < CHUNK_SIZE {
-                            chunk.set(tx, ty, tile);
-                        }
-                    }
-                }
-            }
-        }
     }
 }
