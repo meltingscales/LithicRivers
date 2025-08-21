@@ -50,10 +50,17 @@ clean:
     rm -f  target/debug/lithicrivers-client
     rm -rf target/debug/config/
 
+git-data:
+    git describe --tags --abbrev=0 > VERSION
+    git rev-parse HEAD > GIT_SHA
+    git rev-parse --abbrev-ref HEAD > GIT_BRANCH
+
 # Build the project
-build: fmt clean
+build: fmt clean git-data
     cp -f STEAM_APP_ID crates/client/assets/config/STEAM_APP_ID
     cp -f VERSION crates/client/assets/config/VERSION
+    cp -f GIT_SHA crates/client/assets/config/GIT_SHA
+    cp -f GIT_BRANCH crates/client/assets/config/GIT_BRANCH
     cp -f LICENSE crates/client/assets/config/LICENSE
     cp -f THIRD-PARTY-NOTICES.txt crates/client/assets/config/THIRD-PARTY-NOTICES.txt
     {{cargo_base}} --version
@@ -62,9 +69,11 @@ build: fmt clean
     {{cargoz_env}} build -p lithicrivers-client --bin lithicrivers-client {{build_flags}}
 
 # Build the project in release mode
-build-release: fmt clean
+build-release: fmt clean git-data
     cp -f STEAM_APP_ID crates/client/assets/config/STEAM_APP_ID
     cp -f VERSION crates/client/assets/config/VERSION
+    cp -f GIT_SHA crates/client/assets/config/GIT_SHA
+    cp -f GIT_BRANCH crates/client/assets/config/GIT_BRANCH
     cp -f LICENSE crates/client/assets/config/LICENSE
     cp -f THIRD-PARTY-NOTICES.txt crates/client/assets/config/THIRD-PARTY-NOTICES.txt
     {{cargo_base}} --version

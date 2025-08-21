@@ -82,3 +82,8 @@ save.json
 
 LithicRivers.log
 LithicRivers.log.*
+
+# git tags/versions
+VERSION
+GIT_SHA
+GIT_BRANCH

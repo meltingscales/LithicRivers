@@ -10,14 +10,31 @@ toolchain := "stable"
 # CPU count (PowerShell environment reference)
 cpu_count := "$env:NUMBER_OF_PROCESSORS"
 
+git-data:
+    git describe --tags --abbrev=0 > VERSION
+    git rev-parse HEAD > GIT_SHA
+    git rev-parse --abbrev-ref HEAD > GIT_BRANCH
+
 # Build in debug mode (default)
-build:
+build: git-data
+    cp -f STEAM_APP_ID crates/client/assets/config/STEAM_APP_ID
+    cp -f VERSION crates/client/assets/config/VERSION
+    cp -f GIT_SHA crates/client/assets/config/GIT_SHA
+    cp -f GIT_BRANCH crates/client/assets/config/GIT_BRANCH
+    cp -f LICENSE crates/client/assets/config/LICENSE
+    cp -f THIRD-PARTY-NOTICES.txt crates/client/assets/config/THIRD-PARTY-NOTICES.txt
     cargo build --workspace -j {{cpu_count}}
 
 stage-artifacts: build build-demos
     powershell.exe scripts/stage-artifacts.ps1
 
-build-release:
+build-release: git-data
+    cp -f STEAM_APP_ID crates/client/assets/config/STEAM_APP_ID
+    cp -f VERSION crates/client/assets/config/VERSION
+    cp -f GIT_SHA crates/client/assets/config/GIT_SHA
+    cp -f GIT_BRANCH crates/client/assets/config/GIT_BRANCH
+    cp -f LICENSE crates/client/assets/config/LICENSE
+    cp -f THIRD-PARTY-NOTICES.txt crates/client/assets/config/THIRD-PARTY-NOTICES.txt
     cargo build --workspace --release -j {{cpu_count}}
 
 stage-artifacts-release: build-release build-demos-release
