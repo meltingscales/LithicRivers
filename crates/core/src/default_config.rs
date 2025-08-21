@@ -33,6 +33,7 @@ pub fn default_config() -> ConfigRoot {
             "MENU_NEXT": ["RIGHT"],
             "CREDITS_SCROLL_UP": ["UP"],
             "CREDITS_SCROLL_DOWN": ["DOWN"],
+            "LOOK_TOGGLE": ["l"],
             "SAVE_JSON": ["S"],
             "LOAD_JSON": ["L"],
             "QUIT": []

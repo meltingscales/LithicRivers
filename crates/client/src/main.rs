@@ -53,6 +53,9 @@ struct App {
     // Logging info
     log_full_path: String,
     keybinds: Keybinds,
+    // Look mode state
+    look_mode: bool,
+    look_cursor: lithicrivers_core::components::Position,
 }
 
 #[derive(Debug, Clone)]
@@ -170,6 +173,7 @@ fn render_help_panel(f: &mut Frame, _app: &mut App, area: Rect) {
     // Actions
     lines.push(Line::from(Span::raw("Actions:")));
     lines.push(Line::from(Span::raw("  m  - mine (plays SFX on success)")));
+    lines.push(Line::from(Span::raw("  l  - toggle Look mode")));
     lines.push(Line::from(""));
     // Zoom
     lines.push(Line::from(Span::raw("Zoom:")));
@@ -280,6 +284,17 @@ impl App {
         // Build keybinds from game config
         let keybinds = Keybinds::from_config(&game.res.config);
 
+        // Initialize look cursor to player's position (or origin fallback)
+        let mut look_cursor = lithicrivers_core::components::Position { x: 0, y: 0, z: 0 };
+        if let Some(e) = game.res.player_entity {
+            if let Ok(pos) = game
+                .world
+                .get::<&lithicrivers_core::components::Position>(e)
+            {
+                look_cursor = *pos;
+            }
+        }
+
         App {
             game,
             sprite_loader,
@@ -292,6 +307,8 @@ impl App {
             credits_scroll: 0,
             log_full_path,
             keybinds,
+            look_mode: false,
+            look_cursor,
         }
     }
     fn new() -> App {
@@ -319,6 +336,92 @@ impl App {
         // tracing::info!(target: "game", "key pressed: {:?}", key);
 
         // First, handle configurable keybind actions
+        // Toggle Look mode
+        if self.keybinds.matches("ui", "LOOK_TOGGLE", &key) {
+            self.look_mode = !self.look_mode;
+            // Reset cursor to player on toggle on
+            if self.look_mode {
+                if let Some(e) = self.game.res.player_entity {
+                    if let Ok(pos) = self
+                        .game
+                        .world
+                        .get::<&lithicrivers_core::components::Position>(e)
+                    {
+                        self.look_cursor = *pos;
+                        // Align view slice to cursor
+                        self.game.res.view_z = self.look_cursor.z;
+                    }
+                }
+                self.game.res.log("Look mode: ON");
+            } else {
+                self.game.res.log("Look mode: OFF");
+            }
+            return Ok(());
+        }
+
+        // In Look mode, remap movement keys to move the look cursor without ticking
+        if self.look_mode {
+            let mut moved = false;
+            if self.keybinds.matches("movement", "MOVE_NORTH", &key) {
+                self.look_cursor.y -= 1;
+                moved = true;
+            } else if self.keybinds.matches("movement", "MOVE_SOUTH", &key) {
+                self.look_cursor.y += 1;
+                moved = true;
+            } else if self.keybinds.matches("movement", "MOVE_WEST", &key) {
+                self.look_cursor.x -= 1;
+                moved = true;
+            } else if self.keybinds.matches("movement", "MOVE_EAST", &key) {
+                self.look_cursor.x += 1;
+                moved = true;
+            } else if self.keybinds.matches("movement", "MOVE_NORTHWEST", &key) {
+                self.look_cursor.x -= 1;
+                self.look_cursor.y -= 1;
+                moved = true;
+            } else if self.keybinds.matches("movement", "MOVE_NORTHEAST", &key) {
+                self.look_cursor.x += 1;
+                self.look_cursor.y -= 1;
+                moved = true;
+            } else if self.keybinds.matches("movement", "MOVE_SOUTHWEST", &key) {
+                self.look_cursor.x -= 1;
+                self.look_cursor.y += 1;
+                moved = true;
+            } else if self.keybinds.matches("movement", "MOVE_SOUTHEAST", &key) {
+                self.look_cursor.x += 1;
+                self.look_cursor.y += 1;
+                moved = true;
+            } else if self.keybinds.matches("movement", "WAIT", &key) {
+                // no-op, but treat as handled to avoid player waiting
+                moved = true;
+            } else if self.keybinds.matches("movement", "MOVE_UP", &key) {
+                self.look_cursor.z += 1;
+                self.game.res.view_z = self.look_cursor.z;
+                moved = true;
+            } else if self.keybinds.matches("movement", "MOVE_DOWN", &key) {
+                self.look_cursor.z -= 1;
+                self.game.res.view_z = self.look_cursor.z;
+                moved = true;
+            } else if self.keybinds.matches("viewport", "VIEW_Z_UP", &key) {
+                self.look_cursor.z = self.look_cursor.z.saturating_add(1);
+                self.game.res.view_z = self.look_cursor.z;
+                moved = true;
+            } else if self.keybinds.matches("viewport", "VIEW_Z_DOWN", &key) {
+                self.look_cursor.z = self.look_cursor.z.saturating_sub(1);
+                self.game.res.view_z = self.look_cursor.z;
+                moved = true;
+            }
+
+            if moved {
+                // Prefetch around the new cursor position for smoother draw
+                let radius = 20i32;
+                let left = self.look_cursor.x - radius;
+                let top = self.look_cursor.y - radius;
+                let right = self.look_cursor.x + radius;
+                let bottom = self.look_cursor.y + radius;
+                self.game.res.world.prefetch_rect(left, top, right, bottom);
+                return Ok(());
+            }
+        }
         if self.keybinds.matches("movement", "MOVE_NORTH", &key) {
             self.game.queue_player_move(0, -1);
             self.game.tick();
@@ -685,7 +788,11 @@ fn ui(f: &mut Frame, app: &mut App) {
             .constraints([Constraint::Min(20), Constraint::Length(24)])
             .split(root_chunks[1]);
         render_game_view(f, app, main_chunks[0]);
-        render_inventory_panel(f, app, main_chunks[1]);
+        if app.look_mode {
+            render_look_panel(f, app, main_chunks[1]);
+        } else {
+            render_inventory_panel(f, app, main_chunks[1]);
+        }
     } else if app.menu_index == 1 {
         // Body: fullscreen body panel
         render_body_panel(f, app, root_chunks[1]);
@@ -799,7 +906,19 @@ fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
                             panic!("Could not find sprite for tile kind: {:?}", tile_kind)
                         });
                 let ch = block.chars().next().unwrap_or(' ');
-                spans.push(Span::styled(ch.to_string(), Style::default().fg(color)));
+                // If Look mode cursor is here, highlight it
+                if app.look_mode
+                    && world_x == app.look_cursor.x
+                    && world_y == app.look_cursor.y
+                    && app.game.res.view_z == app.look_cursor.z
+                {
+                    spans.push(Span::styled(
+                        "■".to_string(),
+                        Style::default().fg(Color::White),
+                    ));
+                } else {
+                    spans.push(Span::styled(ch.to_string(), Style::default().fg(color)));
+                }
             }
         }
         lines.push(Line::from(spans));
@@ -1076,4 +1195,80 @@ fn kind_name(kind: ItemKind) -> &'static str {
         ItemKind::Acorn => "Acorn",
         ItemKind::Stick => "Stick",
     }
+}
+
+fn render_look_panel(f: &mut Frame, app: &mut App, area: Rect) {
+    let pos = app.look_cursor;
+    let mut lines: Vec<Line> = Vec::new();
+    lines.push(Line::from(Span::styled(
+        "Look at",
+        Style::default().fg(Color::Cyan),
+    )));
+    lines.push(Line::from(""));
+    lines.push(Line::from(Span::raw(format!(
+        "Pos: ({}, {}, {})",
+        pos.x, pos.y, pos.z
+    ))));
+
+    // Tile info
+    let tile_kind = app.game.res.world.get_tile(pos.x, pos.y);
+    lines.push(Line::from(Span::raw(format!("Tile: {:?}", tile_kind))));
+
+    // Fluid info
+    if let Some(fluid) = app.game.res.fluids.get_fluid(pos) {
+        lines.push(Line::from(Span::raw(format!(
+            "Fluid: {:?} amt={}/{}{}",
+            fluid.fluid_type,
+            fluid.amount,
+            fluid.max_amount,
+            if fluid.settled { " (settled)" } else { "" }
+        ))));
+    }
+
+    // Entity and item info
+    let mut any_entity = false;
+    for (_e, (e_pos, maybe_player, maybe_glyph, maybe_drop)) in app
+        .game
+        .world
+        .query::<(
+            &lithicrivers_core::components::Position,
+            Option<&lithicrivers_core::components::Player>,
+            Option<&lithicrivers_core::components::Glyph>,
+            Option<&lithicrivers_core::components::DroppedItem>,
+        )>()
+        .iter()
+    {
+        if *e_pos == pos {
+            any_entity = true;
+            if maybe_player.is_some() {
+                lines.push(Line::from(Span::styled(
+                    "Entity: Player",
+                    Style::default().fg(Color::Green),
+                )));
+            } else if let Some(di) = maybe_drop {
+                lines.push(Line::from(Span::raw(format!(
+                    "Dropped: {:?} x{}",
+                    di.kind, di.qty
+                ))));
+            } else if let Some(g) = maybe_glyph {
+                lines.push(Line::from(Span::raw(format!("Entity: glyph '{}'", g.0))));
+            } else {
+                lines.push(Line::from(Span::raw("Entity: (unknown)")));
+            }
+        }
+    }
+    if !any_entity {
+        lines.push(Line::from(Span::raw("Entities: (none)")));
+    }
+
+    let content = Paragraph::new(lines)
+        .style(Style::default().fg(Color::White))
+        .alignment(Alignment::Left)
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title("Look at")
+                .style(Style::default().fg(Color::White)),
+        );
+    f.render_widget(content, area);
 }
