@@ -144,7 +144,7 @@ impl From<WorldJson> for TileWorld {
 }
 
 impl From<SaveData> for SaveDataJson {
-    fn from(mut s: SaveData) -> Self {
+    fn from(s: SaveData) -> Self {
         // Convert fluids map and world cached chunks to JSON-friendly forms
         let fluids_vec: Vec<(Position, Fluid)> = s.fluids.fluids.into_iter().collect();
         SaveDataJson {
