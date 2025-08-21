@@ -7,7 +7,7 @@ use ratatui::{
     text::{Line, Span},
 };
 
-// Helper: parse #RRGGBB strings into ratatui Color
+/// Parses a `#RRGGBB` string into a ratatui `Color`, or returns `None` if invalid.
 pub fn parse_hex_color(s: &str) -> Option<Color> {
     let s = s.trim();
     if let Some(hex) = s.strip_prefix('#') {
@@ -24,6 +24,22 @@ pub fn parse_hex_color(s: &str) -> Option<Color> {
     None
 }
 
+/// Renders 12x8 ASCII art for the tile at the given world position.
+///
+/// Loads the tile sprite from the "tiles" category, parses its `#RRGGBB` color,
+/// and appends up to 8 styled `Line`s to `out`. If the sprite has no 12x8 art,
+/// nothing is pushed.
+///
+/// # Arguments
+/// - `app` — Game/app context used to read world tiles and load sprites.
+/// - `pos` — World position (x, y, z) to sample the tile from.
+/// - `out` — Target buffer to receive the rendered lines.
+///
+/// # Returns
+/// `true` if any lines were appended; `false` otherwise.
+///
+/// # Panics
+/// Does not panic; invalid colors are ignored and produce unstyled output.
 pub fn block_art_12x8_lines_for_position(
     app: &mut App,
     pos: lithicrivers_core::components::Position,
@@ -49,7 +65,22 @@ pub fn block_art_12x8_lines_for_position(
     false
 }
 
-// Build 12x8 art lines for entity or dropped item at this position. Returns true if any art was added.
+/// Renders 12x8 ASCII art for the entity or dropped item at the given world position.
+///
+/// First, queries for any entity at the position with a `SpriteRef`. If found,
+/// loads the sprite and appends up to 8 styled `Line`s to `out`. If no entity
+/// has a sprite, falls back to a generic entity sprite.
+///
+/// # Arguments
+/// - `app` — Game/app context used to read world entities and load sprites.
+/// - `pos` — World position (x, y, z) to sample the entity from.
+/// - `out` — Target buffer to receive the rendered lines.
+///
+/// # Returns
+/// `true` if any lines were appended; `false` otherwise.
+///
+/// # Panics
+/// Does not panic; invalid colors are ignored and produce unstyled output.
 pub fn art_12x8_lines_for_position(
     app: &mut App,
     pos: lithicrivers_core::components::Position,
@@ -114,6 +145,7 @@ pub fn art_12x8_lines_for_position(
     false
 }
 
+/// Returns a vector of empty 12x8 lines, each containing 12 question marks.
 pub fn empty_art_12x8_lines_for_position() -> Vec<Line<'static>> {
     let mut lines: Vec<Line<'static>> = Vec::new();
     for _ in 0..8 {
@@ -126,6 +158,7 @@ pub fn empty_art_12x8_lines_for_position() -> Vec<Line<'static>> {
     return lines;
 }
 
+/// Renders a 13x13 ASCII art schematic of the given body.
 pub fn build_body_ascii(body: &Body) -> Vec<Line<'static>> {
     // Simple 13x13 schematic using markers for parts:
     // H head, X torso, A/a arms, L/l legs, space background
