@@ -1,8 +1,5 @@
 use crossterm::{
-    event::{
-        self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEventKind, MouseEvent,
-        MouseEventKind,
-    },
+    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEventKind},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
@@ -32,7 +29,7 @@ use std::collections::HashMap;
 mod audio;
 mod sprite_loader;
 use crate::sprite_loader::{
-    sprite_block_for_entity, sprite_block_for_fluid, sprite_block_for_tile, Scale, SpriteLoader,
+    sprite_block_for_fluid, sprite_block_for_spriteref, sprite_block_for_tile, Scale, SpriteLoader,
 };
 
 use lithicrivers_core::components::{Inventory as InvComp, ItemKind};
@@ -808,7 +805,7 @@ fn ui(f: &mut Frame, app: &mut App) {
 
 fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
     // Get the game view from the core
-    let view = app.game.build_view();
+    let _view = app.game.build_view();
 
     // Create the game display text
     let mut lines = Vec::new();
@@ -830,16 +827,16 @@ fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
     let bottom = top + target_rows as i32 - 1;
     app.game.res.world.prefetch_rect(left, top, right, bottom);
 
-    // Build an entity overlay map for current bounds and Z slice
-    let mut ent_overlay: std::collections::HashMap<(i32, i32), char> =
+    // Build an entity overlay map for current bounds and Z slice using SpriteRef
+    let mut ent_overlay: std::collections::HashMap<(i32, i32), (String, String)> =
         std::collections::HashMap::new();
     let z = app.game.res.view_z;
-    for (_e, (pos, glyph)) in app
+    for (_e, (pos, sr_opt)) in app
         .game
         .world
         .query::<(
             &lithicrivers_core::components::Position,
-            &lithicrivers_core::components::Glyph,
+            Option<&lithicrivers_core::components::SpriteRef>,
         )>()
         .iter()
     {
@@ -847,7 +844,9 @@ fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
             continue;
         }
         if pos.x >= left && pos.x <= right && pos.y >= top && pos.y <= bottom {
-            ent_overlay.insert((pos.x, pos.y), glyph.0);
+            if let Some(sr) = sr_opt {
+                ent_overlay.insert((pos.x, pos.y), (sr.category.clone(), sr.name.clone()));
+            }
         }
     }
 
@@ -894,8 +893,13 @@ fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
                 continue;
             }
             // Entities next
-            if let Some(&ch) = ent_overlay.get(&(world_x, world_y)) {
-                let (block, color) = sprite_block_for_entity(&mut app.sprite_loader, ch, app.scale);
+            if let Some((cat, name)) = ent_overlay.get(&(world_x, world_y)) {
+                let sr = lithicrivers_core::components::SpriteRef {
+                    category: cat.clone(),
+                    name: name.clone(),
+                };
+                let (block, color) =
+                    sprite_block_for_spriteref(&mut app.sprite_loader, &sr, app.scale);
                 let ech = block.chars().next().unwrap_or(' ');
                 spans.push(Span::styled(ech.to_string(), Style::default().fg(color)));
             } else {
@@ -919,7 +923,7 @@ fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
 }
 
 fn render_inventory_panel(f: &mut Frame, app: &mut App, area: Rect) {
-    let mut lines: Vec<Line> = Vec::new();
+    let mut lines: Vec<Line<'static>> = Vec::new();
     if let Some(e) = app.game.res.player_entity {
         if let Ok(inv) = app.game.world.get::<&InvComp>(e) {
             if inv.slots.is_empty() {
@@ -1201,15 +1205,7 @@ fn parse_hex_color(s: &str) -> Option<Color> {
     None
 }
 
-// Map ItemKind to asset folder names under `assets/sprites/items/`
-fn item_asset_name(kind: ItemKind) -> &'static str {
-    match kind {
-        ItemKind::Wood => "log",
-        ItemKind::Acorn => "acorn",
-        ItemKind::Stick => "stick",
-    }
-}
-
+// (removed) item_asset_name: legacy glyph-based/item-name mapping is no longer needed.
 
 fn empty_art_12x8_lines_for_position() -> Vec<Line<'static>> {
     let mut lines: Vec<Line<'static>> = Vec::new();
@@ -1229,25 +1225,21 @@ fn art_12x8_lines_for_position(
     pos: lithicrivers_core::components::Position,
     out: &mut Vec<Line<'static>>,
 ) -> bool {
-    // Prefer specific entities in this priority: Player, DroppedItem, Glyph-mapped entity
-    for (_e, (e_pos, maybe_player, maybe_glyph, maybe_drop)) in app
+    // First, try any entity at this position with a SpriteRef
+    for (_e, (e_pos, maybe_sr)) in app
         .game
         .world
         .query::<(
             &lithicrivers_core::components::Position,
-            Option<&lithicrivers_core::components::Player>,
-            Option<&lithicrivers_core::components::Glyph>,
-            Option<&lithicrivers_core::components::DroppedItem>,
+            Option<&lithicrivers_core::components::SpriteRef>,
         )>()
         .iter()
     {
         if *e_pos != pos {
             continue;
         }
-
-        // Player
-        if maybe_player.is_some() {
-            let sd = app.sprite_loader.load_sprite("player", "entities");
+        if let Some(sr) = maybe_sr {
+            let sd = app.sprite_loader.load_by_spriteref(sr);
             let color = parse_hex_color(&sd.color);
             if let Some(block) = sd.art12x8_sprites.first() {
                 for row in block.split('\n') {
@@ -1260,45 +1252,33 @@ fn art_12x8_lines_for_position(
                 return true;
             }
         }
+    }
 
-        // Dropped item
-        if let Some(di) = maybe_drop {
-            let name = item_asset_name(di.kind);
-            let sd = app.sprite_loader.load_sprite(name, "items");
-            let color = parse_hex_color(&sd.color);
-            if let Some(block) = sd.art12x8_sprites.first() {
-                for row in block.split('\n') {
-                    let span = match color {
-                        Some(c) => Span::styled(row.to_string(), Style::default().fg(c)),
-                        None => Span::raw(row.to_string()),
-                    };
-                    out.push(Line::from(span));
-                }
-                return true;
-            }
+    // If there is any entity at this position but without SpriteRef, render a generic entity sprite
+    let mut any_entity = false;
+    for (_e, (e_pos,)) in app
+        .game
+        .world
+        .query::<(&lithicrivers_core::components::Position,)>()
+        .iter()
+    {
+        if *e_pos == pos {
+            any_entity = true;
+            break;
         }
-
-        // Generic glyph-mapped entity
-        if let Some(g) = maybe_glyph {
-            let (category, name) = if g.0 == '@' {
-                ("entities", "player")
-            } else if g.0 == 's' || g.0 == 'S' {
-                ("entities", "sheep")
-            } else {
-                ("entities", "entity_generic")
-            };
-            let sd = app.sprite_loader.load_sprite(name, category);
-            let color = parse_hex_color(&sd.color);
-            if let Some(block) = sd.art12x8_sprites.first() {
-                for row in block.split('\n') {
-                    let span = match color {
-                        Some(c) => Span::styled(row.to_string(), Style::default().fg(c)),
-                        None => Span::raw(row.to_string()),
-                    };
-                    out.push(Line::from(span));
-                }
-                return true;
+    }
+    if any_entity {
+        let sd = app.sprite_loader.load_sprite("entity_generic", "entities");
+        let color = parse_hex_color(&sd.color);
+        if let Some(block) = sd.art12x8_sprites.first() {
+            for row in block.split('\n') {
+                let span = match color {
+                    Some(c) => Span::styled(row.to_string(), Style::default().fg(c)),
+                    None => Span::raw(row.to_string()),
+                };
+                out.push(Line::from(span));
             }
+            return true;
         }
     }
     false
@@ -1339,13 +1319,13 @@ fn render_look_panel(f: &mut Frame, app: &mut App, area: Rect) {
 
     // Entity and item info
     let mut any_entity = false;
-    for (_e, (e_pos, maybe_player, maybe_glyph, maybe_drop)) in app
+    for (_e, (e_pos, maybe_player, maybe_sr, maybe_drop)) in app
         .game
         .world
         .query::<(
             &lithicrivers_core::components::Position,
             Option<&lithicrivers_core::components::Player>,
-            Option<&lithicrivers_core::components::Glyph>,
+            Option<&lithicrivers_core::components::SpriteRef>,
             Option<&lithicrivers_core::components::DroppedItem>,
         )>()
         .iter()
@@ -1357,13 +1337,16 @@ fn render_look_panel(f: &mut Frame, app: &mut App, area: Rect) {
                     "Entity: Player",
                     Style::default().fg(Color::Green),
                 )));
+            } else if let Some(sr) = maybe_sr {
+                lines.push(Line::from(Span::raw(format!(
+                    "Entity: {}::{}",
+                    sr.category, sr.name
+                ))));
             } else if let Some(di) = maybe_drop {
                 lines.push(Line::from(Span::raw(format!(
                     "Dropped: {:?} x{}",
                     di.kind, di.qty
                 ))));
-            } else if let Some(g) = maybe_glyph {
-                lines.push(Line::from(Span::raw(format!("Entity: glyph '{}'", g.0))));
             } else {
                 lines.push(Line::from(Span::raw("Entity: (unknown)")));
             }

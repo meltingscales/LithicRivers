@@ -1,4 +1,6 @@
-use crate::components::{BlocksMovement, DroppedItem, Inventory, ItemKind, Position, Sheep};
+use crate::components::{
+    BlocksMovement, DroppedItem, Inventory, ItemKind, Position, Sheep, SpriteRef,
+};
 use crate::resources::Resources;
 use hecs::World;
 use tracing::info;
@@ -81,6 +83,13 @@ pub fn mining_system(world: &mut World, res: &mut Resources) -> bool {
                     kind: ItemKind::Wood,
                     qty: 1,
                 },
+                // Map item kind to sprite name under items/
+                SpriteRef::new(
+                    "items",
+                    match ItemKind::Wood {
+                        _ => "log",
+                    },
+                ),
             ));
             res.log("You chop the tree. (+1 Wood)");
             true
