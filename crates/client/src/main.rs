@@ -250,13 +250,21 @@ impl App {
         let app_id = EmbeddedAssets::get("config/STEAM_APP_ID")
             .map(|d| String::from_utf8_lossy(&d.data).to_string())
             .unwrap_or_else(|| "(missing STEAM_APP_ID)".to_string());
+        let git_branch = EmbeddedAssets::get("config/GIT_BRANCH")
+            .map(|d| String::from_utf8_lossy(&d.data).to_string())
+            .unwrap_or_else(|| "(missing GIT_BRANCH)".to_string());
+        let git_commit = EmbeddedAssets::get("config/GIT_SHA")
+            .map(|d| String::from_utf8_lossy(&d.data).to_string())
+            .unwrap_or_else(|| "(missing GIT_SHA)".to_string());
         let credits_body = EmbeddedAssets::get("config/credits.txt")
             .map(|d| String::from_utf8_lossy(&d.data).to_string())
             .unwrap_or_else(|| "(missing credits.txt)".to_string());
         let credits_text = format!(
-            "Version: {}\nSTEAM_APP_ID: {}\n\n{}",
+            "Version: {}\nSTEAM_APP_ID: {}\nGit Branch: {}\nGit Commit: {}\n\n{}",
             version.trim(),
             app_id.trim(),
+            git_branch.trim(),
+            git_commit.trim(),
             credits_body
         );
 
