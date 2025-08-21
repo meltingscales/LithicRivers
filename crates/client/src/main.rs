@@ -150,7 +150,7 @@ impl Keybinds {
 }
 
 fn render_help_panel(f: &mut Frame, _app: &mut App, area: Rect) {
-    let mut lines: Vec<Line> = Vec::new();
+    let mut lines: Vec<Line<'static>> = Vec::new();
     lines.push(Line::from(Span::styled(
         "Controls",
         Style::default().fg(Color::Cyan),
@@ -1184,18 +1184,143 @@ fn kind_name(kind: ItemKind) -> &'static str {
     }
 }
 
+// Helper: parse #RRGGBB strings into ratatui Color
+fn parse_hex_color(s: &str) -> Option<Color> {
+    let s = s.trim();
+    if let Some(hex) = s.strip_prefix('#') {
+        if hex.len() == 6 {
+            if let (Ok(r), Ok(g), Ok(b)) = (
+                u8::from_str_radix(&hex[0..2], 16),
+                u8::from_str_radix(&hex[2..4], 16),
+                u8::from_str_radix(&hex[4..6], 16),
+            ) {
+                return Some(Color::Rgb(r, g, b));
+            }
+        }
+    }
+    None
+}
+
+// Map ItemKind to asset folder names under `assets/sprites/items/`
+fn item_asset_name(kind: ItemKind) -> &'static str {
+    match kind {
+        ItemKind::Wood => "log",
+        ItemKind::Acorn => "acorn",
+        ItemKind::Stick => "stick",
+    }
+}
+
+
+fn empty_art_12x8_lines_for_position() -> Vec<Line<'static>> {
+    let mut lines: Vec<Line<'static>> = Vec::new();
+    for _ in 0..8 {
+        let mut line: String = String::new();
+        for _ in 0..12 {
+            line.push('?');
+        }
+        lines.push(Line::from(line));
+    }
+    return lines;
+}
+
+// Build 12x8 art lines for entity or dropped item at this position. Returns true if any art was added.
+fn art_12x8_lines_for_position(
+    app: &mut App,
+    pos: lithicrivers_core::components::Position,
+    out: &mut Vec<Line<'static>>,
+) -> bool {
+    // Prefer specific entities in this priority: Player, DroppedItem, Glyph-mapped entity
+    for (_e, (e_pos, maybe_player, maybe_glyph, maybe_drop)) in app
+        .game
+        .world
+        .query::<(
+            &lithicrivers_core::components::Position,
+            Option<&lithicrivers_core::components::Player>,
+            Option<&lithicrivers_core::components::Glyph>,
+            Option<&lithicrivers_core::components::DroppedItem>,
+        )>()
+        .iter()
+    {
+        if *e_pos != pos {
+            continue;
+        }
+
+        // Player
+        if maybe_player.is_some() {
+            let sd = app.sprite_loader.load_sprite("player", "entities");
+            let color = parse_hex_color(&sd.color);
+            if let Some(block) = sd.art12x8_sprites.first() {
+                for row in block.split('\n') {
+                    let span = match color {
+                        Some(c) => Span::styled(row.to_string(), Style::default().fg(c)),
+                        None => Span::raw(row.to_string()),
+                    };
+                    out.push(Line::from(span));
+                }
+                return true;
+            }
+        }
+
+        // Dropped item
+        if let Some(di) = maybe_drop {
+            let name = item_asset_name(di.kind);
+            let sd = app.sprite_loader.load_sprite(name, "items");
+            let color = parse_hex_color(&sd.color);
+            if let Some(block) = sd.art12x8_sprites.first() {
+                for row in block.split('\n') {
+                    let span = match color {
+                        Some(c) => Span::styled(row.to_string(), Style::default().fg(c)),
+                        None => Span::raw(row.to_string()),
+                    };
+                    out.push(Line::from(span));
+                }
+                return true;
+            }
+        }
+
+        // Generic glyph-mapped entity
+        if let Some(g) = maybe_glyph {
+            let (category, name) = if g.0 == '@' {
+                ("entities", "player")
+            } else if g.0 == 's' || g.0 == 'S' {
+                ("entities", "sheep")
+            } else {
+                ("entities", "entity_generic")
+            };
+            let sd = app.sprite_loader.load_sprite(name, category);
+            let color = parse_hex_color(&sd.color);
+            if let Some(block) = sd.art12x8_sprites.first() {
+                for row in block.split('\n') {
+                    let span = match color {
+                        Some(c) => Span::styled(row.to_string(), Style::default().fg(c)),
+                        None => Span::raw(row.to_string()),
+                    };
+                    out.push(Line::from(span));
+                }
+                return true;
+            }
+        }
+    }
+    false
+}
+
 fn render_look_panel(f: &mut Frame, app: &mut App, area: Rect) {
     let pos = app.look_cursor;
+
     let mut lines: Vec<Line> = Vec::new();
-    lines.push(Line::from(Span::styled(
-        "Look at",
-        Style::default().fg(Color::Cyan),
-    )));
-    lines.push(Line::from(""));
+
     lines.push(Line::from(Span::raw(format!(
         "Pos: ({}, {}, {})",
         pos.x, pos.y, pos.z
     ))));
+
+    // Gather 12x8 art for entity/dropped item under cursor (if any)
+    if art_12x8_lines_for_position(app, pos, &mut lines) {
+        lines.push(Line::from(""));
+    } else {
+        lines.extend(empty_art_12x8_lines_for_position());
+        lines.push(Line::from(""));
+    }
 
     // Tile info
     let tile_kind = app.game.res.world.get_tile(pos.x, pos.y);
