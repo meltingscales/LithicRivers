@@ -69,6 +69,12 @@ jobs:
           just --justfile justfile.windows build-release
           just --justfile justfile.windows stage-artifacts-release
 
+      - name: Zip artifacts (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          Compress-Archive -Path artifacts\* -DestinationPath artifacts\lithicrivers-windows.zip -Force
+
       - name: Build on Linux
         if: matrix.os == 'ubuntu-latest'
         run: |
@@ -76,6 +82,12 @@ jobs:
           sudo bash scripts/install_dev_deps.sh
           just build-release
           just stage-artifacts-release
+
+      - name: Zip artifacts (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update && sudo apt-get install -y zip
+          (cd artifacts && zip -r lithicrivers-ubuntu.zip .)
 
       - name: Build on macOS
         if: matrix.os == 'macos-latest'
@@ -85,11 +97,31 @@ jobs:
           just build-release
           just stage-artifacts-release
 
-      - name: Upload artifacts
+      - name: Zip artifacts (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          (cd artifacts && zip -r lithicrivers-macos.zip .)
+
+      - name: Upload artifacts (Windows)
+        if: matrix.os == 'windows-latest'
         uses: actions/upload-artifact@v4
         with:
           name: lithicrivers-${{ github.ref_name }}-${{ github.sha }}-${{ matrix.os }}
-          path: artifacts/
+          path: artifacts/lithicrivers-windows.zip
+
+      - name: Upload artifacts (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: lithicrivers-${{ github.ref_name }}-${{ github.sha }}-${{ matrix.os }}
+          path: artifacts/lithicrivers-ubuntu.zip
+
+      - name: Upload artifacts (macOS)
+        if: matrix.os == 'macos-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: lithicrivers-${{ github.ref_name }}-${{ github.sha }}-${{ matrix.os }}
+          path: artifacts/lithicrivers-macos.zip
 
   steam-upload-ubuntu:
     needs: build
@@ -108,6 +140,11 @@ jobs:
         with:
           name: lithicrivers-${{ github.ref_name }}-${{ github.sha }}-ubuntu-latest
           path: artifacts
+
+      - name: Unzip Ubuntu artifacts for steam
+        run: |
+          sudo apt-get update && sudo apt-get install -y unzip
+          unzip -o artifacts/lithicrivers-ubuntu.zip -d artifacts
 
       - name: Install steamcmd
         run: sudo apt-get update && sudo apt-get install -y steamcmd
@@ -150,13 +187,13 @@ jobs:
           draft: false
           prerelease: true
           files: |
-            artifacts/**/*
+            artifacts/lithicrivers-ubuntu.zip
             CHANGELOG.txt
 
   github-release-windows:
     name: Create GitHub Release (Windows)
     continue-on-error: true
-    needs: build
+    needs: [build, github-release-ubuntu]
     runs-on: windows-latest
     steps:
       - name: Checkout
@@ -183,13 +220,12 @@ jobs:
           draft: false
           prerelease: true
           files: |
-            artifacts/**/*
-            CHANGELOG.txt
+            artifacts/lithicrivers-windows.zip
 
   github-release-macos:
     name: Create GitHub Release (macOS)
     continue-on-error: true
-    needs: build
+    needs: [build, github-release-ubuntu]
     runs-on: macos-latest
     steps:
       - name: Checkout
@@ -203,11 +239,11 @@ jobs:
           name: lithicrivers-${{ github.ref_name }}-${{ github.sha }}-macos-latest
           path: artifacts
 
-      - name: Create GitHub Release and upload assets
+      - name: Upload to existing release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
-          name: LithicRivers macOS ${{ github.ref_name }}
+          name: LithicRivers ${{ github.ref_name }}
           body: |
             Version: ${{ github.ref_name }}
             Ref: ${{ github.ref_name }}
@@ -216,5 +252,4 @@ jobs:
           draft: false
           prerelease: true
           files: |
-            artifacts/**/*
-            CHANGELOG.txt
+            artifacts/lithicrivers-macos.zip
