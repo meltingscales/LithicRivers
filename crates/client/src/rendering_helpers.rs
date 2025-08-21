@@ -24,8 +24,11 @@ pub fn parse_hex_color(s: &str) -> Option<Color> {
     None
 }
 
-pub fn block_art_12x8_lines_for_position(app: &mut App, pos: lithicrivers_core::components::Position, out: &mut Vec<Line<'static>>) ->bool{
-    
+pub fn block_art_12x8_lines_for_position(
+    app: &mut App,
+    pos: lithicrivers_core::components::Position,
+    out: &mut Vec<Line<'static>>,
+) -> bool {
     //todo implement this, for now static todo
     for _ in 0..8 {
         let mut line: String = String::new();

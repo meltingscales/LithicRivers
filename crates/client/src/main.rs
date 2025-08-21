@@ -31,7 +31,8 @@ mod rendering_helpers;
 mod sprite_constants;
 mod sprite_loader;
 use crate::rendering_helpers::{
-    art_12x8_lines_for_position, build_body_ascii, empty_art_12x8_lines_for_position, block_art_12x8_lines_for_position
+    art_12x8_lines_for_position, block_art_12x8_lines_for_position, build_body_ascii,
+    empty_art_12x8_lines_for_position,
 };
 use crate::sprite_constants::{sprite_for_view_reticle, sprite_for_view_reticle_color};
 use crate::sprite_loader::{
