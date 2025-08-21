@@ -1,3 +1,7 @@
+# v0.6.3
+
+- testing simpler cicd
+
 # v0.6.2
 
 - testing cicd tagging
