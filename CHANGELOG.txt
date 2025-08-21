@@ -4,3 +4,7 @@
 - Rust migration that's stable enough
 - Basic worldgen, a few biomes, basic menus, basic UI
 - The ability to mine trees
+
+# v0.6.1
+
+- testing cicd tagging
