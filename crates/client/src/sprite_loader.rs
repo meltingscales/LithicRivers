@@ -66,8 +66,13 @@ pub struct SpriteData {
     pub name: String,
     pub color: String,
     pub description: String,
+
     pub sprites: Vec<String>, // Each entry is a sprite at a different scale
-    pub item_art: Option<String>, // Optional 12x8 (or similar) ASCII art for items
+    // Example sprites content: ["x", "xx\nxx", "xxx\nxxx\nxxx"]
+
+    pub art12x8_sprites: Vec<String>, // Required 12x8 (or similar) ASCII art for items.
+    // Example: 12 lines of 8-char-long-lines each, separated by newlines.
+    // Example: ["xxxxxx", "xxxxxx", "xxxxxx", "xxxxxx", "xxxxxx", "xxxxxx", "xxxxxx", "xxxxxx", "xxxxxx", "xxxxxx", "xxxxxx", "xxxxxx"]
 }
 
 pub struct SpriteLoader {
@@ -105,7 +110,7 @@ impl SpriteLoader {
         let base = format!("sprites/{}/{}.lrsprite/", category, sprite_name);
         let data_path = format!("{}data.json", base);
         let sprites_path = format!("{}sprites.txt", base);
-        let item_art_path = format!("{}item_art.txt", base);
+        let art12x8_path = format!("{}art12x8.txt", base);
 
         // Load metadata from embedded assets
         let metadata: SpriteMetadata = serde_json::from_str(&Self::get_embedded_text(&data_path))
@@ -125,16 +130,28 @@ impl SpriteLoader {
         };
         // Validate sprites
         Self::validate_sprite_dimensions(&sprites, sprite_name, category);
+        // Load optional 12x8 art as a single multi-line string into a Vec<String>
+        let art12x8_sprites: Vec<String> = if let Some(d) = EmbeddedAssets::get(&art12x8_path) {
+            let text = match d.data {
+                Cow::Borrowed(b) => String::from_utf8(b.to_vec()).expect("art12x8 not UTF-8"),
+                Cow::Owned(v) => String::from_utf8(v).expect("art12x8 not UTF-8"),
+            };
+            vec![text]
+        } else {
+            panic!("Missing required 12x8 art for sprite '{}::{}'", category, sprite_name);
+        };
+
         let sprite_data = SpriteData {
             name: metadata.name,
             color: metadata.color,
             description: metadata.description,
             sprites,
-            item_art: EmbeddedAssets::get(&item_art_path).map(|d| match d.data {
-                Cow::Borrowed(b) => String::from_utf8(b.to_vec()).expect("item_art not UTF-8"),
-                Cow::Owned(v) => String::from_utf8(v).expect("item_art not UTF-8"),
-            }),
+            art12x8_sprites,
         };
+
+        // Validate art12x8_sprites
+        Self::validate_12x8sprite_dimensions(&sprite_data.art12x8_sprites, sprite_name, category);
+        
         self.sprite_cache.insert(cache_key.clone(), sprite_data);
         self.sprite_cache.get(&cache_key).unwrap()
     }
@@ -184,6 +201,42 @@ impl SpriteLoader {
         }
         for name in seen {
             let _ = self.load_sprite(&name, category);
+        }
+    }
+
+    fn validate_12x8sprite_dimensions(sprite_blocks: &Vec<String>, sprite_name: &str, category: &str) {
+        if sprite_blocks.is_empty() {
+            // Optional for now; nothing to validate
+            return;
+        }
+        for (i, block) in sprite_blocks.iter().enumerate() {
+            if block.is_empty() {
+                panic!(
+                    "Sprite '{}::{}' 12x8 art is empty at entry {}",
+                    category, sprite_name, i
+                );
+            }
+            let lines: Vec<&str> = block.split('\n').collect();
+            if lines.len() != 8 {
+                panic!(
+                    "Sprite '{}::{}' 12x8 art has {} lines at entry {}, expected 8",
+                    category, sprite_name, lines.len(), i
+                );
+            }
+            let line_lengths: Vec<usize> = lines.iter().map(|l| l.len()).collect();
+            let width = line_lengths[0];
+            if line_lengths.iter().any(|&len| len != width) {
+                panic!(
+                    "Sprite '{}::{}' 12x8 art has inconsistent line widths at entry {}",
+                    category, sprite_name, i
+                );
+            }
+            if width != 12 {
+                panic!(
+                    "Sprite '{}::{}' 12x8 art must be 12 columns wide, got {} at entry {}",
+                    category, sprite_name, width, i
+                );
+            }
         }
     }
 
