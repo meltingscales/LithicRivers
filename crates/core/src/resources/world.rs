@@ -175,6 +175,7 @@ impl World {
     fn generate_chunk(&self, cx: i64, cy: i64, cz: i64, chunk: &mut Chunk) {
         // Place fixed demo structures at/near spawn (0,0 chunk only)
         if cx == 0 && cy == 0 {
+            info!(target: "world", "Placing demo structures at chunk ({}, {})", cx, cy);
             let structure_names = [
                 "giant_corpse.lrstructure",
                 "small_ship.lrstructure",
@@ -185,6 +186,7 @@ impl World {
             for (name, &(ox, oy)) in structure_names.iter().zip(offsets.iter()) {
                 let structure = StructureDefinition::load_from_embedded(name);
                 Self::apply_structure(chunk, &structure, ox, oy);
+                info!(target: "world", "Placed structure {} at ({}, {})", name, ox, oy);
             }
         }
 

@@ -40,6 +40,7 @@ use crate::sprite_loader::{
 };
 use lithicrivers_core::components::{Inventory as InvComp, ItemKind};
 use lithicrivers_core::model::body::{Body, BodyPart, BodyPartState, BodyPartType};
+use lithicrivers_core::resources::world::CHUNK_SIZE;
 
 struct App {
     game: Game,
@@ -1151,6 +1152,13 @@ fn render_look_panel(f: &mut Frame, app: &mut App, area: Rect) {
     lines.push(Line::from(Span::raw(format!(
         "Pos: ({}, {}, {})",
         pos.x, pos.y, pos.z
+    ))));
+
+    lines.push(Line::from(Span::raw(format!(
+        "Chunk: ({}, {}, {})",
+        pos.x / CHUNK_SIZE,
+        pos.y / CHUNK_SIZE,
+        pos.z
     ))));
 
     lines.push(Line::from("Entity or item art:"));
