@@ -222,7 +222,7 @@ fn render_credits_panel(f: &mut Frame, app: &mut App, area: Rect) {
 impl App {
     fn new_with_seed(seed: u64) -> App {
         // Initialize game and sprite loader
-        let game = Game::new(seed);
+        let mut game = Game::new(seed);
         let mut sprite_loader = SpriteLoader::new(None);
         // Preload all assets to eliminate runtime I/O during rendering
         sprite_loader.preload_all();
@@ -292,6 +292,10 @@ impl App {
                 .get::<&lithicrivers_core::components::Position>(e)
             {
                 look_cursor = *pos;
+                // Center initial viewport on player
+                game.res.view_x = look_cursor.x;
+                game.res.view_y = look_cursor.y;
+                game.res.view_z = look_cursor.z;
             }
         }
 
@@ -326,6 +330,9 @@ impl App {
                 .world
                 .get::<&lithicrivers_core::components::Position>(e)
             {
+                // Snap entire viewport center and Z slice to player
+                self.game.res.view_x = pos.x;
+                self.game.res.view_y = pos.y;
                 self.game.res.view_z = pos.z;
             }
         }
@@ -348,7 +355,9 @@ impl App {
                         .get::<&lithicrivers_core::components::Position>(e)
                     {
                         self.look_cursor = *pos;
-                        // Align view slice to cursor
+                        // Align all view coords to cursor
+                        self.game.res.view_x = self.look_cursor.x;
+                        self.game.res.view_y = self.look_cursor.y;
                         self.game.res.view_z = self.look_cursor.z;
                     }
                 }
@@ -364,31 +373,43 @@ impl App {
             let mut moved = false;
             if self.keybinds.matches("movement", "MOVE_NORTH", &key) {
                 self.look_cursor.y -= 1;
+                self.game.res.view_y = self.look_cursor.y;
                 moved = true;
             } else if self.keybinds.matches("movement", "MOVE_SOUTH", &key) {
                 self.look_cursor.y += 1;
+                self.game.res.view_y = self.look_cursor.y;
                 moved = true;
             } else if self.keybinds.matches("movement", "MOVE_WEST", &key) {
                 self.look_cursor.x -= 1;
+                self.game.res.view_x = self.look_cursor.x;
                 moved = true;
             } else if self.keybinds.matches("movement", "MOVE_EAST", &key) {
                 self.look_cursor.x += 1;
+                self.game.res.view_x = self.look_cursor.x;
                 moved = true;
             } else if self.keybinds.matches("movement", "MOVE_NORTHWEST", &key) {
                 self.look_cursor.x -= 1;
                 self.look_cursor.y -= 1;
+                self.game.res.view_x = self.look_cursor.x;
+                self.game.res.view_y = self.look_cursor.y;
                 moved = true;
             } else if self.keybinds.matches("movement", "MOVE_NORTHEAST", &key) {
                 self.look_cursor.x += 1;
                 self.look_cursor.y -= 1;
+                self.game.res.view_x = self.look_cursor.x;
+                self.game.res.view_y = self.look_cursor.y;
                 moved = true;
             } else if self.keybinds.matches("movement", "MOVE_SOUTHWEST", &key) {
                 self.look_cursor.x -= 1;
                 self.look_cursor.y += 1;
+                self.game.res.view_x = self.look_cursor.x;
+                self.game.res.view_y = self.look_cursor.y;
                 moved = true;
             } else if self.keybinds.matches("movement", "MOVE_SOUTHEAST", &key) {
                 self.look_cursor.x += 1;
                 self.look_cursor.y += 1;
+                self.game.res.view_x = self.look_cursor.x;
+                self.game.res.view_y = self.look_cursor.y;
                 moved = true;
             } else if self.keybinds.matches("movement", "WAIT", &key) {
                 // no-op, but treat as handled to avoid player waiting
@@ -590,42 +611,6 @@ impl App {
         Ok(())
     }
 
-    fn handle_mouse(&mut self, me: MouseEvent) -> Result<(), Box<dyn Error>> {
-        if let MouseEventKind::Down(_btn) = me.kind {
-            if let Some(rect) = self.bottom_menu_rect {
-                // Convert to u16 to i32 safely
-                let mx = me.column as i32;
-                let my = me.row as i32;
-                let rx = rect.x as i32;
-                let ry = rect.y as i32;
-                let rw = rect.width as i32;
-                let rh = rect.height as i32;
-                if mx >= rx && mx < rx + rw && my >= ry && my < ry + rh {
-                    // Map click to tab index (7 tabs)
-                    let seg = rw / 7;
-                    let relx = mx - rx;
-                    self.menu_index = if relx < seg {
-                        0
-                    } else if relx < seg * 2 {
-                        1
-                    } else if relx < seg * 3 {
-                        2
-                    } else if relx < seg * 4 {
-                        3
-                    } else if relx < seg * 5 {
-                        4
-                    } else if relx < seg * 6 {
-                        5
-                    } else {
-                        6
-                    };
-                    self.activate_menu();
-                }
-            }
-        }
-        Ok(())
-    }
-
     fn activate_menu(&mut self) {
         match self.menu_index {
             0 => {
@@ -740,7 +725,9 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<(), 
                     }
                 }
                 Event::Mouse(me) => {
-                    app.handle_mouse(me)?;
+                    // debug log that we don't handle mouse events.
+                    // TODO we can handle these later
+                    tracing::debug!("UNHANDLED Mouse event: {:?}", me);
                 }
                 _ => {}
             }
@@ -827,28 +814,42 @@ fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
     let mut lines = Vec::new();
 
     // Render the map to exactly the panel's area
-    let view_h = view.map_lines.len();
-    let view_w = if view_h > 0 {
-        view.map_lines[0].len()
-    } else {
-        0
-    };
     let target_cols = area.width as usize;
     let target_rows = area.height as usize;
-
-    // Dimensions of the provided view window
-    let view_h = view_h;
-    let view_w = view_w;
 
     // Sync world generation Z with current view slice
     app.game.res.world.set_generation_z(app.game.res.view_z);
 
     // Compute world-space bounds for current viewport and prefetch chunks
-    let left = view.player_pos.x - (target_cols as i32 / 2);
-    let top = view.player_pos.y - (target_rows as i32 / 2);
+    // Center the viewport on the tracked viewport center, not always the player
+    let center_x = app.game.res.view_x;
+    let center_y = app.game.res.view_y;
+    let left = center_x - (target_cols as i32 / 2);
+    let top = center_y - (target_rows as i32 / 2);
     let right = left + target_cols as i32 - 1;
     let bottom = top + target_rows as i32 - 1;
     app.game.res.world.prefetch_rect(left, top, right, bottom);
+
+    // Build an entity overlay map for current bounds and Z slice
+    let mut ent_overlay: std::collections::HashMap<(i32, i32), char> =
+        std::collections::HashMap::new();
+    let z = app.game.res.view_z;
+    for (_e, (pos, glyph)) in app
+        .game
+        .world
+        .query::<(
+            &lithicrivers_core::components::Position,
+            &lithicrivers_core::components::Glyph,
+        )>()
+        .iter()
+    {
+        if pos.z != z {
+            continue;
+        }
+        if pos.x >= left && pos.x <= right && pos.y >= top && pos.y <= bottom {
+            ent_overlay.insert((pos.x, pos.y), glyph.0);
+        }
+    }
 
     for row in 0..target_rows {
         let mut spans = Vec::with_capacity(target_cols);
@@ -858,10 +859,6 @@ fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
 
             // Base tile color/glyph
             let tile_kind = app.game.res.world.get_tile_cached(world_x, world_y);
-
-            // Overlay from fluids/entities when within original view bounds
-            let rel_x = (world_x - (view.player_pos.x - (view_w as i32 / 2))) as isize;
-            let rel_y = (world_y - (view.player_pos.y - (view_h as i32 / 2))) as isize;
 
             // Check fluids first
             let fluid_pos = lithicrivers_core::components::Position {
@@ -882,24 +879,12 @@ fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
                 spans.push(Span::styled(ch.to_string(), Style::default().fg(color)));
                 continue;
             }
-
-            // If within the original view window, use its overlay character for entities
-            let mut used_overlay = false;
-            if rel_x >= 0 && rel_y >= 0 && (rel_y as usize) < view_h && (rel_x as usize) < view_w {
-                let ch = view.map_lines[rel_y as usize]
-                    .chars()
-                    .nth(rel_x as usize)
-                    .unwrap_or(' ');
-                if ch != ' ' {
-                    let (block, color) =
-                        sprite_block_for_entity(&mut app.sprite_loader, ch, app.scale);
-                    let ech = block.chars().next().unwrap_or(' ');
-                    spans.push(Span::styled(ech.to_string(), Style::default().fg(color)));
-                    used_overlay = true;
-                }
-            }
-
-            if !used_overlay {
+            // Entities next
+            if let Some(&ch) = ent_overlay.get(&(world_x, world_y)) {
+                let (block, color) = sprite_block_for_entity(&mut app.sprite_loader, ch, app.scale);
+                let ech = block.chars().next().unwrap_or(' ');
+                spans.push(Span::styled(ech.to_string(), Style::default().fg(color)));
+            } else {
                 let (block, color) =
                     sprite_block_for_tile(&mut app.sprite_loader, tile_kind, app.scale)
                         .unwrap_or_else(|| {
