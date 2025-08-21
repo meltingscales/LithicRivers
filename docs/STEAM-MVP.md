@@ -2,6 +2,8 @@
 
 ## Small temp list
 
+- `world_seed % 1` will randomly spawn a friendly Greyhound dog named either Kopi or FortyNiner that follows you around and attacks anything that attacks you. If you finish the game with the dog alive and in  your party, you get a free copy of the game to give to a friend, as well as some poetry about my early childhood and my thoughts about my favorite music artists.
+
 - fix windows exe consuming keystrokes way too fast (should we switch shells on windows?? does this only happen because im in a vm??)
 
 - fix steam_cmd for steam release... see https://stackoverflow.com/questions/79740593/steamworks-vague-steamcmd-error-when-publishing
