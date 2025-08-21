@@ -93,6 +93,7 @@ stage-artifacts: build build-demos
     cp -f target/debug/demo_inventory artifacts/
     cp -f target/debug/beezzaroll_color_test artifacts/
     cp -f target/debug/beezzaroll_sprite_test artifacts/
+    cp -f target/debug/portrait_sprite_test artifacts/
 
 # Stage release artifacts
 stage-artifacts-release: build-release build-demos-release
@@ -103,6 +104,7 @@ stage-artifacts-release: build-release build-demos-release
     cp -f target/release/demo_body artifacts/
     cp -f target/release/beezzaroll_color_test artifacts/
     cp -f target/release/beezzaroll_sprite_test artifacts/
+    cp -f target/release/portrait_sprite_test artifacts/
 
 ## Optional: build demo binaries (may require ratatui API updates)
 build-demos: fmt
@@ -110,6 +112,7 @@ build-demos: fmt
     {{cargoz_env}} build -p lithicrivers-client --bin demo_body {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin beezzaroll_color_test {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin beezzaroll_sprite_test {{build_flags}}
+    {{cargoz_env}} build -p lithicrivers-client --bin portrait_sprite_test {{build_flags}}
 
 # Optional: build demo binaries (release)
 build-demos-release: fmt
@@ -117,6 +120,7 @@ build-demos-release: fmt
     {{cargoz_env}} build -p lithicrivers-client --bin demo_body --release {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin beezzaroll_color_test --release {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin beezzaroll_sprite_test --release {{build_flags}}
+    {{cargoz_env}} build -p lithicrivers-client --bin portrait_sprite_test --release {{build_flags}}
 
 # Run debug build (alias for client)
 run-debug: client
@@ -144,6 +148,10 @@ demo-sprite-test:
 # Run the Color Test demo
 demo-color-test:
     {{cargoz_env}} run -p lithicrivers-client --bin beezzaroll_color_test
+
+# Run the portrait sprite test
+demo-portrait-sprite-test:
+    {{cargoz_env}} run -p lithicrivers-client --bin portrait_sprite_test
 
 # Run the Body/Repair UI demo
 demo-body:

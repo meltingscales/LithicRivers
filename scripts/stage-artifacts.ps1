@@ -7,7 +7,8 @@ $bins = @(
     'target/debug/demo_inventory.exe',
     'target/debug/demo_body.exe',
     'target/debug/beezzaroll_color_test.exe',
-    'target/debug/beezzaroll_sprite_test.exe'
+    'target/debug/beezzaroll_sprite_test.exe',
+    'target/debug/portrait_sprite_test.exe'
 )
 foreach ($b in $bins) 
 { 
