@@ -31,6 +31,9 @@ impl Game {
         let [sx, sy, sz] =
             res.config
                 .get_vector_setting("world", "DEFAULT_PLAYER_POSITION", "production");
+        // Initialize viewport center to player's starting position
+        res.view_x = sx;
+        res.view_y = sy;
         res.view_z = sz;
         res.world.set_generation_z(sz);
         // Spawn a player entity with a Position

@@ -55,7 +55,6 @@ pub fn default_config() -> ConfigRoot {
             "DEFAULT_SIZE_RADIUS": {"production": [50, 50, 3], "testing": [3, 3, 1]},
             "DEFAULT_PLAYER_POSITION": {"production": [25, 25, 0], "testing": [0, 0, 0]}
         },
-        "viewport": {"VIEWPORT_RADIUS": [8, 8, 0], "VIEWPORT_WIGGLE": 2},
         "performance": {"MAX_CPU_THREADS": 64},
         "worldgen": {"CHUNK_SIZE": 16}
     });
