@@ -381,8 +381,6 @@ pub fn sprite_block_for_fluid(
     Some((block, color))
 }
 
-// (removed) sprite_block_for_entity: legacy glyph-based mapping has been replaced by SpriteRef-driven rendering.
-
 #[cfg(test)]
 mod tests {
     use super::*;

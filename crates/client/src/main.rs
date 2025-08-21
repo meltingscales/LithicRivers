@@ -27,11 +27,14 @@ use lithicrivers_core::config::ConfigManager;
 use lithicrivers_core::Game;
 use std::collections::HashMap;
 mod audio;
+mod rendering_helpers;
+mod sprite_constants;
 mod sprite_loader;
+use crate::rendering_helpers::{build_body_ascii, empty_art_12x8_lines_for_position};
+use crate::sprite_constants::{sprite_for_view_reticle, sprite_for_view_reticle_color};
 use crate::sprite_loader::{
     sprite_block_for_fluid, sprite_block_for_spriteref, sprite_block_for_tile, Scale, SpriteLoader,
 };
-
 use lithicrivers_core::components::{Inventory as InvComp, ItemKind};
 use lithicrivers_core::model::body::{Body, BodyPart, BodyPartState, BodyPartType};
 
@@ -867,8 +870,8 @@ fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
                 && app.game.res.view_z == app.look_cursor.z
             {
                 spans.push(Span::styled(
-                    "*".to_string(),
-                    Style::default().fg(Color::Magenta),
+                    sprite_for_view_reticle(),
+                    Style::default().fg(sprite_for_view_reticle_color()),
                 ));
                 continue;
             }
@@ -1118,68 +1121,6 @@ fn render_body_panel(f: &mut Frame, app: &mut App, area: Rect) {
     f.render_widget(list_para, chunks[1]);
 }
 
-fn build_body_ascii(body: &Body) -> Vec<Line<'static>> {
-    // Simple 13x13 schematic using markers for parts:
-    // H head, X torso, A/a arms, L/l legs, space background
-    let art = [
-        "      HHH     ",
-        "     HHHHH    ",
-        "      HHH     ",
-        "   A  XXX  a  ",
-        "  A  XXXXX  a ",
-        " A   XXXXX   a",
-        "     XXXXX    ",
-        "     XXXXX    ",
-        "     XX XX    ",
-        "     L   l    ",
-        "     L   l    ",
-        "     L   l    ",
-        "    L     l   ",
-    ];
-
-    // Helper to get state color by marker
-    let color_for = |marker: char| -> Color {
-        let (part_type, present) = match marker {
-            'H' => (BodyPartType::Head, true),
-            'X' => (BodyPartType::Torso, true),
-            'A' => (BodyPartType::LeftArm, true),
-            'a' => (BodyPartType::RightArm, true),
-            'L' => (BodyPartType::LeftLeg, true),
-            'l' => (BodyPartType::RightLeg, true),
-            _ => (BodyPartType::Head, false),
-        };
-        if !present {
-            return Color::DarkGray;
-        }
-        let state = body
-            .parts
-            .get(&part_type)
-            .map(|p| p.state)
-            .unwrap_or(BodyPartState::Missing);
-        match state {
-            BodyPartState::Missing => Color::Black,
-            BodyPartState::Damaged => Color::Red,
-            BodyPartState::Functional => Color::Green,
-            BodyPartState::Enhanced => Color::Cyan,
-        }
-    };
-
-    let mut out: Vec<Line> = Vec::new();
-    for row in art {
-        let mut spans: Vec<Span> = Vec::new();
-        for ch in row.chars() {
-            if ch == ' ' {
-                spans.push(Span::raw(" "));
-            } else {
-                let color = color_for(ch);
-                spans.push(Span::styled("█", Style::default().fg(color)));
-            }
-        }
-        out.push(Line::from(spans));
-    }
-    out
-}
-
 fn kind_name(kind: ItemKind) -> &'static str {
     match kind {
         ItemKind::Wood => "Wood",
@@ -1203,20 +1144,6 @@ fn parse_hex_color(s: &str) -> Option<Color> {
         }
     }
     None
-}
-
-// (removed) item_asset_name: legacy glyph-based/item-name mapping is no longer needed.
-
-fn empty_art_12x8_lines_for_position() -> Vec<Line<'static>> {
-    let mut lines: Vec<Line<'static>> = Vec::new();
-    for _ in 0..8 {
-        let mut line: String = String::new();
-        for _ in 0..12 {
-            line.push('?');
-        }
-        lines.push(Line::from(line));
-    }
-    return lines;
 }
 
 // Build 12x8 art lines for entity or dropped item at this position. Returns true if any art was added.
