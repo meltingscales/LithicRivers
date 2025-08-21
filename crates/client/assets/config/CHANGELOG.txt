@@ -1,6 +1,0 @@
-# v0.6
-
-- commit f047ec357daa270d6e71ec2de1cfc4cc320470c9
-- Rust migration that's stable enough
-- Basic worldgen, a few biomes, basic menus, basic UI
-- The ability to mine trees
