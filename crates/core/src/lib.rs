@@ -109,28 +109,6 @@ impl Game {
         pickup_system(&mut self.world, &mut self.res);
         stumbling_sheep_system(&mut self.world, &mut self.res);
 
-        // Seed deterministic Lithic Rivers lava in nearby chunks when at depth
-        if let Some(e) = self.res.player_entity {
-            if let Ok(pos) = self.world.get::<&Position>(e) {
-                // Align with world's gen_z for correct slice; view_z controls rendering
-                self.res.world.set_generation_z(pos.z);
-                // Determine chunk range around player (1 chunk radius)
-                let cx0 = (pos.x).div_euclid(resources::world::CHUNK_SIZE) as i64;
-                let cy0 = (pos.y).div_euclid(resources::world::CHUNK_SIZE) as i64;
-                for dy in -1..=1 {
-                    for dx in -1..=1 {
-                        let cx = cx0 + dx as i64;
-                        let cy = cy0 + dy as i64;
-                        // Ensure chunk so terrain exists, then seed lava if applicable
-                        self.res.world.ensure_chunk(cx, cy);
-                        self.res
-                            .fluids
-                            .seed_lithic_lava_for_chunk(&self.res.world, cx, cy);
-                    }
-                }
-            }
-        }
-
         // Process fluids (clamped to nearby chunks if we know player position)
         if let Some(e) = self.res.player_entity {
             if let Ok(pos) = self.world.get::<&Position>(e) {

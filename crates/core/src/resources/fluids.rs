@@ -363,7 +363,7 @@ impl FluidManager {
 
     fn can_hold_fluid(&self, world: &World, pos: &Position, fluid_type: FluidType) -> bool {
         // Only allow fluid in-bounds and on passable tiles
-        let t = world.get_tile(pos.x, pos.y);
+        let t = world.get_tile(pos.x, pos.y, pos.z);
         // Only allow on non-solid tiles
         match t {
             crate::tiles::TileKind::Rock | crate::tiles::TileKind::Tree => false, //TODO make this configurable, i.e. "TileKind.is_solid"
@@ -401,7 +401,10 @@ impl FluidManager {
                 let wx = (cx as i32 * CHUNK_SIZE + lx) as i32;
                 let wy = (cy as i32 * CHUNK_SIZE + ly) as i32;
                 // Only seed where the tile is open space (air), so lava flows
-                if matches!(world.get_tile(wx, wy), crate::tiles::TileKind::Air) {
+                if matches!(
+                    world.get_tile(wx, wy, world.gen_z),
+                    crate::tiles::TileKind::Air
+                ) {
                     let wxf = wx as f64;
                     let wyf = wy as f64;
                     let zf = world.gen_z as f64;

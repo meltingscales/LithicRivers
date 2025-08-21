@@ -442,7 +442,10 @@ impl App {
                 let top = self.look_cursor.y - radius;
                 let right = self.look_cursor.x + radius;
                 let bottom = self.look_cursor.y + radius;
-                self.game.res.world.prefetch_rect(left, top, right, bottom);
+                self.game
+                    .res
+                    .world
+                    .prefetch_rect(left, top, right, bottom, self.look_cursor.z);
                 return Ok(());
             }
         }
@@ -831,7 +834,10 @@ fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
     let top = center_y - (target_rows as i32 / 2);
     let right = left + target_cols as i32 - 1;
     let bottom = top + target_rows as i32 - 1;
-    app.game.res.world.prefetch_rect(left, top, right, bottom);
+    app.game
+        .res
+        .world
+        .prefetch_rect(left, top, right, bottom, app.game.res.view_z);
 
     // Build an entity overlay map for current bounds and Z slice using SpriteRef
     let mut ent_overlay: std::collections::HashMap<(i32, i32), (String, String)> =
@@ -861,9 +867,14 @@ fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
         for col in 0..target_cols {
             let world_x = left + col as i32;
             let world_y = top + row as i32;
+            let world_z = app.game.res.view_z;
 
             // Base tile color/glyph
-            let tile_kind = app.game.res.world.get_tile_cached(world_x, world_y);
+            let tile_kind = app
+                .game
+                .res
+                .world
+                .get_tile_cached(world_x, world_y, world_z);
 
             // render look mode cursor first
             //TODO make this blink and cycle through overlapping tiles/entities
@@ -883,7 +894,7 @@ fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
             let fluid_pos = lithicrivers_core::components::Position {
                 x: world_x,
                 y: world_y,
-                z: app.game.res.view_z,
+                z: world_z,
             };
             if let Some(fluid) = app.game.res.fluids.get_fluid(fluid_pos) {
                 let (block, color) =
@@ -1152,7 +1163,7 @@ fn render_look_panel(f: &mut Frame, app: &mut App, area: Rect) {
     }
 
     // Tile info
-    let tile_kind = app.game.res.world.get_tile(pos.x, pos.y);
+    let tile_kind = app.game.res.world.get_tile(pos.x, pos.y, pos.z);
     lines.push(Line::from(Span::raw(format!("Tile: {:?}", tile_kind))));
 
     lines.push(Line::from("Tile art:"));
