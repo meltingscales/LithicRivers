@@ -2,7 +2,14 @@
 
 ## Small temp list
 
-- `world_seed % 1` will randomly spawn a friendly Greyhound dog named either Kopi or FortyNiner that follows you around and attacks anything that attacks you. If you finish the game with the dog alive and in  your party, you get a free copy of the game to give to a friend, as well as some poetry about my early childhood and my thoughts about my favorite music artists.
+- based on the value of `world_seed % 1` will randomly spawn a friendly Greyhound dog named either Kopi or FortyNiner that follows you around and attacks anything that attacks you. If you finish the game with the dog alive and in  your party, you get a free copy of the game to give to a friend, as well as some poetry about my early childhood and my thoughts about my favorite music artists like lapfox trax and 4lung.
+
+- "l" will be bound to toggle "Look" mode where you can view specific entity/fluid/block information. In Look mode, the movement keys move a cursor instead of the player. The right hand panel also gets switched to a "Look at" panel that shows the information of the entity/fluid/block the cursor is over. Similar to caves of qud.
+
+- make the currently selected menu item different visually somehow.
+
+- All keybinds should be shown in the help panel.
+  - TODO- make render_help_panel draw keybind names from the config
 
 - fix windows exe consuming keystrokes way too fast (should we switch shells on windows?? does this only happen because im in a vm??)
 
