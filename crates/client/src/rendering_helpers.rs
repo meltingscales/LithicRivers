@@ -29,18 +29,24 @@ pub fn block_art_12x8_lines_for_position(
     pos: lithicrivers_core::components::Position,
     out: &mut Vec<Line<'static>>,
 ) -> bool {
-    //todo implement this, for now static todo
-    for _ in 0..8 {
-        let mut line: String = String::new();
-        for _ in 0..3 {
-            line.push('T');
-            line.push('O');
-            line.push('D');
-            line.push('O');
+    use lithicrivers_core::tiles::TileKind;
+
+    let kind = app.game.res.world.get_tile_cached(pos.x, pos.y, pos.z);
+
+    let sd = app.sprite_loader.load_sprite(kind.sprite_key(), "tiles");
+    let color = parse_hex_color(&sd.color);
+
+    if let Some(block) = sd.art12x8_sprites.first() {
+        for row in block.split('\n') {
+            let span = match color {
+                Some(c) => Span::styled(row.to_string(), Style::default().fg(c)),
+                None => Span::raw(row.to_string()),
+            };
+            out.push(Line::from(span));
         }
-        out.push(Line::from(line));
+        return true;
     }
-    return true;
+    false
 }
 
 // Build 12x8 art lines for entity or dropped item at this position. Returns true if any art was added.
