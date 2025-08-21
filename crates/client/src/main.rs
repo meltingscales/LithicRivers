@@ -913,8 +913,8 @@ fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
                     && app.game.res.view_z == app.look_cursor.z
                 {
                     spans.push(Span::styled(
-                        "■".to_string(),
-                        Style::default().fg(Color::White),
+                        "*".to_string(),
+                        Style::default().fg(Color::Magenta),
                     ));
                 } else {
                     spans.push(Span::styled(ch.to_string(), Style::default().fg(color)));
