@@ -330,41 +330,4 @@ fn parse_color_string(s: &str) -> Option<Color> {
     None
 }
 
-// Multi-scale: return the full sprite block string (may be multi-line) and color for fluids
-pub fn sprite_block_for_fluid(
-    loader: &mut SpriteLoader,
-    fluid_type: lithicrivers_core::resources::fluids::FluidType,
-    scale: Scale,
-) -> Option<(String, Color)> {
-    use lithicrivers_core::resources::fluids::FluidType;
-    let (category, name) = (
-        "fluids",
-        match fluid_type {
-            FluidType::Water => "water",
-            FluidType::Oil => "oil",
-            FluidType::Blood => "blood",
-            FluidType::Acid => "acid",
-            FluidType::Lava => "lava",
-        },
-    );
-    let sd = loader.load_sprite(name, category);
-    let block = sprite_block_for_scale(sd, scale).to_string();
-    let color = parse_color_string(&sd.color).unwrap_or_else(|| {
-        panic!(
-            "Missing or invalid RGB color in data.json for fluid sprite '{}::{}' (expected #RRGGBB)",
-            category, name
-        )
-    });
-    Some((block, color))
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn test_load_water_sprite() {
-        let mut loader = SpriteLoader::new(None);
-        let sprite = loader.load_sprite("water", "fluids");
-        assert!(!sprite.sprites.is_empty());
-    }
-}
+// Fluids removed

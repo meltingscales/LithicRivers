@@ -53,15 +53,6 @@ impl Game {
             Inventory::default(),
         ));
         res.player_entity = Some(player);
-        // Spawn debug fluid pools around player
-        crate::resources::fluids::spawn_debug_pools(
-            &mut res.fluids,
-            Position {
-                x: sx,
-                y: sy,
-                z: sz,
-            },
-        );
         // Spawn several StumblingSheep near the player for visibility
         let sheep_positions = [
             (sx + 2, sy + 2, sz),
@@ -114,25 +105,7 @@ impl Game {
         pickup_system(&mut self.world, &mut self.res);
         stumbling_sheep_system(&mut self.world, &mut self.res);
 
-        // Process fluids (clamped to nearby chunks if we know player position)
-        if let Some(e) = self.res.player_entity {
-            if let Ok(pos) = self.world.get::<&Position>(e) {
-                let cx0 = (pos.x).div_euclid(resources::world::CHUNK_SIZE) as i64;
-                let cy0 = (pos.y).div_euclid(resources::world::CHUNK_SIZE) as i64;
-                let min_cx = cx0 - 1;
-                let max_cx = cx0 + 1;
-                let min_cy = cy0 - 1;
-                let max_cy = cy0 + 1;
-                self.res.fluids.process_fluids_clamped(
-                    &self.res.world,
-                    self.res.gametick,
-                    min_cx,
-                    min_cy,
-                    max_cx,
-                    max_cy,
-                );
-            }
-        }
+        // Fluids removed
 
         mining_success
     }

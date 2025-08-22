@@ -36,7 +36,7 @@ use crate::rendering_helpers::{
 };
 use crate::sprite_constants::{sprite_for_view_reticle, sprite_for_view_reticle_color};
 use crate::sprite_loader::{
-    sprite_block_for_fluid, sprite_block_for_spriteref, sprite_block_for_tile, Scale, SpriteLoader,
+    sprite_block_for_spriteref, sprite_block_for_tile, Scale, SpriteLoader,
 };
 use lithicrivers_core::components::{Inventory as InvComp, ItemKind};
 use lithicrivers_core::model::body::{Body, BodyPart, BodyPartState, BodyPartType};
@@ -891,25 +891,7 @@ fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
                 continue;
             }
 
-            // Check fluids first
-            let fluid_pos = lithicrivers_core::components::Position {
-                x: world_x,
-                y: world_y,
-                z: world_z,
-            };
-            if let Some(fluid) = app.game.res.fluids.get_fluid(fluid_pos) {
-                let (block, color) =
-                    sprite_block_for_fluid(&mut app.sprite_loader, fluid.fluid_type, app.scale)
-                        .unwrap_or_else(|| {
-                            panic!(
-                                "Could not find sprite for fluid type: {:?}",
-                                fluid.fluid_type
-                            )
-                        });
-                let ch = block.chars().next().unwrap_or(' ');
-                spans.push(Span::styled(ch.to_string(), Style::default().fg(color)));
-                continue;
-            }
+            // Fluids removed: fall through to entities/tiles
             // Entities next
             if let Some((cat, name)) = ent_overlay.get(&(world_x, world_y)) {
                 let sr = lithicrivers_core::components::SpriteRef {
@@ -1223,18 +1205,6 @@ fn render_look_panel(f: &mut Frame, app: &mut App, area: Rect) {
         lines.extend(empty_art_12x8_lines_for_position());
         lines.push(Line::from(""));
     }
-
-    // Fluid info
-    if let Some(fluid) = app.game.res.fluids.get_fluid(pos) {
-        lines.push(Line::from(Span::raw(format!(
-            "Fluid: {:?} amt={}/{}{}",
-            fluid.fluid_type,
-            fluid.amount,
-            fluid.max_amount,
-            if fluid.settled { " (settled)" } else { "" }
-        ))));
-    }
-
 
     let content = Paragraph::new(lines)
         .style(Style::default().fg(Color::White))

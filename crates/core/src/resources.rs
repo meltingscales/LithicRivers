@@ -4,7 +4,6 @@ use rand::SeedableRng;
 use rand_chacha::ChaCha20Rng;
 use tracing::info;
 
-pub mod fluids;
 pub mod world;
 
 pub struct Resources {
@@ -13,7 +12,6 @@ pub struct Resources {
     pub gametick: u64,
     pub player_entity: Option<Entity>,
     pub world: world::World,
-    pub fluids: fluids::FluidManager, // Fluid system
     pub config: ConfigManager,
     pub developer_mode: bool,
     pub player_name: String,
@@ -54,7 +52,6 @@ impl Resources {
             gametick: 0,
             player_entity: None,
             world: world::World::new(80, 24, seed),
-            fluids: fluids::FluidManager::default(),
             config: cfg,
             developer_mode,
             player_name,
