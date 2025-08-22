@@ -178,7 +178,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
-          name: LithicRivers Ubuntu ${{ github.ref_name }}
+          name: LithicRivers Multiplatform ${{ github.ref_name }}
           body: |
             Version: ${{ github.ref_name }}
             Ref: ${{ github.ref_name }}
@@ -211,7 +211,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
-          name: LithicRivers Windows ${{ github.ref_name }}
+          name: LithicRivers Multiplatform ${{ github.ref_name }}
           body: |
             Version: ${{ github.ref_name }}
             Ref: ${{ github.ref_name }}
@@ -243,7 +243,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
-          name: LithicRivers ${{ github.ref_name }}
+          name: LithicRivers Multiplatform ${{ github.ref_name }}
           body: |
             Version: ${{ github.ref_name }}
             Ref: ${{ github.ref_name }}
