@@ -1425,6 +1425,7 @@ fn kind_name(kind: ItemKind) -> &'static str {
         ItemKind::Wood => "Wood",
         ItemKind::Acorn => "Acorn",
         ItemKind::Stick => "Stick",
+        ItemKind::Nail => "Nail",
     }
 }
 
@@ -1433,6 +1434,7 @@ fn item_sprite_name(kind: ItemKind) -> &'static str {
         ItemKind::Wood => "log",
         ItemKind::Acorn => "acorn",
         ItemKind::Stick => "stick",
+        ItemKind::Nail => "nail",
     }
 }
 

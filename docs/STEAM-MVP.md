@@ -4,14 +4,16 @@
 
 - structure gen seems like it gets "stretched" across infinite z?
 
-- inventory panel should have some 8x12 art and flavor text for selected item
-  - "d"rop
-  - "." duplicate (debug)
-  - "x" destroy
+- make the "Quit" menu panel have text when it's selected, just like the other menus.
+  - make it just a periodic "QUIT " repeated in a diamond pattern in the center of the panel with 3 spaces before every other QUIT
 
-- make the currently selected menu item different visually somehow. Make all menu items white and make the selected one blue.
+- make the player inventory spawn with these items:
+  - 10 nails
+  - what else would a humanoid robot carry?
 
-- make the "Quit" menu have text when it's selected, just like the other menus.
+- first crafting item: a weapon: plank nail bat:
+  - 1 wooden plank
+  - 5 nails
 
 - All keybinds should be shown in the help panel.
   - TODO- make render_help_panel draw keybind names from the config
@@ -19,10 +21,6 @@
 - fix windows exe consuming keystrokes way too fast (should we switch shells on windows?? does this only happen because im in a vm??)
 
 - fix steam_cmd for steam release... see https://stackoverflow.com/questions/79740593/steamworks-vague-steamcmd-error-when-publishing
-
-- reduce the amount of fluid in the Lithic Rivers biome, make a "spawn_lava"/"spawn_water"/etc method that just creates 1 standard block of lava with a slightly-lower-than-average volume so it doesnt spread like crazy as it currently does
-
-- also clamp process_fluids_clamped so that it only does up to 50,000 fluid updates per tick, and quits with a warning if it hits that limit...
 
 - add some more empty space to the Lithic Rivers biome, carve out meandering "cave room" and "empty river" paths using noise/erosion plus thick vectors
 

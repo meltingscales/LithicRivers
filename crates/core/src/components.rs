@@ -37,6 +37,7 @@ pub enum ItemKind {
     Wood,
     Acorn,
     Stick,
+    Nail,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
