@@ -45,7 +45,15 @@ impl Game {
             .and_then(|v| v.as_bool())
             .unwrap_or(true);
 
-        // Spawn a player entity with a Position
+        // Build starting inventory
+        let mut starting_inv = Inventory {
+            auto_pickup: auto_pickup_default,
+            ..Default::default()
+        };
+        // Starting items
+        starting_inv.add(ItemKind::Nail, 10);
+
+        // Spawn a player entity with a Position and starting inventory
         let player = world.spawn((
             Position {
                 x: sx,
@@ -59,10 +67,7 @@ impl Game {
             Glyph('@'),
             SpriteRef::new("entities", "player"),
             BlocksMovement,
-            Inventory {
-                auto_pickup: auto_pickup_default,
-                ..Default::default()
-            },
+            starting_inv,
         ));
         res.player_entity = Some(player);
         // Spawn several StumblingSheep near the player for visibility

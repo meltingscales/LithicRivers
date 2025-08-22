@@ -137,6 +137,7 @@ impl SaveData {
                 ItemKind::Wood => "log",
                 ItemKind::Acorn => "acorn",
                 ItemKind::Stick => "stick",
+                ItemKind::Nail => "nail",
             };
             game.world.spawn((
                 d.pos,
