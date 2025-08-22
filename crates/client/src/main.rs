@@ -31,14 +31,16 @@ mod rendering_helpers;
 mod sprite_constants;
 mod sprite_loader;
 use crate::rendering_helpers::{
-    entity_art_12x8_lines_for_position, block_art_12x8_lines_for_position, build_body_ascii,
-    empty_art_12x8_lines_for_position,
+    block_art_12x8_lines_for_position, build_body_ascii, empty_art_12x8_lines_for_position,
+    entity_art_12x8_lines_for_position, parse_hex_color,
 };
 use crate::sprite_constants::{sprite_for_view_reticle, sprite_for_view_reticle_color};
 use crate::sprite_loader::{
     sprite_block_for_spriteref, sprite_block_for_tile, Scale, SpriteLoader,
 };
-use lithicrivers_core::components::{Inventory as InvComp, ItemKind};
+use lithicrivers_core::components::{
+    DroppedItem, Inventory as InvComp, ItemKind, Position, SpriteRef,
+};
 use lithicrivers_core::model::body::{Body, BodyPart, BodyPartState, BodyPartType};
 use lithicrivers_core::resources::world::CHUNK_SIZE;
 
@@ -60,6 +62,8 @@ struct App {
     // Look mode state
     look_mode: bool,
     look_cursor: lithicrivers_core::components::Position,
+    // Inventory panel state
+    inv_selected: usize,
 }
 
 #[derive(Debug, Clone)]
@@ -317,6 +321,7 @@ impl App {
             keybinds,
             look_mode: false,
             look_cursor,
+            inv_selected: 0,
         }
     }
     fn new() -> App {
@@ -451,9 +456,10 @@ impl App {
             }
         }
         // Inventory: toggle item auto-pickup
-        if self
-            .keybinds
-            .matches("inventory", "TOGGLE_ITEM_AUTO_PICKUP_KEY", &key)
+        if self.menu_index == 2
+            && self
+                .keybinds
+                .matches("inventory", "TOGGLE_ITEM_AUTO_PICKUP_KEY", &key)
         {
             if let Some(e) = self.game.res.player_entity {
                 if let Ok(mut inv) = self.game.world.get::<&mut InvComp>(e) {
@@ -463,6 +469,149 @@ impl App {
                 }
             }
             return Ok(());
+        }
+
+        // Inventory panel-specific navigation and actions
+        if self.menu_index == 2 {
+            // Move selection: support Up/Down keys and numpad 8/2 (MOVE_NORTH/SOUTH)
+            if self.keybinds.matches("ui", "CREDITS_SCROLL_UP", &key)
+                || self.keybinds.matches("movement", "MOVE_NORTH", &key)
+            {
+                if let Some(e) = self.game.res.player_entity {
+                    if let Ok(inv) = self.game.world.get::<&InvComp>(e) {
+                        if !inv.slots.is_empty() {
+                            if self.inv_selected == 0 {
+                                self.inv_selected = inv.slots.len() - 1;
+                            } else {
+                                self.inv_selected -= 1;
+                            }
+                        }
+                    }
+                }
+                return Ok(());
+            }
+            if self.keybinds.matches("ui", "CREDITS_SCROLL_DOWN", &key)
+                || self.keybinds.matches("movement", "MOVE_SOUTH", &key)
+            {
+                if let Some(e) = self.game.res.player_entity {
+                    if let Ok(inv) = self.game.world.get::<&InvComp>(e) {
+                        if !inv.slots.is_empty() {
+                            self.inv_selected = (self.inv_selected + 1) % inv.slots.len();
+                        }
+                    }
+                }
+                return Ok(());
+            }
+
+            // Helper to get current selection
+            let mut selected: Option<(ItemKind, u32)> = None;
+            if let Some(e) = self.game.res.player_entity {
+                if let Ok(inv) = self.game.world.get::<&InvComp>(e) {
+                    if !inv.slots.is_empty() {
+                        let idx = self.inv_selected.min(inv.slots.len() - 1);
+                        selected = Some((inv.slots[idx].kind, inv.slots[idx].qty));
+                    }
+                }
+            }
+
+            // Drop selected item (quantity 1 for now)
+            if self.keybinds.matches("inventory", "DROP_ITEM", &key) {
+                if let Some((kind, qty)) = selected {
+                    if qty == 0 {
+                        return Ok(());
+                    }
+                    if let Some(e) = self.game.res.player_entity {
+                        // Copy player position, then drop immutable borrow before mutating world
+                        let (px, py, pz) = {
+                            let Ok(ppos) = self
+                                .game
+                                .world
+                                .get::<&lithicrivers_core::components::Position>(e)
+                            else {
+                                return Ok(());
+                            };
+                            (ppos.x, ppos.y, ppos.z)
+                        };
+
+                        let drop_qty = 1u32;
+                        // Decrement inventory (mutable borrow scope ends before spawn)
+                        if let Ok(mut inv) = self.game.world.get::<&mut InvComp>(e) {
+                            if self.inv_selected < inv.slots.len() {
+                                let slot = &mut inv.slots[self.inv_selected];
+                                if slot.qty >= drop_qty {
+                                    slot.qty -= drop_qty;
+                                    if slot.qty == 0 {
+                                        inv.slots.remove(self.inv_selected);
+                                        if self.inv_selected > 0 {
+                                            self.inv_selected -= 1;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        // Spawn DroppedItem entity with SpriteRef
+                        let _ = self.game.world.spawn((
+                            Position {
+                                x: px,
+                                y: py,
+                                z: pz,
+                            },
+                            DroppedItem {
+                                kind,
+                                qty: drop_qty,
+                            },
+                            SpriteRef::new("items", item_sprite_name(kind)),
+                        ));
+                        self.game.res.log(format!("Dropped 1 {}", kind_name(kind)));
+                    }
+                }
+                return Ok(());
+            }
+
+            // Duplicate selected item (cheat)
+            if self
+                .keybinds
+                .matches("inventory", "CHEAT_DUPLICATE_ITEM", &key)
+            {
+                if let Some(e) = self.game.res.player_entity {
+                    if let Ok(mut inv) = self.game.world.get::<&mut InvComp>(e) {
+                        if !inv.slots.is_empty() {
+                            let idx = self.inv_selected.min(inv.slots.len() - 1);
+                            let kind = inv.slots[idx].kind;
+                            inv.slots[idx].qty = inv.slots[idx].qty.saturating_add(1);
+                            self.game
+                                .res
+                                .log(format!("Duplicated 1 {}", kind_name(kind)));
+                        }
+                    }
+                }
+                return Ok(());
+            }
+
+            // Destroy selected item (remove 1)
+            if self.keybinds.matches("inventory", "DESTROY_ITEM", &key) {
+                if let Some(e) = self.game.res.player_entity {
+                    if let Ok(mut inv) = self.game.world.get::<&mut InvComp>(e) {
+                        if !inv.slots.is_empty() {
+                            let idx = self.inv_selected.min(inv.slots.len() - 1);
+                            let kind = inv.slots[idx].kind;
+                            if inv.slots[idx].qty > 0 {
+                                inv.slots[idx].qty -= 1;
+                                if inv.slots[idx].qty == 0 {
+                                    inv.slots.remove(idx);
+                                    if self.inv_selected > 0 {
+                                        self.inv_selected -= 1;
+                                    }
+                                }
+                                self.game
+                                    .res
+                                    .log(format!("Destroyed 1 {}", kind_name(kind)));
+                            }
+                        }
+                    }
+                }
+                return Ok(());
+            }
         }
 
         if self.keybinds.matches("movement", "MOVE_NORTH", &key) {
@@ -938,36 +1087,88 @@ fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
 }
 
 fn render_inventory_panel(f: &mut Frame, app: &mut App, area: Rect) {
-    let mut lines: Vec<Line<'static>> = Vec::new();
+    // Split: left art/details, right list
+    let chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Length(28), Constraint::Min(20)])
+        .split(area);
+
+    // Build list with selection highlight
+    let mut list_lines: Vec<Line<'static>> = Vec::new();
+    let mut selected_kind: Option<ItemKind> = None;
+    let mut selected_qty: u32 = 0;
     if let Some(e) = app.game.res.player_entity {
         if let Ok(inv) = app.game.world.get::<&InvComp>(e) {
             if inv.slots.is_empty() {
-                lines.push(Line::from(Span::raw("(Empty)")));
+                list_lines.push(Line::from(Span::raw("(Empty)")));
+                app.inv_selected = 0;
             } else {
-                for s in &inv.slots {
-                    lines.push(Line::from(Span::raw(format!(
-                        "{} x{}",
-                        kind_name(s.kind),
-                        s.qty
-                    ))));
+                if app.inv_selected >= inv.slots.len() {
+                    app.inv_selected = inv.slots.len() - 1;
+                }
+                for (i, s) in inv.slots.iter().enumerate() {
+                    let label = format!("{} x{}", kind_name(s.kind), s.qty);
+                    if i == app.inv_selected {
+                        selected_kind = Some(s.kind);
+                        selected_qty = s.qty;
+                        list_lines.push(Line::from(Span::styled(
+                            label,
+                            Style::default().fg(Color::Yellow),
+                        )));
+                    } else {
+                        list_lines.push(Line::from(Span::raw(label)));
+                    }
                 }
             }
         } else {
-            lines.push(Line::from(Span::raw("(No Inventory component)")));
+            list_lines.push(Line::from(Span::raw("(No Inventory component)")));
         }
     } else {
-        lines.push(Line::from(Span::raw("(No player)")));
+        list_lines.push(Line::from(Span::raw("(No player)")));
     }
-    let content = Paragraph::new(lines)
-        .style(Style::default().fg(Color::White))
+
+    // Left: art + description if any selection
+    let left_block = Block::default().borders(Borders::ALL).title("Item");
+    let left_inner = left_block.inner(chunks[0]);
+    let mut left_lines: Vec<Line<'static>> = Vec::new();
+    if let Some(kind) = selected_kind {
+        let (category, sprite_name) = ("items", item_sprite_name(kind));
+        let sd = app.sprite_loader.load_sprite(sprite_name, category);
+        // Art
+        if let Some(block) = sd.art12x8_sprites.first() {
+            let color = parse_hex_color(&sd.color);
+            for row in block.split('\n') {
+                let sp = match color {
+                    Some(c) => Span::styled(row.to_string(), Style::default().fg(c)),
+                    None => Span::raw(row.to_string()),
+                };
+                left_lines.push(Line::from(sp));
+            }
+        }
+        // Spacer and description
+        left_lines.push(Line::from(""));
+        left_lines.push(Line::from(Span::styled(
+            format!("{} (x{})", kind_name(kind), selected_qty),
+            Style::default().fg(Color::Cyan),
+        )));
+        left_lines.push(Line::from(""));
+        left_lines.push(Line::from(Span::raw(sd.description.clone())));
+        left_lines.push(Line::from(""));
+        left_lines.push(Line::from(Span::raw(
+            "Keys: d=drop, .=duplicate, x=destroy",
+        )));
+    } else {
+        left_lines.push(Line::from(Span::raw("Select an item")));
+    }
+    let left_para = Paragraph::new(left_lines).alignment(Alignment::Left);
+    f.render_widget(left_para, left_inner);
+    f.render_widget(left_block, chunks[0]);
+
+    // Right: list panel
+    let list_para = Paragraph::new(list_lines)
         .alignment(Alignment::Left)
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .title("Inventory")
-                .style(Style::default().fg(Color::White)),
-        );
-    f.render_widget(content, area);
+        .block(Block::default().borders(Borders::ALL).title("Inventory"));
+    f.render_widget(list_para, chunks[1]);
 }
 
 fn render_message_log(f: &mut Frame, app: &mut App, area: Rect) {
@@ -1142,6 +1343,14 @@ fn kind_name(kind: ItemKind) -> &'static str {
     }
 }
 
+fn item_sprite_name(kind: ItemKind) -> &'static str {
+    match kind {
+        ItemKind::Wood => "log",
+        ItemKind::Acorn => "acorn",
+        ItemKind::Stick => "stick",
+    }
+}
+
 fn render_look_panel(f: &mut Frame, app: &mut App, area: Rect) {
     let pos = app.look_cursor;
 
@@ -1199,7 +1408,7 @@ fn render_look_panel(f: &mut Frame, app: &mut App, area: Rect) {
     if !any_entity {
         lines.push(Line::from(Span::raw("Entities: (none)")));
     }
-    
+
     lines.push(Line::from("Entity art:"));
     // Gather 12x8 art for entity under cursor (if any)
     if entity_art_12x8_lines_for_position(app, pos, &mut lines) {
