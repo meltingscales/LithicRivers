@@ -450,6 +450,21 @@ impl App {
                 return Ok(());
             }
         }
+        // Inventory: toggle item auto-pickup
+        if self
+            .keybinds
+            .matches("inventory", "TOGGLE_ITEM_AUTO_PICKUP_KEY", &key)
+        {
+            if let Some(e) = self.game.res.player_entity {
+                if let Ok(mut inv) = self.game.world.get::<&mut InvComp>(e) {
+                    inv.auto_pickup = !inv.auto_pickup;
+                    let state = if inv.auto_pickup { "ON" } else { "OFF" };
+                    self.game.res.log(format!("Item auto-pickup: {}", state));
+                }
+            }
+            return Ok(());
+        }
+
         if self.keybinds.matches("movement", "MOVE_NORTH", &key) {
             self.game.queue_player_move(0, -1);
             self.game.tick();

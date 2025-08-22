@@ -72,6 +72,7 @@ pub enum EntityKind {
 pub struct Inventory {
     pub slots: Vec<ItemStack>,
     pub max_slots: usize,
+    pub auto_pickup: bool,
 }
 
 impl Default for Inventory {
@@ -79,6 +80,7 @@ impl Default for Inventory {
         Self {
             slots: Vec::new(),
             max_slots: 20,
+            auto_pickup: false,
         }
     }
 }

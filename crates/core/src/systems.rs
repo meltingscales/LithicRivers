@@ -107,6 +107,14 @@ pub fn pickup_system(world: &mut World, res: &mut Resources) {
         return;
     };
 
+    // If Item Auto Pickup is toggled OFF, skip
+    if let Ok(inv) = world.get::<&Inventory>(player_e) {
+        if !inv.auto_pickup {
+            // info!("ItemAutoPickup is toggled off, skipping pickup system");
+            return;
+        }
+    }
+
     // Get player position and immediately drop the borrow
     let (px, py, pz) = {
         let Ok(ppos) = world.get::<&Position>(player_e) else {

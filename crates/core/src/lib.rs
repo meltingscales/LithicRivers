@@ -38,6 +38,13 @@ impl Game {
         res.view_y = sy;
         res.view_z = sz;
         res.world.set_generation_z(sz);
+        // Read auto-pickup default from config
+        let auto_pickup_default = res
+            .config
+            .get_setting("inventory", "TOGGLE_ITEM_AUTO_PICKUP_DEFAULT_ENABLED")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(true);
+
         // Spawn a player entity with a Position
         let player = world.spawn((
             Position {
@@ -52,7 +59,10 @@ impl Game {
             Glyph('@'),
             SpriteRef::new("entities", "player"),
             BlocksMovement,
-            Inventory::default(),
+            Inventory {
+                auto_pickup: auto_pickup_default,
+                ..Default::default()
+            },
         ));
         res.player_entity = Some(player);
         // Spawn several StumblingSheep near the player for visibility
