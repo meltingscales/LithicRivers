@@ -126,11 +126,11 @@ build-demos-release: fmt
 run-debug: client
 
 # Run the client
-client:
+client: build
     {{cargoz_env}} run -p lithicrivers-client --bin lithicrivers-client
 
 # Run release build
-run-release:
+client-release: build-release
     {{cargoz_env}} run -p lithicrivers-client --bin lithicrivers-client --release
 
 # Run the Intro demo
