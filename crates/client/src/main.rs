@@ -31,7 +31,7 @@ mod rendering_helpers;
 mod sprite_constants;
 mod sprite_loader;
 use crate::rendering_helpers::{
-    art_12x8_lines_for_position, block_art_12x8_lines_for_position, build_body_ascii,
+    entity_art_12x8_lines_for_position, block_art_12x8_lines_for_position, build_body_ascii,
     empty_art_12x8_lines_for_position,
 };
 use crate::sprite_constants::{sprite_for_view_reticle, sprite_for_view_reticle_color};
@@ -1162,37 +1162,7 @@ fn render_look_panel(f: &mut Frame, app: &mut App, area: Rect) {
         pos.z
     ))));
 
-    lines.push(Line::from("Entity or item art:"));
-    // Gather 12x8 art for entity/dropped item under cursor (if any)
-    if art_12x8_lines_for_position(app, pos, &mut lines) {
-        lines.push(Line::from(""));
-    } else {
-        lines.extend(empty_art_12x8_lines_for_position());
-        lines.push(Line::from(""));
-    }
-
-    // Tile info
-    let tile_kind = app.game.res.world.get_tile(pos.x, pos.y, pos.z);
-    lines.push(Line::from(Span::raw(format!("Tile: {:?}", tile_kind))));
-
-    lines.push(Line::from("Tile art:"));
-    if block_art_12x8_lines_for_position(app, pos, &mut lines) {
-        lines.push(Line::from(""));
-    } else {
-        lines.extend(empty_art_12x8_lines_for_position());
-        lines.push(Line::from(""));
-    }
-
-    // Fluid info
-    if let Some(fluid) = app.game.res.fluids.get_fluid(pos) {
-        lines.push(Line::from(Span::raw(format!(
-            "Fluid: {:?} amt={}/{}{}",
-            fluid.fluid_type,
-            fluid.amount,
-            fluid.max_amount,
-            if fluid.settled { " (settled)" } else { "" }
-        ))));
-    }
+    lines.push(Line::from(Span::raw(format!(""))));
 
     // Entity and item info
     let mut any_entity = false;
@@ -1232,6 +1202,39 @@ fn render_look_panel(f: &mut Frame, app: &mut App, area: Rect) {
     if !any_entity {
         lines.push(Line::from(Span::raw("Entities: (none)")));
     }
+    
+    lines.push(Line::from("Entity art:"));
+    // Gather 12x8 art for entity under cursor (if any)
+    if entity_art_12x8_lines_for_position(app, pos, &mut lines) {
+        lines.push(Line::from(""));
+    } else {
+        lines.extend(empty_art_12x8_lines_for_position());
+        lines.push(Line::from(""));
+    }
+
+    // Tile info
+    let tile_kind = app.game.res.world.get_tile(pos.x, pos.y, pos.z);
+    lines.push(Line::from(Span::raw(format!("Tile: {:?}", tile_kind))));
+
+    lines.push(Line::from("Tile art:"));
+    if block_art_12x8_lines_for_position(app, pos, &mut lines) {
+        lines.push(Line::from(""));
+    } else {
+        lines.extend(empty_art_12x8_lines_for_position());
+        lines.push(Line::from(""));
+    }
+
+    // Fluid info
+    if let Some(fluid) = app.game.res.fluids.get_fluid(pos) {
+        lines.push(Line::from(Span::raw(format!(
+            "Fluid: {:?} amt={}/{}{}",
+            fluid.fluid_type,
+            fluid.amount,
+            fluid.max_amount,
+            if fluid.settled { " (settled)" } else { "" }
+        ))));
+    }
+
 
     let content = Paragraph::new(lines)
         .style(Style::default().fg(Color::White))

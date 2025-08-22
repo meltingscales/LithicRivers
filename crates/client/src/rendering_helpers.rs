@@ -65,7 +65,7 @@ pub fn block_art_12x8_lines_for_position(
     false
 }
 
-/// Renders 12x8 ASCII art for the entity or dropped item at the given world position.
+/// Renders 12x8 ASCII art for the entity at the given world position.
 ///
 /// First, queries for any entity at the position with a `SpriteRef`. If found,
 /// loads the sprite and appends up to 8 styled `Line`s to `out`. If no entity
@@ -81,7 +81,7 @@ pub fn block_art_12x8_lines_for_position(
 ///
 /// # Panics
 /// Does not panic; invalid colors are ignored and produce unstyled output.
-pub fn art_12x8_lines_for_position(
+pub fn entity_art_12x8_lines_for_position(
     app: &mut App,
     pos: lithicrivers_core::components::Position,
     out: &mut Vec<Line<'static>>,
@@ -115,21 +115,26 @@ pub fn art_12x8_lines_for_position(
         }
     }
 
-    // If there is any entity at this position but without SpriteRef, render a generic entity sprite
-    let mut any_entity = false;
-    for (_e, (e_pos,)) in app
+    // Fallback: try EntityKind -> sprite mapping
+    for (_e, (e_pos, maybe_kind)) in app
         .game
         .world
-        .query::<(&lithicrivers_core::components::Position,)>()
+        .query::<(
+            &lithicrivers_core::components::Position,
+            Option<&lithicrivers_core::components::EntityKind>,
+        )>()
         .iter()
     {
-        if *e_pos == pos {
-            any_entity = true;
-            break;
+        if *e_pos != pos {
+            continue;
         }
-    }
-    if any_entity {
-        let sd = app.sprite_loader.load_sprite("entity_generic", "entities");
+        let (category, name) = match maybe_kind.copied() {
+            Some(lithicrivers_core::components::EntityKind::Player) => ("entities", "player"),
+            Some(lithicrivers_core::components::EntityKind::Sheep) => ("entities", "sheep"),
+            // Add specific mappings as you introduce more kinds
+            _ => ("entities", "entity_generic"),
+        };
+        let sd = app.sprite_loader.load_sprite(name, category);
         let color = parse_hex_color(&sd.color);
         if let Some(block) = sd.art12x8_sprites.first() {
             for row in block.split('\n') {
