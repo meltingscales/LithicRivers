@@ -6,13 +6,15 @@ use anyhow::{Context, Result};
 use hecs::World;
 use serde::{Deserialize, Serialize};
 
-use crate::components::{BlocksMovement, Glyph, Inventory, Player, Position, Sheep, SpriteRef};
+use crate::components::{
+    BlocksMovement, DroppedItem, Glyph, Inventory, ItemKind, Player, Position, Sheep, SpriteRef,
+};
 use crate::model::body::Body; // currently not persisted (MVP)
 use crate::resources::world::Chunk as TileChunk;
 use crate::resources::world::World as TileWorld;
 use crate::resources::Resources;
 
-pub const SAVE_VERSION: u32 = 2;
+pub const SAVE_VERSION: u32 = 3;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PlayerSave {
@@ -26,6 +28,13 @@ pub struct SheepSave {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DroppedItemSave {
+    pub pos: Position,
+    pub kind: ItemKind,
+    pub qty: u32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SaveData {
     pub version: u32,
     pub seed: u64,
@@ -33,6 +42,7 @@ pub struct SaveData {
     pub world: TileWorld,
     pub player: PlayerSave,
     pub sheep: Vec<SheepSave>,
+    pub dropped_items: Vec<DroppedItemSave>,
     pub view_x: i32,
     pub view_y: i32,
     pub view_z: i32,
@@ -42,13 +52,15 @@ impl SaveData {
     pub fn from_game(game: &crate::Game) -> Result<Self> {
         let mut player_save: Option<PlayerSave> = None;
         let mut sheep: Vec<SheepSave> = Vec::new();
-        for (_e, (pos, maybe_player, maybe_inventory, maybe_sheep)) in game
+        let mut dropped_items: Vec<DroppedItemSave> = Vec::new();
+        for (_e, (pos, maybe_player, maybe_inventory, maybe_sheep, maybe_drop)) in game
             .world
             .query::<(
                 &Position,
                 Option<&Player>,
                 Option<&Inventory>,
                 Option<&Sheep>,
+                Option<&DroppedItem>,
             )>()
             .iter()
         {
@@ -61,6 +73,12 @@ impl SaveData {
                 });
             } else if maybe_sheep.is_some() {
                 sheep.push(SheepSave { pos: *pos });
+            } else if let Some(di) = maybe_drop {
+                dropped_items.push(DroppedItemSave {
+                    pos: *pos,
+                    kind: di.kind,
+                    qty: di.qty,
+                });
             }
         }
         let player = player_save.context("Player entity missing during save")?;
@@ -71,6 +89,7 @@ impl SaveData {
             world: game.res.world.clone(),
             player,
             sheep,
+            dropped_items,
             view_x: game.res.view_x,
             view_y: game.res.view_y,
             view_z: game.res.view_z,
@@ -103,8 +122,30 @@ impl SaveData {
         game.res.player_entity = Some(player_e);
         // Sheep
         for s in self.sheep.into_iter() {
-            game.world
-                .spawn((s.pos, Glyph('s'), Sheep, BlocksMovement, SpriteRef::new("entities", "sheep")));
+            game.world.spawn((
+                s.pos,
+                Glyph('s'),
+                Sheep,
+                BlocksMovement,
+                SpriteRef::new("entities", "sheep"),
+            ));
+        }
+
+        // Dropped items
+        for d in self.dropped_items.into_iter() {
+            let sprite_name = match d.kind {
+                ItemKind::Wood => "log",
+                ItemKind::Acorn => "acorn",
+                ItemKind::Stick => "stick",
+            };
+            game.world.spawn((
+                d.pos,
+                DroppedItem {
+                    kind: d.kind,
+                    qty: d.qty,
+                },
+                SpriteRef::new("items", sprite_name),
+            ));
         }
         Ok(())
     }
@@ -126,6 +167,7 @@ struct SaveDataJson {
     pub world: WorldJson,
     pub player: PlayerSave,
     pub sheep: Vec<SheepSave>,
+    pub dropped_items: Vec<DroppedItemSave>,
     pub view_x: i32,
     pub view_y: i32,
     pub view_z: i32,
@@ -162,6 +204,7 @@ impl From<SaveData> for SaveDataJson {
             world: s.world.into(),
             player: s.player,
             sheep: s.sheep,
+            dropped_items: s.dropped_items,
             view_x: s.view_x,
             view_y: s.view_y,
             view_z: s.view_z,
@@ -178,6 +221,7 @@ impl From<SaveDataJson> for SaveData {
             world: j.world.into(),
             player: j.player,
             sheep: j.sheep,
+            dropped_items: j.dropped_items,
             view_x: j.view_x,
             view_y: j.view_y,
             view_z: j.view_z,
