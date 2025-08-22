@@ -75,15 +75,19 @@ fn render_quit_panel(f: &mut Frame, _app: &mut App, area: Rect) {
     let height = inner.height as usize;
 
     // Build a staggered (diamond-like) pattern:
-    // rows alternate between starting with 0 and 3 spaces, then repeating "QUIT "
+    // rows alternate between starting with 0 and an offset, then repeating "QUIT" with wide spacing
+    let word = "QUIT";
+    let sep = "        "; // 8 spaces between words
+    let offset = "      "; // 6 spaces offset on alternating rows
     for row in 0..height {
         let mut s = String::new();
         if row % 2 == 1 {
-            s.push_str("   "); // 3-space offset on every other row
+            s.push_str(offset);
         }
-        while s.len() < width + 5 {
-            // a bit extra to ensure we can slice cleanly
-            s.push_str("QUIT ");
+        // fill line with repeating pattern
+        while s.len() < width + word.len() + sep.len() {
+            s.push_str(word);
+            s.push_str(sep);
         }
         // Trim to visible width
         s.truncate(width);
