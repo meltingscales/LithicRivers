@@ -38,7 +38,7 @@ pub fn default_config() -> ConfigRoot {
             "LOAD_JSON": ["L"],
             "QUIT": []
         },
-        "inventory": {"DROP_ITEM": ["d"], "DESTROY_ITEM": ["x"], "CHEAT_DUPLICATE_ITEM": ["."]}
+        "inventory": {"DROP_ITEM": ["d"], "DESTROY_ITEM": ["x"], "CHEAT_DUPLICATE_ITEM": ["."], "TOGGLE_ITEM_AUTO_PICKUP_KEY": ["p"]}
     });
     let settings = serde_json::json!({
         "game": {
@@ -50,6 +50,9 @@ pub fn default_config() -> ConfigRoot {
             "DEVELOPER_MODE": true,
             "DEFAULT_SEED": 4669201609u64,
             "DEFAULT_PLAYER_NAME": "melty"
+        },
+        "inventory": {
+            "TOGGLE_ITEM_AUTO_PICKUP_DEFAULT_ENABLED": true
         },
         "world": {
             "DEFAULT_SIZE_RADIUS": {"production": [50, 50, 3], "testing": [3, 3, 1]},
