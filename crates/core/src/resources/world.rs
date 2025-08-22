@@ -144,6 +144,7 @@ impl Chunk {
 }
 
 pub const CHUNK_SIZE: i32 = 64;
+pub const CHUNK_SIZE_Z: i32 = 1; // z slices are 1-tile thick for distinct layers
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct World {
@@ -151,6 +152,8 @@ pub struct World {
     // Z slice to use for generation-time noise sampling
     pub gen_z: i32,
     chunks: HashMap<(i64, i64, i64), Chunk>,
+    // Guard against re-entrant structure placement triggering recursive generation
+    structure_placement_depth: u32,
 }
 
 impl World {
@@ -160,6 +163,7 @@ impl World {
             seed,
             gen_z: 0,
             chunks: HashMap::new(),
+            structure_placement_depth: 0,
         }
     }
 
@@ -180,7 +184,7 @@ impl World {
 
         // Generate terrain using Perlin noise. Incorporate Z to get vertical variation and bands.
         // Use the center Z of this chunk slice as the sampled Z plane.
-        let zf = (cz as f64) * (CHUNK_SIZE as f64) + (CHUNK_SIZE as f64 * 0.5);
+        let zf = (cz as f64) * (CHUNK_SIZE_Z as f64) + (CHUNK_SIZE_Z as f64 * 0.5);
         for y in 0..CHUNK_SIZE {
             for x in 0..CHUNK_SIZE {
                 // Calculate world coordinates
@@ -416,10 +420,10 @@ impl World {
     pub fn get_tile(&self, x: i32, y: i32, z: i32) -> TileKind {
         let cx = Self::div_floor(x, CHUNK_SIZE) as i64;
         let cy = Self::div_floor(y, CHUNK_SIZE) as i64;
-        let cz = Self::div_floor(z, CHUNK_SIZE) as i64;
+        let cz = Self::div_floor(z, CHUNK_SIZE_Z) as i64;
         let tx = Self::mod_floor(x, CHUNK_SIZE);
         let ty = Self::mod_floor(y, CHUNK_SIZE);
-        let _tz = Self::mod_floor(z, CHUNK_SIZE);
+        let _tz = Self::mod_floor(z, CHUNK_SIZE_Z);
         if let Some(ch) = self.chunks.get(&(cx, cy, cz)) {
             ch.get(tx, ty)
         } else {
@@ -434,10 +438,10 @@ impl World {
     pub fn get_tile_cached(&mut self, x: i32, y: i32, z: i32) -> TileKind {
         let cx = Self::div_floor(x, CHUNK_SIZE) as i64;
         let cy = Self::div_floor(y, CHUNK_SIZE) as i64;
-        let cz = Self::div_floor(z, CHUNK_SIZE) as i64;
+        let cz = Self::div_floor(z, CHUNK_SIZE_Z) as i64;
         let tx = Self::mod_floor(x, CHUNK_SIZE);
         let ty = Self::mod_floor(y, CHUNK_SIZE);
-        let _tz = Self::mod_floor(z, CHUNK_SIZE);
+        let _tz = Self::mod_floor(z, CHUNK_SIZE_Z);
         self.ensure_chunk(cx, cy, cz);
         self.chunks
             .get(&(cx, cy, cz))
@@ -457,17 +461,19 @@ impl World {
         self.chunks.insert((cx, cy, cz), chunk);
         info!(
             target: "world",
-            "chunk_generated cx={} cy={} gen_z={} size={}ms cache_size={}",
+            "chunk_generated cx={} cy={} cz={} gen_z={} size={}ms cache_size={}",
             cx,
             cy,
+            cz,
             self.gen_z,
             dur_ms,
             self.chunks.len()
         );
 
         // World-level structure placement so edits can cross chunk boundaries and z layers
-        // 1) Fixed demo structures near spawn on (0,0)
-        if cx == 0 && cy == 0 {
+        if self.structure_placement_depth == 0 {
+            // 1) Fixed demo structures near spawn on (0,0) but only once on cz==0
+            if cx == 0 && cy == 0 && cz == 0 {
             info!(target: "world", "Placing demo structures at chunk ({}, {})", cx, cy);
             let structure_names = [
                 "giant_corpse.lrstructure",
@@ -481,39 +487,40 @@ impl World {
                 self.apply_structure_world(cx, cy, cz, &structure, ox, oy);
                 info!(target: "world", "Placed structure {} at ({}, {})", name, ox, oy);
             }
-        }
+            }
 
-        // 2) Per-biome structure with low probability
-        let center_wx = (cx as f64 * CHUNK_SIZE as f64) + (CHUNK_SIZE as f64 * 0.5);
-        let center_wy = (cy as f64 * CHUNK_SIZE as f64) + (CHUNK_SIZE as f64 * 0.5);
-        let zf = (cz as f64) * (CHUNK_SIZE as f64) + (CHUNK_SIZE as f64 * 0.5);
-        let band_for_chunk = self.biome_for(center_wx, center_wy, zf);
-        let mut rng = ChaCha20Rng::seed_from_u64(self.mix_coords(cx, cy));
-        if rng.gen::<f64>() < 0.05 {
-            let (name, ox, oy) = match band_for_chunk {
-                BiomeBand::Plains => (
-                    "small_temple.lrstructure",
-                    rng.gen_range(0..CHUNK_SIZE) as i32,
-                    rng.gen_range(0..CHUNK_SIZE) as i32,
-                ),
-                BiomeBand::Forest => (
-                    "giant_corpse.lrstructure",
-                    rng.gen_range(0..CHUNK_SIZE) as i32,
-                    rng.gen_range(0..CHUNK_SIZE) as i32,
-                ),
-                BiomeBand::Rocky => (
-                    "small_ship.lrstructure",
-                    rng.gen_range(0..CHUNK_SIZE) as i32,
-                    rng.gen_range(0..CHUNK_SIZE) as i32,
-                ),
-                BiomeBand::LithicRivers => (
-                    "small_temple.lrstructure",
-                    rng.gen_range(0..CHUNK_SIZE) as i32,
-                    rng.gen_range(0..CHUNK_SIZE) as i32,
-                ),
-            };
-            let structure = StructureDefinition::load_from_embedded(name);
-            self.apply_structure_world(cx, cy, cz, &structure, ox, oy);
+            // 2) Per-biome structure with low probability
+            let center_wx = (cx as f64 * CHUNK_SIZE as f64) + (CHUNK_SIZE as f64 * 0.5);
+            let center_wy = (cy as f64 * CHUNK_SIZE as f64) + (CHUNK_SIZE as f64 * 0.5);
+            let zf = (cz as f64) * (CHUNK_SIZE_Z as f64) + (CHUNK_SIZE_Z as f64 * 0.5);
+            let band_for_chunk = self.biome_for(center_wx, center_wy, zf);
+            let mut rng = ChaCha20Rng::seed_from_u64(self.mix_coords(cx, cy));
+            if rng.gen::<f64>() < 0.05 {
+                let (name, ox, oy) = match band_for_chunk {
+                    BiomeBand::Plains => (
+                        "small_temple.lrstructure",
+                        rng.gen_range(0..CHUNK_SIZE) as i32,
+                        rng.gen_range(0..CHUNK_SIZE) as i32,
+                    ),
+                    BiomeBand::Forest => (
+                        "giant_corpse.lrstructure",
+                        rng.gen_range(0..CHUNK_SIZE) as i32,
+                        rng.gen_range(0..CHUNK_SIZE) as i32,
+                    ),
+                    BiomeBand::Rocky => (
+                        "small_ship.lrstructure",
+                        rng.gen_range(0..CHUNK_SIZE) as i32,
+                        rng.gen_range(0..CHUNK_SIZE) as i32,
+                    ),
+                    BiomeBand::LithicRivers => (
+                        "small_temple.lrstructure",
+                        rng.gen_range(0..CHUNK_SIZE) as i32,
+                        rng.gen_range(0..CHUNK_SIZE) as i32,
+                    ),
+                };
+                let structure = StructureDefinition::load_from_embedded(name);
+                self.apply_structure_world(cx, cy, cz, &structure, ox, oy);
+            }
         }
     }
 
@@ -521,10 +528,10 @@ impl World {
     pub fn set_tile_cached(&mut self, x: i32, y: i32, z: i32, t: TileKind) {
         let cx = Self::div_floor(x, CHUNK_SIZE) as i64;
         let cy = Self::div_floor(y, CHUNK_SIZE) as i64;
-        let cz = Self::div_floor(z, CHUNK_SIZE) as i64;
+        let cz = Self::div_floor(z, CHUNK_SIZE_Z) as i64;
         let tx = Self::mod_floor(x, CHUNK_SIZE);
         let ty = Self::mod_floor(y, CHUNK_SIZE);
-        let _tz = Self::mod_floor(z, CHUNK_SIZE);
+        let _tz = Self::mod_floor(z, CHUNK_SIZE_Z);
         self.ensure_chunk(cx, cy, cz);
         if let Some(ch) = self.chunks.get_mut(&(cx, cy, cz)) {
             ch.set(tx, ty, t);
@@ -543,9 +550,12 @@ impl World {
         ox: i32,
         oy: i32,
     ) {
+        // Re-entrancy guard: signal that we are in structure placement so ensure_chunk()
+        // will not schedule additional placements while we write tiles.
+        self.structure_placement_depth = self.structure_placement_depth.saturating_add(1);
         let wx0 = (cx as i32) * CHUNK_SIZE;
         let wy0 = (cy as i32) * CHUNK_SIZE;
-        let wz0 = (cz as i32) * CHUNK_SIZE;
+        let wz0 = (cz as i32) * CHUNK_SIZE_Z;
 
         let mut edits: usize = 0;
         for (li, layer) in structure.layers.iter().enumerate() {
@@ -589,6 +599,7 @@ impl World {
             ox,
             oy
         );
+        self.structure_placement_depth = self.structure_placement_depth.saturating_sub(1);
     }
 
     // Prefetch all chunks overlapping the given rect at a z-level [left..=right] x [top..=bottom]
@@ -597,7 +608,7 @@ impl World {
         let max_cx = Self::div_floor(right, CHUNK_SIZE) as i64;
         let min_cy = Self::div_floor(top, CHUNK_SIZE) as i64;
         let max_cy = Self::div_floor(bottom, CHUNK_SIZE) as i64;
-        let cz = Self::div_floor(z, CHUNK_SIZE) as i64;
+        let cz = Self::div_floor(z, CHUNK_SIZE_Z) as i64;
         for cy in min_cy..=max_cy {
             for cx in min_cx..=max_cx {
                 self.ensure_chunk(cx, cy, cz);
