@@ -66,6 +66,43 @@ struct App {
     inv_selected: usize,
 }
 
+fn render_inventory_list_only(f: &mut Frame, app: &mut App, area: Rect) {
+    // Build list with selection highlight (same as right side of render_inventory_panel)
+    let mut list_lines: Vec<Line<'static>> = Vec::new();
+    if let Some(e) = app.game.res.player_entity {
+        if let Ok(inv) = app.game.world.get::<&InvComp>(e) {
+            if inv.slots.is_empty() {
+                list_lines.push(Line::from(Span::raw("(Empty)")));
+                app.inv_selected = 0;
+            } else {
+                if app.inv_selected >= inv.slots.len() {
+                    app.inv_selected = inv.slots.len() - 1;
+                }
+                for (i, s) in inv.slots.iter().enumerate() {
+                    let label = format!("{} x{}", kind_name(s.kind), s.qty);
+                    if i == app.inv_selected {
+                        list_lines.push(Line::from(Span::styled(
+                            label,
+                            Style::default().fg(Color::Yellow),
+                        )));
+                    } else {
+                        list_lines.push(Line::from(Span::raw(label)));
+                    }
+                }
+            }
+        } else {
+            list_lines.push(Line::from(Span::raw("(No Inventory component)")));
+        }
+    } else {
+        list_lines.push(Line::from(Span::raw("(No player)")));
+    }
+
+    let list_para = Paragraph::new(list_lines)
+        .alignment(Alignment::Left)
+        .block(Block::default().borders(Borders::ALL).title("Inventory"));
+    f.render_widget(list_para, area);
+}
+
 #[derive(Debug, Clone)]
 struct Keybinds {
     // key: "category:ACTION" => list of KeyCodes
@@ -940,16 +977,23 @@ fn ui(f: &mut Frame, app: &mut App) {
 
     // Main area depends on selected tab
     if app.menu_index == 0 {
-        // World: map with inventory sidebar
-        let main_chunks = Layout::default()
-            .direction(Direction::Horizontal)
-            .constraints([Constraint::Min(20), Constraint::Length(24)])
-            .split(root_chunks[1]);
-        render_game_view(f, app, main_chunks[0]);
+        // World
         if app.look_mode {
+            // With Look mode: show look panel on the right
+            let main_chunks = Layout::default()
+                .direction(Direction::Horizontal)
+                .constraints([Constraint::Min(20), Constraint::Length(24)])
+                .split(root_chunks[1]);
+            render_game_view(f, app, main_chunks[0]);
             render_look_panel(f, app, main_chunks[1]);
         } else {
-            render_inventory_panel(f, app, main_chunks[1]);
+            // Show inventory list as sidebar, but hide Item detail panel
+            let main_chunks = Layout::default()
+                .direction(Direction::Horizontal)
+                .constraints([Constraint::Min(20), Constraint::Length(24)])
+                .split(root_chunks[1]);
+            render_game_view(f, app, main_chunks[0]);
+            render_inventory_list_only(f, app, main_chunks[1]);
         }
     } else if app.menu_index == 1 {
         // Body: fullscreen body panel
@@ -1154,9 +1198,10 @@ fn render_inventory_panel(f: &mut Frame, app: &mut App, area: Rect) {
         left_lines.push(Line::from(""));
         left_lines.push(Line::from(Span::raw(sd.description.clone())));
         left_lines.push(Line::from(""));
-        left_lines.push(Line::from(Span::raw(
-            "Keys: d=drop, .=duplicate, x=destroy",
-        )));
+        left_lines.push(Line::from(Span::raw("Keys:")));
+        left_lines.push(Line::from(Span::raw("  d=drop")));
+        left_lines.push(Line::from(Span::raw("  .=duplicate")));
+        left_lines.push(Line::from(Span::raw("  x=destroy")));
     } else {
         left_lines.push(Line::from(Span::raw("Select an item")));
     }
