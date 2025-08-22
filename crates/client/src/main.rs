@@ -998,20 +998,21 @@ fn render_message_log(f: &mut Frame, app: &mut App, area: Rect) {
 fn render_bottom_menu(f: &mut Frame, app: &mut App, area: Rect) {
     // Remember for click handling
     app.bottom_menu_rect = Some(area);
+    // All tabs white; selected tab green
     let titles = vec![
-        Span::styled(" World ", Style::default().fg(Color::Green)),
-        Span::styled(" Body ", Style::default().fg(Color::LightBlue)),
-        Span::styled(" Inventory ", Style::default().fg(Color::Yellow)),
-        Span::styled(" Menu ", Style::default().fg(Color::Magenta)),
-        Span::styled(" Help ", Style::default().fg(Color::White)),
-        Span::styled(" Credits ", Style::default().fg(Color::Gray)),
-        Span::styled(" Quit ", Style::default().fg(Color::Red)),
+        Span::raw("World"),
+        Span::raw("Body"),
+        Span::raw("Inventory"),
+        Span::raw("Menu"),
+        Span::raw("Help"),
+        Span::raw("Credits"),
+        Span::raw("Quit"),
     ];
     let tabs = Tabs::new(titles)
         .block(Block::default().borders(Borders::ALL).title("Menu"))
         .select(app.menu_index)
         .style(Style::default().fg(Color::White))
-        .highlight_style(Style::default().fg(Color::Cyan));
+        .highlight_style(Style::default().fg(Color::Green));
     f.render_widget(tabs, area);
 }
 

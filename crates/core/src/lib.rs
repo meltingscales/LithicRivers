@@ -126,15 +126,7 @@ impl Game {
                     max_cx,
                     max_cy,
                 );
-            } else {
-                self.res
-                    .fluids
-                    .process_fluids(&self.res.world, self.res.gametick);
             }
-        } else {
-            self.res
-                .fluids
-                .process_fluids(&self.res.world, self.res.gametick);
         }
 
         mining_success

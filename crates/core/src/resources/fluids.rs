@@ -106,118 +106,6 @@ impl FluidManager {
         self.fluids.get(&position)
     }
 
-    pub fn process_fluids(&mut self, world: &World, gametick: u64) {
-        let start = Instant::now();
-        let mut to_remove = vec![];
-        let mut to_add = vec![];
-        let directions = [
-            (0, 1, 0),  // South
-            (0, -1, 0), // North
-            (1, 0, 0),  // East
-            (-1, 0, 0), // West
-            (0, 0, 1),  // Down (z+1)
-        ];
-        // Work on a snapshot to avoid borrow issues
-        let fluids_snapshot: Vec<_> = self.fluids.iter().map(|(p, f)| (*p, f.clone())).collect();
-        let mut processed: usize = 0;
-        for (pos, mut fluid) in fluids_snapshot {
-            processed += 1;
-            if fluid.amount == 0 {
-                to_remove.push(pos);
-                continue;
-            }
-            if fluid.settled || fluid.amount < fluid.spread_threshold {
-                fluid.stability_counter += 1;
-                if fluid.stability_counter >= fluid.settlement_threshold {
-                    if let Some(f) = self.fluids.get_mut(&pos) {
-                        f.settled = true;
-                    }
-                }
-                continue;
-            }
-            let spread_amount =
-                std::cmp::min(fluid.amount - fluid.spread_threshold, fluid.viscosity);
-            if spread_amount == 0 {
-                continue;
-            }
-            let mut valid_targets = vec![];
-            for (dx, dy, dz) in directions.iter() {
-                let target = Position {
-                    x: pos.x + dx,
-                    y: pos.y + dy,
-                    z: pos.z + dz,
-                };
-                if self.can_hold_fluid(world, &target, fluid.fluid_type) {
-                    valid_targets.push(target);
-                }
-            }
-            if valid_targets.is_empty() {
-                // No spread possible, increase stability
-                if let Some(f) = self.fluids.get_mut(&pos) {
-                    f.stability_counter += 1;
-                    if f.stability_counter >= f.settlement_threshold {
-                        f.settled = true;
-                    }
-                }
-                continue;
-            }
-            // Distribute spread_amount among valid targets
-            let amount_per = spread_amount / valid_targets.len() as u32;
-            let remainder = spread_amount % valid_targets.len() as u32;
-            let mut distributed = 0;
-            for (i, target) in valid_targets.iter().enumerate() {
-                let mut amt = amount_per;
-                if (i as u32) < remainder {
-                    amt += 1;
-                }
-                if amt > 0 {
-                    to_add.push((
-                        target.clone(),
-                        Fluid {
-                            fluid_type: fluid.fluid_type,
-                            position: *target,
-                            amount: amt,
-                            max_amount: fluid.max_amount,
-                            settled: false,
-                            spread_threshold: fluid.spread_threshold,
-                            stability_counter: 0,
-                            viscosity: fluid.viscosity,
-                            last_spread_tick: gametick,
-                            settlement_threshold: fluid.settlement_threshold,
-                        },
-                    ));
-                    distributed += amt;
-                }
-            }
-            // Subtract what was spread from this fluid
-            if let Some(f) = self.fluids.get_mut(&pos) {
-                if f.amount >= distributed {
-                    f.amount -= distributed;
-                    f.settled = false;
-                    f.stability_counter = 0;
-                    f.last_spread_tick = gametick;
-                }
-            }
-        }
-        // Add new/merged fluids
-        for (_pos, fluid) in to_add {
-            self.add_fluid(fluid);
-        }
-        for pos in to_remove {
-            self.fluids.remove(&pos);
-        }
-        let elapsed_ms = start.elapsed().as_millis();
-        info!(
-            target: "fluids",
-            "process_fluids tick={} z={} processed={} count={} duration_ms={}",
-            gametick,
-            world.gen_z,
-            processed,
-            self.fluids.len(),
-            elapsed_ms
-        );
-    }
-
     /// Process fluids but clamp work to a chunk range [min_cx..=max_cx] x [min_cy..=max_cy]
     /// and only for the current world's generation Z slice. This reduces CPU usage by
     /// limiting updates to the player's vicinity.
@@ -230,6 +118,9 @@ impl FluidManager {
         max_cx: i64,
         max_cy: i64,
     ) {
+        // TODO: overhaul fluid system later. disable fluid spread for now.
+        return;
+        
         let start = Instant::now();
         let mut to_remove = vec![];
         let mut to_add = vec![];
