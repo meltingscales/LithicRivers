@@ -44,6 +44,7 @@ impl Game {
                 z: sz,
             },
             GameEntity,
+            EntityKind::Player,
             Player,
             Body::default(),
             Glyph('@'),
@@ -61,19 +62,23 @@ impl Game {
                 z: sz,
             },
         );
-        // Spawn a simple StumblingSheep near the player (closer for visibility)
-        world.spawn((
-            Position {
-                x: sx + 2,
-                y: sy + 2,
-                z: sz,
-            },
-            GameEntity,
-            Sheep,
-            Glyph('s'),
-            SpriteRef::new("entities", "sheep"),
-            BlocksMovement,
-        ));
+        // Spawn several StumblingSheep near the player for visibility
+        let sheep_positions = [
+            (sx + 2, sy + 2, sz),
+            (sx + 3, sy, sz),
+            (sx, sy + 3, sz),
+        ];
+        for (x, y, z) in sheep_positions {
+            world.spawn((
+                Position { x, y, z },
+                GameEntity,
+                EntityKind::Sheep,
+                Sheep,
+                Glyph('s'),
+                SpriteRef::new("entities", "sheep"),
+                BlocksMovement,
+            ));
+        }
         Self { world, res }
     }
 

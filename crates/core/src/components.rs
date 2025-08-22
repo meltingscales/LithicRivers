@@ -51,6 +51,23 @@ impl ItemStack {
     }
 }
 
+// -----------------------------
+// Entity taxonomy
+// -----------------------------
+
+/// High-level kind for an entity. Prefer ECS composition for behavior; `EntityKind`
+/// is a convenient category for rendering defaults and simple logic tables.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, Eq, PartialEq, Hash)]
+pub enum EntityKind {
+    Player,
+    Sheep,
+    Bot,
+    Turret,
+    Chest,
+    Rock,
+    Corpse,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Inventory {
     pub slots: Vec<ItemStack>,
