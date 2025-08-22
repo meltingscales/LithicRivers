@@ -320,7 +320,7 @@ impl App {
         }
     }
     fn new() -> App {
-        Self::new_with_seed(12345)
+        Self::new_with_seed(12345) //TODO use seed from config...
     }
 
     fn on_tick(&mut self) {
