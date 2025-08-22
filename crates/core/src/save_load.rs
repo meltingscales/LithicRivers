@@ -8,8 +8,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::components::{BlocksMovement, Glyph, Inventory, Player, Position, Sheep};
 use crate::model::body::Body; // currently not persisted (MVP)
-use crate::resources::fluids::Fluid;
-use crate::resources::fluids::FluidManager;
 use crate::resources::world::Chunk as TileChunk;
 use crate::resources::world::World as TileWorld;
 use crate::resources::Resources;
@@ -33,7 +31,6 @@ pub struct SaveData {
     pub seed: u64,
     pub gametick: u64,
     pub world: TileWorld,
-    pub fluids: FluidManager,
     pub player: PlayerSave,
     pub sheep: Vec<SheepSave>,
 }
@@ -69,7 +66,6 @@ impl SaveData {
             seed: game.res.seed,
             gametick: game.res.gametick,
             world: game.res.world.clone(),
-            fluids: game.res.fluids.clone(),
             player,
             sheep,
         })
@@ -80,7 +76,6 @@ impl SaveData {
         game.res = Resources::new(self.seed);
         game.res.gametick = self.gametick;
         game.res.world = self.world;
-        game.res.fluids = self.fluids;
 
         // Rebuild entity world
         game.world = World::new();
@@ -116,7 +111,6 @@ struct SaveDataJson {
     pub seed: u64,
     pub gametick: u64,
     pub world: WorldJson,
-    pub fluids: Vec<(Position, Fluid)>,
     pub player: PlayerSave,
     pub sheep: Vec<SheepSave>,
 }
@@ -145,14 +139,11 @@ impl From<WorldJson> for TileWorld {
 
 impl From<SaveData> for SaveDataJson {
     fn from(s: SaveData) -> Self {
-        // Convert fluids map and world cached chunks to JSON-friendly forms
-        let fluids_vec: Vec<(Position, Fluid)> = s.fluids.fluids.into_iter().collect();
         SaveDataJson {
             version: s.version,
             seed: s.seed,
             gametick: s.gametick,
             world: s.world.into(),
-            fluids: fluids_vec,
             player: s.player,
             sheep: s.sheep,
         }
@@ -161,16 +152,11 @@ impl From<SaveData> for SaveDataJson {
 
 impl From<SaveDataJson> for SaveData {
     fn from(j: SaveDataJson) -> Self {
-        let fluids_map = j.fluids.into_iter().collect();
         SaveData {
             version: j.version,
             seed: j.seed,
             gametick: j.gametick,
             world: j.world.into(),
-            fluids: FluidManager {
-                fluids: fluids_map,
-                seeded_lava_chunks: Default::default(),
-            },
             player: j.player,
             sheep: j.sheep,
         }
@@ -207,9 +193,6 @@ mod tests {
     use crate::tiles::TileKind;
 
     fn simulate_full_actions(game: &mut crate::Game) {
-        // Clear fluids to avoid chunk (0,0) generation via debug pools during tests
-        game.res.fluids = Default::default();
-
         // Move player to a non-origin chunk to avoid structure asset dependency in tests
         if let Some(e) = game.res.player_entity {
             if let Ok(mut pos) = game.world.get::<&mut Position>(e) {
@@ -223,11 +206,10 @@ mod tests {
         for (e, pos) in game.world.query::<&Position>().with::<&Sheep>().iter() {
             sheep_entities.push((e, *pos));
         }
-        for (e, mut pos) in sheep_entities {
+        for (e, _pos) in sheep_entities {
             if let Ok(mut mpos) = game.world.get::<&mut Position>(e) {
                 mpos.x = crate::resources::world::CHUNK_SIZE + 5;
                 mpos.y = crate::resources::world::CHUNK_SIZE + 5;
-                // keep z
             }
         }
 
@@ -237,18 +219,7 @@ mod tests {
         game.queue_player_move(0, 1);
         game.tick();
 
-        // Ensure a tree underfoot, then mine it (should drop Wood and convert to Dirt)
-        if let Some(e) = game.res.player_entity {
-            if let Ok(pos) = game.world.get::<&Position>(e) {
-                game.res
-                    .world
-                    .set_tile_cached(pos.x, pos.y, pos.z, TileKind::Tree);
-            }
-        }
-        game.queue_mine();
-        game.tick();
-
-        // A few more ticks to advance fluids/ai deterministically
+        // A few more ticks to advance ai deterministically
         for _ in 0..3 {
             game.tick();
         }
@@ -256,8 +227,6 @@ mod tests {
 
     fn simulate_movement_only(game: &mut crate::Game) {
         // Reposition away from origin and sheep too, but avoid any call that caches world chunks
-        // Also clear fluids to avoid (0,0) chunk access during fluid processing
-        game.res.fluids = Default::default();
         if let Some(e) = game.res.player_entity {
             if let Ok(mut pos) = game.world.get::<&mut Position>(e) {
                 pos.x = crate::resources::world::CHUNK_SIZE + 2;
@@ -379,7 +348,7 @@ mod tests {
         // Core invariants
         assert_eq!(loaded.res.seed, seed);
         assert_eq!(loaded.res.gametick, game.res.gametick);
-        assert_eq!(loaded.res.fluids.fluids.len(), game.res.fluids.fluids.len());
+        // Fluids removed
 
         // Player position and wood
         let p_before = {
