@@ -51,11 +51,11 @@ build-demos-release:
     cargo build -p lithicrivers-client --bin portrait_sprite_test --release
 
 # Run debug build
-run:
+client: build
     cargo run -p lithicrivers-client --bin lithicrivers-client -j {{cpu_count}}
 
 # Run release build
-run-release:
+client-release: build-release
     cargo run --release -p lithicrivers-client --bin lithicrivers-client -j {{cpu_count}}
 
 # Run tests
