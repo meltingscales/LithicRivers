@@ -6,13 +6,13 @@ use anyhow::{Context, Result};
 use hecs::World;
 use serde::{Deserialize, Serialize};
 
-use crate::components::{BlocksMovement, Glyph, Inventory, Player, Position, Sheep};
+use crate::components::{BlocksMovement, Glyph, Inventory, Player, Position, Sheep, SpriteRef};
 use crate::model::body::Body; // currently not persisted (MVP)
 use crate::resources::world::Chunk as TileChunk;
 use crate::resources::world::World as TileWorld;
 use crate::resources::Resources;
 
-pub const SAVE_VERSION: u32 = 1;
+pub const SAVE_VERSION: u32 = 2;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PlayerSave {
@@ -33,6 +33,9 @@ pub struct SaveData {
     pub world: TileWorld,
     pub player: PlayerSave,
     pub sheep: Vec<SheepSave>,
+    pub view_x: i32,
+    pub view_y: i32,
+    pub view_z: i32,
 }
 
 impl SaveData {
@@ -68,6 +71,9 @@ impl SaveData {
             world: game.res.world.clone(),
             player,
             sheep,
+            view_x: game.res.view_x,
+            view_y: game.res.view_y,
+            view_z: game.res.view_z,
         })
     }
 
@@ -76,6 +82,11 @@ impl SaveData {
         game.res = Resources::new(self.seed);
         game.res.gametick = self.gametick;
         game.res.world = self.world;
+        game.res.view_x = self.view_x;
+        game.res.view_y = self.view_y;
+        game.res.view_z = self.view_z;
+        // Keep world generation slice consistent with view
+        game.res.world.set_generation_z(self.view_z);
 
         // Rebuild entity world
         game.world = World::new();
@@ -86,12 +97,14 @@ impl SaveData {
             Player,
             BlocksMovement,
             Body::default(),
+            SpriteRef::new("entities", "player"),
             self.player.inventory,
         ));
         game.res.player_entity = Some(player_e);
         // Sheep
         for s in self.sheep.into_iter() {
-            game.world.spawn((s.pos, Glyph('s'), Sheep, BlocksMovement));
+            game.world
+                .spawn((s.pos, Glyph('s'), Sheep, BlocksMovement, SpriteRef::new("entities", "sheep")));
         }
         Ok(())
     }
@@ -113,6 +126,9 @@ struct SaveDataJson {
     pub world: WorldJson,
     pub player: PlayerSave,
     pub sheep: Vec<SheepSave>,
+    pub view_x: i32,
+    pub view_y: i32,
+    pub view_z: i32,
 }
 
 impl From<TileWorld> for WorldJson {
@@ -146,6 +162,9 @@ impl From<SaveData> for SaveDataJson {
             world: s.world.into(),
             player: s.player,
             sheep: s.sheep,
+            view_x: s.view_x,
+            view_y: s.view_y,
+            view_z: s.view_z,
         }
     }
 }
@@ -159,6 +178,9 @@ impl From<SaveDataJson> for SaveData {
             world: j.world.into(),
             player: j.player,
             sheep: j.sheep,
+            view_x: j.view_x,
+            view_y: j.view_y,
+            view_z: j.view_z,
         }
     }
 }
