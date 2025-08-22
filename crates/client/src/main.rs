@@ -1218,8 +1218,10 @@ fn render_inventory_panel(f: &mut Frame, app: &mut App, area: Rect) {
 
 fn render_message_log(f: &mut Frame, app: &mut App, area: Rect) {
     let mut lines: Vec<Line> = Vec::new();
-    let start = if app.game.res.messages.len() > area.height as usize {
-        app.game.res.messages.len() - area.height as usize
+    // Account for the border (top+bottom) since Paragraph has a Block
+    let visible_rows = area.height.saturating_sub(2) as usize;
+    let start = if app.game.res.messages.len() > visible_rows {
+        app.game.res.messages.len() - visible_rows
     } else {
         0
     };
