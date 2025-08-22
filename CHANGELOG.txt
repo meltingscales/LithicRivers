@@ -1,3 +1,11 @@
+# v7.0
+
+- entirely remove fluids due to lag and complexity...TODO I will add them back later
+- add the ability to look at things
+- add 12x8 art for all things
+- add 2 more sheep
+- fix structure generation
+
 # v0.6.3
 
 - testing simpler cicd
