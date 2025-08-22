@@ -1,4 +1,4 @@
-# v7.0
+# v0.7
 
 - entirely remove fluids due to lag and complexity...TODO I will add them back later
 - add the ability to look at things
