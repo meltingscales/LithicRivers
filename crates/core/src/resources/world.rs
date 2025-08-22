@@ -474,19 +474,19 @@ impl World {
         if self.structure_placement_depth == 0 {
             // 1) Fixed demo structures near spawn on (0,0) but only once on cz==0
             if cx == 0 && cy == 0 && cz == 0 {
-            info!(target: "world", "Placing demo structures at chunk ({}, {})", cx, cy);
-            let structure_names = [
-                "giant_corpse.lrstructure",
-                "small_ship.lrstructure",
-                "small_temple.lrstructure",
-                "starter_ship.lrstructure",
-            ];
-            let offsets = [(8, 8), (20, 40), (40, 20), (32, 32)];
-            for (name, &(ox, oy)) in structure_names.iter().zip(offsets.iter()) {
-                let structure = StructureDefinition::load_from_embedded(name);
-                self.apply_structure_world(cx, cy, cz, &structure, ox, oy);
-                info!(target: "world", "Placed structure {} at ({}, {})", name, ox, oy);
-            }
+                info!(target: "world", "Placing demo structures at chunk ({}, {})", cx, cy);
+                let structure_names = [
+                    "giant_corpse.lrstructure",
+                    "small_ship.lrstructure",
+                    "small_temple.lrstructure",
+                    "starter_ship.lrstructure",
+                ];
+                let offsets = [(8, 8), (20, 40), (40, 20), (32, 32)];
+                for (name, &(ox, oy)) in structure_names.iter().zip(offsets.iter()) {
+                    let structure = StructureDefinition::load_from_embedded(name);
+                    self.apply_structure_world(cx, cy, cz, &structure, ox, oy);
+                    info!(target: "world", "Placed structure {} at ({}, {})", name, ox, oy);
+                }
             }
 
             // 2) Per-biome structure with low probability

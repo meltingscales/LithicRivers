@@ -66,11 +66,7 @@ impl Game {
         ));
         res.player_entity = Some(player);
         // Spawn several StumblingSheep near the player for visibility
-        let sheep_positions = [
-            (sx + 2, sy + 2, sz),
-            (sx + 3, sy, sz),
-            (sx, sy + 3, sz),
-        ];
+        let sheep_positions = [(sx + 2, sy + 2, sz), (sx + 3, sy, sz), (sx, sy + 3, sz)];
         for (x, y, z) in sheep_positions {
             world.spawn((
                 Position { x, y, z },
@@ -137,7 +133,11 @@ impl Game {
 
             if placed {
                 let _ = world.spawn((
-                    Position { x: tx, y: ty, z: tz },
+                    Position {
+                        x: tx,
+                        y: ty,
+                        z: tz,
+                    },
                     DroppedItem {
                         kind: ItemKind::Wood,
                         qty: 1,
