@@ -66,6 +66,37 @@ struct App {
     inv_selected: usize,
 }
 
+fn render_quit_panel(f: &mut Frame, _app: &mut App, area: Rect) {
+    let block = Block::default().borders(Borders::ALL).title("Quit");
+    let inner = block.inner(area);
+
+    let mut lines: Vec<Line<'static>> = Vec::new();
+    let width = inner.width as usize;
+    let height = inner.height as usize;
+
+    // Build a staggered (diamond-like) pattern:
+    // rows alternate between starting with 0 and 3 spaces, then repeating "QUIT "
+    for row in 0..height {
+        let mut s = String::new();
+        if row % 2 == 1 {
+            s.push_str("   "); // 3-space offset on every other row
+        }
+        while s.len() < width + 5 {
+            // a bit extra to ensure we can slice cleanly
+            s.push_str("QUIT ");
+        }
+        // Trim to visible width
+        s.truncate(width);
+        lines.push(Line::from(Span::raw(s)));
+    }
+
+    let p = Paragraph::new(lines)
+        .alignment(Alignment::Left)
+        .style(Style::default().fg(Color::Red));
+    f.render_widget(p, inner);
+    f.render_widget(block, area);
+}
+
 fn render_inventory_list_only(f: &mut Frame, app: &mut App, area: Rect) {
     // Build list with selection highlight (same as right side of render_inventory_panel)
     let mut list_lines: Vec<Line<'static>> = Vec::new();
@@ -1010,8 +1041,11 @@ fn ui(f: &mut Frame, app: &mut App) {
     } else if app.menu_index == 5 {
         // Credits: scrollable
         render_credits_panel(f, app, root_chunks[1]);
+    } else if app.menu_index == 6 {
+        // Quit: show diamond pattern panel
+        render_quit_panel(f, app, root_chunks[1]);
     } else {
-        // Quit selected: do nothing special here; run loop will exit
+        // Unknown tab
     }
 
     // Message log
