@@ -15,14 +15,6 @@ pub fn default_config() -> ConfigRoot {
             "MOVE_UP": ["<"],
             "MOVE_DOWN": [">"]
         },
-        "viewport": {
-            "RESET_VIEWPORT": ["r"],
-            "SLIDE_VIEWPORT_WEST": ["["],
-            "SLIDE_VIEWPORT_EAST": ["]"],
-            "TOGGLE_VIEWPORT": ["v"],
-            "VIEW_Z_UP": ["PAGEUP"],
-            "VIEW_Z_DOWN": ["PAGEDOWN"]
-        },
         "scale": {"SCALE_UP": ["=", "+"], "SCALE_DOWN": ["-"], "SCALE_RESET": ["0"]},
         "action": {"MINE": ["u"], "INTERACT": ["i"], "PICKUP_ITEMS": ["g"]},
         "ui": {

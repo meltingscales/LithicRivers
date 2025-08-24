@@ -23,6 +23,7 @@ use tracing_appender as _tracing_appender_hidden; // avoid "unused extern crate"
 #[folder = "assets/"]
 struct EmbeddedAssets;
 
+use heck::AsTitleCase;
 use lithicrivers_core::config::ConfigManager;
 use lithicrivers_core::Game;
 use std::collections::HashMap;
@@ -64,6 +65,8 @@ struct App {
     look_cursor: lithicrivers_core::components::Position,
     // Inventory panel state
     inv_selected: usize,
+    // Help panel state
+    help_scroll: u16,
 }
 
 fn render_quit_panel(f: &mut Frame, _app: &mut App, area: Rect) {
@@ -229,62 +232,63 @@ impl Keybinds {
     }
 }
 
-fn render_help_panel(f: &mut Frame, _app: &mut App, area: Rect) {
-    let mut lines: Vec<Line<'static>> = Vec::new();
+fn render_help_panel(f: &mut Frame, app: &mut App, area: Rect) {
+    let mut lines: Vec<Line> = Vec::new();
     lines.push(Line::from(Span::styled(
         "Controls",
         Style::default().fg(Color::Cyan),
     )));
     lines.push(Line::from(""));
-    // Movement
-    lines.push(Line::from(Span::raw("Movement (Numpad):")));
-    lines.push(Line::from(Span::raw("  7 8 9  - diagonals/cardinals")));
-    lines.push(Line::from(Span::raw("  4 5 6  - 5 to wait")));
-    lines.push(Line::from(Span::raw("  1 2 3")));
-    lines.push(Line::from(""));
-    // Vertical
-    lines.push(Line::from(Span::raw("Vertical movement:")));
-    lines.push(Line::from(Span::raw("  <  - move up a Z-level")));
-    lines.push(Line::from(Span::raw("  >  - move down a Z-level")));
-    lines.push(Line::from(Span::raw(
-        "  PageUp/PageDown - change viewed Z slice",
-    )));
-    lines.push(Line::from(""));
-    // Actions
-    lines.push(Line::from(Span::raw("Actions:")));
-    lines.push(Line::from(Span::raw("  m  - mine (plays SFX on success)")));
-    lines.push(Line::from(Span::raw("  l  - toggle Look mode")));
-    lines.push(Line::from(""));
-    // Zoom
-    lines.push(Line::from(Span::raw("Zoom:")));
-    lines.push(Line::from(Span::raw("  =/+ - zoom in")));
-    lines.push(Line::from(Span::raw("  -   - zoom out")));
-    lines.push(Line::from(Span::raw("  0   - reset zoom")));
-    lines.push(Line::from(""));
-    // Save/Load
-    lines.push(Line::from(Span::raw("Save/Load:")));
-    lines.push(Line::from(Span::raw("  S - save to save.json")));
-    lines.push(Line::from(Span::raw("  L - load from save.json")));
-    lines.push(Line::from(""));
-    // Menu
-    lines.push(Line::from(Span::raw("Menu navigation:")));
-    lines.push(Line::from(Span::raw(
-        "  Left/Right - switch tabs (World, Body, Inventory, Menu, Help, Quit)",
-    )));
-    lines.push(Line::from(Span::raw(
-        "  Enter/Space - activate selected tab",
-    )));
-    lines.push(Line::from(Span::raw("  Mouse - click tab labels")));
-    lines.push(Line::from(""));
-    // Quit
-    lines.push(Line::from(Span::raw("General:")));
-    lines.push(Line::from(Span::raw("  q - quit")));
+
+    // Group keybinds by category
+    let mut categorized_binds: HashMap<String, Vec<(String, Vec<KeyCode>)>> = HashMap::new();
+    for (key, value) in &app.keybinds.map {
+        let parts: Vec<&str> = key.split(':').collect();
+        if parts.len() == 2 {
+            let category = parts[0].to_string();
+            let action = parts[1].to_string();
+            categorized_binds
+                .entry(category)
+                .or_default()
+                .push((action, value.clone()));
+        }
+    }
+
+    // Define the order of categories
+    let categories = vec!["movement", "viewport", "scale", "action", "ui", "inventory"];
+
+    for category in categories {
+        if let Some(binds) = categorized_binds.get(category) {
+            let category_title = category.replace('_', " ");
+            lines.push(Line::from(Span::raw(format!(
+                "{} ",
+                heck::AsTitleCase(&category_title)
+            ))));
+            for (action, keys) in binds {
+                let key_str = keys
+                    .iter()
+                    .map(|k| format_keycode(k))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                lines.push(Line::from(Span::raw(format!("  {}: {}", action, key_str))));
+            }
+            lines.push(Line::from(""));
+        }
+    }
 
     let block = Block::default().borders(Borders::ALL).title("Help");
     let inner = block.inner(area);
     let p = Paragraph::new(lines).alignment(Alignment::Left);
     f.render_widget(p, inner);
     f.render_widget(block, area);
+}
+
+fn format_keycode(kc: &KeyCode) -> String {
+    match kc {
+        KeyCode::Char(c) => c.to_string(),
+        KeyCode::F(i) => format!("F{}", i),
+        _ => format!("{:?}", kc),
+    }
 }
 
 fn render_credits_panel(f: &mut Frame, app: &mut App, area: Rect) {
@@ -394,6 +398,7 @@ impl App {
             look_mode: false,
             look_cursor,
             inv_selected: 0,
+            help_scroll: 0,
         }
     }
     fn new() -> App {
