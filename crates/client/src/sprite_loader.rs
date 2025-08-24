@@ -18,6 +18,27 @@ pub enum Scale {
     Large,  // 3x3
 }
 
+impl Scale {
+    pub fn as_u32(self) -> u32 {
+        match self {
+            Scale::Small => 1,
+            Scale::Medium => 2,
+            Scale::Large => 3,
+        }
+    }
+}
+
+impl From<u32> for Scale {
+    fn from(value: u32) -> Self {
+        match value {
+            1 => Scale::Small,
+            2 => Scale::Medium,
+            3 => Scale::Large,
+            _ => Scale::Small, // Fallback to smallest scale
+        }
+    }
+}
+
 // Multi-scale: return the full sprite block string (may be multi-line) and color for a SpriteRef
 pub fn sprite_block_for_spriteref(
     loader: &mut SpriteLoader,

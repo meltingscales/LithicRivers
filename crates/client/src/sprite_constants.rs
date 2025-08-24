@@ -1,7 +1,8 @@
 use ratatui::style::Color;
 
-pub fn sprite_for_view_reticle() -> String {
-    "*".to_string()
+pub fn sprite_for_view_reticle() -> Vec<String> {
+    let s = ["*", "**\n**", "***\n***\n***"];
+    s.iter().map(|s| s.to_string()).collect()
 }
 
 pub fn sprite_for_view_reticle_color() -> Color {
