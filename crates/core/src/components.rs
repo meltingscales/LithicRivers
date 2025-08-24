@@ -34,10 +34,52 @@ pub struct BlocksMovement;
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, Eq, PartialEq, Hash)]
 pub enum ItemKind {
-    Wood,
+    Log,
     Acorn,
     Stick,
     Nail,
+    Stone,
+    IronOre,
+    String,
+    StoneAxe,
+    StonePickaxe,
+    Torch,
+    Rope,
+    IronBar,
+}
+
+pub fn itemkind_name(kind: ItemKind) -> &'static str {
+    match kind {
+        ItemKind::Log => "Log",
+        ItemKind::Acorn => "Acorn",
+        ItemKind::Stick => "Stick",
+        ItemKind::Nail => "Nail",
+        ItemKind::Stone => "Stone",
+        ItemKind::IronOre => "IronOre",
+        ItemKind::String => "String",
+        ItemKind::StoneAxe => "StoneAxe",
+        ItemKind::StonePickaxe => "StonePickaxe",
+        ItemKind::Torch => "Torch",
+        ItemKind::Rope => "Rope",
+        ItemKind::IronBar => "IronBar",
+    }
+}
+
+pub fn itemkind_sprite_name(kind: ItemKind) -> &'static str {
+    match kind {
+        ItemKind::Log => "log",
+        ItemKind::Acorn => "acorn",
+        ItemKind::Stick => "stick",
+        ItemKind::Nail => "nail",
+        ItemKind::Stone => "stone",
+        ItemKind::IronOre => "ironore",
+        ItemKind::String => "string",
+        ItemKind::StoneAxe => "stoneaxe",
+        ItemKind::StonePickaxe => "stonepickaxe",
+        ItemKind::Torch => "torch",
+        ItemKind::Rope => "rope",
+        ItemKind::IronBar => "ironbar",
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

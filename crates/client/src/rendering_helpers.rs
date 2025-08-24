@@ -45,7 +45,7 @@ pub fn block_art_12x8_lines_for_position(
     pos: lithicrivers_core::components::Position,
     out: &mut Vec<Line<'static>>,
 ) -> bool {
-    use lithicrivers_core::tiles::TileKind;
+    // Removed unused import
 
     let kind = app.game.res.world.get_tile_cached(pos.x, pos.y, pos.z);
 

@@ -86,7 +86,7 @@ pub fn mining_system(world: &mut World, res: &mut Resources) -> bool {
             world.spawn((
                 Position { x, y, z },
                 DroppedItem {
-                    kind: ItemKind::Wood,
+                    kind: ItemKind::Log,
                     qty: wood_qty,
                 },
                 SpriteRef::new("items", "log"),
