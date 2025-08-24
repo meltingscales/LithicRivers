@@ -266,6 +266,13 @@ fn ui(f: &mut Frame, app: &App) {
 
 fn render_inventory(f: &mut Frame, app: &App, area: Rect) {
     let items: Vec<(&Item, &u32)> = app.inventory.iter().collect();
+    
+    // Get the selected recipe's ingredients if any
+    let recipe_ingredients: Vec<&Item> = app.selected_recipe.and_then(|idx| {
+        app.recipes.get(idx).map(|(ingredients, _, _)| {
+            ingredients.iter().map(|(item, _)| item).collect()
+        })
+    }).unwrap_or_default();
 
     let block = Block::default().borders(Borders::ALL).title(" Inventory ");
 
@@ -274,9 +281,15 @@ fn render_inventory(f: &mut Frame, app: &App, area: Rect) {
         .enumerate()
         .map(|(i, (item, &count))| {
             let is_selected = app.selected_item == Some(i) && app.selected_recipe.is_none();
+            let is_ingredient = recipe_ingredients.contains(&&item);
+            
             let style = if is_selected {
                 Style::default()
                     .fg(Color::Yellow)
+                    .add_modifier(Modifier::BOLD)
+            } else if is_ingredient && app.selected_recipe.is_some() {
+                Style::default()
+                    .fg(Color::Red)
                     .add_modifier(Modifier::BOLD)
             } else {
                 Style::default()
