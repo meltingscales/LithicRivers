@@ -278,7 +278,9 @@ fn render_help_panel(f: &mut Frame, app: &mut App, area: Rect) {
 
     let block = Block::default().borders(Borders::ALL).title("Help");
     let inner = block.inner(area);
-    let p = Paragraph::new(lines).alignment(Alignment::Left);
+    let p = Paragraph::new(lines)
+        .alignment(Alignment::Left)
+        .scroll((app.help_scroll, 0));
     f.render_widget(p, inner);
     f.render_widget(block, area);
 }
@@ -817,6 +819,20 @@ impl App {
             if self.keybinds.matches("ui", "CREDITS_SCROLL_DOWN", &key) {
                 self.credits_scroll = self.credits_scroll.saturating_add(1);
                 return Ok(());
+            }
+        }
+        // Help scroll
+        if self.menu_index == 4 {
+            match key {
+                KeyCode::Up => {
+                    self.help_scroll = self.help_scroll.saturating_sub(1);
+                    return Ok(());
+                }
+                KeyCode::Down => {
+                    self.help_scroll = self.help_scroll.saturating_add(1);
+                    return Ok(());
+                }
+                _ => {}
             }
         }
         // View Z slice up/down
