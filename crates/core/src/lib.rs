@@ -3,6 +3,7 @@ pub mod config;
 pub mod default_config;
 pub mod model;
 pub mod palettekey;
+pub mod recipe_handler;
 pub mod resources;
 pub mod save_load;
 mod structure;
@@ -53,7 +54,7 @@ impl Game {
         // Starting items
         starting_inv.add(ItemKind::Nail, 10);
         starting_inv.add(ItemKind::Acorn, 1);
-        starting_inv.add(ItemKind::Wood, 3);
+        starting_inv.add(ItemKind::Log, 3);
 
         // Spawn a player entity with a Position and starting inventory
         let player = world.spawn((
@@ -146,7 +147,7 @@ impl Game {
                         z: tz,
                     },
                     DroppedItem {
-                        kind: ItemKind::Wood,
+                        kind: ItemKind::Log,
                         qty: 1,
                     },
                     SpriteRef::new("items", "log"),

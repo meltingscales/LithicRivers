@@ -8,7 +8,7 @@ use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, Paragraph, Tabs, Wrap},
+    widgets::{Block, Borders, ListItem, ListState, Paragraph, Tabs, Wrap},
     Frame, Terminal,
 };
 use rust_embed::RustEmbed;
@@ -23,9 +23,13 @@ use tracing_appender as _tracing_appender_hidden; // avoid "unused extern crate"
 #[folder = "assets/"]
 struct EmbeddedAssets;
 
-use heck::AsTitleCase;
+// Removed unused import
+use lithicrivers_core::components::{
+    itemkind_name, itemkind_sprite_name, DroppedItem, Inventory as InvComp, ItemKind, ItemStack,
+    Position, SpriteRef,
+};
 use lithicrivers_core::config::ConfigManager;
-use lithicrivers_core::Game;
+use lithicrivers_core::{recipe_handler::RecipeHandler, Game};
 use std::collections::HashMap;
 mod audio;
 mod rendering_helpers;
@@ -39,10 +43,7 @@ use crate::sprite_constants::{sprite_for_view_reticle, sprite_for_view_reticle_c
 use crate::sprite_loader::{
     sprite_block_for_spriteref, sprite_block_for_tile, Scale, SpriteLoader,
 };
-use lithicrivers_core::components::{
-    DroppedItem, Inventory as InvComp, ItemKind, Position, SpriteRef,
-};
-use lithicrivers_core::model::body::{Body, BodyPart, BodyPartState, BodyPartType};
+use lithicrivers_core::model::body::{Body, BodyPart, BodyPartState};
 use lithicrivers_core::resources::world::CHUNK_SIZE;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -111,6 +112,10 @@ struct App {
     look_cursor: lithicrivers_core::components::Position,
     // Inventory panel state
     inv_selected: usize,
+    // Crafting system
+    recipe_handler: RecipeHandler,
+    craft_selected: usize,
+    craft_message: Option<(String, u8)>, // (message, timer)
     // Help panel state
     help_scroll: u16,
 }
@@ -163,7 +168,7 @@ fn render_inventory_list_only(f: &mut Frame, app: &mut App, area: Rect) {
                     app.inv_selected = inv.slots.len() - 1;
                 }
                 for (i, s) in inv.slots.iter().enumerate() {
-                    let label = format!("{} x{}", kind_name(s.kind), s.qty);
+                    let label = format!("{} x{}", itemkind_name(s.kind), s.qty);
                     if i == app.inv_selected {
                         list_lines.push(Line::from(Span::styled(
                             label,
@@ -431,6 +436,8 @@ impl App {
             }
         }
 
+        let recipe_handler = RecipeHandler::new();
+
         App {
             game,
             sprite_loader,
@@ -447,8 +454,12 @@ impl App {
             look_cursor,
             inv_selected: 0,
             help_scroll: 0,
+            recipe_handler,
+            craft_selected: 0,
+            craft_message: None,
         }
     }
+
     fn new() -> App {
         Self::new_with_seed(12345) //TODO use seed from config...
     }
@@ -596,6 +607,121 @@ impl App {
             return Ok(());
         }
 
+        // Crafting panel-specific navigation and actions
+        if self.current_tab == MenuTab::Crafting {
+            // Get player inventory for crafting checks
+            let inventory = get_player_inventory(self);
+            let recipe_count = self.recipe_handler.get_recipes().len();
+
+            // Navigation: Up/Down or North/South to move selection
+            if self.keybinds.matches("ui", "CREDITS_SCROLL_UP", &key)
+                || self.keybinds.matches("movement", "MOVE_NORTH", &key)
+            {
+                if recipe_count > 0 {
+                    if self.craft_selected == 0 {
+                        self.craft_selected = recipe_count - 1;
+                    } else {
+                        self.craft_selected = self.craft_selected.saturating_sub(1);
+                    }
+                }
+                return Ok(());
+            }
+            if self.keybinds.matches("ui", "CREDITS_SCROLL_DOWN", &key)
+                || self.keybinds.matches("movement", "MOVE_SOUTH", &key)
+            {
+                if recipe_count > 0 {
+                    self.craft_selected = (self.craft_selected + 1) % recipe_count;
+                }
+                return Ok(());
+            }
+
+            // Craft item on Enter or Activate key
+            if self.keybinds.matches("ui", "ACTIVATE", &key) || key == KeyCode::Enter {
+                if let Some(recipe) = self.recipe_handler.get_recipes().get(self.craft_selected) {
+                    if self
+                        .recipe_handler
+                        .can_craft(self.craft_selected, &inventory)
+                    {
+                        if let Some(e) = self.game.res.player_entity {
+                            if let Ok(mut inv) = self.game.world.get::<&mut InvComp>(e) {
+                                // Consume ingredients
+                                for &(item, qty) in recipe.ingredients {
+                                    let mut remaining = qty;
+                                    for slot in inv.slots.iter_mut() {
+                                        if slot.kind == item && remaining > 0 {
+                                            let consume = slot.qty.min(remaining);
+                                            slot.qty -= consume;
+                                            remaining -= consume;
+
+                                            if slot.qty == 0 {
+                                                // Remove empty slots - the inventory will be compacted later
+                                                // by the game's inventory management system
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // Add crafted item to inventory
+                                let mut added = false;
+                                for slot in inv.slots.iter_mut() {
+                                    if slot.kind == recipe.result && slot.qty < 1000 {
+                                        // Arbitrary max stack size
+                                        slot.qty = slot.qty.saturating_add(recipe.quantity);
+                                        added = true;
+                                        break;
+                                    }
+                                }
+
+                                if !added {
+                                    inv.slots.push(ItemStack {
+                                        kind: recipe.result,
+                                        qty: recipe.quantity,
+                                    });
+                                }
+
+                                self.craft_message = Some((
+                                    format!(
+                                        "Crafted {}x {}",
+                                        recipe.quantity,
+                                        itemkind_name(recipe.result)
+                                    ),
+                                    30, // Display for 30 frames (~0.5 seconds at 60 FPS)
+                                ));
+
+                                self.game.res.log(format!(
+                                    "Crafted {}x {}",
+                                    recipe.quantity,
+                                    itemkind_name(recipe.result)
+                                ));
+                            }
+                        }
+                    } else {
+                        self.craft_message = Some((
+                            "Not enough resources to craft this item".to_string(),
+                            60, // Display for 1 second at 60 FPS
+                        ));
+                    }
+                }
+                return Ok(());
+            }
+
+            // Don't process movement keys in crafting panel
+            if self.keybinds.matches("movement", "MOVE_NORTH", &key)
+                || self.keybinds.matches("movement", "MOVE_SOUTH", &key)
+                || self.keybinds.matches("movement", "MOVE_WEST", &key)
+                || self.keybinds.matches("movement", "MOVE_EAST", &key)
+                || self.keybinds.matches("movement", "MOVE_NORTHWEST", &key)
+                || self.keybinds.matches("movement", "MOVE_NORTHEAST", &key)
+                || self.keybinds.matches("movement", "MOVE_SOUTHWEST", &key)
+                || self.keybinds.matches("movement", "MOVE_SOUTHEAST", &key)
+                || self.keybinds.matches("movement", "WAIT", &key)
+                || self.keybinds.matches("movement", "MOVE_UP", &key)
+                || self.keybinds.matches("movement", "MOVE_DOWN", &key)
+            {
+                return Ok(());
+            }
+        }
+
         // Inventory panel-specific navigation and actions
         if self.current_tab == MenuTab::Inventory {
             // Move selection: support Up/Down keys and numpad 8/2 (MOVE_NORTH/SOUTH)
@@ -685,9 +811,11 @@ impl App {
                                 kind,
                                 qty: drop_qty,
                             },
-                            SpriteRef::new("items", item_sprite_name(kind)),
+                            SpriteRef::new("items", itemkind_sprite_name(kind)),
                         ));
-                        self.game.res.log(format!("Dropped 1 {}", kind_name(kind)));
+                        self.game
+                            .res
+                            .log(format!("Dropped 1 {}", itemkind_name(kind)));
                     }
                 }
                 return Ok(());
@@ -706,7 +834,7 @@ impl App {
                             inv.slots[idx].qty = inv.slots[idx].qty.saturating_add(1);
                             self.game
                                 .res
-                                .log(format!("Duplicated 1 {}", kind_name(kind)));
+                                .log(format!("Duplicated 1 {}", itemkind_name(kind)));
                         }
                     }
                 }
@@ -730,7 +858,7 @@ impl App {
                                 }
                                 self.game
                                     .res
-                                    .log(format!("Destroyed 1 {}", kind_name(kind)));
+                                    .log(format!("Destroyed 1 {}", itemkind_name(kind)));
                             }
                         }
                     }
@@ -1300,7 +1428,7 @@ fn render_inventory_panel(f: &mut Frame, app: &mut App, area: Rect) {
                     app.inv_selected = inv.slots.len() - 1;
                 }
                 for (i, s) in inv.slots.iter().enumerate() {
-                    let label = format!("{} x{}", kind_name(s.kind), s.qty);
+                    let label = format!("{} x{}", itemkind_name(s.kind), s.qty);
                     if i == app.inv_selected {
                         selected_kind = Some(s.kind);
                         selected_qty = s.qty;
@@ -1325,7 +1453,7 @@ fn render_inventory_panel(f: &mut Frame, app: &mut App, area: Rect) {
     let left_inner = left_block.inner(chunks[0]);
     let mut left_lines: Vec<Line<'static>> = Vec::new();
     if let Some(kind) = selected_kind {
-        let (category, sprite_name) = ("items", item_sprite_name(kind));
+        let (category, sprite_name) = ("items", itemkind_sprite_name(kind));
         let sd = app.sprite_loader.load_sprite(sprite_name, category);
         // Art
         if let Some(block) = sd.art12x8_sprites.first() {
@@ -1341,7 +1469,7 @@ fn render_inventory_panel(f: &mut Frame, app: &mut App, area: Rect) {
         // Spacer and description
         left_lines.push(Line::from(""));
         left_lines.push(Line::from(Span::styled(
-            format!("{} (x{})", kind_name(kind), selected_qty),
+            format!("{} (x{})", itemkind_name(kind), selected_qty),
             Style::default().fg(Color::Cyan),
         )));
         left_lines.push(Line::from(""));
@@ -1532,56 +1660,160 @@ fn render_body_panel(f: &mut Frame, app: &mut App, area: Rect) {
     f.render_widget(list_para, chunks[1]);
 }
 
-fn kind_name(kind: ItemKind) -> &'static str {
-    match kind {
-        ItemKind::Wood => "Wood",
-        ItemKind::Acorn => "Acorn",
-        ItemKind::Stick => "Stick",
-        ItemKind::Nail => "Nail",
-    }
-}
+// Helper function to get player's inventory as a HashMap
+fn get_player_inventory(app: &App) -> HashMap<ItemKind, u32> {
+    let mut inventory = HashMap::new();
 
-fn item_sprite_name(kind: ItemKind) -> &'static str {
-    match kind {
-        ItemKind::Wood => "log",
-        ItemKind::Acorn => "acorn",
-        ItemKind::Stick => "stick",
-        ItemKind::Nail => "nail",
+    if let Some(player_e) = app.game.res.player_entity {
+        if let Ok(inv) = app
+            .game
+            .world
+            .get::<&lithicrivers_core::components::Inventory>(player_e)
+        {
+            for item in &inv.slots {
+                *inventory.entry(item.kind).or_insert(0) += item.qty;
+            }
+        }
     }
+
+    inventory
 }
 
 fn render_crafting_panel(f: &mut Frame, app: &mut App, area: Rect) {
     let block = Block::default().borders(Borders::ALL).title("Crafting");
     let inner = block.inner(area);
 
-    let mut lines: Vec<Line> = Vec::new();
-    let width = inner.width as usize;
-    let height = inner.height as usize;
+    // Get player's inventory
+    let inventory = get_player_inventory(app);
 
-    // Build a staggered (diamond-like) pattern:
-    // rows alternate between starting with 0 and an offset, then repeating "CRAFTING" with wide spacing
-    let word = "CRAFTING";
-    let sep = "        "; // 8 spaces between words
-    let offset = "      "; // 6 spaces offset on alternating rows
-    for row in 0..height {
-        let mut s = String::new();
-        if row % 2 == 1 {
-            s.push_str(offset);
+    // Update craft message timer
+    if let Some((_, ref mut timer)) = &mut app.craft_message {
+        *timer = timer.saturating_sub(1);
+        if *timer == 0 {
+            app.craft_message = None;
         }
-        // fill line with repeating pattern
-        while s.len() < width + word.len() + sep.len() {
-            s.push_str(word);
-            s.push_str(sep);
-        }
-        // Trim to visible width
-        s.truncate(width);
-        lines.push(Line::from(Span::raw(s)));
     }
 
-    let p = Paragraph::new(lines)
-        .alignment(Alignment::Left)
-        .style(Style::default().fg(Color::Green));
-    f.render_widget(p, inner);
+    // Split the area into two parts: recipes list and details
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Min(1),
+            Constraint::Length(3), // For the message area
+        ])
+        .split(inner);
+
+    let main_area = chunks[0];
+    let message_area = chunks[1];
+
+    // Split main area into list and details
+    let chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+        .split(main_area);
+
+    let list_area = chunks[0];
+    let details_area = chunks[1];
+
+    // Render recipes list
+    let recipes: Vec<ListItem> = app
+        .recipe_handler
+        .get_recipes()
+        .iter()
+        .enumerate()
+        .map(|(i, recipe)| {
+            let can_craft = app.recipe_handler.can_craft(i, &inventory);
+            let style = if i == app.craft_selected {
+                Style::default().fg(Color::Yellow)
+            } else if can_craft {
+                Style::default().fg(Color::Green)
+            } else {
+                Style::default().fg(Color::Gray)
+            };
+
+            ListItem::new(Span::styled(
+                format!("• {}", itemkind_name(recipe.result)),
+                style,
+            ))
+        })
+        .collect();
+
+    let list = ratatui::widgets::List::new(recipes)
+        .highlight_style(Style::default().add_modifier(ratatui::style::Modifier::BOLD))
+        .highlight_symbol("> ");
+
+    f.render_stateful_widget(
+        list,
+        list_area,
+        &mut ListState::default().with_selected(Some(app.craft_selected)),
+    );
+
+    // Render recipe details
+    if let Some(recipe) = app.recipe_handler.get_recipes().get(app.craft_selected) {
+        let _can_craft = app.recipe_handler.can_craft(app.craft_selected, &inventory);
+        let mut details = vec![
+            Line::from(vec![
+                Span::styled("Item: ", Style::default().fg(Color::Yellow)),
+                Span::styled(
+                    itemkind_name(recipe.result),
+                    Style::default().fg(Color::Green),
+                ),
+            ]),
+            Line::from(""),
+            Line::from(Span::styled(
+                "Ingredients:",
+                Style::default().fg(Color::Yellow),
+            )),
+        ];
+
+        for &(item, qty) in recipe.ingredients {
+            let has_ingredient = inventory.get(&item).copied().unwrap_or(0) >= qty;
+            let style = if has_ingredient {
+                Style::default().fg(Color::Green)
+            } else {
+                Style::default().fg(Color::Red)
+            };
+
+            details.push(Line::from(Span::styled(
+                format!("  - {}x {}", qty, itemkind_name(item)),
+                style,
+            )));
+        }
+
+        details.push(Line::from(""));
+        details.push(Line::from(Span::styled(
+            format!(
+                "Yields: {}x {}",
+                recipe.quantity,
+                itemkind_name(recipe.result)
+            ),
+            Style::default().fg(Color::Cyan),
+        )));
+
+        let details_block = Block::default()
+            .borders(Borders::ALL)
+            .title("Recipe Details");
+
+        let details_paragraph = Paragraph::new(details)
+            .block(details_block)
+            .wrap(Wrap { trim: true });
+
+        f.render_widget(details_paragraph, details_area);
+    }
+
+    // Render message if any
+    if let Some((message, _)) = &app.craft_message {
+        let message_block = Block::default()
+            .borders(Borders::ALL)
+            .style(Style::default().fg(Color::Yellow));
+
+        let message_paragraph = Paragraph::new(message.as_str())
+            .block(message_block)
+            .alignment(Alignment::Center);
+
+        f.render_widget(message_paragraph, message_area);
+    }
+
     f.render_widget(block, area);
 }
 

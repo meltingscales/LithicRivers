@@ -2,6 +2,7 @@ use std::fs::File;
 use std::io::{BufReader, BufWriter};
 use std::path::Path;
 
+use crate::components::itemkind_sprite_name;
 use anyhow::{Context, Result};
 use hecs::World;
 use serde::{Deserialize, Serialize};
@@ -133,12 +134,7 @@ impl SaveData {
 
         // Dropped items
         for d in self.dropped_items.into_iter() {
-            let sprite_name = match d.kind {
-                ItemKind::Wood => "log",
-                ItemKind::Acorn => "acorn",
-                ItemKind::Stick => "stick",
-                ItemKind::Nail => "nail",
-            };
+            let sprite_name = itemkind_sprite_name(d.kind);
             game.world.spawn((
                 d.pos,
                 DroppedItem {
@@ -323,7 +319,7 @@ mod tests {
                 return inv
                     .slots
                     .iter()
-                    .find(|s| s.kind == crate::components::ItemKind::Wood)
+                    .find(|s| s.kind == crate::components::ItemKind::Log)
                     .map(|s| s.qty)
                     .unwrap_or(0);
             }
