@@ -6,9 +6,9 @@ use crossterm::{
 use ratatui::{
     backend::{Backend, CrosstermBackend},
     layout::{Alignment, Constraint, Direction, Layout, Rect},
-    style::{Color, Style},
+    style::{Color, Modifier, Style, Stylize as _},
     text::{Line, Span},
-    widgets::{Block, Borders, ListItem, ListState, Paragraph, Tabs, Wrap},
+    widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Tabs, Wrap},
     Frame, Terminal,
 };
 use rust_embed::RustEmbed;
@@ -1694,11 +1694,11 @@ fn render_crafting_panel(f: &mut Frame, app: &mut App, area: Rect) {
         }
     }
 
-    // Split the area into two parts: recipes list and details
+    // Split the area into three parts: recipes list, details, and inventory
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Min(1),
+            Constraint::Min(1),    // Main content
             Constraint::Length(3), // For the message area
         ])
         .split(inner);
@@ -1706,14 +1706,19 @@ fn render_crafting_panel(f: &mut Frame, app: &mut App, area: Rect) {
     let main_area = chunks[0];
     let message_area = chunks[1];
 
-    // Split main area into list and details
+    // Split main area into three columns
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
-        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+        .constraints([
+            Constraint::Percentage(33), // Recipe list
+            Constraint::Percentage(34), // Recipe details
+            Constraint::Percentage(33), // Inventory
+        ])
         .split(main_area);
 
     let list_area = chunks[0];
     let details_area = chunks[1];
+    let inventory_area = chunks[2];
 
     // Render recipes list
     let recipes: Vec<ListItem> = app
@@ -1724,11 +1729,17 @@ fn render_crafting_panel(f: &mut Frame, app: &mut App, area: Rect) {
         .map(|(i, recipe)| {
             let can_craft = app.recipe_handler.can_craft(i, &inventory);
             let style = if i == app.craft_selected {
-                Style::default().fg(Color::Yellow)
+                if can_craft {
+                    Style::default().fg(Color::Green)
+                } else {
+                    Style::default().fg(Color::Yellow)
+                }
             } else if can_craft {
-                Style::default().fg(Color::Green)
+                Style::default().fg(Color::DarkGray)
             } else {
-                Style::default().fg(Color::Gray)
+                Style::default()
+                    .fg(Color::DarkGray)
+                    .add_modifier(Modifier::DIM)
             };
 
             ListItem::new(Span::styled(
@@ -1740,7 +1751,8 @@ fn render_crafting_panel(f: &mut Frame, app: &mut App, area: Rect) {
 
     let list = ratatui::widgets::List::new(recipes)
         .highlight_style(Style::default().add_modifier(ratatui::style::Modifier::BOLD))
-        .highlight_symbol("> ");
+        .highlight_symbol("> ")
+        .block(Block::default().borders(Borders::ALL).title("Recipes"));
 
     f.render_stateful_widget(
         list,
@@ -1750,13 +1762,13 @@ fn render_crafting_panel(f: &mut Frame, app: &mut App, area: Rect) {
 
     // Render recipe details
     if let Some(recipe) = app.recipe_handler.get_recipes().get(app.craft_selected) {
-        let _can_craft = app.recipe_handler.can_craft(app.craft_selected, &inventory);
+        let can_craft = app.recipe_handler.can_craft(app.craft_selected, &inventory);
         let mut details = vec![
             Line::from(vec![
                 Span::styled("Item: ", Style::default().fg(Color::Yellow)),
                 Span::styled(
                     itemkind_name(recipe.result),
-                    Style::default().fg(Color::Green),
+                    Style::default().fg(if can_craft { Color::Green } else { Color::Red }),
                 ),
             ]),
             Line::from(""),
@@ -1767,17 +1779,24 @@ fn render_crafting_panel(f: &mut Frame, app: &mut App, area: Rect) {
         ];
 
         for &(item, qty) in recipe.ingredients {
-            let has_ingredient = inventory.get(&item).copied().unwrap_or(0) >= qty;
-            let style = if has_ingredient {
+            let available = inventory.get(&item).copied().unwrap_or(0);
+            let has_enough = available >= qty;
+            let style = if has_enough {
                 Style::default().fg(Color::Green)
             } else {
                 Style::default().fg(Color::Red)
             };
 
-            details.push(Line::from(Span::styled(
-                format!("  - {}x {}", qty, itemkind_name(item)),
-                style,
-            )));
+            details.push(Line::from(vec![
+                Span::styled("  - ", style),
+                Span::styled(format!("{}x {}", qty, itemkind_name(item)), style),
+                Span::styled(
+                    format!(" (have {})", available),
+                    Style::default()
+                        .fg(Color::DarkGray)
+                        .add_modifier(Modifier::DIM),
+                ),
+            ]));
         }
 
         details.push(Line::from(""));
@@ -1800,6 +1819,30 @@ fn render_crafting_panel(f: &mut Frame, app: &mut App, area: Rect) {
 
         f.render_widget(details_paragraph, details_area);
     }
+
+    // Render inventory
+    let inventory_block = Block::default().borders(Borders::ALL).title("Inventory");
+
+    let mut inventory_items: Vec<(ItemKind, u32)> = inventory.into_iter().collect();
+    inventory_items.sort_by_key(|&(kind, _)| itemkind_name(kind).to_string());
+
+    let inventory_list: Vec<ListItem> = inventory_items
+        .into_iter()
+        .map(|(kind, qty)| {
+            ListItem::new(Line::from(vec![
+                Span::raw("• "),
+                Span::styled(
+                    format!("{}: ", itemkind_name(kind)),
+                    Style::default().fg(Color::Cyan),
+                ),
+                Span::raw(format!("x{}", qty)),
+            ]))
+        })
+        .collect();
+
+    let inventory_widget = List::new(inventory_list).block(inventory_block);
+
+    f.render_widget(inventory_widget, inventory_area);
 
     // Render message if any
     if let Some((message, _)) = &app.craft_message {
