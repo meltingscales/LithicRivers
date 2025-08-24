@@ -267,12 +267,18 @@ fn ui(f: &mut Frame, app: &App) {
 fn render_inventory(f: &mut Frame, app: &App, area: Rect) {
     let items: Vec<(&Item, &u32)> = app.inventory.iter().collect();
     
-    // Get the selected recipe's ingredients if any
-    let recipe_ingredients: Vec<&Item> = app.selected_recipe.and_then(|idx| {
-        app.recipes.get(idx).map(|(ingredients, _, _)| {
-            ingredients.iter().map(|(item, _)| item).collect()
-        })
-    }).unwrap_or_default();
+    // Get the selected recipe's ingredients and result if any
+    let (recipe_ingredients, recipe_result) = app.selected_recipe.map_or_else(
+        || (Vec::new(), None),
+        |idx| {
+            if let Some((ingredients, result, _)) = app.recipes.get(idx) {
+                let ingredients: Vec<&Item> = ingredients.iter().map(|(item, _)| item).collect();
+                (ingredients, Some(result))
+            } else {
+                (Vec::new(), None)
+            }
+        },
+    );
 
     let block = Block::default().borders(Borders::ALL).title(" Inventory ");
 
@@ -282,10 +288,15 @@ fn render_inventory(f: &mut Frame, app: &App, area: Rect) {
         .map(|(i, (item, &count))| {
             let is_selected = app.selected_item == Some(i) && app.selected_recipe.is_none();
             let is_ingredient = recipe_ingredients.contains(&&item);
+            let is_result = recipe_result.map_or(false, |result_item| *result_item == **item);
             
             let style = if is_selected {
                 Style::default()
                     .fg(Color::Yellow)
+                    .add_modifier(Modifier::BOLD)
+            } else if is_result && app.selected_recipe.is_some() {
+                Style::default()
+                    .fg(Color::Green)
                     .add_modifier(Modifier::BOLD)
             } else if is_ingredient && app.selected_recipe.is_some() {
                 Style::default()
