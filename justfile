@@ -48,6 +48,7 @@ test:
 clean:
     rm -f  target/debug/lithicrivers-client
     rm -rf target/debug/config/
+    rm -rf artifacts/
 
 git-data:
     git describe --tags --abbrev=0 > VERSION
@@ -99,18 +100,20 @@ stage-artifacts-release: build-release build-demos-release
 ## Optional: build demo binaries (may require ratatui API updates)
 build-demos: fmt
     {{cargoz_env}} build -p lithicrivers-client --bin demo_inventory {{build_flags}}
+    {{cargoz_env}} build -p lithicrivers-client --bin demo_crafting {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin demo_body {{build_flags}}
-    {{cargoz_env}} build -p lithicrivers-client --bin beezzaroll_color_test {{build_flags}}
-    {{cargoz_env}} build -p lithicrivers-client --bin beezzaroll_sprite_test {{build_flags}}
-    {{cargoz_env}} build -p lithicrivers-client --bin portrait_sprite_test {{build_flags}}
+    {{cargoz_env}} build -p lithicrivers-client --bin demo_beezzaroll_color_test {{build_flags}}
+    {{cargoz_env}} build -p lithicrivers-client --bin demo_beezzaroll_sprite_test {{build_flags}}
+    {{cargoz_env}} build -p lithicrivers-client --bin demo_portrait_sprite_test {{build_flags}}
 
 # Optional: build demo binaries (release)
 build-demos-release: fmt
     {{cargoz_env}} build -p lithicrivers-client --bin demo_inventory --release {{build_flags}}
+    {{cargoz_env}} build -p lithicrivers-client --bin demo_crafting --release {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin demo_body --release {{build_flags}}
-    {{cargoz_env}} build -p lithicrivers-client --bin beezzaroll_color_test --release {{build_flags}}
-    {{cargoz_env}} build -p lithicrivers-client --bin beezzaroll_sprite_test --release {{build_flags}}
-    {{cargoz_env}} build -p lithicrivers-client --bin portrait_sprite_test --release {{build_flags}}
+    {{cargoz_env}} build -p lithicrivers-client --bin demo_beezzaroll_color_test --release {{build_flags}}
+    {{cargoz_env}} build -p lithicrivers-client --bin demo_beezzaroll_sprite_test --release {{build_flags}}
+    {{cargoz_env}} build -p lithicrivers-client --bin demo_portrait_sprite_test --release {{build_flags}}
 
 # Run debug build (alias for client)
 run-debug: client
