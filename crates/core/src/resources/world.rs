@@ -56,7 +56,7 @@ impl World {
     /// seed, chunk coords, and current gen_z so results are deterministic.
     fn add_tree_clusters(&self, cx: i64, cy: i64, chunk: &mut Chunk) {
         // Distinct salt so RNG stream differs from other features
-        let salt: u64 = 0x7B1E_CA11_u64 ^ (self.gen_z as u64).wrapping_mul(0x9E37);
+        let salt: u64 = 0x7B1E_CA11_u64 ^ (self.gen_z as u64).wrapping_mul(0x5EED);
         let mut rng = ChaCha20Rng::seed_from_u64(self.mix_coords(cx, cy) ^ salt);
 
         // 0-2 clusters per chunk, biased toward 0/1

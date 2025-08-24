@@ -162,7 +162,7 @@ pub fn pickup_system(world: &mut World, res: &mut Resources) {
             total += di.qty;
         }
         if total > 0 {
-            res.log(format!("Picked up {} Wood", total));
+            res.log(format!("Picked up {} items", total));
         }
     }
 

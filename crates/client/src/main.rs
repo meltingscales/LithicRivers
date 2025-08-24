@@ -45,13 +45,56 @@ use lithicrivers_core::components::{
 use lithicrivers_core::model::body::{Body, BodyPart, BodyPartState, BodyPartType};
 use lithicrivers_core::resources::world::CHUNK_SIZE;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum MenuTab {
+    World,
+    Body,
+    Inventory,
+    Menu,
+    Help,
+    Credits,
+    Quit,
+}
+
+impl MenuTab {
+    const COUNT: usize = 7;
+
+    fn next(self) -> Self {
+        match self {
+            MenuTab::World => MenuTab::Body,
+            MenuTab::Body => MenuTab::Inventory,
+            MenuTab::Inventory => MenuTab::Menu,
+            MenuTab::Menu => MenuTab::Help,
+            MenuTab::Help => MenuTab::Credits,
+            MenuTab::Credits => MenuTab::Quit,
+            MenuTab::Quit => MenuTab::World,
+        }
+    }
+
+    fn prev(self) -> Self {
+        match self {
+            MenuTab::World => MenuTab::Quit,
+            MenuTab::Body => MenuTab::World,
+            MenuTab::Inventory => MenuTab::Body,
+            MenuTab::Menu => MenuTab::Inventory,
+            MenuTab::Help => MenuTab::Menu,
+            MenuTab::Credits => MenuTab::Help,
+            MenuTab::Quit => MenuTab::Credits,
+        }
+    }
+
+    fn as_index(&self) -> usize {
+        *self as usize
+    }
+}
+
 struct App {
     game: Game,
     sprite_loader: SpriteLoader,
     should_quit: bool,
     // UI state: remember bottom menu rect for click handling
     bottom_menu_rect: Option<Rect>,
-    menu_index: usize,
+    current_tab: MenuTab,
     scale: Scale,
     audio: audio::AudioManager,
     // Credits panel state
@@ -227,7 +270,7 @@ impl Keybinds {
             "NUMPAD_8" => Some(KeyCode::Char('8')),
             "NUMPAD_9" => Some(KeyCode::Char('9')),
 
-            _ => None,
+            _ => panic!("unknown key: {}", s),
         }
     }
 }
@@ -391,7 +434,7 @@ impl App {
             should_quit: false,
             bottom_menu_rect: None,
             audio,
-            menu_index: 0,
+            current_tab: MenuTab::World,
             scale: Scale::Small,
             credits_text,
             credits_scroll: 0,
@@ -535,7 +578,7 @@ impl App {
             }
         }
         // Inventory: toggle item auto-pickup
-        if self.menu_index == 2
+        if self.current_tab == MenuTab::Inventory
             && self
                 .keybinds
                 .matches("inventory", "TOGGLE_ITEM_AUTO_PICKUP_KEY", &key)
@@ -551,7 +594,7 @@ impl App {
         }
 
         // Inventory panel-specific navigation and actions
-        if self.menu_index == 2 {
+        if self.current_tab == MenuTab::Inventory {
             // Move selection: support Up/Down keys and numpad 8/2 (MOVE_NORTH/SOUTH)
             if self.keybinds.matches("ui", "CREDITS_SCROLL_UP", &key)
                 || self.keybinds.matches("movement", "MOVE_NORTH", &key)
@@ -799,19 +842,15 @@ impl App {
             return Ok(());
         }
         if self.keybinds.matches("ui", "MENU_PREV", &key) {
-            if self.menu_index == 0 {
-                self.menu_index = 6;
-            } else {
-                self.menu_index -= 1;
-            }
+            self.current_tab = self.current_tab.prev();
             return Ok(());
         }
         if self.keybinds.matches("ui", "MENU_NEXT", &key) {
-            self.menu_index = (self.menu_index + 1) % 7;
+            self.current_tab = self.current_tab.next();
             return Ok(());
         }
         // Credits scroll
-        if self.menu_index == 5 {
+        if self.current_tab == MenuTab::Credits {
             if self.keybinds.matches("ui", "CREDITS_SCROLL_UP", &key) {
                 self.credits_scroll = self.credits_scroll.saturating_sub(1);
                 return Ok(());
@@ -822,7 +861,7 @@ impl App {
             }
         }
         // Help scroll
-        if self.menu_index == 4 {
+        if self.current_tab == MenuTab::Help {
             match key {
                 KeyCode::Up => {
                     self.help_scroll = self.help_scroll.saturating_sub(1);
@@ -837,7 +876,7 @@ impl App {
         }
         // View Z slice up/down
         if self.keybinds.matches("viewport", "VIEW_Z_UP", &key) {
-            if self.menu_index == 5 {
+            if self.current_tab == MenuTab::Credits {
                 self.credits_scroll = self.credits_scroll.saturating_sub(10);
             } else {
                 self.game.res.view_z = self.game.res.view_z.saturating_add(1);
@@ -845,7 +884,7 @@ impl App {
             return Ok(());
         }
         if self.keybinds.matches("viewport", "VIEW_Z_DOWN", &key) {
-            if self.menu_index == 5 {
+            if self.current_tab == MenuTab::Credits {
                 self.credits_scroll = self.credits_scroll.saturating_add(10);
             } else {
                 self.game.res.view_z = self.game.res.view_z.saturating_sub(1);
@@ -876,36 +915,36 @@ impl App {
     }
 
     fn activate_menu(&mut self) {
-        match self.menu_index {
-            0 => {
+        match self.current_tab {
+            MenuTab::World => {
                 // World (already active view)
                 self.game.res.log("World map active");
             }
-            1 => {
+            MenuTab::Body => {
                 // Body
                 self.game.res.log("Body panel active");
             }
-            2 => {
+            MenuTab::Inventory => {
                 // Inventory (placeholder)
                 self.game.res.log("Inventory panel (WIP)");
             }
-            3 => {
+            MenuTab::Menu => {
                 // Menu
                 self.game
                     .res
                     .log("Menu panel active (press S to Save, L to Load)");
             }
-            4 => {
+            MenuTab::Help => {
                 // Help
                 self.game.res.log("Help panel active");
             }
-            5 => {
+            MenuTab::Credits => {
                 // Credits
                 self.game
                     .res
                     .log("Credits panel active (Up/Down to scroll)");
             }
-            _ => {
+            MenuTab::Quit => {
                 // Quit
                 self.game.res.log("Quit requested (menu)");
                 tracing::info!(target: "game", "quit_requested input=menu tick={}", self.game.res.gametick);
@@ -1032,45 +1071,50 @@ fn ui(f: &mut Frame, app: &mut App) {
     f.render_widget(title, root_chunks[0]);
 
     // Main area depends on selected tab
-    if app.menu_index == 0 {
-        // World
-        if app.look_mode {
-            // With Look mode: show look panel on the right
-            let main_chunks = Layout::default()
-                .direction(Direction::Horizontal)
-                .constraints([Constraint::Min(20), Constraint::Length(24)])
-                .split(root_chunks[1]);
-            render_game_view(f, app, main_chunks[0]);
-            render_look_panel(f, app, main_chunks[1]);
-        } else {
-            // Show inventory list as sidebar, but hide Item detail panel
-            let main_chunks = Layout::default()
-                .direction(Direction::Horizontal)
-                .constraints([Constraint::Min(20), Constraint::Length(24)])
-                .split(root_chunks[1]);
-            render_game_view(f, app, main_chunks[0]);
-            render_inventory_list_only(f, app, main_chunks[1]);
+    match app.current_tab {
+        MenuTab::World => {
+            if app.look_mode {
+                // With Look mode: show look panel on the right
+                let main_chunks = Layout::default()
+                    .direction(Direction::Horizontal)
+                    .constraints([Constraint::Min(20), Constraint::Length(24)])
+                    .split(root_chunks[1]);
+                render_game_view(f, app, main_chunks[0]);
+                render_look_panel(f, app, main_chunks[1]);
+            } else {
+                // Show inventory list as sidebar, but hide Item detail panel
+                let main_chunks = Layout::default()
+                    .direction(Direction::Horizontal)
+                    .constraints([Constraint::Min(20), Constraint::Length(24)])
+                    .split(root_chunks[1]);
+                render_game_view(f, app, main_chunks[0]);
+                render_inventory_list_only(f, app, main_chunks[1]);
+            }
         }
-    } else if app.menu_index == 1 {
-        // Body: fullscreen body panel
-        render_body_panel(f, app, root_chunks[1]);
-    } else if app.menu_index == 2 {
-        // Inventory: fullscreen inventory panel
-        render_inventory_panel(f, app, root_chunks[1]);
-    } else if app.menu_index == 3 {
-        // Menu: save/load panel
-        render_menu_panel(f, app, root_chunks[1]);
-    } else if app.menu_index == 4 {
-        // Help: controls
-        render_help_panel(f, app, root_chunks[1]);
-    } else if app.menu_index == 5 {
-        // Credits: scrollable
-        render_credits_panel(f, app, root_chunks[1]);
-    } else if app.menu_index == 6 {
-        // Quit: show diamond pattern panel
-        render_quit_panel(f, app, root_chunks[1]);
-    } else {
-        // Unknown tab
+        MenuTab::Body => {
+            // Body panel
+            render_body_panel(f, app, root_chunks[1]);
+        }
+        MenuTab::Inventory => {
+            // Inventory panel
+            render_inventory_panel(f, app, root_chunks[1]);
+        }
+        MenuTab::Menu => {
+            // Menu panel
+            render_menu_panel(f, app, root_chunks[1]);
+        }
+        MenuTab::Help => {
+            // Help: controls
+            render_help_panel(f, app, root_chunks[1]);
+        }
+        MenuTab::Credits => {
+            // Credits: scrollable
+            render_credits_panel(f, app, root_chunks[1]);
+        }
+        MenuTab::Quit => {
+            // Quit: show diamond pattern panel
+            render_quit_panel(f, app, root_chunks[1]);
+        }
     }
 
     // Message log
@@ -1349,7 +1393,7 @@ fn render_bottom_menu(f: &mut Frame, app: &mut App, area: Rect) {
     ];
     let tabs = Tabs::new(titles)
         .block(Block::default().borders(Borders::ALL).title("Menu"))
-        .select(app.menu_index)
+        .select(app.current_tab.as_index())
         .style(Style::default().fg(Color::White))
         .highlight_style(Style::default().fg(Color::Green));
     f.render_widget(tabs, area);
