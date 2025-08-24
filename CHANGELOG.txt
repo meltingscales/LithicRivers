@@ -1,3 +1,8 @@
+# v0.7.1
+
+- add zooming in/out
+- make quit panel more fun
+
 # v0.7
 
 - entirely remove fluids due to lag and complexity...TODO I will add them back later
