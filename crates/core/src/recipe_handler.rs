@@ -15,6 +15,12 @@ pub struct RecipeHandler {
 impl RecipeHandler {
     pub fn new() -> Self {
         let recipes = vec![
+            // 3 Wooden Planks: 1x Log
+            Recipe {
+                ingredients: &[(ItemKind::Log, 1)],
+                result: ItemKind::WoodenPlank,
+                quantity: 3,
+            },
             // Stone Axe: 2x Stone + 1x Stick
             Recipe {
                 ingredients: &[(ItemKind::Stone, 2), (ItemKind::Stick, 1)],

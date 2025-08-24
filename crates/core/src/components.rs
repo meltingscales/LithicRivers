@@ -35,6 +35,7 @@ pub struct BlocksMovement;
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, Eq, PartialEq, Hash)]
 pub enum ItemKind {
     Log,
+    WoodenPlank,
     Acorn,
     Stick,
     Nail,
@@ -51,6 +52,7 @@ pub enum ItemKind {
 pub fn itemkind_name(kind: ItemKind) -> &'static str {
     match kind {
         ItemKind::Log => "Log",
+        ItemKind::WoodenPlank => "WoodenPlank",
         ItemKind::Acorn => "Acorn",
         ItemKind::Stick => "Stick",
         ItemKind::Nail => "Nail",
@@ -68,6 +70,7 @@ pub fn itemkind_name(kind: ItemKind) -> &'static str {
 pub fn itemkind_sprite_name(kind: ItemKind) -> &'static str {
     match kind {
         ItemKind::Log => "log",
+        ItemKind::WoodenPlank => "woodenplank",
         ItemKind::Acorn => "acorn",
         ItemKind::Stick => "stick",
         ItemKind::Nail => "nail",
