@@ -72,26 +72,40 @@ pub fn mining_system(world: &mut World, res: &mut Resources) -> bool {
     drop(pos);
     let t = res.world.get_tile_cached(x, y, z);
     use crate::tiles::TileKind;
+    use rand::Rng;
     match t {
         TileKind::Tree => {
-            // Chop tree: convert to Dirt and drop Wood
+            // Chop tree: convert to Dirt and drop items
             res.world.set_tile_cached(x, y, z, TileKind::Dirt);
-            // Spawn a DroppedItem entity at player's tile
-            let _ = world.spawn((
+
+            let mut rng = rand::thread_rng();
+            let wood_qty = rng.gen_range(2..=3);
+            let acorn_qty = rng.gen_range(1..=3);
+
+            // Spawn Wood
+            world.spawn((
                 Position { x, y, z },
                 DroppedItem {
                     kind: ItemKind::Wood,
-                    qty: 1,
+                    qty: wood_qty,
                 },
-                // Map item kind to sprite name under items/
-                SpriteRef::new(
-                    "items",
-                    match ItemKind::Wood {
-                        _ => "log",
-                    },
-                ),
+                SpriteRef::new("items", "log"),
             ));
-            res.log("You chop the tree. (+1 Wood)");
+
+            // Spawn Acorns
+            world.spawn((
+                Position { x, y, z },
+                DroppedItem {
+                    kind: ItemKind::Acorn,
+                    qty: acorn_qty,
+                },
+                SpriteRef::new("items", "acorn"),
+            ));
+
+            res.log(format!(
+                "You chop the tree. (+{} Wood, +{} Acorn)",
+                wood_qty, acorn_qty
+            ));
             true
         }
         _ => {
