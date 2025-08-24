@@ -3,7 +3,7 @@ Remove-Item -Recurse -Force artifacts -ErrorAction SilentlyContinue
 New-Item -ItemType Directory -Force -Path artifacts | Out-Null
 
 $bins = @(
-    'target/debug/lithicrivers-client.exe',
+    'target/debug/lithicrivers-client.exe'
 )
 
 # add demo bins using globbing
