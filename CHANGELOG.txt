@@ -1,3 +1,7 @@
+# v0.7.2
+
+- add crafting
+
 # v0.7.1
 
 - add zooming in/out
