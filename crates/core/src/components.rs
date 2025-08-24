@@ -70,7 +70,7 @@ pub fn itemkind_name(kind: ItemKind) -> &'static str {
 pub fn itemkind_sprite_name(kind: ItemKind) -> &'static str {
     match kind {
         ItemKind::Log => "log",
-        ItemKind::WoodenPlank => "woodenplank",
+        ItemKind::WoodenPlank => "wooden_plank",
         ItemKind::Acorn => "acorn",
         ItemKind::Stick => "stick",
         ItemKind::Nail => "nail",
