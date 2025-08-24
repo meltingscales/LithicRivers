@@ -1073,14 +1073,20 @@ fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
     // Sync world generation Z with current view slice
     app.game.res.world.set_generation_z(app.game.res.view_z);
 
+    let scale = app.scale.as_u32() as i32;
+
     // Compute world-space bounds for current viewport and prefetch chunks
-    // Center the viewport on the tracked viewport center, not always the player
     let center_x = app.game.res.view_x;
     let center_y = app.game.res.view_y;
-    let left = center_x - (target_cols as i32 / 2);
-    let top = center_y - (target_rows as i32 / 2);
-    let right = left + target_cols as i32 - 1;
-    let bottom = top + target_rows as i32 - 1;
+
+    let world_cols = (target_cols as f32 / scale as f32).ceil() as i32;
+    let world_rows = (target_rows as f32 / scale as f32).ceil() as i32;
+
+    let left = center_x - world_cols / 2;
+    let top = center_y - world_rows / 2;
+    let right = left + world_cols;
+    let bottom = top + world_rows;
+
     app.game
         .res
         .world
@@ -1112,9 +1118,14 @@ fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
     for row in 0..target_rows {
         let mut spans = Vec::with_capacity(target_cols);
         for col in 0..target_cols {
-            let world_x = left + col as i32;
-            let world_y = top + row as i32;
+            let offset_x = col as i32 - target_cols as i32 / 2;
+            let offset_y = row as i32 - target_rows as i32 / 2;
+            let world_x = center_x + offset_x.div_euclid(scale);
+            let world_y = center_y + offset_y.div_euclid(scale);
             let world_z = app.game.res.view_z;
+
+            let sprite_x = (col as i32 - target_cols as i32 / 2).rem_euclid(scale);
+            let sprite_y = (row as i32 - target_rows as i32 / 2).rem_euclid(scale);
 
             // Base tile color/glyph
             let tile_kind = app
@@ -1124,20 +1135,30 @@ fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
                 .get_tile_cached(world_x, world_y, world_z);
 
             // render look mode cursor first
-            //TODO make this blink and cycle through overlapping tiles/entities
             if app.look_mode
                 && world_x == app.look_cursor.x
                 && world_y == app.look_cursor.y
                 && app.game.res.view_z == app.look_cursor.z
             {
+                let reticle_sprites = sprite_for_view_reticle();
+                let scale_index = (app.scale.as_u32() - 1) as usize;
+                let reticle_block = reticle_sprites
+                    .get(scale_index)
+                    .unwrap_or(&reticle_sprites[0]);
+
+                let reticle_char = reticle_block
+                    .lines()
+                    .nth(sprite_y as usize)
+                    .and_then(|line| line.chars().nth(sprite_x as usize))
+                    .unwrap_or(' ');
+
                 spans.push(Span::styled(
-                    sprite_for_view_reticle(),
+                    reticle_char.to_string(),
                     Style::default().fg(sprite_for_view_reticle_color()),
                 ));
                 continue;
             }
 
-            // Fluids removed: fall through to entities/tiles
             // Entities next
             if let Some((cat, name)) = ent_overlay.get(&(world_x, world_y)) {
                 let sr = lithicrivers_core::components::SpriteRef {
@@ -1146,16 +1167,30 @@ fn render_game_view(f: &mut Frame, app: &mut App, area: Rect) {
                 };
                 let (block, color) =
                     sprite_block_for_spriteref(&mut app.sprite_loader, &sr, app.scale);
-                let ech = block.chars().next().unwrap_or(' ');
-                spans.push(Span::styled(ech.to_string(), Style::default().fg(color)));
+                let sprite_char = block
+                    .lines()
+                    .nth(sprite_y as usize)
+                    .and_then(|line| line.chars().nth(sprite_x as usize))
+                    .unwrap_or(' ');
+                spans.push(Span::styled(
+                    sprite_char.to_string(),
+                    Style::default().fg(color),
+                ));
             } else {
                 let (block, color) =
                     sprite_block_for_tile(&mut app.sprite_loader, tile_kind, app.scale)
                         .unwrap_or_else(|| {
                             panic!("Could not find sprite for tile kind: {:?}", tile_kind)
                         });
-                let ch = block.chars().next().unwrap_or(' ');
-                spans.push(Span::styled(ch.to_string(), Style::default().fg(color)));
+                let sprite_char = block
+                    .lines()
+                    .nth(sprite_y as usize)
+                    .and_then(|line| line.chars().nth(sprite_x as usize))
+                    .unwrap_or(' ');
+                spans.push(Span::styled(
+                    sprite_char.to_string(),
+                    Style::default().fg(color),
+                ));
             }
         }
         lines.push(Line::from(spans));

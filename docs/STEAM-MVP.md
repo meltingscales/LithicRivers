@@ -4,12 +4,7 @@
 
 - structure gen seems like it gets "stretched" across infinite z?
 
-- make the "Quit" menu panel have text when it's selected, just like the other menus.
-  - make it just a periodic "QUIT " repeated in a diamond pattern in the center of the panel with 3 spaces before every other QUIT
-
-- make the player inventory spawn with these items:
-  - 10 nails
-  - what else would a humanoid robot carry?
+- I'd like for zooming in/out to work. In the original python version, i.e. @python-old/lithicrivers/game/core.py#L1023-1025 , we allowed the player to zoom in and out. We do this here in our rust code, i.e. @crates/client/src/main.rs#L1133-1138 , but we don't actually render 2x2 or 3x3 blocks. Let's work on doing that!
 
 - first crafting item: a weapon: plank nail bat:
   - 1 wooden plank
