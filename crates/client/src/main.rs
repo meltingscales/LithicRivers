@@ -50,6 +50,7 @@ enum MenuTab {
     World,
     Body,
     Inventory,
+    Crafting,
     Menu,
     Help,
     Credits,
@@ -57,13 +58,14 @@ enum MenuTab {
 }
 
 impl MenuTab {
-    const COUNT: usize = 7;
+    const COUNT: usize = 8;
 
     fn next(self) -> Self {
         match self {
             MenuTab::World => MenuTab::Body,
             MenuTab::Body => MenuTab::Inventory,
-            MenuTab::Inventory => MenuTab::Menu,
+            MenuTab::Inventory => MenuTab::Crafting,
+            MenuTab::Crafting => MenuTab::Menu,
             MenuTab::Menu => MenuTab::Help,
             MenuTab::Help => MenuTab::Credits,
             MenuTab::Credits => MenuTab::Quit,
@@ -76,7 +78,8 @@ impl MenuTab {
             MenuTab::World => MenuTab::Quit,
             MenuTab::Body => MenuTab::World,
             MenuTab::Inventory => MenuTab::Body,
-            MenuTab::Menu => MenuTab::Inventory,
+            MenuTab::Crafting => MenuTab::Inventory,
+            MenuTab::Menu => MenuTab::Crafting,
             MenuTab::Help => MenuTab::Menu,
             MenuTab::Credits => MenuTab::Help,
             MenuTab::Quit => MenuTab::Credits,
@@ -950,6 +953,10 @@ impl App {
                 tracing::info!(target: "game", "quit_requested input=menu tick={}", self.game.res.gametick);
                 self.should_quit = true;
             }
+            MenuTab::Crafting => {
+                // Crafting
+                self.game.res.log("Crafting panel active");
+            }
         }
     }
 }
@@ -1090,6 +1097,10 @@ fn ui(f: &mut Frame, app: &mut App) {
                 render_game_view(f, app, main_chunks[0]);
                 render_inventory_list_only(f, app, main_chunks[1]);
             }
+        }
+        MenuTab::Crafting => {
+            // Crafting panel
+            render_crafting_panel(f, app, root_chunks[1]);
         }
         MenuTab::Body => {
             // Body panel
@@ -1386,6 +1397,7 @@ fn render_bottom_menu(f: &mut Frame, app: &mut App, area: Rect) {
         Span::raw("World"),
         Span::raw("Body"),
         Span::raw("Inventory"),
+        Span::raw("Crafting"),
         Span::raw("Menu"),
         Span::raw("Help"),
         Span::raw("Credits"),
@@ -1536,6 +1548,41 @@ fn item_sprite_name(kind: ItemKind) -> &'static str {
         ItemKind::Stick => "stick",
         ItemKind::Nail => "nail",
     }
+}
+
+fn render_crafting_panel(f: &mut Frame, app: &mut App, area: Rect) {
+    let block = Block::default().borders(Borders::ALL).title("Crafting");
+    let inner = block.inner(area);
+
+    let mut lines: Vec<Line> = Vec::new();
+    let width = inner.width as usize;
+    let height = inner.height as usize;
+
+    // Build a staggered (diamond-like) pattern:
+    // rows alternate between starting with 0 and an offset, then repeating "CRAFTING" with wide spacing
+    let word = "CRAFTING";
+    let sep = "        "; // 8 spaces between words
+    let offset = "      "; // 6 spaces offset on alternating rows
+    for row in 0..height {
+        let mut s = String::new();
+        if row % 2 == 1 {
+            s.push_str(offset);
+        }
+        // fill line with repeating pattern
+        while s.len() < width + word.len() + sep.len() {
+            s.push_str(word);
+            s.push_str(sep);
+        }
+        // Trim to visible width
+        s.truncate(width);
+        lines.push(Line::from(Span::raw(s)));
+    }
+
+    let p = Paragraph::new(lines)
+        .alignment(Alignment::Left)
+        .style(Style::default().fg(Color::Green));
+    f.render_widget(p, inner);
+    f.render_widget(block, area);
 }
 
 fn render_look_panel(f: &mut Frame, app: &mut App, area: Rect) {
