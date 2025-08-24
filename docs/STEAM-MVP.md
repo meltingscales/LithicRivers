@@ -4,8 +4,6 @@
 
 - structure gen seems like it gets "stretched" across infinite z?
 
-- I'd like for zooming in/out to work. In the original python version, i.e. @python-old/lithicrivers/game/core.py#L1023-1025 , we allowed the player to zoom in and out. We do this here in our rust code, i.e. @crates/client/src/main.rs#L1133-1138 , but we don't actually render 2x2 or 3x3 blocks. Let's work on doing that!
-
 - first crafting item: a weapon: plank nail bat:
   - 1 wooden plank
   - 5 nails
@@ -14,8 +12,6 @@
   - TODO- make render_help_panel draw keybind names from the config
 
 - fix windows exe consuming keystrokes way too fast (should we switch shells on windows?? does this only happen because im in a vm??)
-
-- fix steam_cmd for steam release... see https://stackoverflow.com/questions/79740593/steamworks-vague-steamcmd-error-when-publishing
 
 - add some more empty space to the Lithic Rivers biome, carve out meandering "cave room" and "empty river" paths using noise/erosion plus thick vectors
 
