@@ -2,7 +2,7 @@
 
 "AppBuild"
 {
-    "AppID"        "950938"
+    "AppID"        "3940720"
     "Desc"         "Windows-only build"
     "BuildOutput"  "./steampipe_out/"
     "ContentRoot"  "./artifacts/"
