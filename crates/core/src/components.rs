@@ -47,6 +47,7 @@ pub enum ItemKind {
     Torch,
     Rope,
     IronBar,
+    WoodenShavings,
 }
 
 pub fn itemkind_name(kind: ItemKind) -> &'static str {
@@ -65,6 +66,7 @@ pub fn itemkind_name(kind: ItemKind) -> &'static str {
         ItemKind::Torch => "Torch",
         ItemKind::Rope => "Rope",
         ItemKind::IronBar => "Iron Bar",
+        ItemKind::WoodenShavings => "Wooden Shavings",
     }
 }
 
@@ -84,6 +86,7 @@ pub fn itemkind_sprite_name(kind: ItemKind) -> &'static str {
         ItemKind::Torch => "torch",
         ItemKind::Rope => "rope",
         ItemKind::IronBar => "ironbar",
+        ItemKind::WoodenShavings => "wooden_shavings",
     }
 }
 

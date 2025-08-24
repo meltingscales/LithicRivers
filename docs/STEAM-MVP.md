@@ -4,13 +4,6 @@
 
 - structure gen seems like it gets "stretched" across infinite z?
 
-- first crafting item: a weapon: plank nail bat:
-  - 1 wooden plank
-  - 5 nails
-
-- All keybinds should be shown in the help panel.
-  - TODO- make render_help_panel draw keybind names from the config
-
 - fix windows exe consuming keystrokes way too fast (should we switch shells on windows?? does this only happen because im in a vm??)
 
 - add some more empty space to the Lithic Rivers biome, carve out meandering "cave room" and "empty river" paths using noise/erosion plus thick vectors
@@ -38,8 +31,8 @@
   - [x] Mining action with SFX and message log feedback
   - [ ] Make building/placing blocks/mining fun and fast!
     - [ ] vim-style build/break toggle?
-- [ ] Simple crafting system
-  - [ ] 3 starter recipes (stick, plank, torch) with deterministic outputs
+- [x] Simple crafting system
+  - [x] 3 starter recipes (stick, plank, torch) with deterministic outputs
 - [ ] Day/night cycle
   - [ ] Full cycle length ~10–20 minutes with visual cue
 - [ ] Basic survival mechanics (damage, repair, body parts)
