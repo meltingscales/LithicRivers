@@ -50,24 +50,26 @@ pub enum ItemKind {
 }
 
 pub fn itemkind_name(kind: ItemKind) -> &'static str {
+    // Corresponds to a human-readable name for the item kind.
     match kind {
         ItemKind::Log => "Log",
-        ItemKind::WoodenPlank => "WoodenPlank",
+        ItemKind::WoodenPlank => "Wooden Plank",
         ItemKind::Acorn => "Acorn",
         ItemKind::Stick => "Stick",
         ItemKind::Nail => "Nail",
         ItemKind::Stone => "Stone",
-        ItemKind::IronOre => "IronOre",
+        ItemKind::IronOre => "Iron Ore",
         ItemKind::String => "String",
-        ItemKind::StoneAxe => "StoneAxe",
-        ItemKind::StonePickaxe => "StonePickaxe",
+        ItemKind::StoneAxe => "Stone Axe",
+        ItemKind::StonePickaxe => "Stone Pickaxe",
         ItemKind::Torch => "Torch",
         ItemKind::Rope => "Rope",
-        ItemKind::IronBar => "IronBar",
+        ItemKind::IronBar => "Iron Bar",
     }
 }
 
 pub fn itemkind_sprite_name(kind: ItemKind) -> &'static str {
+    // Corresponds to the folder within assets/sprites/items
     match kind {
         ItemKind::Log => "log",
         ItemKind::WoodenPlank => "wooden_plank",
