@@ -87,23 +87,14 @@ stage-artifacts: build build-demos
     rm -rf artifacts/
     mkdir -p artifacts/
     cp -f target/debug/lithicrivers-client artifacts/
-    cp -f target/debug/demo_inventory artifacts/
-    cp -f target/debug/demo_body artifacts/
-    cp -f target/debug/demo_inventory artifacts/
-    cp -f target/debug/beezzaroll_color_test artifacts/
-    cp -f target/debug/beezzaroll_sprite_test artifacts/
-    cp -f target/debug/portrait_sprite_test artifacts/
+    cp -f target/debug/demo_* artifacts/
 
 # Stage release artifacts
 stage-artifacts-release: build-release build-demos-release
     rm -rf artifacts/
     mkdir -p artifacts/
     cp -f target/release/lithicrivers-client artifacts/
-    cp -f target/release/demo_inventory artifacts/
-    cp -f target/release/demo_body artifacts/
-    cp -f target/release/beezzaroll_color_test artifacts/
-    cp -f target/release/beezzaroll_sprite_test artifacts/
-    cp -f target/release/portrait_sprite_test artifacts/
+    cp -f target/release/demo_* artifacts/
 
 ## Optional: build demo binaries (may require ratatui API updates)
 build-demos: fmt
@@ -140,17 +131,21 @@ demo-intro:
 demo-inventory:
     {{cargoz_env}} run -p lithicrivers-client --bin demo_inventory
 
+# Run the Crafting UI demo
+demo-crafting:
+    {{cargoz_env}} run -p lithicrivers-client --bin demo_crafting
+
 # Run the Sprite Test demo
 demo-sprite-test:
-    {{cargoz_env}} run -p lithicrivers-client --bin beezzaroll_sprite_test
+    {{cargoz_env}} run -p lithicrivers-client --bin demo_beezzaroll_sprite_test
 
 # Run the Color Test demo
 demo-color-test:
-    {{cargoz_env}} run -p lithicrivers-client --bin beezzaroll_color_test
+    {{cargoz_env}} run -p lithicrivers-client --bin demo_beezzaroll_color_test
 
 # Run the portrait sprite test
 demo-portrait-sprite-test:
-    {{cargoz_env}} run -p lithicrivers-client --bin portrait_sprite_test
+    {{cargoz_env}} run -p lithicrivers-client --bin demo_portrait_sprite_test
 
 # Run the Body/Repair UI demo
 demo-body:
