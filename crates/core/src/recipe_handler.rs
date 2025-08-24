@@ -3,6 +3,7 @@ use std::collections::HashMap;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Recipe {
+    pub name: &'static str,
     pub ingredients: &'static [(ItemKind, u32)],
     pub result: ItemKind,
     pub quantity: u32,
@@ -17,36 +18,63 @@ impl RecipeHandler {
         let recipes = vec![
             // 3 Wooden Planks: 1x Log
             Recipe {
+                name: "Wooden Planks",
                 ingredients: &[(ItemKind::Log, 1)],
                 result: ItemKind::WoodenPlank,
                 quantity: 3,
             },
+            // 2 sticks: 1x plank
+            Recipe {
+                name: "Sticks",
+                ingredients: &[(ItemKind::WoodenPlank, 1)],
+                result: ItemKind::Stick,
+                quantity: 2,
+            },
+            // 1 wood shavings: 1x acorn
+            Recipe {
+                name: "Wooden Shavings from Acorn",
+                ingredients: &[(ItemKind::Acorn, 1)],
+                result: ItemKind::WoodenShavings,
+                quantity: 1,
+            },
+            // 1 wood shavings: 1x stick
+            Recipe {
+                name: "Wooden Shavings from Stick",
+                ingredients: &[(ItemKind::Stick, 1)],
+                result: ItemKind::WoodenShavings,
+                quantity: 1,
+            },
             // Stone Axe: 2x Stone + 1x Stick
             Recipe {
+                name: "Stone Axe",
                 ingredients: &[(ItemKind::Stone, 2), (ItemKind::Stick, 1)],
                 result: ItemKind::StoneAxe,
                 quantity: 1,
             },
             // Stone Pickaxe: 3x Stone + 2x Stick
             Recipe {
+                name: "Stone Pickaxe",
                 ingredients: &[(ItemKind::Stone, 3), (ItemKind::Stick, 2)],
                 result: ItemKind::StonePickaxe,
                 quantity: 1,
             },
             // Torch: 1x Stick + 1x String
             Recipe {
+                name: "Torch",
                 ingredients: &[(ItemKind::Stick, 1), (ItemKind::String, 1)],
                 result: ItemKind::Torch,
                 quantity: 4,
             },
             // Rope: 3x String
             Recipe {
+                name: "Rope",
                 ingredients: &[(ItemKind::String, 3)],
                 result: ItemKind::Rope,
                 quantity: 1,
             },
             // Iron Bar: 2x Iron Ore
             Recipe {
+                name: "Iron Bar",
                 ingredients: &[(ItemKind::IronOre, 2)],
                 result: ItemKind::IronBar,
                 quantity: 1,

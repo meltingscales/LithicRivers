@@ -1765,9 +1765,13 @@ fn render_crafting_panel(f: &mut Frame, app: &mut App, area: Rect) {
         let can_craft = app.recipe_handler.can_craft(app.craft_selected, &inventory);
         let mut details = vec![
             Line::from(vec![
-                Span::styled("Item: ", Style::default().fg(Color::Yellow)),
+                Span::styled("Recipe Name: ", Style::default().fg(Color::Yellow)),
+                Span::styled(recipe.name, Style::default().fg(Color::Yellow)),
+            ]),
+            Line::from(vec![
+                Span::styled("Result: ", Style::default().fg(Color::Yellow)),
                 Span::styled(
-                    itemkind_name(recipe.result),
+                    format!("{}x {}", recipe.quantity, itemkind_name(recipe.result)),
                     Style::default().fg(if can_craft { Color::Green } else { Color::Red }),
                 ),
             ]),
@@ -1798,16 +1802,6 @@ fn render_crafting_panel(f: &mut Frame, app: &mut App, area: Rect) {
                 ),
             ]));
         }
-
-        details.push(Line::from(""));
-        details.push(Line::from(Span::styled(
-            format!(
-                "Yields: {}x {}",
-                recipe.quantity,
-                itemkind_name(recipe.result)
-            ),
-            Style::default().fg(Color::Cyan),
-        )));
 
         let details_block = Block::default()
             .borders(Borders::ALL)
