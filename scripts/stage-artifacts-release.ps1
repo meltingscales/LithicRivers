@@ -4,12 +4,11 @@ New-Item -ItemType Directory -Force -Path artifacts | Out-Null
 
 $bins = @(
     'target/release/lithicrivers-client.exe',
-    'target/release/demo_inventory.exe',
-    'target/release/demo_body.exe',
-    'target/release/beezzaroll_color_test.exe',
-    'target/release/beezzaroll_sprite_test.exe',
-    'target/release/portrait_sprite_test.exe'
 )
+
+# add demo bins using globbing
+$bins += Get-ChildItem -Path 'target/release/demo_*.exe' -Name
+
 foreach ($b in $bins) 
 { 
     if (Test-Path $b) 
