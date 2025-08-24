@@ -36,7 +36,6 @@ install:
     rustup toolchain install {{toolchain}}
     rustup override set {{toolchain}}
     rustup default {{toolchain}}
-    @just _install-dev-deps
 
 # Run security audit
 security:
