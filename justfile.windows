@@ -43,6 +43,7 @@ build-demos:
     cargo build -p lithicrivers-client --bin demo_beezzaroll_color_test
     cargo build -p lithicrivers-client --bin demo_beezzaroll_sprite_test
     cargo build -p lithicrivers-client --bin demo_portrait_sprite_test
+    cargo build -p lithicrivers-client --bin demo_combat_chrono_trigger
 
 build-demos-release:
     cargo build -p lithicrivers-client --bin demo_inventory --release
@@ -51,6 +52,7 @@ build-demos-release:
     cargo build -p lithicrivers-client --bin demo_beezzaroll_color_test --release
     cargo build -p lithicrivers-client --bin demo_beezzaroll_sprite_test --release
     cargo build -p lithicrivers-client --bin demo_portrait_sprite_test --release
+    cargo build -p lithicrivers-client --bin demo_combat_chrono_trigger --release
 
 # Run debug build
 client: build

@@ -19,6 +19,10 @@
   - abandoned factory
   - abandoned research station
 
+- I'd like you to make me a chrono-trigger style combat UI, where 1-3 enemies can be on-screen at a single time.
+  - This is just a UI demo, so store it in "demo_combat_chrono_trigger.rs".
+  - Get inspired by existing code in demo_portrait_sprite_test.rs, demo_inventory.rs, demo_body.rs, demo_crafting.rs.
+  - Each enemy should have a portrait, name, and health bar. The enemy portraits are 12x8 ascii characters. Feel free to just render random mandelbrot fractal ascii for now.
 
 ## Core Gameplay Loop (Must Have)
 - [ ] Basic world generation with multiple biomes
