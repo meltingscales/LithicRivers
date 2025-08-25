@@ -30,7 +30,7 @@ build: git-data copy-config-data
 stage-artifacts: build build-demos
     powershell.exe scripts/stage-artifacts.ps1
 
-build-release: git-data copy-config-data
+build-release: git-data copy-config-data build-demos-release
     cargo build --workspace --release -j {{cpu_count}}
 
 stage-artifacts-release: build-release build-demos-release
