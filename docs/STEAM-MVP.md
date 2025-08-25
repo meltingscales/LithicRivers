@@ -2,6 +2,8 @@
 
 ## Small temp list
 
+- fix windows panic! on malformed sprite sheet
+
 - structure gen seems like it gets "stretched" across infinite z?
 
 - fix windows exe consuming keystrokes way too fast (should we switch shells on windows?? does this only happen because im in a vm??)
