@@ -22,6 +22,10 @@ pub struct Glyph(pub char);
 #[derive(Debug, Clone, Copy)]
 pub struct Sheep;
 
+/// Marker for a simple wandering feral dog
+#[derive(Debug, Clone, Copy)]
+pub struct FeralDog;
+
 /// Marker for entities that block movement
 #[derive(Debug, Clone, Copy)]
 pub struct BlocksMovement;
@@ -112,6 +116,7 @@ impl ItemStack {
 pub enum EntityKind {
     Player,
     Sheep,
+    FeralDog,
     Bot,
     Turret,
     Chest,
