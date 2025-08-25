@@ -417,6 +417,10 @@ impl World {
         v ^ 0xC0FFEE
     }
 
+    pub fn is_passable(&self, x: i32, y: i32, z: i32) -> bool {
+        self.get_tile(x, y, z).is_passable()
+    }
+
     pub fn get_tile(&self, x: i32, y: i32, z: i32) -> TileKind {
         let cx = Self::div_floor(x, CHUNK_SIZE) as i64;
         let cy = Self::div_floor(y, CHUNK_SIZE) as i64;
