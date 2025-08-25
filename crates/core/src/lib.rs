@@ -1,6 +1,7 @@
 pub mod components;
 pub mod config;
 pub mod default_config;
+pub mod keycode_mapping;
 pub mod model;
 pub mod palettekey;
 pub mod recipe_handler;
