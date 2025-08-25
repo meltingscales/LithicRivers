@@ -1,7 +1,8 @@
 use std::error::Error;
 use std::io::{self, Stdout};
 use std::time::{Duration, Instant};
-use rand::Rng;
+use std::collections::VecDeque;
+use rand::seq::SliceRandom;
 
 use crossterm::{
     event::{self, Event, KeyCode},
@@ -11,10 +12,10 @@ use crossterm::{
 
 use ratatui::{
     backend::{Backend, CrosstermBackend},
-    layout::{Alignment, Constraint, Layout, Rect},
+    layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Style, Stylize},
-    text::{Line, Span},
-    widgets::{Block, Borders, Gauge, Paragraph},
+    text::Line,
+    widgets::{Block, Borders, Gauge, Paragraph, Wrap},
     Frame, Terminal,
 };
 
@@ -42,6 +43,7 @@ struct Move {
     cooldown: u32,      // in ticks
     current_cooldown: u32,
     effect: Option<Effect>,
+    time_cost: u32, // How many ticks this move takes to execute
 }
 
 #[derive(Debug, Clone)]
@@ -87,6 +89,7 @@ impl Player {
                     cooldown: 0,
                     current_cooldown: 0,
                     effect: None,
+                    time_cost: 3, // Fastest move
                 },
                 Move {
                     name: "Escape".to_string(),
@@ -96,6 +99,7 @@ impl Player {
                     cooldown: 0,
                     current_cooldown: 0,
                     effect: None,
+                    time_cost: 5,
                 },
                 Move {
                     name: "Fireball (AoE)".to_string(),
@@ -105,6 +109,7 @@ impl Player {
                     cooldown: 3,
                     current_cooldown: 0,
                     effect: None,
+                    time_cost: 8,
                 },
                 Move {
                     name: "Tackle".to_string(),
@@ -117,6 +122,7 @@ impl Player {
                         duration: 3,
                         effect_type: EffectType::Stun,
                     }),
+                    time_cost: 6,
                 },
             ],
         }
@@ -232,6 +238,20 @@ impl Enemy {
     }
 }
 
+#[derive(Debug)]
+enum Action {
+    PlayerMove {
+        move_index: usize,
+        target_index: Option<usize>,
+        time_remaining: u32,
+    },
+    EnemyAttack {
+        enemy_index: usize,
+        damage: u32,
+        time_remaining: u32,
+    },
+}
+
 struct App {
     player: Player,
     enemies: Vec<Enemy>,
@@ -240,6 +260,8 @@ struct App {
     message: Option<(String, Instant)>,
     last_tick: Instant,
     tick_count: u64,
+    action_queue: VecDeque<Action>,
+    current_action: Option<Action>,
 }
 
 impl App {
@@ -250,7 +272,7 @@ impl App {
             mandel_coords.push((
                 rand::random::<f64>() * 2.0 - 1.0,
                 rand::random::<f64>() * 2.0 - 1.0,
-                rand::random::<f64>() * 2.0 + 1.0,
+                rand::random::<f64>() * 0.5 + 0.5,
             ));
         }
 
@@ -264,12 +286,9 @@ impl App {
         ];
 
         // Randomly select 1-5 enemies
-        use rand::seq::SliceRandom;
-        use rand::thread_rng;
-        let mut rng = thread_rng();
-        let count = rand::random::<usize>() % 5 + 1;
-        enemies.shuffle(&mut rng);
-        enemies.truncate(count);
+        let num_enemies = 1 + rand::random::<usize>() % 5;
+        enemies.shuffle(&mut rand::thread_rng());
+        enemies.truncate(num_enemies);
 
         Self {
             player: Player::new(),
@@ -279,77 +298,144 @@ impl App {
             message: None,
             last_tick: now,
             tick_count: 0,
+            action_queue: VecDeque::new(),
+            current_action: None,
         }
     }
 
     fn next_enemy(&mut self) {
-        if !self.enemies.is_empty() {
-            self.current_enemy = (self.current_enemy + 1) % self.enemies.len();
+        if self.enemies.len() <= 1 {
+            return;
         }
+        self.current_enemy = (self.current_enemy + 1) % self.enemies.len();
     }
 
     fn prev_enemy(&mut self) {
-        if !self.enemies.is_empty() {
-            if self.current_enemy == 0 {
-                self.current_enemy = self.enemies.len().saturating_sub(1);
-            } else {
-                self.current_enemy -= 1;
-            }
+        if self.enemies.len() <= 1 {
+            return;
         }
+        self.current_enemy = if self.current_enemy == 0 {
+            self.enemies.len() - 1
+        } else {
+            self.current_enemy - 1
+        };
     }
 
     fn next_move(&mut self) {
-        self.current_move = (self.current_move + 1) % self.player.moves.len();
+        if !self.player.moves.is_empty() {
+            self.current_move = (self.current_move + 1) % self.player.moves.len();
+        }
     }
 
     fn prev_move(&mut self) {
-        if self.current_move == 0 {
-            self.current_move = self.player.moves.len().saturating_sub(1);
-        } else {
-            self.current_move -= 1;
+        if !self.player.moves.is_empty() {
+            self.current_move = if self.current_move == 0 {
+                self.player.moves.len() - 1
+            } else {
+                self.current_move - 1
+            };
         }
     }
 
-    fn use_current_move(&mut self) {
-        if self.enemies.is_empty() {
-            return;
+    fn use_current_move(&mut self) -> bool {
+        self.queue_player_move(self.current_move)
+    }
+
+    fn queue_player_move(&mut self, move_index: usize) -> bool {
+        if self.enemies.is_empty() || !self.player.can_use_move(move_index) {
+            return false;
         }
 
-        if let Some(mv) = self.player.use_move(self.current_move) {
-            let message = match mv.move_type {
+        // Get a mutable reference to the move to update cooldown
+        if let Some(mv) = self.player.moves.get_mut(move_index) {
+            // Deduct mana and set cooldown
+            self.player.mana = self.player.mana.saturating_sub(mv.mana_cost);
+            mv.current_cooldown = mv.cooldown;
+
+            // Queue the action with appropriate time cost
+            let action = match mv.move_type {
                 MoveType::Melee => {
-                    if let Some(enemy) = self.enemies.get_mut(self.current_enemy) {
-                        enemy.health = enemy.health.saturating_sub(mv.damage);
-                        Some(format!("Melee hits {} for {} damage!", enemy.name, mv.damage))
-                    } else {
-                        None
+                    Action::PlayerMove {
+                        move_index,
+                        target_index: Some(self.current_enemy),
+                        time_remaining: mv.time_cost,
                     }
                 }
                 MoveType::Escape => {
-                    self.enemies.clear();
-                    Some("You escaped from battle!".to_string())
-                }
-                MoveType::Fireball => {
-                    for enemy in &mut self.enemies {
-                        enemy.health = enemy.health.saturating_sub(mv.damage);
+                    Action::PlayerMove {
+                        move_index,
+                        target_index: None, // No target for escape
+                        time_remaining: mv.time_cost,
                     }
-                    Some(format!("Fireball hits all enemies for {} damage!", mv.damage))
                 }
-                MoveType::Tackle => {
-                    if let Some(enemy) = self.enemies.get_mut(self.current_enemy) {
-                        enemy.health = enemy.health.saturating_sub(mv.damage);
-                        if let Some(effect) = &mv.effect {
-                            enemy.add_effect(effect.clone(), self.current_enemy);
-                        }
-                        Some(format!("Tackle hits {} for {} damage!", enemy.name, mv.damage))
-                    } else {
-                        None
+                MoveType::Fireball | MoveType::Tackle => {
+                    Action::PlayerMove {
+                        move_index,
+                        target_index: Some(self.current_enemy),
+                        time_remaining: mv.time_cost,
                     }
                 }
             };
 
-            if let Some(msg) = message {
-                self.message = Some((msg, Instant::now()));
+            self.action_queue.push_back(action);
+            true
+        } else {
+            false
+        }
+    }
+
+    fn process_action(&mut self) {
+        if let Some(action) = self.current_action.take() {
+            match action {
+                Action::PlayerMove { move_index, target_index, .. } => {
+                    if let Some(mv) = self.player.moves.get(move_index) {
+                        let message = match mv.move_type {
+                            MoveType::Melee => {
+                                if let Some(enemy_idx) = target_index {
+                                    if let Some(enemy) = self.enemies.get_mut(enemy_idx) {
+                                        enemy.health = enemy.health.saturating_sub(mv.damage);
+                                        Some(format!("Melee hits {} for {} damage!", enemy.name, mv.damage))
+                                    } else { None }
+                                } else { None }
+                            }
+                            MoveType::Escape => {
+                                self.enemies.clear();
+                                Some("You escaped from battle!".to_string())
+                            }
+                            MoveType::Fireball => {
+                                for enemy in &mut self.enemies {
+                                enemy.health = enemy.health.saturating_sub(mv.damage);
+                            }
+                                Some(format!("Fireball hits all enemies for {} damage!", mv.damage))
+                            }
+                            MoveType::Tackle => {
+                                if let Some(enemy_idx) = target_index {
+                                    if let Some(enemy) = self.enemies.get_mut(enemy_idx) {
+                                        enemy.health = enemy.health.saturating_sub(mv.damage);
+                                        if let Some(effect) = &mv.effect {
+                                            enemy.add_effect(effect.clone(), enemy_idx);
+                                        }
+                                        Some(format!("Tackle hits {} for {} damage and stuns!", 
+                                            enemy.name, mv.damage))
+                                    } else { None }
+                                } else { None }
+                            }
+                        };
+
+                        if let Some(msg) = message {
+                            self.message = Some((msg, Instant::now()));
+                        }
+                    }
+                }
+                Action::EnemyAttack { enemy_index, damage, .. } => {
+                    self.player.health = self.player.health.saturating_sub(damage);
+                    if let Some(enemy) = self.enemies.get(enemy_index) {
+                        self.message = Some((
+                            format!("{} attacks for {} damage!", enemy.name, damage),
+                            Instant::now()
+                        ));
+                    }
+                }
             }
         }
     }
@@ -360,41 +446,60 @@ impl App {
             self.tick_count += 1;
             self.last_tick = now;
             
-            // Update cooldowns and regen
-            self.player.update_cooldowns();
-            self.player.regen();
-            
-            // Update enemy effects
-            for enemy in &mut self.enemies {
-                enemy.update_effects();
-            }
-            
-            // Update enemy attack timers
-            for enemy in &mut self.enemies {
-                if !enemy.is_stunned {
-                    if enemy.attack_timer > 0 {
-                        enemy.attack_timer -= 1;
-                    } else {
-                        // Enemy attacks!
-                        let damage = enemy.attack_damage;
-                        self.player.health = self.player.health.saturating_sub(damage);
-                        self.message = Some((
-                            format!("{} attacks for {} damage!", enemy.name, damage),
-                            Instant::now()
-                        ));
-                        
-                        // Reset attack timer with some randomness
-                        enemy.attack_timer = enemy.attack_speed + (rand::random::<u32>() % 5);
+            // Process current action if any
+            if let Some(action) = &mut self.current_action {
+                match action {
+                    Action::PlayerMove { time_remaining, .. } => {
+                        *time_remaining = time_remaining.saturating_sub(1);
+                        if *time_remaining == 0 {
+                            self.process_action();
+                        }
+                    }
+                    Action::EnemyAttack { time_remaining, .. } => {
+                        *time_remaining = time_remaining.saturating_sub(1);
+                        if *time_remaining == 0 {
+                            self.process_action();
+                        }
                     }
                 }
-            }
-            
-            // Remove defeated enemies
-            self.enemies.retain(|e| e.health > 0);
-            
-            // Reset current enemy if needed
-            if !self.enemies.is_empty() && self.current_enemy >= self.enemies.len() {
-                self.current_enemy = self.enemies.len() - 1;
+            } else if let Some(next_action) = self.action_queue.pop_front() {
+                self.current_action = Some(next_action);
+            } else {
+                // No current action and nothing in queue, handle normal updates
+                self.player.update_cooldowns();
+                self.player.regen();
+                
+                // Update enemy effects
+                for enemy in &mut self.enemies {
+                    enemy.update_effects();
+                }
+                
+                // Queue enemy attacks
+                for (i, enemy) in self.enemies.iter_mut().enumerate() {
+                    if !enemy.is_stunned {
+                        if enemy.attack_timer > 0 {
+                            enemy.attack_timer -= 1;
+                        } else {
+                            // Queue enemy attack
+                            self.action_queue.push_back(Action::EnemyAttack {
+                                enemy_index: i,
+                                damage: enemy.attack_damage,
+                                time_remaining: 5, // Base time cost for enemy attacks
+                            });
+                            
+                            // Reset attack timer with some randomness
+                            enemy.attack_timer = enemy.attack_speed + (rand::random::<u32>() % 5);
+                        }
+                    }
+                }
+                
+                // Remove defeated enemies
+                self.enemies.retain(|e| e.health > 0);
+                
+                // Reset current enemy if needed
+                if !self.enemies.is_empty() && self.current_enemy >= self.enemies.len() {
+                    self.current_enemy = self.enemies.len() - 1;
+                }
             }
             
             // Clear old messages after 2 seconds
@@ -428,14 +533,32 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>) -> io::Result<()> {
             if let Event::Key(key) = event::read()? {
                 match key.code {
                     KeyCode::Char('q') => return Ok(()),
-                    KeyCode::Char('1') => app.current_move = 0,
-                    KeyCode::Char('2') => app.current_move = 1,
-                    KeyCode::Char('3') => app.current_move = 2,
-                    KeyCode::Right | KeyCode::Char('d') => app.next_enemy(),
-                    KeyCode::Left | KeyCode::Char('a') => app.prev_enemy(),
-                    KeyCode::Down | KeyCode::Char('s') => app.next_move(),
-                    KeyCode::Up | KeyCode::Char('w') => app.prev_move(),
-                    KeyCode::Char(' ') | KeyCode::Enter => app.use_current_move(),
+                    // Allow enemy selection at any time
+                    KeyCode::Char('h') | KeyCode::Left | KeyCode::Char('a') => {
+                        app.prev_enemy();
+                    }
+                    KeyCode::Char('l') | KeyCode::Right | KeyCode::Char('d') => {
+                        app.next_enemy();
+                    }
+                    // Allow move selection at any time
+                    KeyCode::Char('k') | KeyCode::Up | KeyCode::Char('w') => {
+                        app.prev_move();
+                    }
+                    KeyCode::Char('j') | KeyCode::Down | KeyCode::Char('s') => {
+                        app.next_move();
+                    }
+                    // Queue moves at any time
+                    KeyCode::Char(' ') | KeyCode::Enter => {
+                        app.use_current_move();
+                    }
+                    // Allow direct move selection with number keys at any time
+                    KeyCode::Char(c @ '1'..='4') => {
+                        let move_idx = (c as u8 - b'1') as usize;
+                        if move_idx < app.player.moves.len() {
+                            app.current_move = move_idx;
+                            app.use_current_move();
+                        }
+                    }
                     _ => {}
                 }
             }
@@ -532,55 +655,128 @@ fn render_message(f: &mut Frame, area: Rect, message: &str) {
     f.render_widget(message_para, area);
 }
 
-fn render_enemy_info(f: &mut Frame, enemy: &Enemy, area: Rect, is_selected: bool) {
-    let border_style = if is_selected {
-        Style::default().fg(Color::Yellow)
-    } else {
-        Style::default().fg(Color::DarkGray)
+fn render_move_queue(f: &mut Frame, area: Rect, app: &App) {
+    let current_action = match &app.current_action {
+        Some(Action::PlayerMove { move_index, .. }) => {
+            if let Some(mv) = app.player.moves.get(*move_index) {
+                format!("▶ {}", mv.name)
+            } else {
+                String::new()
+            }
+        }
+        Some(Action::EnemyAttack { enemy_index, .. }) => {
+            if let Some(enemy) = app.enemies.get(*enemy_index) {
+                format!("▶ {} attacks!", enemy.name)
+            } else {
+                String::new()
+            }
+        }
+        None => "Waiting...".to_string(),
     };
+
+    let queued_actions: Vec<String> = app.action_queue.iter().map(|action| {
+        match action {
+            Action::PlayerMove { move_index, .. } => {
+                if let Some(mv) = app.player.moves.get(*move_index) {
+                    format!("• {}", mv.name)
+                } else {
+                    String::from("• ???")
+                }
+            }
+            Action::EnemyAttack { enemy_index, .. } => {
+                if let Some(enemy) = app.enemies.get(*enemy_index) {
+                    format!("• {} attacks!", enemy.name)
+                } else {
+                    String::from("• ???")
+                }
+            }
+        }
+    }).collect();
+
+    let mut lines = vec![Line::from("Current:".to_string().bold())];
+    lines.push(Line::from(current_action));
+    
+    if !queued_actions.is_empty() {
+        lines.push(Line::from(""));
+        lines.push(Line::from("Queue:".to_string().bold()));
+        for action in queued_actions {
+            lines.push(Line::from(action));
+        }
+    }
 
     let block = Block::default()
         .borders(Borders::ALL)
-        .border_style(border_style);
-    
-    let inner_area = block.inner(area);
+        .title("Action Queue");
+        
+    let paragraph = Paragraph::new(lines)
+        .block(block)
+        .wrap(Wrap { trim: true });
+        
+    f.render_widget(paragraph, area);
+}
+
+fn render_enemy_info(f: &mut Frame, enemy: &Enemy, area: Rect, is_selected: bool) {
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .border_style(if is_selected {
+            Style::default().fg(Color::Yellow)
+        } else {
+            Style::default()
+        });
+
+    let inner = block.inner(area);
     f.render_widget(block, area);
+
+    // Render enemy portrait
+    let portrait = enemy.render_portrait(
+        inner.width as usize,
+        (inner.height * 2 / 3).min(8) as usize
+    );
     
-    // Add attack timer indicator
-    let timer_bar = if enemy.attack_timer > 0 {
-        format!("Attack in: {}/{}", enemy.attack_timer, enemy.attack_speed)
+    let portrait_block = Block::default()
+        .borders(Borders::NONE)
+        .style(Style::default().bg(Color::Black));
+    let portrait_area = center_rect_exact(
+        inner.width.min(20),
+        (inner.height * 2 / 3).min(8) + 2,
+        inner
+    );
+    
+    f.render_widget(portrait_block, portrait_area);
+    f.render_widget(
+        Paragraph::new(portrait)
+            .style(Style::default().fg(Color::Green))
+            .alignment(Alignment::Center),
+        portrait_area
+    );
+
+    // Render health bar below portrait
+    let health_ratio = enemy.health as f64 / enemy.max_health as f64;
+    let health_bar = Gauge::default()
+        .block(Block::default().title(enemy.name.clone()).borders(Borders::ALL))
+        .gauge_style(Style::default().fg(Color::Red).bg(Color::DarkGray))
+        .ratio(health_ratio)
+        .label(format!(" {}/{} ", enemy.health, enemy.max_health));
+
+    // Render attack timer
+    let attack_timer = if enemy.attack_timer > 0 {
+        format!("⏳ {}/{}", enemy.attack_timer, enemy.attack_speed)
     } else {
-        "Attacking!".to_string()
+        "⚡ Ready!".to_string()
     };
 
-    let health_label = format!("{} {}/{}", enemy.name, enemy.health, enemy.max_health);
-    
-    let health_bar = Gauge::default()
-        .block(Block::default().title(health_label).borders(Borders::ALL))
-        .gauge_style(Style::default().fg(Color::Red).bg(Color::DarkGray))
-        .ratio(enemy.health_percentage() as f64 / 100.0);
-        
-    let timer_gauge = Gauge::default()
-        .block(Block::default().title(timer_bar).borders(Borders::NONE))
-        .gauge_style(Style::default().fg(Color::Cyan).bg(Color::DarkGray))
-        .ratio(1.0 - (enemy.attack_timer as f64 / enemy.attack_speed as f64).max(0.0).min(1.0));
-
-    let chunks = Layout::vertical([
-        Constraint::Length(8), // Portrait
+    let layout = Layout::vertical([
+        Constraint::Length(portrait_area.height + 2), // Portrait with padding
         Constraint::Length(3), // Health bar
-        Constraint::Length(2), // Attack timer
-    ]).spacing(1)
-      .margin(1)
-      .split(inner_area);
+        Constraint::Length(1), // Attack timer
+    ]).split(inner);
 
-    let portrait = enemy.render_portrait(12, 8);
-    let portrait_para = Paragraph::new(portrait)
-        .style(Style::default().fg(Color::White).bg(Color::Black))
+    let timer = Paragraph::new(attack_timer)
+        .style(Style::default().fg(Color::Cyan))
         .alignment(Alignment::Center);
-    f.render_widget(portrait_para, chunks[0]);
 
-    f.render_widget(health_bar, chunks[1]);
-    f.render_widget(timer_gauge, chunks[2]);
+    f.render_widget(health_bar, layout[1]);
+    f.render_widget(timer, layout[2]);
 }
 
 fn ui(f: &mut Frame, app: &mut App) {
@@ -591,69 +787,74 @@ fn ui(f: &mut Frame, app: &mut App) {
         .borders(Borders::ALL)
         .title(" Chrono Trigger-Style Combat ")
         .title_alignment(Alignment::Center);
-    let inner = block.inner(size);
+    let _inner = block.inner(size);
     f.render_widget(block, size);
 
+    // Main layout
+    let chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage(75),
+            Constraint::Percentage(25),
+        ])
+        .split(f.size());
+
+    let left_chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Length(3),  // Player info
+            Constraint::Min(12),    // Enemies
+            Constraint::Length(15), // Moves
+            Constraint::Length(3),  // Message
+            Constraint::Length(1),  // Controls
+        ])
+        .split(chunks[0]);
+
+    // Victory screen
     if app.enemies.is_empty() {
         let victory = Paragraph::new("Victory!")
             .style(Style::default().fg(Color::Green))
             .alignment(Alignment::Center);
-        f.render_widget(victory, inner);
+        f.render_widget(victory, chunks[0]);
         return;
     }
 
-    // Main layout: player info, enemies, moves, message
-    let main_chunks = Layout::vertical([
-        Constraint::Length(3),  // Player info
-        Constraint::Min(12),    // Enemies
-        Constraint::Length(12), // Moves
-        Constraint::Length(3),  // Message
-        Constraint::Length(3),  // Controls
-    ]).split(inner);
-
-    // Render player info
-    render_player_info(f, main_chunks[0], app);
-
-    // Layout for enemies area
-    let enemy_area = main_chunks[1];
-    let message_area = main_chunks[3];
+    // Render player info and enemies
+    render_player_info(f, left_chunks[0], app);
     
-    // Show message if any
-    if let Some((msg, _)) = &app.message {
-        render_message(f, message_area, msg);
-    }
-
     // Create a row for each enemy
-    let enemy_chunks: Vec<Rect> = if !app.enemies.is_empty() {
-        let constraints: Vec<_> = (0..app.enemies.len())
+    let enemy_chunks = if !app.enemies.is_empty() {
+        let constraints: Vec<Constraint> = (0..app.enemies.len())
             .map(|_| Constraint::Ratio(1, app.enemies.len() as u32))
             .collect();
-        Layout::horizontal(constraints).split(enemy_area).to_vec()
+        Layout::horizontal(constraints).split(left_chunks[1]).to_vec()
     } else {
-        vec![enemy_area]
+        vec![left_chunks[1]]
     };
-
-    // Render each enemy
+    
+    // Render enemies
     for (i, (enemy, area)) in app.enemies.iter().zip(enemy_chunks.iter()).enumerate() {
         let is_selected = i == app.current_enemy;
         render_enemy_info(f, enemy, *area, is_selected);
     }
-
-    // Render moves
-    render_moves(f, main_chunks[2], app);
+    
+    // Render moves and message
+    render_moves(f, left_chunks[2], app);
+    
+    if let Some((msg, _)) = &app.message {
+        render_message(f, left_chunks[3], msg);
+    }
+    
+    // Render the move queue on the right side
+    render_move_queue(f, chunks[1], app);
 
     // Controls help
-    let controls = Line::from(vec![
-        "W/↑, S/↓: Select Move ".into(),
-        "A/←, D/→: Select Enemy ".into(),
-        "1,2,3: Quick Select ".into(),
-        "Space/Enter: Use Move ".into(),
-        "Q: Quit".into(),
-    ]);
-    let footer = Paragraph::new(controls)
-        .alignment(Alignment::Center)
-        .block(Block::default().borders(Borders::TOP));
-    f.render_widget(footer, main_chunks[4]);
+    let controls = Paragraph::new(
+        "[←→] Select Target | [↑↓] Select Move | [1-4] Quick Select | [SPACE] Use Move | [q] Quit"
+    )
+    .style(Style::default().fg(Color::Gray))
+    .alignment(Alignment::Center);
+    f.render_widget(controls, left_chunks[4]);
 }
 
 // Center a rect of exact size (w,h) inside "area".
