@@ -1,8 +1,8 @@
+use rand::seq::SliceRandom;
+use std::collections::VecDeque;
 use std::error::Error;
 use std::io::{self, Stdout};
 use std::time::{Duration, Instant};
-use std::collections::VecDeque;
-use rand::seq::SliceRandom;
 
 use crossterm::{
     event::{self, Event, KeyCode},
@@ -40,7 +40,7 @@ struct Move {
     move_type: MoveType,
     damage: u32,
     mana_cost: u32,
-    cooldown: u32,      // in ticks
+    cooldown: u32, // in ticks
     current_cooldown: u32,
     effect: Option<Effect>,
     time_cost: u32, // How many ticks this move takes to execute
@@ -48,7 +48,7 @@ struct Move {
 
 #[derive(Debug, Clone)]
 struct Effect {
-    duration: u32,      // in ticks
+    duration: u32, // in ticks
     effect_type: EffectType,
 }
 
@@ -86,7 +86,7 @@ impl Player {
                     move_type: MoveType::Melee,
                     damage: 10,
                     mana_cost: 0,
-                    cooldown: 2,  // 2-tick cooldown to prevent spamming
+                    cooldown: 2, // 2-tick cooldown to prevent spamming
                     current_cooldown: 0,
                     effect: None,
                     time_cost: 3, // Fastest move
@@ -141,7 +141,7 @@ impl Player {
         if !self.can_use_move(move_index) {
             return None;
         }
-        
+
         // Now we can safely get mutable access since we've done all immutable checks
         if let Some(mv) = self.moves.get_mut(move_index) {
             self.mana = self.mana.saturating_sub(mv.mana_cost);
@@ -190,7 +190,7 @@ impl Enemy {
             remaining_ticks: self.effects.last().map_or(0, |e| e.effect.duration),
             target_index,
         });
-        
+
         if is_stun {
             self.is_stunned = true;
         }
@@ -213,7 +213,13 @@ impl Enemy {
 }
 
 impl Enemy {
-    fn new(name: &str, max_health: u32, attack_speed: u32, attack_damage: u32, seed: (f64, f64, f64)) -> Self {
+    fn new(
+        name: &str,
+        max_health: u32,
+        attack_speed: u32,
+        attack_damage: u32,
+        seed: (f64, f64, f64),
+    ) -> Self {
         Self {
             name: name.to_string(),
             health: max_health,
@@ -225,7 +231,6 @@ impl Enemy {
             attack_speed,
             attack_damage,
         }
-
     }
 
     fn render_portrait(&self, width: usize, height: usize) -> String {
@@ -354,13 +359,11 @@ impl App {
 
             // Queue the action with appropriate time cost
             let action = match mv.move_type {
-                MoveType::Melee => {
-                    Action::PlayerMove {
-                        move_index,
-                        target_index: Some(self.current_enemy),
-                        time_remaining: mv.time_cost,
-                    }
-                }
+                MoveType::Melee => Action::PlayerMove {
+                    move_index,
+                    target_index: Some(self.current_enemy),
+                    time_remaining: mv.time_cost,
+                },
                 MoveType::Escape => {
                     Action::PlayerMove {
                         move_index,
@@ -368,13 +371,11 @@ impl App {
                         time_remaining: mv.time_cost,
                     }
                 }
-                MoveType::Fireball | MoveType::Tackle => {
-                    Action::PlayerMove {
-                        move_index,
-                        target_index: Some(self.current_enemy),
-                        time_remaining: mv.time_cost,
-                    }
-                }
+                MoveType::Fireball | MoveType::Tackle => Action::PlayerMove {
+                    move_index,
+                    target_index: Some(self.current_enemy),
+                    time_remaining: mv.time_cost,
+                },
             };
 
             self.action_queue.push_back(action);
@@ -393,7 +394,7 @@ impl App {
                     damage: enemy.attack_damage,
                     time_remaining: 5, // Base time cost for enemy attacks
                 });
-                
+
                 // Reset attack timer with some randomness
                 enemy.attack_timer = enemy.attack_speed + (rand::random::<u32>() % 5);
             }
@@ -403,16 +404,27 @@ impl App {
     fn process_action(&mut self) {
         if let Some(action) = self.current_action.take() {
             match action {
-                Action::PlayerMove { move_index, target_index, .. } => {
+                Action::PlayerMove {
+                    move_index,
+                    target_index,
+                    ..
+                } => {
                     if let Some(mv) = self.player.moves.get(move_index) {
                         let message = match mv.move_type {
                             MoveType::Melee => {
                                 if let Some(enemy_idx) = target_index {
                                     if let Some(enemy) = self.enemies.get_mut(enemy_idx) {
                                         enemy.health = enemy.health.saturating_sub(mv.damage);
-                                        Some(format!("Melee hits {} for {} damage!", enemy.name, mv.damage))
-                                    } else { None }
-                                } else { None }
+                                        Some(format!(
+                                            "Melee hits {} for {} damage!",
+                                            enemy.name, mv.damage
+                                        ))
+                                    } else {
+                                        None
+                                    }
+                                } else {
+                                    None
+                                }
                             }
                             MoveType::Escape => {
                                 self.enemies.clear();
@@ -420,9 +432,12 @@ impl App {
                             }
                             MoveType::Fireball => {
                                 for enemy in &mut self.enemies {
-                                enemy.health = enemy.health.saturating_sub(mv.damage);
-                            }
-                                Some(format!("Fireball hits all enemies for {} damage!", mv.damage))
+                                    enemy.health = enemy.health.saturating_sub(mv.damage);
+                                }
+                                Some(format!(
+                                    "Fireball hits all enemies for {} damage!",
+                                    mv.damage
+                                ))
                             }
                             MoveType::Tackle => {
                                 if let Some(enemy_idx) = target_index {
@@ -431,10 +446,16 @@ impl App {
                                         if let Some(effect) = &mv.effect {
                                             enemy.add_effect(effect.clone(), enemy_idx);
                                         }
-                                        Some(format!("Tackle hits {} for {} damage and stuns!", 
-                                            enemy.name, mv.damage))
-                                    } else { None }
-                                } else { None }
+                                        Some(format!(
+                                            "Tackle hits {} for {} damage and stuns!",
+                                            enemy.name, mv.damage
+                                        ))
+                                    } else {
+                                        None
+                                    }
+                                } else {
+                                    None
+                                }
                             }
                         };
 
@@ -443,12 +464,16 @@ impl App {
                         }
                     }
                 }
-                Action::EnemyAttack { enemy_index, damage, .. } => {
+                Action::EnemyAttack {
+                    enemy_index,
+                    damage,
+                    ..
+                } => {
                     self.player.health = self.player.health.saturating_sub(damage);
                     if let Some(enemy) = self.enemies.get(enemy_index) {
                         self.message = Some((
                             format!("{} attacks for {} damage!", enemy.name, damage),
-                            Instant::now()
+                            Instant::now(),
                         ));
                     }
                 }
@@ -461,12 +486,12 @@ impl App {
         if now.duration_since(self.last_tick).as_millis() >= TICK_RATE as u128 {
             self.tick_count += 1;
             self.last_tick = now;
-            
+
             // Process current action if any
             if let Some(action) = &mut self.current_action {
                 match action {
-                    Action::PlayerMove { time_remaining, .. } | 
-                    Action::EnemyAttack { time_remaining, .. } => {
+                    Action::PlayerMove { time_remaining, .. }
+                    | Action::EnemyAttack { time_remaining, .. } => {
                         *time_remaining = time_remaining.saturating_sub(1);
                         if *time_remaining == 0 {
                             self.process_action();
@@ -481,16 +506,16 @@ impl App {
                 // No current action and nothing in queue, handle normal updates
                 self.player.update_cooldowns();
                 self.player.regen();
-                
+
                 // Update enemy effects
                 for enemy in &mut self.enemies {
                     enemy.update_effects();
                 }
-                
+
                 // If we get here, both action queue and current action are empty
                 // Queue any pending enemy attacks
                 self.queue_enemy_attacks();
-                
+
                 // If we still have no actions, reset enemy attack timers to prevent stalling
                 if self.action_queue.is_empty() && self.current_action.is_none() {
                     for enemy in &mut self.enemies {
@@ -499,17 +524,16 @@ impl App {
                         }
                     }
                 }
-                
             }
-            
+
             // Remove defeated enemies
             self.enemies.retain(|e| e.health > 0);
-            
+
             // Reset current enemy if needed
             if !self.enemies.is_empty() && self.current_enemy >= self.enemies.len() {
                 self.current_enemy = self.enemies.len() - 1;
             }
-            
+
             // Clear old messages after 2 seconds
             if let Some((_, time)) = &self.message {
                 if now.duration_since(*time).as_secs() >= 2 {
@@ -537,7 +561,8 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>) -> io::Result<()> {
         app.update();
         terminal.draw(|f| ui(f, &mut app))?;
 
-        if event::poll(Duration::from_millis(16))? { // ~60fps
+        if event::poll(Duration::from_millis(16))? {
+            // ~60fps
             if let Event::Key(key) = event::read()? {
                 match key.code {
                     KeyCode::Char('q') => return Ok(()),
@@ -606,49 +631,51 @@ fn render_player_info(f: &mut Frame, area: Rect, app: &App) {
         .ratio(mana_ratio)
         .label(format!(" {}/{} ", player.mana, player.max_mana));
 
-    let bars = Layout::horizontal([
-        Constraint::Ratio(1, 2),
-        Constraint::Ratio(1, 2),
-    ]).split(area);
+    let bars = Layout::horizontal([Constraint::Ratio(1, 2), Constraint::Ratio(1, 2)]).split(area);
 
     f.render_widget(health_bar, bars[0]);
     f.render_widget(mana_bar, bars[1]);
 }
 
 fn render_moves(f: &mut Frame, area: Rect, app: &App) {
-    let move_blocks = app.player.moves.iter().enumerate().map(|(i, mv)| {
-        let is_selected = i == app.current_move;
-        let can_use = app.player.can_use_move(i);
-        let cooldown = if mv.current_cooldown > 0 {
-            format!(" ({})", mv.current_cooldown)
-        } else {
-            String::new()
-        };
-        
-        let style = if !can_use {
-            Style::default().fg(Color::DarkGray)
-        } else if is_selected {
-            Style::default().fg(Color::Yellow).bold()
-        } else {
-            Style::default()
-        };
-        
-        let content = format!("{}: {}{} - {} MP", 
-            i + 1, 
-            mv.name, 
-            cooldown,
-            mv.mana_cost
-        );
-        
-        Paragraph::new(content)
-            .style(style)
-            .block(Block::default().borders(Borders::ALL))
-    }).collect::<Vec<_>>();
-    
+    let move_blocks = app
+        .player
+        .moves
+        .iter()
+        .enumerate()
+        .map(|(i, mv)| {
+            let is_selected = i == app.current_move;
+            let can_use = app.player.can_use_move(i);
+            let cooldown = if mv.current_cooldown > 0 {
+                format!(" ({})", mv.current_cooldown)
+            } else {
+                String::new()
+            };
+
+            let style = if !can_use {
+                Style::default().fg(Color::DarkGray)
+            } else if is_selected {
+                Style::default().fg(Color::Yellow).bold()
+            } else {
+                Style::default()
+            };
+
+            let content = format!("{}: {}{} - {} MP", i + 1, mv.name, cooldown, mv.mana_cost);
+
+            Paragraph::new(content)
+                .style(style)
+                .block(Block::default().borders(Borders::ALL))
+        })
+        .collect::<Vec<_>>();
+
     let move_chunks = Layout::vertical(
-        move_blocks.iter().map(|_| Constraint::Length(3)).collect::<Vec<_>>()
-    ).split(area);
-    
+        move_blocks
+            .iter()
+            .map(|_| Constraint::Length(3))
+            .collect::<Vec<_>>(),
+    )
+    .split(area);
+
     for (i, block) in move_blocks.into_iter().enumerate() {
         f.render_widget(block, move_chunks[i]);
     }
@@ -659,7 +686,7 @@ fn render_message(f: &mut Frame, area: Rect, message: &str) {
         .style(Style::default().fg(Color::Yellow))
         .alignment(Alignment::Center)
         .block(Block::default().borders(Borders::ALL));
-    
+
     f.render_widget(message_para, area);
 }
 
@@ -682,8 +709,10 @@ fn render_move_queue(f: &mut Frame, area: Rect, app: &App) {
         None => "Waiting...".to_string(),
     };
 
-    let queued_actions: Vec<String> = app.action_queue.iter().map(|action| {
-        match action {
+    let queued_actions: Vec<String> = app
+        .action_queue
+        .iter()
+        .map(|action| match action {
             Action::PlayerMove { move_index, .. } => {
                 if let Some(mv) = app.player.moves.get(*move_index) {
                     format!("• {}", mv.name)
@@ -698,12 +727,12 @@ fn render_move_queue(f: &mut Frame, area: Rect, app: &App) {
                     String::from("• ???")
                 }
             }
-        }
-    }).collect();
+        })
+        .collect();
 
     let mut lines = vec![Line::from("Current:".to_string().bold())];
     lines.push(Line::from(current_action));
-    
+
     if !queued_actions.is_empty() {
         lines.push(Line::from(""));
         lines.push(Line::from("Queue:".to_string().bold()));
@@ -712,14 +741,10 @@ fn render_move_queue(f: &mut Frame, area: Rect, app: &App) {
         }
     }
 
-    let block = Block::default()
-        .borders(Borders::ALL)
-        .title("Action Queue");
-        
-    let paragraph = Paragraph::new(lines)
-        .block(block)
-        .wrap(Wrap { trim: true });
-        
+    let block = Block::default().borders(Borders::ALL).title("Action Queue");
+
+    let paragraph = Paragraph::new(lines).block(block).wrap(Wrap { trim: true });
+
     f.render_widget(paragraph, area);
 }
 
@@ -736,32 +761,34 @@ fn render_enemy_info(f: &mut Frame, enemy: &Enemy, area: Rect, is_selected: bool
     f.render_widget(block, area);
 
     // Render enemy portrait
-    let portrait = enemy.render_portrait(
-        inner.width as usize,
-        (inner.height * 2 / 3).min(8) as usize
-    );
-    
+    let portrait =
+        enemy.render_portrait(inner.width as usize, (inner.height * 2 / 3).min(8) as usize);
+
     let portrait_block = Block::default()
         .borders(Borders::NONE)
         .style(Style::default().bg(Color::Black));
     let portrait_area = center_rect_exact(
         inner.width.min(20),
         (inner.height * 2 / 3).min(8) + 2,
-        inner
+        inner,
     );
-    
+
     f.render_widget(portrait_block, portrait_area);
     f.render_widget(
         Paragraph::new(portrait)
             .style(Style::default().fg(Color::Green))
             .alignment(Alignment::Center),
-        portrait_area
+        portrait_area,
     );
 
     // Render health bar below portrait
     let health_ratio = enemy.health as f64 / enemy.max_health as f64;
     let health_bar = Gauge::default()
-        .block(Block::default().title(enemy.name.clone()).borders(Borders::ALL))
+        .block(
+            Block::default()
+                .title(enemy.name.clone())
+                .borders(Borders::ALL),
+        )
         .gauge_style(Style::default().fg(Color::Red).bg(Color::DarkGray))
         .ratio(health_ratio)
         .label(format!(" {}/{} ", enemy.health, enemy.max_health));
@@ -775,9 +802,10 @@ fn render_enemy_info(f: &mut Frame, enemy: &Enemy, area: Rect, is_selected: bool
 
     let layout = Layout::vertical([
         Constraint::Length(portrait_area.height + 2), // Portrait with padding
-        Constraint::Length(3), // Health bar
-        Constraint::Length(1), // Attack timer
-    ]).split(inner);
+        Constraint::Length(3),                        // Health bar
+        Constraint::Length(1),                        // Attack timer
+    ])
+    .split(inner);
 
     let timer = Paragraph::new(attack_timer)
         .style(Style::default().fg(Color::Cyan))
@@ -801,10 +829,7 @@ fn ui(f: &mut Frame, app: &mut App) {
     // Main layout
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
-        .constraints([
-            Constraint::Percentage(75),
-            Constraint::Percentage(25),
-        ])
+        .constraints([Constraint::Percentage(75), Constraint::Percentage(25)])
         .split(f.size());
 
     let left_chunks = Layout::default()
@@ -829,36 +854,38 @@ fn ui(f: &mut Frame, app: &mut App) {
 
     // Render player info and enemies
     render_player_info(f, left_chunks[0], app);
-    
+
     // Create a row for each enemy
     let enemy_chunks = if !app.enemies.is_empty() {
         let constraints: Vec<Constraint> = (0..app.enemies.len())
             .map(|_| Constraint::Ratio(1, app.enemies.len() as u32))
             .collect();
-        Layout::horizontal(constraints).split(left_chunks[1]).to_vec()
+        Layout::horizontal(constraints)
+            .split(left_chunks[1])
+            .to_vec()
     } else {
         vec![left_chunks[1]]
     };
-    
+
     // Render enemies
     for (i, (enemy, area)) in app.enemies.iter().zip(enemy_chunks.iter()).enumerate() {
         let is_selected = i == app.current_enemy;
         render_enemy_info(f, enemy, *area, is_selected);
     }
-    
+
     // Render moves and message
     render_moves(f, left_chunks[2], app);
-    
+
     if let Some((msg, _)) = &app.message {
         render_message(f, left_chunks[3], msg);
     }
-    
+
     // Render the move queue on the right side
     render_move_queue(f, chunks[1], app);
 
     // Controls help
     let controls = Paragraph::new(
-        "[←→] Select Target | [↑↓] Select Move | [1-4] Quick Select | [SPACE] Use Move | [q] Quit"
+        "[←→] Select Target | [↑↓] Select Move | [1-4] Quick Select | [SPACE] Use Move | [q] Quit",
     )
     .style(Style::default().fg(Color::Gray))
     .alignment(Alignment::Center);
