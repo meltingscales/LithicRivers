@@ -86,7 +86,7 @@ impl Player {
                     move_type: MoveType::Melee,
                     damage: 10,
                     mana_cost: 0,
-                    cooldown: 0,
+                    cooldown: 2,  // 2-tick cooldown to prevent spamming
                     current_cooldown: 0,
                     effect: None,
                     time_cost: 3, // Fastest move
@@ -384,6 +384,22 @@ impl App {
         }
     }
 
+    fn queue_enemy_attacks(&mut self) {
+        for (i, enemy) in self.enemies.iter_mut().enumerate() {
+            if !enemy.is_stunned && enemy.attack_timer == 0 {
+                // Queue enemy attack
+                self.action_queue.push_back(Action::EnemyAttack {
+                    enemy_index: i,
+                    damage: enemy.attack_damage,
+                    time_remaining: 5, // Base time cost for enemy attacks
+                });
+                
+                // Reset attack timer with some randomness
+                enemy.attack_timer = enemy.attack_speed + (rand::random::<u32>() % 5);
+            }
+        }
+    }
+
     fn process_action(&mut self) {
         if let Some(action) = self.current_action.take() {
             match action {
@@ -449,16 +465,13 @@ impl App {
             // Process current action if any
             if let Some(action) = &mut self.current_action {
                 match action {
-                    Action::PlayerMove { time_remaining, .. } => {
-                        *time_remaining = time_remaining.saturating_sub(1);
-                        if *time_remaining == 0 {
-                            self.process_action();
-                        }
-                    }
+                    Action::PlayerMove { time_remaining, .. } | 
                     Action::EnemyAttack { time_remaining, .. } => {
                         *time_remaining = time_remaining.saturating_sub(1);
                         if *time_remaining == 0 {
                             self.process_action();
+                            // After processing an action, check for enemy attacks
+                            self.queue_enemy_attacks();
                         }
                     }
                 }
@@ -474,32 +487,27 @@ impl App {
                     enemy.update_effects();
                 }
                 
-                // Queue enemy attacks
-                for (i, enemy) in self.enemies.iter_mut().enumerate() {
-                    if !enemy.is_stunned {
+                // If we get here, both action queue and current action are empty
+                // Queue any pending enemy attacks
+                self.queue_enemy_attacks();
+                
+                // If we still have no actions, reset enemy attack timers to prevent stalling
+                if self.action_queue.is_empty() && self.current_action.is_none() {
+                    for enemy in &mut self.enemies {
                         if enemy.attack_timer > 0 {
                             enemy.attack_timer -= 1;
-                        } else {
-                            // Queue enemy attack
-                            self.action_queue.push_back(Action::EnemyAttack {
-                                enemy_index: i,
-                                damage: enemy.attack_damage,
-                                time_remaining: 5, // Base time cost for enemy attacks
-                            });
-                            
-                            // Reset attack timer with some randomness
-                            enemy.attack_timer = enemy.attack_speed + (rand::random::<u32>() % 5);
                         }
                     }
                 }
                 
-                // Remove defeated enemies
-                self.enemies.retain(|e| e.health > 0);
-                
-                // Reset current enemy if needed
-                if !self.enemies.is_empty() && self.current_enemy >= self.enemies.len() {
-                    self.current_enemy = self.enemies.len() - 1;
-                }
+            }
+            
+            // Remove defeated enemies
+            self.enemies.retain(|e| e.health > 0);
+            
+            // Reset current enemy if needed
+            if !self.enemies.is_empty() && self.current_enemy >= self.enemies.len() {
+                self.current_enemy = self.enemies.len() - 1;
             }
             
             // Clear old messages after 2 seconds
