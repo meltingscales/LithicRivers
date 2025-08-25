@@ -105,6 +105,7 @@ build-demos: fmt
     {{cargoz_env}} build -p lithicrivers-client --bin demo_beezzaroll_color_test {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin demo_beezzaroll_sprite_test {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin demo_portrait_sprite_test {{build_flags}}
+    {{cargoz_env}} build -p lithicrivers-client --bin demo_combat_chrono_trigger {{build_flags}}
 
 # Optional: build demo binaries (release)
 build-demos-release: fmt
@@ -114,6 +115,7 @@ build-demos-release: fmt
     {{cargoz_env}} build -p lithicrivers-client --bin demo_beezzaroll_color_test --release {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin demo_beezzaroll_sprite_test --release {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin demo_portrait_sprite_test --release {{build_flags}}
+    {{cargoz_env}} build -p lithicrivers-client --bin demo_combat_chrono_trigger --release {{build_flags}}
 
 # Run debug build (alias for client)
 run-debug: client
@@ -153,6 +155,10 @@ demo-portrait-sprite-test:
 # Run the Body/Repair UI demo
 demo-body:
     {{cargoz_env}} run -p lithicrivers-client --bin demo_body
+
+# Run the Chrono Trigger combat demo
+demo-combat-chrono-trigger:
+    {{cargoz_env}} run -p lithicrivers-client --bin demo_combat_chrono_trigger
 
 # Blind mode (not implemented)
 client-blind:
