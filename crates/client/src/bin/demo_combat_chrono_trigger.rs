@@ -1,6 +1,7 @@
 use std::error::Error;
 use std::io::{self, Stdout};
 use std::time::{Duration, Instant};
+use rand::Rng;
 
 use crossterm::{
     event::{self, Event, KeyCode},
@@ -22,7 +23,7 @@ type Result<T> = std::result::Result<T, Box<dyn Error>>;
 const PLAYER_MAX_HEALTH: u32 = 200;
 const PLAYER_MAX_MANA: u32 = 100;
 const MANA_REGEN: u32 = 5;
-const TICK_RATE_MS: u64 = 100; // 100ms per tick
+const TICK_RATE: u64 = 250; // ms
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 enum MoveType {
@@ -163,9 +164,12 @@ struct Enemy {
     name: String,
     health: u32,
     max_health: u32,
-    portrait_seed: (f64, f64, f64), // (cx, cy, scale) for Mandelbrot
+    seed: (f64, f64, f64), // (cx, cy, scale) for Mandelbrot
     effects: Vec<ActiveEffect>,
     is_stunned: bool,
+    attack_timer: u32,
+    attack_speed: u32, // Lower is faster
+    attack_damage: u32,
 }
 
 impl Enemy {
@@ -203,20 +207,23 @@ impl Enemy {
 }
 
 impl Enemy {
-    fn new(name: &str, max_health: u32, seed: (f64, f64, f64)) -> Self {
+    fn new(name: &str, max_health: u32, attack_speed: u32, attack_damage: u32, seed: (f64, f64, f64)) -> Self {
         Self {
             name: name.to_string(),
             health: max_health,
             max_health,
-            portrait_seed: seed,
+            seed,
             effects: Vec::new(),
             is_stunned: false,
+            attack_timer: 0,
+            attack_speed,
+            attack_damage,
         }
 
     }
 
     fn render_portrait(&self, width: usize, height: usize) -> String {
-        let (cx, cy, scale) = self.portrait_seed;
+        let (cx, cy, scale) = self.seed;
         render_mandelbrot(width, height, cx, cy, scale)
     }
 
@@ -249,11 +256,11 @@ impl App {
 
         // Create 1-5 random enemies with different seeds for variety
         let mut enemies = vec![
-            Enemy::new("Gato", 120, mandel_coords[0]),
-            Enemy::new("Nu", 180, mandel_coords[1]),
-            Enemy::new("Retinite", 250, mandel_coords[2]),
-            Enemy::new("Rend", 120, mandel_coords[3]),
-            Enemy::new("Mete", 120, mandel_coords[4]),
+            Enemy::new("Gato", 120, 8, 5, mandel_coords[0]),
+            Enemy::new("Nu", 180, 12, 3, mandel_coords[1]),
+            Enemy::new("Retinite", 250, 6, 4, mandel_coords[2]),
+            Enemy::new("Rend", 120, 10, 6, mandel_coords[3]),
+            Enemy::new("Mete", 120, 8, 5, mandel_coords[4]),
         ];
 
         // Randomly select 1-5 enemies
@@ -349,7 +356,7 @@ impl App {
 
     fn update(&mut self) {
         let now = Instant::now();
-        if now.duration_since(self.last_tick).as_millis() >= TICK_RATE_MS as u128 {
+        if now.duration_since(self.last_tick).as_millis() >= TICK_RATE as u128 {
             self.tick_count += 1;
             self.last_tick = now;
             
@@ -360,6 +367,26 @@ impl App {
             // Update enemy effects
             for enemy in &mut self.enemies {
                 enemy.update_effects();
+            }
+            
+            // Update enemy attack timers
+            for enemy in &mut self.enemies {
+                if !enemy.is_stunned {
+                    if enemy.attack_timer > 0 {
+                        enemy.attack_timer -= 1;
+                    } else {
+                        // Enemy attacks!
+                        let damage = enemy.attack_damage;
+                        self.player.health = self.player.health.saturating_sub(damage);
+                        self.message = Some((
+                            format!("{} attacks for {} damage!", enemy.name, damage),
+                            Instant::now()
+                        ));
+                        
+                        // Reset attack timer with some randomness
+                        enemy.attack_timer = enemy.attack_speed + (rand::random::<u32>() % 5);
+                    }
+                }
             }
             
             // Remove defeated enemies
@@ -505,6 +532,57 @@ fn render_message(f: &mut Frame, area: Rect, message: &str) {
     f.render_widget(message_para, area);
 }
 
+fn render_enemy_info(f: &mut Frame, enemy: &Enemy, area: Rect, is_selected: bool) {
+    let border_style = if is_selected {
+        Style::default().fg(Color::Yellow)
+    } else {
+        Style::default().fg(Color::DarkGray)
+    };
+
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .border_style(border_style);
+    
+    let inner_area = block.inner(area);
+    f.render_widget(block, area);
+    
+    // Add attack timer indicator
+    let timer_bar = if enemy.attack_timer > 0 {
+        format!("Attack in: {}/{}", enemy.attack_timer, enemy.attack_speed)
+    } else {
+        "Attacking!".to_string()
+    };
+
+    let health_label = format!("{} {}/{}", enemy.name, enemy.health, enemy.max_health);
+    
+    let health_bar = Gauge::default()
+        .block(Block::default().title(health_label).borders(Borders::ALL))
+        .gauge_style(Style::default().fg(Color::Red).bg(Color::DarkGray))
+        .ratio(enemy.health_percentage() as f64 / 100.0);
+        
+    let timer_gauge = Gauge::default()
+        .block(Block::default().title(timer_bar).borders(Borders::NONE))
+        .gauge_style(Style::default().fg(Color::Cyan).bg(Color::DarkGray))
+        .ratio(1.0 - (enemy.attack_timer as f64 / enemy.attack_speed as f64).max(0.0).min(1.0));
+
+    let chunks = Layout::vertical([
+        Constraint::Length(8), // Portrait
+        Constraint::Length(3), // Health bar
+        Constraint::Length(2), // Attack timer
+    ]).spacing(1)
+      .margin(1)
+      .split(inner_area);
+
+    let portrait = enemy.render_portrait(12, 8);
+    let portrait_para = Paragraph::new(portrait)
+        .style(Style::default().fg(Color::White).bg(Color::Black))
+        .alignment(Alignment::Center);
+    f.render_widget(portrait_para, chunks[0]);
+
+    f.render_widget(health_bar, chunks[1]);
+    f.render_widget(timer_gauge, chunks[2]);
+}
+
 fn ui(f: &mut Frame, app: &mut App) {
     let size = f.size();
 
@@ -558,58 +636,7 @@ fn ui(f: &mut Frame, app: &mut App) {
     // Render each enemy
     for (i, (enemy, area)) in app.enemies.iter().zip(enemy_chunks.iter()).enumerate() {
         let is_selected = i == app.current_enemy;
-        let border_style = if is_selected {
-            Style::default().fg(Color::Yellow)
-        } else {
-            Style::default().fg(Color::DarkGray)
-        };
-
-        let enemy_block = Block::default()
-            .borders(Borders::ALL)
-            .border_style(border_style)
-            .title_alignment(Alignment::Center);
-
-        let inner_area = enemy_block.inner(*area);
-        f.render_widget(enemy_block, *area);
-
-        // Layout for each enemy: portrait on top, name and health below
-        let enemy_layout = Layout::vertical([
-            Constraint::Length(8), // Portrait
-            Constraint::Length(1), // Name
-            Constraint::Length(1), // Health bar
-            Constraint::Min(1),    // Spacer
-        ])
-        .split(inner_area);
-
-        // Render portrait (12x8 as per requirements)
-        let portrait = enemy.render_portrait(12, 8);
-        let portrait_para = Paragraph::new(portrait)
-            .style(Style::default().fg(Color::White).bg(Color::Black))
-            .alignment(Alignment::Center);
-        f.render_widget(portrait_para, enemy_layout[0]);
-
-        // Render enemy name
-        let name_style = if is_selected {
-            Style::default().fg(Color::Yellow).bold()
-        } else {
-            Style::default()
-        };
-        let name_para = Paragraph::new(Line::from(vec![Span::styled(&enemy.name, name_style)]))
-            .alignment(Alignment::Center);
-        f.render_widget(name_para, enemy_layout[1]);
-
-        // Render health bar
-        let health_gauge = Gauge::default()
-            .block(Block::default())
-            .gauge_style(
-                Style::default()
-                    .fg(Color::Red)
-                    .bg(Color::DarkGray)
-                    .add_modifier(ratatui::style::Modifier::BOLD),
-            )
-            .ratio(enemy.health_percentage() as f64 / 100.0)
-            .label(format!("HP: {}/{} ", enemy.health, enemy.max_health));
-        f.render_widget(health_gauge, enemy_layout[2]);
+        render_enemy_info(f, enemy, *area, is_selected);
     }
 
     // Render moves
