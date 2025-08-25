@@ -101,6 +101,10 @@ impl ConfigManager {
         self.data.settings.get(category).and_then(|c| c.get(key))
     }
 
+    pub fn get_keybind(&self, category: &str, key: &str) -> Option<&serde_json::Value> {
+        self.data.keybinds.get(category).and_then(|c| c.get(key))
+    }
+
     pub fn get_vector_setting(&self, category: &str, key: &str, environment: &str) -> [i32; 3] {
         let v = self.data.settings.get(category).and_then(|c| c.get(key));
         if let Some(obj) = v.and_then(|v| v.as_object()) {
