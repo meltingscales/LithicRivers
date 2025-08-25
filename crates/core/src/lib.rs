@@ -90,6 +90,20 @@ impl Game {
             ));
         }
 
+        // spawn 2 feral dogs a bit further
+        let dog_positions = [(sx + 12, sy + 12, sz), (sx + 13, sy + 13, sz)];
+        for (x, y, z) in dog_positions {
+            world.spawn((
+                Position { x, y, z },
+                GameEntity,
+                EntityKind::FeralDog,
+                FeralDog,
+                Glyph('d'),
+                SpriteRef::new("entities", "feral_dog"),
+                BlocksMovement,
+            ));
+        }
+
         // Deterministically spawn a few Logs near the player (~5 tiles away)
         // Use a local RNG derived from the seed so we don't perturb the global RNG sequence
         let mut spawn_rng = ChaCha20Rng::seed_from_u64(seed.wrapping_add(0x5eed_cafe_f00d_dead));

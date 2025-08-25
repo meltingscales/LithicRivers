@@ -219,7 +219,6 @@ See [STEAM-MVP.md](STEAM-MVP.md) for the complete release plan.
 - reintegrate speedscope for ratatui and rust build
 
 - migrate all of the code from python-old/ to rust...
-- migrate to ratatui
 - tutorial system that can be re-activated
   - context-aware tutorial
 - game checkpointing, branching saves
@@ -243,11 +242,8 @@ See [STEAM-MVP.md](STEAM-MVP.md) for the complete release plan.
 - finish working on `story.txt`...
 - in progress: steam API integration
 - ask AI: How should I start doing steamworks/steamapi integration?
-  - how should I do CICD for steam releases? I should document my tagging/branch rules.
 
 - save/load system where you can pick a save file from a list of saved games (build UI for this...)
-
-- For the rendering, wouldn't it be far more efficient to just render big patches of 3d objects/glypths, save them, and translate the 3d objects when the player moves? So the player actually never "moves", the world below them just gets translated on x/z.
 
 ## steam key giveaway list:
 - skomor123
