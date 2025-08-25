@@ -247,40 +247,7 @@ impl Keybinds {
     }
 
     fn parse_keycode(s: &str) -> Option<KeyCode> {
-        // Single character mappings
-        if s.len() == 1 {
-            let ch = s.chars().next().unwrap();
-            return Some(KeyCode::Char(ch));
-        }
-        match s {
-            // Common named keys
-            "ESCAPE" => Some(KeyCode::Esc),
-            "ENTER" => Some(KeyCode::Enter),
-            "SPACE" => Some(KeyCode::Char(' ')),
-            "TAB" => Some(KeyCode::Tab),
-            "BACKSPACE" => Some(KeyCode::Backspace),
-
-            // Arrows and paging
-            "UP" => Some(KeyCode::Up),
-            "DOWN" => Some(KeyCode::Down),
-            "LEFT" => Some(KeyCode::Left),
-            "RIGHT" => Some(KeyCode::Right),
-            "PAGEUP" | "PAGE_UP" => Some(KeyCode::PageUp),
-            "PAGEDOWN" | "PAGE_DOWN" => Some(KeyCode::PageDown),
-
-            // Numpad (map to equivalent characters)
-            "NUMPAD_1" => Some(KeyCode::Char('1')),
-            "NUMPAD_2" => Some(KeyCode::Char('2')),
-            "NUMPAD_3" => Some(KeyCode::Char('3')),
-            "NUMPAD_4" => Some(KeyCode::Char('4')),
-            "NUMPAD_5" => Some(KeyCode::Char('5')),
-            "NUMPAD_6" => Some(KeyCode::Char('6')),
-            "NUMPAD_7" => Some(KeyCode::Char('7')),
-            "NUMPAD_8" => Some(KeyCode::Char('8')),
-            "NUMPAD_9" => Some(KeyCode::Char('9')),
-
-            _ => panic!("unknown key: {}", s),
-        }
+        lithicrivers_core::keycode_mapping::parse_keycode(s)
     }
 }
 
@@ -292,47 +259,50 @@ fn render_help_panel(f: &mut Frame, app: &mut App, area: Rect) {
     )));
     lines.push(Line::from(""));
 
+    let movement_keys_list = vec![
+        app.config_manager
+            .get_printable_key_for_keybind("movement", "MOVE_NORTHWEST"),
+        app.config_manager
+            .get_printable_key_for_keybind("movement", "MOVE_NORTH"),
+        app.config_manager
+            .get_printable_key_for_keybind("movement", "MOVE_NORTHEAST"),
+        app.config_manager
+            .get_printable_key_for_keybind("movement", "MOVE_WEST"),
+        app.config_manager
+            .get_printable_key_for_keybind("movement", "WAIT"),
+        app.config_manager
+            .get_printable_key_for_keybind("movement", "MOVE_EAST"),
+        app.config_manager
+            .get_printable_key_for_keybind("movement", "MOVE_SOUTHWEST"),
+        app.config_manager
+            .get_printable_key_for_keybind("movement", "MOVE_SOUTH"),
+        app.config_manager
+            .get_printable_key_for_keybind("movement", "MOVE_SOUTHEAST"),
+    ];
+
     // custom movement help rendering
-    lines.push(Line::from(Span::raw("Movement: Numpad by default")));
+    lines.push(Line::from(Span::raw(
+        "Movement Directions: Numpad by default",
+    )));
     lines.push(Line::from(Span::raw("")));
     lines.push(Line::from(Span::raw(" NW N NE ")));
     lines.push(Line::from(Span::raw(" W  .  E ")));
     lines.push(Line::from(Span::raw(" SW S SE ")));
     lines.push(Line::from(Span::raw("")));
+    lines.push(Line::from(Span::raw("Movement Keys: ")));
     lines.push(Line::from(format!(
-        " {} {} {} ",
-        app.config_manager
-            .get_keybind("movement", "MOVE_NORTHWEST")
-            .unwrap(),
-        app.config_manager
-            .get_keybind("movement", "MOVE_NORTH")
-            .unwrap(),
-        app.config_manager
-            .get_keybind("movement", "MOVE_NORTHEAST")
-            .unwrap()
+        " {}  {}  {} ",
+        movement_keys_list[0], movement_keys_list[1], movement_keys_list[2]
     )));
     lines.push(Line::from(format!(
-        " {} {} {} ",
-        app.config_manager
-            .get_keybind("movement", "MOVE_WEST")
-            .unwrap(),
-        app.config_manager.get_keybind("movement", "WAIT").unwrap(),
-        app.config_manager
-            .get_keybind("movement", "MOVE_EAST")
-            .unwrap()
+        " {}  {}  {} ",
+        movement_keys_list[3], movement_keys_list[4], movement_keys_list[5]
     )));
     lines.push(Line::from(format!(
-        " {} {} {} ",
-        app.config_manager
-            .get_keybind("movement", "MOVE_SOUTHWEST")
-            .unwrap(),
-        app.config_manager
-            .get_keybind("movement", "MOVE_SOUTH")
-            .unwrap(),
-        app.config_manager
-            .get_keybind("movement", "MOVE_SOUTHEAST")
-            .unwrap()
+        " {}  {}  {} ",
+        movement_keys_list[6], movement_keys_list[7], movement_keys_list[8]
     )));
+    lines.push(Line::from(Span::raw("")));
 
     // Group keybinds by category
     let mut categorized_binds: HashMap<String, Vec<(String, Vec<KeyCode>)>> = HashMap::new();
