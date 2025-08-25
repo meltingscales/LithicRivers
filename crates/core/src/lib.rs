@@ -204,9 +204,10 @@ impl Game {
         let mining_success = mining_system(&mut self.world, &mut self.res);
         move_player_system(&mut self.world, &mut self.res);
         pickup_system(&mut self.world, &mut self.res);
+        feral_dog_system(&mut self.world, &mut self.res);
         stumbling_sheep_system(&mut self.world, &mut self.res);
 
-        // Fluids removed
+        // Fluids were removed.
 
         mining_success
     }

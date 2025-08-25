@@ -1,5 +1,5 @@
 use crate::components::{
-    BlocksMovement, DroppedItem, Inventory, ItemKind, Position, Sheep, SpriteRef,
+    BlocksMovement, DroppedItem, FeralDog, Inventory, ItemKind, Position, Sheep, SpriteRef,
 };
 use crate::resources::Resources;
 use hecs::World;
@@ -169,6 +169,77 @@ pub fn pickup_system(world: &mut World, res: &mut Resources) {
     // Remove the picked up items from the world
     for e in pickups {
         let _ = world.despawn(e);
+    }
+}
+
+// Feral dogs will chase the player if they get too close.
+pub fn feral_dog_system(world: &mut World, res: &mut Resources) {
+    use rand::Rng;
+
+    // Get player position if available
+    let player_pos = match res
+        .player_entity
+        .and_then(|e| world.get::<&Position>(e).ok())
+    {
+        Some(pos) => *pos,
+        None => return, // No player to chase
+    };
+
+    // Collect dogs with their positions to avoid borrowing issues
+    let mut dogs = Vec::new();
+    for (e, (pos, _)) in world.query::<(&Position, &FeralDog)>().iter() {
+        dogs.push((e, *pos));
+    }
+
+    // Process each dog
+    for (dog_entity, dog_pos) in dogs {
+        // Calculate distance to player
+        let dx = player_pos.x - dog_pos.x;
+        let dy = player_pos.y - dog_pos.y;
+        let distance_sq = dx * dx + dy * dy;
+
+        // Only chase if player is within 10 tiles
+        if distance_sq > 100 {
+            // 10^2
+            continue;
+        }
+
+        // decide if dog should do nothing for a turn (50% chance)
+        if res.rng.gen_range(0..2) == 0 {
+            continue;
+        }
+
+        // Determine movement direction (signum gives -1, 0, or 1)
+        let move_x = dx.signum();
+        let move_y = dy.signum();
+
+        // Calculate new position
+        let new_x = dog_pos.x + move_x;
+        let new_y = dog_pos.y + move_y;
+        let new_z = dog_pos.z;
+
+        // // Check if new position is blocked by terrain
+        // TODO Add is_passable to World...
+        // if !res.world.is_passable(new_x, new_y, new_z) {
+        //     continue;
+        // }
+
+        // Check for blocking entities at new position
+        let mut blocked = false;
+        for (_, (other_pos, _)) in world.query::<(&Position, &BlocksMovement)>().iter() {
+            if other_pos.x == new_x && other_pos.y == new_y && other_pos.z == new_z {
+                blocked = true;
+                break;
+            }
+        }
+
+        // Move the dog if not blocked
+        if !blocked {
+            if let Ok(mut pos) = world.get::<&mut Position>(dog_entity) {
+                pos.x = new_x;
+                pos.y = new_y;
+            }
+        }
     }
 }
 
