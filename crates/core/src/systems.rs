@@ -218,11 +218,10 @@ pub fn feral_dog_system(world: &mut World, res: &mut Resources) {
         let new_y = dog_pos.y + move_y;
         let new_z = dog_pos.z;
 
-        // // Check if new position is blocked by terrain
-        // TODO Add is_passable to World...
-        // if !res.world.is_passable(new_x, new_y, new_z) {
-        //     continue;
-        // }
+        // Check if new position is blocked by terrain
+        if !res.world.is_passable(new_x, new_y, new_z) {
+            continue;
+        }
 
         // Check for blocking entities at new position
         let mut blocked = false;
