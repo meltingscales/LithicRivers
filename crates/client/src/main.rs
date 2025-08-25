@@ -94,6 +94,7 @@ impl MenuTab {
 
 struct App {
     game: Game,
+    config_manager: ConfigManager,
     sprite_loader: SpriteLoader,
     should_quit: bool,
     // UI state: remember bottom menu rect for click handling
@@ -291,6 +292,48 @@ fn render_help_panel(f: &mut Frame, app: &mut App, area: Rect) {
     )));
     lines.push(Line::from(""));
 
+    // custom movement help rendering
+    lines.push(Line::from(Span::raw("Movement: Numpad by default")));
+    lines.push(Line::from(Span::raw("")));
+    lines.push(Line::from(Span::raw(" NW N NE ")));
+    lines.push(Line::from(Span::raw(" W  .  E ")));
+    lines.push(Line::from(Span::raw(" SW S SE ")));
+    lines.push(Line::from(Span::raw("")));
+    lines.push(Line::from(format!(
+        " {} {} {} ",
+        app.config_manager
+            .get_keybind("movement", "MOVE_NORTHWEST")
+            .unwrap(),
+        app.config_manager
+            .get_keybind("movement", "MOVE_NORTH")
+            .unwrap(),
+        app.config_manager
+            .get_keybind("movement", "MOVE_NORTHEAST")
+            .unwrap()
+    )));
+    lines.push(Line::from(format!(
+        " {} {} {} ",
+        app.config_manager
+            .get_keybind("movement", "MOVE_WEST")
+            .unwrap(),
+        app.config_manager.get_keybind("movement", "WAIT").unwrap(),
+        app.config_manager
+            .get_keybind("movement", "MOVE_EAST")
+            .unwrap()
+    )));
+    lines.push(Line::from(format!(
+        " {} {} {} ",
+        app.config_manager
+            .get_keybind("movement", "MOVE_SOUTHWEST")
+            .unwrap(),
+        app.config_manager
+            .get_keybind("movement", "MOVE_SOUTH")
+            .unwrap(),
+        app.config_manager
+            .get_keybind("movement", "MOVE_SOUTHEAST")
+            .unwrap()
+    )));
+
     // Group keybinds by category
     let mut categorized_binds: HashMap<String, Vec<(String, Vec<KeyCode>)>> = HashMap::new();
     for (key, value) in &app.keybinds.map {
@@ -306,7 +349,7 @@ fn render_help_panel(f: &mut Frame, app: &mut App, area: Rect) {
     }
 
     // Define the order of categories
-    let categories = vec!["movement", "viewport", "scale", "action", "ui", "inventory"];
+    let categories = vec!["viewport", "scale", "action", "ui", "inventory"];
 
     for category in categories {
         if let Some(binds) = categorized_binds.get(category) {
@@ -419,7 +462,8 @@ impl App {
         let log_full_path = format!("{}/LithicRivers.log.{}", log_dir_abs, today);
 
         // Build keybinds from game config
-        let keybinds = Keybinds::from_config(&game.res.config);
+        let config_manager = ConfigManager::new();
+        let keybinds = Keybinds::from_config(&config_manager);
 
         // Initialize look cursor to player's position (or origin fallback)
         let mut look_cursor = lithicrivers_core::components::Position { x: 0, y: 0, z: 0 };
@@ -440,6 +484,7 @@ impl App {
 
         App {
             game,
+            config_manager,
             sprite_loader,
             should_quit: false,
             bottom_menu_rect: None,
