@@ -28,6 +28,7 @@ const TICK_RATE_MS: u64 = 100; // 100ms per tick
 enum MoveType {
     Escape,
     Fireball,
+    Melee,
     Tackle,
 }
 
@@ -78,6 +79,15 @@ impl Player {
             max_mana: PLAYER_MAX_MANA,
             moves: vec![
                 Move {
+                    name: "Melee".to_string(),
+                    move_type: MoveType::Melee,
+                    damage: 10,
+                    mana_cost: 0,
+                    cooldown: 0,
+                    current_cooldown: 0,
+                    effect: None,
+                },
+                Move {
                     name: "Escape".to_string(),
                     move_type: MoveType::Escape,
                     damage: 0,
@@ -87,7 +97,7 @@ impl Player {
                     effect: None,
                 },
                 Move {
-                    name: "Fireball".to_string(),
+                    name: "Fireball (AoE)".to_string(),
                     move_type: MoveType::Fireball,
                     damage: 30,
                     mana_cost: 40,
@@ -300,6 +310,14 @@ impl App {
 
         if let Some(mv) = self.player.use_move(self.current_move) {
             let message = match mv.move_type {
+                MoveType::Melee => {
+                    if let Some(enemy) = self.enemies.get_mut(self.current_enemy) {
+                        enemy.health = enemy.health.saturating_sub(mv.damage);
+                        Some(format!("Melee hits {} for {} damage!", enemy.name, mv.damage))
+                    } else {
+                        None
+                    }
+                }
                 MoveType::Escape => {
                     self.enemies.clear();
                     Some("You escaped from battle!".to_string())
