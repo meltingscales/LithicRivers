@@ -54,12 +54,15 @@ struct App {
 
 impl App {
     fn new() -> Self {
-
         let mut mandel_coords = vec![];
         for _ in 0..10 {
-            mandel_coords.push((rand::random::<f64>() * 2.0 - 1.0, rand::random::<f64>() * 2.0 - 1.0, rand::random::<f64>() * 2.0 + 1.0));
+            mandel_coords.push((
+                rand::random::<f64>() * 2.0 - 1.0,
+                rand::random::<f64>() * 2.0 - 1.0,
+                rand::random::<f64>() * 2.0 + 1.0,
+            ));
         }
-        
+
         // Create 1-5 random enemies with different seeds for variety
         let mut enemies = vec![
             Enemy::new("Gato", 120, mandel_coords[0]),
@@ -68,7 +71,7 @@ impl App {
             Enemy::new("Rend", 120, mandel_coords[3]),
             Enemy::new("Mete", 120, mandel_coords[4]),
         ];
-        
+
         // Randomly select 1-5 enemies
         use rand::seq::SliceRandom;
         use rand::thread_rng;
@@ -125,7 +128,8 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>) -> io::Result<()> {
                             enemy.health = enemy.health.saturating_sub(damage);
                             if enemy.health == 0 {
                                 app.enemies.remove(app.current_enemy);
-                                if app.current_enemy >= app.enemies.len() && !app.enemies.is_empty() {
+                                if app.current_enemy >= app.enemies.len() && !app.enemies.is_empty()
+                                {
                                     app.current_enemy = app.enemies.len() - 1;
                                 }
                                 if app.enemies.is_empty() {
@@ -200,17 +204,18 @@ fn ui(f: &mut Frame, app: &App) {
             .borders(Borders::ALL)
             .border_style(border_style)
             .title_alignment(Alignment::Center);
-        
+
         let inner_area = enemy_block.inner(*area);
         f.render_widget(enemy_block, *area);
 
         // Layout for each enemy: portrait on top, name and health below
         let enemy_layout = Layout::vertical([
-            Constraint::Length(8),  // Portrait
-            Constraint::Length(1),  // Name
-            Constraint::Length(1),  // Health bar
-            Constraint::Min(1),     // Spacer
-        ]).split(inner_area);
+            Constraint::Length(8), // Portrait
+            Constraint::Length(1), // Name
+            Constraint::Length(1), // Health bar
+            Constraint::Min(1),    // Spacer
+        ])
+        .split(inner_area);
 
         // Render portrait (12x8 as per requirements)
         let portrait = enemy.render_portrait(12, 8);
@@ -225,18 +230,19 @@ fn ui(f: &mut Frame, app: &App) {
         } else {
             Style::default()
         };
-        let name_para = Paragraph::new(Line::from(vec![
-            Span::styled(&enemy.name, name_style)
-        ])).alignment(Alignment::Center);
+        let name_para = Paragraph::new(Line::from(vec![Span::styled(&enemy.name, name_style)]))
+            .alignment(Alignment::Center);
         f.render_widget(name_para, enemy_layout[1]);
 
         // Render health bar
         let health_gauge = Gauge::default()
             .block(Block::default())
-            .gauge_style(Style::default()
-                .fg(Color::Red)
-                .bg(Color::DarkGray)
-                .add_modifier(ratatui::style::Modifier::BOLD))
+            .gauge_style(
+                Style::default()
+                    .fg(Color::Red)
+                    .bg(Color::DarkGray)
+                    .add_modifier(ratatui::style::Modifier::BOLD),
+            )
             .ratio(enemy.health_percentage() as f64 / 100.0)
             .label(format!("HP: {}/{} ", enemy.health, enemy.max_health));
         f.render_widget(health_gauge, enemy_layout[2]);
@@ -248,13 +254,11 @@ fn ui(f: &mut Frame, app: &App) {
         "H: Hit ".into(),
         "Q: Quit".into(),
     ]);
-    let footer = Paragraph::new(controls)
-        .alignment(Alignment::Center)
-        .block(
-            Block::default()
-                .borders(Borders::TOP)
-                .border_style(Style::default().fg(Color::DarkGray)),
-        );
+    let footer = Paragraph::new(controls).alignment(Alignment::Center).block(
+        Block::default()
+            .borders(Borders::TOP)
+            .border_style(Style::default().fg(Color::DarkGray)),
+    );
     f.render_widget(footer, chunks[1]);
 }
 
