@@ -72,7 +72,7 @@ build: fmt clean git-data copy-config-data
     {{cargoz_env}} build -p lithicrivers-client --bin lithicrivers-client {{build_flags}}
 
 # Build the project in release mode
-build-release: fmt clean git-data copy-config-data
+build-release: fmt clean git-data copy-config-data build-demos-release
     cp -f CHANGELOG.txt crates/client/assets/config/CHANGELOG.txt
     cp -f STEAM_APP_ID crates/client/assets/config/STEAM_APP_ID
     cp -f VERSION crates/client/assets/config/VERSION
