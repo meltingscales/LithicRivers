@@ -198,7 +198,8 @@ See [STEAM-MVP.md](STEAM-MVP.md) for the complete release plan.
 - fights only occur on the same Z-level, no 3d combat. just like qud.
 
 ## MVP for steam release (2025 christmas release)
-  
+- Auto harvest Mode
+- Dig mode (to not get stuck in rocks when moving Z axis)
 - consider using cardboard/paper cutouts to model the game system
   - inventory pages
   - ui

@@ -1,5 +1,5 @@
 {
     "name": "Player",
-    "color": "#FFFF00",
-    "description": "The player character"
+    "color": "#cc0000",
+    "description": "The el player character"
 } 
