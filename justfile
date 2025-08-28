@@ -85,6 +85,7 @@ build-release: fmt clean git-data copy-config-data build-demos-release
     {{cargoz_env}} build -p lithicrivers-client --bin lithicrivers-client --release {{build_flags}}
 
 stage-artifacts-legal:
+    mkdir -p artifacts/
     cp -f LICENSE artifacts/
     cp -f THIRD-PARTY-NOTICES.txt artifacts/
 

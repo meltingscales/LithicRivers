@@ -26,6 +26,7 @@ build: git-data copy-config-data
 
 
 stage-artifacts-legal:
+    New-Item -ItemType Directory -Path artifacts
     Copy-Item -Path LICENSE -Destination artifacts/
     Copy-Item -Path THIRD-PARTY-NOTICES.txt -Destination artifacts/
 

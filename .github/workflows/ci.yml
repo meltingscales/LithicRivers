@@ -124,8 +124,8 @@ jobs:
           name: lithicrivers-${{ github.ref_name }}-${{ github.sha }}-${{ matrix.os }}
           path: artifacts/lithicrivers-macos.zip
 
-  steam-upload-ubuntu:
-    name: Upload to Steam for Ubuntu (SteamPipe)
+  steam-upload:
+    name: Upload to Steam (SteamPipe)
     continue-on-error: true
     needs: build
     runs-on: ubuntu-latest
