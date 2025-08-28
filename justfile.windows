@@ -23,17 +23,21 @@ copy-config-data:
     cp -Force LICENSE crates/client/assets/config/LICENSE
     cp -Force THIRD-PARTY-NOTICES.txt crates/client/assets/config/THIRD-PARTY-NOTICES.txt
 
+# remove artifacts/ folder but NOT cargo cache or target/ folder.
+clean: 
+    rm -Force -Recurse ./artifacts
+
 # Build in debug mode (default)
 build: git-data copy-config-data
     cargo build --workspace -j {{cpu_count}}
 
-stage-artifacts: build build-demos
+stage-artifacts: clean build build-demos
     powershell.exe scripts/stage-artifacts.ps1
 
 build-release: git-data copy-config-data build-demos-release
     cargo build --workspace --release -j {{cpu_count}}
 
-stage-artifacts-release: build-release build-demos-release
+stage-artifacts-release: clean build-release build-demos-release
     powershell.exe scripts/stage-artifacts-release.ps1
 
 build-demos:
@@ -65,10 +69,6 @@ client-release: build-release
 # Run tests
 test:
     cargo test --workspace -j {{cpu_count}}
-
-# Clean build artifacts
-clean:
-    cargo clean
 
 # Install Rust toolchain
 install:
