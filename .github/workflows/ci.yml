@@ -159,10 +159,11 @@ jobs:
 
       - name: Setup steamcmd credentials
         run: |
-          # populate ~/.local/share/Steam/config/config.vdf with our secret value
-          mkdir -p ~/.local/share/Steam/config
-          echo "$STEAM_CONFIG_VDF" > ~/.local/share/Steam/config/config.vdf
-          ls -lash ~/.local/share/Steam/config/config.vdf
+          # populate ~/.steam/debian-installation/config/config.vdf with our secret value
+          mkdir -p ~/.steam/debian-installation/config/
+          echo "$STEAM_CONFIG_VDF" > ~/.steam/debian-installation/config/config.vdf
+          ls -lash ~/.steam/debian-installation/
+          ls -lash ~/.steam/debian-installation/config/config.vdf
 
       - name: Test steamcmd login and print info
         run: |
