@@ -150,9 +150,36 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y steamcmd
 
       - name: Upload to Steam for Ubuntu (SteamPipe)
-        if: env.STEAM_USERNAME != '' && env.STEAM_CONFIG_VDF != ''
         run: |
           APPVDF="$(realpath scripts/app_build_linux.vdf)"
+          
+          # populate ~/.local/share/Steam/config/config.vdf with our secret value
+          mkdir -p ~/.local/share/Steam/config
+          echo '$STEAM_CONFIG_VDF' > ~/.local/share/Steam/config/config.vdf
+
+          # this uses our cached config.vdf and just prints info
+          steamcmd +login "$STEAM_USERNAME" +info +quit
+
+          # this uploads the app
+          steamcmd +login "$STEAM_USERNAME" +run_app_build_http $APPVDF +quit
+
+      - name: Upload to Steam for Windows (SteamPipe)
+        run: |
+          APPVDF="$(realpath scripts/app_build_windows.vdf)"
+          
+          # populate ~/.local/share/Steam/config/config.vdf with our secret value
+          mkdir -p C:\ProgramData\chocolatey\lib\steamcmd\tools\config
+          echo '$STEAM_CONFIG_VDF' > C:\ProgramData\chocolatey\lib\steamcmd\tools\config\config.vdf
+
+          # this uses our cached config.vdf and just prints info
+          steamcmd +login "$STEAM_USERNAME" +info +quit
+
+          # this uploads the app
+          steamcmd +login "$STEAM_USERNAME" +run_app_build_http $APPVDF +quit
+
+      - name: Upload to Steam for macOS (SteamPipe)
+        run: |
+          APPVDF="$(realpath scripts/app_build_macos.vdf)"
           
           # populate ~/.local/share/Steam/config/config.vdf with our secret value
           mkdir -p ~/.local/share/Steam/config
