@@ -171,7 +171,7 @@ jobs:
 
       - name: Test manual login and then try to find where the hell the VDF file is (delete later)
         run: |
-          steamcmd +login $STEAM_USERNAME $STEAM_PASSWORD +info +set_steam_guard_code $STEAM_GUARD_CODE +quit
+          steamcmd +set_steam_guard_code $STEAM_GUARD_CODE +login $STEAM_USERNAME $STEAM_PASSWORD +info +quit
 
           echo "config.vdf:"
           find / -name "config.vdf" 2>/dev/null
