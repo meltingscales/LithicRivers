@@ -124,9 +124,10 @@ jobs:
           path: artifacts/lithicrivers-macos.zip
 
   steam-upload-ubuntu:
+    name: Upload to Steam for Ubuntu (SteamPipe)
+    continue-on-error: true
     needs: build
     runs-on: ubuntu-latest
-    if: vars.ENABLE_STEAM_UPLOAD == 'true'
     env:
       STEAM_USERNAME: ${{ secrets.STEAM_USERNAME }}
       STEAM_CONFIG_VDF: ${{ secrets.STEAM_CONFIG_VDF }}
@@ -189,18 +190,20 @@ jobs:
           choco install steamcmd
 
       - name: Upload to Steam for Windows (SteamPipe)
+        shell: pwsh
         run: |
-          APPVDF="$(realpath scripts/app_build_windows.vdf)"
+          $APPVDF = (Resolve-Path "scripts/app_build_windows.vdf").Path
           
-          # populate ~/.local/share/Steam/config/config.vdf with our secret value
-          mkdir -p C:\ProgramData\chocolatey\lib\steamcmd\tools\config
-          echo '$STEAM_CONFIG_VDF' > C:\ProgramData\chocolatey\lib\steamcmd\tools\config\config.vdf
+          # populate config.vdf with our secret value
+          $configPath = "C:\ProgramData\chocolatey\lib\steamcmd\tools\config"
+          New-Item -ItemType Directory -Force -Path $configPath | Out-Null
+          $env:STEAM_CONFIG_VDF | Out-File -FilePath "$configPath\config.vdf" -Encoding ascii
 
           # this uses our cached config.vdf and just prints info
-          steamcmd +login "$STEAM_USERNAME" +info +quit
+          steamcmd +login $env:STEAM_USERNAME +info +quit
 
           # this uploads the app
-          steamcmd +login "$STEAM_USERNAME" +run_app_build_http $APPVDF +quit
+          steamcmd +login $env:STEAM_USERNAME +run_app_build_http $APPVDF +quit
 
   steam-upload-macos:
     name: Upload to Steam for macOS (SteamPipe)
