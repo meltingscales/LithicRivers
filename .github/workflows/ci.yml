@@ -131,6 +131,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       STEAM_USERNAME: ${{ secrets.STEAM_USERNAME }}
+      STEAM_PASSWORD: ${{ secrets.STEAM_PASSWORD }}
       STEAM_CONFIG_VDF: ${{ secrets.STEAM_CONFIG_VDF }}
       STEAM_APP_ID: ${{ secrets.STEAM_APP_ID }}
     steps:
@@ -157,18 +158,29 @@ jobs:
           echo steam steam/license note '' | sudo debconf-set-selections
           sudo apt-get install -y steamcmd
 
-      - name: Setup steamcmd credentials
-        run: |
-          # populate ~/.steam/debian-installation/config/config.vdf with our secret value
-          mkdir -p ~/.steam/debian-installation/config/
-          echo "$STEAM_CONFIG_VDF" > ~/.steam/debian-installation/config/config.vdf
-          ls -lash ~/.steam/debian-installation/
-          ls -lash ~/.steam/debian-installation/config/config.vdf
+      # - name: Setup steamcmd credentials
+      #   run: |
+      #     # populate ~/.steam/debian-installation/config/config.vdf with our secret value
+      #     mkdir -p ~/.steam/debian-installation/config/
+      #     echo "$STEAM_CONFIG_VDF" > ~/.steam/debian-installation/config/config.vdf
+      #     ls -lash ~/.steam/debian-installation/
+      #     ls -lash ~/.steam/debian-installation/config/config.vdf
+      #     ls -lash /home/runner/Steam/logs/ 
 
-      - name: Test steamcmd login and print info
+      - name: Test manual login and then try to find where the hell the VDF file is (delete later)
         run: |
-          steamcmd +login "$STEAM_USERNAME" +info +quit
+          steamcmd +login "$STEAM_USERNAME" "$STEAM_PASSWORD" +info +quit
 
+          echo "config.vdf:"
+          find / -name "config.vdf" 2>/dev/null
+
+          echo "all vdf:"
+          find / -name "*.vdf" 2>/dev/null
+
+          - name: Test steamcmd login and print info
+          run: |
+            steamcmd +login "$STEAM_USERNAME" +info +quit
+  
       - name: Upload to Steam for Ubuntu (SteamPipe)
         run: |
           APPVDF="$(realpath app_build_linux.vdf)"
