@@ -156,17 +156,21 @@ jobs:
           echo steam steam/license note '' | sudo debconf-set-selections
           sudo apt-get install -y steamcmd
 
+      - name: Setup steamcmd credentials
+        run: |
+          # populate ~/.local/share/Steam/config/config.vdf with our secret value
+          mkdir -p ~/.local/share/Steam/config
+          echo "$STEAM_CONFIG_VDF" > ~/.local/share/Steam/config/config.vdf
+          ls -lash ~/.local/share/Steam/config/config.vdf
+
+      - name: Test steamcmd login and print info
+        run: |
+          steamcmd +login "$STEAM_USERNAME" +info +quit
+
       - name: Upload to Steam for Ubuntu (SteamPipe)
         run: |
           APPVDF="$(realpath app_build_linux.vdf)"
           
-          # populate ~/.local/share/Steam/config/config.vdf with our secret value
-          mkdir -p ~/.local/share/Steam/config
-          echo '$STEAM_CONFIG_VDF' > ~/.local/share/Steam/config/config.vdf
-
-          # this uses our cached config.vdf and just prints info
-          steamcmd +login "$STEAM_USERNAME" +info +quit
-
           # this uploads the app
           steamcmd +login "$STEAM_USERNAME" +run_app_build_http $APPVDF +quit
 
@@ -195,18 +199,22 @@ jobs:
         run: |
           choco install steamcmd
 
-      - name: Upload to Steam for Windows (SteamPipe)
-        shell: pwsh
+      - name: Setup steamcmd credentials
         run: |
-          $APPVDF = (Resolve-Path "app_build_windows.vdf").Path
-          
           # populate config.vdf with our secret value
           $configPath = "C:\ProgramData\chocolatey\lib\steamcmd\tools\config"
           New-Item -ItemType Directory -Force -Path $configPath | Out-Null
           $env:STEAM_CONFIG_VDF | Out-File -FilePath "$configPath\config.vdf" -Encoding ascii
+          Get-ChildItem -Path $configPath\config.vdf
 
-          # this uses our cached config.vdf and just prints info
-          steamcmd +login $env:STEAM_USERNAME +info +quit
+      - name: Test steamcmd login and print info
+        run: |
+          steamcmd +login "$STEAM_USERNAME" +info +quit
+
+      - name: Upload to Steam for Windows (SteamPipe)
+        shell: pwsh
+        run: |
+          $APPVDF = (Resolve-Path "app_build_windows.vdf").Path
 
           # this uploads the app
           steamcmd +login $env:STEAM_USERNAME +run_app_build_http $APPVDF +quit
@@ -236,17 +244,20 @@ jobs:
         run: |
           brew install steamcmd
 
+      - name: Setup steamcmd credentials
+        run: |
+          mkdir -p ~/.local/share/Steam/config
+          echo "$STEAM_CONFIG_VDF" > ~/.local/share/Steam/config/config.vdf
+          ls -lash ~/.local/share/Steam/config/config.vdf
+
+      - name: Test steamcmd login and print info
+        run: |
+          steamcmd +login "$STEAM_USERNAME" +info +quit
+
       - name: Upload to Steam for macOS (SteamPipe)
         run: |
           APPVDF="$(realpath app_build_macos.vdf)"
           
-          # populate ~/.local/share/Steam/config/config.vdf with our secret value
-          mkdir -p ~/.local/share/Steam/config
-          echo '$STEAM_CONFIG_VDF' > ~/.local/share/Steam/config/config.vdf
-
-          # this uses our cached config.vdf and just prints info
-          steamcmd +login "$STEAM_USERNAME" +info +quit
-
           # this uploads the app
           steamcmd +login "$STEAM_USERNAME" +run_app_build_http $APPVDF +quit
 
