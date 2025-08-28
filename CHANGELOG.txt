@@ -1,3 +1,7 @@
+# v0.7.5.17
+
+- fix legal artifacts staging
+
 # v0.7.5.16
 
 - use unified build for steam
