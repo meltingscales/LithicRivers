@@ -245,7 +245,7 @@ impl SpriteLoader {
                     category, sprite_name, i
                 );
             }
-            let lines: Vec<&str> = block.split('\n').collect();
+            let lines: Vec<&str> = block.lines().collect();
             if lines.len() != 8 {
                 panic!(
                     "Sprite '{}::{}' 12x8 art has {} lines at entry {}, expected 8",
@@ -282,7 +282,7 @@ impl SpriteLoader {
                     i + 1
                 );
             }
-            let lines: Vec<&str> = sprite.split('\n').collect();
+            let lines: Vec<&str> = sprite.lines().collect();
             if lines.is_empty() {
                 panic!(
                     "Sprite '{}' in '{}' category has no lines at scale {}",
