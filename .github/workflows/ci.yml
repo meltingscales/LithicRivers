@@ -139,16 +139,42 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Download artifacts
+      - name: Download artifacts for Ubuntu
         uses: actions/download-artifact@v4
         with:
           name: lithicrivers-${{ github.ref_name }}-${{ github.sha }}-ubuntu-latest
-          path: artifacts
+          path: artifacts-zip
+      
+      - name: Download artifacts for Windows
+        uses: actions/download-artifact@v4
+        with:
+          name: lithicrivers-${{ github.ref_name }}-${{ github.sha }}-windows-latest
+          path: artifacts-zip
+      
+      - name: Download artifacts for macOS
+        uses: actions/download-artifact@v4
+        with:
+          name: lithicrivers-${{ github.ref_name }}-${{ github.sha }}-macos-latest
+          path: artifacts-zip
+
+      - name: Install unzip
+        run: |
+          sudo apt-get update && sudo apt-get install -y unzip
+          mkdir -p artifacts/ubuntu
+          mkdir -p artifacts/windows
+          mkdir -p artifacts/macos
 
       - name: Unzip Ubuntu artifacts for steam
         run: |
-          sudo apt-get update && sudo apt-get install -y unzip
-          unzip -o artifacts/lithicrivers-ubuntu.zip -d artifacts
+          unzip -o artifacts-zip/lithicrivers-ubuntu.zip -d artifacts/ubuntu
+
+      - name: Unzip Windows artifacts for steam
+        run: |
+          unzip -o artifacts-zip/lithicrivers-windows.zip -d artifacts/windows
+
+      - name: Unzip macOS artifacts for steam
+        run: |
+          unzip -o artifacts-zip/lithicrivers-macos.zip -d artifacts/macos
 
       - name: Install steamcmd
         run: |
@@ -179,107 +205,12 @@ jobs:
         run: |
           steamcmd +login $STEAM_USERNAME +info +quit
 
-      - name: Upload to Steam for Ubuntu (SteamPipe)
+      - name: Upload to Steam for all platforms (SteamPipe)
         run: |
-          APPVDF="$(realpath app_build_linux.vdf)"
+          APPVDF="$(realpath app_build_unified.vdf)"
           
           # this uploads the app
           steamcmd +login "$STEAM_USERNAME" +run_app_build_http $APPVDF +quit
-
-  steam-upload-windows:
-    name: Upload to Steam for Windows (SteamPipe)
-    continue-on-error: true
-    needs: build
-    runs-on: windows-latest
-    env:
-      STEAM_USERNAME: ${{ secrets.STEAM_USERNAME }}
-      STEAM_CONFIG_VDF: ${{ secrets.STEAM_CONFIG_VDF }}
-      STEAM_APP_ID: ${{ secrets.STEAM_APP_ID }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: lithicrivers-${{ github.ref_name }}-${{ github.sha }}-windows-latest
-          path: artifacts
-
-      - name: Unzip Windows artifacts for steam
-        run: |
-          Compress-Archive -Path artifacts\* -DestinationPath artifacts\lithicrivers-windows.zip -Force
-
-      - name: Install steamcmd
-        run: |
-          choco install steamcmd
-
-      - name: Setup steamcmd credentials
-        run: |
-          # populate config.vdf with our secret value
-          $configPath = "C:\ProgramData\chocolatey\lib\steamcmd\tools\config"
-          New-Item -ItemType Directory -Force -Path $configPath | Out-Null
-          $env:STEAM_CONFIG_VDF | Out-File -FilePath "$configPath\config.vdf" -Encoding ascii
-          Get-ChildItem -Path $configPath\config.vdf
-
-      - name: Test steamcmd login and print info
-        run: |
-          steamcmd +login $env:STEAM_USERNAME +info +quit
-
-      - name: Upload to Steam for Windows (SteamPipe)
-        shell: pwsh
-        run: |
-          $APPVDF = (Resolve-Path "app_build_windows.vdf").Path
-
-          # this uploads the app
-          steamcmd +login $env:STEAM_USERNAME +run_app_build_http $APPVDF +quit
-
-  steam-upload-macos:
-    name: Upload to Steam for macOS (SteamPipe)
-    continue-on-error: true
-    needs: build
-    runs-on: macos-latest
-    env:
-      STEAM_USERNAME: ${{ secrets.STEAM_USERNAME }}
-      STEAM_CONFIG_VDF: ${{ secrets.STEAM_CONFIG_VDF }}
-      STEAM_APP_ID: ${{ secrets.STEAM_APP_ID }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: lithicrivers-${{ github.ref_name }}-${{ github.sha }}-macos-latest
-          path: artifacts
-
-      - name: Unzip macOS artifacts for steam
-        run: |
-          ditto -xk artifacts/lithicrivers-macos.zip artifacts/
-
-      - name: Install steamcmd
-        run: |
-          brew install steamcmd
-
-      - name: Setup steamcmd credentials
-        run: |
-          mkdir -p ~/.local/share/Steam/config
-          echo "$STEAM_CONFIG_VDF" > ~/.local/share/Steam/config/config.vdf
-          ls -lash ~/.local/share/Steam/config/config.vdf
-
-      - name: Test steamcmd login and print info
-        run: |
-          steamcmd +login $STEAM_USERNAME +info +quit
-
-      - name: Upload to Steam for macOS (SteamPipe)
-        run: |
-          APPVDF="$(realpath app_build_macos.vdf)"
-          
-          # this uploads the app
-          steamcmd +login $STEAM_USERNAME +run_app_build_http $APPVDF +quit
 
   github-release-ubuntu:
     name: Create GitHub Release (Ubuntu)
