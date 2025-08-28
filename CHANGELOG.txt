@@ -1,3 +1,7 @@
+# v0.7.5
+
+- test steamcmd on multiplatform
+
 # v0.7.4.2
 
 - ci is uh...pissing me off!!!! fixed??? we'll find out
