@@ -15,7 +15,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        # os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest]
     env:
       RUSTC_WRAPPER: sccache
       SCCACHE_CACHE_SIZE: 5G
@@ -127,7 +128,7 @@ jobs:
   steam-upload-ubuntu:
     name: Upload to Steam for Ubuntu (SteamPipe)
     continue-on-error: true
-    needs: build
+    # needs: build
     runs-on: ubuntu-latest
     env:
       STEAM_USERNAME: ${{ secrets.STEAM_USERNAME }}
@@ -138,16 +139,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: lithicrivers-${{ github.ref_name }}-${{ github.sha }}-ubuntu-latest
-          path: artifacts
+      # - name: Download artifacts
+      #   uses: actions/download-artifact@v4
+      #   with:
+      #     name: lithicrivers-${{ github.ref_name }}-${{ github.sha }}-ubuntu-latest
+      #     path: artifacts
 
-      - name: Unzip Ubuntu artifacts for steam
-        run: |
-          sudo apt-get update && sudo apt-get install -y unzip
-          unzip -o artifacts/lithicrivers-ubuntu.zip -d artifacts
+      # - name: Unzip Ubuntu artifacts for steam
+      #   run: |
+      #     sudo apt-get update && sudo apt-get install -y unzip
+      #     unzip -o artifacts/lithicrivers-ubuntu.zip -d artifacts
 
       - name: Install steamcmd
         run: |
