@@ -170,7 +170,7 @@ jobs:
 
       - name: Test manual login and then try to find where the hell the VDF file is (delete later)
         run: |
-          steamcmd +login "$STEAM_USERNAME" "$STEAM_PASSWORD" +info +quit
+          steamcmd +login $STEAM_USERNAME $STEAM_PASSWORD +info +quit
 
           echo "config.vdf:"
           find / -name "config.vdf" 2>/dev/null
@@ -180,7 +180,7 @@ jobs:
 
           - name: Test steamcmd login and print info
           run: |
-            steamcmd +login "$STEAM_USERNAME" +info +quit
+            steamcmd +login $STEAM_USERNAME +info +quit
   
       - name: Upload to Steam for Ubuntu (SteamPipe)
         run: |
