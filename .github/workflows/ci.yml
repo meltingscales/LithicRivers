@@ -163,6 +163,31 @@ jobs:
           # this uploads the app
           steamcmd +login "$STEAM_USERNAME" +run_app_build_http $APPVDF +quit
 
+  steam-upload-windows:
+    name: Upload to Steam for Windows (SteamPipe)
+    continue-on-error: true
+    needs: build
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: lithicrivers-${{ github.ref_name }}-${{ github.sha }}-windows-latest
+          path: artifacts
+
+      - name: Unzip Windows artifacts for steam
+        run: |
+          Compress-Archive -Path artifacts\* -DestinationPath artifacts\lithicrivers-windows.zip -Force
+
+      - name: Install steamcmd
+        run: |
+          choco install steamcmd
+
       - name: Upload to Steam for Windows (SteamPipe)
         run: |
           APPVDF="$(realpath scripts/app_build_windows.vdf)"
@@ -176,6 +201,31 @@ jobs:
 
           # this uploads the app
           steamcmd +login "$STEAM_USERNAME" +run_app_build_http $APPVDF +quit
+
+  steam-upload-macos:
+    name: Upload to Steam for macOS (SteamPipe)
+    continue-on-error: true
+    needs: build
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: lithicrivers-${{ github.ref_name }}-${{ github.sha }}-macos-latest
+          path: artifacts
+
+      - name: Unzip macOS artifacts for steam
+        run: |
+          Compress-Archive -Path artifacts\* -DestinationPath artifacts\lithicrivers-macos.zip -Force
+
+      - name: Install steamcmd
+        run: |
+          brew install steamcmd
 
       - name: Upload to Steam for macOS (SteamPipe)
         run: |
