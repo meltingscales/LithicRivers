@@ -180,6 +180,10 @@ jobs:
     continue-on-error: true
     needs: build
     runs-on: windows-latest
+    env:
+      STEAM_USERNAME: ${{ secrets.STEAM_USERNAME }}
+      STEAM_CONFIG_VDF: ${{ secrets.STEAM_CONFIG_VDF }}
+      STEAM_APP_ID: ${{ secrets.STEAM_APP_ID }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -210,7 +214,7 @@ jobs:
 
       - name: Test steamcmd login and print info
         run: |
-          steamcmd +login "$STEAM_USERNAME" +info +quit
+          steamcmd +login $env:STEAM_USERNAME +info +quit
 
       - name: Upload to Steam for Windows (SteamPipe)
         shell: pwsh
@@ -225,6 +229,10 @@ jobs:
     continue-on-error: true
     needs: build
     runs-on: macos-latest
+    env:
+      STEAM_USERNAME: ${{ secrets.STEAM_USERNAME }}
+      STEAM_CONFIG_VDF: ${{ secrets.STEAM_CONFIG_VDF }}
+      STEAM_APP_ID: ${{ secrets.STEAM_APP_ID }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -253,14 +261,14 @@ jobs:
 
       - name: Test steamcmd login and print info
         run: |
-          steamcmd +login "$STEAM_USERNAME" +info +quit
+          steamcmd +login $STEAM_USERNAME +info +quit
 
       - name: Upload to Steam for macOS (SteamPipe)
         run: |
           APPVDF="$(realpath app_build_macos.vdf)"
           
           # this uploads the app
-          steamcmd +login "$STEAM_USERNAME" +run_app_build_http $APPVDF +quit
+          steamcmd +login $STEAM_USERNAME +run_app_build_http $APPVDF +quit
 
   github-release-ubuntu:
     name: Create GitHub Release (Ubuntu)
