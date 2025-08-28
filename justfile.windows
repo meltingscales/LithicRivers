@@ -11,17 +11,10 @@ toolchain := "stable"
 cpu_count := "$env:NUMBER_OF_PROCESSORS"
 
 git-data:
-    git describe --tags --abbrev=0 > VERSION
-    git rev-parse HEAD > GIT_SHA
-    git rev-parse --abbrev-ref HEAD > GIT_BRANCH
-
+    powershell.exe scripts/git-data.ps1
+    
 copy-config-data:
-    cp -Force STEAM_APP_ID crates/client/assets/config/STEAM_APP_ID
-    cp -Force VERSION crates/client/assets/config/VERSION
-    cp -Force GIT_SHA crates/client/assets/config/GIT_SHA
-    cp -Force GIT_BRANCH crates/client/assets/config/GIT_BRANCH
-    cp -Force LICENSE crates/client/assets/config/LICENSE
-    cp -Force THIRD-PARTY-NOTICES.txt crates/client/assets/config/THIRD-PARTY-NOTICES.txt
+    powershell.exe scripts/copy-config-data.ps1
 
 # remove artifacts/ folder but NOT cargo cache or target/ folder.
 clean: 
