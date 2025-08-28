@@ -54,14 +54,15 @@ jobs:
             C:\\Users\\runneradmin\\AppData\\Local\\sccache
           key: sccache-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            sccache-${{ runner.os }}-
+            sccache-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Cache cargo builds
         uses: Swatinem/rust-cache@v2
         with:
           cache-on-failure: true
-          shared-key: ${{ runner.os }}-nightly
-
+          key: ${{ runner.os }}-nightly-${{ hashFiles('**/Cargo.lock') }}
+          shared-key: ${{ runner.os }}-nightly-${{ hashFiles('**/Cargo.lock') }}
+      
       - name: Build on Windows
         if: matrix.os == 'windows-latest'
         run: |
