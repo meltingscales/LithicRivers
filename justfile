@@ -86,6 +86,7 @@ build-release: fmt clean git-data copy-config-data build-demos-release
 
 stage-artifacts-legal:
     mkdir -p artifacts/
+    cp -f CHANGELOG.txt artifacts/
     cp -f LICENSE artifacts/
     cp -f THIRD-PARTY-NOTICES.txt artifacts/
 
