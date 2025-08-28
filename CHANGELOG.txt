@@ -1,3 +1,7 @@
+# v0.7.5.1
+
+- fix windows steamcmd
+
 # v0.7.5
 
 - test steamcmd on multiplatform
