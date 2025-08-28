@@ -1,3 +1,7 @@
+# v0.7.5.8
+
+- *sisyphus meme music*
+
 # v0.7.5.7
 
 - one must imagine sisyphus happy
