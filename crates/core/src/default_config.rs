@@ -16,7 +16,13 @@ pub fn default_config() -> ConfigRoot {
             "MOVE_DOWN": [">"]
         },
         "scale": {"SCALE_UP": ["=", "+"], "SCALE_DOWN": ["-"], "SCALE_RESET": ["0"]},
-        "action": {"MINE": ["u"], "INTERACT": ["i"], "PICKUP_ITEMS": ["g"]},
+        "action": {
+            "MINE": ["q"],          // Quick mine toggle
+            "BUILD": ["e"],         // Quick build toggle
+            "INTERACT": ["f"],      // Interact/use
+            "PICKUP_ITEMS": ["r"],  // Quick grab
+            "LOOK_TOGGLE": ["c"],   // Look around
+        },
         "ui": {
             "CLOSE_HELP_MENU": ["ESCAPE"],
             "OPEN_COMMAND_MENU": ["/"],
@@ -25,12 +31,16 @@ pub fn default_config() -> ConfigRoot {
             "MENU_NEXT": ["RIGHT"],
             "CREDITS_SCROLL_UP": ["UP"],
             "CREDITS_SCROLL_DOWN": ["DOWN"],
-            "LOOK_TOGGLE": ["l"],
             "SAVE_JSON": ["S"],
             "LOAD_JSON": ["L"],
             "QUIT": []
         },
-        "inventory": {"DROP_ITEM": ["d"], "DESTROY_ITEM": ["x"], "CHEAT_DUPLICATE_ITEM": ["."], "TOGGLE_ITEM_AUTO_PICKUP_KEY": ["p"]}
+        "inventory": {
+            "DROP_ITEM": ["g"], // Drop item
+            "DESTROY_ITEM": ["x"], // Destroy item, remove later
+            "CHEAT_DUPLICATE_ITEM": ["."], // Duplicate item, remove later
+            "TOGGLE_ITEM_AUTO_PICKUP_KEY": ["p"] // Toggle item auto pickup
+        }
     });
     let settings = serde_json::json!({
         "game": {

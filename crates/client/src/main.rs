@@ -504,7 +504,7 @@ impl App {
 
         // First, handle configurable keybind actions
         // Toggle Look mode
-        if self.keybinds.matches("ui", "LOOK_TOGGLE", &key) {
+        if self.keybinds.matches("action", "LOOK_TOGGLE", &key) {
             self.look_mode = !self.look_mode;
             // Reset cursor to player on toggle on
             if self.look_mode {
