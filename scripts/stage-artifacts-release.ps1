@@ -7,7 +7,16 @@ $bins = @(
 )
 
 # add demo bins using globbing
-$bins += Get-ChildItem -Path 'target/release/demo_*.exe' -Name
+$demo_bins = @()
+$demo_bins += Get-ChildItem -Path 'target/release/demo_*.exe' -Name
+
+# append demo bins to $bins
+foreach ($b in $demo_bins) 
+{ 
+    $bins += "target/release/" + $b 
+}
+
+write-output $bins
 
 foreach ($b in $bins) 
 { 
