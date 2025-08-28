@@ -1,3 +1,7 @@
+# v0.7.5.3
+
+- more steamcmd fixes
+
 # v0.7.5.2
 
 - fix windows steamcmd

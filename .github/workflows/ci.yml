@@ -148,7 +148,11 @@ jobs:
           unzip -o artifacts/lithicrivers-ubuntu.zip -d artifacts
 
       - name: Install steamcmd
-        run: sudo apt-get update && sudo apt-get install -y steamcmd
+        run: |
+          sudo add-apt-repository multiverse
+          sudo dpkg --add-architecture i386
+          sudo apt update
+          sudo apt-get install -y steamcmd
 
       - name: Upload to Steam for Ubuntu (SteamPipe)
         run: |
@@ -224,7 +228,7 @@ jobs:
 
       - name: Unzip macOS artifacts for steam
         run: |
-          Compress-Archive -Path artifacts\* -DestinationPath artifacts\lithicrivers-macos.zip -Force
+          ditto -xk artifacts/lithicrivers-macos.zip artifacts/
 
       - name: Install steamcmd
         run: |
