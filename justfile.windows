@@ -18,7 +18,7 @@ copy-config-data:
 
 # remove artifacts/ folder but NOT cargo cache or target/ folder.
 clean: 
-    rm -Force -Recurse ./artifacts
+    rm -Force -Recurse ./artifacts -ErrorAction SilentlyContinue
 
 # Build in debug mode (default)
 build: git-data copy-config-data

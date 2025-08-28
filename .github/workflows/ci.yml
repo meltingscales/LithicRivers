@@ -78,9 +78,6 @@ jobs:
       - name: Build on Linux
         if: matrix.os == 'ubuntu-latest'
         run: |
-          echo "TODO go read this henry! - cache the login info."
-          echo "https://partner.steamgames.com/doc/sdk/uploading#automating_steampipe"
-          exit 1
           sudo apt install just
           sudo bash scripts/install_dev_deps.sh
           just build-release
