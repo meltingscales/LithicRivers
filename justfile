@@ -84,14 +84,18 @@ build-release: fmt clean git-data copy-config-data build-demos-release
     {{cargoz_env}} build -p lithicrivers-core --release {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin lithicrivers-client --release {{build_flags}}
 
-stage-artifacts: build build-demos
+stage-artifacts-legal:
+    cp -f LICENSE artifacts/
+    cp -f THIRD-PARTY-NOTICES.txt artifacts/
+
+stage-artifacts: build build-demos stage-artifacts-legal
     rm -rf artifacts/
     mkdir -p artifacts/
     cp -f target/debug/lithicrivers-client artifacts/
     cp -f target/debug/demo_* artifacts/
 
 # Stage release artifacts
-stage-artifacts-release: build-release build-demos-release
+stage-artifacts-release: build-release build-demos-release stage-artifacts-legal
     rm -rf artifacts/
     mkdir -p artifacts/
     cp -f target/release/lithicrivers-client artifacts/

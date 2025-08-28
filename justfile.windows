@@ -24,13 +24,18 @@ clean:
 build: git-data copy-config-data
     cargo build --workspace -j {{cpu_count}}
 
-stage-artifacts: clean build build-demos
+
+stage-artifacts-legal:
+    Copy-Item -Path LICENSE -Destination artifacts/
+    Copy-Item -Path THIRD-PARTY-NOTICES.txt -Destination artifacts/
+
+stage-artifacts: clean build build-demos stage-artifacts-legal
     powershell.exe scripts/stage-artifacts.ps1
 
 build-release: git-data copy-config-data build-demos-release
     cargo build --workspace --release -j {{cpu_count}}
 
-stage-artifacts-release: clean build-release build-demos-release
+stage-artifacts-release: clean build-release build-demos-release stage-artifacts-legal
     powershell.exe scripts/stage-artifacts-release.ps1
 
 build-demos:
