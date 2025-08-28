@@ -15,8 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # os: [ubuntu-latest, windows-latest, macos-latest]
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
     env:
       RUSTC_WRAPPER: sccache
       SCCACHE_CACHE_SIZE: 5G
@@ -128,7 +127,7 @@ jobs:
   steam-upload-ubuntu:
     name: Upload to Steam for Ubuntu (SteamPipe)
     continue-on-error: true
-    # needs: build
+    needs: build
     runs-on: ubuntu-latest
     env:
       STEAM_USERNAME: ${{ secrets.STEAM_USERNAME }}
@@ -171,10 +170,8 @@ jobs:
       # - name: Test manual login and then try to find where the hell the VDF file is (delete later)
       #   run: |
       #     steamcmd +set_steam_guard_code $STEAM_GUARD_CODE +login $STEAM_USERNAME $STEAM_PASSWORD +info +quit
-
       #     echo "config.vdf:"
       #     find / -name "config.vdf" 2>/dev/null || exit 0
-
       #     echo "all vdf:"
       #     find / -name "*.vdf" 2>/dev/null || exit 0
 
