@@ -29,7 +29,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 echo_and_log_to_file "$log_file" "SCRIPT_DIR=$SCRIPT_DIR"
 GAME_BIN="$SCRIPT_DIR/lithicrivers-client"
 echo_and_log_to_file "$log_file" "GAME_BIN=$GAME_BIN"
-GAME_ARGS="--steam-launch $@"
+GAME_ARGS="$@"
 echo_and_log_to_file "$log_file" "GAME_ARGS=$GAME_ARGS"
 
 # If not in a desktop environment, try to run directly
