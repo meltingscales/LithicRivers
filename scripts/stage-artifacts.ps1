@@ -16,3 +16,6 @@ foreach ($b in $bins)
         Copy-Item -Force $b artifacts/ 
     } 
 }
+
+# add launcher script
+Copy-Item -Force scripts/launcher/lithicrivers-launcher.bat artifacts/
