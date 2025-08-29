@@ -46,7 +46,6 @@ test:
     {{cargoz_env}} test
 
 clean:
-    rm -f  target/debug/lithicrivers-client
     rm -rf target/debug/config/
     rm -rf artifacts/
 
@@ -95,6 +94,7 @@ stage-artifacts: build build-demos stage-artifacts-legal
     mkdir -p artifacts/
     cp -f target/debug/lithicrivers-client artifacts/
     cp -f target/debug/demo_* artifacts/
+    cp -f scripts/launcher/lithicrivers-launcher.sh artifacts/
 
 # Stage release artifacts
 stage-artifacts-release: build-release build-demos-release stage-artifacts-legal
@@ -102,6 +102,7 @@ stage-artifacts-release: build-release build-demos-release stage-artifacts-legal
     mkdir -p artifacts/
     cp -f target/release/lithicrivers-client artifacts/
     cp -f target/release/demo_* artifacts/
+    cp -f scripts/launcher/lithicrivers-launcher.sh artifacts/
 
 ## Optional: build demo binaries (may require ratatui API updates)
 build-demos: fmt
