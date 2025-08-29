@@ -1,3 +1,7 @@
+# v0.7.6
+
+- add launcher script, fix builds
+
 # v0.7.5.17
 
 - fix legal artifacts staging
