@@ -1202,7 +1202,14 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<(), 
     }
 }
 
-fn ui(f: &mut Frame, app: &mut App) {
+fn ui(f: &mut Frame, app: &mut App) { 
+
+    //TODO modify this to add intro splash screen.
+    //1. the logo for Drakonix Systems will be shown for 1 second, sourced from config/logo.txt. center it.
+    //2. next, the game title "LithicRivers" will be shown for 1 second, sourced from config/gametitle.txt. center it.
+    //3. next, the `config/boot_message.dat` will be shown, using our existing code found at src/bin/demo_intro.rs
+    //4. finally, the main ui and menu bar, will be shown, using our existing code below.
+
     let root_chunks = Layout::default()
         .direction(Direction::Vertical)
         .margin(0)
