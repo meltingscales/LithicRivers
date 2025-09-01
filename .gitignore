@@ -80,8 +80,7 @@ profile.linux-perf.txt
 # saves
 save.json
 
-LithicRivers.log
-LithicRivers.log.*
+LithicRivers.log*
 
 # git tags/versions
 VERSION
