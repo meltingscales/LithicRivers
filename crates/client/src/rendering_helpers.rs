@@ -129,13 +129,10 @@ pub fn entity_art_12x8_lines_for_position(
             continue;
         }
         let (category, name) = match maybe_kind.copied() {
-            Some(lithicrivers_core::components::EntityKind::Player) => ("entities", "player"), //TODO extract these into some list, this is a strange place to have this hardcoded
-            Some(lithicrivers_core::components::EntityKind::Sheep) => ("entities", "sheep"),
-            Some(lithicrivers_core::components::EntityKind::FeralDog) => ("entities", "feral_dog"),
-            // Add specific mappings as you introduce more kinds
-            _ => ("entities", "entity_generic"),
+            Some(kind) => app.sprite_loader.sprite_path_for_entitykind(kind),
+            None => panic!("Missing entity kind for position {}", e_pos),
         };
-        let sd = app.sprite_loader.load_sprite(name, category);
+        let sd = app.sprite_loader.load_sprite(&name, &category);
         let color = parse_hex_color(&sd.color);
         if let Some(block) = sd.art12x8_sprites.first() {
             for row in block.split('\n') {

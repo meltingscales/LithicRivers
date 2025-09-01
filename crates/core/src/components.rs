@@ -1,10 +1,18 @@
 use serde::{Deserialize, Serialize};
 
+use std::fmt;
+
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, Eq, Hash, PartialEq)]
 pub struct Position {
     pub x: i32,
     pub y: i32,
     pub z: i32,
+}
+
+impl fmt::Display for Position {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "({}, {}, {})", self.x, self.y, self.z)
+    }
 }
 
 #[derive(Debug, Clone, Copy)]

@@ -47,7 +47,13 @@ test:
 
 clean:
     rm -rf target/debug/config/
+    rm -rf target/release/config/
     rm -rf artifacts/
+    rm -f LithicRivers.log.*
+    rm -f perf.data
+    rm -f perf.data.old
+    rm -f flamegraph.svg
+    rm -rf steampipe_out/
 
 git-data:
     git describe --tags --abbrev=0 > VERSION
