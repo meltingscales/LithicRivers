@@ -129,6 +129,7 @@ struct App {
     splash_state: SplashState,
     splash_start_time: Option<std::time::Instant>,
     logo_text: String,
+    game_title_text: String,
     // Help panel state
     help_scroll: u16,
 }
@@ -422,14 +423,19 @@ impl App {
         let git_commit = EmbeddedAssets::get("config/GIT_SHA")
             .map(|d| String::from_utf8_lossy(&d.data).to_string())
             .unwrap_or_else(|| "(missing GIT_SHA)".to_string());
-        let credits_body = EmbeddedAssets::get("config/CREDITS.txt")
+        let credits_body = EmbeddedAssets::get("config/credits.txt")
             .map(|d| String::from_utf8_lossy(&d.data).to_string())
-            .unwrap_or_else(|| "Credits not found".to_string());
+            .unwrap_or_else(|| panic!("credits.txt not found"));
 
         // Load logo text
         let logo_text = EmbeddedAssets::get("config/logo.txt")
             .map(|d| String::from_utf8_lossy(&d.data).to_string())
-            .unwrap_or_else(|| panic!("Failed to read logo.txt"));
+            .unwrap_or_else(|| panic!("logo.txt not found"));
+
+        // Load game title text
+        let game_title_text = EmbeddedAssets::get("config/gametitle.txt")
+            .map(|d| String::from_utf8_lossy(&d.data).to_string())
+            .unwrap_or_else(|| panic!("gametitle.txt not found"));
 
         let credits_text = format!(
             "Version: {}\nSTEAM_APP_ID: {}\nGit Branch: {}\nGit Commit: {}\n\n{}",
@@ -447,7 +453,7 @@ impl App {
             .map(|p| p.to_string_lossy().to_string())
             .unwrap_or_else(|| ".".to_string());
         let today = Local::now().format("%Y-%m-%d").to_string();
-        let log_full_path = format!("{}/LithicRivers.log.{}", log_dir_abs, today);
+        let log_full_path = format!("{}/LithicRivers-{}.log", log_dir_abs, today);
 
         // Build keybinds from game config
         let config_manager = ConfigManager::new();
@@ -494,6 +500,7 @@ impl App {
             splash_state: SplashState::Logo,
             splash_start_time: Some(Instant::now()),
             logo_text,
+            game_title_text,
         }
     }
 
@@ -503,10 +510,17 @@ impl App {
 
     fn on_tick(&mut self) {
         // Handle splash screen timing
-        if let (SplashState::Logo, Some(start_time)) = (self.splash_state, self.splash_start_time) {
-            if start_time.elapsed() >= Duration::from_secs(2) {
-                self.splash_state = SplashState::GameTitle;
-                self.splash_start_time = Some(Instant::now());
+        if let Some(start_time) = self.splash_start_time {
+            match self.splash_state {
+                SplashState::Logo if start_time.elapsed() >= Duration::from_secs(2) => {
+                    self.splash_state = SplashState::GameTitle;
+                    self.splash_start_time = Some(Instant::now());
+                }
+                SplashState::GameTitle if start_time.elapsed() >= Duration::from_secs(2) => {
+                    self.splash_state = SplashState::BootMessage;
+                    self.splash_start_time = Some(Instant::now());
+                }
+                _ => {}
             }
         }
     }
@@ -1242,6 +1256,17 @@ fn ui(f: &mut Frame, app: &mut App) {
             // Center the logo in the middle of the screen
             let area = centered_rect(50, 50, f.size());
             f.render_widget(logo_paragraph, area);
+            return;
+        }
+        SplashState::GameTitle => {
+            // Show centered game title
+            let title_paragraph = Paragraph::new(app.game_title_text.as_str())
+                .alignment(Alignment::Center)
+                .block(Block::default().borders(Borders::NONE));
+
+            // Center the title in the middle of the screen
+            let area = centered_rect(70, 70, f.size());
+            f.render_widget(title_paragraph, area);
             return;
         }
         _ => {
