@@ -1,5 +1,6 @@
 {
     "name": "Grass",
-    "color": "#00FF00",
+    "color": "#006E0C",
     "description": "Basic grass that can be mined for resources"
 } 
+

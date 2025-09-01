@@ -1,3 +1,111 @@
+# v0.7.6.1
+
+- add windows launcher script
+
+# v0.7.6
+
+- add linux launcher script, fix builds
+
+# v0.7.5.17
+
+- fix legal artifacts staging
+
+# v0.7.5.16
+
+- use unified build for steam
+
+# v0.7.5.15
+
+- ooops, restore rest of cicd.yml
+
+# v0.7.5.14
+
+- ubuntu steamcmd finally works, now to restore rest of cicd.yml
+
+# v0.7.5.13
+
+- yippie!!!
+
+# v0.7.5.11
+
+- pain3
+
+# v0.7.5.10
+
+- pain2
+
+# v0.7.5.9
+
+- pain
+
+# v0.7.5.8
+
+- *sisyphus meme music*
+
+# v0.7.5.7
+
+- one must imagine sisyphus happy
+
+# v0.7.5.6
+
+- wew lad steamcmd testing
+
+# v0.7.5.5
+
+- even more steamcmd fixes
+
+# v0.7.5.4
+
+- more steamcmd fixes
+
+# v0.7.5.3
+
+- more steamcmd fixes
+
+# v0.7.5.2
+
+- fix windows steamcmd
+
+# v0.7.5
+
+- test steamcmd on multiplatform
+
+# v0.7.4.2
+
+- ci is uh...pissing me off!!!! fixed??? we'll find out
+
+# v0.7.4.1
+
+- fix ci...ripperoni
+
+# v0.7.4
+
+- make terminal not make your eyes bleed
+- fix windows CI, fix newline error
+- improve windows CI
+- hopefully fix 2fa prompts for steampipe deploy
+
+# v0.7.3
+
+- fix ci error
+
+# v0.7.2
+
+- add crafting
+
+# v0.7.1
+
+- add zooming in/out
+- make quit panel more fun
+
+# v0.7
+
+- entirely remove fluids due to lag and complexity...TODO I will add them back later
+- add the ability to look at things
+- add 12x8 art for all things
+- add 2 more sheep
+- fix structure generation
+
 # v0.6.3
 
 - testing simpler cicd

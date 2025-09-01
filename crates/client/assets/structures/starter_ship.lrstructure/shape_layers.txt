@@ -1,5 +1,5 @@
-..S..
-.SSS.
+,,S,,
+,SSS,
 SSCSS
-.SSS.
-..S..
+,SSS,
+,,S,,

@@ -2,19 +2,20 @@ use std::fs::File;
 use std::io::{BufReader, BufWriter};
 use std::path::Path;
 
+use crate::components::itemkind_sprite_name;
 use anyhow::{Context, Result};
 use hecs::World;
 use serde::{Deserialize, Serialize};
 
-use crate::components::{BlocksMovement, Glyph, Inventory, Player, Position, Sheep};
+use crate::components::{
+    BlocksMovement, DroppedItem, Glyph, Inventory, ItemKind, Player, Position, Sheep, SpriteRef,
+};
 use crate::model::body::Body; // currently not persisted (MVP)
-use crate::resources::fluids::Fluid;
-use crate::resources::fluids::FluidManager;
-use crate::resources::world::Chunk as TileChunk;
-use crate::resources::world::World as TileWorld;
 use crate::resources::Resources;
+use crate::world::Chunk as TileChunk;
+use crate::world::World as TileWorld;
 
-pub const SAVE_VERSION: u32 = 1;
+pub const SAVE_VERSION: u32 = 3;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PlayerSave {
@@ -28,27 +29,39 @@ pub struct SheepSave {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DroppedItemSave {
+    pub pos: Position,
+    pub kind: ItemKind,
+    pub qty: u32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SaveData {
     pub version: u32,
     pub seed: u64,
     pub gametick: u64,
     pub world: TileWorld,
-    pub fluids: FluidManager,
     pub player: PlayerSave,
     pub sheep: Vec<SheepSave>,
+    pub dropped_items: Vec<DroppedItemSave>,
+    pub view_x: i32,
+    pub view_y: i32,
+    pub view_z: i32,
 }
 
 impl SaveData {
     pub fn from_game(game: &crate::Game) -> Result<Self> {
         let mut player_save: Option<PlayerSave> = None;
         let mut sheep: Vec<SheepSave> = Vec::new();
-        for (_e, (pos, maybe_player, maybe_inventory, maybe_sheep)) in game
+        let mut dropped_items: Vec<DroppedItemSave> = Vec::new();
+        for (_e, (pos, maybe_player, maybe_inventory, maybe_sheep, maybe_drop)) in game
             .world
             .query::<(
                 &Position,
                 Option<&Player>,
                 Option<&Inventory>,
                 Option<&Sheep>,
+                Option<&DroppedItem>,
             )>()
             .iter()
         {
@@ -61,6 +74,12 @@ impl SaveData {
                 });
             } else if maybe_sheep.is_some() {
                 sheep.push(SheepSave { pos: *pos });
+            } else if let Some(di) = maybe_drop {
+                dropped_items.push(DroppedItemSave {
+                    pos: *pos,
+                    kind: di.kind,
+                    qty: di.qty,
+                });
             }
         }
         let player = player_save.context("Player entity missing during save")?;
@@ -69,9 +88,12 @@ impl SaveData {
             seed: game.res.seed,
             gametick: game.res.gametick,
             world: game.res.world.clone(),
-            fluids: game.res.fluids.clone(),
             player,
             sheep,
+            dropped_items,
+            view_x: game.res.view_x,
+            view_y: game.res.view_y,
+            view_z: game.res.view_z,
         })
     }
 
@@ -80,7 +102,11 @@ impl SaveData {
         game.res = Resources::new(self.seed);
         game.res.gametick = self.gametick;
         game.res.world = self.world;
-        game.res.fluids = self.fluids;
+        game.res.view_x = self.view_x;
+        game.res.view_y = self.view_y;
+        game.res.view_z = self.view_z;
+        // Keep world generation slice consistent with view
+        game.res.world.set_generation_z(self.view_z);
 
         // Rebuild entity world
         game.world = World::new();
@@ -91,12 +117,32 @@ impl SaveData {
             Player,
             BlocksMovement,
             Body::default(),
+            SpriteRef::new("entities", "player"),
             self.player.inventory,
         ));
         game.res.player_entity = Some(player_e);
         // Sheep
         for s in self.sheep.into_iter() {
-            game.world.spawn((s.pos, Glyph('s'), Sheep, BlocksMovement));
+            game.world.spawn((
+                s.pos,
+                Glyph('s'),
+                Sheep,
+                BlocksMovement,
+                SpriteRef::new("entities", "sheep"),
+            ));
+        }
+
+        // Dropped items
+        for d in self.dropped_items.into_iter() {
+            let sprite_name = itemkind_sprite_name(d.kind);
+            game.world.spawn((
+                d.pos,
+                DroppedItem {
+                    kind: d.kind,
+                    qty: d.qty,
+                },
+                SpriteRef::new("items", sprite_name),
+            ));
         }
         Ok(())
     }
@@ -107,7 +153,7 @@ impl SaveData {
 struct WorldJson {
     pub seed: u64,
     pub gen_z: i32,
-    pub chunks: Vec<((i64, i64), TileChunk)>,
+    pub chunks: Vec<((i64, i64, i64), TileChunk)>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -116,9 +162,12 @@ struct SaveDataJson {
     pub seed: u64,
     pub gametick: u64,
     pub world: WorldJson,
-    pub fluids: Vec<(Position, Fluid)>,
     pub player: PlayerSave,
     pub sheep: Vec<SheepSave>,
+    pub dropped_items: Vec<DroppedItemSave>,
+    pub view_x: i32,
+    pub view_y: i32,
+    pub view_z: i32,
 }
 
 impl From<TileWorld> for WorldJson {
@@ -144,35 +193,35 @@ impl From<WorldJson> for TileWorld {
 }
 
 impl From<SaveData> for SaveDataJson {
-    fn from(mut s: SaveData) -> Self {
-        // Convert fluids map and world cached chunks to JSON-friendly forms
-        let fluids_vec: Vec<(Position, Fluid)> = s.fluids.fluids.into_iter().collect();
+    fn from(s: SaveData) -> Self {
         SaveDataJson {
             version: s.version,
             seed: s.seed,
             gametick: s.gametick,
             world: s.world.into(),
-            fluids: fluids_vec,
             player: s.player,
             sheep: s.sheep,
+            dropped_items: s.dropped_items,
+            view_x: s.view_x,
+            view_y: s.view_y,
+            view_z: s.view_z,
         }
     }
 }
 
 impl From<SaveDataJson> for SaveData {
     fn from(j: SaveDataJson) -> Self {
-        let fluids_map = j.fluids.into_iter().collect();
         SaveData {
             version: j.version,
             seed: j.seed,
             gametick: j.gametick,
             world: j.world.into(),
-            fluids: FluidManager {
-                fluids: fluids_map,
-                seeded_lava_chunks: Default::default(),
-            },
             player: j.player,
             sheep: j.sheep,
+            dropped_items: j.dropped_items,
+            view_x: j.view_x,
+            view_y: j.view_y,
+            view_z: j.view_z,
         }
     }
 }
@@ -207,9 +256,6 @@ mod tests {
     use crate::tiles::TileKind;
 
     fn simulate_full_actions(game: &mut crate::Game) {
-        // Clear fluids to avoid chunk (0,0) generation via debug pools during tests
-        game.res.fluids = Default::default();
-
         // Move player to a non-origin chunk to avoid structure asset dependency in tests
         if let Some(e) = game.res.player_entity {
             if let Ok(mut pos) = game.world.get::<&mut Position>(e) {
@@ -223,11 +269,10 @@ mod tests {
         for (e, pos) in game.world.query::<&Position>().with::<&Sheep>().iter() {
             sheep_entities.push((e, *pos));
         }
-        for (e, mut pos) in sheep_entities {
+        for (e, _pos) in sheep_entities {
             if let Ok(mut mpos) = game.world.get::<&mut Position>(e) {
                 mpos.x = crate::resources::world::CHUNK_SIZE + 5;
                 mpos.y = crate::resources::world::CHUNK_SIZE + 5;
-                // keep z
             }
         }
 
@@ -237,16 +282,7 @@ mod tests {
         game.queue_player_move(0, 1);
         game.tick();
 
-        // Ensure a tree underfoot, then mine it (should drop Wood and convert to Dirt)
-        if let Some(e) = game.res.player_entity {
-            if let Ok(pos) = game.world.get::<&Position>(e) {
-                game.res.world.set_tile_cached(pos.x, pos.y, TileKind::Tree);
-            }
-        }
-        game.queue_mine();
-        game.tick();
-
-        // A few more ticks to advance fluids/ai deterministically
+        // A few more ticks to advance ai deterministically
         for _ in 0..3 {
             game.tick();
         }
@@ -254,8 +290,6 @@ mod tests {
 
     fn simulate_movement_only(game: &mut crate::Game) {
         // Reposition away from origin and sheep too, but avoid any call that caches world chunks
-        // Also clear fluids to avoid (0,0) chunk access during fluid processing
-        game.res.fluids = Default::default();
         if let Some(e) = game.res.player_entity {
             if let Ok(mut pos) = game.world.get::<&mut Position>(e) {
                 pos.x = crate::resources::world::CHUNK_SIZE + 2;
@@ -285,7 +319,7 @@ mod tests {
                 return inv
                     .slots
                     .iter()
-                    .find(|s| s.kind == crate::components::ItemKind::Wood)
+                    .find(|s| s.kind == crate::components::ItemKind::Log)
                     .map(|s| s.qty)
                     .unwrap_or(0);
             }
@@ -303,13 +337,15 @@ mod tests {
         if let Some(e) = game.res.player_entity {
             if let Ok(pos) = game.world.get::<&Position>(e) {
                 // Ensure chunk is cached and then set a unique tile
-                let before = game.res.world.get_tile_cached(pos.x, pos.y);
+                let before = game.res.world.get_tile_cached(pos.x, pos.y, pos.z);
                 let new_tile = if before == crate::tiles::TileKind::Rock {
                     crate::tiles::TileKind::Dirt
                 } else {
                     crate::tiles::TileKind::Rock
                 };
-                game.res.world.set_tile_cached(pos.x, pos.y, new_tile);
+                game.res
+                    .world
+                    .set_tile_cached(pos.x, pos.y, pos.z, new_tile);
             }
         }
 
@@ -342,14 +378,16 @@ mod tests {
         assert_eq!(player_pos_after, player_pos_before);
 
         // Verify the mutated tile persisted
-        let tile_after = loaded
-            .res
-            .world
-            .get_tile_cached(player_pos_after.x, player_pos_after.y);
-        let tile_before = game
-            .res
-            .world
-            .get_tile_cached(player_pos_before.x, player_pos_before.y);
+        let tile_after = loaded.res.world.get_tile_cached(
+            player_pos_after.x,
+            player_pos_after.y,
+            player_pos_after.z,
+        );
+        let tile_before = game.res.world.get_tile_cached(
+            player_pos_before.x,
+            player_pos_before.y,
+            player_pos_before.z,
+        );
         assert_eq!(tile_after, tile_before);
 
         // Basic invariants
@@ -373,7 +411,7 @@ mod tests {
         // Core invariants
         assert_eq!(loaded.res.seed, seed);
         assert_eq!(loaded.res.gametick, game.res.gametick);
-        assert_eq!(loaded.res.fluids.fluids.len(), game.res.fluids.fluids.len());
+        // Fluids removed
 
         // Player position and wood
         let p_before = {

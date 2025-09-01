@@ -2,6 +2,10 @@
 
 Make sure to also read docs/AI_INSTRUCTIONS.md.
 
+## What is this game?
+
+LithicRivers is a roguelike, procedurally generated world that's similar to Caves of Qud, Factorio, and Minecraft. It's rendered entirely in ASCII text, with sprite-based graphics for entities and items.
+
 ## Project Context
 This is a Python-based game development project called "LithicRivers". The project appears to be a roguelike or simulation game with:
 - Sprite-based graphics system

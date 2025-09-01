@@ -1,19 +1,16 @@
 use crate::config::ConfigManager;
+use crate::world::World;
 use hecs::Entity;
 use rand::SeedableRng;
 use rand_chacha::ChaCha20Rng;
 use tracing::info;
-
-pub mod fluids;
-pub mod world;
 
 pub struct Resources {
     pub seed: u64,
     pub rng: ChaCha20Rng,
     pub gametick: u64,
     pub player_entity: Option<Entity>,
-    pub world: world::World,
-    pub fluids: fluids::FluidManager, // Fluid system
+    pub world: World,
     pub config: ConfigManager,
     pub developer_mode: bool,
     pub player_name: String,
@@ -26,6 +23,9 @@ pub struct Resources {
     pub mining_intent: bool,
     // Simple message log for UI
     pub messages: Vec<String>,
+    // Current viewed viewport center in world-space
+    pub view_x: i32,
+    pub view_y: i32,
     // Current viewed Z level (slice) for ASCII rendering
     pub view_z: i32,
     // Vertical movement intent (dz)
@@ -50,8 +50,7 @@ impl Resources {
             rng,
             gametick: 0,
             player_entity: None,
-            world: world::World::new(80, 24, seed),
-            fluids: fluids::FluidManager::default(),
+            world: World::new(80, 24, seed),
             config: cfg,
             developer_mode,
             player_name,
@@ -60,6 +59,8 @@ impl Resources {
             pending_tick_increase: None,
             mining_intent: false,
             messages: Vec::new(),
+            view_x: 0,
+            view_y: 0,
             view_z: 0,
             player_move_intent_z: None,
         }

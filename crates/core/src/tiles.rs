@@ -15,6 +15,9 @@ pub enum TileKind {
     ScrapElectronics,
     PlasteelScrap,
     Treasure,
+
+    //special tile that gets replaced by existing worldgen
+    ExistingWorldgen,
 }
 
 pub static TILE_KIND_STRS: &[&str] = &[
@@ -30,6 +33,7 @@ pub static TILE_KIND_STRS: &[&str] = &[
     "scrap_electronics",
     "plasteel_scrap",
     "treasure",
+    "existing_worldgen",
 ];
 
 impl TileKind {
@@ -47,6 +51,7 @@ impl TileKind {
             TileKind::ScrapElectronics => "scrap_electronics",
             TileKind::PlasteelScrap => "plasteel_scrap",
             TileKind::Treasure => "treasure",
+            TileKind::ExistingWorldgen => "existing_worldgen",
         }
     }
     pub fn palette_key(self) -> PaletteKey {
@@ -63,6 +68,7 @@ impl TileKind {
             TileKind::ScrapElectronics => PaletteKey::ScrapElectronics,
             TileKind::PlasteelScrap => PaletteKey::PlasteelScrap,
             TileKind::Treasure => PaletteKey::Treasure,
+            TileKind::ExistingWorldgen => PaletteKey::ExistingWorldgen,
         }
     }
     pub fn from_str(s: &str) -> Option<TileKind> {
@@ -79,6 +85,7 @@ impl TileKind {
             "scrap_electronics" => Some(TileKind::ScrapElectronics),
             "plasteel_scrap" => Some(TileKind::PlasteelScrap),
             "treasure" => Some(TileKind::Treasure),
+            "existing_worldgen" => Some(TileKind::ExistingWorldgen),
             _ => None,
         }
     }
@@ -97,6 +104,7 @@ impl TileKind {
             TileKind::ScrapElectronics => false,
             TileKind::PlasteelScrap => true,
             TileKind::Treasure => false,
+            TileKind::ExistingWorldgen => false,
         }
     }
 }
@@ -120,6 +128,7 @@ mod tests {
             TileKind::ScrapElectronics,
             TileKind::PlasteelScrap,
             TileKind::Treasure,
+            TileKind::ExistingWorldgen,
         ];
         for &k in &kinds {
             let s = serde_json::to_string(&k).expect("serialize");
