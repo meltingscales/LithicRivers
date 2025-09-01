@@ -12,7 +12,7 @@ use ratatui::{
     Frame, Terminal,
 };
 use rust_embed::RustEmbed;
-use std::{error::Error, io, time::Duration};
+use std::{error::Error, io, time::Duration, time::Instant};
 use tracing_subscriber::EnvFilter;
 
 // Tracing file appender for log file output
@@ -45,6 +45,14 @@ use crate::sprite_loader::{
 };
 use lithicrivers_core::model::body::{Body, BodyPart, BodyPartState};
 use lithicrivers_core::world::CHUNK_SIZE;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum SplashState {
+    Logo,
+    GameTitle,
+    BootMessage,
+    MainUI,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum MenuTab {
@@ -117,6 +125,10 @@ struct App {
     recipe_handler: RecipeHandler,
     craft_selected: usize,
     craft_message: Option<(String, u8)>, // (message, timer)
+    // Splash screen state
+    splash_state: SplashState,
+    splash_start_time: Option<std::time::Instant>,
+    logo_text: String,
     // Help panel state
     help_scroll: u16,
 }
@@ -410,9 +422,15 @@ impl App {
         let git_commit = EmbeddedAssets::get("config/GIT_SHA")
             .map(|d| String::from_utf8_lossy(&d.data).to_string())
             .unwrap_or_else(|| "(missing GIT_SHA)".to_string());
-        let credits_body = EmbeddedAssets::get("config/credits.txt")
+        let credits_body = EmbeddedAssets::get("config/CREDITS.txt")
             .map(|d| String::from_utf8_lossy(&d.data).to_string())
-            .unwrap_or_else(|| "(missing credits.txt)".to_string());
+            .unwrap_or_else(|| "Credits not found".to_string());
+
+        // Load logo text
+        let logo_text = EmbeddedAssets::get("config/logo.txt")
+            .map(|d| String::from_utf8_lossy(&d.data).to_string())
+            .unwrap_or_else(|| panic!("Failed to read logo.txt"));
+
         let credits_text = format!(
             "Version: {}\nSTEAM_APP_ID: {}\nGit Branch: {}\nGit Commit: {}\n\n{}",
             version.trim(),
@@ -472,6 +490,10 @@ impl App {
             recipe_handler,
             craft_selected: 0,
             craft_message: None,
+            // Initialize splash screen state
+            splash_state: SplashState::Logo,
+            splash_start_time: Some(Instant::now()),
+            logo_text,
         }
     }
 
@@ -480,7 +502,13 @@ impl App {
     }
 
     fn on_tick(&mut self) {
-        // Turn-based: do not auto-tick. Ticks only occur on player actions in handle_input().
+        // Handle splash screen timing
+        if let (SplashState::Logo, Some(start_time)) = (self.splash_state, self.splash_start_time) {
+            if start_time.elapsed() >= Duration::from_secs(2) {
+                self.splash_state = SplashState::GameTitle;
+                self.splash_start_time = Some(Instant::now());
+            }
+        }
     }
 
     fn snap_view_to_player_z(&mut self) {
@@ -1202,13 +1230,24 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<(), 
     }
 }
 
-fn ui(f: &mut Frame, app: &mut App) { 
+fn ui(f: &mut Frame, app: &mut App) {
+    // Show splash screens if needed
+    match app.splash_state {
+        SplashState::Logo => {
+            // Show centered logo
+            let logo_paragraph = Paragraph::new(app.logo_text.as_str())
+                .alignment(Alignment::Center)
+                .block(Block::default().borders(Borders::NONE));
 
-    //TODO modify this to add intro splash screen.
-    //1. the logo for Drakonix Systems will be shown for 1 second, sourced from config/logo.txt. center it.
-    //2. next, the game title "LithicRivers" will be shown for 1 second, sourced from config/gametitle.txt. center it.
-    //3. next, the `config/boot_message.dat` will be shown, using our existing code found at src/bin/demo_intro.rs
-    //4. finally, the main ui and menu bar, will be shown, using our existing code below.
+            // Center the logo in the middle of the screen
+            let area = centered_rect(50, 50, f.size());
+            f.render_widget(logo_paragraph, area);
+            return;
+        }
+        _ => {
+            // Continue with normal UI rendering
+        }
+    }
 
     let root_chunks = Layout::default()
         .direction(Direction::Vertical)
@@ -1874,6 +1913,27 @@ fn render_crafting_panel(f: &mut Frame, app: &mut App, area: Rect) {
     }
 
     f.render_widget(block, area);
+}
+
+/// Helper function to center a rectangle within another rectangle
+fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
+    let popup_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Percentage((100 - percent_y) / 2),
+            Constraint::Percentage(percent_y),
+            Constraint::Percentage((100 - percent_y) / 2),
+        ])
+        .split(r);
+
+    Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage((100 - percent_x) / 2),
+            Constraint::Percentage(percent_x),
+            Constraint::Percentage((100 - percent_x) / 2),
+        ])
+        .split(popup_layout[1])[1]
 }
 
 fn render_look_panel(f: &mut Frame, app: &mut App, area: Rect) {
