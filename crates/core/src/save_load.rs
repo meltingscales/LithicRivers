@@ -11,9 +11,9 @@ use crate::components::{
     BlocksMovement, DroppedItem, Glyph, Inventory, ItemKind, Player, Position, Sheep, SpriteRef,
 };
 use crate::model::body::Body; // currently not persisted (MVP)
-use crate::resources::world::Chunk as TileChunk;
-use crate::resources::world::World as TileWorld;
 use crate::resources::Resources;
+use crate::world::Chunk as TileChunk;
+use crate::world::World as TileWorld;
 
 pub const SAVE_VERSION: u32 = 3;
 
