@@ -36,7 +36,6 @@ install:
     rustup toolchain install {{toolchain}}
     rustup override set {{toolchain}}
     rustup default {{toolchain}}
-    @just _install-dev-deps
 
 # Run security audit
 security:
@@ -47,8 +46,14 @@ test:
     {{cargoz_env}} test
 
 clean:
-    rm -f  target/debug/lithicrivers-client
     rm -rf target/debug/config/
+    rm -rf target/release/config/
+    rm -rf artifacts/
+    rm -f LithicRivers.log.*
+    rm -f perf.data
+    rm -f perf.data.old
+    rm -f flamegraph.svg
+    rm -rf steampipe_out/
 
 git-data:
     git describe --tags --abbrev=0 > VERSION
@@ -72,7 +77,7 @@ build: fmt clean git-data copy-config-data
     {{cargoz_env}} build -p lithicrivers-client --bin lithicrivers-client {{build_flags}}
 
 # Build the project in release mode
-build-release: fmt clean git-data copy-config-data
+build-release: fmt clean git-data copy-config-data build-demos-release
     cp -f CHANGELOG.txt crates/client/assets/config/CHANGELOG.txt
     cp -f STEAM_APP_ID crates/client/assets/config/STEAM_APP_ID
     cp -f VERSION crates/client/assets/config/VERSION
@@ -84,49 +89,56 @@ build-release: fmt clean git-data copy-config-data
     {{cargoz_env}} build -p lithicrivers-core --release {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin lithicrivers-client --release {{build_flags}}
 
-stage-artifacts: build build-demos
+stage-artifacts-legal:
+    mkdir -p artifacts/
+    cp -f CHANGELOG.txt artifacts/
+    cp -f LICENSE artifacts/
+    cp -f THIRD-PARTY-NOTICES.txt artifacts/
+
+stage-artifacts: build build-demos stage-artifacts-legal
     rm -rf artifacts/
     mkdir -p artifacts/
     cp -f target/debug/lithicrivers-client artifacts/
-    cp -f target/debug/demo_inventory artifacts/
-    cp -f target/debug/demo_body artifacts/
-    cp -f target/debug/demo_inventory artifacts/
-    cp -f target/debug/beezzaroll_color_test artifacts/
-    cp -f target/debug/beezzaroll_sprite_test artifacts/
+    cp -f target/debug/demo_* artifacts/
+    cp -f scripts/launcher/lithicrivers-launcher.sh artifacts/
 
 # Stage release artifacts
-stage-artifacts-release: build-release build-demos-release
+stage-artifacts-release: build-release build-demos-release stage-artifacts-legal
     rm -rf artifacts/
     mkdir -p artifacts/
     cp -f target/release/lithicrivers-client artifacts/
-    cp -f target/release/demo_inventory artifacts/
-    cp -f target/release/demo_body artifacts/
-    cp -f target/release/beezzaroll_color_test artifacts/
-    cp -f target/release/beezzaroll_sprite_test artifacts/
+    cp -f target/release/demo_* artifacts/
+    cp -f scripts/launcher/lithicrivers-launcher.sh artifacts/
 
 ## Optional: build demo binaries (may require ratatui API updates)
 build-demos: fmt
     {{cargoz_env}} build -p lithicrivers-client --bin demo_inventory {{build_flags}}
+    {{cargoz_env}} build -p lithicrivers-client --bin demo_crafting {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin demo_body {{build_flags}}
-    {{cargoz_env}} build -p lithicrivers-client --bin beezzaroll_color_test {{build_flags}}
-    {{cargoz_env}} build -p lithicrivers-client --bin beezzaroll_sprite_test {{build_flags}}
+    {{cargoz_env}} build -p lithicrivers-client --bin demo_beezzaroll_color_test {{build_flags}}
+    {{cargoz_env}} build -p lithicrivers-client --bin demo_beezzaroll_sprite_test {{build_flags}}
+    {{cargoz_env}} build -p lithicrivers-client --bin demo_portrait_sprite_test {{build_flags}}
+    {{cargoz_env}} build -p lithicrivers-client --bin demo_combat_chrono_trigger {{build_flags}}
 
 # Optional: build demo binaries (release)
 build-demos-release: fmt
     {{cargoz_env}} build -p lithicrivers-client --bin demo_inventory --release {{build_flags}}
+    {{cargoz_env}} build -p lithicrivers-client --bin demo_crafting --release {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin demo_body --release {{build_flags}}
-    {{cargoz_env}} build -p lithicrivers-client --bin beezzaroll_color_test --release {{build_flags}}
-    {{cargoz_env}} build -p lithicrivers-client --bin beezzaroll_sprite_test --release {{build_flags}}
+    {{cargoz_env}} build -p lithicrivers-client --bin demo_beezzaroll_color_test --release {{build_flags}}
+    {{cargoz_env}} build -p lithicrivers-client --bin demo_beezzaroll_sprite_test --release {{build_flags}}
+    {{cargoz_env}} build -p lithicrivers-client --bin demo_portrait_sprite_test --release {{build_flags}}
+    {{cargoz_env}} build -p lithicrivers-client --bin demo_combat_chrono_trigger --release {{build_flags}}
 
 # Run debug build (alias for client)
 run-debug: client
 
 # Run the client
-client:
+client: build
     {{cargoz_env}} run -p lithicrivers-client --bin lithicrivers-client
 
 # Run release build
-run-release:
+client-release: build-release
     {{cargoz_env}} run -p lithicrivers-client --bin lithicrivers-client --release
 
 # Run the Intro demo
@@ -137,17 +149,29 @@ demo-intro:
 demo-inventory:
     {{cargoz_env}} run -p lithicrivers-client --bin demo_inventory
 
+# Run the Crafting UI demo
+demo-crafting:
+    {{cargoz_env}} run -p lithicrivers-client --bin demo_crafting
+
 # Run the Sprite Test demo
 demo-sprite-test:
-    {{cargoz_env}} run -p lithicrivers-client --bin beezzaroll_sprite_test
+    {{cargoz_env}} run -p lithicrivers-client --bin demo_beezzaroll_sprite_test
 
 # Run the Color Test demo
 demo-color-test:
-    {{cargoz_env}} run -p lithicrivers-client --bin beezzaroll_color_test
+    {{cargoz_env}} run -p lithicrivers-client --bin demo_beezzaroll_color_test
+
+# Run the portrait sprite test
+demo-portrait-sprite-test:
+    {{cargoz_env}} run -p lithicrivers-client --bin demo_portrait_sprite_test
 
 # Run the Body/Repair UI demo
 demo-body:
     {{cargoz_env}} run -p lithicrivers-client --bin demo_body
+
+# Run the Chrono Trigger combat demo
+demo-combat-chrono-trigger:
+    {{cargoz_env}} run -p lithicrivers-client --bin demo_combat_chrono_trigger
 
 # Blind mode (not implemented)
 client-blind:

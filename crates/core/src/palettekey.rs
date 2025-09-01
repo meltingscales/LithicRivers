@@ -25,4 +25,6 @@ pub enum PaletteKey {
     Player,
     EntityGeneric,
     Sheep,
+    // special tile that gets replaced by existing worldgen
+    ExistingWorldgen,
 }

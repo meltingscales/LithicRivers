@@ -54,14 +54,15 @@ jobs:
             C:\\Users\\runneradmin\\AppData\\Local\\sccache
           key: sccache-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            sccache-${{ runner.os }}-
+            sccache-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Cache cargo builds
         uses: Swatinem/rust-cache@v2
         with:
           cache-on-failure: true
-          shared-key: ${{ runner.os }}-nightly
-
+          key: ${{ runner.os }}-nightly-${{ hashFiles('**/Cargo.lock') }}
+          shared-key: ${{ runner.os }}-nightly-${{ hashFiles('**/Cargo.lock') }}
+      
       - name: Build on Windows
         if: matrix.os == 'windows-latest'
         run: |
@@ -123,43 +124,95 @@ jobs:
           name: lithicrivers-${{ github.ref_name }}-${{ github.sha }}-${{ matrix.os }}
           path: artifacts/lithicrivers-macos.zip
 
-  steam-upload-ubuntu:
+  steam-upload:
+    name: Upload to Steam (SteamPipe)
     needs: build
     runs-on: ubuntu-latest
-    if: vars.ENABLE_STEAM_UPLOAD == 'true'
     env:
       STEAM_USERNAME: ${{ secrets.STEAM_USERNAME }}
       STEAM_PASSWORD: ${{ secrets.STEAM_PASSWORD }}
+      STEAM_GUARD_CODE: ${{ secrets.STEAM_GUARD_CODE }}
+      STEAM_CONFIG_VDF: ${{ secrets.STEAM_CONFIG_VDF }}
       STEAM_APP_ID: ${{ secrets.STEAM_APP_ID }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Download artifacts
+      - name: Download artifacts for Ubuntu
         uses: actions/download-artifact@v4
         with:
           name: lithicrivers-${{ github.ref_name }}-${{ github.sha }}-ubuntu-latest
-          path: artifacts
+          path: artifacts-zip
+      
+      - name: Download artifacts for Windows
+        uses: actions/download-artifact@v4
+        with:
+          name: lithicrivers-${{ github.ref_name }}-${{ github.sha }}-windows-latest
+          path: artifacts-zip
+      
+      - name: Download artifacts for macOS
+        uses: actions/download-artifact@v4
+        with:
+          name: lithicrivers-${{ github.ref_name }}-${{ github.sha }}-macos-latest
+          path: artifacts-zip
+
+      - name: Install unzip
+        run: |
+          sudo apt-get update && sudo apt-get install -y unzip
+          mkdir -p artifacts/ubuntu
+          mkdir -p artifacts/windows
+          mkdir -p artifacts/macos
 
       - name: Unzip Ubuntu artifacts for steam
         run: |
-          sudo apt-get update && sudo apt-get install -y unzip
-          unzip -o artifacts/lithicrivers-ubuntu.zip -d artifacts
+          unzip -o artifacts-zip/lithicrivers-ubuntu.zip -d artifacts/ubuntu
+
+      - name: Unzip Windows artifacts for steam
+        run: |
+          unzip -o artifacts-zip/lithicrivers-windows.zip -d artifacts/windows
+
+      - name: Unzip macOS artifacts for steam
+        run: |
+          unzip -o artifacts-zip/lithicrivers-macos.zip -d artifacts/macos
 
       - name: Install steamcmd
-        run: sudo apt-get update && sudo apt-get install -y steamcmd
-
-      - name: Upload to Steam (SteamPipe)
-        if: env.STEAM_USERNAME != ''
         run: |
-          APPVDF="$(realpath scripts/app_build_linux.vdf)"
-          steamcmd +login "$STEAM_USERNAME" "$STEAM_PASSWORD" \
-                   +run_app_build_http $APPVDF \
-                   +quit
+          sudo add-apt-repository multiverse
+          sudo dpkg --add-architecture i386
+          sudo apt update
+          echo steam steam/question select "I AGREE" | sudo debconf-set-selections
+          echo steam steam/license note '' | sudo debconf-set-selections
+          sudo apt-get install -y steamcmd
+
+      - name: Setup steamcmd credentials
+        run: |
+          # populate /home/runner/.local/share/Steam/config/config.vdf with our secret value
+          mkdir -p /home/runner/.local/share/Steam/config/
+          echo "$STEAM_CONFIG_VDF" > /home/runner/.local/share/Steam/config/config.vdf
+          ls -lash /home/runner/.local/share/Steam/config/config.vdf
+          sha256sum /home/runner/.local/share/Steam/config/config.vdf
+
+      # - name: Test manual login and then try to find where the hell the VDF file is (delete later)
+      #   run: |
+      #     steamcmd +set_steam_guard_code $STEAM_GUARD_CODE +login $STEAM_USERNAME $STEAM_PASSWORD +info +quit
+      #     echo "config.vdf:"
+      #     find / -name "config.vdf" 2>/dev/null || exit 0
+      #     echo "all vdf:"
+      #     find / -name "*.vdf" 2>/dev/null || exit 0
+
+      - name: Test steamcmd login and print info
+        run: |
+          steamcmd +login $STEAM_USERNAME +info +quit
+
+      - name: Upload to Steam for all platforms (SteamPipe)
+        run: |
+          APPVDF="$(realpath app_build_unified.vdf)"
+          
+          # this uploads the app
+          steamcmd +login "$STEAM_USERNAME" +run_app_build_http $APPVDF +quit
 
   github-release-ubuntu:
     name: Create GitHub Release (Ubuntu)
-    continue-on-error: true
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -178,7 +231,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
-          name: LithicRivers Ubuntu ${{ github.ref_name }}
+          name: LithicRivers Multiplatform ${{ github.ref_name }}
           body: |
             Version: ${{ github.ref_name }}
             Ref: ${{ github.ref_name }}
@@ -192,7 +245,6 @@ jobs:
 
   github-release-windows:
     name: Create GitHub Release (Windows)
-    continue-on-error: true
     needs: [build, github-release-ubuntu]
     runs-on: windows-latest
     steps:
@@ -211,7 +263,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
-          name: LithicRivers Windows ${{ github.ref_name }}
+          name: LithicRivers Multiplatform ${{ github.ref_name }}
           body: |
             Version: ${{ github.ref_name }}
             Ref: ${{ github.ref_name }}
@@ -224,7 +276,6 @@ jobs:
 
   github-release-macos:
     name: Create GitHub Release (macOS)
-    continue-on-error: true
     needs: [build, github-release-ubuntu]
     runs-on: macos-latest
     steps:
@@ -243,7 +294,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
-          name: LithicRivers ${{ github.ref_name }}
+          name: LithicRivers Multiplatform ${{ github.ref_name }}
           body: |
             Version: ${{ github.ref_name }}
             Ref: ${{ github.ref_name }}

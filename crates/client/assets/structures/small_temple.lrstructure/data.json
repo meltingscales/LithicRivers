@@ -1,6 +1,7 @@
 {
   "blocks": {
-    ".": "air",
+    " ": "air",
+    ",": "existing_worldgen",
     "X": "iron_scrap",
     "T": "treasure"
   },

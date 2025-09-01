@@ -1,8 +1,10 @@
+use lithicrivers_core::components::EntityKind;
 use lithicrivers_core::tiles::TileKind;
 use ratatui::prelude::Color;
 use serde::Deserialize;
 use std::borrow::Cow;
 use std::collections::HashMap;
+use std::fmt;
 use std::path::{Path, PathBuf};
 
 use rust_embed::RustEmbed;
@@ -16,6 +18,44 @@ pub enum Scale {
     Small,  // 1x1
     Medium, // 2x2
     Large,  // 3x3
+}
+
+impl Scale {
+    pub fn as_u32(self) -> u32 {
+        match self {
+            Scale::Small => 1,
+            Scale::Medium => 2,
+            Scale::Large => 3,
+        }
+    }
+}
+
+impl From<u32> for Scale {
+    fn from(value: u32) -> Self {
+        match value {
+            1 => Scale::Small,
+            2 => Scale::Medium,
+            3 => Scale::Large,
+            _ => Scale::Small, // Fallback to smallest scale
+        }
+    }
+}
+
+// Multi-scale: return the full sprite block string (may be multi-line) and color for a SpriteRef
+pub fn sprite_block_for_spriteref(
+    loader: &mut SpriteLoader,
+    sr: &lithicrivers_core::components::SpriteRef,
+    scale: Scale,
+) -> (String, Color) {
+    let sd = loader.load_by_spriteref(sr);
+    let block = sprite_block_for_scale(sd, scale).to_string();
+    let color = parse_color_string(&sd.color).unwrap_or_else(|| {
+        panic!(
+            "Missing or invalid RGB color in data.json for sprite '{}::{}' (expected #RRGGBB)",
+            sr.category, sr.name
+        )
+    });
+    (block, color)
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -66,8 +106,12 @@ pub struct SpriteData {
     pub name: String,
     pub color: String,
     pub description: String,
+
     pub sprites: Vec<String>, // Each entry is a sprite at a different scale
-    pub item_art: Option<String>, // Optional 12x8 (or similar) ASCII art for items
+    // Example sprites content: ["x", "xx\nxx", "xxx\nxxx\nxxx"]
+    pub art12x8_sprites: Vec<String>, // Required 12x8 (or similar) ASCII art for items.
+                                      // Example: 12 lines of 8-char-long-lines each, separated by newlines.
+                                      // Example: ["xxxxxx", "xxxxxx", "xxxxxx", "xxxxxx", "xxxxxx", "xxxxxx", "xxxxxx", "xxxxxx", "xxxxxx", "xxxxxx", "xxxxxx", "xxxxxx"]
 }
 
 pub struct SpriteLoader {
@@ -79,6 +123,14 @@ unsafe impl Send for SpriteLoader {}
 unsafe impl Sync for SpriteLoader {}
 
 impl SpriteLoader {
+    pub fn sprite_path_for_entitykind(&self, kind: EntityKind) -> (String, String) {
+        match kind {
+            EntityKind::Player => ("entities".to_string(), "player".to_string()),
+            EntityKind::Sheep => ("entities".to_string(), "sheep".to_string()),
+            EntityKind::FeralDog => ("entities".to_string(), "feral_dog".to_string()),
+            _ => panic!("Unknown entity kind: {:?}", kind),
+        }
+    }
     pub fn new(data_path: Option<&Path>) -> Self {
         let default = PathBuf::from("crates/client/assets/sprites");
         Self {
@@ -105,7 +157,7 @@ impl SpriteLoader {
         let base = format!("sprites/{}/{}.lrsprite/", category, sprite_name);
         let data_path = format!("{}data.json", base);
         let sprites_path = format!("{}sprites.txt", base);
-        let item_art_path = format!("{}item_art.txt", base);
+        let art12x8_path = format!("{}art12x8.txt", base);
 
         // Load metadata from embedded assets
         let metadata: SpriteMetadata = serde_json::from_str(&Self::get_embedded_text(&data_path))
@@ -125,18 +177,41 @@ impl SpriteLoader {
         };
         // Validate sprites
         Self::validate_sprite_dimensions(&sprites, sprite_name, category);
+        // Load optional 12x8 art as a single multi-line string into a Vec<String>
+        let art12x8_sprites: Vec<String> = if let Some(d) = EmbeddedAssets::get(&art12x8_path) {
+            let text = match d.data {
+                Cow::Borrowed(b) => String::from_utf8(b.to_vec()).expect("art12x8 not UTF-8"),
+                Cow::Owned(v) => String::from_utf8(v).expect("art12x8 not UTF-8"),
+            };
+            vec![text]
+        } else {
+            panic!(
+                "Missing required 12x8 art for sprite '{}::{}'",
+                category, sprite_name
+            );
+        };
+
         let sprite_data = SpriteData {
             name: metadata.name,
             color: metadata.color,
             description: metadata.description,
             sprites,
-            item_art: EmbeddedAssets::get(&item_art_path).map(|d| match d.data {
-                Cow::Borrowed(b) => String::from_utf8(b.to_vec()).expect("item_art not UTF-8"),
-                Cow::Owned(v) => String::from_utf8(v).expect("item_art not UTF-8"),
-            }),
+            art12x8_sprites,
         };
+
+        // Validate art12x8_sprites
+        Self::validate_12x8sprite_dimensions(&sprite_data.art12x8_sprites, sprite_name, category);
+
         self.sprite_cache.insert(cache_key.clone(), sprite_data);
         self.sprite_cache.get(&cache_key).unwrap()
+    }
+
+    // Convenience: load by a SpriteRef component (category + name)
+    pub fn load_by_spriteref(
+        &mut self,
+        sr: &lithicrivers_core::components::SpriteRef,
+    ) -> &SpriteData {
+        self.load_sprite(&sr.name, &sr.category)
     }
 
     // Discover and preload all sprites from embedded assets under sprites/<category>/<name>.lrsprite/
@@ -164,26 +239,46 @@ impl SpriteLoader {
         }
     }
 
-    // Preload a single category from embedded assets.
-    pub fn preload_category(&mut self, category: &str) {
-        use std::collections::BTreeSet;
-        let mut seen: BTreeSet<String> = BTreeSet::new();
-        let prefix = format!("sprites/{}/", category);
-        for file in EmbeddedAssets::iter() {
-            let path = file.as_ref();
-            if !path.starts_with(&prefix) {
-                continue;
-            }
-            let parts: Vec<&str> = path.split('/').collect();
-            if parts.len() < 3 {
-                continue;
-            }
-            if let Some(name) = parts[2].strip_suffix(".lrsprite") {
-                seen.insert(name.to_string());
-            }
+    fn validate_12x8sprite_dimensions(
+        sprite_blocks: &Vec<String>,
+        sprite_name: &str,
+        category: &str,
+    ) {
+        if sprite_blocks.is_empty() {
+            // Optional for now; nothing to validate
+            return;
         }
-        for name in seen {
-            let _ = self.load_sprite(&name, category);
+        for (i, block) in sprite_blocks.iter().enumerate() {
+            if block.is_empty() {
+                panic!(
+                    "Sprite '{}::{}' 12x8 art is empty at entry {}",
+                    category, sprite_name, i
+                );
+            }
+            let lines: Vec<&str> = block.lines().collect();
+            if lines.len() != 8 {
+                panic!(
+                    "Sprite '{}::{}' 12x8 art has {} lines at entry {}, expected 8",
+                    category,
+                    sprite_name,
+                    lines.len(),
+                    i
+                );
+            }
+            let line_lengths: Vec<usize> = lines.iter().map(|l| l.len()).collect();
+            let width = line_lengths[0];
+            if line_lengths.iter().any(|&len| len != width) {
+                panic!(
+                    "Sprite '{}::{}' 12x8 art has inconsistent line widths at entry {}",
+                    category, sprite_name, i
+                );
+            }
+            if width != 12 {
+                panic!(
+                    "Sprite '{}::{}' 12x8 art must be 12 columns wide, got {} at entry {}",
+                    category, sprite_name, width, i
+                );
+            }
         }
     }
 
@@ -197,7 +292,7 @@ impl SpriteLoader {
                     i + 1
                 );
             }
-            let lines: Vec<&str> = sprite.split('\n').collect();
+            let lines: Vec<&str> = sprite.lines().collect();
             if lines.is_empty() {
                 panic!(
                     "Sprite '{}' in '{}' category has no lines at scale {}",
@@ -266,68 +361,4 @@ fn parse_color_string(s: &str) -> Option<Color> {
     None
 }
 
-// Multi-scale: return the full sprite block string (may be multi-line) and color for fluids
-pub fn sprite_block_for_fluid(
-    loader: &mut SpriteLoader,
-    fluid_type: lithicrivers_core::resources::fluids::FluidType,
-    scale: Scale,
-) -> Option<(String, Color)> {
-    use lithicrivers_core::resources::fluids::FluidType;
-    let (category, name) = (
-        "fluids",
-        match fluid_type {
-            FluidType::Water => "water",
-            FluidType::Oil => "oil",
-            FluidType::Blood => "blood",
-            FluidType::Acid => "acid",
-            FluidType::Lava => "lava",
-        },
-    );
-    let sd = loader.load_sprite(name, category);
-    let block = sprite_block_for_scale(sd, scale).to_string();
-    let color = parse_color_string(&sd.color).unwrap_or_else(|| {
-        panic!(
-            "Missing or invalid RGB color in data.json for fluid sprite '{}::{}' (expected #RRGGBB)",
-            category, name
-        )
-    });
-    Some((block, color))
-}
-
-// Multi-scale: return the full sprite block string (may be multi-line) and color for entities
-pub fn sprite_block_for_entity(
-    loader: &mut SpriteLoader,
-    ch: char,
-    scale: Scale,
-) -> (String, Color) {
-    let (category, name) = (
-        "entities",
-        if ch == '@' {
-            "player"
-        } else if ch == 's' || ch == 'S' {
-            "sheep"
-        } else {
-            "entity_generic"
-        },
-    );
-    let sd = loader.load_sprite(name, category);
-    let block = sprite_block_for_scale(sd, scale).to_string();
-    let color = parse_color_string(&sd.color).unwrap_or_else(|| {
-        panic!(
-            "Missing or invalid RGB color in data.json for entity sprite '{}::{}' (expected #RRGGBB)",
-            category, name
-        )
-    });
-    (block, color)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn test_load_water_sprite() {
-        let mut loader = SpriteLoader::new(None);
-        let sprite = loader.load_sprite("water", "fluids");
-        assert!(!sprite.sprites.is_empty());
-    }
-}
+// Fluids removed

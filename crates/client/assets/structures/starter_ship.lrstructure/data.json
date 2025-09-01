@@ -1,6 +1,6 @@
 {
   "blocks": {
-    ".": "air",
+    ",": "existing_worldgen",
     "S": "plasteel_scrap",
     "C": "scrap_electronics",
     "E": "treasure"

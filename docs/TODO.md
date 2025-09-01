@@ -185,6 +185,8 @@ See [STEAM-MVP.md](STEAM-MVP.md) for the complete release plan.
 
 - investigate how dwarf fortress does vertical combat...
 
+- based on the value of `world_seed % 1` will randomly spawn a friendly Greyhound dog named either Kopi or FortyNiner that follows you around and attacks anything that attacks you. If you finish the game with the dog alive and in  your party, you get a free copy of the game to give to a friend, as well as some poetry about my early childhood and my thoughts about my favorite music artists like lapfox trax and 4lung.
+
 - fight system that is basically just chrono trigger, limit to 3 enemies so players dont get fucked
   - if you decide to "Escape", there's a "BattleDelay" timer that prevents you from re-engaging with an enemy for about 600 ticks.
   - Tackle is a move
@@ -196,7 +198,8 @@ See [STEAM-MVP.md](STEAM-MVP.md) for the complete release plan.
 - fights only occur on the same Z-level, no 3d combat. just like qud.
 
 ## MVP for steam release (2025 christmas release)
-  
+- Auto harvest Mode
+- Dig mode (to not get stuck in rocks when moving Z axis)
 - consider using cardboard/paper cutouts to model the game system
   - inventory pages
   - ui
@@ -217,7 +220,6 @@ See [STEAM-MVP.md](STEAM-MVP.md) for the complete release plan.
 - reintegrate speedscope for ratatui and rust build
 
 - migrate all of the code from python-old/ to rust...
-- migrate to ratatui
 - tutorial system that can be re-activated
   - context-aware tutorial
 - game checkpointing, branching saves
@@ -241,11 +243,8 @@ See [STEAM-MVP.md](STEAM-MVP.md) for the complete release plan.
 - finish working on `story.txt`...
 - in progress: steam API integration
 - ask AI: How should I start doing steamworks/steamapi integration?
-  - how should I do CICD for steam releases? I should document my tagging/branch rules.
 
 - save/load system where you can pick a save file from a list of saved games (build UI for this...)
-
-- For the rendering, wouldn't it be far more efficient to just render big patches of 3d objects/glypths, save them, and translate the 3d objects when the player moves? So the player actually never "moves", the world below them just gets translated on x/z.
 
 ## steam key giveaway list:
 - skomor123

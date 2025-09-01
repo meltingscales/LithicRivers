@@ -11,58 +11,64 @@ toolchain := "stable"
 cpu_count := "$env:NUMBER_OF_PROCESSORS"
 
 git-data:
-    git describe --tags --abbrev=0 > VERSION
-    git rev-parse HEAD > GIT_SHA
-    git rev-parse --abbrev-ref HEAD > GIT_BRANCH
-
+    powershell.exe scripts/git-data.ps1
+    
 copy-config-data:
-    cp -Force STEAM_APP_ID crates/client/assets/config/STEAM_APP_ID
-    cp -Force VERSION crates/client/assets/config/VERSION
-    cp -Force GIT_SHA crates/client/assets/config/GIT_SHA
-    cp -Force GIT_BRANCH crates/client/assets/config/GIT_BRANCH
-    cp -Force LICENSE crates/client/assets/config/LICENSE
-    cp -Force THIRD-PARTY-NOTICES.txt crates/client/assets/config/THIRD-PARTY-NOTICES.txt
+    powershell.exe scripts/copy-config-data.ps1
+
+# remove artifacts/ folder but NOT cargo cache or target/ folder.
+clean: 
+    powershell.exe scripts/clean.ps1
 
 # Build in debug mode (default)
 build: git-data copy-config-data
     cargo build --workspace -j {{cpu_count}}
 
-stage-artifacts: build build-demos
+
+stage-artifacts-legal:
+    New-Item -ItemType Directory -Path artifacts
+    Copy-Item -Path CHANGELOG.txt -Destination artifacts/
+    Copy-Item -Path LICENSE -Destination artifacts/
+    Copy-Item -Path THIRD-PARTY-NOTICES.txt -Destination artifacts/
+
+stage-artifacts: clean build build-demos stage-artifacts-legal
     powershell.exe scripts/stage-artifacts.ps1
 
-build-release: git-data copy-config-data
+build-release: git-data copy-config-data build-demos-release
     cargo build --workspace --release -j {{cpu_count}}
 
-stage-artifacts-release: build-release build-demos-release
+stage-artifacts-release: clean build-release build-demos-release stage-artifacts-legal
     powershell.exe scripts/stage-artifacts-release.ps1
 
 build-demos:
     cargo build -p lithicrivers-client --bin demo_inventory
+    cargo build -p lithicrivers-client --bin demo_crafting
     cargo build -p lithicrivers-client --bin demo_body
-    cargo build -p lithicrivers-client --bin beezzaroll_color_test
-    cargo build -p lithicrivers-client --bin beezzaroll_sprite_test
+    cargo build -p lithicrivers-client --bin demo_beezzaroll_color_test
+    cargo build -p lithicrivers-client --bin demo_beezzaroll_sprite_test
+    cargo build -p lithicrivers-client --bin demo_portrait_sprite_test
+    cargo build -p lithicrivers-client --bin demo_combat_chrono_trigger
 
 build-demos-release:
     cargo build -p lithicrivers-client --bin demo_inventory --release
+    cargo build -p lithicrivers-client --bin demo_crafting --release
     cargo build -p lithicrivers-client --bin demo_body --release
-    cargo build -p lithicrivers-client --bin beezzaroll_color_test --release
-    cargo build -p lithicrivers-client --bin beezzaroll_sprite_test --release
+    cargo build -p lithicrivers-client --bin demo_beezzaroll_color_test --release
+    cargo build -p lithicrivers-client --bin demo_beezzaroll_sprite_test --release
+    cargo build -p lithicrivers-client --bin demo_portrait_sprite_test --release
+    cargo build -p lithicrivers-client --bin demo_combat_chrono_trigger --release
 
 # Run debug build
-run:
+client: build
     cargo run -p lithicrivers-client --bin lithicrivers-client -j {{cpu_count}}
 
 # Run release build
-run-release:
+client-release: build-release
     cargo run --release -p lithicrivers-client --bin lithicrivers-client -j {{cpu_count}}
 
 # Run tests
 test:
     cargo test --workspace -j {{cpu_count}}
-
-# Clean build artifacts
-clean:
-    cargo clean
 
 # Install Rust toolchain
 install:

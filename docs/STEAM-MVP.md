@@ -2,13 +2,9 @@
 
 ## Small temp list
 
+- structure gen seems like it gets "stretched" across infinite z?
+
 - fix windows exe consuming keystrokes way too fast (should we switch shells on windows?? does this only happen because im in a vm??)
-
-- fix steam_cmd for steam release... see https://stackoverflow.com/questions/79740593/steamworks-vague-steamcmd-error-when-publishing
-
-- reduce the amount of fluid in the Lithic Rivers biome, make a "spawn_lava"/"spawn_water"/etc method that just creates 1 standard block of lava with a slightly-lower-than-average volume so it doesnt spread like crazy as it currently does
-
-- also clamp process_fluids_clamped so that it only does up to 50,000 fluid updates per tick, and quits with a warning if it hits that limit...
 
 - add some more empty space to the Lithic Rivers biome, carve out meandering "cave room" and "empty river" paths using noise/erosion plus thick vectors
 
@@ -23,35 +19,41 @@
   - abandoned factory
   - abandoned research station
 
-
 ## Core Gameplay Loop (Must Have)
 - [ ] Basic world generation with multiple biomes
   - [ ] At least 3 distinct biome bands with tile/feature differences
     - [ ] structure generation that's unique across biomes
     - [ ] underground "Lithic Rivers" biome that's molten lava and rare ore, and dangerous mining bots
     - [x] Deterministic by seed across Z-slices
-- [ ] Player movement and basic interactions
-  - [ ] Numpad movement plus '<'/'>' vertical movement
-  - [ ] Mining action with SFX and message log feedback
-- [ ] Simple crafting system
-  - [ ] 3 starter recipes (stick, plank, torch) with deterministic outputs
+- [x] Player movement and basic interactions
+  - [x] Numpad movement plus '<'/'>' vertical movement
+  - [x] Mining action with SFX and message log feedback
+  - [ ] Make building/placing blocks/mining fun and fast!
+    - [ ] vim-style build/break toggle?
+- [x] Simple crafting system
+  - [x] 3 starter recipes (stick, plank, torch) with deterministic outputs
 - [ ] Day/night cycle
   - [ ] Full cycle length ~10–20 minutes with visual cue
 - [ ] Basic survival mechanics (damage, repair, body parts)
   - [ ] Body panel shows part states; player can incur and repair at least 1 damage type
 - [ ] NPC interactions and conversations just like the python version
+- [ ] Combat system with tick-based moves and an option to use items and run away
+  - [ ] Running away costs 600 ticks
+  - [ ] Tackling an enemy costs 800 ticks
+  - [ ] Tackling an enemy stuns it for 400 ticks (50% chance)
+  - [ ] Tackling an enemy pushes it back 2 spaces
 
 ## Technical Requirements
 - [x] Stable save/load system
 - [x] 3D world slices (Z-level viewing and vertical movement)
   - [x] View snaps to player Z after movement (toggle later if needed)
   - [x] Worldgen Perlin noise includes Z; slices deterministic by seed
-- [ ] Windows build pipeline
-  - [ ] CI job builds Windows artifacts
-  - [ ] Smoke test launch on artifact
-  - [ ] Upload artifacts to Releases (draft)
-- [ ] Basic settings/controls menu
-  - [ ] Rebind keys (movement, vertical, snap toggle)
+- [x] Windows build pipeline
+  - [x] CI job builds Windows artifacts
+  - [x] Smoke test launch on artifact
+  - [x] Upload artifacts to Releases (draft)
+- [x] Basic settings/controls menu
+  - [x] Rebind keys (movement, vertical, snap toggle)
   - [ ] Volume sliders (music/sfx)
 - [ ] Performance optimizations for target hardware
   - [ ] Profiling budget: ~60 FPS at 80x24; ≤16 ms tick under normal load

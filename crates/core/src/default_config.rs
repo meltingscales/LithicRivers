@@ -15,16 +15,14 @@ pub fn default_config() -> ConfigRoot {
             "MOVE_UP": ["<"],
             "MOVE_DOWN": [">"]
         },
-        "viewport": {
-            "RESET_VIEWPORT": ["r"],
-            "SLIDE_VIEWPORT_WEST": ["["],
-            "SLIDE_VIEWPORT_EAST": ["]"],
-            "TOGGLE_VIEWPORT": ["v"],
-            "VIEW_Z_UP": ["PAGEUP"],
-            "VIEW_Z_DOWN": ["PAGEDOWN"]
-        },
         "scale": {"SCALE_UP": ["=", "+"], "SCALE_DOWN": ["-"], "SCALE_RESET": ["0"]},
-        "action": {"MINE": ["u"], "INTERACT": ["i"], "PICKUP_ITEMS": ["g"]},
+        "action": {
+            "MINE": ["q"],          // Quick mine toggle
+            "BUILD": ["e"],         // Quick build toggle
+            "INTERACT": ["f"],      // Interact/use
+            "PICKUP_ITEMS": ["r"],  // Quick grab
+            "LOOK_TOGGLE": ["c"],   // Look around
+        },
         "ui": {
             "CLOSE_HELP_MENU": ["ESCAPE"],
             "OPEN_COMMAND_MENU": ["/"],
@@ -37,7 +35,12 @@ pub fn default_config() -> ConfigRoot {
             "LOAD_JSON": ["L"],
             "QUIT": []
         },
-        "inventory": {"DROP_ITEM": ["d"], "DESTROY_ITEM": ["x"], "CHEAT_DUPLICATE_ITEM": ["."]}
+        "inventory": {
+            "DROP_ITEM": ["g"], // Drop item
+            "DESTROY_ITEM": ["x"], // Destroy item, remove later
+            "CHEAT_DUPLICATE_ITEM": ["."], // Duplicate item, remove later
+            "TOGGLE_ITEM_AUTO_PICKUP_KEY": ["p"] // Toggle item auto pickup
+        }
     });
     let settings = serde_json::json!({
         "game": {
@@ -50,13 +53,14 @@ pub fn default_config() -> ConfigRoot {
             "DEFAULT_SEED": 4669201609u64,
             "DEFAULT_PLAYER_NAME": "melty"
         },
+        "inventory": {
+            "TOGGLE_ITEM_AUTO_PICKUP_DEFAULT_ENABLED": true
+        },
         "world": {
             "DEFAULT_SIZE_RADIUS": {"production": [50, 50, 3], "testing": [3, 3, 1]},
             "DEFAULT_PLAYER_POSITION": {"production": [25, 25, 0], "testing": [0, 0, 0]}
         },
-        "viewport": {"VIEWPORT_RADIUS": [8, 8, 0], "VIEWPORT_WIGGLE": 2},
-        "performance": {"MAX_CPU_THREADS": 64},
-        "worldgen": {"CHUNK_SIZE": 16}
+        "performance": {"MAX_CPU_THREADS": 64}
     });
     ConfigRoot { keybinds, settings }
 }

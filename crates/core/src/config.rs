@@ -1,4 +1,6 @@
 use crate::default_config::default_config;
+use crate::keycode_mapping;
+use crossterm::event::KeyCode;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -99,6 +101,41 @@ impl ConfigManager {
 
     pub fn get_setting<'a>(&'a self, category: &str, key: &str) -> Option<&'a serde_json::Value> {
         self.data.settings.get(category).and_then(|c| c.get(key))
+    }
+
+    pub fn get_keybind(&self, category: &str, key: &str) -> Option<&serde_json::Value> {
+        self.data.keybinds.get(category).and_then(|c| c.get(key))
+    }
+
+    pub fn get_printable_key_for_keybind(&self, category: &str, key: &str) -> &'static str {
+        let keybinds = self
+            .data
+            .keybinds
+            .get(category)
+            .unwrap_or_else(|| panic!("Keybind category '{}' not found", category));
+
+        let key_value = keybinds
+            .get(key)
+            .unwrap_or_else(|| panic!("Key '{}' not found in category '{}'", key, category));
+
+        // handle when key_value is an array, just take the first one
+        let key_value = if let Some(arr) = key_value.as_array() {
+            arr[0].clone()
+        } else {
+            key_value.clone()
+        };
+
+        let key_str = key_value.as_str().unwrap_or_else(|| {
+            panic!(
+                "Keybind {}.{} is not a string: {:?}",
+                category, key, key_value
+            )
+        });
+
+        let keycode = keycode_mapping::parse_keycode(key_str)
+            .unwrap_or_else(|| panic!("Invalid keycode '{}' for {}.{}", key_str, category, key));
+
+        keycode_mapping::keycode_to_printable_name(keycode)
     }
 
     pub fn get_vector_setting(&self, category: &str, key: &str, environment: &str) -> [i32; 3] {

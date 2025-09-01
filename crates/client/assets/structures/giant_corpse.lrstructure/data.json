@@ -1,6 +1,6 @@
 {
   "blocks": {
-    ".": "air",
+    ",": "existing_worldgen",
     "B": "bone_block"
   },
   "gen_biomes": "ALL",
