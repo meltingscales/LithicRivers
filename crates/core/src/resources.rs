@@ -6,9 +6,6 @@ use tracing::info;
 
 pub mod world;
 
-// Re-export World and Chunk for easier access
-pub use world::{Chunk, World};
-
 pub struct Resources {
     pub seed: u64,
     pub rng: ChaCha20Rng,
