@@ -12,6 +12,7 @@ pub mod structure;
 pub mod systems;
 pub mod tiles;
 pub mod view;
+pub mod world;
 
 // Re-export commonly used types
 pub use game::Game;

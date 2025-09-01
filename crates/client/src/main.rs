@@ -44,7 +44,7 @@ use crate::sprite_loader::{
     sprite_block_for_spriteref, sprite_block_for_tile, Scale, SpriteLoader,
 };
 use lithicrivers_core::model::body::{Body, BodyPart, BodyPartState};
-use lithicrivers_core::resources::world::CHUNK_SIZE;
+use lithicrivers_core::world::CHUNK_SIZE;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum MenuTab {

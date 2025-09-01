@@ -20,7 +20,7 @@ enum BiomeBand {
 
 impl World {
     #[inline]
-    fn biome_for(&self, wx: f64, wy: f64, zf: f64) -> BiomeBand {
+    pub fn biome_for(&self, wx: f64, wy: f64, zf: f64) -> BiomeBand {
         // Depth rule: Lithic Rivers only below or equal to -5 depth levels.
         if zf <= -5.0 {
             return BiomeBand::LithicRivers;
@@ -54,7 +54,7 @@ impl World {
     /// Deterministic post-process that adds small clusters of trees (10-20 tiles)
     /// onto suitable ground (grass/dirt). Uses a seeded RNG derived from
     /// seed, chunk coords, and current gen_z so results are deterministic.
-    fn add_tree_clusters(&self, cx: i64, cy: i64, chunk: &mut Chunk) {
+    pub fn add_tree_clusters(&self, cx: i64, cy: i64, chunk: &mut Chunk) {
         // Distinct salt so RNG stream differs from other features
         let salt: u64 = 0x7B1E_CA11_u64 ^ (self.gen_z as u64).wrapping_mul(0x5EED);
         let mut rng = ChaCha20Rng::seed_from_u64(self.mix_coords(cx, cy) ^ salt);
@@ -123,21 +123,21 @@ impl World {
 }
 
 impl Chunk {
-    fn new_filled(fill: TileKind) -> Self {
+    pub fn new_filled(fill: TileKind) -> Self {
         Self {
             tiles: vec![fill; (CHUNK_SIZE as usize) * (CHUNK_SIZE as usize)],
         }
     }
     #[inline]
-    fn idx(tx: i32, ty: i32) -> usize {
+    pub fn idx(tx: i32, ty: i32) -> usize {
         (ty as usize) * (CHUNK_SIZE as usize) + (tx as usize)
     }
     #[inline]
-    fn get(&self, tx: i32, ty: i32) -> TileKind {
+    pub fn get(&self, tx: i32, ty: i32) -> TileKind {
         self.tiles[Self::idx(tx, ty)]
     }
     #[inline]
-    fn set(&mut self, tx: i32, ty: i32, t: TileKind) {
+    pub fn set(&mut self, tx: i32, ty: i32, t: TileKind) {
         let i = Self::idx(tx, ty);
         self.tiles[i] = t;
     }
