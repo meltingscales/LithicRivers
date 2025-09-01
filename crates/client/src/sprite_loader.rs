@@ -1,8 +1,10 @@
+use lithicrivers_core::components::EntityKind;
 use lithicrivers_core::tiles::TileKind;
 use ratatui::prelude::Color;
 use serde::Deserialize;
 use std::borrow::Cow;
 use std::collections::HashMap;
+use std::fmt;
 use std::path::{Path, PathBuf};
 
 use rust_embed::RustEmbed;
@@ -121,6 +123,14 @@ unsafe impl Send for SpriteLoader {}
 unsafe impl Sync for SpriteLoader {}
 
 impl SpriteLoader {
+    pub fn sprite_path_for_entitykind(&self, kind: EntityKind) -> (String, String) {
+        match kind {
+            EntityKind::Player => ("entities".to_string(), "player".to_string()),
+            EntityKind::Sheep => ("entities".to_string(), "sheep".to_string()),
+            EntityKind::FeralDog => ("entities".to_string(), "feral_dog".to_string()),
+            _ => panic!("Unknown entity kind: {:?}", kind),
+        }
+    }
     pub fn new(data_path: Option<&Path>) -> Self {
         let default = PathBuf::from("crates/client/assets/sprites");
         Self {
