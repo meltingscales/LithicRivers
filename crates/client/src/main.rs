@@ -140,6 +140,7 @@ struct App {
     boot_message_lines: Vec<String>,
     boot_display_text: String,
     boot_line_index: usize,
+    boot_scroll: u16, // Tracks scroll position for boot message
     last_line_time: Instant,
     boot_complete: bool,
     // Help panel state
@@ -522,6 +523,7 @@ impl App {
             boot_message_lines,
             boot_display_text: String::new(),
             boot_line_index: 0,
+            boot_scroll: 0,
             last_line_time: Instant::now(),
             boot_complete: false,
         }
@@ -1321,9 +1323,26 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<(), 
                     }
                 }
                 Event::Mouse(me) => {
-                    // debug log that we don't handle mouse events.
-                    // TODO we can handle these later
-                    tracing::debug!("UNHANDLED Mouse event: {:?}", me);
+                    if let crossterm::event::MouseEventKind::ScrollDown = me.kind {
+                        // Scroll down (move view down, which means increase scroll position)
+                        if let SplashState::BootMessage = app.splash_state {
+                            let total_lines = app.boot_display_text.lines().count() as u16;
+                            let visible_lines = 20; // Approximate visible lines
+                            if app.boot_scroll + visible_lines < total_lines {
+                                app.boot_scroll = app.boot_scroll.saturating_add(3);
+                                // Scroll 3 lines at a time
+                            }
+                        }
+                    } else if let crossterm::event::MouseEventKind::ScrollUp = me.kind {
+                        // Scroll up (move view up, which means decrease scroll position)
+                        if let SplashState::BootMessage = app.splash_state {
+                            app.boot_scroll = app.boot_scroll.saturating_sub(3);
+                            // Scroll 3 lines at a time
+                        }
+                    } else {
+                        // Log other mouse events
+                        tracing::debug!("UNHANDLED Mouse event: {:?}", me);
+                    }
                 }
                 _ => {}
             }
@@ -1386,18 +1405,73 @@ fn ui(f: &mut Frame, app: &mut App) {
             // Clear content area before drawing
             f.render_widget(Clear, area);
 
-            // Display boot message with typewriter effect
-            // Add padding to the text area to prevent text from touching the border
+            // Calculate available height for text (accounting for borders and padding)
             let inner_area = area.inner(&Margin {
                 horizontal: 2,
                 vertical: 2,
             });
+            let text_area = inner_area.inner(&Margin {
+                horizontal: 1,
+                vertical: 1,
+            });
+
+            // Calculate visible lines and update scroll position if needed
+            let visible_lines = text_area.height.saturating_sub(2); // Leave room for border
+            let total_lines = app.boot_display_text.lines().count() as u16;
+
+            // Auto-scroll if we're at the bottom
+            if app.boot_scroll + visible_lines >= total_lines.saturating_sub(1) {
+                app.boot_scroll = total_lines.saturating_sub(visible_lines);
+            }
+
+            // Create a scrollable paragraph
             let paragraph = Paragraph::new(app.boot_display_text.as_str())
                 .block(Block::default().borders(Borders::NONE))
-                .wrap(Wrap { trim: false });
+                .wrap(Wrap { trim: false })
+                .scroll((app.boot_scroll, 0));
 
             // Render content with padding
             f.render_widget(paragraph, inner_area);
+
+            // Add scrollbar if needed
+            if total_lines > visible_lines {
+                // Create a simple scrollbar on the right
+                let scrollbar_area = Rect {
+                    x: inner_area.right() - 1,
+                    y: inner_area.y,
+                    width: 1,
+                    height: inner_area.height,
+                };
+
+                // Calculate scrollbar thumb position and height
+                let thumb_height = (visible_lines as f32 / total_lines as f32
+                    * visible_lines as f32)
+                    .max(1.0) as u16;
+                let thumb_position = (app.boot_scroll as f32 / (total_lines - visible_lines) as f32
+                    * (visible_lines - thumb_height) as f32)
+                    .round() as u16;
+
+                // Draw scrollbar track
+                let track_span = Span::styled("│", Style::default().fg(Color::DarkGray));
+                for y in inner_area.top()..inner_area.bottom() {
+                    f.render_widget(
+                        Paragraph::new(track_span.clone()),
+                        Rect::new(scrollbar_area.x, y, 1, 1),
+                    );
+                }
+
+                // Draw scrollbar thumb
+                let thumb_span = Span::styled("▐", Style::default().fg(Color::LightBlue));
+                for y in 0..thumb_height {
+                    let y_pos = inner_area.y + thumb_position + y;
+                    if y_pos < inner_area.bottom() {
+                        f.render_widget(
+                            Paragraph::new(thumb_span.clone()),
+                            Rect::new(scrollbar_area.x, y_pos, 1, 1),
+                        );
+                    }
+                }
+            }
 
             // Render border last to ensure it's on top
             f.render_widget(block, area);
