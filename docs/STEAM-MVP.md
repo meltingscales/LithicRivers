@@ -66,7 +66,8 @@
 - [ ] Basic Steam overlay support
 
 ## Polish & UX
-- [ ] Tutorial/intro sequence
+- [x] intro sequence
+- [ ] tutorial sequence that can be accessed anytime
 - [ ] Basic sound effects, not just music
 - [ ] Main menu with new game/load game
 - [ ] Basic UI feedback for player actions
