@@ -17,5 +17,6 @@ anyhow = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 rust-embed = "8"
+bitflags = "2.0"
 ratatui = "0.26"
 crossterm = "0.27"

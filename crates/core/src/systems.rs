@@ -172,14 +172,14 @@ pub fn pickup_system(world: &mut World, res: &mut Resources) {
     }
 }
 
-pub fn combat_trigger_system(world: &mut World, res: &mut Resources) {
+pub fn combat_trigger_system(world: &mut World, res: &mut Resources) -> bool {
     // get player position
     let player_pos = match res
         .player_entity
         .and_then(|e| world.get::<&Position>(e).ok())
     {
         Some(pos) => *pos,
-        None => return, // No player to chase
+        None => return false, // No player to chase
     };
 
     // collect all entities with a combat component
@@ -204,9 +204,10 @@ pub fn combat_trigger_system(world: &mut World, res: &mut Resources) {
         // trigger combat
         if let Ok(mut combat) = world.get::<&mut Combat>(e) {
             combat.triggered = true;
-            panic!("test to see if we can trigger combat system")
+            return true;
         }
     }
+    false
 }
 
 // Feral dogs will chase the player if they get too close.
