@@ -8,7 +8,7 @@ mod boot_message;
 use boot_message::get_boot_message;
 use ratatui::{
     backend::{Backend, CrosstermBackend},
-    layout::{Alignment, Constraint, Direction, Layout, Rect},
+    layout::{Alignment, Constraint, Direction, Layout, Margin, Rect},
     style::{Color, Modifier, Style, Stylize as _},
     symbols::border,
     text::{Line, Span},
@@ -452,14 +452,6 @@ impl App {
         // Load and process boot message
         let boot_message = boot_message::get_boot_message();
         let mut boot_message_lines = boot_message.lines().map(String::from).collect::<Vec<_>>();
-
-        // add some space to the beginning of each newline to align with our border
-        boot_message_lines.iter_mut().for_each(|line| {
-            line.insert(0, ' ');
-            line.insert(0, ' ');
-            line.insert(0, ' ');
-            line.insert(0, ' ');
-        });
 
         let credits_text = format!(
             "Version: {}\nSTEAM_APP_ID: {}\nGit Branch: {}\nGit Commit: {}\n\n{}",
@@ -1395,12 +1387,17 @@ fn ui(f: &mut Frame, app: &mut App) {
             f.render_widget(Clear, area);
 
             // Display boot message with typewriter effect
+            // Add padding to the text area to prevent text from touching the border
+            let inner_area = area.inner(&Margin {
+                horizontal: 2,
+                vertical: 2,
+            });
             let paragraph = Paragraph::new(app.boot_display_text.as_str())
                 .block(Block::default().borders(Borders::NONE))
-                .wrap(Wrap { trim: true });
+                .wrap(Wrap { trim: false });
 
-            // Render content
-            f.render_widget(paragraph, area);
+            // Render content with padding
+            f.render_widget(paragraph, inner_area);
 
             // Render border last to ensure it's on top
             f.render_widget(block, area);
