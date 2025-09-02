@@ -78,13 +78,11 @@ build: fmt clean git-data copy-config-data
 
 # Build the project in release mode
 build-release: fmt clean git-data copy-config-data build-demos-release
-    cp -f CHANGELOG.txt crates/client/assets/config/CHANGELOG.txt
-    cp -f STEAM_APP_ID crates/client/assets/config/STEAM_APP_ID
-    cp -f VERSION crates/client/assets/config/VERSION
-    cp -f GIT_SHA crates/client/assets/config/GIT_SHA
-    cp -f GIT_BRANCH crates/client/assets/config/GIT_BRANCH
-    cp -f LICENSE crates/client/assets/config/LICENSE
-    cp -f THIRD-PARTY-NOTICES.txt crates/client/assets/config/THIRD-PARTY-NOTICES.txt
+    {{cargo_base}} --version
+    {{cargoz_env}} build -p lithicrivers-core --release {{build_flags}}
+    {{cargoz_env}} build -p lithicrivers-client --bin lithicrivers-client --release {{build_flags}}
+
+build-release-no-clean: fmt git-data copy-config-data build-demos-release
     {{cargo_base}} --version
     {{cargoz_env}} build -p lithicrivers-core --release {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin lithicrivers-client --release {{build_flags}}
@@ -184,7 +182,13 @@ fmt:
 
 # Run clippy
 clippy:
-    {{cargoz_env}} clippy --all-targets --all-features -D warnings
+    {{cargoz_env}} clippy --all-targets --all-features {{build_flags}} -- -D warnings
+
+# tokei, code stats
+tokei:
+    rustup run {{toolchain}} cargo install tokei --locked
+    rustup run {{toolchain}} tokei --sort lines
+    rustup run {{toolchain}} tokei --files --sort lines
 
 # Show toolchain information
 toolchain:
