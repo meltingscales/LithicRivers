@@ -4,6 +4,8 @@ use crossterm::{
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
 mod boot_message;
+mod input;
+mod ui;
 
 use boot_message::get_boot_message;
 use lithicrivers_core::game::GameTickResult;
@@ -40,13 +42,15 @@ mod audio;
 mod rendering_helpers;
 mod sprite_constants;
 mod sprite_loader;
-use crate::rendering_helpers::{
-    block_art_12x8_lines_for_position, build_body_ascii, empty_art_12x8_lines_for_position,
-    entity_art_12x8_lines_for_position, parse_hex_color,
-};
-use crate::sprite_constants::{sprite_for_view_reticle, sprite_for_view_reticle_color};
-use crate::sprite_loader::{
-    sprite_block_for_spriteref, sprite_block_for_tile, Scale, SpriteLoader,
+use crate::{
+    input::format_keycode,
+    rendering_helpers::{
+        block_art_12x8_lines_for_position, build_body_ascii, empty_art_12x8_lines_for_position,
+        entity_art_12x8_lines_for_position, parse_hex_color,
+    },
+    sprite_constants::{sprite_for_view_reticle, sprite_for_view_reticle_color},
+    sprite_loader::{sprite_block_for_spriteref, sprite_block_for_tile, Scale, SpriteLoader},
+    ui::centered_rect,
 };
 use lithicrivers_core::model::body::{Body, BodyPart, BodyPartState};
 use lithicrivers_core::world::CHUNK_SIZE;
@@ -387,17 +391,8 @@ fn render_help_panel(f: &mut Frame, app: &mut App, area: Rect) {
     let inner = block.inner(area);
     let p = Paragraph::new(lines)
         .alignment(Alignment::Left)
-        .scroll((app.help_scroll, 0));
-    f.render_widget(p, inner);
-    f.render_widget(block, area);
-}
-
-fn format_keycode(kc: &KeyCode) -> String {
-    match kc {
-        KeyCode::Char(c) => c.to_string(),
-        KeyCode::F(i) => format!("F{}", i),
-        _ => format!("{:?}", kc),
-    }
+        .block(block);
+    f.render_widget(p, area);
 }
 
 fn render_credits_panel(f: &mut Frame, app: &mut App, area: Rect) {
@@ -2150,27 +2145,6 @@ fn render_crafting_panel(f: &mut Frame, app: &mut App, area: Rect) {
     }
 
     f.render_widget(block, area);
-}
-
-/// Helper function to center a rectangle within another rectangle
-fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
-    let popup_layout = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Percentage((100 - percent_y) / 2),
-            Constraint::Percentage(percent_y),
-            Constraint::Percentage((100 - percent_y) / 2),
-        ])
-        .split(r);
-
-    Layout::default()
-        .direction(Direction::Horizontal)
-        .constraints([
-            Constraint::Percentage((100 - percent_x) / 2),
-            Constraint::Percentage(percent_x),
-            Constraint::Percentage((100 - percent_x) / 2),
-        ])
-        .split(popup_layout[1])[1]
 }
 
 fn render_look_panel(f: &mut Frame, app: &mut App, area: Rect) {
