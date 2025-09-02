@@ -3,16 +3,20 @@ use crossterm::{
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
+mod boot_message;
+
+use boot_message::get_boot_message;
 use ratatui::{
     backend::{Backend, CrosstermBackend},
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style, Stylize as _},
+    symbols::border,
     text::{Line, Span},
-    widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Tabs, Wrap},
+    widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, Tabs, Wrap},
     Frame, Terminal,
 };
 use rust_embed::RustEmbed;
-use std::{error::Error, io, time::Duration, time::Instant};
+use std::{cmp::max, collections::VecDeque, error::Error, io, time::Duration, time::Instant};
 use tracing_subscriber::EnvFilter;
 
 // Tracing file appender for log file output
@@ -65,6 +69,8 @@ enum MenuTab {
     Credits,
     Quit,
 }
+
+const BOOT_MESSAGE_TYPEWRITER_MS: u64 = 50;
 
 impl MenuTab {
     const COUNT: usize = 8;
@@ -130,6 +136,12 @@ struct App {
     splash_start_time: Option<std::time::Instant>,
     logo_text: String,
     game_title_text: String,
+    boot_message: String,
+    boot_message_lines: Vec<String>,
+    boot_display_text: String,
+    boot_line_index: usize,
+    last_line_time: Instant,
+    boot_complete: bool,
     // Help panel state
     help_scroll: u16,
 }
@@ -437,6 +449,10 @@ impl App {
             .map(|d| String::from_utf8_lossy(&d.data).to_string())
             .unwrap_or_else(|| panic!("gametitle.txt not found"));
 
+        // Load and process boot message
+        let boot_message = boot_message::get_boot_message();
+        let boot_message_lines = boot_message.lines().map(String::from).collect::<Vec<_>>();
+
         let credits_text = format!(
             "Version: {}\nSTEAM_APP_ID: {}\nGit Branch: {}\nGit Commit: {}\n\n{}",
             version.trim(),
@@ -492,15 +508,22 @@ impl App {
             look_mode: false,
             look_cursor,
             inv_selected: 0,
-            help_scroll: 0,
             recipe_handler,
             craft_selected: 0,
             craft_message: None,
+            // Help panel state
+            help_scroll: 0,
             // Initialize splash screen state
             splash_state: SplashState::Logo,
             splash_start_time: Some(Instant::now()),
             logo_text,
             game_title_text,
+            boot_message,
+            boot_message_lines,
+            boot_display_text: String::new(),
+            boot_line_index: 0,
+            last_line_time: Instant::now(),
+            boot_complete: false,
         }
     }
 
@@ -512,13 +535,49 @@ impl App {
         // Handle splash screen timing
         if let Some(start_time) = self.splash_start_time {
             match self.splash_state {
-                SplashState::Logo if start_time.elapsed() >= Duration::from_secs(2) => {
-                    self.splash_state = SplashState::GameTitle;
-                    self.splash_start_time = Some(Instant::now());
+                SplashState::Logo => {
+                    if start_time.elapsed() >= Duration::from_secs(1) {
+                        self.splash_state = SplashState::GameTitle;
+                        self.splash_start_time = Some(Instant::now());
+                    }
                 }
-                SplashState::GameTitle if start_time.elapsed() >= Duration::from_secs(2) => {
-                    self.splash_state = SplashState::BootMessage;
-                    self.splash_start_time = Some(Instant::now());
+                SplashState::GameTitle => {
+                    if start_time.elapsed() >= Duration::from_secs(1) {
+                        self.splash_state = SplashState::BootMessage;
+                        self.splash_start_time = Some(Instant::now());
+                        self.boot_display_text.clear();
+                        self.boot_line_index = 0;
+                        self.last_line_time = Instant::now();
+                        self.boot_complete = false;
+                    }
+                }
+                SplashState::BootMessage => {
+                    // Handle typewriter effect
+                    if !self.boot_complete {
+                        let elapsed = self.last_line_time.elapsed();
+                        if elapsed >= Duration::from_millis(BOOT_MESSAGE_TYPEWRITER_MS) {
+                            // ~(1000/x) characters per second
+                            self.last_line_time = Instant::now();
+
+                            // Get all text as a single string with newlines
+                            let full_text = self.boot_message_lines.join("\n");
+
+                            if self.boot_line_index < full_text.len() {
+                                // Add next line
+                                self.boot_line_index =
+                                    (self.boot_line_index + 1).min(full_text.len());
+                                self.boot_display_text =
+                                    full_text[..self.boot_line_index].to_string();
+                            } else if !self.boot_complete {
+                                self.boot_complete = true;
+                                // Set a minimum display time after completion
+                                self.splash_start_time = Some(Instant::now());
+                            }
+                        }
+                    } else if start_time.elapsed() >= Duration::from_secs(2) {
+                        // 2 seconds after completion, move to main UI
+                        self.splash_state = SplashState::MainUI;
+                    }
                 }
                 _ => {}
             }
@@ -541,6 +600,43 @@ impl App {
     }
 
     fn handle_input(&mut self, key: KeyCode) -> Result<(), Box<dyn Error>> {
+        // Handle splash screen skipping first
+        if let Some(start_time) = self.splash_start_time {
+            match self.splash_state {
+                SplashState::Logo => {
+                    // Any key skips to next screen
+                    self.splash_state = SplashState::GameTitle;
+                    self.splash_start_time = Some(Instant::now());
+                    return Ok(());
+                }
+                SplashState::GameTitle => {
+                    // Any key skips to boot message
+                    self.splash_state = SplashState::BootMessage;
+                    self.splash_start_time = Some(Instant::now());
+                    self.boot_display_text.clear();
+                    self.boot_line_index = 0;
+                    self.last_line_time = Instant::now();
+                    self.boot_complete = false;
+                    return Ok(());
+                }
+                SplashState::BootMessage => {
+                    if !self.boot_complete {
+                        // Skip to end of text
+                        let full_text = self.boot_message_lines.join("\n");
+                        self.boot_display_text = full_text.clone();
+                        self.boot_line_index = full_text.len();
+                        self.boot_complete = true;
+                        self.splash_start_time = Some(Instant::now());
+                    } else {
+                        // Move to main UI if already complete
+                        self.splash_state = SplashState::MainUI;
+                    }
+                    return Ok(());
+                }
+                _ => {}
+            }
+        }
+
         // log key to log
         // tracing::info!(target: "game", "key pressed: {:?}", key);
 
@@ -1269,9 +1365,42 @@ fn ui(f: &mut Frame, app: &mut App) {
             f.render_widget(title_paragraph, area);
             return;
         }
-        _ => {
-            // Continue with normal UI rendering
+        SplashState::BootMessage => {
+            // Show boot message with glitch effect
+            let block = Block::default()
+                .borders(Borders::ALL)
+                .border_set(border::THICK)
+                .title(" System Boot ")
+                .title_alignment(Alignment::Center)
+                .border_style(Style::default().fg(Color::LightBlue));
+
+            // Inner and centered content area with padding
+            let inner = block.inner(Rect::new(0, 0, f.size().width, f.size().height));
+            let area = centered_rect(80, 60, inner);
+
+            // Clear content area before drawing
+            f.render_widget(Clear, area);
+
+            // Display boot message with typewriter effect
+            let paragraph = Paragraph::new(app.boot_display_text.as_str())
+                .block(Block::default().borders(Borders::NONE))
+                .wrap(Wrap { trim: true });
+
+            // Render content
+            f.render_widget(paragraph, area);
+
+            // Render border last to ensure it's on top
+            f.render_widget(block, area);
+            return;
         }
+        SplashState::MainUI => {
+            // Normal UI rendering continues below
+        }
+    }
+
+    // Only render the main UI if we're past all splash screens
+    if app.splash_state != SplashState::MainUI {
+        return;
     }
 
     let root_chunks = Layout::default()
