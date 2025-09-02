@@ -1,8 +1,12 @@
-use crate::components::*;
+use crate::components::{
+    BlocksMovement, Combat, DroppedItem, EntityKind, FeralDog, GameEntity, Glyph, Inventory,
+    ItemKind, Player, Position, Sheep, SpriteRef,
+};
 use crate::model::body::Body;
 use crate::resources::Resources;
 use crate::systems::{
-    feral_dog_system, mining_system, move_player_system, pickup_system, stumbling_sheep_system,
+    combat_trigger_system, feral_dog_system, mining_system, move_player_system, pickup_system,
+    stumbling_sheep_system,
 };
 use crate::view::{build_render_view, RenderView};
 
@@ -90,6 +94,7 @@ impl Game {
                 Glyph('d'),
                 SpriteRef::new("entities", "feral_dog"),
                 BlocksMovement,
+                Combat::default(),
             ));
         }
 
@@ -195,7 +200,7 @@ impl Game {
         pickup_system(&mut self.world, &mut self.res);
         feral_dog_system(&mut self.world, &mut self.res);
         stumbling_sheep_system(&mut self.world, &mut self.res);
-        // combat_trigger_system(&mut self.world, &mut self.res);//TODO
+        combat_trigger_system(&mut self.world, &mut self.res);
 
         mining_success
     }

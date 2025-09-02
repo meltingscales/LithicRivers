@@ -34,6 +34,18 @@ pub struct Sheep;
 #[derive(Debug, Clone, Copy)]
 pub struct FeralDog;
 
+/// Component for entities that can engage in combat
+#[derive(Debug, Clone, Copy)]
+pub struct Combat {
+    pub triggered: bool,
+}
+
+impl Default for Combat {
+    fn default() -> Self {
+        Self { triggered: false }
+    }
+}
+
 /// Marker for entities that block movement
 #[derive(Debug, Clone, Copy)]
 pub struct BlocksMovement;

@@ -1,5 +1,5 @@
 use crate::components::{
-    BlocksMovement, DroppedItem, FeralDog, Inventory, ItemKind, Position, Sheep, SpriteRef,
+    BlocksMovement, Combat, DroppedItem, FeralDog, Inventory, ItemKind, Position, Sheep, SpriteRef,
 };
 use crate::resources::Resources;
 use hecs::World;
@@ -169,6 +169,43 @@ pub fn pickup_system(world: &mut World, res: &mut Resources) {
     // Remove the picked up items from the world
     for e in pickups {
         let _ = world.despawn(e);
+    }
+}
+
+pub fn combat_trigger_system(world: &mut World, res: &mut Resources) {
+    // get player position
+    let player_pos = match res
+        .player_entity
+        .and_then(|e| world.get::<&Position>(e).ok())
+    {
+        Some(pos) => *pos,
+        None => return, // No player to chase
+    };
+
+    // collect all entities with a combat component
+    let mut combat_entities = Vec::new();
+    for (e, (pos, _)) in world.query::<(&Position, &Combat)>().iter() {
+        combat_entities.push((e, *pos));
+    }
+
+    // process each combat entity
+    for (e, pos) in combat_entities {
+        // calculate distance to player
+        let dx = player_pos.x - pos.x;
+        let dy = player_pos.y - pos.y;
+        let distance_sq = dx * dx + dy * dy;
+
+        // only trigger combat if player is touching on any of the 8 cardinal directions
+        if distance_sq > 1 {
+            // 1^2
+            continue;
+        }
+
+        // trigger combat
+        if let Ok(mut combat) = world.get::<&mut Combat>(e) {
+            combat.triggered = true;
+            panic!("test to see if we can trigger combat system")
+        }
     }
 }
 
