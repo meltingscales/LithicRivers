@@ -1,5 +1,7 @@
 //! UI utility functions and components
 
+pub mod panels;
+
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 
 /// Helper function to center a rectangle within another rectangle
