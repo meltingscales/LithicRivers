@@ -1,12 +1,10 @@
-use crate::App;
-use crate::{
-    audio, boot_message, EmbeddedAssets, Keybinds, MenuTab, RecipeHandler, Scale, SplashState,
-    SpriteLoader,
-};
+use crate::app_state::*;
+use crate::{audio, boot_message, App, EmbeddedAssets, MenuTab, Scale, SplashState, SpriteLoader};
 use chrono::prelude::Local;
 use lithicrivers_core::components::Position;
 use lithicrivers_core::config::ConfigManager;
 use lithicrivers_core::game::Game;
+use lithicrivers_core::recipe_handler::RecipeHandler;
 use std::time::Instant;
 
 impl App {
@@ -105,40 +103,53 @@ impl App {
         let recipe_handler = RecipeHandler::new();
 
         App {
-            game,
-            config_manager,
-            sprite_loader,
-            should_quit: false,
-            bottom_menu_rect: None,
-            audio,
-            current_tab: MenuTab::World,
-            scale: Scale::Small,
-            credits_text,
-            credits_scroll: 0,
-            log_full_path,
-            keybinds,
-            look_mode: false,
-            look_cursor,
-            inv_selected: 0,
-            recipe_handler,
-            craft_selected: 0,
-            craft_message: None,
-            // Help panel state
-            help_scroll: 0,
-            // Combat state
-            combat_happening: false,
-            // Initialize splash screen state
-            splash_state: SplashState::Logo,
-            splash_start_time: Some(Instant::now()),
-            logo_text,
-            game_title_text,
-            boot_message,
-            boot_message_lines,
-            boot_display_text: String::new(),
-            boot_line_index: 0,
-            boot_scroll: 0,
-            last_line_time: Instant::now(),
-            boot_complete: false,
+            core: CoreState {
+                game,
+                config_manager,
+                sprite_loader,
+                should_quit: false,
+            },
+            ui: UiState {
+                current_tab: MenuTab::World,
+                scale: Scale::Small,
+                bottom_menu_rect: None,
+                keybinds,
+            },
+            audio: AudioState { audio },
+            logging: LoggingState { log_full_path },
+            combat: CombatState {
+                combat_happening: false,
+            },
+            panels: PanelStates {
+                inventory: InventoryPanelState { selected: 0 },
+                crafting: CraftingPanelState {
+                    recipe_handler,
+                    selected: 0,
+                    message: None,
+                },
+                credits: CreditsPanelState {
+                    text: credits_text,
+                    scroll: 0,
+                },
+                help: HelpPanelState { scroll: 0 },
+                look: LookPanelState {
+                    mode: false,
+                    cursor: look_cursor,
+                },
+            },
+            splash: SplashScreenState {
+                state: SplashState::Logo,
+                start_time: Some(Instant::now()),
+                logo_text,
+                game_title_text,
+                boot_message,
+                boot_message_lines,
+                boot_display_text: String::new(),
+                boot_line_index: 0,
+                boot_scroll: 0,
+                last_line_time: Instant::now(),
+                boot_complete: false,
+            },
         }
     }
 

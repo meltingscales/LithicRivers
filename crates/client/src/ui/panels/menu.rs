@@ -24,15 +24,15 @@ pub fn render_menu_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     )));
     lines.push(Line::from(Span::raw(format!(
         "  {}",
-        app.game.res.config.source_label()
+        app.core.game.res.config.source_label()
     ))));
     lines.push(Line::from(Span::raw(format!(
         "  Player: {}",
-        app.game.res.player_name
+        app.core.game.res.player_name
     ))));
     lines.push(Line::from(Span::raw(format!(
         "  Developer mode: {}",
-        if app.game.res.developer_mode {
+        if app.core.game.res.developer_mode {
             "ON"
         } else {
             "OFF"
@@ -43,23 +43,24 @@ pub fn render_menu_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     lines.push(Line::from(Span::raw("Logging:")));
     lines.push(Line::from(Span::raw(format!(
         "  Path: {}",
-        app.log_full_path
+        app.logging.log_full_path
     ))));
     lines.push(Line::from(""));
     lines.push(Line::from(Span::raw(format!(
         "Seed: {}",
-        app.game.res.seed
+        app.core.game.res.seed
     ))));
     lines.push(Line::from(Span::raw(format!(
         "Tick: {}",
-        app.game.res.gametick
+        app.core.game.res.gametick
     ))));
     lines.push(Line::from(Span::raw(format!(
         "View Z: {}",
-        app.game.res.view_z
+        app.core.game.res.view_z
     ))));
-    if let Some(e) = app.game.res.player_entity {
+    if let Some(e) = app.core.game.res.player_entity {
         if let Ok(pos) = app
+            .core
             .game
             .world
             .get::<&lithicrivers_core::components::Position>(e)

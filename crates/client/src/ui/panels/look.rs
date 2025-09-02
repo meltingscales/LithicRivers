@@ -12,7 +12,7 @@ use ratatui::{
 };
 
 pub fn render_look_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
-    let pos = app.look_cursor;
+    let pos = app.panels.look.cursor;
 
     let mut lines: Vec<Line> = Vec::new();
 
@@ -33,6 +33,7 @@ pub fn render_look_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     // Entity and item info
     let mut any_entity = false;
     for (_e, (e_pos, maybe_player, maybe_sr, maybe_drop)) in app
+        .core
         .game
         .world
         .query::<(
@@ -79,7 +80,7 @@ pub fn render_look_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     }
 
     // Tile info
-    let tile_kind = app.game.res.world.get_tile(pos.x, pos.y, pos.z);
+    let tile_kind = app.core.game.res.world.get_tile(pos.x, pos.y, pos.z);
     lines.push(Line::from(Span::raw(format!("Tile: {:?}", tile_kind))));
 
     lines.push(Line::from("Tile art:"));

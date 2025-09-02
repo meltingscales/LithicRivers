@@ -4,6 +4,7 @@ use crossterm::{
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
 mod app;
+mod app_state;
 mod boot_message;
 mod input;
 mod ui;
@@ -28,9 +29,8 @@ use tracing_appender as _tracing_appender_hidden; // avoid "unused extern crate"
 #[folder = "assets/"]
 struct EmbeddedAssets;
 
+use crate::app_state::*;
 use lithicrivers_core::config::ConfigManager;
-use lithicrivers_core::{recipe_handler::RecipeHandler, Game};
-use std::collections::HashMap;
 mod audio;
 mod rendering_helpers;
 mod sprite_constants;
@@ -105,175 +105,76 @@ impl MenuTab {
     }
 }
 
+/// Main application state - organized into logical subsystems for better maintainability
 struct App {
-    game: Game,
-    config_manager: ConfigManager,
-    sprite_loader: SpriteLoader,
-    should_quit: bool,
-    // UI state: remember bottom menu rect for click handling
-    bottom_menu_rect: Option<Rect>,
-    current_tab: MenuTab,
-    scale: Scale,
-    #[allow(dead_code)]
-    audio: audio::AudioManager,
-    // Credits panel state
-    credits_text: String,
-    credits_scroll: u16,
-    // Logging info
-    log_full_path: String,
-    keybinds: Keybinds,
-    // Look mode state
-    look_mode: bool,
-    look_cursor: lithicrivers_core::components::Position,
-    // Inventory panel state
-    inv_selected: usize,
-    // combat state below
-    combat_happening: bool,
-    // Crafting system
-    recipe_handler: RecipeHandler,
-    craft_selected: usize,
-    craft_message: Option<(String, u8)>, // (message, timer)
-    // Splash screen state
-    splash_state: SplashState,
-    splash_start_time: Option<std::time::Instant>,
-    logo_text: String,
-    game_title_text: String,
-    #[allow(dead_code)]
-    boot_message: String,
-    boot_message_lines: Vec<String>,
-    boot_display_text: String,
-    boot_line_index: usize,
-    boot_scroll: u16, // Tracks scroll position for boot message
-    last_line_time: Instant,
-    boot_complete: bool,
-    // Help panel state
-    help_scroll: u16,
-}
-
-#[derive(Debug, Clone)]
-struct Keybinds {
-    // key: "category:ACTION" => list of KeyCodes
-    map: HashMap<String, Vec<KeyCode>>,
-}
-
-impl Keybinds {
-    fn from_config(cfg: &ConfigManager) -> Self {
-        let mut map: HashMap<String, Vec<KeyCode>> = HashMap::new();
-        if let Some(obj) = cfg.data.keybinds.as_object() {
-            for (category, actions) in obj.iter() {
-                if let Some(act_obj) = actions.as_object() {
-                    for (action, arr) in act_obj.iter() {
-                        let mut codes: Vec<KeyCode> = Vec::new();
-                        if let Some(list) = arr.as_array() {
-                            for v in list {
-                                if let Some(s) = v.as_str() {
-                                    if let Some(code) = Self::parse_keycode(s) {
-                                        codes.push(code);
-                                    }
-                                }
-                            }
-                        }
-                        if !codes.is_empty() {
-                            map.insert(format!("{}:{}", category, action), codes);
-                        }
-                    }
-                }
-            }
-        }
-
-        tracing::info!(target: "game", "built keybind map: {:?}", map);
-        Self { map }
-    }
-
-    fn matches(&self, category: &str, action: &str, key: &KeyCode) -> bool {
-        let k = format!("{}:{}", category, action);
-
-        // tracing::info!(target: "game", "self.map: {:?}", self.map);
-        // tracing::info!(target: "game", "k: {:?}", k);
-        // tracing::info!(target: "game", "key: {:?}", key);
-
-        if let Some(list) = self.map.get(&k) {
-            for c in list {
-                if c == key {
-                    // tracing::info!(target: "game", "match!");
-                    return true;
-                }
-            }
-        }
-        false
-    }
-
-    fn matches_movement(&self, key: &KeyCode) -> bool {
-        self.matches("movement", "MOVE_NORTH", key)
-            || self.matches("movement", "MOVE_SOUTH", key)
-            || self.matches("movement", "MOVE_WEST", key)
-            || self.matches("movement", "MOVE_EAST", key)
-            || self.matches("movement", "MOVE_NORTHWEST", key)
-            || self.matches("movement", "MOVE_NORTHEAST", key)
-            || self.matches("movement", "MOVE_SOUTHWEST", key)
-            || self.matches("movement", "MOVE_SOUTHEAST", key)
-            || self.matches("movement", "WAIT", key)
-            || self.matches("movement", "MOVE_UP", key)
-            || self.matches("movement", "MOVE_DOWN", key)
-    }
-
-    fn parse_keycode(s: &str) -> Option<KeyCode> {
-        lithicrivers_core::keycode_mapping::parse_keycode(s)
-    }
+    /// Core game engine systems
+    pub core: CoreState,
+    /// UI framework state  
+    pub ui: UiState,
+    /// Audio system
+    pub audio: AudioState,
+    /// Logging configuration
+    pub logging: LoggingState,
+    /// Combat system
+    pub combat: CombatState,
+    /// UI panel states
+    pub panels: PanelStates,
+    /// Splash screen system
+    pub splash: SplashScreenState,
 }
 
 impl App {
     fn on_tick(&mut self) {
         // Handle splash screen timing
-        if let Some(start_time) = self.splash_start_time {
-            match self.splash_state {
+        if let Some(start_time) = self.splash.start_time {
+            match self.splash.state {
                 SplashState::Logo => {
                     if start_time.elapsed() >= Duration::from_secs(1) {
-                        self.splash_state = SplashState::GameTitle;
-                        self.splash_start_time = Some(Instant::now());
+                        self.splash.state = SplashState::GameTitle;
+                        self.splash.start_time = Some(Instant::now());
                     }
                 }
                 SplashState::GameTitle => {
                     if start_time.elapsed() >= Duration::from_secs(1) {
-                        self.splash_state = SplashState::BootMessage;
-                        self.splash_start_time = Some(Instant::now());
-                        self.boot_display_text.clear();
-                        self.boot_line_index = 0;
-                        self.last_line_time = Instant::now();
-                        self.boot_complete = false;
+                        self.splash.state = SplashState::BootMessage;
+                        self.splash.start_time = Some(Instant::now());
+                        self.splash.boot_display_text.clear();
+                        self.splash.boot_line_index = 0;
+                        self.splash.last_line_time = Instant::now();
+                        self.splash.boot_complete = false;
                     }
                 }
                 SplashState::BootMessage => {
                     // Handle typewriter effect
-                    if !self.boot_complete {
-                        let elapsed = self.last_line_time.elapsed();
+                    if !self.splash.boot_complete {
+                        let elapsed = self.splash.last_line_time.elapsed();
                         if elapsed >= Duration::from_millis(BOOT_MESSAGE_TYPEWRITER_MS) {
                             // ~(1000/x) characters per second
-                            self.last_line_time = Instant::now();
+                            self.splash.last_line_time = Instant::now();
 
                             // Get all text as a single string with newlines
-                            let full_text = self.boot_message_lines.join("\n");
+                            let full_text = self.splash.boot_message_lines.join("\n");
 
-                            if self.boot_line_index < full_text.len() {
+                            if self.splash.boot_line_index < full_text.len() {
                                 // Move to next line
                                 if let Some(next_newline) =
-                                    full_text[self.boot_line_index..].find('\n')
+                                    full_text[self.splash.boot_line_index..].find('\n')
                                 {
-                                    self.boot_line_index += next_newline + 1;
+                                    self.splash.boot_line_index += next_newline + 1;
                                 } else {
-                                    self.boot_line_index = full_text.len();
+                                    self.splash.boot_line_index = full_text.len();
                                 }
-                                self.boot_display_text =
-                                    full_text[..self.boot_line_index].to_string();
-                            } else if !self.boot_complete {
-                                self.boot_complete = true;
+                                self.splash.boot_display_text =
+                                    full_text[..self.splash.boot_line_index].to_string();
+                            } else if !self.splash.boot_complete {
+                                self.splash.boot_complete = true;
                                 // Set a minimum display time after completion
-                                self.splash_start_time = Some(Instant::now());
+                                self.splash.start_time = Some(Instant::now());
                             }
                         }
                     } else if start_time.elapsed() >= Duration::from_secs(2) {
                         // 2 seconds after completion, move to main UI
-                        self.splash_state = SplashState::MainUI;
+                        self.splash.state = SplashState::MainUI;
                     }
                 }
                 _ => {}
@@ -282,59 +183,62 @@ impl App {
     }
 
     fn snap_view_to_player_z(&mut self) {
-        if let Some(e) = self.game.res.player_entity {
+        if let Some(e) = self.core.game.res.player_entity {
             if let Ok(pos) = self
+                .core
                 .game
                 .world
                 .get::<&lithicrivers_core::components::Position>(e)
             {
                 // Snap entire viewport center and Z slice to player
-                self.game.res.view_x = pos.x;
-                self.game.res.view_y = pos.y;
-                self.game.res.view_z = pos.z;
+                self.core.game.res.view_x = pos.x;
+                self.core.game.res.view_y = pos.y;
+                self.core.game.res.view_z = pos.z;
             }
         }
     }
 
     fn activate_menu(&mut self) {
-        match self.current_tab {
+        match self.ui.current_tab {
             MenuTab::World => {
                 // World (already active view)
-                self.game.res.log("World map active");
+                self.core.game.res.log("World map active");
             }
             MenuTab::Body => {
                 // Body
-                self.game.res.log("Body panel active");
+                self.core.game.res.log("Body panel active");
             }
             MenuTab::Inventory => {
                 // Inventory (placeholder)
-                self.game.res.log("Inventory panel (WIP)");
+                self.core.game.res.log("Inventory panel (WIP)");
             }
             MenuTab::Menu => {
                 // Menu
-                self.game
+                self.core
+                    .game
                     .res
                     .log("Menu panel active (press S to Save, L to Load)");
             }
             MenuTab::Help => {
                 // Help
-                self.game.res.log("Help panel active");
+                self.core.game.res.log("Help panel active");
             }
             MenuTab::Credits => {
                 // Credits
-                self.game
+                self.core
+                    .game
                     .res
                     .log("Credits panel active (Up/Down to scroll)");
             }
             MenuTab::Quit => {
                 // Quit
-                self.game.res.log("Quit requested (menu)");
-                tracing::info!(target: "game", "quit_requested input=menu tick={}", self.game.res.gametick);
-                self.should_quit = true;
+                self.core.game.res.log("Quit requested (menu)");
+                tracing::info!(target: "game", "quit_requested input=menu tick={}", self.core.game.res.gametick);
+                self.core.should_quit = true;
             }
             MenuTab::Crafting => {
                 // Crafting
-                self.game.res.log("Crafting panel active");
+                self.core.game.res.log("Crafting panel active");
             }
         }
     }
@@ -416,18 +320,18 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<(), 
                 Event::Mouse(me) => {
                     if let crossterm::event::MouseEventKind::ScrollDown = me.kind {
                         // Scroll down (move view down, which means increase scroll position)
-                        if let SplashState::BootMessage = app.splash_state {
-                            let total_lines = app.boot_display_text.lines().count() as u16;
+                        if let SplashState::BootMessage = app.splash.state {
+                            let total_lines = app.splash.boot_display_text.lines().count() as u16;
                             let visible_lines = 20; // Approximate visible lines
-                            if app.boot_scroll + visible_lines < total_lines {
-                                app.boot_scroll = app.boot_scroll.saturating_add(3);
+                            if app.splash.boot_scroll + visible_lines < total_lines {
+                                app.splash.boot_scroll = app.splash.boot_scroll.saturating_add(3);
                                 // Scroll 3 lines at a time
                             }
                         }
                     } else if let crossterm::event::MouseEventKind::ScrollUp = me.kind {
                         // Scroll up (move view up, which means decrease scroll position)
-                        if let SplashState::BootMessage = app.splash_state {
-                            app.boot_scroll = app.boot_scroll.saturating_sub(3);
+                        if let SplashState::BootMessage = app.splash.state {
+                            app.splash.boot_scroll = app.splash.boot_scroll.saturating_sub(3);
                             // Scroll 3 lines at a time
                         }
                     } else {
@@ -441,14 +345,14 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<(), 
 
         app.on_tick();
 
-        if app.should_quit {
-            app.game.res.log("Shutting down...");
+        if app.core.should_quit {
+            app.core.game.res.log("Shutting down...");
             tracing::info!(
                 target: "game",
                 "shutdown tick={} view_z={} seed={}",
-                app.game.res.gametick,
-                app.game.res.view_z,
-                app.game.res.seed
+                app.core.game.res.gametick,
+                app.core.game.res.view_z,
+                app.core.game.res.seed
             );
             return Ok(());
         }
@@ -457,10 +361,10 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<(), 
 
 fn ui(f: &mut Frame, app: &mut App) {
     // Show splash screens if needed
-    match app.splash_state {
+    match app.splash.state {
         SplashState::Logo => {
             // Show centered logo
-            let logo_paragraph = Paragraph::new(app.logo_text.as_str())
+            let logo_paragraph = Paragraph::new(app.splash.logo_text.as_str())
                 .alignment(Alignment::Center)
                 .block(Block::default().borders(Borders::NONE));
 
@@ -471,7 +375,7 @@ fn ui(f: &mut Frame, app: &mut App) {
         }
         SplashState::GameTitle => {
             // Show centered game title
-            let title_paragraph = Paragraph::new(app.game_title_text.as_str())
+            let title_paragraph = Paragraph::new(app.splash.game_title_text.as_str())
                 .alignment(Alignment::Center)
                 .block(Block::default().borders(Borders::NONE));
 
@@ -508,18 +412,18 @@ fn ui(f: &mut Frame, app: &mut App) {
 
             // Calculate visible lines and update scroll position if needed
             let visible_lines = text_area.height.saturating_sub(2); // Leave room for border
-            let total_lines = app.boot_display_text.lines().count() as u16;
+            let total_lines = app.splash.boot_display_text.lines().count() as u16;
 
             // Auto-scroll if we're at the bottom
-            if app.boot_scroll + visible_lines >= total_lines.saturating_sub(1) {
-                app.boot_scroll = total_lines.saturating_sub(visible_lines);
+            if app.splash.boot_scroll + visible_lines >= total_lines.saturating_sub(1) {
+                app.splash.boot_scroll = total_lines.saturating_sub(visible_lines);
             }
 
             // Create a scrollable paragraph
-            let paragraph = Paragraph::new(app.boot_display_text.as_str())
+            let paragraph = Paragraph::new(app.splash.boot_display_text.as_str())
                 .block(Block::default().borders(Borders::NONE))
                 .wrap(Wrap { trim: false })
-                .scroll((app.boot_scroll, 0));
+                .scroll((app.splash.boot_scroll, 0));
 
             // Render content with padding
             f.render_widget(paragraph, inner_area);
@@ -538,7 +442,8 @@ fn ui(f: &mut Frame, app: &mut App) {
                 let thumb_height = (visible_lines as f32 / total_lines as f32
                     * visible_lines as f32)
                     .max(1.0) as u16;
-                let thumb_position = (app.boot_scroll as f32 / (total_lines - visible_lines) as f32
+                let thumb_position = (app.splash.boot_scroll as f32
+                    / (total_lines - visible_lines) as f32
                     * (visible_lines - thumb_height) as f32)
                     .round() as u16;
 
@@ -574,7 +479,7 @@ fn ui(f: &mut Frame, app: &mut App) {
     }
 
     // Only render the main UI if we're past all splash screens
-    if app.splash_state != SplashState::MainUI {
+    if app.splash.state != SplashState::MainUI {
         return;
     }
 
@@ -596,9 +501,9 @@ fn ui(f: &mut Frame, app: &mut App) {
     f.render_widget(title, root_chunks[0]);
 
     // Main area depends on selected tab
-    match app.current_tab {
+    match app.ui.current_tab {
         MenuTab::World => {
-            if app.look_mode {
+            if app.panels.look.mode {
                 // With Look mode: show look panel on the right
                 let main_chunks = Layout::default()
                     .direction(Direction::Horizontal)
@@ -657,12 +562,12 @@ fn render_message_log(f: &mut Frame, app: &mut App, area: Rect) {
     let mut lines: Vec<Line> = Vec::new();
     // Account for the border (top+bottom) since Paragraph has a Block
     let visible_rows = area.height.saturating_sub(2) as usize;
-    let start = if app.game.res.messages.len() > visible_rows {
-        app.game.res.messages.len() - visible_rows
+    let start = if app.core.game.res.messages.len() > visible_rows {
+        app.core.game.res.messages.len() - visible_rows
     } else {
         0
     };
-    for msg in app.game.res.messages.iter().skip(start) {
+    for msg in app.core.game.res.messages.iter().skip(start) {
         lines.push(Line::from(Span::raw(msg.clone())));
     }
     let paragraph = Paragraph::new(lines)
@@ -679,7 +584,7 @@ fn render_message_log(f: &mut Frame, app: &mut App, area: Rect) {
 
 fn render_bottom_menu(f: &mut Frame, app: &mut App, area: Rect) {
     // Remember for click handling
-    app.bottom_menu_rect = Some(area);
+    app.ui.bottom_menu_rect = Some(area);
     // All tabs white; selected tab green
     let titles = vec![
         Span::raw("World"),
@@ -693,7 +598,7 @@ fn render_bottom_menu(f: &mut Frame, app: &mut App, area: Rect) {
     ];
     let tabs = Tabs::new(titles)
         .block(Block::default().borders(Borders::ALL).title("Menu"))
-        .select(app.current_tab.as_index())
+        .select(app.ui.current_tab.as_index())
         .style(Style::default().fg(Color::White))
         .highlight_style(Style::default().fg(Color::Green));
     f.render_widget(tabs, area);

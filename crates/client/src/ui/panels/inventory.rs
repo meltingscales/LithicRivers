@@ -14,18 +14,18 @@ use std::collections::HashMap;
 pub fn render_inventory_list_only(f: &mut Frame, app: &mut crate::App, area: Rect) {
     // Build list with selection highlight (same as right side of render_inventory_panel)
     let mut list_lines: Vec<Line<'static>> = Vec::new();
-    if let Some(e) = app.game.res.player_entity {
-        if let Ok(inv) = app.game.world.get::<&InvComp>(e) {
+    if let Some(e) = app.core.game.res.player_entity {
+        if let Ok(inv) = app.core.game.world.get::<&InvComp>(e) {
             if inv.slots.is_empty() {
                 list_lines.push(Line::from(Span::raw("(Empty)")));
-                app.inv_selected = 0;
+                app.panels.inventory.selected = 0;
             } else {
-                if app.inv_selected >= inv.slots.len() {
-                    app.inv_selected = inv.slots.len() - 1;
+                if app.panels.inventory.selected >= inv.slots.len() {
+                    app.panels.inventory.selected = inv.slots.len() - 1;
                 }
                 for (i, s) in inv.slots.iter().enumerate() {
                     let label = format!("{} x{}", itemkind_name(s.kind), s.qty);
-                    if i == app.inv_selected {
+                    if i == app.panels.inventory.selected {
                         list_lines.push(Line::from(Span::styled(
                             label,
                             Style::default().fg(Color::Yellow),
@@ -59,18 +59,18 @@ pub fn render_inventory_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     let mut list_lines: Vec<Line<'static>> = Vec::new();
     let mut selected_kind: Option<ItemKind> = None;
     let mut selected_qty: u32 = 0;
-    if let Some(e) = app.game.res.player_entity {
-        if let Ok(inv) = app.game.world.get::<&InvComp>(e) {
+    if let Some(e) = app.core.game.res.player_entity {
+        if let Ok(inv) = app.core.game.world.get::<&InvComp>(e) {
             if inv.slots.is_empty() {
                 list_lines.push(Line::from(Span::raw("(Empty)")));
-                app.inv_selected = 0;
+                app.panels.inventory.selected = 0;
             } else {
-                if app.inv_selected >= inv.slots.len() {
-                    app.inv_selected = inv.slots.len() - 1;
+                if app.panels.inventory.selected >= inv.slots.len() {
+                    app.panels.inventory.selected = inv.slots.len() - 1;
                 }
                 for (i, s) in inv.slots.iter().enumerate() {
                     let label = format!("{} x{}", itemkind_name(s.kind), s.qty);
-                    if i == app.inv_selected {
+                    if i == app.panels.inventory.selected {
                         selected_kind = Some(s.kind);
                         selected_qty = s.qty;
                         list_lines.push(Line::from(Span::styled(
@@ -95,7 +95,7 @@ pub fn render_inventory_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     let mut left_lines: Vec<Line<'static>> = Vec::new();
     if let Some(kind) = selected_kind {
         let (category, sprite_name) = ("items", itemkind_sprite_name(kind));
-        let sd = app.sprite_loader.load_sprite(sprite_name, category);
+        let sd = app.core.sprite_loader.load_sprite(sprite_name, category);
         // Art
         if let Some(block) = sd.art12x8_sprites.first() {
             let color = parse_hex_color(&sd.color);
@@ -137,8 +137,9 @@ pub fn render_inventory_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
 pub fn get_player_inventory(app: &crate::App) -> HashMap<ItemKind, u32> {
     let mut inventory = HashMap::new();
 
-    if let Some(player_e) = app.game.res.player_entity {
+    if let Some(player_e) = app.core.game.res.player_entity {
         if let Ok(inv) = app
+            .core
             .game
             .world
             .get::<&lithicrivers_core::components::Inventory>(player_e)
