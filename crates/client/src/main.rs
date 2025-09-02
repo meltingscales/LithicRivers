@@ -128,6 +128,8 @@ struct App {
     look_cursor: lithicrivers_core::components::Position,
     // Inventory panel state
     inv_selected: usize,
+    // combat state below
+    combat_happening: bool,
     // Crafting system
     recipe_handler: RecipeHandler,
     craft_selected: usize,
@@ -529,6 +531,8 @@ impl App {
             craft_message: None,
             // Help panel state
             help_scroll: 0,
+            // Combat state
+            combat_happening: false,
             // Initialize splash screen state
             splash_state: SplashState::Logo,
             splash_start_time: Some(Instant::now()),
@@ -1077,28 +1081,24 @@ impl App {
                 self.game.queue_player_move_z(-1);
             }
 
-            self.game.tick();
+            let tick_result = self.game.tick();
+            if tick_result.contains(GameTickResult::CombatTriggered) {
+                self.combat_happening = true;
+                panic!("todo show combat panel...");
+            }
             self.snap_view_to_player_z();
             return Ok(());
         }
 
         if self.keybinds.matches("action", "MINE", &key) {
             self.game.queue_mine();
-            let mining_success = self.game.tick();
-            if mining_success.contains(GameTickResult::MiningSuccess) {
+            let tick_result = self.game.tick();
+            if tick_result.contains(GameTickResult::MiningSuccess) {
                 self.snap_view_to_player_z();
             }
             return Ok(());
         }
 
-        if self.keybinds.matches("action", "MINE", &key) {
-            self.game.queue_mine();
-            let mining_success = self.game.tick();
-            if mining_success.contains(GameTickResult::MiningSuccess) {
-                self.snap_view_to_player_z();
-            }
-            return Ok(());
-        }
         if self.keybinds.matches("scale", "SCALE_UP", &key) {
             self.scale = match self.scale {
                 Scale::Small => Scale::Medium,
