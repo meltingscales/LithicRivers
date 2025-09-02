@@ -1,5 +1,8 @@
 use ratatui::layout::Rect;
 
+const CORRUPTION_RATE: f32 = 0.0;
+const CORRUPTION_SEED: u64 = 42;
+
 pub fn get_boot_message() -> String {
     let lines = read_boot_lines();
 
@@ -8,7 +11,7 @@ pub fn get_boot_message() -> String {
         .iter()
         .map(|line| {
             // Use a fixed seed for consistent corruption
-            let corrupted = corrupt_text(line, 0.3, 42);
+            let corrupted = corrupt_text(line, CORRUPTION_RATE, CORRUPTION_SEED);
             // Ensure line length is reasonable
             if corrupted.len() > 120 {
                 corrupted[..120].to_string()
@@ -31,7 +34,7 @@ fn read_boot_lines() -> Vec<String> {
 
     Asset::get("boot_message.dat")
         .and_then(|f| std::str::from_utf8(&f.data).ok().map(|s| s.to_string()))
-        .unwrap_or_else(|| "Boot message not found".to_string())
+        .unwrap_or_else(|| panic!("boot_message.dat not found"))
         .lines()
         .map(|s| s.to_string())
         .collect()
