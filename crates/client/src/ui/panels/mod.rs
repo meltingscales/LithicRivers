@@ -1,9 +1,11 @@
+pub mod body;
 pub mod crafting;
 pub mod credits;
 pub mod help;
 pub mod inventory;
 pub mod quit;
 
+pub use body::render_body_panel;
 pub use crafting::render_crafting_panel;
 pub use credits::render_credits_panel;
 pub use help::render_help_panel;
