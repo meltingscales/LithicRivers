@@ -220,7 +220,6 @@ See [STEAM-MVP.md](STEAM-MVP.md) for the complete release plan.
 - skomor123
 - noahnogueras@gmail.com
 - oglingling
-- Tj.kennedy@gmail.com
 - college friends
 - miguel from colab
 
