@@ -50,7 +50,10 @@ use crate::{
     },
     sprite_constants::{sprite_for_view_reticle, sprite_for_view_reticle_color},
     sprite_loader::{sprite_block_for_spriteref, sprite_block_for_tile, Scale, SpriteLoader},
-    ui::{centered_rect, panels::render_help_panel},
+    ui::{
+        centered_rect,
+        panels::{render_credits_panel, render_help_panel, render_quit_panel},
+    },
 };
 use lithicrivers_core::model::body::{Body, BodyPart, BodyPartState};
 use lithicrivers_core::world::CHUNK_SIZE;
@@ -152,41 +155,6 @@ struct App {
     boot_complete: bool,
     // Help panel state
     help_scroll: u16,
-}
-
-fn render_quit_panel(f: &mut Frame, _app: &mut App, area: Rect) {
-    let block = Block::default().borders(Borders::ALL).title("Quit");
-    let inner = block.inner(area);
-
-    let mut lines: Vec<Line<'static>> = Vec::new();
-    let width = inner.width as usize;
-    let height = inner.height as usize;
-
-    // Build a staggered (diamond-like) pattern:
-    // rows alternate between starting with 0 and an offset, then repeating "QUIT" with wide spacing
-    let word = "QUIT";
-    let sep = "        "; // 8 spaces between words
-    let offset = "      "; // 6 spaces offset on alternating rows
-    for row in 0..height {
-        let mut s = String::new();
-        if row % 2 == 1 {
-            s.push_str(offset);
-        }
-        // fill line with repeating pattern
-        while s.len() < width + word.len() + sep.len() {
-            s.push_str(word);
-            s.push_str(sep);
-        }
-        // Trim to visible width
-        s.truncate(width);
-        lines.push(Line::from(Span::raw(s)));
-    }
-
-    let p = Paragraph::new(lines)
-        .alignment(Alignment::Left)
-        .style(Style::default().fg(Color::Red));
-    f.render_widget(p, inner);
-    f.render_widget(block, area);
 }
 
 fn render_inventory_list_only(f: &mut Frame, app: &mut App, area: Rect) {
@@ -296,18 +264,6 @@ impl Keybinds {
     fn parse_keycode(s: &str) -> Option<KeyCode> {
         lithicrivers_core::keycode_mapping::parse_keycode(s)
     }
-}
-
-fn render_credits_panel(f: &mut Frame, app: &mut App, area: Rect) {
-    // Build a scrollable paragraph from preloaded embedded text
-    let block = Block::default().borders(Borders::ALL).title("Credits");
-    let inner = block.inner(area);
-    let para = Paragraph::new(app.credits_text.clone())
-        .alignment(Alignment::Left)
-        .wrap(Wrap { trim: false })
-        .scroll((app.credits_scroll, 0));
-    f.render_widget(para, inner);
-    f.render_widget(block, area);
 }
 
 impl App {
