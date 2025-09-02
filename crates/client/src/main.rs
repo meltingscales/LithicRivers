@@ -8,34 +8,26 @@ mod boot_message;
 mod input;
 mod ui;
 
-use boot_message::get_boot_message;
-use lithicrivers_core::game::GameTickResult;
 use ratatui::{
     backend::{Backend, CrosstermBackend},
     layout::{Alignment, Constraint, Direction, Layout, Margin, Rect},
-    style::{Color, Modifier, Style, Stylize as _},
+    style::{Color, Style},
     symbols::border,
     text::{Line, Span},
-    widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, Tabs, Wrap},
+    widgets::{Block, Borders, Clear, Paragraph, Tabs, Wrap},
     Frame, Terminal,
 };
 use rust_embed::RustEmbed;
-use std::{cmp::max, collections::VecDeque, error::Error, io, time::Duration, time::Instant};
+use std::{error::Error, io, time::Duration, time::Instant};
 use tracing_subscriber::EnvFilter;
 
 // Tracing file appender for log file output
-use chrono::Local;
 use tracing_appender as _tracing_appender_hidden; // avoid "unused extern crate" lint
 
 #[derive(RustEmbed)]
 #[folder = "assets/"]
 struct EmbeddedAssets;
 
-// Removed unused import
-use lithicrivers_core::components::{
-    itemkind_name, itemkind_sprite_name, DroppedItem, Inventory as InvComp, ItemKind, ItemStack,
-    Position, SpriteRef,
-};
 use lithicrivers_core::config::ConfigManager;
 use lithicrivers_core::{recipe_handler::RecipeHandler, Game};
 use std::collections::HashMap;
@@ -45,24 +37,16 @@ mod sprite_constants;
 mod sprite_loader;
 use crate::{
     app::handle_input,
-    input::format_keycode,
-    rendering_helpers::{
-        block_art_12x8_lines_for_position, build_body_ascii, empty_art_12x8_lines_for_position,
-        entity_art_12x8_lines_for_position, parse_hex_color,
-    },
-    sprite_constants::{sprite_for_view_reticle, sprite_for_view_reticle_color},
-    sprite_loader::{sprite_block_for_spriteref, sprite_block_for_tile, Scale, SpriteLoader},
+    sprite_loader::{Scale, SpriteLoader},
     ui::{
         centered_rect,
         panels::{
-            get_player_inventory, render_body_panel, render_crafting_panel, render_credits_panel,
-            render_game_view, render_help_panel, render_inventory_list_only,
-            render_inventory_panel, render_look_panel, render_menu_panel, render_quit_panel,
+            render_body_panel, render_crafting_panel, render_credits_panel, render_game_view,
+            render_help_panel, render_inventory_list_only, render_inventory_panel,
+            render_look_panel, render_menu_panel, render_quit_panel,
         },
     },
 };
-use lithicrivers_core::model::body::{Body, BodyPart, BodyPartState};
-use lithicrivers_core::world::CHUNK_SIZE;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum SplashState {
@@ -87,6 +71,7 @@ enum MenuTab {
 const BOOT_MESSAGE_TYPEWRITER_MS: u64 = 100;
 
 impl MenuTab {
+    #[allow(dead_code)]
     const COUNT: usize = 8;
 
     fn next(self) -> Self {
@@ -129,6 +114,7 @@ struct App {
     bottom_menu_rect: Option<Rect>,
     current_tab: MenuTab,
     scale: Scale,
+    #[allow(dead_code)]
     audio: audio::AudioManager,
     // Credits panel state
     credits_text: String,
@@ -152,6 +138,7 @@ struct App {
     splash_start_time: Option<std::time::Instant>,
     logo_text: String,
     game_title_text: String,
+    #[allow(dead_code)]
     boot_message: String,
     boot_message_lines: Vec<String>,
     boot_display_text: String,

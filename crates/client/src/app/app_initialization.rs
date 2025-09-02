@@ -66,7 +66,7 @@ impl App {
 
         // Load and process boot message
         let boot_message = boot_message::get_boot_message();
-        let mut boot_message_lines = boot_message.lines().map(String::from).collect::<Vec<_>>();
+        let boot_message_lines = boot_message.lines().map(String::from).collect::<Vec<_>>();
 
         let credits_text = format!(
             "Version: {}\nSTEAM_APP_ID: {}\nGit Branch: {}\nGit Commit: {}\n\n{}",
@@ -142,6 +142,7 @@ impl App {
         }
     }
 
+    #[allow(dead_code)]
     pub fn new() -> App {
         Self::new_with_seed(12345) //TODO use seed from config...
     }
