@@ -15,9 +15,20 @@ use hecs::World;
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha20Rng;
 
+use bitflags::bitflags;
+
 pub struct Game {
     pub world: World,
     pub res: Resources,
+}
+
+bitflags! {
+    // What happened during a tick?
+    pub struct GameTickResult: u32 {
+        const MiningSuccess = 1 << 0;
+        const CombatTriggered = 1 << 1;
+        const NoAction = 1 << 2;
+    }
 }
 
 impl Game {
@@ -188,7 +199,7 @@ impl Game {
 
     /// Advance the game state by one tick.
     /// Returns true if mining was successful during this tick, false otherwise.
-    pub fn tick(&mut self) -> bool {
+    pub fn tick(&mut self) -> GameTickResult {
         // In the future, run an ordered system schedule.
         // For now, just increment tick and maybe move the player slowly.
         let inc = self.res.pending_tick_increase.take().unwrap_or(1);
@@ -200,9 +211,17 @@ impl Game {
         pickup_system(&mut self.world, &mut self.res);
         feral_dog_system(&mut self.world, &mut self.res);
         stumbling_sheep_system(&mut self.world, &mut self.res);
-        combat_trigger_system(&mut self.world, &mut self.res);
+        let combat_success = combat_trigger_system(&mut self.world, &mut self.res);
 
-        mining_success
+        let mut result = GameTickResult::NoAction;
+        if mining_success {
+            result |= GameTickResult::MiningSuccess;
+        }
+        if combat_success {
+            result |= GameTickResult::CombatTriggered;
+        }
+
+        result
     }
 
     pub fn build_view(&self) -> RenderView {

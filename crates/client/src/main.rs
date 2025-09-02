@@ -6,6 +6,7 @@ use crossterm::{
 mod boot_message;
 
 use boot_message::get_boot_message;
+use lithicrivers_core::game::GameTickResult;
 use ratatui::{
     backend::{Backend, CrosstermBackend},
     layout::{Alignment, Constraint, Direction, Layout, Margin, Rect},
@@ -270,6 +271,20 @@ impl Keybinds {
             }
         }
         false
+    }
+
+    fn matches_movement(&self, key: &KeyCode) -> bool {
+        self.matches("movement", "MOVE_NORTH", key)
+            || self.matches("movement", "MOVE_SOUTH", key)
+            || self.matches("movement", "MOVE_WEST", key)
+            || self.matches("movement", "MOVE_EAST", key)
+            || self.matches("movement", "MOVE_NORTHWEST", key)
+            || self.matches("movement", "MOVE_NORTHEAST", key)
+            || self.matches("movement", "MOVE_SOUTHWEST", key)
+            || self.matches("movement", "MOVE_SOUTHEAST", key)
+            || self.matches("movement", "WAIT", key)
+            || self.matches("movement", "MOVE_UP", key)
+            || self.matches("movement", "MOVE_DOWN", key)
     }
 
     fn parse_keycode(s: &str) -> Option<KeyCode> {
@@ -1027,6 +1042,10 @@ impl App {
             }
         }
 
+        if self.keybinds.matches_movement(&key) {
+            panic!("todo movement keybind cleanup, simplify");
+        }
+
         if self.keybinds.matches("movement", "MOVE_NORTH", &key) {
             self.game.queue_player_move(0, -1);
             self.game.tick();
@@ -1095,7 +1114,7 @@ impl App {
         if self.keybinds.matches("action", "MINE", &key) {
             self.game.queue_mine();
             let mining_success = self.game.tick();
-            if mining_success {
+            if mining_success.contains(GameTickResult::MiningSuccess) {
                 self.snap_view_to_player_z();
             }
             return Ok(());
