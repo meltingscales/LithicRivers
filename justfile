@@ -187,8 +187,8 @@ clippy:
 # tokei, code stats
 tokei:
     rustup run {{toolchain}} cargo install tokei --locked
-    rustup run {{toolchain}} tokei --sort lines
-    rustup run {{toolchain}} tokei --files --sort lines
+    rustup run {{toolchain}} tokei --sort lines --type rust
+    rustup run {{toolchain}} tokei --files --sort lines --type rust
 
 # Show toolchain information
 toolchain:
