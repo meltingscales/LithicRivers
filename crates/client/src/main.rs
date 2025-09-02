@@ -3,16 +3,20 @@ use crossterm::{
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
+mod boot_message;
+
+use boot_message::get_boot_message;
 use ratatui::{
     backend::{Backend, CrosstermBackend},
-    layout::{Alignment, Constraint, Direction, Layout, Rect},
+    layout::{Alignment, Constraint, Direction, Layout, Margin, Rect},
     style::{Color, Modifier, Style, Stylize as _},
+    symbols::border,
     text::{Line, Span},
-    widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Tabs, Wrap},
+    widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, Tabs, Wrap},
     Frame, Terminal,
 };
 use rust_embed::RustEmbed;
-use std::{error::Error, io, time::Duration};
+use std::{cmp::max, collections::VecDeque, error::Error, io, time::Duration, time::Instant};
 use tracing_subscriber::EnvFilter;
 
 // Tracing file appender for log file output
@@ -47,6 +51,14 @@ use lithicrivers_core::model::body::{Body, BodyPart, BodyPartState};
 use lithicrivers_core::world::CHUNK_SIZE;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum SplashState {
+    Logo,
+    GameTitle,
+    BootMessage,
+    MainUI,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum MenuTab {
     World,
     Body,
@@ -57,6 +69,8 @@ enum MenuTab {
     Credits,
     Quit,
 }
+
+const BOOT_MESSAGE_TYPEWRITER_MS: u64 = 100;
 
 impl MenuTab {
     const COUNT: usize = 8;
@@ -117,6 +131,18 @@ struct App {
     recipe_handler: RecipeHandler,
     craft_selected: usize,
     craft_message: Option<(String, u8)>, // (message, timer)
+    // Splash screen state
+    splash_state: SplashState,
+    splash_start_time: Option<std::time::Instant>,
+    logo_text: String,
+    game_title_text: String,
+    boot_message: String,
+    boot_message_lines: Vec<String>,
+    boot_display_text: String,
+    boot_line_index: usize,
+    boot_scroll: u16, // Tracks scroll position for boot message
+    last_line_time: Instant,
+    boot_complete: bool,
     // Help panel state
     help_scroll: u16,
 }
@@ -412,7 +438,22 @@ impl App {
             .unwrap_or_else(|| "(missing GIT_SHA)".to_string());
         let credits_body = EmbeddedAssets::get("config/credits.txt")
             .map(|d| String::from_utf8_lossy(&d.data).to_string())
-            .unwrap_or_else(|| "(missing credits.txt)".to_string());
+            .unwrap_or_else(|| panic!("credits.txt not found"));
+
+        // Load logo text
+        let logo_text = EmbeddedAssets::get("config/logo.txt")
+            .map(|d| String::from_utf8_lossy(&d.data).to_string())
+            .unwrap_or_else(|| panic!("logo.txt not found"));
+
+        // Load game title text
+        let game_title_text = EmbeddedAssets::get("config/gametitle.txt")
+            .map(|d| String::from_utf8_lossy(&d.data).to_string())
+            .unwrap_or_else(|| panic!("gametitle.txt not found"));
+
+        // Load and process boot message
+        let boot_message = boot_message::get_boot_message();
+        let mut boot_message_lines = boot_message.lines().map(String::from).collect::<Vec<_>>();
+
         let credits_text = format!(
             "Version: {}\nSTEAM_APP_ID: {}\nGit Branch: {}\nGit Commit: {}\n\n{}",
             version.trim(),
@@ -429,7 +470,7 @@ impl App {
             .map(|p| p.to_string_lossy().to_string())
             .unwrap_or_else(|| ".".to_string());
         let today = Local::now().format("%Y-%m-%d").to_string();
-        let log_full_path = format!("{}/LithicRivers.log.{}", log_dir_abs, today);
+        let log_full_path = format!("{}/LithicRivers-{}.log", log_dir_abs, today);
 
         // Build keybinds from game config
         let config_manager = ConfigManager::new();
@@ -468,10 +509,23 @@ impl App {
             look_mode: false,
             look_cursor,
             inv_selected: 0,
-            help_scroll: 0,
             recipe_handler,
             craft_selected: 0,
             craft_message: None,
+            // Help panel state
+            help_scroll: 0,
+            // Initialize splash screen state
+            splash_state: SplashState::Logo,
+            splash_start_time: Some(Instant::now()),
+            logo_text,
+            game_title_text,
+            boot_message,
+            boot_message_lines,
+            boot_display_text: String::new(),
+            boot_line_index: 0,
+            boot_scroll: 0,
+            last_line_time: Instant::now(),
+            boot_complete: false,
         }
     }
 
@@ -480,7 +534,61 @@ impl App {
     }
 
     fn on_tick(&mut self) {
-        // Turn-based: do not auto-tick. Ticks only occur on player actions in handle_input().
+        // Handle splash screen timing
+        if let Some(start_time) = self.splash_start_time {
+            match self.splash_state {
+                SplashState::Logo => {
+                    if start_time.elapsed() >= Duration::from_secs(1) {
+                        self.splash_state = SplashState::GameTitle;
+                        self.splash_start_time = Some(Instant::now());
+                    }
+                }
+                SplashState::GameTitle => {
+                    if start_time.elapsed() >= Duration::from_secs(1) {
+                        self.splash_state = SplashState::BootMessage;
+                        self.splash_start_time = Some(Instant::now());
+                        self.boot_display_text.clear();
+                        self.boot_line_index = 0;
+                        self.last_line_time = Instant::now();
+                        self.boot_complete = false;
+                    }
+                }
+                SplashState::BootMessage => {
+                    // Handle typewriter effect
+                    if !self.boot_complete {
+                        let elapsed = self.last_line_time.elapsed();
+                        if elapsed >= Duration::from_millis(BOOT_MESSAGE_TYPEWRITER_MS) {
+                            // ~(1000/x) characters per second
+                            self.last_line_time = Instant::now();
+
+                            // Get all text as a single string with newlines
+                            let full_text = self.boot_message_lines.join("\n");
+
+                            if self.boot_line_index < full_text.len() {
+                                // Move to next line
+                                if let Some(next_newline) =
+                                    full_text[self.boot_line_index..].find('\n')
+                                {
+                                    self.boot_line_index += next_newline + 1;
+                                } else {
+                                    self.boot_line_index = full_text.len();
+                                }
+                                self.boot_display_text =
+                                    full_text[..self.boot_line_index].to_string();
+                            } else if !self.boot_complete {
+                                self.boot_complete = true;
+                                // Set a minimum display time after completion
+                                self.splash_start_time = Some(Instant::now());
+                            }
+                        }
+                    } else if start_time.elapsed() >= Duration::from_secs(2) {
+                        // 2 seconds after completion, move to main UI
+                        self.splash_state = SplashState::MainUI;
+                    }
+                }
+                _ => {}
+            }
+        }
     }
 
     fn snap_view_to_player_z(&mut self) {
@@ -499,6 +607,43 @@ impl App {
     }
 
     fn handle_input(&mut self, key: KeyCode) -> Result<(), Box<dyn Error>> {
+        // Handle splash screen skipping first
+        if let Some(start_time) = self.splash_start_time {
+            match self.splash_state {
+                SplashState::Logo => {
+                    // Any key skips to next screen
+                    self.splash_state = SplashState::GameTitle;
+                    self.splash_start_time = Some(Instant::now());
+                    return Ok(());
+                }
+                SplashState::GameTitle => {
+                    // Any key skips to boot message
+                    self.splash_state = SplashState::BootMessage;
+                    self.splash_start_time = Some(Instant::now());
+                    self.boot_display_text.clear();
+                    self.boot_line_index = 0;
+                    self.last_line_time = Instant::now();
+                    self.boot_complete = false;
+                    return Ok(());
+                }
+                SplashState::BootMessage => {
+                    if !self.boot_complete {
+                        // Skip to end of text
+                        let full_text = self.boot_message_lines.join("\n");
+                        self.boot_display_text = full_text.clone();
+                        self.boot_line_index = full_text.len();
+                        self.boot_complete = true;
+                        self.splash_start_time = Some(Instant::now());
+                    } else {
+                        // Move to main UI if already complete
+                        self.splash_state = SplashState::MainUI;
+                    }
+                    return Ok(());
+                }
+                _ => {}
+            }
+        }
+
         // log key to log
         // tracing::info!(target: "game", "key pressed: {:?}", key);
 
@@ -1178,9 +1323,26 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<(), 
                     }
                 }
                 Event::Mouse(me) => {
-                    // debug log that we don't handle mouse events.
-                    // TODO we can handle these later
-                    tracing::debug!("UNHANDLED Mouse event: {:?}", me);
+                    if let crossterm::event::MouseEventKind::ScrollDown = me.kind {
+                        // Scroll down (move view down, which means increase scroll position)
+                        if let SplashState::BootMessage = app.splash_state {
+                            let total_lines = app.boot_display_text.lines().count() as u16;
+                            let visible_lines = 20; // Approximate visible lines
+                            if app.boot_scroll + visible_lines < total_lines {
+                                app.boot_scroll = app.boot_scroll.saturating_add(3);
+                                // Scroll 3 lines at a time
+                            }
+                        }
+                    } else if let crossterm::event::MouseEventKind::ScrollUp = me.kind {
+                        // Scroll up (move view up, which means decrease scroll position)
+                        if let SplashState::BootMessage = app.splash_state {
+                            app.boot_scroll = app.boot_scroll.saturating_sub(3);
+                            // Scroll 3 lines at a time
+                        }
+                    } else {
+                        // Log other mouse events
+                        tracing::debug!("UNHANDLED Mouse event: {:?}", me);
+                    }
                 }
                 _ => {}
             }
@@ -1203,6 +1365,128 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<(), 
 }
 
 fn ui(f: &mut Frame, app: &mut App) {
+    // Show splash screens if needed
+    match app.splash_state {
+        SplashState::Logo => {
+            // Show centered logo
+            let logo_paragraph = Paragraph::new(app.logo_text.as_str())
+                .alignment(Alignment::Center)
+                .block(Block::default().borders(Borders::NONE));
+
+            // Center the logo in the middle of the screen
+            let area = centered_rect(50, 50, f.size());
+            f.render_widget(logo_paragraph, area);
+            return;
+        }
+        SplashState::GameTitle => {
+            // Show centered game title
+            let title_paragraph = Paragraph::new(app.game_title_text.as_str())
+                .alignment(Alignment::Center)
+                .block(Block::default().borders(Borders::NONE));
+
+            // Center the title in the middle of the screen
+            let area = centered_rect(70, 70, f.size());
+            f.render_widget(title_paragraph, area);
+            return;
+        }
+        SplashState::BootMessage => {
+            // Show boot message with glitch effect
+            let block = Block::default()
+                .borders(Borders::ALL)
+                .border_set(border::THICK)
+                .title(" System Boot ")
+                .title_alignment(Alignment::Center)
+                .border_style(Style::default().fg(Color::LightBlue));
+
+            // Inner and centered content area with padding
+            let inner = block.inner(Rect::new(0, 0, f.size().width, f.size().height));
+            let area = centered_rect(80, 60, inner);
+
+            // Clear content area before drawing
+            f.render_widget(Clear, area);
+
+            // Calculate available height for text (accounting for borders and padding)
+            let inner_area = area.inner(&Margin {
+                horizontal: 2,
+                vertical: 2,
+            });
+            let text_area = inner_area.inner(&Margin {
+                horizontal: 1,
+                vertical: 1,
+            });
+
+            // Calculate visible lines and update scroll position if needed
+            let visible_lines = text_area.height.saturating_sub(2); // Leave room for border
+            let total_lines = app.boot_display_text.lines().count() as u16;
+
+            // Auto-scroll if we're at the bottom
+            if app.boot_scroll + visible_lines >= total_lines.saturating_sub(1) {
+                app.boot_scroll = total_lines.saturating_sub(visible_lines);
+            }
+
+            // Create a scrollable paragraph
+            let paragraph = Paragraph::new(app.boot_display_text.as_str())
+                .block(Block::default().borders(Borders::NONE))
+                .wrap(Wrap { trim: false })
+                .scroll((app.boot_scroll, 0));
+
+            // Render content with padding
+            f.render_widget(paragraph, inner_area);
+
+            // Add scrollbar if needed
+            if total_lines > visible_lines {
+                // Create a simple scrollbar on the right
+                let scrollbar_area = Rect {
+                    x: inner_area.right() - 1,
+                    y: inner_area.y,
+                    width: 1,
+                    height: inner_area.height,
+                };
+
+                // Calculate scrollbar thumb position and height
+                let thumb_height = (visible_lines as f32 / total_lines as f32
+                    * visible_lines as f32)
+                    .max(1.0) as u16;
+                let thumb_position = (app.boot_scroll as f32 / (total_lines - visible_lines) as f32
+                    * (visible_lines - thumb_height) as f32)
+                    .round() as u16;
+
+                // Draw scrollbar track
+                let track_span = Span::styled("│", Style::default().fg(Color::DarkGray));
+                for y in inner_area.top()..inner_area.bottom() {
+                    f.render_widget(
+                        Paragraph::new(track_span.clone()),
+                        Rect::new(scrollbar_area.x, y, 1, 1),
+                    );
+                }
+
+                // Draw scrollbar thumb
+                let thumb_span = Span::styled("▐", Style::default().fg(Color::LightBlue));
+                for y in 0..thumb_height {
+                    let y_pos = inner_area.y + thumb_position + y;
+                    if y_pos < inner_area.bottom() {
+                        f.render_widget(
+                            Paragraph::new(thumb_span.clone()),
+                            Rect::new(scrollbar_area.x, y_pos, 1, 1),
+                        );
+                    }
+                }
+            }
+
+            // Render border last to ensure it's on top
+            f.render_widget(block, area);
+            return;
+        }
+        SplashState::MainUI => {
+            // Normal UI rendering continues below
+        }
+    }
+
+    // Only render the main UI if we're past all splash screens
+    if app.splash_state != SplashState::MainUI {
+        return;
+    }
+
     let root_chunks = Layout::default()
         .direction(Direction::Vertical)
         .margin(0)
@@ -1867,6 +2151,27 @@ fn render_crafting_panel(f: &mut Frame, app: &mut App, area: Rect) {
     }
 
     f.render_widget(block, area);
+}
+
+/// Helper function to center a rectangle within another rectangle
+fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
+    let popup_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Percentage((100 - percent_y) / 2),
+            Constraint::Percentage(percent_y),
+            Constraint::Percentage((100 - percent_y) / 2),
+        ])
+        .split(r);
+
+    Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage((100 - percent_x) / 2),
+            Constraint::Percentage(percent_x),
+            Constraint::Percentage((100 - percent_x) / 2),
+        ])
+        .split(popup_layout[1])[1]
 }
 
 fn render_look_panel(f: &mut Frame, app: &mut App, area: Rect) {
