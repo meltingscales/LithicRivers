@@ -184,7 +184,7 @@ fmt:
 
 # Run clippy
 clippy:
-    {{cargoz_env}} clippy --all-targets --all-features -D warnings
+    {{cargoz_env}} clippy --all-targets --all-features {{build_flags}}
 
 # Show toolchain information
 toolchain:
