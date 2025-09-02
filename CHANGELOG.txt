@@ -1,3 +1,7 @@
+# v0.7.6.2
+
+- add boot message and intro screens
+
 # v0.7.6.1
 
 - add windows launcher script
