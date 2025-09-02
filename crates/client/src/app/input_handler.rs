@@ -13,7 +13,7 @@ use crate::{ui::panels::get_player_inventory, App, MenuTab, Scale, SplashState};
 
 pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
     // Handle splash screen skipping first
-    if let Some(start_time) = app.splash_start_time {
+    if let Some(_start_time) = app.splash_start_time {
         match app.splash_state {
             SplashState::Logo => {
                 // Any key skips to next screen
