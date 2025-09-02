@@ -1043,74 +1043,54 @@ impl App {
         }
 
         if self.keybinds.matches_movement(&key) {
-            panic!("todo movement keybind cleanup, simplify");
+            if self.keybinds.matches("movement", "MOVE_NORTH", &key) {
+                self.game.queue_player_move(0, -1);
+            }
+            if self.keybinds.matches("movement", "MOVE_SOUTH", &key) {
+                self.game.queue_player_move(0, 1);
+            }
+            if self.keybinds.matches("movement", "MOVE_WEST", &key) {
+                self.game.queue_player_move(-1, 0);
+            }
+            if self.keybinds.matches("movement", "MOVE_EAST", &key) {
+                self.game.queue_player_move(1, 0);
+            }
+            if self.keybinds.matches("movement", "MOVE_NORTHWEST", &key) {
+                self.game.queue_player_move(-1, -1);
+            }
+            if self.keybinds.matches("movement", "MOVE_NORTHEAST", &key) {
+                self.game.queue_player_move(1, -1);
+            }
+            if self.keybinds.matches("movement", "MOVE_SOUTHWEST", &key) {
+                self.game.queue_player_move(-1, 1);
+            }
+            if self.keybinds.matches("movement", "MOVE_SOUTHEAST", &key) {
+                self.game.queue_player_move(1, 1);
+            }
+            if self.keybinds.matches("movement", "WAIT", &key) {
+                self.game.queue_player_move(0, 0);
+            }
+            if self.keybinds.matches("movement", "MOVE_UP", &key) {
+                self.game.queue_player_move_z(1);
+            }
+            if self.keybinds.matches("movement", "MOVE_DOWN", &key) {
+                self.game.queue_player_move_z(-1);
+            }
+
+            self.game.tick();
+            self.snap_view_to_player_z();
+            return Ok(());
         }
 
-        if self.keybinds.matches("movement", "MOVE_NORTH", &key) {
-            self.game.queue_player_move(0, -1);
-            self.game.tick();
-            self.snap_view_to_player_z();
+        if self.keybinds.matches("action", "MINE", &key) {
+            self.game.queue_mine();
+            let mining_success = self.game.tick();
+            if mining_success.contains(GameTickResult::MiningSuccess) {
+                self.snap_view_to_player_z();
+            }
             return Ok(());
         }
-        if self.keybinds.matches("movement", "MOVE_SOUTH", &key) {
-            self.game.queue_player_move(0, 1);
-            self.game.tick();
-            self.snap_view_to_player_z();
-            return Ok(());
-        }
-        if self.keybinds.matches("movement", "MOVE_WEST", &key) {
-            self.game.queue_player_move(-1, 0);
-            self.game.tick();
-            self.snap_view_to_player_z();
-            return Ok(());
-        }
-        if self.keybinds.matches("movement", "MOVE_EAST", &key) {
-            self.game.queue_player_move(1, 0);
-            self.game.tick();
-            self.snap_view_to_player_z();
-            return Ok(());
-        }
-        if self.keybinds.matches("movement", "MOVE_NORTHWEST", &key) {
-            self.game.queue_player_move(-1, -1);
-            self.game.tick();
-            self.snap_view_to_player_z();
-            return Ok(());
-        }
-        if self.keybinds.matches("movement", "MOVE_NORTHEAST", &key) {
-            self.game.queue_player_move(1, -1);
-            self.game.tick();
-            self.snap_view_to_player_z();
-            return Ok(());
-        }
-        if self.keybinds.matches("movement", "MOVE_SOUTHWEST", &key) {
-            self.game.queue_player_move(-1, 1);
-            self.game.tick();
-            self.snap_view_to_player_z();
-            return Ok(());
-        }
-        if self.keybinds.matches("movement", "MOVE_SOUTHEAST", &key) {
-            self.game.queue_player_move(1, 1);
-            self.game.tick();
-            self.snap_view_to_player_z();
-            return Ok(());
-        }
-        if self.keybinds.matches("movement", "WAIT", &key) {
-            self.game.queue_player_move(0, 0);
-            self.game.tick();
-            return Ok(());
-        }
-        if self.keybinds.matches("movement", "MOVE_UP", &key) {
-            self.game.queue_player_move_z(1);
-            self.game.tick();
-            self.snap_view_to_player_z();
-            return Ok(());
-        }
-        if self.keybinds.matches("movement", "MOVE_DOWN", &key) {
-            self.game.queue_player_move_z(-1);
-            self.game.tick();
-            self.snap_view_to_player_z();
-            return Ok(());
-        }
+
         if self.keybinds.matches("action", "MINE", &key) {
             self.game.queue_mine();
             let mining_success = self.game.tick();
