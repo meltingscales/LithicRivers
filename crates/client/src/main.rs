@@ -70,7 +70,7 @@ enum MenuTab {
     Quit,
 }
 
-const BOOT_MESSAGE_TYPEWRITER_MS: u64 = 50;
+const BOOT_MESSAGE_TYPEWRITER_MS: u64 = 100;
 
 impl MenuTab {
     const COUNT: usize = 8;
@@ -451,7 +451,15 @@ impl App {
 
         // Load and process boot message
         let boot_message = boot_message::get_boot_message();
-        let boot_message_lines = boot_message.lines().map(String::from).collect::<Vec<_>>();
+        let mut boot_message_lines = boot_message.lines().map(String::from).collect::<Vec<_>>();
+
+        // add some space to the beginning of each newline to align with our border
+        boot_message_lines.iter_mut().for_each(|line| {
+            line.insert(0, ' ');
+            line.insert(0, ' ');
+            line.insert(0, ' ');
+            line.insert(0, ' ');
+        });
 
         let credits_text = format!(
             "Version: {}\nSTEAM_APP_ID: {}\nGit Branch: {}\nGit Commit: {}\n\n{}",
@@ -563,9 +571,14 @@ impl App {
                             let full_text = self.boot_message_lines.join("\n");
 
                             if self.boot_line_index < full_text.len() {
-                                // Add next line
-                                self.boot_line_index =
-                                    (self.boot_line_index + 1).min(full_text.len());
+                                // Move to next line
+                                if let Some(next_newline) =
+                                    full_text[self.boot_line_index..].find('\n')
+                                {
+                                    self.boot_line_index += next_newline + 1;
+                                } else {
+                                    self.boot_line_index = full_text.len();
+                                }
                                 self.boot_display_text =
                                     full_text[..self.boot_line_index].to_string();
                             } else if !self.boot_complete {
