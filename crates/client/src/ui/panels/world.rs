@@ -13,7 +13,7 @@ use std::collections::HashMap;
 
 pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
     // Get the game view from the core
-    let _view = app.game.build_view();
+    let _view = app.core.game.build_view();
 
     // Create the game display text
     let mut lines = Vec::new();
@@ -23,13 +23,17 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
     let target_rows = area.height as usize;
 
     // Sync world generation Z with current view slice
-    app.game.res.world.set_generation_z(app.game.res.view_z);
+    app.core
+        .game
+        .res
+        .world
+        .set_generation_z(app.core.game.res.view_z);
 
-    let scale = app.scale.as_u32() as i32;
+    let scale = app.ui.scale.as_u32() as i32;
 
     // Compute world-space bounds for current viewport and prefetch chunks
-    let center_x = app.game.res.view_x;
-    let center_y = app.game.res.view_y;
+    let center_x = app.core.game.res.view_x;
+    let center_y = app.core.game.res.view_y;
 
     let world_cols = (target_cols as f32 / scale as f32).ceil() as i32;
     let world_rows = (target_rows as f32 / scale as f32).ceil() as i32;
@@ -39,15 +43,17 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
     let right = left + world_cols;
     let bottom = top + world_rows;
 
-    app.game
+    app.core
+        .game
         .res
         .world
-        .prefetch_rect(left, top, right, bottom, app.game.res.view_z);
+        .prefetch_rect(left, top, right, bottom, app.core.game.res.view_z);
 
     // Build an entity overlay map for current bounds and Z slice using SpriteRef
     let mut ent_overlay: HashMap<(i32, i32), (String, String)> = HashMap::new();
-    let z = app.game.res.view_z;
+    let z = app.core.game.res.view_z;
     for (_e, (pos, sr_opt)) in app
+        .core
         .game
         .world
         .query::<(
@@ -73,26 +79,27 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
             let offset_y = row as i32 - target_rows as i32 / 2;
             let world_x = center_x + offset_x.div_euclid(scale);
             let world_y = center_y + offset_y.div_euclid(scale);
-            let world_z = app.game.res.view_z;
+            let world_z = app.core.game.res.view_z;
 
             let sprite_x = (col as i32 - target_cols as i32 / 2).rem_euclid(scale);
             let sprite_y = (row as i32 - target_rows as i32 / 2).rem_euclid(scale);
 
             // Base tile color/glyph
             let tile_kind = app
+                .core
                 .game
                 .res
                 .world
                 .get_tile_cached(world_x, world_y, world_z);
 
             // render look mode cursor first
-            if app.look_mode
-                && world_x == app.look_cursor.x
-                && world_y == app.look_cursor.y
-                && app.game.res.view_z == app.look_cursor.z
+            if app.panels.look.mode
+                && world_x == app.panels.look.cursor.x
+                && world_y == app.panels.look.cursor.y
+                && app.core.game.res.view_z == app.panels.look.cursor.z
             {
                 let reticle_sprites = sprite_for_view_reticle();
-                let scale_index = (app.scale.as_u32() - 1) as usize;
+                let scale_index = (app.ui.scale.as_u32() - 1) as usize;
                 let reticle_block = reticle_sprites
                     .get(scale_index)
                     .unwrap_or(&reticle_sprites[0]);
@@ -117,7 +124,7 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
                     name: name.clone(),
                 };
                 let (block, color) =
-                    sprite_block_for_spriteref(&mut app.sprite_loader, &sr, app.scale);
+                    sprite_block_for_spriteref(&mut app.core.sprite_loader, &sr, app.ui.scale);
                 let sprite_char = block
                     .lines()
                     .nth(sprite_y as usize)
@@ -129,7 +136,7 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
                 ));
             } else {
                 let (block, color) =
-                    sprite_block_for_tile(&mut app.sprite_loader, tile_kind, app.scale)
+                    sprite_block_for_tile(&mut app.core.sprite_loader, tile_kind, app.ui.scale)
                         .unwrap_or_else(|| {
                             panic!("Could not find sprite for tile kind: {:?}", tile_kind)
                         });

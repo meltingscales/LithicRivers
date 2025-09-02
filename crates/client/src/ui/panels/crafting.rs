@@ -16,10 +16,10 @@ pub fn render_crafting_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     let inventory = get_player_inventory(app);
 
     // Update craft message timer
-    if let Some((_, ref mut timer)) = &mut app.craft_message {
+    if let Some((_, ref mut timer)) = &mut app.panels.crafting.message {
         *timer = timer.saturating_sub(1);
         if *timer == 0 {
-            app.craft_message = None;
+            app.panels.crafting.message = None;
         }
     }
 
@@ -51,13 +51,15 @@ pub fn render_crafting_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
 
     // Render recipes list
     let recipes: Vec<ListItem> = app
+        .panels
+        .crafting
         .recipe_handler
         .get_recipes()
         .iter()
         .enumerate()
         .map(|(i, recipe)| {
-            let can_craft = app.recipe_handler.can_craft(i, &inventory);
-            let style = if i == app.craft_selected {
+            let can_craft = app.panels.crafting.recipe_handler.can_craft(i, &inventory);
+            let style = if i == app.panels.crafting.selected {
                 if can_craft {
                     Style::default().fg(Color::Green)
                 } else {
@@ -86,12 +88,22 @@ pub fn render_crafting_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     f.render_stateful_widget(
         list,
         list_area,
-        &mut ListState::default().with_selected(Some(app.craft_selected)),
+        &mut ListState::default().with_selected(Some(app.panels.crafting.selected)),
     );
 
     // Render recipe details
-    if let Some(recipe) = app.recipe_handler.get_recipes().get(app.craft_selected) {
-        let can_craft = app.recipe_handler.can_craft(app.craft_selected, &inventory);
+    if let Some(recipe) = app
+        .panels
+        .crafting
+        .recipe_handler
+        .get_recipes()
+        .get(app.panels.crafting.selected)
+    {
+        let can_craft = app
+            .panels
+            .crafting
+            .recipe_handler
+            .can_craft(app.panels.crafting.selected, &inventory);
         let mut details = vec![
             Line::from(vec![
                 Span::styled("Recipe Name: ", Style::default().fg(Color::Yellow)),
@@ -168,7 +180,7 @@ pub fn render_crafting_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     f.render_widget(inventory_widget, inventory_area);
 
     // Render message if any
-    if let Some((message, _)) = &app.craft_message {
+    if let Some((message, _)) = &app.panels.crafting.message {
         let message_block = Block::default()
             .borders(Borders::ALL)
             .style(Style::default().fg(Color::Yellow));

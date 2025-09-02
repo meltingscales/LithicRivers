@@ -13,35 +13,35 @@ use crate::{ui::panels::get_player_inventory, App, MenuTab, Scale, SplashState};
 
 pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
     // Handle splash screen skipping first
-    if let Some(_start_time) = app.splash_start_time {
-        match app.splash_state {
+    if let Some(_start_time) = app.splash.start_time {
+        match app.splash.state {
             SplashState::Logo => {
                 // Any key skips to next screen
-                app.splash_state = SplashState::GameTitle;
-                app.splash_start_time = Some(Instant::now());
+                app.splash.state = SplashState::GameTitle;
+                app.splash.start_time = Some(Instant::now());
                 return Ok(());
             }
             SplashState::GameTitle => {
                 // Any key skips to boot message
-                app.splash_state = SplashState::BootMessage;
-                app.splash_start_time = Some(Instant::now());
-                app.boot_display_text.clear();
-                app.boot_line_index = 0;
-                app.last_line_time = Instant::now();
-                app.boot_complete = false;
+                app.splash.state = SplashState::BootMessage;
+                app.splash.start_time = Some(Instant::now());
+                app.splash.boot_display_text.clear();
+                app.splash.boot_line_index = 0;
+                app.splash.last_line_time = Instant::now();
+                app.splash.boot_complete = false;
                 return Ok(());
             }
             SplashState::BootMessage => {
-                if !app.boot_complete {
+                if !app.splash.boot_complete {
                     // Skip to end of text
-                    let full_text = app.boot_message_lines.join("\n");
-                    app.boot_display_text = full_text.clone();
-                    app.boot_line_index = full_text.len();
-                    app.boot_complete = true;
-                    app.splash_start_time = Some(Instant::now());
+                    let full_text = app.splash.boot_message_lines.join("\n");
+                    app.splash.boot_display_text = full_text.clone();
+                    app.splash.boot_line_index = full_text.len();
+                    app.splash.boot_complete = true;
+                    app.splash.start_time = Some(Instant::now());
                 } else {
                     // Move to main UI if already complete
-                    app.splash_state = SplashState::MainUI;
+                    app.splash.state = SplashState::MainUI;
                 }
                 return Ok(());
             }
@@ -54,158 +54,177 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
 
     // First, handle configurable keybind actions
     // Toggle Look mode
-    if app.keybinds.matches("action", "LOOK_TOGGLE", &key) {
-        app.look_mode = !app.look_mode;
+    if app.ui.keybinds.matches("action", "LOOK_TOGGLE", &key) {
+        app.panels.look.mode = !app.panels.look.mode;
         // Reset cursor to player on toggle on
-        if app.look_mode {
-            if let Some(e) = app.game.res.player_entity {
+        if app.panels.look.mode {
+            if let Some(e) = app.core.game.res.player_entity {
                 if let Ok(pos) = app
+                    .core
                     .game
                     .world
                     .get::<&lithicrivers_core::components::Position>(e)
                 {
-                    app.look_cursor = *pos;
+                    app.panels.look.cursor = *pos;
                     // Align all view coords to cursor
-                    app.game.res.view_x = app.look_cursor.x;
-                    app.game.res.view_y = app.look_cursor.y;
-                    app.game.res.view_z = app.look_cursor.z;
+                    app.core.game.res.view_x = app.panels.look.cursor.x;
+                    app.core.game.res.view_y = app.panels.look.cursor.y;
+                    app.core.game.res.view_z = app.panels.look.cursor.z;
                 }
             }
-            app.game.res.log("Look mode: ON");
+            app.core.game.res.log("Look mode: ON");
         } else {
-            app.game.res.log("Look mode: OFF");
+            app.core.game.res.log("Look mode: OFF");
         }
         return Ok(());
     }
 
     // In Look mode, remap movement keys to move the look cursor without ticking
-    if app.look_mode {
+    if app.panels.look.mode {
         let mut moved = false;
-        if app.keybinds.matches("movement", "MOVE_NORTH", &key) {
-            app.look_cursor.y -= 1;
-            app.game.res.view_y = app.look_cursor.y;
+        if app.ui.keybinds.matches("movement", "MOVE_NORTH", &key) {
+            app.panels.look.cursor.y -= 1;
+            app.core.game.res.view_y = app.panels.look.cursor.y;
             moved = true;
-        } else if app.keybinds.matches("movement", "MOVE_SOUTH", &key) {
-            app.look_cursor.y += 1;
-            app.game.res.view_y = app.look_cursor.y;
+        } else if app.ui.keybinds.matches("movement", "MOVE_SOUTH", &key) {
+            app.panels.look.cursor.y += 1;
+            app.core.game.res.view_y = app.panels.look.cursor.y;
             moved = true;
-        } else if app.keybinds.matches("movement", "MOVE_WEST", &key) {
-            app.look_cursor.x -= 1;
-            app.game.res.view_x = app.look_cursor.x;
+        } else if app.ui.keybinds.matches("movement", "MOVE_WEST", &key) {
+            app.panels.look.cursor.x -= 1;
+            app.core.game.res.view_x = app.panels.look.cursor.x;
             moved = true;
-        } else if app.keybinds.matches("movement", "MOVE_EAST", &key) {
-            app.look_cursor.x += 1;
-            app.game.res.view_x = app.look_cursor.x;
+        } else if app.ui.keybinds.matches("movement", "MOVE_EAST", &key) {
+            app.panels.look.cursor.x += 1;
+            app.core.game.res.view_x = app.panels.look.cursor.x;
             moved = true;
-        } else if app.keybinds.matches("movement", "MOVE_NORTHWEST", &key) {
-            app.look_cursor.x -= 1;
-            app.look_cursor.y -= 1;
-            app.game.res.view_x = app.look_cursor.x;
-            app.game.res.view_y = app.look_cursor.y;
+        } else if app.ui.keybinds.matches("movement", "MOVE_NORTHWEST", &key) {
+            app.panels.look.cursor.x -= 1;
+            app.panels.look.cursor.y -= 1;
+            app.core.game.res.view_x = app.panels.look.cursor.x;
+            app.core.game.res.view_y = app.panels.look.cursor.y;
             moved = true;
-        } else if app.keybinds.matches("movement", "MOVE_NORTHEAST", &key) {
-            app.look_cursor.x += 1;
-            app.look_cursor.y -= 1;
-            app.game.res.view_x = app.look_cursor.x;
-            app.game.res.view_y = app.look_cursor.y;
+        } else if app.ui.keybinds.matches("movement", "MOVE_NORTHEAST", &key) {
+            app.panels.look.cursor.x += 1;
+            app.panels.look.cursor.y -= 1;
+            app.core.game.res.view_x = app.panels.look.cursor.x;
+            app.core.game.res.view_y = app.panels.look.cursor.y;
             moved = true;
-        } else if app.keybinds.matches("movement", "MOVE_SOUTHWEST", &key) {
-            app.look_cursor.x -= 1;
-            app.look_cursor.y += 1;
-            app.game.res.view_x = app.look_cursor.x;
-            app.game.res.view_y = app.look_cursor.y;
+        } else if app.ui.keybinds.matches("movement", "MOVE_SOUTHWEST", &key) {
+            app.panels.look.cursor.x -= 1;
+            app.panels.look.cursor.y += 1;
+            app.core.game.res.view_x = app.panels.look.cursor.x;
+            app.core.game.res.view_y = app.panels.look.cursor.y;
             moved = true;
-        } else if app.keybinds.matches("movement", "MOVE_SOUTHEAST", &key) {
-            app.look_cursor.x += 1;
-            app.look_cursor.y += 1;
-            app.game.res.view_x = app.look_cursor.x;
-            app.game.res.view_y = app.look_cursor.y;
+        } else if app.ui.keybinds.matches("movement", "MOVE_SOUTHEAST", &key) {
+            app.panels.look.cursor.x += 1;
+            app.panels.look.cursor.y += 1;
+            app.core.game.res.view_x = app.panels.look.cursor.x;
+            app.core.game.res.view_y = app.panels.look.cursor.y;
             moved = true;
-        } else if app.keybinds.matches("movement", "WAIT", &key) {
+        } else if app.ui.keybinds.matches("movement", "WAIT", &key) {
             // no-op, but treat as handled to avoid player waiting
             moved = true;
-        } else if app.keybinds.matches("movement", "MOVE_UP", &key) {
-            app.look_cursor.z += 1;
-            app.game.res.view_z = app.look_cursor.z;
+        } else if app.ui.keybinds.matches("movement", "MOVE_UP", &key) {
+            app.panels.look.cursor.z += 1;
+            app.core.game.res.view_z = app.panels.look.cursor.z;
             moved = true;
-        } else if app.keybinds.matches("movement", "MOVE_DOWN", &key) {
-            app.look_cursor.z -= 1;
-            app.game.res.view_z = app.look_cursor.z;
+        } else if app.ui.keybinds.matches("movement", "MOVE_DOWN", &key) {
+            app.panels.look.cursor.z -= 1;
+            app.core.game.res.view_z = app.panels.look.cursor.z;
             moved = true;
-        } else if app.keybinds.matches("viewport", "VIEW_Z_UP", &key) {
-            app.look_cursor.z = app.look_cursor.z.saturating_add(1);
-            app.game.res.view_z = app.look_cursor.z;
+        } else if app.ui.keybinds.matches("viewport", "VIEW_Z_UP", &key) {
+            app.panels.look.cursor.z = app.panels.look.cursor.z.saturating_add(1);
+            app.core.game.res.view_z = app.panels.look.cursor.z;
             moved = true;
-        } else if app.keybinds.matches("viewport", "VIEW_Z_DOWN", &key) {
-            app.look_cursor.z = app.look_cursor.z.saturating_sub(1);
-            app.game.res.view_z = app.look_cursor.z;
+        } else if app.ui.keybinds.matches("viewport", "VIEW_Z_DOWN", &key) {
+            app.panels.look.cursor.z = app.panels.look.cursor.z.saturating_sub(1);
+            app.core.game.res.view_z = app.panels.look.cursor.z;
             moved = true;
         }
 
         if moved {
             // Prefetch around the new cursor position for smoother draw
             let radius = 20i32;
-            let left = app.look_cursor.x - radius;
-            let top = app.look_cursor.y - radius;
-            let right = app.look_cursor.x + radius;
-            let bottom = app.look_cursor.y + radius;
-            app.game
-                .res
-                .world
-                .prefetch_rect(left, top, right, bottom, app.look_cursor.z);
+            let left = app.panels.look.cursor.x - radius;
+            let top = app.panels.look.cursor.y - radius;
+            let right = app.panels.look.cursor.x + radius;
+            let bottom = app.panels.look.cursor.y + radius;
+            app.core.game.res.world.prefetch_rect(
+                left,
+                top,
+                right,
+                bottom,
+                app.panels.look.cursor.z,
+            );
             return Ok(());
         }
     }
     // Inventory: toggle item auto-pickup
-    if app.current_tab == MenuTab::Inventory
+    if app.ui.current_tab == MenuTab::Inventory
         && app
+            .ui
             .keybinds
             .matches("inventory", "TOGGLE_ITEM_AUTO_PICKUP_KEY", &key)
     {
-        if let Some(e) = app.game.res.player_entity {
-            if let Ok(mut inv) = app.game.world.get::<&mut InvComp>(e) {
+        if let Some(e) = app.core.game.res.player_entity {
+            if let Ok(mut inv) = app.core.game.world.get::<&mut InvComp>(e) {
                 inv.auto_pickup = !inv.auto_pickup;
                 let state = if inv.auto_pickup { "ON" } else { "OFF" };
-                app.game.res.log(format!("Item auto-pickup: {}", state));
+                app.core
+                    .game
+                    .res
+                    .log(format!("Item auto-pickup: {}", state));
             }
         }
         return Ok(());
     }
 
     // Crafting panel-specific navigation and actions
-    if app.current_tab == MenuTab::Crafting {
+    if app.ui.current_tab == MenuTab::Crafting {
         // Get player inventory for crafting checks
         let inventory = get_player_inventory(app);
-        let recipe_count = app.recipe_handler.get_recipes().len();
+        let recipe_count = app.panels.crafting.recipe_handler.get_recipes().len();
 
         // Navigation: Up/Down or North/South to move selection
-        if app.keybinds.matches("ui", "CREDITS_SCROLL_UP", &key)
-            || app.keybinds.matches("movement", "MOVE_NORTH", &key)
+        if app.ui.keybinds.matches("ui", "CREDITS_SCROLL_UP", &key)
+            || app.ui.keybinds.matches("movement", "MOVE_NORTH", &key)
         {
             if recipe_count > 0 {
-                if app.craft_selected == 0 {
-                    app.craft_selected = recipe_count - 1;
+                if app.panels.crafting.selected == 0 {
+                    app.panels.crafting.selected = recipe_count - 1;
                 } else {
-                    app.craft_selected = app.craft_selected.saturating_sub(1);
+                    app.panels.crafting.selected = app.panels.crafting.selected.saturating_sub(1);
                 }
             }
             return Ok(());
         }
-        if app.keybinds.matches("ui", "CREDITS_SCROLL_DOWN", &key)
-            || app.keybinds.matches("movement", "MOVE_SOUTH", &key)
+        if app.ui.keybinds.matches("ui", "CREDITS_SCROLL_DOWN", &key)
+            || app.ui.keybinds.matches("movement", "MOVE_SOUTH", &key)
         {
             if recipe_count > 0 {
-                app.craft_selected = (app.craft_selected + 1) % recipe_count;
+                app.panels.crafting.selected = (app.panels.crafting.selected + 1) % recipe_count;
             }
             return Ok(());
         }
 
         // Craft item on Enter or Activate key
-        if app.keybinds.matches("ui", "ACTIVATE", &key) || key == KeyCode::Enter {
-            if let Some(recipe) = app.recipe_handler.get_recipes().get(app.craft_selected) {
-                if app.recipe_handler.can_craft(app.craft_selected, &inventory) {
-                    if let Some(e) = app.game.res.player_entity {
-                        if let Ok(mut inv) = app.game.world.get::<&mut InvComp>(e) {
+        if app.ui.keybinds.matches("ui", "ACTIVATE", &key) || key == KeyCode::Enter {
+            if let Some(recipe) = app
+                .panels
+                .crafting
+                .recipe_handler
+                .get_recipes()
+                .get(app.panels.crafting.selected)
+            {
+                if app
+                    .panels
+                    .crafting
+                    .recipe_handler
+                    .can_craft(app.panels.crafting.selected, &inventory)
+                {
+                    if let Some(e) = app.core.game.res.player_entity {
+                        if let Ok(mut inv) = app.core.game.world.get::<&mut InvComp>(e) {
                             // Consume ingredients
                             for &(item, qty) in recipe.ingredients {
                                 let mut remaining = qty;
@@ -241,7 +260,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
                                 });
                             }
 
-                            app.craft_message = Some((
+                            app.panels.crafting.message = Some((
                                 format!(
                                     "Crafted {}x {}",
                                     recipe.quantity,
@@ -250,7 +269,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
                                 30, // Display for 30 frames (~0.5 seconds at 60 FPS)
                             ));
 
-                            app.game.res.log(format!(
+                            app.core.game.res.log(format!(
                                 "Crafted {}x {}",
                                 recipe.quantity,
                                 itemkind_name(recipe.result)
@@ -258,7 +277,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
                         }
                     }
                 } else {
-                    app.craft_message = Some((
+                    app.panels.crafting.message = Some((
                         "Not enough resources to craft this item".to_string(),
                         60, // Display for 1 second at 60 FPS
                     ));
@@ -268,48 +287,49 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
         }
 
         // Don't process movement keys in crafting panel
-        if app.keybinds.matches("movement", "MOVE_NORTH", &key)
-            || app.keybinds.matches("movement", "MOVE_SOUTH", &key)
-            || app.keybinds.matches("movement", "MOVE_WEST", &key)
-            || app.keybinds.matches("movement", "MOVE_EAST", &key)
-            || app.keybinds.matches("movement", "MOVE_NORTHWEST", &key)
-            || app.keybinds.matches("movement", "MOVE_NORTHEAST", &key)
-            || app.keybinds.matches("movement", "MOVE_SOUTHWEST", &key)
-            || app.keybinds.matches("movement", "MOVE_SOUTHEAST", &key)
-            || app.keybinds.matches("movement", "WAIT", &key)
-            || app.keybinds.matches("movement", "MOVE_UP", &key)
-            || app.keybinds.matches("movement", "MOVE_DOWN", &key)
+        if app.ui.keybinds.matches("movement", "MOVE_NORTH", &key)
+            || app.ui.keybinds.matches("movement", "MOVE_SOUTH", &key)
+            || app.ui.keybinds.matches("movement", "MOVE_WEST", &key)
+            || app.ui.keybinds.matches("movement", "MOVE_EAST", &key)
+            || app.ui.keybinds.matches("movement", "MOVE_NORTHWEST", &key)
+            || app.ui.keybinds.matches("movement", "MOVE_NORTHEAST", &key)
+            || app.ui.keybinds.matches("movement", "MOVE_SOUTHWEST", &key)
+            || app.ui.keybinds.matches("movement", "MOVE_SOUTHEAST", &key)
+            || app.ui.keybinds.matches("movement", "WAIT", &key)
+            || app.ui.keybinds.matches("movement", "MOVE_UP", &key)
+            || app.ui.keybinds.matches("movement", "MOVE_DOWN", &key)
         {
             return Ok(());
         }
     }
 
     // Inventory panel-specific navigation and actions
-    if app.current_tab == MenuTab::Inventory {
+    if app.ui.current_tab == MenuTab::Inventory {
         // Move selection: support Up/Down keys and numpad 8/2 (MOVE_NORTH/SOUTH)
-        if app.keybinds.matches("ui", "CREDITS_SCROLL_UP", &key)
-            || app.keybinds.matches("movement", "MOVE_NORTH", &key)
+        if app.ui.keybinds.matches("ui", "CREDITS_SCROLL_UP", &key)
+            || app.ui.keybinds.matches("movement", "MOVE_NORTH", &key)
         {
-            if let Some(e) = app.game.res.player_entity {
-                if let Ok(inv) = app.game.world.get::<&InvComp>(e) {
+            if let Some(e) = app.core.game.res.player_entity {
+                if let Ok(inv) = app.core.game.world.get::<&InvComp>(e) {
                     if !inv.slots.is_empty() {
-                        if app.inv_selected == 0 {
-                            app.inv_selected = inv.slots.len() - 1;
+                        if app.panels.inventory.selected == 0 {
+                            app.panels.inventory.selected = inv.slots.len() - 1;
                         } else {
-                            app.inv_selected -= 1;
+                            app.panels.inventory.selected -= 1;
                         }
                     }
                 }
             }
             return Ok(());
         }
-        if app.keybinds.matches("ui", "CREDITS_SCROLL_DOWN", &key)
-            || app.keybinds.matches("movement", "MOVE_SOUTH", &key)
+        if app.ui.keybinds.matches("ui", "CREDITS_SCROLL_DOWN", &key)
+            || app.ui.keybinds.matches("movement", "MOVE_SOUTH", &key)
         {
-            if let Some(e) = app.game.res.player_entity {
-                if let Ok(inv) = app.game.world.get::<&InvComp>(e) {
+            if let Some(e) = app.core.game.res.player_entity {
+                if let Ok(inv) = app.core.game.world.get::<&InvComp>(e) {
                     if !inv.slots.is_empty() {
-                        app.inv_selected = (app.inv_selected + 1) % inv.slots.len();
+                        app.panels.inventory.selected =
+                            (app.panels.inventory.selected + 1) % inv.slots.len();
                     }
                 }
             }
@@ -318,25 +338,26 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
 
         // Helper to get current selection
         let mut selected: Option<(ItemKind, u32)> = None;
-        if let Some(e) = app.game.res.player_entity {
-            if let Ok(inv) = app.game.world.get::<&InvComp>(e) {
+        if let Some(e) = app.core.game.res.player_entity {
+            if let Ok(inv) = app.core.game.world.get::<&InvComp>(e) {
                 if !inv.slots.is_empty() {
-                    let idx = app.inv_selected.min(inv.slots.len() - 1);
+                    let idx = app.panels.inventory.selected.min(inv.slots.len() - 1);
                     selected = Some((inv.slots[idx].kind, inv.slots[idx].qty));
                 }
             }
         }
 
         // Drop selected item (quantity 1 for now)
-        if app.keybinds.matches("inventory", "DROP_ITEM", &key) {
+        if app.ui.keybinds.matches("inventory", "DROP_ITEM", &key) {
             if let Some((kind, qty)) = selected {
                 if qty == 0 {
                     return Ok(());
                 }
-                if let Some(e) = app.game.res.player_entity {
+                if let Some(e) = app.core.game.res.player_entity {
                     // Copy player position, then drop immutable borrow before mutating world
                     let (px, py, pz) = {
                         let Ok(ppos) = app
+                            .core
                             .game
                             .world
                             .get::<&lithicrivers_core::components::Position>(e)
@@ -348,22 +369,22 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
 
                     let drop_qty = 1u32;
                     // Decrement inventory (mutable borrow scope ends before spawn)
-                    if let Ok(mut inv) = app.game.world.get::<&mut InvComp>(e) {
-                        if app.inv_selected < inv.slots.len() {
-                            let slot = &mut inv.slots[app.inv_selected];
+                    if let Ok(mut inv) = app.core.game.world.get::<&mut InvComp>(e) {
+                        if app.panels.inventory.selected < inv.slots.len() {
+                            let slot = &mut inv.slots[app.panels.inventory.selected];
                             if slot.qty >= drop_qty {
                                 slot.qty -= drop_qty;
                                 if slot.qty == 0 {
-                                    inv.slots.remove(app.inv_selected);
-                                    if app.inv_selected > 0 {
-                                        app.inv_selected -= 1;
+                                    inv.slots.remove(app.panels.inventory.selected);
+                                    if app.panels.inventory.selected > 0 {
+                                        app.panels.inventory.selected -= 1;
                                     }
                                 }
                             }
                         }
                     }
                     // Spawn DroppedItem entity with SpriteRef
-                    let _ = app.game.world.spawn((
+                    let _ = app.core.game.world.spawn((
                         Position {
                             x: px,
                             y: py,
@@ -375,7 +396,8 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
                         },
                         SpriteRef::new("items", itemkind_sprite_name(kind)),
                     ));
-                    app.game
+                    app.core
+                        .game
                         .res
                         .log(format!("Dropped 1 {}", itemkind_name(kind)));
                 }
@@ -385,16 +407,18 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
 
         // Duplicate selected item (cheat)
         if app
+            .ui
             .keybinds
             .matches("inventory", "CHEAT_DUPLICATE_ITEM", &key)
         {
-            if let Some(e) = app.game.res.player_entity {
-                if let Ok(mut inv) = app.game.world.get::<&mut InvComp>(e) {
+            if let Some(e) = app.core.game.res.player_entity {
+                if let Ok(mut inv) = app.core.game.world.get::<&mut InvComp>(e) {
                     if !inv.slots.is_empty() {
-                        let idx = app.inv_selected.min(inv.slots.len() - 1);
+                        let idx = app.panels.inventory.selected.min(inv.slots.len() - 1);
                         let kind = inv.slots[idx].kind;
                         inv.slots[idx].qty = inv.slots[idx].qty.saturating_add(1);
-                        app.game
+                        app.core
+                            .game
                             .res
                             .log(format!("Duplicated 1 {}", itemkind_name(kind)));
                     }
@@ -404,21 +428,22 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
         }
 
         // Destroy selected item (remove 1)
-        if app.keybinds.matches("inventory", "DESTROY_ITEM", &key) {
-            if let Some(e) = app.game.res.player_entity {
-                if let Ok(mut inv) = app.game.world.get::<&mut InvComp>(e) {
+        if app.ui.keybinds.matches("inventory", "DESTROY_ITEM", &key) {
+            if let Some(e) = app.core.game.res.player_entity {
+                if let Ok(mut inv) = app.core.game.world.get::<&mut InvComp>(e) {
                     if !inv.slots.is_empty() {
-                        let idx = app.inv_selected.min(inv.slots.len() - 1);
+                        let idx = app.panels.inventory.selected.min(inv.slots.len() - 1);
                         let kind = inv.slots[idx].kind;
                         if inv.slots[idx].qty > 0 {
                             inv.slots[idx].qty -= 1;
                             if inv.slots[idx].qty == 0 {
                                 inv.slots.remove(idx);
-                                if app.inv_selected > 0 {
-                                    app.inv_selected -= 1;
+                                if app.panels.inventory.selected > 0 {
+                                    app.panels.inventory.selected -= 1;
                                 }
                             }
-                            app.game
+                            app.core
+                                .game
                                 .res
                                 .log(format!("Destroyed 1 {}", itemkind_name(kind)));
                         }
@@ -429,158 +454,160 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
         }
     }
 
-    if app.keybinds.matches_movement(&key) {
-        if app.keybinds.matches("movement", "MOVE_NORTH", &key) {
-            app.game.queue_player_move(0, -1);
+    if app.ui.keybinds.matches_movement(&key) {
+        if app.ui.keybinds.matches("movement", "MOVE_NORTH", &key) {
+            app.core.game.queue_player_move(0, -1);
         }
-        if app.keybinds.matches("movement", "MOVE_SOUTH", &key) {
-            app.game.queue_player_move(0, 1);
+        if app.ui.keybinds.matches("movement", "MOVE_SOUTH", &key) {
+            app.core.game.queue_player_move(0, 1);
         }
-        if app.keybinds.matches("movement", "MOVE_WEST", &key) {
-            app.game.queue_player_move(-1, 0);
+        if app.ui.keybinds.matches("movement", "MOVE_WEST", &key) {
+            app.core.game.queue_player_move(-1, 0);
         }
-        if app.keybinds.matches("movement", "MOVE_EAST", &key) {
-            app.game.queue_player_move(1, 0);
+        if app.ui.keybinds.matches("movement", "MOVE_EAST", &key) {
+            app.core.game.queue_player_move(1, 0);
         }
-        if app.keybinds.matches("movement", "MOVE_NORTHWEST", &key) {
-            app.game.queue_player_move(-1, -1);
+        if app.ui.keybinds.matches("movement", "MOVE_NORTHWEST", &key) {
+            app.core.game.queue_player_move(-1, -1);
         }
-        if app.keybinds.matches("movement", "MOVE_NORTHEAST", &key) {
-            app.game.queue_player_move(1, -1);
+        if app.ui.keybinds.matches("movement", "MOVE_NORTHEAST", &key) {
+            app.core.game.queue_player_move(1, -1);
         }
-        if app.keybinds.matches("movement", "MOVE_SOUTHWEST", &key) {
-            app.game.queue_player_move(-1, 1);
+        if app.ui.keybinds.matches("movement", "MOVE_SOUTHWEST", &key) {
+            app.core.game.queue_player_move(-1, 1);
         }
-        if app.keybinds.matches("movement", "MOVE_SOUTHEAST", &key) {
-            app.game.queue_player_move(1, 1);
+        if app.ui.keybinds.matches("movement", "MOVE_SOUTHEAST", &key) {
+            app.core.game.queue_player_move(1, 1);
         }
-        if app.keybinds.matches("movement", "WAIT", &key) {
-            app.game.queue_player_move(0, 0);
+        if app.ui.keybinds.matches("movement", "WAIT", &key) {
+            app.core.game.queue_player_move(0, 0);
         }
-        if app.keybinds.matches("movement", "MOVE_UP", &key) {
-            app.game.queue_player_move_z(1);
+        if app.ui.keybinds.matches("movement", "MOVE_UP", &key) {
+            app.core.game.queue_player_move_z(1);
         }
-        if app.keybinds.matches("movement", "MOVE_DOWN", &key) {
-            app.game.queue_player_move_z(-1);
+        if app.ui.keybinds.matches("movement", "MOVE_DOWN", &key) {
+            app.core.game.queue_player_move_z(-1);
         }
 
-        let tick_result = app.game.tick();
+        let tick_result = app.core.game.tick();
         if tick_result.contains(GameTickResult::CombatTriggered) {
-            app.combat_happening = true;
+            app.combat.combat_happening = true;
             panic!("todo show combat panel...");
         }
         app.snap_view_to_player_z();
         return Ok(());
     }
 
-    if app.keybinds.matches("action", "MINE", &key) {
-        app.game.queue_mine();
-        let tick_result = app.game.tick();
+    if app.ui.keybinds.matches("action", "MINE", &key) {
+        app.core.game.queue_mine();
+        let tick_result = app.core.game.tick();
         if tick_result.contains(GameTickResult::MiningSuccess) {
             app.snap_view_to_player_z();
         }
         return Ok(());
     }
 
-    if app.keybinds.matches("scale", "SCALE_UP", &key) {
-        app.scale = match app.scale {
+    if app.ui.keybinds.matches("scale", "SCALE_UP", &key) {
+        app.ui.scale = match app.ui.scale {
             Scale::Small => Scale::Medium,
             Scale::Medium => Scale::Large,
             Scale::Large => Scale::Large,
         };
         return Ok(());
     }
-    if app.keybinds.matches("scale", "SCALE_DOWN", &key) {
-        app.scale = match app.scale {
+    if app.ui.keybinds.matches("scale", "SCALE_DOWN", &key) {
+        app.ui.scale = match app.ui.scale {
             Scale::Large => Scale::Medium,
             Scale::Medium => Scale::Small,
             Scale::Small => Scale::Small,
         };
         return Ok(());
     }
-    if app.keybinds.matches("scale", "SCALE_RESET", &key) {
-        app.scale = Scale::Small;
+    if app.ui.keybinds.matches("scale", "SCALE_RESET", &key) {
+        app.ui.scale = Scale::Small;
         return Ok(());
     }
     // UI: Quit
-    if app.keybinds.matches("ui", "QUIT", &key) {
-        app.game.res.log("Quit requested (keybind)");
-        tracing::info!(target: "game", "quit_requested tick={}", app.game.res.gametick);
-        app.should_quit = true;
+    if app.ui.keybinds.matches("ui", "QUIT", &key) {
+        app.core.game.res.log("Quit requested (keybind)");
+        tracing::info!(target: "game", "quit_requested tick={}", app.core.game.res.gametick);
+        app.core.should_quit = true;
         return Ok(());
     }
     // UI: Menu activation and paging
-    if app.keybinds.matches("ui", "MENU_ACTIVATE", &key) {
+    if app.ui.keybinds.matches("ui", "MENU_ACTIVATE", &key) {
         app.activate_menu();
         return Ok(());
     }
-    if app.keybinds.matches("ui", "MENU_PREV", &key) {
-        app.current_tab = app.current_tab.prev();
+    if app.ui.keybinds.matches("ui", "MENU_PREV", &key) {
+        app.ui.current_tab = app.ui.current_tab.prev();
         return Ok(());
     }
-    if app.keybinds.matches("ui", "MENU_NEXT", &key) {
-        app.current_tab = app.current_tab.next();
+    if app.ui.keybinds.matches("ui", "MENU_NEXT", &key) {
+        app.ui.current_tab = app.ui.current_tab.next();
         return Ok(());
     }
     // Credits scroll
-    if app.current_tab == MenuTab::Credits {
-        if app.keybinds.matches("ui", "CREDITS_SCROLL_UP", &key) {
-            app.credits_scroll = app.credits_scroll.saturating_sub(1);
+    if app.ui.current_tab == MenuTab::Credits {
+        if app.ui.keybinds.matches("ui", "CREDITS_SCROLL_UP", &key) {
+            app.panels.credits.scroll = app.panels.credits.scroll.saturating_sub(1);
             return Ok(());
         }
-        if app.keybinds.matches("ui", "CREDITS_SCROLL_DOWN", &key) {
-            app.credits_scroll = app.credits_scroll.saturating_add(1);
+        if app.ui.keybinds.matches("ui", "CREDITS_SCROLL_DOWN", &key) {
+            app.panels.credits.scroll = app.panels.credits.scroll.saturating_add(1);
             return Ok(());
         }
     }
     // Help scroll
-    if app.current_tab == MenuTab::Help {
+    if app.ui.current_tab == MenuTab::Help {
         match key {
             KeyCode::Up => {
-                app.help_scroll = app.help_scroll.saturating_sub(1);
+                app.panels.help.scroll = app.panels.help.scroll.saturating_sub(1);
                 return Ok(());
             }
             KeyCode::Down => {
-                app.help_scroll = app.help_scroll.saturating_add(1);
+                app.panels.help.scroll = app.panels.help.scroll.saturating_add(1);
                 return Ok(());
             }
             _ => {}
         }
     }
     // View Z slice up/down
-    if app.keybinds.matches("viewport", "VIEW_Z_UP", &key) {
-        if app.current_tab == MenuTab::Credits {
-            app.credits_scroll = app.credits_scroll.saturating_sub(10);
+    if app.ui.keybinds.matches("viewport", "VIEW_Z_UP", &key) {
+        if app.ui.current_tab == MenuTab::Credits {
+            app.panels.credits.scroll = app.panels.credits.scroll.saturating_sub(10);
         } else {
-            app.game.res.view_z = app.game.res.view_z.saturating_add(1);
+            app.core.game.res.view_z = app.core.game.res.view_z.saturating_add(1);
         }
         return Ok(());
     }
-    if app.keybinds.matches("viewport", "VIEW_Z_DOWN", &key) {
-        if app.current_tab == MenuTab::Credits {
-            app.credits_scroll = app.credits_scroll.saturating_add(10);
+    if app.ui.keybinds.matches("viewport", "VIEW_Z_DOWN", &key) {
+        if app.ui.current_tab == MenuTab::Credits {
+            app.panels.credits.scroll = app.panels.credits.scroll.saturating_add(10);
         } else {
-            app.game.res.view_z = app.game.res.view_z.saturating_sub(1);
+            app.core.game.res.view_z = app.core.game.res.view_z.saturating_sub(1);
         }
         return Ok(());
     }
     // Save/Load via config
-    if app.keybinds.matches("ui", "SAVE_JSON", &key) {
-        tracing::info!(target: "game", "save_begin path=save.json tick={}", app.game.res.gametick);
-        app.game
+    if app.ui.keybinds.matches("ui", "SAVE_JSON", &key) {
+        tracing::info!(target: "game", "save_begin path=save.json tick={}", app.core.game.res.gametick);
+        app.core
+            .game
             .save_json("save.json")
             .map_err(|e| format!("save_json error: {:?}", e))?;
-        app.game.res.log("Saved to save.json");
-        tracing::info!(target: "game", "save_end path=save.json tick={}", app.game.res.gametick);
+        app.core.game.res.log("Saved to save.json");
+        tracing::info!(target: "game", "save_end path=save.json tick={}", app.core.game.res.gametick);
         return Ok(());
     }
-    if app.keybinds.matches("ui", "LOAD_JSON", &key) {
-        tracing::info!(target: "game", "load_begin path=save.json tick={}", app.game.res.gametick);
-        app.game
+    if app.ui.keybinds.matches("ui", "LOAD_JSON", &key) {
+        tracing::info!(target: "game", "load_begin path=save.json tick={}", app.core.game.res.gametick);
+        app.core
+            .game
             .load_json("save.json")
             .map_err(|e| format!("load_json error: {:?}", e))?;
-        app.game.res.log("Loaded from save.json");
-        tracing::info!(target: "game", "load_end path=save.json tick={}", app.game.res.gametick);
+        app.core.game.res.log("Loaded from save.json");
+        tracing::info!(target: "game", "load_end path=save.json tick={}", app.core.game.res.gametick);
         return Ok(());
     }
 

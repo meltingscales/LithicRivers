@@ -17,23 +17,32 @@ pub fn render_help_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     )));
     lines.push(Line::from(""));
     let movement_keys_list = vec![
-        app.config_manager
+        app.core
+            .config_manager
             .get_printable_key_for_keybind("movement", "MOVE_NORTHWEST"),
-        app.config_manager
+        app.core
+            .config_manager
             .get_printable_key_for_keybind("movement", "MOVE_NORTH"),
-        app.config_manager
+        app.core
+            .config_manager
             .get_printable_key_for_keybind("movement", "MOVE_NORTHEAST"),
-        app.config_manager
+        app.core
+            .config_manager
             .get_printable_key_for_keybind("movement", "MOVE_WEST"),
-        app.config_manager
+        app.core
+            .config_manager
             .get_printable_key_for_keybind("movement", "WAIT"),
-        app.config_manager
+        app.core
+            .config_manager
             .get_printable_key_for_keybind("movement", "MOVE_EAST"),
-        app.config_manager
+        app.core
+            .config_manager
             .get_printable_key_for_keybind("movement", "MOVE_SOUTHWEST"),
-        app.config_manager
+        app.core
+            .config_manager
             .get_printable_key_for_keybind("movement", "MOVE_SOUTH"),
-        app.config_manager
+        app.core
+            .config_manager
             .get_printable_key_for_keybind("movement", "MOVE_SOUTHEAST"),
     ];
     // custom movement help rendering
@@ -61,7 +70,7 @@ pub fn render_help_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     lines.push(Line::from(Span::raw("")));
     // Group keybinds by category
     let mut categorized_binds: HashMap<String, Vec<(String, Vec<KeyCode>)>> = HashMap::new();
-    for (key, value) in &app.keybinds.map {
+    for (key, value) in app.ui.keybinds.get_map() {
         let parts: Vec<&str> = key.split(':').collect();
         if parts.len() == 2 {
             let category = parts[0].to_string();

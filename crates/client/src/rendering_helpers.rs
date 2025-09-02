@@ -47,9 +47,12 @@ pub fn block_art_12x8_lines_for_position(
 ) -> bool {
     // Removed unused import
 
-    let kind = app.game.res.world.get_tile_cached(pos.x, pos.y, pos.z);
+    let kind = app.core.game.res.world.get_tile_cached(pos.x, pos.y, pos.z);
 
-    let sd = app.sprite_loader.load_sprite(kind.sprite_key(), "tiles");
+    let sd = app
+        .core
+        .sprite_loader
+        .load_sprite(kind.sprite_key(), "tiles");
     let color = parse_hex_color(&sd.color);
 
     if let Some(block) = sd.art12x8_sprites.first() {
@@ -88,6 +91,7 @@ pub fn entity_art_12x8_lines_for_position(
 ) -> bool {
     // First, try any entity at this position with a SpriteRef
     for (_e, (e_pos, maybe_sr)) in app
+        .core
         .game
         .world
         .query::<(
@@ -100,7 +104,7 @@ pub fn entity_art_12x8_lines_for_position(
             continue;
         }
         if let Some(sr) = maybe_sr {
-            let sd = app.sprite_loader.load_by_spriteref(sr);
+            let sd = app.core.sprite_loader.load_by_spriteref(sr);
             let color = parse_hex_color(&sd.color);
             if let Some(block) = sd.art12x8_sprites.first() {
                 for row in block.split('\n') {
@@ -117,6 +121,7 @@ pub fn entity_art_12x8_lines_for_position(
 
     // Fallback: try EntityKind -> sprite mapping
     for (_e, (e_pos, maybe_kind)) in app
+        .core
         .game
         .world
         .query::<(
@@ -129,10 +134,10 @@ pub fn entity_art_12x8_lines_for_position(
             continue;
         }
         let (category, name) = match maybe_kind.copied() {
-            Some(kind) => app.sprite_loader.sprite_path_for_entitykind(kind),
+            Some(kind) => app.core.sprite_loader.sprite_path_for_entitykind(kind),
             None => panic!("Missing entity kind for position {}", e_pos),
         };
-        let sd = app.sprite_loader.load_sprite(&name, &category);
+        let sd = app.core.sprite_loader.load_sprite(&name, &category);
         let color = parse_hex_color(&sd.color);
         if let Some(block) = sd.art12x8_sprites.first() {
             for row in block.split('\n') {
