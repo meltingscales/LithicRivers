@@ -46,6 +46,20 @@ impl Default for Combat {
     }
 }
 
+/// Component for entities that have escaped combat and cannot re-engage for a while
+#[derive(Debug, Clone, Copy)]
+pub struct BattleDelay {
+    pub remaining_ticks: u64,
+}
+
+impl BattleDelay {
+    pub fn new(ticks: u64) -> Self {
+        Self {
+            remaining_ticks: ticks,
+        }
+    }
+}
+
 /// Marker for entities that block movement
 #[derive(Debug, Clone, Copy)]
 pub struct BlocksMovement;
