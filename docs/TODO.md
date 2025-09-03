@@ -223,6 +223,8 @@ See [STEAM-MVP.md](STEAM-MVP.md) for the complete release plan.
 - college friends
 - miguel from colab
 - Hassan a
+- cam 1
+- cam 2
 
 ## streamers
 
