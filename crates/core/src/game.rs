@@ -216,7 +216,7 @@ impl Game {
         if mining_success {
             result |= GameTickResult::MiningSuccess;
         }
-        if combat_success {
+        if matches!(combat_success, crate::systems::CombatState::CombatStarted) {
             result |= GameTickResult::CombatTriggered;
         }
 

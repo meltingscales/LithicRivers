@@ -172,15 +172,24 @@ pub fn pickup_system(world: &mut World, res: &mut Resources) {
     }
 }
 
-pub fn combat_trigger_system(world: &mut World, res: &mut Resources) -> bool {
+pub enum CombatState {
+    Idle,
+    CombatStarted,
+    CombatEnded,
+}
+
+pub fn combat_trigger_system(world: &mut World, res: &mut Resources) -> CombatState {
     // get player position
     let player_pos = match res
         .player_entity
         .and_then(|e| world.get::<&Position>(e).ok())
     {
         Some(pos) => *pos,
-        None => return false, // No player to chase
+        None => return CombatState::Idle, // No player to chase
     };
+
+    //if we're already in combat, check to see if we should exit combat
+    //TODO
 
     // collect all entities with a combat component
     let mut combat_entities = Vec::new();
@@ -204,10 +213,10 @@ pub fn combat_trigger_system(world: &mut World, res: &mut Resources) -> bool {
         // trigger combat
         if let Ok(mut combat) = world.get::<&mut Combat>(e) {
             combat.triggered = true;
-            return true;
+            return CombatState::CombatStarted;
         }
     }
-    false
+    CombatState::Idle
 }
 
 // Feral dogs will chase the player if they get too close.

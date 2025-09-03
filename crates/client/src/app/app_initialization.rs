@@ -117,9 +117,7 @@ impl App {
             },
             audio: AudioState { audio },
             logging: LoggingState { log_full_path },
-            combat: CombatState {
-                combat_happening: false,
-            },
+            combat: CombatUiState::default(),
             panels: PanelStates {
                 inventory: InventoryPanelState { selected: 0 },
                 crafting: CraftingPanelState {

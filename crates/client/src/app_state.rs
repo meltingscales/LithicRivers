@@ -35,9 +35,28 @@ pub struct LoggingState {
     pub log_full_path: String,
 }
 
-/// Combat system state
-pub struct CombatState {
-    pub combat_happening: bool,
+/// Client-side combat UI state
+#[derive(Debug, Clone, PartialEq)]
+pub enum CombatUiState {
+    None,
+    Active {
+        current_move: usize,
+        current_enemy: usize,
+        enemy_timers: Vec<u32>,           // Milliseconds until each enemy acts
+        player_action_timer: Option<u32>, // Milliseconds for player move execution
+    },
+}
+
+impl CombatUiState {
+    pub fn is_active(&self) -> bool {
+        matches!(self, CombatUiState::Active { .. })
+    }
+}
+
+impl Default for CombatUiState {
+    fn default() -> Self {
+        CombatUiState::None
+    }
 }
 
 /// All UI panel-specific states grouped by functionality
