@@ -18,3 +18,6 @@ pub mod world;
 pub use game::Game;
 pub use resources::Resources;
 pub use tiles::TileKind;
+
+// Re-export hecs Entity for client access
+pub use hecs::Entity;

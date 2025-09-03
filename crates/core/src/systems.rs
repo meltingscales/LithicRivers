@@ -1,9 +1,15 @@
 use crate::components::{
-    BlocksMovement, Combat, DroppedItem, FeralDog, Inventory, ItemKind, Position, Sheep, SpriteRef,
+    BattleDelay, BlocksMovement, Combat, DroppedItem, FeralDog, GameEntity, Inventory, ItemKind,
+    Position, Sheep, SpriteRef,
 };
 use crate::resources::Resources;
 use hecs::World;
 use tracing::info;
+
+/// Check if an entity is stunned (has BattleDelay component)
+fn is_stunned(world: &World, entity: hecs::Entity) -> bool {
+    world.get::<&BattleDelay>(entity).is_ok()
+}
 
 pub fn move_player_system(world: &mut World, res: &mut Resources) {
     if let Some((dx, dy)) = res.player_move_intent.take() {
@@ -191,9 +197,13 @@ pub fn combat_trigger_system(world: &mut World, res: &mut Resources) -> CombatSt
     //if we're already in combat, check to see if we should exit combat
     //TODO
 
-    // collect all entities with a combat component
+    // collect all entities with a combat component that aren't in battle delay
     let mut combat_entities = Vec::new();
-    for (e, (pos, _)) in world.query::<(&Position, &Combat)>().iter() {
+    for (e, (pos, _, _)) in world.query::<(&Position, &Combat, &GameEntity)>().iter() {
+        // Skip entities with BattleDelay - they can't re-engage in combat yet
+        if world.get::<&BattleDelay>(e).is_ok() {
+            continue;
+        }
         combat_entities.push((e, *pos));
     }
 
@@ -240,6 +250,11 @@ pub fn feral_dog_system(world: &mut World, res: &mut Resources) {
 
     // Process each dog
     for (dog_entity, dog_pos) in dogs {
+        // Skip stunned dogs - they cannot move
+        if is_stunned(world, dog_entity) {
+            continue;
+        }
+
         // Calculate distance to player
         let dx = player_pos.x - dog_pos.x;
         let dy = player_pos.y - dog_pos.y;
@@ -301,6 +316,11 @@ pub fn stumbling_sheep_system(world: &mut World, res: &mut Resources) {
     // Sort by position then entity bits for a stable iteration order
     entities.sort_by_key(|(e, p)| (p.x, p.y, p.z, e.to_bits()));
     for (e, pos) in entities {
+        // Skip stunned sheep - they cannot move
+        if is_stunned(world, e) {
+            continue;
+        }
+
         // 25% chance to stay, else pick one of 4 directions
         let r: u32 = res.rng.gen_range(0..5);
         let (dx, dy) = match r {
@@ -338,5 +358,26 @@ pub fn stumbling_sheep_system(world: &mut World, res: &mut Resources) {
             mypos.x = nx;
             mypos.y = ny;
         }
+    }
+}
+
+/// System to count down battle delay timers and remove expired ones
+pub fn battle_delay_timer_system(world: &mut World, _res: &mut Resources) {
+    let mut entities_to_remove_delay: Vec<hecs::Entity> = Vec::new();
+
+    // Collect entities with BattleDelay and GameEntity marker, and decrement their timers
+    for (e, (delay, _)) in world.query::<(&mut BattleDelay, &GameEntity)>().iter() {
+        if delay.remaining_ticks > 0 {
+            delay.remaining_ticks -= 1;
+        }
+
+        if delay.remaining_ticks == 0 {
+            entities_to_remove_delay.push(e);
+        }
+    }
+
+    // Remove expired BattleDelay components
+    for e in entities_to_remove_delay {
+        let _ = world.remove_one::<BattleDelay>(e);
     }
 }

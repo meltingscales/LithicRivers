@@ -502,9 +502,9 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
                 // Start executing the move - different moves have different execution times
                 let execution_time = match *current_move {
                     0 => 3000, // Melee: 3 seconds
-                    1 => 5000, // Escape: 5 seconds
-                    2 => 8000, // Fireball: 8 seconds
-                    3 => 6000, // Tackle: 6 seconds
+                    1 => 8000, // Fireball: 8 seconds
+                    2 => 6000, // Tackle: 6 seconds
+                    3 => 5000, // Escape: 5 seconds
                     _ => 3000,
                 };
                 *player_action_timer = Some(execution_time);

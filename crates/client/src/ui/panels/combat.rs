@@ -148,7 +148,7 @@ pub fn render_combat_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
         .constraints([
             Constraint::Length(3),  // Player health/mana bars
             Constraint::Min(8),     // Enemies area
-            Constraint::Length(12), // Moves area
+            Constraint::Length(15), // Moves area (increased to fit player timer + 4 moves)
             Constraint::Length(3),  // Message/status area
             Constraint::Length(1),  // Controls
         ])
@@ -160,8 +160,21 @@ pub fn render_combat_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     // Render enemies with real timers
     render_enemies(f, chunks[1], &enemies, current_enemy, &enemy_timers);
 
+    // Debug moves area
+    app.core.game.res.log(format!(
+        "Moves area: {}x{}",
+        chunks[2].width, chunks[2].height
+    ));
+
     // Render moves with player action timer
-    render_moves(f, chunks[2], &player, current_move, player_action_timer);
+    render_moves(
+        f,
+        chunks[2],
+        &player,
+        current_move,
+        player_action_timer,
+        app,
+    );
 
     // Message area (placeholder for now)
     let message_para = Paragraph::new("Combat active - Select your move!")
@@ -274,11 +287,10 @@ fn render_single_enemy(
 
     f.render_widget(health_bar, enemy_layout[1]);
 
-    // Attack timer using real combat timing
+    // Attack timer using real combat timing - only show whole seconds to prevent constant re-renders
     let attack_timer = if timer_ms > 0 {
         let seconds = timer_ms / 1000;
-        let milliseconds = timer_ms % 1000;
-        format!("⏳ {}.{:01}s", seconds, milliseconds / 100)
+        format!("⏳ {}s", seconds)
     } else {
         "⚡ ATTACKING!".to_string()
     };
@@ -296,19 +308,24 @@ fn render_moves(
     player: &CombatPlayer,
     current_move: usize,
     player_action_timer: Option<u32>,
+    app: &mut crate::App,
 ) {
+    // Debug: log the area we're working with
+    app.core.game.res.log(format!(
+        "render_moves area: {}x{} at ({},{})",
+        area.width, area.height, area.x, area.y
+    ));
     // Split area to show player action timer at the top
     let moves_area = if let Some(timer_ms) = player_action_timer {
-        let layout = Layout::vertical([Constraint::Length(3), Constraint::Min(8)]).split(area);
+        let layout = Layout::vertical([Constraint::Length(3), Constraint::Min(12)]).split(area);
+        app.core.game.res.log(format!(
+            "Player action timer active - split area. Timer area: {}x{}, Moves area: {}x{}",
+            layout[0].width, layout[0].height, layout[1].width, layout[1].height
+        ));
 
-        // Render player action timer
+        // Render player action timer - only show whole seconds to prevent constant re-renders
         let seconds = timer_ms / 1000;
-        let milliseconds = timer_ms % 1000;
-        let timer_text = format!(
-            "⚡ Executing move... {}.{:01}s",
-            seconds,
-            milliseconds / 100
-        );
+        let timer_text = format!("⚡ Executing move... {}s", seconds);
         let timer_para = Paragraph::new(timer_text)
             .style(Style::default().fg(Color::Green))
             .alignment(Alignment::Center)
@@ -321,6 +338,10 @@ fn render_moves(
 
         layout[1]
     } else {
+        app.core
+            .game
+            .res
+            .log("No player action timer - using full area for moves".to_string());
         area // Use full area for moves if no timer
     };
 
@@ -337,33 +358,102 @@ fn render_moves(
                 String::new()
             };
 
+            // Always use the same basic format to ensure consistent rendering
+            let prefix = if !can_use { "[X] " } else { "" };
+            let move_name = if mv.name.is_empty() {
+                "Unknown"
+            } else {
+                &mv.name
+            };
+            let content = format!(
+                "{}{}: {}{} - {} MP",
+                prefix,
+                i + 1,
+                move_name,
+                cooldown,
+                mv.mana_cost
+            );
+
+            // Ensure content is never empty
+            let final_content = if content.trim().is_empty() {
+                format!("{}: Move - 0 MP", i + 1)
+            } else {
+                content
+            };
+
+            // Debug: log the move content
+            app.core.game.res.log(format!(
+                "Move {}: '{}' (can_use: {}, selected: {})",
+                i, final_content, can_use, is_selected
+            ));
+
             let style = if !can_use {
                 Style::default().fg(Color::DarkGray)
             } else if is_selected {
                 Style::default().fg(Color::Yellow).bold()
             } else {
+                Style::default().fg(Color::White)
+            };
+
+            let border_style = if !can_use {
+                Style::default().fg(Color::DarkGray)
+            } else if is_selected {
+                Style::default().fg(Color::Yellow)
+            } else {
                 Style::default()
             };
 
-            let content = format!("{}: {}{} - {} MP", i + 1, mv.name, cooldown, mv.mana_cost);
-
-            Paragraph::new(content)
-                .style(style)
-                .block(Block::default().borders(Borders::ALL))
+            Paragraph::new(final_content).style(style).block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .border_style(border_style),
+            )
         })
         .collect::<Vec<_>>();
 
-    let move_chunks = Layout::vertical(
-        move_blocks
-            .iter()
-            .map(|_| Constraint::Length(3))
-            .collect::<Vec<_>>(),
-    )
-    .split(moves_area);
+    // Debug: log move information
+    app.core
+        .game
+        .res
+        .log(format!("Number of moves: {}", move_blocks.len()));
+    app.core.game.res.log(format!(
+        "Moves area for blocks: {}x{} at ({},{})",
+        moves_area.width, moves_area.height, moves_area.x, moves_area.y
+    ));
 
+    // Ensure we have constraints for each move
+    let num_moves = move_blocks.len();
+    let constraints: Vec<Constraint> = (0..num_moves).map(|_| Constraint::Length(3)).collect();
+
+    let move_chunks = Layout::vertical(constraints).split(moves_area);
+
+    app.core.game.res.log(format!(
+        "Generated {} chunks for {} moves",
+        move_chunks.len(),
+        num_moves
+    ));
+
+    // Render each move block, but ensure we don't go out of bounds
     for (i, block) in move_blocks.into_iter().enumerate() {
         if i < move_chunks.len() {
-            f.render_widget(block, move_chunks[i]);
+            let chunk = move_chunks[i];
+            app.core.game.res.log(format!(
+                "Move {}: chunk {}x{} at ({},{})",
+                i, chunk.width, chunk.height, chunk.x, chunk.y
+            ));
+            if chunk.height > 0 && chunk.width > 0 {
+                f.render_widget(block, chunk);
+            } else {
+                app.core
+                    .game
+                    .res
+                    .log(format!("Skipping move {} - zero size chunk", i));
+            }
+        } else {
+            app.core
+                .game
+                .res
+                .log(format!("Move {} out of bounds - no chunk available", i));
         }
     }
 }
