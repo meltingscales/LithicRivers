@@ -5,100 +5,6 @@ use ratatui::{
     Frame,
 };
 
-// Mock combat data structures - these will be replaced with actual game data
-#[derive(Debug, Clone)]
-struct CombatMove {
-    name: String,
-    mana_cost: u32,
-    cooldown: u32,
-    current_cooldown: u32,
-}
-
-#[derive(Debug, Clone)]
-struct CombatPlayer {
-    health: u32,
-    max_health: u32,
-    mana: u32,
-    max_mana: u32,
-    moves: Vec<CombatMove>,
-}
-
-#[derive(Debug, Clone)]
-struct CombatEnemy {
-    name: String,
-    health: u32,
-    max_health: u32,
-    attack_timer: u32,
-    attack_speed: u32,
-}
-
-// For now, create mock data
-impl CombatPlayer {
-    fn mock() -> Self {
-        Self {
-            health: 180,
-            max_health: 200,
-            mana: 60,
-            max_mana: 100,
-            moves: vec![
-                CombatMove {
-                    name: "Melee".to_string(),
-                    mana_cost: 0,
-                    cooldown: 2,
-                    current_cooldown: 0,
-                },
-                CombatMove {
-                    name: "Fireball (AoE)".to_string(),
-                    mana_cost: 40,
-                    cooldown: 3,
-                    current_cooldown: 2,
-                },
-                CombatMove {
-                    name: "Tackle".to_string(),
-                    mana_cost: 20,
-                    cooldown: 5,
-                    current_cooldown: 0,
-                },
-                CombatMove {
-                    name: "Escape".to_string(),
-                    mana_cost: 20,
-                    cooldown: 0,
-                    current_cooldown: 0,
-                },
-            ],
-        }
-    }
-
-    fn can_use_move(&self, move_index: usize) -> bool {
-        if let Some(mv) = self.moves.get(move_index) {
-            mv.current_cooldown == 0 && self.mana >= mv.mana_cost
-        } else {
-            false
-        }
-    }
-}
-
-impl CombatEnemy {
-    fn mock() -> Vec<Self> {
-        vec![
-            Self {
-                name: "Gato".to_string(),
-                health: 85,
-                max_health: 120,
-                attack_timer: 3,
-                attack_speed: 8,
-            },
-            Self {
-                name: "Nu".to_string(),
-                health: 160,
-                max_health: 180,
-                attack_timer: 0,
-                attack_speed: 12,
-            },
-        ]
-    }
-}
-
 pub fn render_combat_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     let outer_block = Block::default()
         .borders(Borders::ALL)
@@ -125,16 +31,16 @@ pub fn render_combat_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
         _ => (0, 0, vec![], None), // Fallback, shouldn't happen when this function is called
     };
 
-    // For now, use mock data but with real selection state
-    let player = CombatPlayer::mock();
-    let enemies = CombatEnemy::mock();
+    // Get real player and enemy data from the game world
+    let (player_health, player_energy, available_moves, cooldowns) = get_player_combat_data(app);
+    let combat_enemies = get_enemy_combat_data(app);
 
     // Ensure selections are within bounds
-    let current_move = current_move.min(player.moves.len().saturating_sub(1));
-    let current_enemy = current_enemy.min(enemies.len().saturating_sub(1));
+    let current_move = current_move.min(available_moves.len().saturating_sub(1));
+    let current_enemy = current_enemy.min(combat_enemies.len().saturating_sub(1));
 
     // Victory check
-    if enemies.is_empty() || enemies.iter().all(|e| e.health == 0) {
+    if combat_enemies.is_empty() || combat_enemies.iter().all(|e| e.health <= 0) {
         let victory = Paragraph::new("Victory!")
             .style(Style::default().fg(Color::Green))
             .alignment(Alignment::Center);
@@ -155,10 +61,10 @@ pub fn render_combat_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
         .split(inner);
 
     // Render player info
-    render_player_info(f, chunks[0], &player);
+    render_player_info(f, chunks[0], player_health, player_energy);
 
     // Render enemies with real timers
-    render_enemies(f, chunks[1], &enemies, current_enemy, &enemy_timers);
+    render_enemies(f, chunks[1], &combat_enemies, current_enemy, &enemy_timers);
 
     // Debug moves area
     app.core.game.res.log(format!(
@@ -170,7 +76,9 @@ pub fn render_combat_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     render_moves(
         f,
         chunks[2],
-        &player,
+        &available_moves,
+        &cooldowns,
+        player_energy,
         current_move,
         player_action_timer,
         app,
@@ -192,27 +100,7 @@ pub fn render_combat_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     f.render_widget(controls, chunks[4]);
 }
 
-fn render_player_info(f: &mut Frame, area: Rect, player: &CombatPlayer) {
-    let health_ratio = player.health as f64 / player.max_health as f64;
-    let mana_ratio = player.mana as f64 / player.max_mana as f64;
-
-    let health_bar = Gauge::default()
-        .block(Block::default().title("HP").borders(Borders::ALL))
-        .gauge_style(Style::default().fg(Color::Red).bg(Color::DarkGray))
-        .ratio(health_ratio)
-        .label(format!(" {}/{} ", player.health, player.max_health));
-
-    let mana_bar = Gauge::default()
-        .block(Block::default().title("MP").borders(Borders::ALL))
-        .gauge_style(Style::default().fg(Color::Blue).bg(Color::DarkGray))
-        .ratio(mana_ratio)
-        .label(format!(" {}/{} ", player.mana, player.max_mana));
-
-    let bars = Layout::horizontal([Constraint::Ratio(1, 2), Constraint::Ratio(1, 2)]).split(area);
-
-    f.render_widget(health_bar, bars[0]);
-    f.render_widget(mana_bar, bars[1]);
-}
+// Old render_player_info function removed - using new one with Body and Energy
 
 fn render_enemies(
     f: &mut Frame,
@@ -341,7 +229,9 @@ fn render_action_queue(f: &mut Frame, area: Rect, app: &mut crate::App) {
 fn render_moves(
     f: &mut Frame,
     area: Rect,
-    player: &CombatPlayer,
+    moves: &[lithicrivers_core::moves::Move],
+    cooldowns: &lithicrivers_core::moves::MoveCooldowns,
+    energy: lithicrivers_core::components::Energy,
     current_move: usize,
     player_action_timer: Option<u32>,
     app: &mut crate::App,
@@ -391,15 +281,17 @@ fn render_moves(
         layout[0].width, layout[0].height, layout[1].width, layout[1].height
     ));
 
-    let move_blocks = player
-        .moves
+    let move_blocks = moves
         .iter()
         .enumerate()
         .map(|(i, mv)| {
             let is_selected = i == current_move;
-            let can_use = player.can_use_move(i);
-            let cooldown = if mv.current_cooldown > 0 {
-                format!(" ({})", mv.current_cooldown)
+            let can_use_energy = energy.current >= mv.energy_cost;
+            let can_use_cooldown = cooldowns.can_use(mv.move_type);
+            let can_use = can_use_energy && can_use_cooldown;
+
+            let cooldown = if cooldowns.get_cooldown(mv.move_type) > 0 {
+                format!(" ({})", cooldowns.get_cooldown(mv.move_type))
             } else {
                 String::new()
             };
@@ -412,17 +304,17 @@ fn render_moves(
                 &mv.name
             };
             let content = format!(
-                "{}{}: {}{} - {} MP",
+                "{}{}: {}{} - {}E",
                 prefix,
                 i + 1,
                 move_name,
                 cooldown,
-                mv.mana_cost
+                mv.energy_cost
             );
 
             // Ensure content is never empty
             let final_content = if content.trim().is_empty() {
-                format!("{}: Move - 0 MP", i + 1)
+                format!("{}: Move - 0E", i + 1)
             } else {
                 content
             };
@@ -505,4 +397,145 @@ fn render_moves(
 
     // Render the action queue on the right side
     render_action_queue(f, queue_area, app);
+}
+
+// Helper functions to get real game data
+fn get_player_combat_data(
+    app: &mut crate::App,
+) -> (
+    Option<lithicrivers_core::model::body::Body>,
+    lithicrivers_core::components::Energy,
+    Vec<lithicrivers_core::moves::Move>,
+    lithicrivers_core::moves::MoveCooldowns,
+) {
+    use lithicrivers_core::components::Energy;
+    use lithicrivers_core::model::body::Body;
+    use lithicrivers_core::moves::{get_available_moves, MoveCooldowns};
+
+    // Find the player entity and get their body and energy
+    let mut player_body = None;
+    let mut player_energy = Energy::new(100); // Default energy
+    let mut cooldowns = MoveCooldowns::new();
+
+    if let Some(player_entity) = app.core.game.res.player_entity {
+        // Try to get player body
+        if let Ok(body) = app.core.game.world.get::<&Body>(player_entity) {
+            player_body = Some((*body).clone());
+        }
+
+        // Get player energy - should always exist
+        player_energy = *app
+            .core
+            .game
+            .world
+            .get::<&Energy>(player_entity)
+            .expect("Player entity must have Energy component");
+
+        // Get cooldowns - should always exist
+        cooldowns = (*app
+            .core
+            .game
+            .world
+            .get::<&MoveCooldowns>(player_entity)
+            .expect("Player entity must have MoveCooldowns component"))
+        .clone();
+    }
+
+    (player_body, player_energy, get_available_moves(), cooldowns)
+}
+
+#[derive(Debug, Clone)]
+struct CombatEnemy {
+    name: String,
+    health: u32,
+    max_health: u32,
+}
+
+fn get_enemy_combat_data(app: &mut crate::App) -> Vec<CombatEnemy> {
+    use lithicrivers_core::components::{Combat, GameEntity, Health, Position};
+
+    let mut enemies = Vec::new();
+
+    // Find all combat entities near the player
+    if let Some(player_entity) = app.core.game.res.player_entity {
+        if let Ok(player_pos) = app.core.game.world.get::<&Position>(player_entity) {
+            let player_pos = *player_pos;
+
+            // Look for nearby combat entities
+            for (entity, (pos, _, _)) in app
+                .core
+                .game
+                .world
+                .query::<(&Position, &Combat, &GameEntity)>()
+                .iter()
+            {
+                if entity == player_entity {
+                    continue;
+                } // Skip player
+
+                let dx = player_pos.x - pos.x;
+                let dy = player_pos.y - pos.y;
+                let distance_sq = dx * dx + dy * dy;
+
+                if distance_sq <= 1 {
+                    // Adjacent enemies - health should always exist
+                    let health = *app
+                        .core
+                        .game
+                        .world
+                        .get::<&Health>(entity)
+                        .expect("Combat entities must have Health component");
+
+                    enemies.push(CombatEnemy {
+                        name: format!("Enemy {}", entity.id()), // Use entity ID for now
+                        health: health.current,
+                        max_health: health.max,
+                    });
+                }
+            }
+        }
+    }
+
+    enemies
+}
+
+fn render_player_info(
+    f: &mut Frame,
+    area: Rect,
+    body: Option<lithicrivers_core::model::body::Body>,
+    energy: lithicrivers_core::components::Energy,
+) {
+    use lithicrivers_core::moves::{calculate_body_integrity, get_body_status_description};
+
+    // Calculate body integrity (replaces health for robots)
+    let (integrity_ratio, integrity_label) = if let Some(ref body) = body {
+        let integrity = calculate_body_integrity(body);
+        let status = get_body_status_description(body);
+        (integrity as f64, status)
+    } else {
+        (1.0, "No Body Data".to_string())
+    };
+
+    let energy_ratio = energy.percentage() as f64;
+
+    let integrity_bar = Gauge::default()
+        .block(
+            Block::default()
+                .title("Body Integrity")
+                .borders(Borders::ALL),
+        )
+        .gauge_style(Style::default().fg(Color::Cyan).bg(Color::DarkGray))
+        .ratio(integrity_ratio)
+        .label(format!(" {} ", integrity_label));
+
+    let energy_bar = Gauge::default()
+        .block(Block::default().title("Energy").borders(Borders::ALL))
+        .gauge_style(Style::default().fg(Color::Yellow).bg(Color::DarkGray))
+        .ratio(energy_ratio)
+        .label(format!(" {}/{} ", energy.current, energy.max));
+
+    let bars = Layout::horizontal([Constraint::Ratio(1, 2), Constraint::Ratio(1, 2)]).split(area);
+
+    f.render_widget(integrity_bar, bars[0]);
+    f.render_widget(energy_bar, bars[1]);
 }

@@ -1,8 +1,9 @@
 use crate::components::{
-    BlocksMovement, Combat, DroppedItem, EntityKind, FeralDog, GameEntity, Glyph, Inventory,
-    ItemKind, Player, Position, Sheep, SpriteRef,
+    BlocksMovement, Combat, DroppedItem, Energy, EntityKind, FeralDog, GameEntity, Glyph, Health,
+    Inventory, ItemKind, Player, Position, Sheep, SpriteRef,
 };
 use crate::model::body::Body;
+use crate::moves::MoveCooldowns;
 use crate::resources::Resources;
 use crate::systems::{
     battle_delay_timer_system, combat_trigger_system, feral_dog_system, mining_system,
@@ -73,6 +74,8 @@ impl Game {
             EntityKind::Player,
             Player,
             Body::default(),
+            Energy::new(100),
+            MoveCooldowns::new(),
             Glyph('@'),
             SpriteRef::new("entities", "player"),
             BlocksMovement,
@@ -87,6 +90,7 @@ impl Game {
                 GameEntity,
                 EntityKind::Sheep,
                 Sheep,
+                Health::new(50), // Sheep have 50 HP
                 Glyph('s'),
                 SpriteRef::new("entities", "sheep"),
                 BlocksMovement,
@@ -101,6 +105,7 @@ impl Game {
                 GameEntity,
                 EntityKind::FeralDog,
                 FeralDog,
+                Health::new(80), // Feral dogs have 80 HP
                 Glyph('d'),
                 SpriteRef::new("entities", "feral_dog"),
                 BlocksMovement,

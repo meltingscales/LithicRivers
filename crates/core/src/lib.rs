@@ -4,6 +4,7 @@ pub mod default_config;
 pub mod game;
 pub mod keycode_mapping;
 pub mod model;
+pub mod moves;
 pub mod palettekey;
 pub mod recipe_handler;
 pub mod resources;
