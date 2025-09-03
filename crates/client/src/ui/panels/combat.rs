@@ -302,6 +302,42 @@ fn render_single_enemy(
     f.render_widget(timer, enemy_layout[2]);
 }
 
+fn render_action_queue(f: &mut Frame, area: Rect, app: &mut crate::App) {
+    use ratatui::text::Line;
+    use ratatui::widgets::Wrap;
+
+    // Mock queue data for now - later this will come from the actual combat system
+    let mut lines = vec![Line::from("Current:".bold())];
+
+    // Show player action timer if active
+    if let crate::CombatUiState::Active {
+        player_action_timer,
+        current_move,
+        ..
+    } = &app.combat
+    {
+        if let Some(timer_ms) = player_action_timer {
+            let seconds = timer_ms / 1000;
+            lines.push(Line::from(format!("▶ Executing... {}s", seconds)));
+        } else {
+            lines.push(Line::from("▶ Waiting..."));
+        }
+    } else {
+        lines.push(Line::from("▶ Waiting..."));
+    }
+
+    // Mock queue items - in the real system this would show actual queued actions
+    lines.push(Line::from(""));
+    lines.push(Line::from("Queue:".bold()));
+    lines.push(Line::from("• Enemy 1 attacks"));
+    lines.push(Line::from("• Enemy 2 attacks"));
+
+    let block = Block::default().borders(Borders::ALL).title("Action Queue");
+    let paragraph = Paragraph::new(lines).block(block).wrap(Wrap { trim: true });
+
+    f.render_widget(paragraph, area);
+}
+
 fn render_moves(
     f: &mut Frame,
     area: Rect,
@@ -310,40 +346,50 @@ fn render_moves(
     player_action_timer: Option<u32>,
     app: &mut crate::App,
 ) {
+    // Split the moves area horizontally: moves on left, queue on right
+    let horizontal_chunks = Layout::horizontal([
+        Constraint::Percentage(70), // Moves area
+        Constraint::Percentage(30), // Queue area
+    ])
+    .split(area);
+
+    let moves_area = horizontal_chunks[0];
+    let queue_area = horizontal_chunks[1];
     // Debug: log the area we're working with
     app.core.game.res.log(format!(
         "render_moves area: {}x{} at ({},{})",
         area.width, area.height, area.x, area.y
     ));
-    // Split area to show player action timer at the top
-    let moves_area = if let Some(timer_ms) = player_action_timer {
-        let layout = Layout::vertical([Constraint::Length(3), Constraint::Min(12)]).split(area);
-        app.core.game.res.log(format!(
-            "Player action timer active - split area. Timer area: {}x{}, Moves area: {}x{}",
-            layout[0].width, layout[0].height, layout[1].width, layout[1].height
-        ));
+    // Always split moves area to show player action timer at the top (always visible)
+    let layout = Layout::vertical([Constraint::Length(3), Constraint::Min(12)]).split(moves_area);
+    let moves_only_area = layout[1];
 
-        // Render player action timer - only show whole seconds to prevent constant re-renders
+    // Always render player action timer - show timer or "Ready" state
+    let timer_text = if let Some(timer_ms) = player_action_timer {
         let seconds = timer_ms / 1000;
-        let timer_text = format!("⚡ Executing move... {}s", seconds);
-        let timer_para = Paragraph::new(timer_text)
-            .style(Style::default().fg(Color::Green))
-            .alignment(Alignment::Center)
-            .block(
-                Block::default()
-                    .borders(Borders::ALL)
-                    .title("Player Action"),
-            );
-        f.render_widget(timer_para, layout[0]);
-
-        layout[1]
+        format!("⚡ Executing move... {}s", seconds)
     } else {
-        app.core
-            .game
-            .res
-            .log("No player action timer - using full area for moves".to_string());
-        area // Use full area for moves if no timer
+        "⚡ Ready".to_string()
     };
+
+    let timer_para = Paragraph::new(timer_text)
+        .style(if player_action_timer.is_some() {
+            Style::default().fg(Color::Green)
+        } else {
+            Style::default().fg(Color::Yellow)
+        })
+        .alignment(Alignment::Center)
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title("Player Action"),
+        );
+    f.render_widget(timer_para, layout[0]);
+
+    app.core.game.res.log(format!(
+        "Player action timer area: {}x{}, Moves area: {}x{}",
+        layout[0].width, layout[0].height, layout[1].width, layout[1].height
+    ));
 
     let move_blocks = player
         .moves
@@ -418,14 +464,14 @@ fn render_moves(
         .log(format!("Number of moves: {}", move_blocks.len()));
     app.core.game.res.log(format!(
         "Moves area for blocks: {}x{} at ({},{})",
-        moves_area.width, moves_area.height, moves_area.x, moves_area.y
+        moves_only_area.width, moves_only_area.height, moves_only_area.x, moves_only_area.y
     ));
 
     // Ensure we have constraints for each move
     let num_moves = move_blocks.len();
     let constraints: Vec<Constraint> = (0..num_moves).map(|_| Constraint::Length(3)).collect();
 
-    let move_chunks = Layout::vertical(constraints).split(moves_area);
+    let move_chunks = Layout::vertical(constraints).split(moves_only_area);
 
     app.core.game.res.log(format!(
         "Generated {} chunks for {} moves",
@@ -456,4 +502,7 @@ fn render_moves(
                 .log(format!("Move {} out of bounds - no chunk available", i));
         }
     }
+
+    // Render the action queue on the right side
+    render_action_queue(f, queue_area, app);
 }
