@@ -41,9 +41,9 @@ use crate::{
     ui::{
         centered_rect,
         panels::{
-            render_body_panel, render_crafting_panel, render_credits_panel, render_game_view,
-            render_help_panel, render_inventory_list_only, render_inventory_panel,
-            render_look_panel, render_menu_panel, render_quit_panel,
+            render_body_panel, render_combat_panel, render_crafting_panel, render_credits_panel,
+            render_game_view, render_help_panel, render_inventory_list_only,
+            render_inventory_panel, render_look_panel, render_menu_panel, render_quit_panel,
         },
     },
 };
@@ -250,11 +250,11 @@ fn main() -> Result<(), Box<dyn Error>> {
     let log_level = cm
         .get_setting("game", "LOGGINGLEVEL")
         .and_then(|v| v.as_str())
-        .unwrap_or("INFO");
+        .unwrap_or_else(|| panic!("LOGGINGLEVEL must be set in config"));
     let seed_val: u64 = cm
         .get_setting("game", "DEFAULT_SEED")
         .and_then(|v| v.as_u64())
-        .unwrap_or(panic!("DEFAULT_SEED must be set in config"));
+        .unwrap_or_else(|| panic!("DEFAULT_SEED must be set in config"));
 
     // Initialize tracing to write logs to LithicRivers.log (rotated daily)
     {
@@ -503,7 +503,15 @@ fn ui(f: &mut Frame, app: &mut App) {
     // Main area depends on selected tab
     match app.ui.current_tab {
         MenuTab::World => {
-            if app.panels.look.mode {
+            if app.combat.combat_happening {
+                // Combat mode: show combat panel on the left, game view on the right
+                let main_chunks = Layout::default()
+                    .direction(Direction::Horizontal)
+                    .constraints([Constraint::Length(30), Constraint::Min(20)])
+                    .split(root_chunks[1]);
+                render_combat_panel(f, app, main_chunks[0]);
+                render_game_view(f, app, main_chunks[1]);
+            } else if app.panels.look.mode {
                 // With Look mode: show look panel on the right
                 let main_chunks = Layout::default()
                     .direction(Direction::Horizontal)

@@ -1,4 +1,5 @@
 pub mod body;
+pub mod combat;
 pub mod crafting;
 pub mod credits;
 pub mod help;
@@ -9,6 +10,7 @@ pub mod quit;
 pub mod world;
 
 pub use body::render_body_panel;
+pub use combat::render_combat_panel;
 pub use crafting::render_crafting_panel;
 pub use credits::render_credits_panel;
 pub use help::render_help_panel;
