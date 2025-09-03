@@ -10,7 +10,6 @@ use crate::systems::{
 };
 use crate::view::{build_render_view, RenderView};
 
-use anyhow::Result;
 use hecs::World;
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha20Rng;

@@ -254,7 +254,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let seed_val: u64 = cm
         .get_setting("game", "DEFAULT_SEED")
         .and_then(|v| v.as_u64())
-        .unwrap_or(12345);
+        .unwrap_or(panic!("DEFAULT_SEED must be set in config"));
 
     // Initialize tracing to write logs to LithicRivers.log (rotated daily)
     {

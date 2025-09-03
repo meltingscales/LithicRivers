@@ -67,7 +67,9 @@ impl SaveData {
         {
             if maybe_player.is_some() {
                 // inventory may be missing if something went wrong; default it
-                let inv = maybe_inventory.cloned().unwrap_or_default();
+                let inv = maybe_inventory
+                    .cloned()
+                    .unwrap_or(panic!("Player missing inventory"));
                 player_save = Some(PlayerSave {
                     pos: *pos,
                     inventory: inv,
@@ -321,7 +323,7 @@ mod tests {
                     .iter()
                     .find(|s| s.kind == crate::components::ItemKind::Log)
                     .map(|s| s.qty)
-                    .unwrap_or(0);
+                    .unwrap_or(panic!("No wood in inventory"));
             }
         }
         0
