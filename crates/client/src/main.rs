@@ -116,7 +116,7 @@ struct App {
     /// Logging configuration
     pub logging: LoggingState,
     /// Combat system
-    pub combat: CombatState,
+    pub combat: CombatUiState,
     /// UI panel states
     pub panels: PanelStates,
     /// Splash screen system
@@ -306,8 +306,83 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+/// Update combat timers and trigger world ticks when moves execute
+fn update_combat_timing(
+    app: &mut App,
+    delta_time: std::time::Duration,
+) -> Result<(), Box<dyn std::error::Error>> {
+    if let CombatUiState::Active {
+        enemy_timers,
+        player_action_timer,
+        current_move,
+        current_enemy,
+        ..
+    } = &mut app.combat
+    {
+        let delta_ms = delta_time.as_millis() as u32;
+        let mut world_should_tick = false;
+
+        // Update player action timer
+        if let Some(timer) = player_action_timer.as_mut() {
+            *timer = timer.saturating_sub(delta_ms);
+            if *timer == 0 {
+                // Player move executes! Trigger world tick
+                app.core.game.res.log(format!(
+                    "Player move {} executed against enemy {}! World ticks.",
+                    current_move, current_enemy
+                ));
+                *player_action_timer = None;
+                world_should_tick = true;
+            }
+        }
+
+        // Update enemy timers
+        for (i, timer) in enemy_timers.iter_mut().enumerate() {
+            *timer = timer.saturating_sub(delta_ms);
+            if *timer == 0 {
+                // Enemy attacks! Trigger world tick
+                app.core
+                    .game
+                    .res
+                    .log(format!("Enemy {} attacks! World ticks.", i));
+                world_should_tick = true;
+
+                // Reset enemy timer (like Chrono Trigger)
+                *timer = match i {
+                    0 => 8000,  // Gato: 8s
+                    1 => 12000, // Nu: 12s
+                    _ => 10000, // Default
+                };
+            }
+        }
+
+        // Only tick the world when combat actions actually execute
+        if world_should_tick {
+            let tick_result = app.core.game.tick();
+            app.core.game.res.log(format!(
+                "World ticked due to combat action. Result bits: {}",
+                tick_result.bits()
+            ));
+
+            // Check if combat should end (all enemies defeated, player died, etc.)
+            // TODO: Add proper combat end conditions
+        }
+    }
+
+    Ok(())
+}
+
 fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<(), Box<dyn Error>> {
+    let mut last_update = std::time::Instant::now();
+
     loop {
+        let now = std::time::Instant::now();
+        let delta_time = now.duration_since(last_update);
+        last_update = now;
+
+        // Update combat timing (but don't tick world yet!)
+        update_combat_timing(app, delta_time)?;
+
         terminal.draw(|f| ui(f, app))?;
 
         if crossterm::event::poll(Duration::from_millis(50))? {
@@ -489,7 +564,7 @@ fn ui(f: &mut Frame, app: &mut App) {
         .constraints([
             Constraint::Length(1), // Title line
             Constraint::Min(0),    // Main area (map + inventory)
-            Constraint::Length(5), // Message log
+            Constraint::Length(7), // Message log
             Constraint::Length(3), // Bottom menu bar (needs 3 for borders + content)
         ])
         .split(f.size());
@@ -503,11 +578,11 @@ fn ui(f: &mut Frame, app: &mut App) {
     // Main area depends on selected tab
     match app.ui.current_tab {
         MenuTab::World => {
-            if app.combat.combat_happening {
-                // Combat mode: show combat panel on the left, game view on the right
+            if app.combat.is_active() {
+                // Combat mode: show combat panel on the left (50%), game view on the right (50%)
                 let main_chunks = Layout::default()
                     .direction(Direction::Horizontal)
-                    .constraints([Constraint::Length(30), Constraint::Min(20)])
+                    .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
                     .split(root_chunks[1]);
                 render_combat_panel(f, app, main_chunks[0]);
                 render_game_view(f, app, main_chunks[1]);

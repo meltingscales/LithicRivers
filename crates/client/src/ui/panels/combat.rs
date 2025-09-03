@@ -109,11 +109,29 @@ pub fn render_combat_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     let inner = outer_block.inner(area);
     f.render_widget(outer_block, area);
 
-    // For now, just render mock data - later this will use actual game state
+    // Get current selection and timers from combat state
+    let (current_move, current_enemy, enemy_timers, player_action_timer) = match &app.combat {
+        crate::CombatUiState::Active {
+            current_move,
+            current_enemy,
+            enemy_timers,
+            player_action_timer,
+        } => (
+            *current_move,
+            *current_enemy,
+            enemy_timers.clone(),
+            *player_action_timer,
+        ),
+        _ => (0, 0, vec![], None), // Fallback, shouldn't happen when this function is called
+    };
+
+    // For now, use mock data but with real selection state
     let player = CombatPlayer::mock();
     let enemies = CombatEnemy::mock();
-    let current_move = 0;
-    let current_enemy = 0;
+
+    // Ensure selections are within bounds
+    let current_move = current_move.min(player.moves.len().saturating_sub(1));
+    let current_enemy = current_enemy.min(enemies.len().saturating_sub(1));
 
     // Victory check
     if enemies.is_empty() || enemies.iter().all(|e| e.health == 0) {
@@ -139,11 +157,11 @@ pub fn render_combat_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     // Render player info
     render_player_info(f, chunks[0], &player);
 
-    // Render enemies
-    render_enemies(f, chunks[1], &enemies, current_enemy);
+    // Render enemies with real timers
+    render_enemies(f, chunks[1], &enemies, current_enemy, &enemy_timers);
 
-    // Render moves
-    render_moves(f, chunks[2], &player, current_move);
+    // Render moves with player action timer
+    render_moves(f, chunks[2], &player, current_move, player_action_timer);
 
     // Message area (placeholder for now)
     let message_para = Paragraph::new("Combat active - Select your move!")
@@ -183,7 +201,13 @@ fn render_player_info(f: &mut Frame, area: Rect, player: &CombatPlayer) {
     f.render_widget(mana_bar, bars[1]);
 }
 
-fn render_enemies(f: &mut Frame, area: Rect, enemies: &[CombatEnemy], current_enemy: usize) {
+fn render_enemies(
+    f: &mut Frame,
+    area: Rect,
+    enemies: &[CombatEnemy],
+    current_enemy: usize,
+    enemy_timers: &[u32],
+) {
     if enemies.is_empty() {
         return;
     }
@@ -196,11 +220,18 @@ fn render_enemies(f: &mut Frame, area: Rect, enemies: &[CombatEnemy], current_en
 
     for (i, (enemy, chunk)) in enemies.iter().zip(enemy_chunks.iter()).enumerate() {
         let is_selected = i == current_enemy;
-        render_single_enemy(f, *chunk, enemy, is_selected);
+        let timer = enemy_timers.get(i).copied().unwrap_or(0);
+        render_single_enemy(f, *chunk, enemy, is_selected, timer);
     }
 }
 
-fn render_single_enemy(f: &mut Frame, area: Rect, enemy: &CombatEnemy, is_selected: bool) {
+fn render_single_enemy(
+    f: &mut Frame,
+    area: Rect,
+    enemy: &CombatEnemy,
+    is_selected: bool,
+    timer_ms: u32,
+) {
     let block = Block::default()
         .borders(Borders::ALL)
         .border_style(if is_selected {
@@ -243,11 +274,13 @@ fn render_single_enemy(f: &mut Frame, area: Rect, enemy: &CombatEnemy, is_select
 
     f.render_widget(health_bar, enemy_layout[1]);
 
-    // Attack timer
-    let attack_timer = if enemy.attack_timer > 0 {
-        format!("⏳ {}/{}", enemy.attack_timer, enemy.attack_speed)
+    // Attack timer using real combat timing
+    let attack_timer = if timer_ms > 0 {
+        let seconds = timer_ms / 1000;
+        let milliseconds = timer_ms % 1000;
+        format!("⏳ {}.{:01}s", seconds, milliseconds / 100)
     } else {
-        "⚡ Ready!".to_string()
+        "⚡ ATTACKING!".to_string()
     };
 
     let timer = Paragraph::new(attack_timer)
@@ -257,7 +290,40 @@ fn render_single_enemy(f: &mut Frame, area: Rect, enemy: &CombatEnemy, is_select
     f.render_widget(timer, enemy_layout[2]);
 }
 
-fn render_moves(f: &mut Frame, area: Rect, player: &CombatPlayer, current_move: usize) {
+fn render_moves(
+    f: &mut Frame,
+    area: Rect,
+    player: &CombatPlayer,
+    current_move: usize,
+    player_action_timer: Option<u32>,
+) {
+    // Split area to show player action timer at the top
+    let moves_area = if let Some(timer_ms) = player_action_timer {
+        let layout = Layout::vertical([Constraint::Length(3), Constraint::Min(8)]).split(area);
+
+        // Render player action timer
+        let seconds = timer_ms / 1000;
+        let milliseconds = timer_ms % 1000;
+        let timer_text = format!(
+            "⚡ Executing move... {}.{:01}s",
+            seconds,
+            milliseconds / 100
+        );
+        let timer_para = Paragraph::new(timer_text)
+            .style(Style::default().fg(Color::Green))
+            .alignment(Alignment::Center)
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title("Player Action"),
+            );
+        f.render_widget(timer_para, layout[0]);
+
+        layout[1]
+    } else {
+        area // Use full area for moves if no timer
+    };
+
     let move_blocks = player
         .moves
         .iter()
@@ -293,7 +359,7 @@ fn render_moves(f: &mut Frame, area: Rect, player: &CombatPlayer, current_move: 
             .map(|_| Constraint::Length(3))
             .collect::<Vec<_>>(),
     )
-    .split(area);
+    .split(moves_area);
 
     for (i, block) in move_blocks.into_iter().enumerate() {
         if i < move_chunks.len() {

@@ -9,7 +9,7 @@ use lithicrivers_core::{
     game::GameTickResult,
 };
 
-use crate::{ui::panels::get_player_inventory, App, MenuTab, Scale, SplashState};
+use crate::{ui::panels::get_player_inventory, App, CombatUiState, MenuTab, Scale, SplashState};
 
 pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
     // Handle splash screen skipping first
@@ -454,6 +454,79 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
         }
     }
 
+    // Handle combat-specific input when combat is active
+    if let CombatUiState::Active {
+        current_move,
+        current_enemy,
+        enemy_timers,
+        player_action_timer,
+    } = &mut app.combat
+    {
+        // Move selection (Up/Down) - using mock move count for now
+        const MAX_MOVES: usize = 4; // From CombatPlayer::mock()
+        if app.ui.keybinds.matches("movement", "MOVE_NORTH", &key)
+            || app.ui.keybinds.matches("movement", "MOVE_UP", &key)
+        {
+            *current_move = if *current_move == 0 {
+                MAX_MOVES - 1
+            } else {
+                *current_move - 1
+            };
+            return Ok(());
+        }
+        if app.ui.keybinds.matches("movement", "MOVE_SOUTH", &key)
+            || app.ui.keybinds.matches("movement", "MOVE_DOWN", &key)
+        {
+            *current_move = (*current_move + 1) % MAX_MOVES;
+            return Ok(());
+        }
+
+        // Enemy/target selection (Left/Right) - using mock enemy count for now
+        const MAX_ENEMIES: usize = 2; // From CombatEnemy::mock()
+        if app.ui.keybinds.matches("movement", "MOVE_WEST", &key) {
+            *current_enemy = if *current_enemy == 0 {
+                MAX_ENEMIES - 1
+            } else {
+                *current_enemy - 1
+            };
+            return Ok(());
+        }
+        if app.ui.keybinds.matches("movement", "MOVE_EAST", &key) {
+            *current_enemy = (*current_enemy + 1) % MAX_ENEMIES;
+            return Ok(());
+        }
+
+        // Use selected move (Space/Enter)
+        if app.ui.keybinds.matches("ui", "MENU_ACTIVATE", &key) {
+            if player_action_timer.is_none() {
+                // Start executing the move - different moves have different execution times
+                let execution_time = match *current_move {
+                    0 => 3000, // Melee: 3 seconds
+                    1 => 5000, // Escape: 5 seconds
+                    2 => 8000, // Fireball: 8 seconds
+                    3 => 6000, // Tackle: 6 seconds
+                    _ => 3000,
+                };
+                *player_action_timer = Some(execution_time);
+                app.core.game.res.log(format!(
+                    "Starting move {} ({}ms) against enemy {}",
+                    current_move, execution_time, current_enemy
+                ));
+            }
+            return Ok(());
+        }
+
+        // Exit combat (Escape)
+        if app.ui.keybinds.matches("ui", "CLOSE_HELP_MENU", &key) {
+            app.combat = CombatUiState::None;
+            app.core.game.res.log("Exited combat");
+            return Ok(());
+        }
+
+        // Block all other input during combat
+        return Ok(());
+    }
+
     if app.ui.keybinds.matches_movement(&key) {
         if app.ui.keybinds.matches("movement", "MOVE_NORTH", &key) {
             app.core.game.queue_player_move(0, -1);
@@ -491,7 +564,12 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
 
         let tick_result = app.core.game.tick();
         if tick_result.contains(GameTickResult::CombatTriggered) {
-            app.combat.combat_happening = true;
+            app.combat = CombatUiState::Active {
+                current_move: 0,
+                current_enemy: 0,
+                enemy_timers: vec![8000, 12000], // Gato: 8s, Nu: 12s (matching demo)
+                player_action_timer: None,
+            };
         }
         app.snap_view_to_player_z();
         return Ok(());
@@ -538,13 +616,16 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
         app.activate_menu();
         return Ok(());
     }
-    if app.ui.keybinds.matches("ui", "MENU_PREV", &key) {
-        app.ui.current_tab = app.ui.current_tab.prev();
-        return Ok(());
-    }
-    if app.ui.keybinds.matches("ui", "MENU_NEXT", &key) {
-        app.ui.current_tab = app.ui.current_tab.next();
-        return Ok(());
+    // Block menu navigation during combat
+    if !app.combat.is_active() {
+        if app.ui.keybinds.matches("ui", "MENU_PREV", &key) {
+            app.ui.current_tab = app.ui.current_tab.prev();
+            return Ok(());
+        }
+        if app.ui.keybinds.matches("ui", "MENU_NEXT", &key) {
+            app.ui.current_tab = app.ui.current_tab.next();
+            return Ok(());
+        }
     }
     // Credits scroll
     if app.ui.current_tab == MenuTab::Credits {
