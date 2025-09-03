@@ -152,14 +152,4 @@ impl App {
             },
         }
     }
-
-    #[allow(dead_code)]
-    pub fn new() -> App {
-        let config_manager = ConfigManager::new();
-        let seed = config_manager
-            .get_setting("game", "DEFAULT_SEED")
-            .and_then(|v| v.as_u64())
-            .expect("DEFAULT_SEED must be set in config");
-        Self::new_with_seed(seed)
-    }
 }

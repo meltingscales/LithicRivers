@@ -492,7 +492,6 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
         let tick_result = app.core.game.tick();
         if tick_result.contains(GameTickResult::CombatTriggered) {
             app.combat.combat_happening = true;
-            panic!("todo show combat panel...");
         }
         app.snap_view_to_player_z();
         return Ok(());
