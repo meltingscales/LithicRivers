@@ -333,14 +333,13 @@ pub fn damage_random_body_part(
     body: &mut Body,
     world_seed: u64,
     tick: u64,
+    damage: u32,
 ) -> Option<BodyPartType> {
     // Simple deterministic "random" selection based on seed and tick
     let available_parts: Vec<_> = body
         .parts
         .iter()
-        .filter(|(_, part)| {
-            part.state == BodyPartState::Functional || part.state == BodyPartState::Enhanced
-        })
+        .filter(|(_, part)| part.state != BodyPartState::Missing)
         .map(|(part_type, _)| *part_type)
         .collect();
 
@@ -352,11 +351,9 @@ pub fn damage_random_body_part(
     let part_type = available_parts[index];
 
     if let Some(part) = body.parts.get_mut(&part_type) {
-        part.state = match part.state {
-            BodyPartState::Enhanced => BodyPartState::Functional,
-            BodyPartState::Functional => BodyPartState::Damaged,
-            _ => part.state, // Already damaged or missing
-        };
+        // 20% chance for severing damage on strong attacks
+        let can_sever = damage > 20 && ((world_seed + tick + 1) % 5) == 0;
+        part.receive_damage(damage as i32, can_sever);
         Some(part_type)
     } else {
         None
