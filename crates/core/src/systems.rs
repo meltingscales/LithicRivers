@@ -645,7 +645,7 @@ fn apply_damage(
     // If no Health component, try to damage body parts (for robots)
     let should_handle_body_death = if let Ok(mut body) = world.get::<&mut Body>(target_entity) {
         if let Some(damaged_part) =
-            crate::moves::damage_random_body_part(&mut body, res.world.seed, res.gametick)
+            crate::moves::damage_random_body_part(&mut body, res.world.seed, res.gametick, damage)
         {
             res.log(format!(
                 "Target's {:?} is damaged by {}",

@@ -34,21 +34,26 @@ pub struct BodyPart {
 }
 
 impl BodyPart {
+    pub fn receive_damage(&mut self, damage: i32, can_sever: bool) {
+        self.integrity -= damage;
 
-    pub fn receive_damage(&self, damage:i32, can_sever: bool)->None{
-        //TODO:
-        // if can_sever is true, apply damage and destroy the body part if it goes to 0, setting it to "Missing" and "0"
-        // if can_sever is false, apply damage and set to "Damaged" if it goes below 50, but not below 1
+        if can_sever && self.integrity <= 0 {
+            self.integrity = 0;
+            self.state = BodyPartState::Missing;
+        } else if !can_sever && self.integrity < 1 {
+            self.integrity = 1;
+        }
+
+        self.update_state_from_integrity();
     }
 
-    pub fn update_state_from_integrity(&self)->None {
-        match self.integrity {
-            //TODO:
-            //0: absent
-            //1-50: damaged
-            //50-100: functional
-            //100+: enhanced
-        }
+    pub fn update_state_from_integrity(&mut self) {
+        self.state = match self.integrity {
+            0 => BodyPartState::Missing,
+            1..=50 => BodyPartState::Damaged,
+            51..=100 => BodyPartState::Functional,
+            _ => BodyPartState::Enhanced,
+        };
     }
 
     pub fn get_walk_speed_modifier(&self) -> f32 {
@@ -108,7 +113,11 @@ impl Default for Body {
         // - Left arm: No signal detected (missing)
         // - Right leg: Torque mismatch (treat as damaged)
         let mut parts = HashMap::new();
-        let mut insert = |part_type: BodyPartType, state: BodyPartState, integrity: i32, name: &str, desc: &str| {
+        let mut insert = |part_type: BodyPartType,
+                          state: BodyPartState,
+                          integrity: i32,
+                          name: &str,
+                          desc: &str| {
             parts.insert(
                 part_type,
                 BodyPart {

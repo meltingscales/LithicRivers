@@ -456,16 +456,6 @@ fn render_moves(
         })
         .collect::<Vec<_>>();
 
-    // Debug: log move information
-    app.core
-        .game
-        .res
-        .log(format!("Number of moves: {}", move_blocks.len()));
-    app.core.game.res.log(format!(
-        "Moves area for blocks: {}x{} at ({},{})",
-        moves_only_area.width, moves_only_area.height, moves_only_area.x, moves_only_area.y
-    ));
-
     // Ensure we have constraints for each move
     let num_moves = move_blocks.len();
     let constraints: Vec<Constraint> = (0..num_moves).map(|_| Constraint::Length(3)).collect();
@@ -476,10 +466,6 @@ fn render_moves(
     for (i, block) in move_blocks.into_iter().enumerate() {
         if i < move_chunks.len() {
             let chunk = move_chunks[i];
-            app.core.game.res.log(format!(
-                "Move {}: chunk {}x{} at ({},{})",
-                i, chunk.width, chunk.height, chunk.x, chunk.y
-            ));
             if chunk.height > 0 && chunk.width > 0 {
                 f.render_widget(block, chunk);
             } else {
