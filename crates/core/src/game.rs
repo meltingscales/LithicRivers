@@ -6,8 +6,8 @@ use crate::model::body::Body;
 use crate::moves::MoveCooldowns;
 use crate::resources::Resources;
 use crate::systems::{
-    battle_delay_timer_system, combat_trigger_system, feral_dog_system, mining_system,
-    move_player_system, pickup_system, stumbling_sheep_system,
+    action_queue_system, battle_delay_timer_system, combat_trigger_system, enemy_combat_ai_system,
+    feral_dog_system, mining_system, move_player_system, pickup_system, stumbling_sheep_system,
 };
 use crate::view::{build_render_view, RenderView};
 
@@ -217,6 +217,10 @@ impl Game {
         stumbling_sheep_system(&mut self.world, &mut self.res);
         battle_delay_timer_system(&mut self.world, &mut self.res);
         let combat_success = combat_trigger_system(&mut self.world, &mut self.res);
+
+        // New combat systems
+        action_queue_system(&mut self.world, &mut self.res);
+        enemy_combat_ai_system(&mut self.world, &mut self.res);
 
         let mut result = GameTickResult::NoAction;
         if mining_success {

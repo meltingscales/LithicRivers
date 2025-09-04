@@ -313,115 +313,12 @@ fn main() -> Result<(), Box<dyn Error>> {
 /// Update combat timers and trigger world ticks when moves execute
 /// Returns true if combat should exit (due to escape)
 fn update_combat_timing(
-    app: &mut App,
-    delta_time: std::time::Duration,
+    _app: &mut App,
+    _delta_time: std::time::Duration,
 ) -> Result<bool, Box<dyn std::error::Error>> {
-    if let CombatUiState::Active {
-        enemy_timers,
-        player_action_timer,
-        current_move,
-        current_enemy,
-        ..
-    } = &mut app.combat
-    {
-        let delta_ms = delta_time.as_millis() as u32;
-        let mut world_should_tick = false;
-        let mut should_exit_combat = false;
-
-        // Update player action timer
-        if let Some(timer) = player_action_timer.as_mut() {
-            *timer = timer.saturating_sub(delta_ms);
-            if *timer == 0 {
-                // Player move executes!
-                if *current_move == 3 {
-                    // Escape move - exit combat and add BattleDelay to all nearby combat entities
-                    app.core.game.res.log("Escape successful! Exiting combat.");
-                    should_exit_combat = true;
-
-                    // Get player position and find entities to stun
-                    let mut entities_to_stun: Vec<Entity> = Vec::new();
-                    if let Some(player_entity) = app.core.game.res.player_entity {
-                        if let Ok(player_pos) = app.core.game.world.get::<&Position>(player_entity)
-                        {
-                            let player_pos = *player_pos;
-
-                            // Find all combat entities within range (same logic as combat trigger)
-                            for (e, (pos, _, _)) in app
-                                .core
-                                .game
-                                .world
-                                .query::<(&Position, &Combat, &GameEntity)>()
-                                .iter()
-                            {
-                                let dx = player_pos.x - pos.x;
-                                let dy = player_pos.y - pos.y;
-                                let distance_sq = dx * dx + dy * dy;
-
-                                // Add BattleDelay to entities within combat range
-                                if distance_sq <= 1 {
-                                    entities_to_stun.push(e);
-                                }
-                            }
-                        }
-                    }
-
-                    // Apply BattleDelay (2000 ticks as per TODO.md)
-                    for entity in entities_to_stun {
-                        let _ = app
-                            .core
-                            .game
-                            .world
-                            .insert_one(entity, BattleDelay::new(2000));
-                        app.core.game.res.log("Enemy stunned by escape!");
-                    }
-                } else {
-                    // Regular combat move
-                    app.core.game.res.log(format!(
-                        "Player move {} executed against enemy {}! World ticks.",
-                        current_move, current_enemy
-                    ));
-                    world_should_tick = true;
-                }
-                *player_action_timer = None;
-            }
-        }
-
-        // Update enemy timers
-        for (i, timer) in enemy_timers.iter_mut().enumerate() {
-            *timer = timer.saturating_sub(delta_ms);
-            if *timer == 0 {
-                // Enemy attacks! Trigger world tick
-                app.core
-                    .game
-                    .res
-                    .log(format!("Enemy {} attacks! World ticks.", i));
-                world_should_tick = true;
-
-                // Reset enemy timer (like Chrono Trigger)
-                *timer = match i {
-                    0 => 8000,  // Gato: 8s
-                    1 => 12000, // Nu: 12s
-                    _ => 10000, // Default
-                };
-            }
-        }
-
-        // Only tick the world when combat actions actually execute
-        if world_should_tick {
-            let tick_result = app.core.game.tick();
-            app.core.game.res.log(format!(
-                "World ticked due to combat action. Result bits: {}",
-                tick_result.bits()
-            ));
-
-            // Check if combat should end (all enemies defeated, player died, etc.)
-            // TODO: Add proper combat end conditions
-        }
-
-        Ok(should_exit_combat)
-    } else {
-        Ok(false)
-    }
+    // This function is deprecated - combat timing is now handled by ActionQueue system in core
+    // Always return false (don't exit combat from here)
+    Ok(false)
 }
 
 fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<(), Box<dyn Error>> {

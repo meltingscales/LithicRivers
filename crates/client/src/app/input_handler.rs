@@ -459,7 +459,6 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
         current_move,
         current_enemy,
         enemy_timers,
-        player_action_timer,
     } = &mut app.combat
     {
         // Move selection (Up/Down) - using mock move count for now
@@ -496,30 +495,136 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
             return Ok(());
         }
 
-        // Use selected move (Space/Enter)
+        // Use selected move (Space/Enter) - queue the action instead of immediate execution
         if app.ui.keybinds.matches("ui", "MENU_ACTIVATE", &key) {
-            if player_action_timer.is_none() {
-                // Start executing the move - different moves have different execution times
-                let execution_time = match *current_move {
-                    0 => 3000, // Melee: 3 seconds
-                    1 => 8000, // Fireball: 8 seconds
-                    2 => 6000, // Tackle: 6 seconds
-                    3 => 5000, // Escape: 5 seconds
-                    _ => 3000,
-                };
-                *player_action_timer = Some(execution_time);
-                app.core.game.res.log(format!(
-                    "Starting move {} ({}ms) against enemy {}",
-                    current_move, execution_time, current_enemy
-                ));
+            // Get the player entity
+            if let Some(player_entity) = app.core.game.res.player_entity {
+                // Get available moves and selected move
+                let available_moves = lithicrivers_core::moves::get_available_moves();
+                if let Some(selected_move) = available_moves.get(*current_move) {
+                    // Check if player can use this move (energy and cooldowns)
+                    let can_use = if let (Ok(energy), Ok(cooldowns)) = (
+                        app.core
+                            .game
+                            .world
+                            .get::<&lithicrivers_core::components::Energy>(player_entity),
+                        app.core
+                            .game
+                            .world
+                            .get::<&lithicrivers_core::moves::MoveCooldowns>(player_entity),
+                    ) {
+                        lithicrivers_core::moves::can_use_move(&energy, &cooldowns, selected_move)
+                    } else {
+                        false
+                    };
+
+                    if !can_use {
+                        app.core.game.res.log("Cannot use this move!".to_string());
+                        return Ok(());
+                    }
+
+                    // Find target entity if needed
+                    let target_entity = if *current_move != 3 {
+                        // Not escape move
+                        // Find the actual entity for the selected enemy
+                        let mut enemy_count = 0;
+                        let mut target = None;
+                        for (entity, (_, combat, _)) in app
+                            .core
+                            .game
+                            .world
+                            .query::<(
+                                &lithicrivers_core::components::Position,
+                                &lithicrivers_core::components::Combat,
+                                &lithicrivers_core::components::GameEntity,
+                            )>()
+                            .iter()
+                        {
+                            if entity == player_entity || !combat.triggered {
+                                continue;
+                            }
+                            if enemy_count == *current_enemy {
+                                target = Some(entity);
+                                break;
+                            }
+                            enemy_count += 1;
+                        }
+                        target
+                    } else {
+                        None
+                    };
+
+                    // Create queued action
+                    let execution_time = selected_move.move_type.execution_time_ms();
+                    let action = lithicrivers_core::moves::QueuedAction {
+                        entity: player_entity,
+                        action: lithicrivers_core::moves::CombatAction::PlayerMove {
+                            move_type: selected_move.move_type,
+                            target_entity,
+                            target_position: None, // Not used for current moves
+                        },
+                        execution_time_ms: execution_time,
+                        remaining_time_ms: execution_time,
+                    };
+
+                    // Ensure player has an action queue component
+                    if app
+                        .core
+                        .game
+                        .world
+                        .get::<&lithicrivers_core::moves::ActionQueue>(player_entity)
+                        .is_err()
+                    {
+                        app.core
+                            .game
+                            .world
+                            .insert_one(player_entity, lithicrivers_core::moves::ActionQueue::new())
+                            .ok();
+                    }
+
+                    // Queue the action
+                    if let Ok(mut queue) =
+                        app.core
+                            .game
+                            .world
+                            .get::<&mut lithicrivers_core::moves::ActionQueue>(player_entity)
+                    {
+                        queue.queue_action(action);
+
+                        // If no current action, start this one
+                        if queue.current_action.is_none() {
+                            queue.start_next_action();
+                        }
+
+                        app.core.game.res.log(format!(
+                            "Queued {} against target {}",
+                            selected_move.name, current_enemy
+                        ));
+                    }
+                } else {
+                    app.core.game.res.log("Invalid move selected!".to_string());
+                }
             }
             return Ok(());
         }
 
         // Exit combat (Escape)
         if app.ui.keybinds.matches("ui", "CLOSE_HELP_MENU", &key) {
+            // Clear the player's action queue when manually exiting combat
+            if let Some(player_entity) = app.core.game.res.player_entity {
+                if let Ok(mut queue) = app
+                    .core
+                    .game
+                    .world
+                    .get::<&mut lithicrivers_core::moves::ActionQueue>(player_entity)
+                {
+                    queue.clear();
+                    app.core.game.res.log("Cleared action queue on combat exit");
+                }
+            }
+
             app.combat = CombatUiState::None;
-            app.core.game.res.log("Exited combat");
+            app.core.game.res.log("Exited combat (cheat mode)");
             return Ok(());
         }
 
@@ -567,8 +672,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
             app.combat = CombatUiState::Active {
                 current_move: 0,
                 current_enemy: 0,
-                enemy_timers: vec![8000, 12000], // Gato: 8s, Nu: 12s (matching demo)
-                player_action_timer: None,
+                enemy_timers: vec![], // Deprecated - using ActionQueue now
             };
         }
         app.snap_view_to_player_z();

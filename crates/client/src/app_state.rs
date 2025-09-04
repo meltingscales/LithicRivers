@@ -42,8 +42,7 @@ pub enum CombatUiState {
     Active {
         current_move: usize,
         current_enemy: usize,
-        enemy_timers: Vec<u32>,           // Milliseconds until each enemy acts
-        player_action_timer: Option<u32>, // Milliseconds for player move execution
+        enemy_timers: Vec<u32>, // Deprecated - will be removed once UI fully migrated to ActionQueue
     },
 }
 

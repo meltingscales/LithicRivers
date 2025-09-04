@@ -1,7 +1,8 @@
 use crate::components::{
-    BattleDelay, BlocksMovement, Combat, DroppedItem, FeralDog, GameEntity, Inventory, ItemKind,
-    Position, Sheep, SpriteRef,
+    BattleDelay, BlocksMovement, Combat, Dead, DroppedItem, Energy, FeralDog, GameEntity, Health,
+    Inventory, ItemKind, Position, Sheep, SpriteRef, Stunned,
 };
+use crate::moves::{ActionQueue, CombatAction, MoveType, QueuedAction};
 use crate::resources::Resources;
 use hecs::World;
 use tracing::info;
@@ -221,8 +222,21 @@ pub fn combat_trigger_system(world: &mut World, res: &mut Resources) -> CombatSt
         }
 
         // trigger combat
-        if let Ok(mut combat) = world.get::<&mut Combat>(e) {
+        let combat_triggered = if let Ok(mut combat) = world.get::<&mut Combat>(e) {
             combat.triggered = true;
+            true
+        } else {
+            false
+        };
+
+        if combat_triggered {
+            // Ensure player has an ActionQueue component for combat
+            if let Some(player_entity) = res.player_entity {
+                if world.get::<&ActionQueue>(player_entity).is_err() {
+                    world.insert_one(player_entity, ActionQueue::new()).ok();
+                }
+            }
+
             return CombatState::CombatStarted;
         }
     }
@@ -379,5 +393,385 @@ pub fn battle_delay_timer_system(world: &mut World, _res: &mut Resources) {
     // Remove expired BattleDelay components
     for e in entities_to_remove_delay {
         let _ = world.remove_one::<BattleDelay>(e);
+    }
+}
+
+/// System to process action queues and execute completed actions
+pub fn action_queue_system(world: &mut World, res: &mut Resources) {
+    const DELTA_MS: u64 = 16; // Assume 60fps game loop
+
+    let mut completed_actions = Vec::new();
+    let mut entities_with_queues = Vec::new();
+
+    // Collect entities that have action queues
+    for (entity, _queue) in world.query::<&mut ActionQueue>().iter() {
+        entities_with_queues.push(entity);
+    }
+
+    // Process each entity's action queue
+    for entity in entities_with_queues {
+        if let Ok(mut queue) = world.get::<&mut ActionQueue>(entity) {
+            // Update timers and check for completed actions
+            if let Some(completed_action) = queue.update_timers(DELTA_MS) {
+                completed_actions.push(completed_action);
+            }
+        }
+    }
+
+    // Execute all completed actions
+    for action in completed_actions {
+        execute_combat_action(world, res, &action);
+    }
+
+    // Check if combat should end and clear queues if needed
+    check_combat_end_conditions(world, res);
+}
+
+/// Check for combat end conditions and clear action queues if combat ends
+fn check_combat_end_conditions(world: &mut World, res: &mut Resources) {
+    // Check if player is dead
+    let player_dead = if let Some(player_entity) = res.player_entity {
+        world.get::<&Dead>(player_entity).is_ok()
+    } else {
+        true // No player entity means dead
+    };
+
+    // Check if all enemies are dead
+    let mut has_living_enemies = false;
+    for (entity, (_, combat, _)) in world.query::<(&Position, &Combat, &GameEntity)>().iter() {
+        if Some(entity) != res.player_entity && combat.triggered {
+            if world.get::<&Dead>(entity).is_err() {
+                has_living_enemies = true;
+                break;
+            }
+        }
+    }
+
+    // Clear all action queues if combat should end
+    if player_dead || !has_living_enemies {
+        let mut entities_to_clear = Vec::new();
+        for (entity, _) in world.query::<&ActionQueue>().iter() {
+            entities_to_clear.push(entity);
+        }
+
+        for entity in entities_to_clear {
+            if let Ok(mut queue) = world.get::<&mut ActionQueue>(entity) {
+                queue.clear();
+            }
+        }
+
+        if player_dead {
+            res.log("Combat ended: Player defeated - all action queues cleared".to_string());
+        } else if !has_living_enemies {
+            res.log("Combat ended: All enemies defeated - all action queues cleared".to_string());
+        }
+    }
+}
+
+/// Execute a completed combat action
+fn execute_combat_action(world: &mut World, res: &mut Resources, action: &QueuedAction) {
+    match &action.action {
+        CombatAction::PlayerMove {
+            move_type,
+            target_entity,
+            target_position,
+        } => {
+            execute_player_move(
+                world,
+                res,
+                action.entity,
+                *move_type,
+                *target_entity,
+                *target_position,
+            );
+        }
+        CombatAction::EnemyAttack {
+            target_entity,
+            damage,
+        } => {
+            execute_enemy_attack(world, res, action.entity, *target_entity, *damage);
+        }
+    }
+}
+
+/// Execute a player move action
+fn execute_player_move(
+    world: &mut World,
+    res: &mut Resources,
+    player_entity: hecs::Entity,
+    move_type: MoveType,
+    target_entity: Option<hecs::Entity>,
+    _target_position: Option<Position>,
+) {
+    use rand::Rng;
+
+    // Get player position
+    let player_pos = match world.get::<&Position>(player_entity) {
+        Ok(pos) => *pos,
+        Err(_) => return,
+    };
+
+    // Get move definition first
+    let available_moves = crate::moves::get_available_moves();
+    let selected_move = available_moves.iter().find(|m| m.move_type == move_type);
+    let mv = match selected_move {
+        Some(mv) => mv.clone(),
+        None => return,
+    };
+
+    // Update player components
+    let energy_consumed = {
+        if let Ok(mut energy) = world.get::<&mut Energy>(player_entity) {
+            if energy.consume(mv.energy_cost) {
+                true
+            } else {
+                res.log("Not enough energy!".to_string());
+                false
+            }
+        } else {
+            false
+        }
+    };
+
+    if !energy_consumed {
+        return;
+    }
+
+    // Update cooldowns
+    if let Ok(mut cooldowns) = world.get::<&mut crate::moves::MoveCooldowns>(player_entity) {
+        let current_cooldown = cooldowns.get_cooldown(move_type);
+        cooldowns.set_cooldown(move_type, current_cooldown + mv.cooldown_ticks);
+    }
+
+    // Execute move effects based on type
+    match move_type {
+        MoveType::Melee => {
+            if let Some(target) = target_entity {
+                apply_damage(world, res, target, mv.damage, "melee attack");
+            }
+        }
+        MoveType::Fireball => {
+            if let Some(target) = target_entity {
+                apply_damage(world, res, target, mv.damage, "fireball");
+                // TODO: Add AoE damage to nearby enemies
+            }
+        }
+        MoveType::Tackle => {
+            if let Some(target) = target_entity {
+                apply_damage(world, res, target, mv.damage, "tackle");
+
+                // Push effect
+                if let Ok(target_pos) = world.get::<&Position>(target) {
+                    let pushed_pos =
+                        crate::moves::calculate_push_position(player_pos, *target_pos, 2);
+                    if let Ok(mut pos) = world.get::<&mut Position>(target) {
+                        pos.x = pushed_pos.x;
+                        pos.y = pushed_pos.y;
+                        pos.z = pushed_pos.z;
+                    }
+                }
+
+                // 50% chance to stun
+                if res.rng.gen_bool(0.5) {
+                    world.insert_one(target, Stunned::new(600)).ok();
+                    res.log("Target is stunned!".to_string());
+                }
+            }
+        }
+        MoveType::Escape => {
+            // Add battle delay to player to prevent immediate re-engagement
+            world.insert_one(player_entity, BattleDelay::new(1000)).ok();
+            res.log("You attempt to escape from combat!".to_string());
+
+            // End combat for all nearby enemies
+            end_combat_for_nearby_enemies(world, player_pos);
+
+            // Clear the player's action queue since combat is ending
+            if let Ok(mut queue) = world.get::<&mut ActionQueue>(player_entity) {
+                queue.clear();
+                res.log("Action queue cleared after escape");
+            }
+        }
+    }
+
+    res.log(format!("Used {}", mv.name));
+}
+
+/// Execute an enemy attack action
+fn execute_enemy_attack(
+    world: &mut World,
+    res: &mut Resources,
+    _attacker_entity: hecs::Entity,
+    target_entity: hecs::Entity,
+    damage: u32,
+) {
+    apply_damage(world, res, target_entity, damage, "enemy attack");
+}
+
+/// Apply damage to an entity, handling both Health and Body systems
+fn apply_damage(
+    world: &mut World,
+    res: &mut Resources,
+    target_entity: hecs::Entity,
+    damage: u32,
+    source: &str,
+) {
+    use crate::model::body::Body;
+
+    // Check if target is already dead
+    if world.get::<&Dead>(target_entity).is_ok() {
+        return;
+    }
+
+    // Try to apply damage to Health component first
+    let should_handle_death = if let Ok(mut health) = world.get::<&mut Health>(target_entity) {
+        health.damage(damage);
+        res.log(format!(
+            "Target takes {} damage from {} ({}/{} HP)",
+            damage, source, health.current, health.max
+        ));
+
+        // Check for death
+        !health.is_alive()
+    } else {
+        false
+    };
+
+    if should_handle_death {
+        handle_entity_death(world, res, target_entity);
+        return;
+    }
+
+    // If no Health component, try to damage body parts (for robots)
+    let should_handle_body_death = if let Ok(mut body) = world.get::<&mut Body>(target_entity) {
+        if let Some(damaged_part) =
+            crate::moves::damage_random_body_part(&mut body, res.world.seed, res.gametick)
+        {
+            res.log(format!(
+                "Target's {:?} is damaged by {}",
+                damaged_part, source
+            ));
+
+            // Check if body integrity is too low (death condition for robots)
+            let integrity = crate::moves::calculate_body_integrity(&body);
+            integrity < 0.1 // 10% integrity threshold
+        } else {
+            false
+        }
+    } else {
+        false
+    };
+
+    if should_handle_body_death {
+        handle_entity_death(world, res, target_entity);
+    }
+}
+
+/// Handle entity death - add Dead marker and clean up
+fn handle_entity_death(world: &mut World, res: &mut Resources, entity: hecs::Entity) {
+    // Add Dead marker
+    world.insert_one(entity, Dead).ok();
+
+    // Clear any action queues
+    if let Ok(mut queue) = world.get::<&mut ActionQueue>(entity) {
+        queue.clear();
+    }
+
+    // Remove combat capability
+    world.remove_one::<Combat>(entity).ok();
+
+    // Log death
+    if Some(entity) == res.player_entity {
+        res.log("You have died!".to_string());
+        // TODO: Trigger game over state
+    } else {
+        res.log("Enemy defeated!".to_string());
+    }
+}
+
+/// End combat for all enemies near the given position
+fn end_combat_for_nearby_enemies(world: &mut World, center_pos: Position) {
+    let mut entities_to_update = Vec::new();
+
+    for (entity, (pos, combat, _)) in world.query::<(&Position, &Combat, &GameEntity)>().iter() {
+        let dx = center_pos.x - pos.x;
+        let dy = center_pos.y - pos.y;
+        let distance_sq = dx * dx + dy * dy;
+
+        // End combat for enemies within 3 tiles
+        if distance_sq <= 9 && combat.triggered {
+            entities_to_update.push(entity);
+        }
+    }
+
+    for entity in entities_to_update {
+        if let Ok(mut combat) = world.get::<&mut Combat>(entity) {
+            combat.triggered = false;
+        }
+    }
+}
+
+/// System to automatically generate enemy actions during combat
+pub fn enemy_combat_ai_system(world: &mut World, res: &mut Resources) {
+    // Find all combat entities that should act
+    let mut enemy_entities = Vec::new();
+
+    for (entity, (_, combat, _)) in world.query::<(&Position, &Combat, &GameEntity)>().iter() {
+        if combat.triggered && entity != res.player_entity.unwrap_or(hecs::Entity::DANGLING) {
+            // Skip if entity is dead, stunned, or already has actions queued
+            if world.get::<&Dead>(entity).is_ok() || world.get::<&Stunned>(entity).is_ok() {
+                continue;
+            }
+
+            // Check if entity has an empty or no action queue
+            let needs_action = match world.get::<&ActionQueue>(entity) {
+                Ok(queue) => queue.current_action.is_none() && queue.actions.is_empty(),
+                Err(_) => true, // No queue component means it needs one
+            };
+
+            if needs_action {
+                enemy_entities.push(entity);
+            }
+        }
+    }
+
+    // Generate actions for each enemy that needs them
+    for enemy_entity in enemy_entities {
+        generate_enemy_action(world, res, enemy_entity);
+    }
+}
+
+/// Generate an action for an enemy entity
+fn generate_enemy_action(world: &mut World, res: &mut Resources, enemy_entity: hecs::Entity) {
+    use rand::Rng;
+
+    // Ensure enemy has an action queue
+    if world.get::<&ActionQueue>(enemy_entity).is_err() {
+        world.insert_one(enemy_entity, ActionQueue::new()).ok();
+    }
+
+    // Find the player
+    let player_entity = match res.player_entity {
+        Some(player) => player,
+        None => return,
+    };
+
+    // Simple AI: attack the player with random damage and timing
+    let damage = res.rng.gen_range(5..=15);
+    let execution_time = res.rng.gen_range(2000..=5000); // 2-5 seconds
+
+    let action = QueuedAction {
+        entity: enemy_entity,
+        action: CombatAction::EnemyAttack {
+            target_entity: player_entity,
+            damage,
+        },
+        execution_time_ms: execution_time,
+        remaining_time_ms: execution_time,
+    };
+
+    if let Ok(mut queue) = world.get::<&mut ActionQueue>(enemy_entity) {
+        queue.queue_action(action);
+        queue.start_next_action();
     }
 }
