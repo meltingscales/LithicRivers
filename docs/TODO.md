@@ -163,6 +163,7 @@ See [STEAM-MVP.md](STEAM-MVP.md) for the complete release plan.
   - Tackle is a move
     - It has a 800 tick cooldown
     - It ALWAYS pushes an enemy back 2 spaces
+    - it stops combat if no enemies are adjacent to you now
     - You move into the enemy's original space
     - It 50% of the time will make an enemy Stunned for 600 ticks
 

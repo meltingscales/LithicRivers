@@ -2,6 +2,7 @@ use crate::components::{Energy, Position};
 use crate::model::body::{Body, BodyPartState, BodyPartType};
 use hecs::Entity;
 use serde::{Deserialize, Serialize};
+use std::collections::VecDeque;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum MoveType {
@@ -9,6 +10,17 @@ pub enum MoveType {
     Tackle,
     Fireball,
     Escape,
+}
+
+impl MoveType {
+    pub fn execution_time_ms(&self) -> u64 {
+        match self {
+            MoveType::Melee => 3000,
+            MoveType::Fireball => 8000,
+            MoveType::Tackle => 6000,
+            MoveType::Escape => 5000,
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -228,6 +240,80 @@ pub fn calculate_body_integrity(body: &Body) -> f32 {
     }
 
     (integrity_sum / total_parts).min(1.0) // Cap at 100%
+}
+
+/// Queued action in the combat system
+#[derive(Debug, Clone)]
+pub struct QueuedAction {
+    pub entity: Entity,
+    pub action: CombatAction,
+    pub execution_time_ms: u64,
+    pub remaining_time_ms: u64,
+}
+
+/// Types of combat actions that can be queued
+#[derive(Debug, Clone)]
+pub enum CombatAction {
+    PlayerMove {
+        move_type: MoveType,
+        target_entity: Option<Entity>,
+        target_position: Option<Position>,
+    },
+    EnemyAttack {
+        target_entity: Entity,
+        damage: u32,
+    },
+}
+
+/// Component for the action queue system - attached to combat entities
+#[derive(Debug, Clone, Default)]
+pub struct ActionQueue {
+    pub actions: VecDeque<QueuedAction>,
+    pub current_action: Option<QueuedAction>,
+}
+
+impl ActionQueue {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn queue_action(&mut self, action: QueuedAction) {
+        self.actions.push_back(action);
+    }
+
+    pub fn start_next_action(&mut self) -> Option<QueuedAction> {
+        if self.current_action.is_none() {
+            self.current_action = self.actions.pop_front();
+        }
+        self.current_action.clone()
+    }
+
+    pub fn update_timers(&mut self, delta_ms: u64) -> Option<QueuedAction> {
+        if let Some(ref mut current) = self.current_action {
+            current.remaining_time_ms = current.remaining_time_ms.saturating_sub(delta_ms);
+
+            if current.remaining_time_ms == 0 {
+                let completed = self.current_action.take();
+                // Start the next action automatically
+                self.start_next_action();
+                return completed;
+            }
+        }
+        None
+    }
+
+    pub fn get_queued_actions(&self) -> &VecDeque<QueuedAction> {
+        &self.actions
+    }
+
+    pub fn get_current_action(&self) -> &Option<QueuedAction> {
+        &self.current_action
+    }
+
+    pub fn clear(&mut self) {
+        self.actions.clear();
+        self.current_action = None;
+    }
 }
 
 /// Get a description of body state for display

@@ -285,6 +285,10 @@ pub struct SpriteRef {
     pub name: String,
 }
 
+/// Marker component for entities that are dead
+#[derive(Debug, Clone, Copy)]
+pub struct Dead;
+
 impl SpriteRef {
     pub fn new(category: &str, name: &str) -> Self {
         Self {

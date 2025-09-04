@@ -16,19 +16,13 @@ pub fn render_combat_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     f.render_widget(outer_block, area);
 
     // Get current selection and timers from combat state
-    let (current_move, current_enemy, enemy_timers, player_action_timer) = match &app.combat {
+    let (current_move, current_enemy, enemy_timers) = match &app.combat {
         crate::CombatUiState::Active {
             current_move,
             current_enemy,
             enemy_timers,
-            player_action_timer,
-        } => (
-            *current_move,
-            *current_enemy,
-            enemy_timers.clone(),
-            *player_action_timer,
-        ),
-        _ => (0, 0, vec![], None), // Fallback, shouldn't happen when this function is called
+        } => (*current_move, *current_enemy, enemy_timers.clone()),
+        _ => (0, 0, vec![]), // Fallback, shouldn't happen when this function is called
     };
 
     // Get real player and enemy data from the game world
@@ -72,7 +66,7 @@ pub fn render_combat_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
         chunks[2].width, chunks[2].height
     ));
 
-    // Render moves with player action timer
+    // Render moves
     render_moves(
         f,
         chunks[2],
@@ -80,7 +74,6 @@ pub fn render_combat_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
         &cooldowns,
         player_energy,
         current_move,
-        player_action_timer,
         app,
     );
 
@@ -194,31 +187,120 @@ fn render_action_queue(f: &mut Frame, area: Rect, app: &mut crate::App) {
     use ratatui::text::Line;
     use ratatui::widgets::Wrap;
 
-    // Mock queue data for now - later this will come from the actual combat system
     let mut lines = vec![Line::from("Current:".bold())];
 
-    // Show player action timer if active
-    if let crate::CombatUiState::Active {
-        player_action_timer,
-        current_move,
-        ..
-    } = &app.combat
-    {
-        if let Some(timer_ms) = player_action_timer {
-            let seconds = timer_ms / 1000;
-            lines.push(Line::from(format!("▶ Executing... {}s", seconds)));
+    // Get real action queue data from the player entity
+    if let Some(player_entity) = app.core.game.res.player_entity {
+        if let Ok(queue) = app
+            .core
+            .game
+            .world
+            .get::<&lithicrivers_core::moves::ActionQueue>(player_entity)
+        {
+            // Show current action
+            if let Some(current_action) = &queue.current_action {
+                let seconds = current_action.remaining_time_ms / 1000;
+                let action_name = match &current_action.action {
+                    lithicrivers_core::moves::CombatAction::PlayerMove { move_type, .. } => {
+                        match move_type {
+                            lithicrivers_core::moves::MoveType::Melee => "Melee",
+                            lithicrivers_core::moves::MoveType::Fireball => "Fireball",
+                            lithicrivers_core::moves::MoveType::Tackle => "Tackle",
+                            lithicrivers_core::moves::MoveType::Escape => "Escape",
+                        }
+                    }
+                    lithicrivers_core::moves::CombatAction::EnemyAttack { .. } => "Enemy Attack",
+                };
+                lines.push(Line::from(format!("▶ {} ({}s)", action_name, seconds)));
+            } else {
+                lines.push(Line::from("▶ Ready"));
+            }
+
+            // Show queued actions
+            lines.push(Line::from(""));
+            lines.push(Line::from("Queue:".bold()));
+
+            if queue.actions.is_empty() {
+                lines.push(Line::from("• No actions queued"));
+            } else {
+                for (i, action) in queue.actions.iter().enumerate() {
+                    if i >= 3 {
+                        // Limit display to first 3 queued actions
+                        lines.push(Line::from(format!(
+                            "• ... and {} more",
+                            queue.actions.len() - 3
+                        )));
+                        break;
+                    }
+
+                    let action_name = match &action.action {
+                        lithicrivers_core::moves::CombatAction::PlayerMove {
+                            move_type, ..
+                        } => match move_type {
+                            lithicrivers_core::moves::MoveType::Melee => "Melee",
+                            lithicrivers_core::moves::MoveType::Fireball => "Fireball",
+                            lithicrivers_core::moves::MoveType::Tackle => "Tackle",
+                            lithicrivers_core::moves::MoveType::Escape => "Escape",
+                        },
+                        lithicrivers_core::moves::CombatAction::EnemyAttack { .. } => {
+                            "Enemy Attack"
+                        }
+                    };
+                    lines.push(Line::from(format!("• {}", action_name)));
+                }
+            }
         } else {
-            lines.push(Line::from("▶ Waiting..."));
+            lines.push(Line::from("▶ No queue"));
         }
     } else {
-        lines.push(Line::from("▶ Waiting..."));
+        lines.push(Line::from("▶ No player"));
     }
 
-    // Mock queue items - in the real system this would show actual queued actions
+    // Show enemy actions too
     lines.push(Line::from(""));
-    lines.push(Line::from("Queue:".bold()));
-    lines.push(Line::from("• Enemy 1 attacks"));
-    lines.push(Line::from("• Enemy 2 attacks"));
+    lines.push(Line::from("Enemies:".bold()));
+
+    let mut enemy_count = 0;
+    for (entity, (_, combat, _)) in app
+        .core
+        .game
+        .world
+        .query::<(
+            &lithicrivers_core::components::Position,
+            &lithicrivers_core::components::Combat,
+            &lithicrivers_core::components::GameEntity,
+        )>()
+        .iter()
+    {
+        if Some(entity) == app.core.game.res.player_entity || !combat.triggered {
+            continue;
+        }
+
+        enemy_count += 1;
+        if enemy_count > 3 {
+            lines.push(Line::from("• ..."));
+            break;
+        }
+
+        if let Ok(queue) = app
+            .core
+            .game
+            .world
+            .get::<&lithicrivers_core::moves::ActionQueue>(entity)
+        {
+            if let Some(current) = &queue.current_action {
+                let seconds = current.remaining_time_ms / 1000;
+                lines.push(Line::from(format!(
+                    "• Enemy {} ({}s)",
+                    enemy_count, seconds
+                )));
+            } else {
+                lines.push(Line::from(format!("• Enemy {} ready", enemy_count)));
+            }
+        } else {
+            lines.push(Line::from(format!("• Enemy {} preparing", enemy_count)));
+        }
+    }
 
     let block = Block::default().borders(Borders::ALL).title("Action Queue");
     let paragraph = Paragraph::new(lines).block(block).wrap(Wrap { trim: true });
@@ -233,7 +315,6 @@ fn render_moves(
     cooldowns: &lithicrivers_core::moves::MoveCooldowns,
     energy: lithicrivers_core::components::Energy,
     current_move: usize,
-    player_action_timer: Option<u32>,
     app: &mut crate::App,
 ) {
     // Split the moves area horizontally: moves on left, queue on right
@@ -254,16 +335,51 @@ fn render_moves(
     let layout = Layout::vertical([Constraint::Length(3), Constraint::Min(12)]).split(moves_area);
     let moves_only_area = layout[1];
 
-    // Always render player action timer - show timer or "Ready" state
-    let timer_text = if let Some(timer_ms) = player_action_timer {
-        let seconds = timer_ms / 1000;
-        format!("⚡ Executing move... {}s", seconds)
+    // Render player action timer based on ActionQueue system
+    let timer_text = if let Some(player_entity) = app.core.game.res.player_entity {
+        if let Ok(queue) = app
+            .core
+            .game
+            .world
+            .get::<&lithicrivers_core::moves::ActionQueue>(player_entity)
+        {
+            if let Some(current_action) = &queue.current_action {
+                let seconds = current_action.remaining_time_ms / 1000;
+                let action_name = match &current_action.action {
+                    lithicrivers_core::moves::CombatAction::PlayerMove { move_type, .. } => {
+                        match move_type {
+                            lithicrivers_core::moves::MoveType::Melee => "Melee",
+                            lithicrivers_core::moves::MoveType::Fireball => "Fireball",
+                            lithicrivers_core::moves::MoveType::Tackle => "Tackle",
+                            lithicrivers_core::moves::MoveType::Escape => "Escape",
+                        }
+                    }
+                    _ => "Action",
+                };
+                format!("⚡ {} ({}s)", action_name, seconds)
+            } else {
+                "⚡ Ready".to_string()
+            }
+        } else {
+            "⚡ Ready".to_string()
+        }
     } else {
-        "⚡ Ready".to_string()
+        "⚡ No Player".to_string()
+    };
+
+    let has_action = if let Some(player_entity) = app.core.game.res.player_entity {
+        app.core
+            .game
+            .world
+            .get::<&lithicrivers_core::moves::ActionQueue>(player_entity)
+            .map(|queue| queue.current_action.is_some())
+            .unwrap_or(false)
+    } else {
+        false
     };
 
     let timer_para = Paragraph::new(timer_text)
-        .style(if player_action_timer.is_some() {
+        .style(if has_action {
             Style::default().fg(Color::Green)
         } else {
             Style::default().fg(Color::Yellow)
