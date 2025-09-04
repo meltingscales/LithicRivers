@@ -8,6 +8,15 @@ You should use `rustup` to run `cargo` and other tools.
 
 Please avoid running `cargo clean`. It takes a long time to rebuild rust modules.
 
+## Testing
+
+Run tests with `make test` to validate game systems. Write simple unit tests for:
+- Combat mechanics (damage, death, action queues)  
+- Game logic (movement, energy, cooldowns)
+- Edge cases and bug fixes
+
+Tests help ensure systems work correctly and prevent regressions during development.
+
 Also never run `just client` or any other TUI because you might be in a terminal that cannot display properly as you're an AI agent.
 
 Guiding principles:

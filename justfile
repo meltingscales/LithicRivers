@@ -41,9 +41,11 @@ install:
 security:
     {{cargoz_env}} audit
 
-# Run tests
-test:
+test: build
     {{cargoz_env}} test
+
+test-release: build-release
+    {{cargoz_env}} test --release
 
 clean:
     rm -rf target/debug/config/

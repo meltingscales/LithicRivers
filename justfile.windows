@@ -66,9 +66,11 @@ client: build
 client-release: build-release
     cargo run --release -p lithicrivers-client --bin lithicrivers-client -j {{cpu_count}}
 
-# Run tests
-test:
+test: build
     cargo test --workspace -j {{cpu_count}}
+
+test-release: build-release
+    cargo test --workspace -j {{cpu_count}} --release
 
 # Install Rust toolchain
 install:
