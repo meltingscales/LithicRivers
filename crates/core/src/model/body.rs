@@ -23,6 +23,7 @@ pub enum BodyPartState {
 pub struct BodyPart {
     pub part_type: BodyPartType,
     pub state: BodyPartState,
+    pub integrity: i32,
     pub name: String,
     pub description: String,
     // Stat modifiers when this part is in different states
@@ -33,6 +34,23 @@ pub struct BodyPart {
 }
 
 impl BodyPart {
+
+    pub fn receive_damage(&self, damage:i32, can_sever: bool)->None{
+        //TODO:
+        // if can_sever is true, apply damage and destroy the body part if it goes to 0, setting it to "Missing" and "0"
+        // if can_sever is false, apply damage and set to "Damaged" if it goes below 50, but not below 1
+    }
+
+    pub fn update_state_from_integrity(&self)->None {
+        match self.integrity {
+            //TODO:
+            //0: absent
+            //1-50: damaged
+            //50-100: functional
+            //100+: enhanced
+        }
+    }
+
     pub fn get_walk_speed_modifier(&self) -> f32 {
         match self.state {
             BodyPartState::Missing => 0.0,
@@ -90,12 +108,13 @@ impl Default for Body {
         // - Left arm: No signal detected (missing)
         // - Right leg: Torque mismatch (treat as damaged)
         let mut parts = HashMap::new();
-        let mut insert = |part_type: BodyPartType, state: BodyPartState, name: &str, desc: &str| {
+        let mut insert = |part_type: BodyPartType, state: BodyPartState, integrity: i32, name: &str, desc: &str| {
             parts.insert(
                 part_type,
                 BodyPart {
                     part_type,
                     state,
+                    integrity,
                     name: name.to_string(),
                     description: desc.to_string(),
                     walk_speed_modifier: 1.0,
@@ -108,36 +127,42 @@ impl Default for Body {
         insert(
             BodyPartType::Head,
             BodyPartState::Functional,
+            100,
             "Head",
             "Standard cranial unit",
         );
         insert(
             BodyPartType::Torso,
             BodyPartState::Functional,
+            100,
             "Torso",
             "Reinforced chassis",
         );
         insert(
             BodyPartType::LeftArm,
             BodyPartState::Missing,
+            0,
             "Left Arm",
             "Limb absent per diagnostics",
         );
         insert(
             BodyPartType::RightArm,
             BodyPartState::Functional,
+            100,
             "Right Arm",
             "Nominal voltage detected",
         );
         insert(
             BodyPartType::LeftLeg,
             BodyPartState::Functional,
+            100,
             "Left Leg",
             "Nominal voltage detected",
         );
         insert(
             BodyPartType::RightLeg,
             BodyPartState::Damaged,
+            43,
             "Right Leg",
             "Torque feedback mismatch detected",
         );
