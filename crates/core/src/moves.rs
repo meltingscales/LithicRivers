@@ -13,12 +13,12 @@ pub enum MoveType {
 }
 
 impl MoveType {
-    pub fn execution_time_ms(&self) -> u64 {
+    pub fn execution_time_ticks(&self) -> u64 {
         match self {
-            MoveType::Melee => 3000,
-            MoveType::Fireball => 8000,
-            MoveType::Tackle => 6000,
-            MoveType::Escape => 5000,
+            MoveType::Melee => 150,    // ~3 seconds at 60 ticks/sec
+            MoveType::Fireball => 400, // ~8 seconds at 60 ticks/sec
+            MoveType::Tackle => 300,   // ~6 seconds at 60 ticks/sec
+            MoveType::Escape => 250,   // ~5 seconds at 60 ticks/sec
         }
     }
 }
@@ -247,8 +247,8 @@ pub fn calculate_body_integrity(body: &Body) -> f32 {
 pub struct QueuedAction {
     pub entity: Entity,
     pub action: CombatAction,
-    pub execution_time_ms: u64,
-    pub remaining_time_ms: u64,
+    pub execution_time_ticks: u64,
+    pub remaining_time_ticks: u64,
 }
 
 /// Types of combat actions that can be queued
@@ -288,11 +288,11 @@ impl ActionQueue {
         self.current_action.clone()
     }
 
-    pub fn update_timers(&mut self, delta_ms: u64) -> Option<QueuedAction> {
+    pub fn update_timers(&mut self, delta_ticks: u64) -> Option<QueuedAction> {
         if let Some(ref mut current) = self.current_action {
-            current.remaining_time_ms = current.remaining_time_ms.saturating_sub(delta_ms);
+            current.remaining_time_ticks = current.remaining_time_ticks.saturating_sub(delta_ticks);
 
-            if current.remaining_time_ms == 0 {
+            if current.remaining_time_ticks == 0 {
                 let completed = self.current_action.take();
                 // Start the next action automatically
                 self.start_next_action();

@@ -261,8 +261,8 @@ mod tests {
         // Move player to a non-origin chunk to avoid structure asset dependency in tests
         if let Some(e) = game.res.player_entity {
             if let Ok(mut pos) = game.world.get::<&mut Position>(e) {
-                pos.x = crate::resources::world::CHUNK_SIZE + 2;
-                pos.y = crate::resources::world::CHUNK_SIZE + 2;
+                pos.x = crate::world::CHUNK_SIZE + 2;
+                pos.y = crate::world::CHUNK_SIZE + 2;
             }
         }
 
@@ -273,8 +273,8 @@ mod tests {
         }
         for (e, _pos) in sheep_entities {
             if let Ok(mut mpos) = game.world.get::<&mut Position>(e) {
-                mpos.x = crate::resources::world::CHUNK_SIZE + 5;
-                mpos.y = crate::resources::world::CHUNK_SIZE + 5;
+                mpos.x = crate::world::CHUNK_SIZE + 5;
+                mpos.y = crate::world::CHUNK_SIZE + 5;
             }
         }
 
@@ -294,8 +294,8 @@ mod tests {
         // Reposition away from origin and sheep too, but avoid any call that caches world chunks
         if let Some(e) = game.res.player_entity {
             if let Ok(mut pos) = game.world.get::<&mut Position>(e) {
-                pos.x = crate::resources::world::CHUNK_SIZE + 2;
-                pos.y = crate::resources::world::CHUNK_SIZE + 2;
+                pos.x = crate::world::CHUNK_SIZE + 2;
+                pos.y = crate::world::CHUNK_SIZE + 2;
             }
         }
         let mut sheep_entities: Vec<(hecs::Entity, Position)> = Vec::new();
@@ -304,8 +304,8 @@ mod tests {
         }
         for (e, _pos) in sheep_entities {
             if let Ok(mut mpos) = game.world.get::<&mut Position>(e) {
-                mpos.x = crate::resources::world::CHUNK_SIZE + 5;
-                mpos.y = crate::resources::world::CHUNK_SIZE + 5;
+                mpos.x = crate::world::CHUNK_SIZE + 5;
+                mpos.y = crate::world::CHUNK_SIZE + 5;
             }
         }
         // Just movement (uses non-cached tile reads)

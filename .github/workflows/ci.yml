@@ -63,11 +63,12 @@ jobs:
           key: ${{ runner.os }}-nightly-${{ hashFiles('**/Cargo.lock') }}
           shared-key: ${{ runner.os }}-nightly-${{ hashFiles('**/Cargo.lock') }}
       
-      - name: Build on Windows
+      - name: Build and test on Windows
         if: matrix.os == 'windows-latest'
         run: |
           choco install just
           just --justfile justfile.windows build-release
+          just --justfile justfile.windows test-release
           just --justfile justfile.windows stage-artifacts-release
 
       - name: Zip artifacts (Windows)
@@ -76,12 +77,13 @@ jobs:
         run: |
           Compress-Archive -Path artifacts\* -DestinationPath artifacts\lithicrivers-windows.zip -Force
 
-      - name: Build on Linux
+      - name: Build and test on Linux
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt install just
           sudo bash scripts/install_dev_deps.sh
           just build-release
+          just test-release
           just stage-artifacts-release
 
       - name: Zip artifacts (Linux)
@@ -90,12 +92,13 @@ jobs:
           sudo apt-get update && sudo apt-get install -y zip
           (cd artifacts && zip -r lithicrivers-ubuntu.zip .)
 
-      - name: Build on macOS
+      - name: Build and test on macOS
         if: matrix.os == 'macos-latest'
         run: |
           brew update
           brew install just
           just build-release
+          just test-release
           just stage-artifacts-release
 
       - name: Zip artifacts (macOS)

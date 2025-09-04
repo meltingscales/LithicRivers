@@ -199,7 +199,7 @@ fn render_action_queue(f: &mut Frame, area: Rect, app: &mut crate::App) {
         {
             // Show current action
             if let Some(current_action) = &queue.current_action {
-                let seconds = current_action.remaining_time_ms / 1000;
+                let ticks = current_action.remaining_time_ticks;
                 let action_name = match &current_action.action {
                     lithicrivers_core::moves::CombatAction::PlayerMove { move_type, .. } => {
                         match move_type {
@@ -211,7 +211,7 @@ fn render_action_queue(f: &mut Frame, area: Rect, app: &mut crate::App) {
                     }
                     lithicrivers_core::moves::CombatAction::EnemyAttack { .. } => "Enemy Attack",
                 };
-                lines.push(Line::from(format!("▶ {} ({}s)", action_name, seconds)));
+                lines.push(Line::from(format!("▶ {} ({}t)", action_name, ticks)));
             } else {
                 lines.push(Line::from("▶ Ready"));
             }
@@ -289,11 +289,8 @@ fn render_action_queue(f: &mut Frame, area: Rect, app: &mut crate::App) {
             .get::<&lithicrivers_core::moves::ActionQueue>(entity)
         {
             if let Some(current) = &queue.current_action {
-                let seconds = current.remaining_time_ms / 1000;
-                lines.push(Line::from(format!(
-                    "• Enemy {} ({}s)",
-                    enemy_count, seconds
-                )));
+                let ticks = current.remaining_time_ticks;
+                lines.push(Line::from(format!("• Enemy {} ({}t)", enemy_count, ticks)));
             } else {
                 lines.push(Line::from(format!("• Enemy {} ready", enemy_count)));
             }
@@ -344,7 +341,7 @@ fn render_moves(
             .get::<&lithicrivers_core::moves::ActionQueue>(player_entity)
         {
             if let Some(current_action) = &queue.current_action {
-                let seconds = current_action.remaining_time_ms / 1000;
+                let ticks = current_action.remaining_time_ticks;
                 let action_name = match &current_action.action {
                     lithicrivers_core::moves::CombatAction::PlayerMove { move_type, .. } => {
                         match move_type {
@@ -356,7 +353,7 @@ fn render_moves(
                     }
                     _ => "Action",
                 };
-                format!("⚡ {} ({}s)", action_name, seconds)
+                format!("⚡ {} ({}t)", action_name, ticks)
             } else {
                 "⚡ Ready".to_string()
             }

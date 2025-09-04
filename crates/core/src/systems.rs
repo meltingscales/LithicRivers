@@ -398,7 +398,7 @@ pub fn battle_delay_timer_system(world: &mut World, _res: &mut Resources) {
 
 /// System to process action queues and execute completed actions
 pub fn action_queue_system(world: &mut World, res: &mut Resources) {
-    const DELTA_MS: u64 = 16; // Assume 60fps game loop
+    const DELTA_TICKS: u64 = 1; // Each game tick advances by 1
 
     let mut completed_actions = Vec::new();
     let mut entities_with_queues = Vec::new();
@@ -412,7 +412,7 @@ pub fn action_queue_system(world: &mut World, res: &mut Resources) {
     for entity in entities_with_queues {
         if let Ok(mut queue) = world.get::<&mut ActionQueue>(entity) {
             // Update timers and check for completed actions
-            if let Some(completed_action) = queue.update_timers(DELTA_MS) {
+            if let Some(completed_action) = queue.update_timers(DELTA_TICKS) {
                 completed_actions.push(completed_action);
             }
         }
@@ -758,7 +758,7 @@ fn generate_enemy_action(world: &mut World, res: &mut Resources, enemy_entity: h
 
     // Simple AI: attack the player with random damage and timing
     let damage = res.rng.gen_range(5..=15);
-    let execution_time = res.rng.gen_range(2000..=5000); // 2-5 seconds
+    let execution_time = res.rng.gen_range(100..=250); // 100-250 ticks (~1.5-4 seconds at 60 ticks/sec)
 
     let action = QueuedAction {
         entity: enemy_entity,
@@ -766,12 +766,86 @@ fn generate_enemy_action(world: &mut World, res: &mut Resources, enemy_entity: h
             target_entity: player_entity,
             damage,
         },
-        execution_time_ms: execution_time,
-        remaining_time_ms: execution_time,
+        execution_time_ticks: execution_time,
+        remaining_time_ticks: execution_time,
     };
 
     if let Ok(mut queue) = world.get::<&mut ActionQueue>(enemy_entity) {
         queue.queue_action(action);
         queue.start_next_action();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::components::{Energy, GameEntity, Health, Player};
+    use crate::moves::{ActionQueue, CombatAction, MoveType, QueuedAction};
+
+    #[test]
+    fn test_combat_system_enemy_death() {
+        // Setup a minimal world with player and enemy
+        let mut world = World::new();
+        let mut res = Resources::new(12345);
+
+        // Create player
+        let player = world.spawn((
+            Position { x: 0, y: 0, z: 0 },
+            Player,
+            GameEntity,
+            Health::new(100),
+            Energy::new(100),
+            ActionQueue::new(),
+        ));
+        res.player_entity = Some(player);
+
+        // Create enemy with low health (will die from one hit)
+        let enemy = world.spawn((
+            Position { x: 1, y: 0, z: 0 },
+            GameEntity,
+            Health::new(10), // Low health - will die from melee attack
+            Combat::default(),
+        ));
+
+        // Create a player melee attack action that should kill the enemy
+        let action = QueuedAction {
+            entity: player,
+            action: CombatAction::PlayerMove {
+                move_type: MoveType::Melee,
+                target_entity: Some(enemy),
+                target_position: None,
+            },
+            execution_time_ticks: 150,
+            remaining_time_ticks: 0, // Ready to execute immediately
+        };
+
+        // Add action to player's queue and execute it
+        if let Ok(mut queue) = world.get::<&mut ActionQueue>(player) {
+            queue.queue_action(action);
+            queue.start_next_action();
+        }
+
+        // Process one tick of the action queue system
+        action_queue_system(&mut world, &mut res);
+
+        // Verify the enemy is now dead
+        assert!(
+            world.get::<&Dead>(enemy).is_ok(),
+            "Enemy should be marked as Dead"
+        );
+
+        // Verify the enemy's health is 0 or below
+        if let Ok(health) = world.get::<&Health>(enemy) {
+            assert!(!health.is_alive(), "Enemy should not be alive");
+        }
+
+        // Verify player is still alive
+        assert!(
+            world.get::<&Dead>(player).is_err(),
+            "Player should still be alive"
+        );
+        if let Ok(health) = world.get::<&Health>(player) {
+            assert!(health.is_alive(), "Player should still be alive");
+        };
     }
 }

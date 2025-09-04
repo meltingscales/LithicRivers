@@ -555,7 +555,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
                     };
 
                     // Create queued action
-                    let execution_time = selected_move.move_type.execution_time_ms();
+                    let execution_time = selected_move.move_type.execution_time_ticks();
                     let action = lithicrivers_core::moves::QueuedAction {
                         entity: player_entity,
                         action: lithicrivers_core::moves::CombatAction::PlayerMove {
@@ -563,8 +563,8 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
                             target_entity,
                             target_position: None, // Not used for current moves
                         },
-                        execution_time_ms: execution_time,
-                        remaining_time_ms: execution_time,
+                        execution_time_ticks: execution_time,
+                        remaining_time_ticks: execution_time,
                     };
 
                     // Ensure player has an action queue component
