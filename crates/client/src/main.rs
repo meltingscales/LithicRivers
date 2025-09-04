@@ -125,6 +125,8 @@ struct App {
     pub panels: PanelStates,
     /// Splash screen system
     pub splash: SplashScreenState,
+    /// Last time we advanced a combat tick (for 10 ticks/second)
+    pub last_combat_tick: Option<std::time::Instant>,
 }
 
 impl App {
@@ -335,6 +337,34 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<(), 
         // Exit combat if escape was successful
         if should_exit_combat {
             app.combat = CombatUiState::None;
+        }
+
+        // Auto-advance ticks when combat is active (10 ticks per second)
+        if app.combat.is_active() {
+            const TICK_INTERVAL: std::time::Duration = std::time::Duration::from_millis(100); // 10 ticks per second
+
+            let current_time = std::time::Instant::now();
+            let should_tick = match app.last_combat_tick {
+                None => {
+                    app.last_combat_tick = Some(current_time);
+                    false
+                }
+                Some(last_time) => {
+                    if current_time.duration_since(last_time) >= TICK_INTERVAL {
+                        app.last_combat_tick = Some(current_time);
+                        true
+                    } else {
+                        false
+                    }
+                }
+            };
+
+            if should_tick {
+                app.core.game.tick();
+            }
+        } else {
+            // Reset tick timer when not in combat
+            app.last_combat_tick = None;
         }
 
         terminal.draw(|f| ui(f, app))?;

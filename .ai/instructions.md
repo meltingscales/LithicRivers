@@ -8,6 +8,8 @@ You should use `rustup` to run `cargo` and other tools.
 
 Please avoid running `cargo clean`. It takes a long time to rebuild rust modules.
 
+Also never run `just client` or any other TUI because you might be in a terminal that cannot display properly as you're an AI agent. Instead, ask me to run `just client` or use unit testing to test code.
+
 ## Testing
 
 Run tests with `make test` to validate game systems. Write simple unit tests for:
@@ -17,9 +19,7 @@ Run tests with `make test` to validate game systems. Write simple unit tests for
 
 Tests help ensure systems work correctly and prevent regressions during development.
 
-Also never run `just client` or any other TUI because you might be in a terminal that cannot display properly as you're an AI agent.
-
-Guiding principles:
+## Guiding principles
 
 - All randomly-generated choices, actions, damage, loot, worldgen, etc - should be fully deterministic and based on world seed and world tick. This means that this game should be fully TAS-able for any specific initial seed (and version of game code). Always use the seed and any permutation (when appropriate) of XYZ coordinate, biome, or other seeded randomness to generate anything "random".
 

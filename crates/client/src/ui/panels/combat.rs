@@ -478,12 +478,6 @@ fn render_moves(
 
     let move_chunks = Layout::vertical(constraints).split(moves_only_area);
 
-    app.core.game.res.log(format!(
-        "Generated {} chunks for {} moves",
-        move_chunks.len(),
-        num_moves
-    ));
-
     // Render each move block, but ensure we don't go out of bounds
     for (i, block) in move_blocks.into_iter().enumerate() {
         if i < move_chunks.len() {

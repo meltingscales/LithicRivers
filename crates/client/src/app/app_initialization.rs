@@ -148,6 +148,7 @@ impl App {
                 last_line_time: Instant::now(),
                 boot_complete: false,
             },
+            last_combat_tick: None,
         }
     }
 }
