@@ -60,12 +60,6 @@ pub fn render_combat_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     // Render enemies with real timers
     render_enemies(f, chunks[1], &combat_enemies, current_enemy, &enemy_timers);
 
-    // Debug moves area
-    app.core.game.res.log(format!(
-        "Moves area: {}x{}",
-        chunks[2].width, chunks[2].height
-    ));
-
     // Render moves
     render_moves(
         f,
