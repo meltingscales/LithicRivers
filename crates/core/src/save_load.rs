@@ -99,7 +99,7 @@ impl SaveData {
         // Rebuild entity world
         game.world = World::new();
         // Player
-        let player_e = game.world.spawn((
+        let _player_e = game.world.spawn((
             self.player.pos,
             Glyph('@'),
             Player,
@@ -108,7 +108,7 @@ impl SaveData {
             SpriteRef::new("entities", "player"),
             self.player.inventory,
         ));
-        game.res.player_entity = Some(player_e);
+        // Note: player_entity no longer needed - use ECS queries
         // Sheep
         for s in self.sheep.into_iter() {
             game.world.spawn((

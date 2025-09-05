@@ -93,14 +93,12 @@ impl App {
         let mut initial_view_x = 0;
         let mut initial_view_y = 0;
         let mut initial_view_z = 0;
-        if let Some(e) = game.res.player_entity {
-            if let Ok(pos) = game.world.get::<&Position>(e) {
-                look_cursor = *pos;
-                // Center initial UI viewport on player
-                initial_view_x = look_cursor.x;
-                initial_view_y = look_cursor.y;
-                initial_view_z = look_cursor.z;
-            }
+        if let Some(pos) = game.get_player_position() {
+            look_cursor = pos;
+            // Center initial UI viewport on player
+            initial_view_x = look_cursor.x;
+            initial_view_y = look_cursor.y;
+            initial_view_z = look_cursor.z;
         }
 
         let recipe_handler = RecipeHandler::new();

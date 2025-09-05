@@ -55,7 +55,7 @@ pub fn render_menu_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
         app.core.game.res.gametick
     ))));
     lines.push(Line::from(Span::raw(format!("View Z: {}", app.ui.view_z))));
-    if let Some(e) = app.core.game.res.player_entity {
+    if let Some(e) = app.core.game.get_player_entity() {
         if let Ok(pos) = app
             .core
             .game

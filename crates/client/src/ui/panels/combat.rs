@@ -190,7 +190,7 @@ fn render_action_queue(f: &mut Frame, area: Rect, app: &mut crate::App) {
     let mut lines = vec![Line::from("Current:".bold())];
 
     // Get real action queue data from the player entity
-    if let Some(player_entity) = app.core.game.res.player_entity {
+    if let Some(player_entity) = app.core.game.get_player_entity() {
         if let Ok(queue) = app
             .core
             .game
@@ -262,7 +262,7 @@ fn render_action_queue(f: &mut Frame, area: Rect, app: &mut crate::App) {
         )>()
         .iter()
     {
-        if Some(entity) == app.core.game.res.player_entity || !combat.triggered {
+        if Some(entity) == app.core.game.get_player_entity() || !combat.triggered {
             continue;
         }
 
@@ -319,7 +319,7 @@ fn render_moves(
     let moves_only_area = layout[1];
 
     // Render player action timer based on ActionQueue system
-    let timer_text = if let Some(player_entity) = app.core.game.res.player_entity {
+    let timer_text = if let Some(player_entity) = app.core.game.get_player_entity() {
         if let Ok(queue) = app
             .core
             .game
@@ -345,7 +345,7 @@ fn render_moves(
         "[z] No Player".to_string()
     };
 
-    let has_action = if let Some(player_entity) = app.core.game.res.player_entity {
+    let has_action = if let Some(player_entity) = app.core.game.get_player_entity() {
         app.core
             .game
             .world
@@ -502,7 +502,7 @@ fn get_player_combat_data(
     let mut player_body = None;
     let mut player_energy = Energy::new(100); // Default energy
 
-    if let Some(player_entity) = app.core.game.res.player_entity {
+    if let Some(player_entity) = app.core.game.get_player_entity() {
         // Try to get player body
         if let Ok(body) = app.core.game.world.get::<&Body>(player_entity) {
             player_body = Some((*body).clone());
@@ -533,7 +533,7 @@ fn get_enemy_combat_data(app: &mut crate::App) -> Vec<CombatEnemy> {
     let mut enemies = Vec::new();
 
     // Find all combat entities near the player
-    if let Some(player_entity) = app.core.game.res.player_entity {
+    if let Some(player_entity) = app.core.game.get_player_entity() {
         if let Ok(player_pos) = app.core.game.world.get::<&Position>(player_entity) {
             let player_pos = *player_pos;
 
