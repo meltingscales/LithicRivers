@@ -24,7 +24,7 @@ pub fn render_menu_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     )));
     lines.push(Line::from(Span::raw(format!(
         "  {}",
-        app.core.game.res.config.config.source_label()
+        app.core.game.res.config.source_label()
     ))));
     lines.push(Line::from(Span::raw(format!(
         "  Player: {}",

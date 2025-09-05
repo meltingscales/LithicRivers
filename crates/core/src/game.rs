@@ -32,20 +32,12 @@ impl Game {
     pub fn new(seed: u64) -> Self {
         let mut world = World::new();
         let mut res = Resources::new(seed);
-        // Determine starting position from config (production environment)
-        let [sx, sy, sz] =
-            res.config
-                .config
-                .get_vector_setting("world", "DEFAULT_PLAYER_POSITION", "production");
+        // Determine starting position from cached config
+        let [sx, sy, sz] = res.config.default_player_position;
         // Note: viewport is now managed by client UI, not core game
         // Core game no longer sets generation Z - let client manage viewport
-        // Read auto-pickup default from config
-        let auto_pickup_default = res
-            .config
-            .config
-            .get_setting("inventory", "TOGGLE_ITEM_AUTO_PICKUP_DEFAULT_ENABLED")
-            .and_then(|v| v.as_bool())
-            .unwrap_or(true);
+        // Read auto-pickup default from cached config
+        let auto_pickup_default = res.config.auto_pickup_enabled;
 
         // Build starting inventory
         let mut starting_inv = Inventory {

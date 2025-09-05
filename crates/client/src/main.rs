@@ -252,12 +252,12 @@ impl App {
 
 fn main() -> Result<(), Box<dyn Error>> {
     // Load configuration to determine logging and seed before starting app
-    let cm = ConfigManager::new();
-    let log_level = cm
+    let config = lithicrivers_core::game_config::GameConfig::new();
+    let log_level = config
         .get_setting("game", "LOGGINGLEVEL")
         .and_then(|v| v.as_str())
         .unwrap_or_else(|| panic!("LOGGINGLEVEL must be set in config"));
-    let seed_val: u64 = cm
+    let seed_val: u64 = config
         .get_setting("game", "DEFAULT_SEED")
         .and_then(|v| v.as_u64())
         .unwrap_or_else(|| panic!("DEFAULT_SEED must be set in config"));
@@ -629,12 +629,13 @@ fn render_message_log(f: &mut Frame, app: &mut App, area: Rect) {
     let mut lines: Vec<Line> = Vec::new();
     // Account for the border (top+bottom) since Paragraph has a Block
     let visible_rows = area.height.saturating_sub(2) as usize;
-    let start = if app.core.game.res.message_log.messages.len() > visible_rows {
-        app.core.game.res.message_log.messages.len() - visible_rows
+    let messages = &app.core.game.res.events.get_message_log().messages;
+    let start = if messages.len() > visible_rows {
+        messages.len() - visible_rows
     } else {
         0
     };
-    for msg in app.core.game.res.message_log.messages.iter().skip(start) {
+    for msg in messages.iter().skip(start) {
         lines.push(Line::from(Span::raw(msg.clone())));
     }
     let paragraph = Paragraph::new(lines)

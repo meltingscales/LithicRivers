@@ -3,6 +3,7 @@ pub mod config;
 pub mod default_config;
 pub mod game;
 pub mod game_config;
+pub mod game_events;
 pub mod game_time;
 pub mod intent;
 pub mod keycode_mapping;
