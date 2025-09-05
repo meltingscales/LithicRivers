@@ -81,9 +81,9 @@ impl SaveData {
         let player = player_save.context("Player entity missing during save")?;
         Ok(SaveData {
             version: SAVE_VERSION,
-            seed: game.res.seed,
-            gametick: game.res.gametick,
-            world: game.res.world.clone(),
+            seed: game.res.world_state.seed,
+            gametick: game.res.time.tick,
+            world: game.res.world_state.world.clone(),
             player,
             sheep,
             dropped_items,
@@ -93,8 +93,8 @@ impl SaveData {
     pub fn apply_to_game(self, game: &mut crate::Game) -> Result<()> {
         // Replace resources (except RNG; reconstruct from seed)
         game.res = Resources::new(self.seed);
-        game.res.gametick = self.gametick;
-        game.res.world = self.world;
+        game.res.time.tick = self.gametick;
+        game.res.world_state.world = self.world;
 
         // Rebuild entity world
         game.world = World::new();
@@ -236,7 +236,7 @@ mod tests {
 
     fn simulate_full_actions(game: &mut crate::Game) {
         // Move player to a non-origin chunk to avoid structure asset dependency in tests
-        if let Some(e) = game.res.player_entity {
+        if let Some(e) = game.get_player_entity() {
             if let Ok(mut pos) = game.world.get::<&mut Position>(e) {
                 pos.x = crate::world::CHUNK_SIZE + 2;
                 pos.y = crate::world::CHUNK_SIZE + 2;
@@ -269,7 +269,7 @@ mod tests {
 
     fn simulate_movement_only(game: &mut crate::Game) {
         // Reposition away from origin and sheep too, but avoid any call that caches world chunks
-        if let Some(e) = game.res.player_entity {
+        if let Some(e) = game.get_player_entity() {
             if let Ok(mut pos) = game.world.get::<&mut Position>(e) {
                 pos.x = crate::world::CHUNK_SIZE + 2;
                 pos.y = crate::world::CHUNK_SIZE + 2;
@@ -293,7 +293,7 @@ mod tests {
     }
 
     fn wood_count(game: &crate::Game) -> u32 {
-        if let Some(e) = game.res.player_entity {
+        if let Some(e) = game.get_player_entity() {
             if let Ok(inv) = game.world.get::<&Inventory>(e) {
                 return inv
                     .slots
@@ -313,27 +313,28 @@ mod tests {
         simulate_movement_only(&mut game);
 
         // Mutate a tile in a cached chunk to ensure it persists through JSON
-        if let Some(e) = game.res.player_entity {
+        if let Some(e) = game.get_player_entity() {
             if let Ok(pos) = game.world.get::<&Position>(e) {
                 // Ensure chunk is cached and then set a unique tile
-                let before = game.res.world.get_tile_cached(pos.x, pos.y, pos.z);
+                let before = game
+                    .res
+                    .world_state
+                    .world
+                    .get_tile_cached(pos.x, pos.y, pos.z);
                 let new_tile = if before == crate::tiles::TileKind::Rock {
                     crate::tiles::TileKind::Dirt
                 } else {
                     crate::tiles::TileKind::Rock
                 };
                 game.res
+                    .world_state
                     .world
                     .set_tile_cached(pos.x, pos.y, pos.z, new_tile);
             }
         }
 
         // Snapshot key expectations
-        let player_pos_before = if let Some(e) = game.res.player_entity {
-            *game.world.get::<&Position>(e).unwrap()
-        } else {
-            panic!("no player entity");
-        };
+        let player_pos_before = game.get_player_position().expect("no player entity");
         // JSON roundtrip in-memory (use JSON-friendly mirror)
         let data = SaveData::from_game(&game).expect("save");
         let data_json: SaveDataJson = data.into();
@@ -345,24 +346,22 @@ mod tests {
         decoded.apply_to_game(&mut loaded).expect("apply");
 
         // Verify seed and tick
-        assert_eq!(loaded.res.seed, seed);
-        assert_eq!(loaded.res.gametick, game.res.gametick);
+        assert_eq!(loaded.res.world_state.seed, seed);
+        assert_eq!(loaded.res.time.tick, game.res.time.tick);
 
         // Verify player position
-        let player_pos_after = if let Some(e) = loaded.res.player_entity {
-            *loaded.world.get::<&Position>(e).unwrap()
-        } else {
-            panic!("no player entity after load");
-        };
+        let player_pos_after = loaded
+            .get_player_position()
+            .expect("no player entity after load");
         assert_eq!(player_pos_after, player_pos_before);
 
         // Verify the mutated tile persisted
-        let tile_after = loaded.res.world.get_tile_cached(
+        let tile_after = loaded.res.world_state.world.get_tile_cached(
             player_pos_after.x,
             player_pos_after.y,
             player_pos_after.z,
         );
-        let tile_before = game.res.world.get_tile_cached(
+        let tile_before = game.res.world_state.world.get_tile_cached(
             player_pos_before.x,
             player_pos_before.y,
             player_pos_before.z,
@@ -370,8 +369,8 @@ mod tests {
         assert_eq!(tile_after, tile_before);
 
         // Basic invariants
-        assert_eq!(loaded.res.seed, seed);
-        assert_eq!(loaded.res.gametick, game.res.gametick);
+        assert_eq!(loaded.res.world_state.seed, seed);
+        assert_eq!(loaded.res.time.tick, game.res.time.tick);
     }
 
     #[test]
@@ -388,19 +387,13 @@ mod tests {
         decoded.apply_to_game(&mut loaded).expect("apply");
 
         // Core invariants
-        assert_eq!(loaded.res.seed, seed);
-        assert_eq!(loaded.res.gametick, game.res.gametick);
+        assert_eq!(loaded.res.world_state.seed, seed);
+        assert_eq!(loaded.res.time.tick, game.res.time.tick);
         // Fluids removed
 
         // Player position and wood
-        let p_before = {
-            let e = game.res.player_entity.unwrap();
-            *game.world.get::<&Position>(e).unwrap()
-        };
-        let p_after = {
-            let e = loaded.res.player_entity.unwrap();
-            *loaded.world.get::<&Position>(e).unwrap()
-        };
+        let p_before = game.get_player_position().unwrap();
+        let p_after = loaded.get_player_position().unwrap();
         assert_eq!(p_after, p_before);
         assert_eq!(wood_count(&loaded), wood_count(&game));
     }

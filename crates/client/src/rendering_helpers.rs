@@ -47,7 +47,13 @@ pub fn block_art_12x8_lines_for_position(
 ) -> bool {
     // Removed unused import
 
-    let kind = app.core.game.res.world.get_tile_cached(pos.x, pos.y, pos.z);
+    let kind = app
+        .core
+        .game
+        .res
+        .world_state
+        .world
+        .get_tile_cached(pos.x, pos.y, pos.z);
 
     let sd = app
         .core

@@ -239,7 +239,7 @@ impl App {
             MenuTab::Quit => {
                 // Quit
                 self.core.game.res.log("Quit requested (menu)");
-                tracing::info!(target: "game", "quit_requested input=menu tick={}", self.core.game.res.gametick);
+                tracing::info!(target: "game", "quit_requested input=menu tick={}", self.core.game.res.time.tick);
                 self.core.should_quit = true;
             }
             MenuTab::Crafting => {
@@ -409,9 +409,9 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<(), 
             tracing::info!(
                 target: "game",
                 "shutdown tick={} view_z={} seed={}",
-                app.core.game.res.gametick,
+                app.core.game.res.time.tick,
                 app.ui.view_z,
-                app.core.game.res.seed
+                app.core.game.res.world_state.seed
             );
             return Ok(());
         }
@@ -629,12 +629,12 @@ fn render_message_log(f: &mut Frame, app: &mut App, area: Rect) {
     let mut lines: Vec<Line> = Vec::new();
     // Account for the border (top+bottom) since Paragraph has a Block
     let visible_rows = area.height.saturating_sub(2) as usize;
-    let start = if app.core.game.res.messages.len() > visible_rows {
-        app.core.game.res.messages.len() - visible_rows
+    let start = if app.core.game.res.message_log.messages.len() > visible_rows {
+        app.core.game.res.message_log.messages.len() - visible_rows
     } else {
         0
     };
-    for msg in app.core.game.res.messages.iter().skip(start) {
+    for msg in app.core.game.res.message_log.messages.iter().skip(start) {
         lines.push(Line::from(Span::raw(msg.clone())));
     }
     let paragraph = Paragraph::new(lines)

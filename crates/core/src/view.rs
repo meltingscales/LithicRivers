@@ -19,7 +19,7 @@ pub fn build_render_view(world: &World, res: &Resources) -> RenderView {
         .unwrap_or(Position { x: 0, y: 0, z: 0 });
 
     RenderView {
-        gametick: res.gametick,
+        gametick: res.time.tick,
         player_pos,
         map_lines: Vec::new(),
     }

@@ -151,7 +151,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
             let top = app.panels.look.cursor.y - radius;
             let right = app.panels.look.cursor.x + radius;
             let bottom = app.panels.look.cursor.y + radius;
-            app.core.game.res.world.prefetch_rect(
+            app.core.game.res.world_state.world.prefetch_rect(
                 left,
                 top,
                 right,
@@ -726,7 +726,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
     // UI: Quit
     if app.ui.keybinds.matches("ui", "QUIT", &key) {
         app.core.game.res.log("Quit requested (keybind)");
-        tracing::info!(target: "game", "quit_requested tick={}", app.core.game.res.gametick);
+        tracing::info!(target: "game", "quit_requested tick={}", app.core.game.res.time.tick);
         app.core.should_quit = true;
         return Ok(());
     }
@@ -790,23 +790,23 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
     }
     // Save/Load via config
     if app.ui.keybinds.matches("ui", "SAVE_JSON", &key) {
-        tracing::info!(target: "game", "save_begin path=save.json tick={}", app.core.game.res.gametick);
+        tracing::info!(target: "game", "save_begin path=save.json tick={}", app.core.game.res.time.tick);
         app.core
             .game
             .save_json("save.json")
             .map_err(|e| format!("save_json error: {:?}", e))?;
         app.core.game.res.log("Saved to save.json");
-        tracing::info!(target: "game", "save_end path=save.json tick={}", app.core.game.res.gametick);
+        tracing::info!(target: "game", "save_end path=save.json tick={}", app.core.game.res.time.tick);
         return Ok(());
     }
     if app.ui.keybinds.matches("ui", "LOAD_JSON", &key) {
-        tracing::info!(target: "game", "load_begin path=save.json tick={}", app.core.game.res.gametick);
+        tracing::info!(target: "game", "load_begin path=save.json tick={}", app.core.game.res.time.tick);
         app.core
             .game
             .load_json("save.json")
             .map_err(|e| format!("load_json error: {:?}", e))?;
         app.core.game.res.log("Loaded from save.json");
-        tracing::info!(target: "game", "load_end path=save.json tick={}", app.core.game.res.gametick);
+        tracing::info!(target: "game", "load_end path=save.json tick={}", app.core.game.res.time.tick);
         return Ok(());
     }
 
