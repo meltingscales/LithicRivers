@@ -139,10 +139,13 @@ pub fn mining_system(world: &mut World, res: &mut Resources) -> bool {
                 SpriteRef::new("items", "acorn"),
             ));
 
-            res.log(format!(
-                "You chop the tree. (+{} Wood, +{} Acorn)",
-                wood_qty, acorn_qty
-            ));
+            res.events.interaction_event(
+                format!(
+                    "You chop the tree. (+{} Wood, +{} Acorn)",
+                    wood_qty, acorn_qty
+                ),
+                res.time.tick,
+            );
             true
         }
         _ => {
@@ -199,7 +202,8 @@ pub fn pickup_system(world: &mut World, res: &mut Resources) {
             total += di.qty;
         }
         if total > 0 {
-            res.log(format!("Picked up {} items", total));
+            res.events
+                .interaction_event(format!("Picked up {} items", total), res.time.tick);
         }
     }
 
@@ -485,9 +489,15 @@ fn check_combat_end_conditions(world: &mut World, res: &mut Resources) {
         }
 
         if player_dead {
-            res.log("Combat ended: Player defeated - all action queues cleared".to_string());
+            res.events.combat_event(
+                "Combat ended: Player defeated - all action queues cleared",
+                res.time.tick,
+            );
         } else if !has_living_enemies {
-            res.log("Combat ended: All enemies defeated - all action queues cleared".to_string());
+            res.events.combat_event(
+                "Combat ended: All enemies defeated - all action queues cleared",
+                res.time.tick,
+            );
         }
     }
 }
@@ -541,7 +551,7 @@ fn execute_player_move(
             if energy.consume(move_data.energy_cost) {
                 true
             } else {
-                res.log("Not enough energy!".to_string());
+                res.events.combat_event("Not enough energy!", res.time.tick);
                 false
             }
         } else {
