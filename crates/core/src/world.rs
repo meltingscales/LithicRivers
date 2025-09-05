@@ -54,7 +54,7 @@ impl World {
     /// Deterministic post-process that adds small clusters of trees (10-20 tiles)
     /// onto suitable ground (grass/dirt). Uses a seeded RNG derived from
     /// seed, chunk coords, and current gen_z so results are deterministic.
-    pub fn add_tree_clusters(&self, cx: i64, cy: i64, chunk: &mut Chunk) {
+    fn add_tree_clusters(&self, cx: i64, cy: i64, chunk: &mut Chunk) {
         // Distinct salt so RNG stream differs from other features
         let salt: u64 = 0x7B1E_CA11_u64 ^ (self.gen_z as u64).wrapping_mul(0x5EED);
         let mut rng = ChaCha20Rng::seed_from_u64(self.mix_coords(cx, cy) ^ salt);
@@ -604,6 +604,31 @@ impl World {
             oy
         );
         self.structure_placement_depth = self.structure_placement_depth.saturating_sub(1);
+    }
+
+    /// Viewport-safe tile access: gets tile without affecting world generation state
+    pub fn get_tile_at_z(&mut self, x: i32, y: i32, z: i32) -> TileKind {
+        let original_gen_z = self.gen_z;
+        if original_gen_z != z {
+            self.set_generation_z(z);
+        }
+        let tile = self.get_tile_cached(x, y, z);
+        if original_gen_z != z {
+            self.set_generation_z(original_gen_z);
+        }
+        tile
+    }
+
+    /// Viewport-safe prefetch: prefetches chunks without affecting world generation state
+    pub fn prefetch_rect_at_z(&mut self, left: i32, top: i32, right: i32, bottom: i32, z: i32) {
+        let original_gen_z = self.gen_z;
+        if original_gen_z != z {
+            self.set_generation_z(z);
+        }
+        self.prefetch_rect(left, top, right, bottom, z);
+        if original_gen_z != z {
+            self.set_generation_z(original_gen_z);
+        }
     }
 
     // Prefetch all chunks overlapping the given rect at a z-level [left..=right] x [top..=bottom]

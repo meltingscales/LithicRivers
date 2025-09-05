@@ -22,13 +22,7 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
     let target_cols = area.width as usize;
     let target_rows = area.height as usize;
 
-    // Sync world generation Z with current UI viewport
-    app.core
-        .game
-        .res
-        .world_state
-        .world
-        .set_generation_z(app.ui.view_z);
+    // Note: No longer need to sync generation Z - using viewport-safe methods
 
     let scale = app.ui.scale.as_u32() as i32;
 
@@ -49,7 +43,7 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
         .res
         .world_state
         .world
-        .prefetch_rect(left, top, right, bottom, app.ui.view_z);
+        .prefetch_rect_at_z(left, top, right, bottom, app.ui.view_z);
 
     // Build an entity overlay map for current bounds and Z slice using SpriteRef
     let mut ent_overlay: HashMap<(i32, i32), (String, String)> = HashMap::new();
@@ -93,7 +87,7 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
                 .res
                 .world_state
                 .world
-                .get_tile_cached(world_x, world_y, world_z);
+                .get_tile_at_z(world_x, world_y, world_z);
 
             // render look mode cursor first
             if app.panels.look.mode

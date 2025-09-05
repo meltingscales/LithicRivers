@@ -53,7 +53,7 @@ pub fn block_art_12x8_lines_for_position(
         .res
         .world_state
         .world
-        .get_tile_cached(pos.x, pos.y, pos.z);
+        .get_tile_at_z(pos.x, pos.y, pos.z);
 
     let sd = app
         .core

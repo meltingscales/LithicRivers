@@ -86,7 +86,7 @@ pub fn render_look_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
         .res
         .world_state
         .world
-        .get_tile(pos.x, pos.y, pos.z);
+        .get_tile_at_z(pos.x, pos.y, pos.z);
     lines.push(Line::from(Span::raw(format!("Tile: {:?}", tile_kind))));
 
     lines.push(Line::from("Tile art:"));

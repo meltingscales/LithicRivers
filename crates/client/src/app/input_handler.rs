@@ -151,7 +151,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
             let top = app.panels.look.cursor.y - radius;
             let right = app.panels.look.cursor.x + radius;
             let bottom = app.panels.look.cursor.y + radius;
-            app.core.game.res.world_state.world.prefetch_rect(
+            app.core.game.res.world_state.world.prefetch_rect_at_z(
                 left,
                 top,
                 right,
