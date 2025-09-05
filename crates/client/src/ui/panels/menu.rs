@@ -24,15 +24,15 @@ pub fn render_menu_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     )));
     lines.push(Line::from(Span::raw(format!(
         "  {}",
-        app.core.game.res.config.source_label()
+        app.core.game.res.config.config.source_label()
     ))));
     lines.push(Line::from(Span::raw(format!(
         "  Player: {}",
-        app.core.game.res.player_name
+        app.core.game.res.config.player_name
     ))));
     lines.push(Line::from(Span::raw(format!(
         "  Developer mode: {}",
-        if app.core.game.res.developer_mode {
+        if app.core.game.res.config.developer_mode {
             "ON"
         } else {
             "OFF"
@@ -48,11 +48,11 @@ pub fn render_menu_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     lines.push(Line::from(""));
     lines.push(Line::from(Span::raw(format!(
         "Seed: {}",
-        app.core.game.res.seed
+        app.core.game.res.world_state.seed
     ))));
     lines.push(Line::from(Span::raw(format!(
         "Tick: {}",
-        app.core.game.res.gametick
+        app.core.game.res.time.tick
     ))));
     lines.push(Line::from(Span::raw(format!("View Z: {}", app.ui.view_z))));
     if let Some(e) = app.core.game.get_player_entity() {

@@ -23,7 +23,12 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
     let target_rows = area.height as usize;
 
     // Sync world generation Z with current UI viewport
-    app.core.game.res.world.set_generation_z(app.ui.view_z);
+    app.core
+        .game
+        .res
+        .world_state
+        .world
+        .set_generation_z(app.ui.view_z);
 
     let scale = app.ui.scale.as_u32() as i32;
 
@@ -42,6 +47,7 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
     app.core
         .game
         .res
+        .world_state
         .world
         .prefetch_rect(left, top, right, bottom, app.ui.view_z);
 
@@ -85,6 +91,7 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
                 .core
                 .game
                 .res
+                .world_state
                 .world
                 .get_tile_cached(world_x, world_y, world_z);
 

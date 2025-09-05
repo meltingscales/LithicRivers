@@ -37,11 +37,13 @@ impl Game {
         // Determine starting position from config (production environment)
         let [sx, sy, sz] =
             res.config
+                .config
                 .get_vector_setting("world", "DEFAULT_PLAYER_POSITION", "production");
         // Note: viewport is now managed by client UI, not core game
-        res.world.set_generation_z(sz);
+        res.world_state.world.set_generation_z(sz);
         // Read auto-pickup default from config
         let auto_pickup_default = res
+            .config
             .config
             .get_setting("inventory", "TOGGLE_ITEM_AUTO_PICKUP_DEFAULT_ENABLED")
             .and_then(|v| v.as_bool())
@@ -137,7 +139,7 @@ impl Game {
                     for oy in -rad..=rad {
                         let px = tx + ox;
                         let py = ty + oy;
-                        let t = res.world.get_tile_cached(px, py, tz);
+                        let t = res.world_state.world.get_tile_cached(px, py, tz);
                         if !t.is_passable() {
                             continue;
                         }
@@ -188,7 +190,7 @@ impl Game {
         let cost = (base / mult.max(0.01)).round().max(1.0) as u64;
 
         // Set movement intent with cost
-        self.res.player_intent = crate::intent::PlayerIntent::movement(dx, dy, 0, cost);
+        self.res.player_state.intent = crate::intent::PlayerIntent::movement(dx, dy, 0, cost);
     }
 
     /// Advance the game state by one tick.
@@ -196,8 +198,8 @@ impl Game {
     pub fn tick(&mut self) -> GameTickResult {
         // In the future, run an ordered system schedule.
         // For now, just increment tick based on pending action cost.
-        let inc = self.res.player_intent.cost().max(1);
-        self.res.gametick = self.res.gametick.saturating_add(inc);
+        let inc = self.res.player_state.intent.cost().max(1);
+        self.res.time.tick = self.res.time.tick.saturating_add(inc);
 
         // Process systems
         let mining_success = mining_system(&mut self.world, &mut self.res);
@@ -237,7 +239,7 @@ impl Game {
         let cost = (base / mult.max(0.01)).round().max(1.0) as u64;
 
         // Set mining intent with cost
-        self.res.player_intent = crate::intent::PlayerIntent::mine(cost);
+        self.res.player_state.intent = crate::intent::PlayerIntent::mine(cost);
     }
 
     // Convenience save/load wrappers
@@ -265,7 +267,7 @@ impl Game {
         let cost = (base / mult.max(0.01)).round().max(1.0) as u64;
 
         // Set vertical movement intent
-        self.res.player_intent = crate::intent::PlayerIntent::movement(0, 0, dz, cost);
+        self.res.player_state.intent = crate::intent::PlayerIntent::movement(0, 0, dz, cost);
     }
 
     // ECS Helper Functions - Replace direct player_entity access

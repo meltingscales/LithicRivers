@@ -35,7 +35,7 @@ fn is_player_entity(world: &World, entity: hecs::Entity) -> bool {
 }
 
 pub fn move_player_system(world: &mut World, res: &mut Resources) {
-    if let Some(action) = res.player_intent.take() {
+    if let Some(action) = res.player_state.intent.take() {
         if let Some(player_e) = get_player_entity(world) {
             match action {
                 PlayerAction::Move { dx, dy, dz } => {
@@ -51,7 +51,7 @@ pub fn move_player_system(world: &mut World, res: &mut Resources) {
                         // Check horizontal movement blocking
                         let mut blocked = false;
                         if dx != 0 || dy != 0 {
-                            let t = res.world.get_tile_cached(nx, ny, cz);
+                            let t = res.world_state.world.get_tile_cached(nx, ny, cz);
                             blocked = !t.is_passable();
                             if !blocked {
                                 for (_, (_, epos)) in
@@ -65,7 +65,7 @@ pub fn move_player_system(world: &mut World, res: &mut Resources) {
                             }
                             if blocked {
                                 info!("Blocked by {:?} at ({}, {})", t, nx, ny);
-                                res.last_blocked_tile = Some((nx, ny));
+                                res.player_state.last_blocked_tile = Some((nx, ny));
                             }
                         }
 
@@ -91,7 +91,7 @@ pub fn move_player_system(world: &mut World, res: &mut Resources) {
 /// Returns true if mining was successful (e.g. chopped a tree), false otherwise.
 pub fn mining_system(world: &mut World, res: &mut Resources) -> bool {
     // Check if there's a mining action in the intent
-    let has_mining_action = matches!(res.player_intent.action, Some(PlayerAction::Mine));
+    let has_mining_action = matches!(res.player_state.intent.action, Some(PlayerAction::Mine));
     if !has_mining_action {
         return false;
     }
@@ -105,13 +105,15 @@ pub fn mining_system(world: &mut World, res: &mut Resources) -> bool {
     let (x, y, z) = (pos.x, pos.y, pos.z);
     // End immutable borrow before mutating the world
     drop(pos);
-    let t = res.world.get_tile_cached(x, y, z);
+    let t = res.world_state.world.get_tile_cached(x, y, z);
     use crate::tiles::TileKind;
     use rand::Rng;
     match t {
         TileKind::Tree => {
             // Chop tree: convert to Dirt and drop items
-            res.world.set_tile_cached(x, y, z, TileKind::Dirt);
+            res.world_state
+                .world
+                .set_tile_cached(x, y, z, TileKind::Dirt);
 
             let mut rng = rand::thread_rng();
             let wood_qty = rng.gen_range(2..=3);
@@ -303,7 +305,7 @@ pub fn feral_dog_system(world: &mut World, res: &mut Resources) {
         }
 
         // decide if dog should do nothing for a turn (50% chance)
-        if res.rng.gen_range(0..2) == 0 {
+        if res.world_state.rng.gen_range(0..2) == 0 {
             continue;
         }
 
@@ -317,7 +319,7 @@ pub fn feral_dog_system(world: &mut World, res: &mut Resources) {
         let new_z = dog_pos.z;
 
         // Check if new position is blocked by terrain
-        if !res.world.is_passable(new_x, new_y, new_z) {
+        if !res.world_state.world.is_passable(new_x, new_y, new_z) {
             continue;
         }
 
@@ -358,7 +360,7 @@ pub fn stumbling_sheep_system(world: &mut World, res: &mut Resources) {
         }
 
         // 25% chance to stay, else pick one of 4 directions
-        let r: u32 = res.rng.gen_range(0..5);
+        let r: u32 = res.world_state.rng.gen_range(0..5);
         let (dx, dy) = match r {
             0 => (0, 0),
             1 => (1, 0),
@@ -374,7 +376,7 @@ pub fn stumbling_sheep_system(world: &mut World, res: &mut Resources) {
         let nz = pos.z; // Sheep stay on the same Z-level
 
         // Check if the target tile is passable
-        let t = res.world.get_tile(nx, ny, nz);
+        let t = res.world_state.world.get_tile(nx, ny, nz);
         if !t.is_passable() {
             continue;
         }
@@ -582,7 +584,7 @@ fn execute_player_move(
                 }
 
                 // 50% chance to stun
-                if res.rng.gen_bool(0.5) {
+                if res.world_state.rng.gen_bool(0.5) {
                     world.insert_one(target, Stunned::new(600)).ok();
                     res.log("Target is stunned!".to_string());
                 }
@@ -661,9 +663,12 @@ fn apply_damage(
 
     // If no Health component, try to damage body parts (for robots)
     let should_handle_body_death = if let Ok(mut body) = world.get::<&mut Body>(target_entity) {
-        if let Some(damaged_part) =
-            crate::moves::damage_random_body_part(&mut body, res.world.seed, res.gametick, damage)
-        {
+        if let Some(damaged_part) = crate::moves::damage_random_body_part(
+            &mut body,
+            res.world_state.seed,
+            res.time.tick,
+            damage,
+        ) {
             res.log(format!(
                 "Target's {:?} is damaged by {}",
                 damaged_part, source
@@ -774,8 +779,8 @@ fn generate_enemy_action(world: &mut World, res: &mut Resources, enemy_entity: h
     };
 
     // Simple AI: attack the player with random damage and timing
-    let damage = res.rng.gen_range(5..=15);
-    let execution_time = res.rng.gen_range(100..=250); // 100-250 ticks (~1.5-4 seconds at 60 ticks/sec)
+    let damage = res.world_state.rng.gen_range(5..=15);
+    let execution_time = res.world_state.rng.gen_range(100..=250); // 100-250 ticks (~1.5-4 seconds at 60 ticks/sec)
 
     let action = QueuedAction {
         entity: enemy_entity,

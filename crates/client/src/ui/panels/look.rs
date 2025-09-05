@@ -80,7 +80,13 @@ pub fn render_look_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     }
 
     // Tile info
-    let tile_kind = app.core.game.res.world.get_tile(pos.x, pos.y, pos.z);
+    let tile_kind = app
+        .core
+        .game
+        .res
+        .world_state
+        .world
+        .get_tile(pos.x, pos.y, pos.z);
     lines.push(Line::from(Span::raw(format!("Tile: {:?}", tile_kind))));
 
     lines.push(Line::from("Tile art:"));
