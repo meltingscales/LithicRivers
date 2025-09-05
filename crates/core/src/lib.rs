@@ -15,6 +15,7 @@ pub mod recipe_handler;
 pub mod resources;
 pub mod save_load;
 pub mod structure;
+pub mod system_scheduler;
 pub mod systems;
 pub mod tiles;
 pub mod view;
