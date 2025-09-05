@@ -38,10 +38,7 @@ impl Game {
         let [sx, sy, sz] =
             res.config
                 .get_vector_setting("world", "DEFAULT_PLAYER_POSITION", "production");
-        // Initialize viewport center to player's starting position
-        res.view_x = sx;
-        res.view_y = sy;
-        res.view_z = sz;
+        // Note: viewport is now managed by client UI, not core game
         res.world.set_generation_z(sz);
         // Read auto-pickup default from config
         let auto_pickup_default = res
