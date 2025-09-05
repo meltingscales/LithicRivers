@@ -223,6 +223,7 @@ See [STEAM-MVP.md](STEAM-MVP.md) for the complete release plan.
 - oglingling
 - college friends
 - miguel from colab
+- cameron (false)
 
 ## streamers
 
