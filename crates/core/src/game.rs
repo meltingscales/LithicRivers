@@ -38,7 +38,7 @@ impl Game {
                 .config
                 .get_vector_setting("world", "DEFAULT_PLAYER_POSITION", "production");
         // Note: viewport is now managed by client UI, not core game
-        res.world_state.world.set_generation_z(sz);
+        // Core game no longer sets generation Z - let client manage viewport
         // Read auto-pickup default from config
         let auto_pickup_default = res
             .config
