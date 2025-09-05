@@ -3,7 +3,6 @@ use crate::components::{
     Inventory, ItemKind, Player, Position, Sheep, SpriteRef,
 };
 use crate::model::body::Body;
-use crate::moves::MoveCooldowns;
 use crate::resources::Resources;
 use crate::systems::{
     action_queue_system, battle_delay_timer_system, combat_trigger_system, enemy_combat_ai_system,
@@ -75,7 +74,6 @@ impl Game {
             Player,
             Body::default(),
             Energy::new(100),
-            MoveCooldowns::new(),
             Glyph('@'),
             SpriteRef::new("entities", "player"),
             BlocksMovement,

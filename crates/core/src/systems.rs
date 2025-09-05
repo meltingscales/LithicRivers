@@ -2,7 +2,7 @@ use crate::components::{
     BattleDelay, BlocksMovement, Combat, Dead, DroppedItem, Energy, FeralDog, GameEntity, Health,
     Inventory, ItemKind, Position, Sheep, SpriteRef, Stunned,
 };
-use crate::moves::{ActionQueue, CombatAction, MoveType, QueuedAction};
+use crate::moves::{ActionQueue, CombatAction, Move, MoveType, QueuedAction};
 use crate::resources::Resources;
 use hecs::World;
 use tracing::info;
@@ -472,7 +472,7 @@ fn check_combat_end_conditions(world: &mut World, res: &mut Resources) {
 fn execute_combat_action(world: &mut World, res: &mut Resources, action: &QueuedAction) {
     match &action.action {
         CombatAction::PlayerMove {
-            move_type,
+            move_data,
             target_entity,
             target_position,
         } => {
@@ -480,7 +480,7 @@ fn execute_combat_action(world: &mut World, res: &mut Resources, action: &Queued
                 world,
                 res,
                 action.entity,
-                *move_type,
+                move_data,
                 *target_entity,
                 *target_position,
             );
@@ -499,7 +499,7 @@ fn execute_player_move(
     world: &mut World,
     res: &mut Resources,
     player_entity: hecs::Entity,
-    move_type: MoveType,
+    move_data: &Move,
     target_entity: Option<hecs::Entity>,
     _target_position: Option<Position>,
 ) {
@@ -511,18 +511,10 @@ fn execute_player_move(
         Err(_) => return,
     };
 
-    // Get move definition first
-    let available_moves = crate::moves::get_available_moves();
-    let selected_move = available_moves.iter().find(|m| m.move_type == move_type);
-    let mv = match selected_move {
-        Some(mv) => mv.clone(),
-        None => return,
-    };
-
     // Update player components
     let energy_consumed = {
         if let Ok(mut energy) = world.get::<&mut Energy>(player_entity) {
-            if energy.consume(mv.energy_cost) {
+            if energy.consume(move_data.energy_cost) {
                 true
             } else {
                 res.log("Not enough energy!".to_string());
@@ -537,28 +529,24 @@ fn execute_player_move(
         return;
     }
 
-    // Update cooldowns
-    if let Ok(mut cooldowns) = world.get::<&mut crate::moves::MoveCooldowns>(player_entity) {
-        let current_cooldown = cooldowns.get_cooldown(move_type);
-        cooldowns.set_cooldown(move_type, current_cooldown + mv.cooldown_ticks);
-    }
+    // Note: Cooldowns are now handled by the action queue system through execution_time_ticks
 
     // Execute move effects based on type
-    match move_type {
+    match move_data.move_type {
         MoveType::Melee => {
             if let Some(target) = target_entity {
-                apply_damage(world, res, target, mv.damage, "melee attack");
+                apply_damage(world, res, target, move_data.damage, "melee attack");
             }
         }
         MoveType::Fireball => {
             if let Some(target) = target_entity {
-                apply_damage(world, res, target, mv.damage, "fireball");
+                apply_damage(world, res, target, move_data.damage, "fireball");
                 // TODO: Add AoE damage to nearby enemies
             }
         }
         MoveType::Tackle => {
             if let Some(target) = target_entity {
-                apply_damage(world, res, target, mv.damage, "tackle");
+                apply_damage(world, res, target, move_data.damage, "tackle");
 
                 // Push effect
                 if let Ok(target_pos) = world.get::<&Position>(target) {
@@ -592,9 +580,16 @@ fn execute_player_move(
                 res.log("Action queue cleared after escape");
             }
         }
+        MoveType::DebugInstantKill => {
+            if let Some(target) = target_entity {
+                // Instantly kill the target for debugging purposes
+                handle_entity_death(world, res, target);
+                res.log("DEBUG: Target instantly killed!".to_string());
+            }
+        }
     }
 
-    res.log(format!("Used {}", mv.name));
+    res.log(format!("Used {}", move_data.name));
 }
 
 /// Execute an enemy attack action
@@ -811,7 +806,7 @@ mod tests {
         let action = QueuedAction {
             entity: player,
             action: CombatAction::PlayerMove {
-                move_type: MoveType::Melee,
+                move_data: Move::melee(),
                 target_entity: Some(enemy),
                 target_position: None,
             },
