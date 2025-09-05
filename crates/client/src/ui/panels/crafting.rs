@@ -74,7 +74,7 @@ pub fn render_crafting_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
             };
 
             ListItem::new(Span::styled(
-                format!("• {}", itemkind_name(recipe.result)),
+                format!("* {}", itemkind_name(recipe.result)),
                 style,
             ))
         })
@@ -165,7 +165,7 @@ pub fn render_crafting_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
         .into_iter()
         .map(|(kind, qty)| {
             ListItem::new(Line::from(vec![
-                Span::raw("• "),
+                Span::raw("* "),
                 Span::styled(
                     format!("{}: ", itemkind_name(kind)),
                     Style::default().fg(Color::Cyan),

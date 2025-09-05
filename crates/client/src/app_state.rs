@@ -43,6 +43,7 @@ pub enum CombatUiState {
         current_move: usize,
         current_enemy: usize,
         enemy_timers: Vec<u32>, // Deprecated - will be removed once UI fully migrated to ActionQueue
+        move_scroll_offset: usize, // For scrolling through many moves
     },
 }
 

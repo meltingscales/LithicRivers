@@ -7,6 +7,7 @@ use lithicrivers_core::{
         ItemStack, Position, SpriteRef,
     },
     game::GameTickResult,
+    moves::get_available_moves,
 };
 
 use crate::{ui::panels::get_player_inventory, App, CombatUiState, MenuTab, Scale, SplashState};
@@ -459,29 +460,46 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
         current_move,
         current_enemy,
         enemy_timers,
+        move_scroll_offset,
     } = &mut app.combat
     {
-        // Move selection (Up/Down) - using mock move count for now
-        const MAX_MOVES: usize = 4; // From CombatPlayer::mock()
+        // Move selection (Up/Down) - with scrolling support
+        let max_moves = get_available_moves().len();
+        const VISIBLE_MOVES: usize = 4; // Number of moves visible at once
+
         if app.ui.keybinds.matches("movement", "MOVE_NORTH", &key)
             || app.ui.keybinds.matches("movement", "MOVE_UP", &key)
         {
-            *current_move = if *current_move == 0 {
-                MAX_MOVES - 1
+            if *current_move == 0 {
+                *current_move = max_moves - 1;
+                // Scroll to show the last move
+                *move_scroll_offset = max_moves.saturating_sub(VISIBLE_MOVES);
             } else {
-                *current_move - 1
-            };
+                *current_move -= 1;
+                // Scroll up if needed
+                if *current_move < *move_scroll_offset {
+                    *move_scroll_offset = *current_move;
+                }
+            }
             return Ok(());
         }
         if app.ui.keybinds.matches("movement", "MOVE_SOUTH", &key)
             || app.ui.keybinds.matches("movement", "MOVE_DOWN", &key)
         {
-            *current_move = (*current_move + 1) % MAX_MOVES;
+            *current_move = (*current_move + 1) % max_moves;
+            // Scroll down if needed
+            if *current_move >= *move_scroll_offset + VISIBLE_MOVES {
+                *move_scroll_offset = (*current_move + 1).saturating_sub(VISIBLE_MOVES);
+            }
+            // Handle wrap-around to beginning
+            if *current_move == 0 {
+                *move_scroll_offset = 0;
+            }
             return Ok(());
         }
 
         // Enemy/target selection (Left/Right) - using mock enemy count for now
-        const MAX_ENEMIES: usize = 2; // From CombatEnemy::mock()
+        const MAX_ENEMIES: usize = 3; // From CombatEnemy::mock()
         if app.ui.keybinds.matches("movement", "MOVE_WEST", &key) {
             *current_enemy = if *current_enemy == 0 {
                 MAX_ENEMIES - 1
@@ -502,18 +520,14 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
                 // Get available moves and selected move
                 let available_moves = lithicrivers_core::moves::get_available_moves();
                 if let Some(selected_move) = available_moves.get(*current_move) {
-                    // Check if player can use this move (energy and cooldowns)
-                    let can_use = if let (Ok(energy), Ok(cooldowns)) = (
+                    // Check if player can use this move (only energy, timing handled by action queue)
+                    let can_use = if let Ok(energy) =
                         app.core
                             .game
                             .world
-                            .get::<&lithicrivers_core::components::Energy>(player_entity),
-                        app.core
-                            .game
-                            .world
-                            .get::<&lithicrivers_core::moves::MoveCooldowns>(player_entity),
-                    ) {
-                        lithicrivers_core::moves::can_use_move(&energy, &cooldowns, selected_move)
+                            .get::<&lithicrivers_core::components::Energy>(player_entity)
+                    {
+                        energy.current >= selected_move.energy_cost
                     } else {
                         false
                     };
@@ -559,7 +573,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
                     let action = lithicrivers_core::moves::QueuedAction {
                         entity: player_entity,
                         action: lithicrivers_core::moves::CombatAction::PlayerMove {
-                            move_type: selected_move.move_type,
+                            move_data: selected_move.clone(),
                             target_entity,
                             target_position: None, // Not used for current moves
                         },
@@ -673,6 +687,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
                 current_move: 0,
                 current_enemy: 0,
                 enemy_timers: vec![], // Deprecated - using ActionQueue now
+                move_scroll_offset: 0,
             };
         }
         app.snap_view_to_player_z();

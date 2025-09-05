@@ -1,7 +1,6 @@
-use crate::components::{Energy, Position};
+use crate::components::Position;
 use crate::model::body::{Body, BodyPartState, BodyPartType};
 use hecs::Entity;
-use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -10,15 +9,27 @@ pub enum MoveType {
     Tackle,
     Fireball,
     Escape,
+    DebugInstantKill,
 }
 
 impl MoveType {
     pub fn execution_time_ticks(&self) -> u64 {
         match self {
-            MoveType::Melee => 150,    // ~3 seconds at 60 ticks/sec
-            MoveType::Fireball => 400, // ~8 seconds at 60 ticks/sec
-            MoveType::Tackle => 300,   // ~6 seconds at 60 ticks/sec
-            MoveType::Escape => 250,   // ~5 seconds at 60 ticks/sec
+            MoveType::Melee => 150,
+            MoveType::Fireball => 400,
+            MoveType::Tackle => 300,
+            MoveType::Escape => 250,
+            MoveType::DebugInstantKill => 50,
+        }
+    }
+
+    pub fn human_name(&self) -> &'static str {
+        match self {
+            MoveType::Melee => "Melee",
+            MoveType::Fireball => "Fireball",
+            MoveType::Tackle => "Tackle",
+            MoveType::Escape => "Escape",
+            MoveType::DebugInstantKill => "Debug Instant Kill",
         }
     }
 }
@@ -28,7 +39,7 @@ pub struct Move {
     pub name: String,
     pub move_type: MoveType,
     pub energy_cost: u32,
-    pub cooldown_ticks: u64,
+    pub execution_time_ticks: i32,
     pub damage: u32,
     pub description: String,
 }
@@ -39,7 +50,7 @@ impl Move {
             name: "Melee".to_string(),
             move_type: MoveType::Melee,
             energy_cost: 0,
-            cooldown_ticks: 0,
+            execution_time_ticks: 150,
             damage: 10,
             description: "Basic melee attack".to_string(),
         }
@@ -50,7 +61,7 @@ impl Move {
             name: "Tackle".to_string(),
             move_type: MoveType::Tackle,
             energy_cost: 20,
-            cooldown_ticks: 800,
+            execution_time_ticks: 300,
             damage: 15,
             description: "Pushes enemy back 2 spaces, 50% chance to stun for 600 ticks".to_string(),
         }
@@ -61,7 +72,7 @@ impl Move {
             name: "Fireball (AoE)".to_string(),
             move_type: MoveType::Fireball,
             energy_cost: 40,
-            cooldown_ticks: 0,
+            execution_time_ticks: 400,
             damage: 30,
             description: "Area of effect fire damage".to_string(),
         }
@@ -72,65 +83,65 @@ impl Move {
             name: "Escape".to_string(),
             move_type: MoveType::Escape,
             energy_cost: 20,
-            cooldown_ticks: 0,
+            execution_time_ticks: 250,
             damage: 0,
             description: "Flee from combat, adds BattleDelay".to_string(),
         }
     }
-}
 
-/// Component to track move cooldowns for an entity
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct MoveCooldowns {
-    pub melee: u64,
-    pub tackle: u64,
-    pub fireball: u64,
-    pub escape: u64,
-}
-
-impl MoveCooldowns {
-    pub fn new() -> Self {
+    pub fn debuginstantkill() -> Self {
         Self {
-            melee: 0,
-            tackle: 0,
-            fireball: 0,
-            escape: 0,
+            name: "DebugInstantKill".to_string(),
+            move_type: MoveType::DebugInstantKill,
+            energy_cost: 0,
+            execution_time_ticks: 50,
+            damage: 9999,
+            description: "Debug instant kill".to_string(),
         }
     }
 
-    pub fn get_cooldown(&self, move_type: MoveType) -> u64 {
-        match move_type {
-            MoveType::Melee => self.melee,
-            MoveType::Tackle => self.tackle,
-            MoveType::Fireball => self.fireball,
-            MoveType::Escape => self.escape,
+    pub fn heal() -> Self {
+        Self {
+            name: "Heal".to_string(),
+            move_type: MoveType::Melee, // Reusing MoveType for now
+            energy_cost: 30,
+            execution_time_ticks: 200,
+            damage: 0,
+            description: "Restore health".to_string(),
         }
     }
 
-    pub fn set_cooldown(&mut self, move_type: MoveType, ticks: u64) {
-        match move_type {
-            MoveType::Melee => self.melee = ticks,
-            MoveType::Tackle => self.tackle = ticks,
-            MoveType::Fireball => self.fireball = ticks,
-            MoveType::Escape => self.escape = ticks,
+    pub fn shield() -> Self {
+        Self {
+            name: "Shield".to_string(),
+            move_type: MoveType::Melee, // Reusing MoveType for now
+            energy_cost: 25,
+            execution_time_ticks: 100,
+            damage: 0,
+            description: "Block incoming attacks".to_string(),
         }
     }
 
-    pub fn tick(&mut self) {
-        self.melee = self.melee.saturating_sub(1);
-        self.tackle = self.tackle.saturating_sub(1);
-        self.fireball = self.fireball.saturating_sub(1);
-        self.escape = self.escape.saturating_sub(1);
+    pub fn lightning_bolt() -> Self {
+        Self {
+            name: "Lightning Bolt".to_string(),
+            move_type: MoveType::Fireball, // Reusing MoveType for now
+            energy_cost: 50,
+            execution_time_ticks: 300,
+            damage: 40,
+            description: "Fast electric attack".to_string(),
+        }
     }
 
-    pub fn can_use(&self, move_type: MoveType) -> bool {
-        self.get_cooldown(move_type) == 0
-    }
-}
-
-impl Default for MoveCooldowns {
-    fn default() -> Self {
-        Self::new()
+    pub fn power_strike() -> Self {
+        Self {
+            name: "Power Strike".to_string(),
+            move_type: MoveType::Melee, // Reusing MoveType for now
+            energy_cost: 40,
+            execution_time_ticks: 400,
+            damage: 50,
+            description: "Powerful melee attack".to_string(),
+        }
     }
 }
 
@@ -179,11 +190,12 @@ pub fn get_available_moves() -> Vec<Move> {
         Move::fireball(),
         Move::tackle(),
         Move::escape(),
+        Move::heal(),
+        Move::shield(),
+        Move::lightning_bolt(),
+        Move::power_strike(),
+        Move::debuginstantkill(),
     ]
-}
-
-pub fn can_use_move(energy: &Energy, cooldowns: &MoveCooldowns, mv: &Move) -> bool {
-    energy.current >= mv.energy_cost && cooldowns.can_use(mv.move_type)
 }
 
 /// Calculate distance for tackle push mechanics
@@ -255,7 +267,7 @@ pub struct QueuedAction {
 #[derive(Debug, Clone)]
 pub enum CombatAction {
     PlayerMove {
-        move_type: MoveType,
+        move_data: Move,
         target_entity: Option<Entity>,
         target_position: Option<Position>,
     },

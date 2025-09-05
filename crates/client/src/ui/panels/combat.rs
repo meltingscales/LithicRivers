@@ -1,7 +1,7 @@
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Style, Stylize},
-    widgets::{Block, Borders, Gauge, Paragraph},
+    widgets::{Block, Borders, Gauge, Paragraph, Wrap},
     Frame,
 };
 
@@ -16,17 +16,23 @@ pub fn render_combat_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     f.render_widget(outer_block, area);
 
     // Get current selection and timers from combat state
-    let (current_move, current_enemy, enemy_timers) = match &app.combat {
+    let (current_move, current_enemy, enemy_timers, scroll_offset) = match &app.combat {
         crate::CombatUiState::Active {
             current_move,
             current_enemy,
             enemy_timers,
-        } => (*current_move, *current_enemy, enemy_timers.clone()),
-        _ => (0, 0, vec![]), // Fallback, shouldn't happen when this function is called
+            move_scroll_offset,
+        } => (
+            *current_move,
+            *current_enemy,
+            enemy_timers.clone(),
+            *move_scroll_offset,
+        ),
+        _ => (0, 0, vec![], 0), // Fallback, shouldn't happen when this function is called
     };
 
     // Get real player and enemy data from the game world
-    let (player_health, player_energy, available_moves, cooldowns) = get_player_combat_data(app);
+    let (player_health, player_energy, available_moves) = get_player_combat_data(app);
     let combat_enemies = get_enemy_combat_data(app);
 
     // Ensure selections are within bounds
@@ -65,9 +71,9 @@ pub fn render_combat_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
         f,
         chunks[2],
         &available_moves,
-        &cooldowns,
         player_energy,
         current_move,
+        scroll_offset,
         app,
     );
 
@@ -195,19 +201,14 @@ fn render_action_queue(f: &mut Frame, area: Rect, app: &mut crate::App) {
             if let Some(current_action) = &queue.current_action {
                 let ticks = current_action.remaining_time_ticks;
                 let action_name = match &current_action.action {
-                    lithicrivers_core::moves::CombatAction::PlayerMove { move_type, .. } => {
-                        match move_type {
-                            lithicrivers_core::moves::MoveType::Melee => "Melee",
-                            lithicrivers_core::moves::MoveType::Fireball => "Fireball",
-                            lithicrivers_core::moves::MoveType::Tackle => "Tackle",
-                            lithicrivers_core::moves::MoveType::Escape => "Escape",
-                        }
+                    lithicrivers_core::moves::CombatAction::PlayerMove { move_data, .. } => {
+                        move_data.move_type.human_name()
                     }
                     lithicrivers_core::moves::CombatAction::EnemyAttack { .. } => "Enemy Attack",
                 };
-                lines.push(Line::from(format!("▶ {} ({}t)", action_name, ticks)));
+                lines.push(Line::from(format!("> {} ({}t)", action_name, ticks)));
             } else {
-                lines.push(Line::from("▶ Ready"));
+                lines.push(Line::from("> Ready"));
             }
 
             // Show queued actions
@@ -215,13 +216,13 @@ fn render_action_queue(f: &mut Frame, area: Rect, app: &mut crate::App) {
             lines.push(Line::from("Queue:".bold()));
 
             if queue.actions.is_empty() {
-                lines.push(Line::from("• No actions queued"));
+                lines.push(Line::from("* No actions queued"));
             } else {
                 for (i, action) in queue.actions.iter().enumerate() {
                     if i >= 3 {
                         // Limit display to first 3 queued actions
                         lines.push(Line::from(format!(
-                            "• ... and {} more",
+                            "* ... and {} more",
                             queue.actions.len() - 3
                         )));
                         break;
@@ -229,25 +230,20 @@ fn render_action_queue(f: &mut Frame, area: Rect, app: &mut crate::App) {
 
                     let action_name = match &action.action {
                         lithicrivers_core::moves::CombatAction::PlayerMove {
-                            move_type, ..
-                        } => match move_type {
-                            lithicrivers_core::moves::MoveType::Melee => "Melee",
-                            lithicrivers_core::moves::MoveType::Fireball => "Fireball",
-                            lithicrivers_core::moves::MoveType::Tackle => "Tackle",
-                            lithicrivers_core::moves::MoveType::Escape => "Escape",
-                        },
+                            move_data, ..
+                        } => move_data.move_type.human_name(),
                         lithicrivers_core::moves::CombatAction::EnemyAttack { .. } => {
                             "Enemy Attack"
                         }
                     };
-                    lines.push(Line::from(format!("• {}", action_name)));
+                    lines.push(Line::from(format!("* {}", action_name)));
                 }
             }
         } else {
-            lines.push(Line::from("▶ No queue"));
+            lines.push(Line::from("> No queue"));
         }
     } else {
-        lines.push(Line::from("▶ No player"));
+        lines.push(Line::from("> No player"));
     }
 
     // Show enemy actions too
@@ -272,7 +268,7 @@ fn render_action_queue(f: &mut Frame, area: Rect, app: &mut crate::App) {
 
         enemy_count += 1;
         if enemy_count > 3 {
-            lines.push(Line::from("• ..."));
+            lines.push(Line::from("* ..."));
             break;
         }
 
@@ -284,12 +280,12 @@ fn render_action_queue(f: &mut Frame, area: Rect, app: &mut crate::App) {
         {
             if let Some(current) = &queue.current_action {
                 let ticks = current.remaining_time_ticks;
-                lines.push(Line::from(format!("• Enemy {} ({}t)", enemy_count, ticks)));
+                lines.push(Line::from(format!("* Enemy {} ({}t)", enemy_count, ticks)));
             } else {
-                lines.push(Line::from(format!("• Enemy {} ready", enemy_count)));
+                lines.push(Line::from(format!("* Enemy {} ready", enemy_count)));
             }
         } else {
-            lines.push(Line::from(format!("• Enemy {} preparing", enemy_count)));
+            lines.push(Line::from(format!("* Enemy {} preparing", enemy_count)));
         }
     }
 
@@ -303,9 +299,9 @@ fn render_moves(
     f: &mut Frame,
     area: Rect,
     moves: &[lithicrivers_core::moves::Move],
-    cooldowns: &lithicrivers_core::moves::MoveCooldowns,
     energy: lithicrivers_core::components::Energy,
     current_move: usize,
+    scroll_offset: usize,
     app: &mut crate::App,
 ) {
     // Split the moves area horizontally: moves on left, queue on right
@@ -317,11 +313,7 @@ fn render_moves(
 
     let moves_area = horizontal_chunks[0];
     let queue_area = horizontal_chunks[1];
-    // Debug: log the area we're working with
-    app.core.game.res.log(format!(
-        "render_moves area: {}x{} at ({},{})",
-        area.width, area.height, area.x, area.y
-    ));
+
     // Always split moves area to show player action timer at the top (always visible)
     let layout = Layout::vertical([Constraint::Length(3), Constraint::Min(12)]).split(moves_area);
     let moves_only_area = layout[1];
@@ -337,25 +329,20 @@ fn render_moves(
             if let Some(current_action) = &queue.current_action {
                 let ticks = current_action.remaining_time_ticks;
                 let action_name = match &current_action.action {
-                    lithicrivers_core::moves::CombatAction::PlayerMove { move_type, .. } => {
-                        match move_type {
-                            lithicrivers_core::moves::MoveType::Melee => "Melee",
-                            lithicrivers_core::moves::MoveType::Fireball => "Fireball",
-                            lithicrivers_core::moves::MoveType::Tackle => "Tackle",
-                            lithicrivers_core::moves::MoveType::Escape => "Escape",
-                        }
+                    lithicrivers_core::moves::CombatAction::PlayerMove { move_data, .. } => {
+                        move_data.move_type.human_name()
                     }
                     _ => "Action",
                 };
-                format!("⚡ {} ({}t)", action_name, ticks)
+                format!("[z] {} ({}t)", action_name, ticks)
             } else {
-                "⚡ Ready".to_string()
+                "[z] Ready".to_string()
             }
         } else {
-            "⚡ Ready".to_string()
+            "[z] Ready".to_string()
         }
     } else {
-        "⚡ No Player".to_string()
+        "[z] No Player".to_string()
     };
 
     let has_action = if let Some(player_entity) = app.core.game.res.player_entity {
@@ -383,25 +370,19 @@ fn render_moves(
         );
     f.render_widget(timer_para, layout[0]);
 
-    app.core.game.res.log(format!(
-        "Player action timer area: {}x{}, Moves area: {}x{}",
-        layout[0].width, layout[0].height, layout[1].width, layout[1].height
-    ));
+    // Calculate which moves to display based on scrolling
+    const VISIBLE_MOVES: usize = 4;
+    let end_offset = (scroll_offset + VISIBLE_MOVES).min(moves.len());
+    let visible_moves = &moves[scroll_offset..end_offset];
 
-    let move_blocks = moves
+    let move_blocks = visible_moves
         .iter()
         .enumerate()
-        .map(|(i, mv)| {
-            let is_selected = i == current_move;
+        .map(|(visible_i, mv)| {
+            let actual_i = scroll_offset + visible_i;
+            let is_selected = actual_i == current_move;
             let can_use_energy = energy.current >= mv.energy_cost;
-            let can_use_cooldown = cooldowns.can_use(mv.move_type);
-            let can_use = can_use_energy && can_use_cooldown;
-
-            let cooldown = if cooldowns.get_cooldown(mv.move_type) > 0 {
-                format!(" ({})", cooldowns.get_cooldown(mv.move_type))
-            } else {
-                String::new()
-            };
+            let can_use = can_use_energy; // Only check energy, action queue handles timing
 
             // Always use the same basic format to ensure consistent rendering
             let prefix = if !can_use { "[X] " } else { "" };
@@ -411,25 +392,18 @@ fn render_moves(
                 &mv.name
             };
             let content = format!(
-                "{}{}: {}{} - {}E",
+                "{}{}: {} - {}E - {}t",
                 prefix,
-                i + 1,
+                actual_i + 1,
                 move_name,
-                cooldown,
-                mv.energy_cost
+                mv.energy_cost,
+                mv.execution_time_ticks,
             );
-
-            // Ensure content is never empty
-            let final_content = if content.trim().is_empty() {
-                format!("{}: Move - 0E", i + 1)
-            } else {
-                content
-            };
 
             // Debug: log the move content
             app.core.game.res.log(format!(
                 "Move {}: '{}' (can_use: {}, selected: {})",
-                i, final_content, can_use, is_selected
+                actual_i, content, can_use, is_selected
             ));
 
             let style = if !can_use {
@@ -448,7 +422,7 @@ fn render_moves(
                 Style::default()
             };
 
-            Paragraph::new(final_content).style(style).block(
+            Paragraph::new(content).style(style).block(
                 Block::default()
                     .borders(Borders::ALL)
                     .border_style(border_style),
@@ -456,29 +430,55 @@ fn render_moves(
         })
         .collect::<Vec<_>>();
 
-    // Ensure we have constraints for each move
-    let num_moves = move_blocks.len();
-    let constraints: Vec<Constraint> = (0..num_moves).map(|_| Constraint::Length(3)).collect();
+    // Create constraints for visible moves, plus scroll indicators
+    let num_visible = move_blocks.len();
+    let mut constraints: Vec<Constraint> = vec![];
+
+    // Add scroll indicator at top if needed
+    if scroll_offset > 0 {
+        constraints.push(Constraint::Length(1));
+    }
+
+    // Add constraints for each visible move
+    for _ in 0..num_visible {
+        constraints.push(Constraint::Length(3));
+    }
+
+    // Add scroll indicator at bottom if needed
+    if scroll_offset + VISIBLE_MOVES < moves.len() {
+        constraints.push(Constraint::Length(1));
+    }
 
     let move_chunks = Layout::vertical(constraints).split(moves_only_area);
+    let mut chunk_index = 0;
 
-    // Render each move block, but ensure we don't go out of bounds
+    // Render top scroll indicator
+    if scroll_offset > 0 {
+        let scroll_up = Paragraph::new("▲ More above")
+            .style(Style::default().fg(Color::Gray))
+            .alignment(Alignment::Center);
+        f.render_widget(scroll_up, move_chunks[chunk_index]);
+        chunk_index += 1;
+    }
+
+    // Render each move block
     for (i, block) in move_blocks.into_iter().enumerate() {
-        if i < move_chunks.len() {
-            let chunk = move_chunks[i];
+        if chunk_index + i < move_chunks.len() {
+            let chunk = move_chunks[chunk_index + i];
             if chunk.height > 0 && chunk.width > 0 {
                 f.render_widget(block, chunk);
-            } else {
-                app.core
-                    .game
-                    .res
-                    .log(format!("Skipping move {} - zero size chunk", i));
             }
-        } else {
-            app.core
-                .game
-                .res
-                .log(format!("Move {} out of bounds - no chunk available", i));
+        }
+    }
+    chunk_index += num_visible;
+
+    // Render bottom scroll indicator
+    if scroll_offset + VISIBLE_MOVES < moves.len() {
+        if chunk_index < move_chunks.len() {
+            let scroll_down = Paragraph::new("▼ More below")
+                .style(Style::default().fg(Color::Gray))
+                .alignment(Alignment::Center);
+            f.render_widget(scroll_down, move_chunks[chunk_index]);
         }
     }
 
@@ -493,16 +493,14 @@ fn get_player_combat_data(
     Option<lithicrivers_core::model::body::Body>,
     lithicrivers_core::components::Energy,
     Vec<lithicrivers_core::moves::Move>,
-    lithicrivers_core::moves::MoveCooldowns,
 ) {
     use lithicrivers_core::components::Energy;
     use lithicrivers_core::model::body::Body;
-    use lithicrivers_core::moves::{get_available_moves, MoveCooldowns};
+    use lithicrivers_core::moves::get_available_moves;
 
     // Find the player entity and get their body and energy
     let mut player_body = None;
     let mut player_energy = Energy::new(100); // Default energy
-    let mut cooldowns = MoveCooldowns::new();
 
     if let Some(player_entity) = app.core.game.res.player_entity {
         // Try to get player body
@@ -517,18 +515,9 @@ fn get_player_combat_data(
             .world
             .get::<&Energy>(player_entity)
             .expect("Player entity must have Energy component");
-
-        // Get cooldowns - should always exist
-        cooldowns = (*app
-            .core
-            .game
-            .world
-            .get::<&MoveCooldowns>(player_entity)
-            .expect("Player entity must have MoveCooldowns component"))
-        .clone();
     }
 
-    (player_body, player_energy, get_available_moves(), cooldowns)
+    (player_body, player_energy, get_available_moves())
 }
 
 #[derive(Debug, Clone)]
