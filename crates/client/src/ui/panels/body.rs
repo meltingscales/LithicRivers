@@ -18,7 +18,7 @@ pub fn render_body_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     // Build from ECS
     let mut list_lines: Vec<Line> = Vec::new();
     let mut ascii_lines_opt: Option<Vec<Line<'static>>> = None;
-    if let Some(e) = app.core.game.res.player_entity {
+    if let Some(e) = app.core.game.get_player_entity() {
         if let Ok(body) = app.core.game.world.get::<&Body>(e) {
             // Build list
             let mut parts: Vec<&BodyPart> = body.parts.values().collect();

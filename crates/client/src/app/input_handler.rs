@@ -59,7 +59,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
         app.panels.look.mode = !app.panels.look.mode;
         // Reset cursor to player on toggle on
         if app.panels.look.mode {
-            if let Some(e) = app.core.game.res.player_entity {
+            if let Some(e) = app.core.game.get_player_entity() {
                 if let Ok(pos) = app
                     .core
                     .game
@@ -168,7 +168,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
             .keybinds
             .matches("inventory", "TOGGLE_ITEM_AUTO_PICKUP_KEY", &key)
     {
-        if let Some(e) = app.core.game.res.player_entity {
+        if let Some(e) = app.core.game.get_player_entity() {
             if let Ok(mut inv) = app.core.game.world.get::<&mut InvComp>(e) {
                 inv.auto_pickup = !inv.auto_pickup;
                 let state = if inv.auto_pickup { "ON" } else { "OFF" };
@@ -224,7 +224,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
                     .recipe_handler
                     .can_craft(app.panels.crafting.selected, &inventory)
                 {
-                    if let Some(e) = app.core.game.res.player_entity {
+                    if let Some(e) = app.core.game.get_player_entity() {
                         if let Ok(mut inv) = app.core.game.world.get::<&mut InvComp>(e) {
                             // Consume ingredients
                             for &(item, qty) in recipe.ingredients {
@@ -310,7 +310,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
         if app.ui.keybinds.matches("ui", "CREDITS_SCROLL_UP", &key)
             || app.ui.keybinds.matches("movement", "MOVE_NORTH", &key)
         {
-            if let Some(e) = app.core.game.res.player_entity {
+            if let Some(e) = app.core.game.get_player_entity() {
                 if let Ok(inv) = app.core.game.world.get::<&InvComp>(e) {
                     if !inv.slots.is_empty() {
                         if app.panels.inventory.selected == 0 {
@@ -326,7 +326,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
         if app.ui.keybinds.matches("ui", "CREDITS_SCROLL_DOWN", &key)
             || app.ui.keybinds.matches("movement", "MOVE_SOUTH", &key)
         {
-            if let Some(e) = app.core.game.res.player_entity {
+            if let Some(e) = app.core.game.get_player_entity() {
                 if let Ok(inv) = app.core.game.world.get::<&InvComp>(e) {
                     if !inv.slots.is_empty() {
                         app.panels.inventory.selected =
@@ -339,7 +339,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
 
         // Helper to get current selection
         let mut selected: Option<(ItemKind, u32)> = None;
-        if let Some(e) = app.core.game.res.player_entity {
+        if let Some(e) = app.core.game.get_player_entity() {
             if let Ok(inv) = app.core.game.world.get::<&InvComp>(e) {
                 if !inv.slots.is_empty() {
                     let idx = app.panels.inventory.selected.min(inv.slots.len() - 1);
@@ -354,7 +354,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
                 if qty == 0 {
                     return Ok(());
                 }
-                if let Some(e) = app.core.game.res.player_entity {
+                if let Some(e) = app.core.game.get_player_entity() {
                     // Copy player position, then drop immutable borrow before mutating world
                     let (px, py, pz) = {
                         let Ok(ppos) = app
@@ -412,7 +412,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
             .keybinds
             .matches("inventory", "CHEAT_DUPLICATE_ITEM", &key)
         {
-            if let Some(e) = app.core.game.res.player_entity {
+            if let Some(e) = app.core.game.get_player_entity() {
                 if let Ok(mut inv) = app.core.game.world.get::<&mut InvComp>(e) {
                     if !inv.slots.is_empty() {
                         let idx = app.panels.inventory.selected.min(inv.slots.len() - 1);
@@ -430,7 +430,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
 
         // Destroy selected item (remove 1)
         if app.ui.keybinds.matches("inventory", "DESTROY_ITEM", &key) {
-            if let Some(e) = app.core.game.res.player_entity {
+            if let Some(e) = app.core.game.get_player_entity() {
                 if let Ok(mut inv) = app.core.game.world.get::<&mut InvComp>(e) {
                     if !inv.slots.is_empty() {
                         let idx = app.panels.inventory.selected.min(inv.slots.len() - 1);
@@ -516,7 +516,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
         // Use selected move (Space/Enter) - queue the action instead of immediate execution
         if app.ui.keybinds.matches("ui", "MENU_ACTIVATE", &key) {
             // Get the player entity
-            if let Some(player_entity) = app.core.game.res.player_entity {
+            if let Some(player_entity) = app.core.game.get_player_entity() {
                 // Get available moves and selected move
                 let available_moves = lithicrivers_core::moves::get_available_moves();
                 if let Some(selected_move) = available_moves.get(*current_move) {
@@ -625,7 +625,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
         // Exit combat (Escape)
         if app.ui.keybinds.matches("ui", "CLOSE_HELP_MENU", &key) {
             // Clear the player's action queue when manually exiting combat
-            if let Some(player_entity) = app.core.game.res.player_entity {
+            if let Some(player_entity) = app.core.game.get_player_entity() {
                 if let Ok(mut queue) = app
                     .core
                     .game

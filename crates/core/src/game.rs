@@ -60,7 +60,7 @@ impl Game {
         starting_inv.add(ItemKind::String, 2);
 
         // Spawn a player entity with a Position and starting inventory
-        let player = world.spawn((
+        let _player = world.spawn((
             Position {
                 x: sx,
                 y: sy,
@@ -76,7 +76,7 @@ impl Game {
             BlocksMovement,
             starting_inv,
         ));
-        res.player_entity = Some(player);
+        // Note: player_entity field will be removed - use ECS queries instead
         // Spawn several StumblingSheep near the player for visibility
         let sheep_positions = [(sx + 2, sy + 2, sz), (sx + 3, sy, sz), (sx, sy + 3, sz)];
         for (x, y, z) in sheep_positions {
@@ -182,15 +182,10 @@ impl Game {
         self.res.player_move_intent = Some((dx, dy));
         // Set the move cost so the next tick advances by this many ticks,
         // using the player's Body.walk_speed_mult if available.
-        let mult: f32 = if let Some(e) = self.res.player_entity {
-            if let Ok(body) = self.world.get::<&Body>(e) {
-                body.walk_speed_modifier()
-            } else {
-                1.0
-            }
-        } else {
-            1.0
-        };
+        let mult: f32 = self
+            .get_player_component::<Body>()
+            .map(|body| body.walk_speed_modifier())
+            .unwrap_or(1.0);
         let base: f32 = 200.0;
         let cost = (base / mult.max(0.01)).round().max(1.0) as u64;
         self.res.pending_tick_increase = Some(cost);
@@ -235,15 +230,10 @@ impl Game {
     pub fn queue_mine(&mut self) {
         self.res.mining_intent = true;
         // Set an action cost similar to moving; could use Body modifiers later
-        let mult: f32 = if let Some(e) = self.res.player_entity {
-            if let Ok(body) = self.world.get::<&Body>(e) {
-                body.walk_speed_modifier()
-            } else {
-                1.0
-            }
-        } else {
-            1.0
-        };
+        let mult: f32 = self
+            .get_player_component::<Body>()
+            .map(|body| body.walk_speed_modifier())
+            .unwrap_or(1.0);
         let base: f32 = 300.0; // slightly slower than a normal move
         let cost = (base / mult.max(0.01)).round().max(1.0) as u64;
         self.res.pending_tick_increase = Some(cost);
@@ -267,17 +257,62 @@ impl Game {
     pub fn queue_player_move_z(&mut self, dz: i32) {
         self.res.player_move_intent_z = Some(dz);
         // Use same base cost as lateral movement for now
-        let mult: f32 = if let Some(e) = self.res.player_entity {
-            if let Ok(body) = self.world.get::<&Body>(e) {
-                body.walk_speed_modifier()
-            } else {
-                1.0
-            }
-        } else {
-            1.0
-        };
+        let mult: f32 = self
+            .get_player_component::<Body>()
+            .map(|body| body.walk_speed_modifier())
+            .unwrap_or(1.0);
         let base: f32 = 200.0;
         let cost = (base / mult.max(0.01)).round().max(1.0) as u64;
         self.res.pending_tick_increase = Some(cost);
+    }
+
+    // ECS Helper Functions - Replace direct player_entity access
+
+    /// Get the player entity using proper ECS query
+    pub fn get_player_entity(&self) -> Option<hecs::Entity> {
+        self.world.query::<&Player>().iter().next().map(|(e, _)| e)
+    }
+
+    /// Get player position using ECS query  
+    pub fn get_player_position(&self) -> Option<Position> {
+        self.world
+            .query::<(&Player, &Position)>()
+            .iter()
+            .next()
+            .map(|(_, (_, pos))| *pos)
+    }
+
+    /// Check if given entity is the player
+    pub fn is_player_entity(&self, entity: hecs::Entity) -> bool {
+        self.world.get::<&Player>(entity).is_ok()
+    }
+
+    /// Get player component of specified type
+    pub fn get_player_component<T: hecs::Component>(&self) -> Option<T>
+    where
+        T: Clone,
+    {
+        self.world
+            .query::<(&Player, &T)>()
+            .iter()
+            .next()
+            .map(|(_, (_, component))| component.clone())
+    }
+
+    /// Get mutable reference to player component
+    pub fn get_player_component_mut<T: hecs::Component>(&mut self) -> Option<hecs::RefMut<'_, T>> {
+        if let Some(player_entity) = self.get_player_entity() {
+            self.world.get::<&mut T>(player_entity).ok()
+        } else {
+            None
+        }
+    }
+
+    /// Apply function to player entity if it exists
+    pub fn with_player_entity<F, R>(&self, f: F) -> Option<R>
+    where
+        F: FnOnce(hecs::Entity) -> R,
+    {
+        self.get_player_entity().map(f)
     }
 }

@@ -189,7 +189,7 @@ impl App {
     }
 
     fn snap_view_to_player_z(&mut self) {
-        if let Some(e) = self.core.game.res.player_entity {
+        if let Some(e) = self.core.game.get_player_entity() {
             if let Ok(pos) = self
                 .core
                 .game

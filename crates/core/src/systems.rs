@@ -1,6 +1,6 @@
 use crate::components::{
     BattleDelay, BlocksMovement, Combat, Dead, DroppedItem, Energy, FeralDog, GameEntity, Health,
-    Inventory, ItemKind, Position, Sheep, SpriteRef, Stunned,
+    Inventory, ItemKind, Player, Position, Sheep, SpriteRef, Stunned,
 };
 use crate::moves::{ActionQueue, CombatAction, Move, MoveType, QueuedAction};
 use crate::resources::Resources;
@@ -12,9 +12,30 @@ fn is_stunned(world: &World, entity: hecs::Entity) -> bool {
     world.get::<&BattleDelay>(entity).is_ok()
 }
 
+/// ECS Helper Functions for Systems
+
+/// Get the player entity using proper ECS query
+fn get_player_entity(world: &World) -> Option<hecs::Entity> {
+    world.query::<&Player>().iter().next().map(|(e, _)| e)
+}
+
+/// Get player position using ECS query  
+fn get_player_position(world: &World) -> Option<Position> {
+    world
+        .query::<(&Player, &Position)>()
+        .iter()
+        .next()
+        .map(|(_, (_, pos))| *pos)
+}
+
+/// Check if given entity is the player
+fn is_player_entity(world: &World, entity: hecs::Entity) -> bool {
+    world.get::<&Player>(entity).is_ok()
+}
+
 pub fn move_player_system(world: &mut World, res: &mut Resources) {
     if let Some((dx, dy)) = res.player_move_intent.take() {
-        if let Some(player_e) = res.player_entity {
+        if let Some(player_e) = get_player_entity(world) {
             // 1) Read current position immutably to avoid aliasing with queries below
             if let Ok(pos) = world.get::<&Position>(player_e) {
                 let (cx, cy, cz) = (pos.x, pos.y, pos.z);
@@ -53,7 +74,7 @@ pub fn move_player_system(world: &mut World, res: &mut Resources) {
 
     // Handle vertical movement intent separately (no terrain checks yet)
     if let Some(dz) = res.player_move_intent_z.take() {
-        if let Some(player_e) = res.player_entity {
+        if let Some(player_e) = get_player_entity(world) {
             if let Ok(mut pos_mut) = world.get::<&mut Position>(player_e) {
                 pos_mut.z = pos_mut.z.saturating_add(dz);
             }
@@ -68,7 +89,7 @@ pub fn mining_system(world: &mut World, res: &mut Resources) -> bool {
         return false;
     }
     res.mining_intent = false;
-    let Some(player_e) = res.player_entity else {
+    let Some(player_e) = get_player_entity(world) else {
         return false;
     };
     let Ok(pos) = world.get::<&Position>(player_e) else {
@@ -124,7 +145,7 @@ pub fn mining_system(world: &mut World, res: &mut Resources) -> bool {
 
 /// When the player is on the same tile as any DroppedItem, pick it up into Inventory.
 pub fn pickup_system(world: &mut World, res: &mut Resources) {
-    let Some(player_e) = res.player_entity else {
+    let Some(player_e) = get_player_entity(world) else {
         return;
     };
 
@@ -187,11 +208,8 @@ pub enum CombatState {
 
 pub fn combat_trigger_system(world: &mut World, res: &mut Resources) -> CombatState {
     // get player position
-    let player_pos = match res
-        .player_entity
-        .and_then(|e| world.get::<&Position>(e).ok())
-    {
-        Some(pos) => *pos,
+    let player_pos = match get_player_position(world) {
+        Some(pos) => pos,
         None => return CombatState::Idle, // No player to chase
     };
 
@@ -231,7 +249,7 @@ pub fn combat_trigger_system(world: &mut World, res: &mut Resources) -> CombatSt
 
         if combat_triggered {
             // Ensure player has an ActionQueue component for combat
-            if let Some(player_entity) = res.player_entity {
+            if let Some(player_entity) = get_player_entity(world) {
                 if world.get::<&ActionQueue>(player_entity).is_err() {
                     world.insert_one(player_entity, ActionQueue::new()).ok();
                 }
@@ -248,11 +266,8 @@ pub fn feral_dog_system(world: &mut World, res: &mut Resources) {
     use rand::Rng;
 
     // Get player position if available
-    let player_pos = match res
-        .player_entity
-        .and_then(|e| world.get::<&Position>(e).ok())
-    {
-        Some(pos) => *pos,
+    let player_pos = match get_player_position(world) {
+        Some(pos) => pos,
         None => return, // No player to chase
     };
 
@@ -430,7 +445,7 @@ pub fn action_queue_system(world: &mut World, res: &mut Resources) {
 /// Check for combat end conditions and clear action queues if combat ends
 fn check_combat_end_conditions(world: &mut World, res: &mut Resources) {
     // Check if player is dead
-    let player_dead = if let Some(player_entity) = res.player_entity {
+    let player_dead = if let Some(player_entity) = get_player_entity(world) {
         world.get::<&Dead>(player_entity).is_ok()
     } else {
         true // No player entity means dead
@@ -439,7 +454,7 @@ fn check_combat_end_conditions(world: &mut World, res: &mut Resources) {
     // Check if all enemies are dead
     let mut has_living_enemies = false;
     for (entity, (_, combat, _)) in world.query::<(&Position, &Combat, &GameEntity)>().iter() {
-        if Some(entity) != res.player_entity && combat.triggered {
+        if !is_player_entity(world, entity) && combat.triggered {
             if world.get::<&Dead>(entity).is_err() {
                 has_living_enemies = true;
                 break;
@@ -676,7 +691,7 @@ fn handle_entity_death(world: &mut World, res: &mut Resources, entity: hecs::Ent
     world.remove_one::<Combat>(entity).ok();
 
     // Log death
-    if Some(entity) == res.player_entity {
+    if is_player_entity(world, entity) {
         res.log("You have died!".to_string());
         // TODO: Trigger game over state
     } else {
@@ -712,7 +727,7 @@ pub fn enemy_combat_ai_system(world: &mut World, res: &mut Resources) {
     let mut enemy_entities = Vec::new();
 
     for (entity, (_, combat, _)) in world.query::<(&Position, &Combat, &GameEntity)>().iter() {
-        if combat.triggered && entity != res.player_entity.unwrap_or(hecs::Entity::DANGLING) {
+        if combat.triggered && !is_player_entity(world, entity) {
             // Skip if entity is dead, stunned, or already has actions queued
             if world.get::<&Dead>(entity).is_ok() || world.get::<&Stunned>(entity).is_ok() {
                 continue;
@@ -746,7 +761,7 @@ fn generate_enemy_action(world: &mut World, res: &mut Resources, enemy_entity: h
     }
 
     // Find the player
-    let player_entity = match res.player_entity {
+    let player_entity = match get_player_entity(world) {
         Some(player) => player,
         None => return,
     };
@@ -792,7 +807,7 @@ mod tests {
             Energy::new(100),
             ActionQueue::new(),
         ));
-        res.player_entity = Some(player);
+        // Note: player_entity no longer needed - use ECS queries
 
         // Create enemy with low health (will die from one hit)
         let enemy = world.spawn((

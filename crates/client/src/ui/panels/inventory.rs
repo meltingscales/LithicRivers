@@ -14,7 +14,7 @@ use std::collections::HashMap;
 pub fn render_inventory_list_only(f: &mut Frame, app: &mut crate::App, area: Rect) {
     // Build list with selection highlight (same as right side of render_inventory_panel)
     let mut list_lines: Vec<Line<'static>> = Vec::new();
-    if let Some(e) = app.core.game.res.player_entity {
+    if let Some(e) = app.core.game.get_player_entity() {
         if let Ok(inv) = app.core.game.world.get::<&InvComp>(e) {
             if inv.slots.is_empty() {
                 list_lines.push(Line::from(Span::raw("(Empty)")));
@@ -59,7 +59,7 @@ pub fn render_inventory_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     let mut list_lines: Vec<Line<'static>> = Vec::new();
     let mut selected_kind: Option<ItemKind> = None;
     let mut selected_qty: u32 = 0;
-    if let Some(e) = app.core.game.res.player_entity {
+    if let Some(e) = app.core.game.get_player_entity() {
         if let Ok(inv) = app.core.game.world.get::<&InvComp>(e) {
             if inv.slots.is_empty() {
                 list_lines.push(Line::from(Span::raw("(Empty)")));
@@ -137,7 +137,7 @@ pub fn render_inventory_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
 pub fn get_player_inventory(app: &crate::App) -> HashMap<ItemKind, u32> {
     let mut inventory = HashMap::new();
 
-    if let Some(player_e) = app.core.game.res.player_entity {
+    if let Some(player_e) = app.core.game.get_player_entity() {
         if let Ok(inv) = app
             .core
             .game
