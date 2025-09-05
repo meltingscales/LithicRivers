@@ -44,9 +44,6 @@ pub struct SaveData {
     pub player: PlayerSave,
     pub sheep: Vec<SheepSave>,
     pub dropped_items: Vec<DroppedItemSave>,
-    pub view_x: i32,
-    pub view_y: i32,
-    pub view_z: i32,
 }
 
 impl SaveData {
@@ -66,10 +63,7 @@ impl SaveData {
             .iter()
         {
             if maybe_player.is_some() {
-                // inventory may be missing if something went wrong; default it
-                let inv = maybe_inventory
-                    .cloned()
-                    .unwrap_or(panic!("Player missing inventory"));
+                let inv = maybe_inventory.cloned().expect("Player missing inventory");
                 player_save = Some(PlayerSave {
                     pos: *pos,
                     inventory: inv,
@@ -93,9 +87,6 @@ impl SaveData {
             player,
             sheep,
             dropped_items,
-            view_x: game.res.view_x,
-            view_y: game.res.view_y,
-            view_z: game.res.view_z,
         })
     }
 
@@ -104,11 +95,6 @@ impl SaveData {
         game.res = Resources::new(self.seed);
         game.res.gametick = self.gametick;
         game.res.world = self.world;
-        game.res.view_x = self.view_x;
-        game.res.view_y = self.view_y;
-        game.res.view_z = self.view_z;
-        // Keep world generation slice consistent with view
-        game.res.world.set_generation_z(self.view_z);
 
         // Rebuild entity world
         game.world = World::new();
@@ -167,9 +153,6 @@ struct SaveDataJson {
     pub player: PlayerSave,
     pub sheep: Vec<SheepSave>,
     pub dropped_items: Vec<DroppedItemSave>,
-    pub view_x: i32,
-    pub view_y: i32,
-    pub view_z: i32,
 }
 
 impl From<TileWorld> for WorldJson {
@@ -204,9 +187,6 @@ impl From<SaveData> for SaveDataJson {
             player: s.player,
             sheep: s.sheep,
             dropped_items: s.dropped_items,
-            view_x: s.view_x,
-            view_y: s.view_y,
-            view_z: s.view_z,
         }
     }
 }
@@ -221,9 +201,6 @@ impl From<SaveDataJson> for SaveData {
             player: j.player,
             sheep: j.sheep,
             dropped_items: j.dropped_items,
-            view_x: j.view_x,
-            view_y: j.view_y,
-            view_z: j.view_z,
         }
     }
 }

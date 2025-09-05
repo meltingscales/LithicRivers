@@ -88,15 +88,18 @@ impl App {
         let config_manager = ConfigManager::new();
         let keybinds = Keybinds::from_config(&config_manager);
 
-        // Initialize look cursor to player's position (or origin fallback)
+        // Initialize look cursor and viewport to player's position (or origin fallback)
         let mut look_cursor = Position { x: 0, y: 0, z: 0 };
+        let mut initial_view_x = 0;
+        let mut initial_view_y = 0;
+        let mut initial_view_z = 0;
         if let Some(e) = game.res.player_entity {
             if let Ok(pos) = game.world.get::<&Position>(e) {
                 look_cursor = *pos;
-                // Center initial viewport on player
-                game.res.view_x = look_cursor.x;
-                game.res.view_y = look_cursor.y;
-                game.res.view_z = look_cursor.z;
+                // Center initial UI viewport on player
+                initial_view_x = look_cursor.x;
+                initial_view_y = look_cursor.y;
+                initial_view_z = look_cursor.z;
             }
         }
 
@@ -114,6 +117,9 @@ impl App {
                 scale: Scale::Small,
                 bottom_menu_rect: None,
                 keybinds,
+                view_x: initial_view_x,
+                view_y: initial_view_y,
+                view_z: initial_view_z,
             },
             audio: AudioState { audio },
             logging: LoggingState { log_full_path },

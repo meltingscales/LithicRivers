@@ -197,9 +197,9 @@ impl App {
                 .get::<&lithicrivers_core::components::Position>(e)
             {
                 // Snap entire viewport center and Z slice to player
-                self.core.game.res.view_x = pos.x;
-                self.core.game.res.view_y = pos.y;
-                self.core.game.res.view_z = pos.z;
+                self.ui.view_x = pos.x;
+                self.ui.view_y = pos.y;
+                self.ui.view_z = pos.z;
             }
         }
     }
@@ -410,7 +410,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<(), 
                 target: "game",
                 "shutdown tick={} view_z={} seed={}",
                 app.core.game.res.gametick,
-                app.core.game.res.view_z,
+                app.ui.view_z,
                 app.core.game.res.seed
             );
             return Ok(());

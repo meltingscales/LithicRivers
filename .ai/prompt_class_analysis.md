@@ -1,0 +1,1 @@
+Is there a Rust tool that can show me how all my classes are interrelated, so that I can find architectural issues?
