@@ -179,24 +179,24 @@ impl Game {
     }
 
     pub fn queue_player_move(&mut self, dx: i32, dy: i32) {
-        self.res.player_move_intent = Some((dx, dy));
-        // Set the move cost so the next tick advances by this many ticks,
-        // using the player's Body.walk_speed_mult if available.
+        // Calculate move cost using player's Body modifiers
         let mult: f32 = self
             .get_player_component::<Body>()
             .map(|body| body.walk_speed_modifier())
             .unwrap_or(1.0);
         let base: f32 = 200.0;
         let cost = (base / mult.max(0.01)).round().max(1.0) as u64;
-        self.res.pending_tick_increase = Some(cost);
+
+        // Set movement intent with cost
+        self.res.player_intent = crate::intent::PlayerIntent::movement(dx, dy, 0, cost);
     }
 
     /// Advance the game state by one tick.
     /// Returns true if mining was successful during this tick, false otherwise.
     pub fn tick(&mut self) -> GameTickResult {
         // In the future, run an ordered system schedule.
-        // For now, just increment tick and maybe move the player slowly.
-        let inc = self.res.pending_tick_increase.take().unwrap_or(1);
+        // For now, just increment tick based on pending action cost.
+        let inc = self.res.player_intent.cost().max(1);
         self.res.gametick = self.res.gametick.saturating_add(inc);
 
         // Process systems
@@ -228,7 +228,6 @@ impl Game {
     }
 
     pub fn queue_mine(&mut self) {
-        self.res.mining_intent = true;
         // Set an action cost similar to moving; could use Body modifiers later
         let mult: f32 = self
             .get_player_component::<Body>()
@@ -236,7 +235,9 @@ impl Game {
             .unwrap_or(1.0);
         let base: f32 = 300.0; // slightly slower than a normal move
         let cost = (base / mult.max(0.01)).round().max(1.0) as u64;
-        self.res.pending_tick_increase = Some(cost);
+
+        // Set mining intent with cost
+        self.res.player_intent = crate::intent::PlayerIntent::mine(cost);
     }
 
     // Convenience save/load wrappers
@@ -255,7 +256,6 @@ impl Game {
 
     /// Queue a vertical movement for the player by dz levels.
     pub fn queue_player_move_z(&mut self, dz: i32) {
-        self.res.player_move_intent_z = Some(dz);
         // Use same base cost as lateral movement for now
         let mult: f32 = self
             .get_player_component::<Body>()
@@ -263,7 +263,9 @@ impl Game {
             .unwrap_or(1.0);
         let base: f32 = 200.0;
         let cost = (base / mult.max(0.01)).round().max(1.0) as u64;
-        self.res.pending_tick_increase = Some(cost);
+
+        // Set vertical movement intent
+        self.res.player_intent = crate::intent::PlayerIntent::movement(0, 0, dz, cost);
     }
 
     // ECS Helper Functions - Replace direct player_entity access

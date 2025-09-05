@@ -1,4 +1,5 @@
 use crate::config::ConfigManager;
+use crate::intent::PlayerIntent;
 use crate::world::World;
 use rand::SeedableRng;
 use rand_chacha::ChaCha20Rng;
@@ -13,17 +14,11 @@ pub struct Resources {
     pub config: ConfigManager,
     pub developer_mode: bool,
     pub player_name: String,
-    // Input intents (single-step for now)
-    pub player_move_intent: Option<(i32, i32)>,
+    // Consolidated player action intent
+    pub player_intent: PlayerIntent,
     pub last_blocked_tile: Option<(i32, i32)>,
-    // If set, the next tick will advance by this many ticks (e.g., move/action cost)
-    pub pending_tick_increase: Option<u64>,
-    // Mining intent: when set, player will mine the current tile on next tick
-    pub mining_intent: bool,
     // Simple message log for UI
     pub messages: Vec<String>,
-    // Vertical movement intent (dz)
-    pub player_move_intent_z: Option<i32>,
 }
 
 impl Resources {
@@ -47,12 +42,9 @@ impl Resources {
             config: cfg,
             developer_mode,
             player_name,
-            player_move_intent: None,
+            player_intent: PlayerIntent::default(),
             last_blocked_tile: None,
-            pending_tick_increase: None,
-            mining_intent: false,
             messages: Vec::new(),
-            player_move_intent_z: None,
         }
     }
 

@@ -2,6 +2,7 @@ use crate::components::{
     BattleDelay, BlocksMovement, Combat, Dead, DroppedItem, Energy, FeralDog, GameEntity, Health,
     Inventory, ItemKind, Player, Position, Sheep, SpriteRef, Stunned,
 };
+use crate::intent::PlayerAction;
 use crate::moves::{ActionQueue, CombatAction, Move, MoveType, QueuedAction};
 use crate::resources::Resources;
 use hecs::World;
@@ -34,49 +35,53 @@ fn is_player_entity(world: &World, entity: hecs::Entity) -> bool {
 }
 
 pub fn move_player_system(world: &mut World, res: &mut Resources) {
-    if let Some((dx, dy)) = res.player_move_intent.take() {
+    if let Some(action) = res.player_intent.take() {
         if let Some(player_e) = get_player_entity(world) {
-            // 1) Read current position immutably to avoid aliasing with queries below
-            if let Ok(pos) = world.get::<&Position>(player_e) {
-                let (cx, cy, cz) = (pos.x, pos.y, pos.z);
-                // Drop immutable borrow explicitly (not strictly necessary but clarifies intent)
-                drop(pos);
+            match action {
+                PlayerAction::Move { dx, dy, dz } => {
+                    // Read current position immutably
+                    if let Ok(pos) = world.get::<&Position>(player_e) {
+                        let (cx, cy, cz) = (pos.x, pos.y, pos.z);
+                        drop(pos); // Drop immutable borrow
 
-                let nx = cx + dx;
-                let ny = cy + dy;
-                let nz = cz; // Keep same Z-level for now
-                let t = res.world.get_tile_cached(nx, ny, nz);
-                // Check tile passability and blocking entities
-                let mut blocked = !t.is_passable();
-                if !blocked {
-                    for (_, (_, epos)) in world.query::<(&BlocksMovement, &Position)>().iter() {
-                        if epos.x == nx && epos.y == ny && epos.z == nz {
-                            blocked = true;
-                            break;
+                        let nx = cx + dx;
+                        let ny = cy + dy;
+                        let nz = cz + dz;
+
+                        // Check horizontal movement blocking
+                        let mut blocked = false;
+                        if dx != 0 || dy != 0 {
+                            let t = res.world.get_tile_cached(nx, ny, cz);
+                            blocked = !t.is_passable();
+                            if !blocked {
+                                for (_, (_, epos)) in
+                                    world.query::<(&BlocksMovement, &Position)>().iter()
+                                {
+                                    if epos.x == nx && epos.y == ny && epos.z == cz {
+                                        blocked = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            if blocked {
+                                info!("Blocked by {:?} at ({}, {})", t, nx, ny);
+                                res.last_blocked_tile = Some((nx, ny));
+                            }
+                        }
+
+                        // Apply movement if not blocked
+                        if !blocked {
+                            if let Ok(mut pos_mut) = world.get::<&mut Position>(player_e) {
+                                pos_mut.x = nx;
+                                pos_mut.y = ny;
+                                pos_mut.z = nz;
+                            }
                         }
                     }
                 }
-                if blocked {
-                    info!("Blocked by {:?} at ({}, {})", t, nx, ny);
-                    // Set resource for last blocked tile (only x,y for now)
-                    res.last_blocked_tile = Some((nx, ny));
-                } else {
-                    // 2) Now borrow mutably to write the new position
-                    if let Ok(mut pos_mut) = world.get::<&mut Position>(player_e) {
-                        pos_mut.x = nx;
-                        pos_mut.y = ny;
-                        pos_mut.z = nz;
-                    }
+                _ => {
+                    // Other actions handled by different systems
                 }
-            }
-        }
-    }
-
-    // Handle vertical movement intent separately (no terrain checks yet)
-    if let Some(dz) = res.player_move_intent_z.take() {
-        if let Some(player_e) = get_player_entity(world) {
-            if let Ok(mut pos_mut) = world.get::<&mut Position>(player_e) {
-                pos_mut.z = pos_mut.z.saturating_add(dz);
             }
         }
     }
@@ -85,10 +90,12 @@ pub fn move_player_system(world: &mut World, res: &mut Resources) {
 /// Process mining intent: if the player requested mining, act on current tile.
 /// Returns true if mining was successful (e.g. chopped a tree), false otherwise.
 pub fn mining_system(world: &mut World, res: &mut Resources) -> bool {
-    if !res.mining_intent {
+    // Check if there's a mining action in the intent
+    let has_mining_action = matches!(res.player_intent.action, Some(PlayerAction::Mine));
+    if !has_mining_action {
         return false;
     }
-    res.mining_intent = false;
+
     let Some(player_e) = get_player_entity(world) else {
         return false;
     };
