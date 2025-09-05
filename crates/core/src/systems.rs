@@ -1,5 +1,6 @@
+use crate::component_access::{ComponentAccess, ComponentUpdate, DamageResult};
 use crate::components::{
-    BattleDelay, BlocksMovement, Combat, Dead, DroppedItem, Energy, FeralDog, GameEntity, Health,
+    BattleDelay, BlocksMovement, Combat, Dead, DroppedItem, Energy, FeralDog, GameEntity,
     Inventory, ItemKind, Player, Position, Sheep, SpriteRef, Stunned,
 };
 use crate::intent::PlayerAction;
@@ -39,43 +40,54 @@ pub fn move_player_system(world: &mut World, res: &mut Resources) {
         if let Some(player_e) = get_player_entity(world) {
             match action {
                 PlayerAction::Move { dx, dy, dz } => {
-                    // Read current position immutably
-                    if let Ok(pos) = world.get::<&Position>(player_e) {
-                        let (cx, cy, cz) = (pos.x, pos.y, pos.z);
-                        drop(pos); // Drop immutable borrow
+                    // Read current position and check for movement blocking
+                    let (cx, cy, cz) = if let Ok(pos) = world.get::<&Position>(player_e) {
+                        (pos.x, pos.y, pos.z)
+                    } else {
+                        return; // No position component
+                    };
 
-                        let nx = cx + dx;
-                        let ny = cy + dy;
-                        let nz = cz + dz;
+                    let nx = cx + dx;
+                    let ny = cy + dy;
+                    let nz = cz + dz;
 
-                        // Check horizontal movement blocking
-                        let mut blocked = false;
-                        if dx != 0 || dy != 0 {
-                            let t = res.world_state.world.get_tile_cached(nx, ny, cz);
-                            blocked = !t.is_passable();
-                            if !blocked {
-                                for (_, (_, epos)) in
-                                    world.query::<(&BlocksMovement, &Position)>().iter()
-                                {
-                                    if epos.x == nx && epos.y == ny && epos.z == cz {
-                                        blocked = true;
-                                        break;
-                                    }
+                    // Check horizontal movement blocking
+                    let mut blocked = false;
+                    if dx != 0 || dy != 0 {
+                        let t = res.world_state.world.get_tile_cached(nx, ny, cz);
+                        blocked = !t.is_passable();
+                        if !blocked {
+                            for (_, (_, epos)) in
+                                world.query::<(&BlocksMovement, &Position)>().iter()
+                            {
+                                if epos.x == nx && epos.y == ny && epos.z == cz {
+                                    blocked = true;
+                                    break;
                                 }
                             }
-                            if blocked {
-                                info!("Blocked by {:?} at ({}, {})", t, nx, ny);
-                                res.player_state.last_blocked_tile = Some((nx, ny));
-                            }
                         }
+                        if blocked {
+                            info!("Blocked by {:?} at ({}, {})", t, nx, ny);
+                            res.player_state.last_blocked_tile = Some((nx, ny));
+                        }
+                    }
 
-                        // Apply movement if not blocked
-                        if !blocked {
-                            if let Ok(mut pos_mut) = world.get::<&mut Position>(player_e) {
-                                pos_mut.x = nx;
-                                pos_mut.y = ny;
-                                pos_mut.z = nz;
-                            }
+                    // Apply movement if not blocked
+                    if !blocked {
+                        let new_position = Position {
+                            x: nx,
+                            y: ny,
+                            z: nz,
+                        };
+                        let mut comp_access = ComponentAccess::new(world);
+                        if let Err(e) = comp_access.atomic_update(
+                            player_e,
+                            ComponentUpdate::Move {
+                                new_position,
+                                remove_combat_delay: false,
+                            },
+                        ) {
+                            tracing::warn!(target: "systems", "Failed to update player position: {}", e);
                         }
                     }
                 }
@@ -194,13 +206,19 @@ pub fn pickup_system(world: &mut World, res: &mut Resources) {
         return;
     }
 
-    // Process inventory updates
-    if let Ok(mut inv) = world.get::<&mut Inventory>(player_e) {
+    // Process inventory updates using safe component access
+    let mut comp_access = ComponentAccess::new(world);
+    if let Ok(()) = comp_access.modify_inventory(player_e, |inv| {
         let mut total = 0u32;
         for di in &items {
             inv.add(di.kind, di.qty);
             total += di.qty;
         }
+        if total > 0 {
+            // This will be handled outside the closure
+        }
+    }) {
+        let total: u32 = items.iter().map(|di| di.qty).sum();
         if total > 0 {
             res.events
                 .interaction_event(format!("Picked up {} items", total), res.time.tick);
@@ -219,7 +237,7 @@ pub enum CombatState {
     CombatEnded,
 }
 
-pub fn combat_trigger_system(world: &mut World, res: &mut Resources) -> CombatState {
+pub fn combat_trigger_system(world: &mut World, _res: &mut Resources) -> CombatState {
     // get player position
     let player_pos = match get_player_position(world) {
         Some(pos) => pos,
@@ -637,7 +655,7 @@ fn execute_enemy_attack(
     apply_damage(world, res, target_entity, damage, "enemy attack");
 }
 
-/// Apply damage to an entity, handling both Health and Body systems
+/// Apply damage to an entity using safe component access
 fn apply_damage(
     world: &mut World,
     res: &mut Resources,
@@ -645,57 +663,44 @@ fn apply_damage(
     damage: u32,
     source: &str,
 ) {
-    use crate::model::body::Body;
+    let mut comp_access = ComponentAccess::new(world);
 
-    // Check if target is already dead
-    if world.get::<&Dead>(target_entity).is_ok() {
-        return;
-    }
-
-    // Try to apply damage to Health component first
-    let should_handle_death = if let Ok(mut health) = world.get::<&mut Health>(target_entity) {
-        health.damage(damage);
-        res.log(format!(
-            "Target takes {} damage from {} ({}/{} HP)",
-            damage, source, health.current, health.max
-        ));
-
-        // Check for death
-        !health.is_alive()
-    } else {
-        false
-    };
-
-    if should_handle_death {
-        handle_entity_death(world, res, target_entity);
-        return;
-    }
-
-    // If no Health component, try to damage body parts (for robots)
-    let should_handle_body_death = if let Ok(mut body) = world.get::<&mut Body>(target_entity) {
-        if let Some(damaged_part) = crate::moves::damage_random_body_part(
-            &mut body,
-            res.world_state.seed,
-            res.time.tick,
-            damage,
-        ) {
-            res.log(format!(
-                "Target's {:?} is damaged by {}",
-                damaged_part, source
-            ));
-
-            // Check if body integrity is too low (death condition for robots)
-            let integrity = crate::moves::calculate_body_integrity(&body);
-            integrity < 0.1 // 10% integrity threshold
-        } else {
-            false
+    match comp_access.apply_damage(target_entity, damage) {
+        Ok(DamageResult::Damaged {
+            old_health,
+            new_health,
+            damage_applied,
+        }) => {
+            res.events.combat_event(
+                format!(
+                    "Target takes {} damage from {} ({}/{} HP)",
+                    damage_applied, source, new_health, old_health
+                ),
+                res.time.tick,
+            );
         }
-    } else {
-        false
-    };
-
-    if should_handle_body_death {
-        handle_entity_death(world, res, target_entity);
+        Ok(DamageResult::Killed {
+            old_health,
+            damage_applied,
+        }) => {
+            res.events.combat_event(
+                format!(
+                    "Target takes {} damage from {} and dies! ({} HP)",
+                    damage_applied, source, old_health
+                ),
+                res.time.tick,
+            );
+            // Additional death handling is done by ComponentAccess
+        }
+        Ok(DamageResult::AlreadyDead) => {
+            tracing::debug!(target: "combat", "Attempted to damage already dead entity {:?}", target_entity);
+        }
+        Ok(DamageResult::NoDamageSystem) => {
+            tracing::warn!(target: "combat", "Entity {:?} has no damage system (Health or Body)", target_entity);
+        }
+        Err(e) => {
+            tracing::error!(target: "combat", "Failed to apply damage to {:?}: {}", target_entity, e);
+        }
     }
 }
 

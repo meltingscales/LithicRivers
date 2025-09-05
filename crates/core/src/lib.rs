@@ -1,3 +1,4 @@
+pub mod component_access;
 pub mod components;
 pub mod config;
 pub mod default_config;
