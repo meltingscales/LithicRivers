@@ -2,6 +2,7 @@ pub mod components;
 pub mod config;
 pub mod default_config;
 pub mod game;
+pub mod intent;
 pub mod keycode_mapping;
 pub mod model;
 pub mod moves;
