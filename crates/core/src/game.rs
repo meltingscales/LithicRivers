@@ -4,10 +4,7 @@ use crate::components::{
 };
 use crate::model::body::Body;
 use crate::resources::Resources;
-use crate::systems::{
-    action_queue_system, battle_delay_timer_system, combat_trigger_system, enemy_combat_ai_system,
-    feral_dog_system, mining_system, move_player_system, pickup_system, stumbling_sheep_system,
-};
+use crate::system_scheduler::SystemScheduler;
 use crate::view::{build_render_view, RenderView};
 
 use hecs::World;
@@ -19,6 +16,7 @@ use bitflags::bitflags;
 pub struct Game {
     pub world: World,
     pub res: Resources,
+    pub scheduler: SystemScheduler,
 }
 
 bitflags! {
@@ -177,7 +175,11 @@ impl Game {
                 ));
             }
         }
-        Self { world, res }
+        Self {
+            world,
+            res,
+            scheduler: SystemScheduler::new(),
+        }
     }
 
     pub fn queue_player_move(&mut self, dx: i32, dy: i32) {
@@ -193,32 +195,22 @@ impl Game {
         self.res.player_state.intent = crate::intent::PlayerIntent::movement(dx, dy, 0, cost);
     }
 
-    /// Advance the game state by one tick.
-    /// Returns true if mining was successful during this tick, false otherwise.
+    /// Advance the game state by one tick using the system scheduler.
     pub fn tick(&mut self) -> GameTickResult {
-        // In the future, run an ordered system schedule.
-        // For now, just increment tick based on pending action cost.
+        // Increment tick based on pending action cost
         let inc = self.res.player_state.intent.cost().max(1);
         self.res.time.tick = self.res.time.tick.saturating_add(inc);
 
-        // Process systems
-        let mining_success = mining_system(&mut self.world, &mut self.res);
-        move_player_system(&mut self.world, &mut self.res);
-        pickup_system(&mut self.world, &mut self.res);
-        feral_dog_system(&mut self.world, &mut self.res);
-        stumbling_sheep_system(&mut self.world, &mut self.res);
-        battle_delay_timer_system(&mut self.world, &mut self.res);
-        let combat_success = combat_trigger_system(&mut self.world, &mut self.res);
-
-        // New combat systems
-        action_queue_system(&mut self.world, &mut self.res);
-        enemy_combat_ai_system(&mut self.world, &mut self.res);
+        // Run all systems through the scheduler
+        let system_results = self
+            .scheduler
+            .run_all_systems(&mut self.world, &mut self.res);
 
         let mut result = GameTickResult::NoAction;
-        if mining_success {
+        if system_results.mining_success {
             result |= GameTickResult::MiningSuccess;
         }
-        if matches!(combat_success, crate::systems::CombatState::CombatStarted) {
+        if system_results.combat_triggered {
             result |= GameTickResult::CombatTriggered;
         }
 
