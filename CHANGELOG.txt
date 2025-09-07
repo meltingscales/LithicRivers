@@ -1,3 +1,8 @@
+# v0.8.0
+
+- combat release
+- still needs polish but technically functional
+
 # v0.7.6.2
 
 - add boot message and intro screens
