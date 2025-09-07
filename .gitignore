@@ -17,13 +17,15 @@ coverage/
 .run/
 htmlcov/
 
-# profiling
+# profiling/other tools
 *.speedscope
 profile_cpu.svg
-
-# security
 security-report.json
 security-report.html
+code-analysis.json
+modules.svg
+client-deps.svg
+core-deps.svg
 
 # other
 *.pyc

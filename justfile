@@ -192,6 +192,29 @@ tokei:
     rustup run {{toolchain}} tokei --sort lines --type rust
     rustup run {{toolchain}} tokei --files --sort lines --type rust
 
+# Analyze module structure and dependencies
+analyze-modules:
+    {{cargo_base}} install cargo-modules --locked
+    @echo "=== Core crate structure ==="
+    {{cargo_base}} modules structure -p lithicrivers-core --lib
+    @echo ""
+    @echo "=== Client main binary structure ==="
+    {{cargo_base}} modules structure -p lithicrivers-client --bin lithicrivers-client
+    @echo "Use 'just analyze-deps' for dependency graph"
+
+# Analyze module dependencies as graph
+analyze-deps:
+    {{cargo_base}} install cargo-modules --locked
+    {{cargo_base}} modules dependencies -p lithicrivers-core --lib | dot -Tsvg > core-deps.svg
+    {{cargo_base}} modules dependencies -p lithicrivers-client --bin lithicrivers-client | dot -Tsvg > client-deps.svg
+    @echo "Dependency graphs saved to core-deps.svg and client-deps.svg"
+
+# Analyze code complexity and metrics
+analyze-code:
+    {{cargo_base}} install rust-code-analysis-cli --locked
+    rust-code-analysis-cli -p crates/ -O json -o code-analysis.json
+    @echo "Code analysis saved to code-analysis.json"
+
 # Show toolchain information
 toolchain:
     rustup show
