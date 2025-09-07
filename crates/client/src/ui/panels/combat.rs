@@ -410,11 +410,11 @@ fn render_moves(
                 mv.execution_time_ticks,
             );
 
-            // Debug: log the move content
-            app.core.game.res.log(format!(
-                "Move {}: '{}' (can_use: {}, selected: {})",
-                actual_i, content, can_use, is_selected
-            ));
+            // // Debug: log the move content
+            // app.core.game.res.log(format!(
+            //     "Move {}: '{}' (can_use: {}, selected: {})",
+            //     actual_i, content, can_use, is_selected
+            // ));
 
             let style = if !can_use {
                 Style::default().fg(Color::DarkGray)
