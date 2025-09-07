@@ -27,6 +27,7 @@ pkgs.mkShell {
     pkgs.alsa-lib
     pkgs.alsa-oss
     pkgs.steamcmd
+    pkgs.graphviz
   ];
   shellHook = ''
     export PKG_CONFIG_PATH=${pkgs.alsa-lib.dev}/lib/pkgconfig:${pkgs.openssl.dev}/lib/pkgconfig:$PKG_CONFIG_PATH

@@ -1,1 +1,1 @@
-Is there a Rust tool that can show me how all my classes are interrelated, so that I can find architectural issues?
+Run `just analyze-modules` and `just analyze-code` and give me a summary of what I should do to improve the codebase, and any good patterns you see as well.
