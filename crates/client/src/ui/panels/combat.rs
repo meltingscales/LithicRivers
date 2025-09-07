@@ -370,9 +370,19 @@ fn render_moves(
         );
     f.render_widget(timer_para, layout[0]);
 
-    // Calculate which moves to display based on scrolling
-    const VISIBLE_MOVES: usize = 4;
-    let end_offset = (scroll_offset + VISIBLE_MOVES).min(moves.len());
+    // Calculate how many moves we can fit in the available space
+    let mut available_height = moves_only_area.height as usize;
+
+    // Reserve space for scroll indicators if needed
+    if scroll_offset > 0 {
+        available_height = available_height.saturating_sub(1);
+    }
+    if scroll_offset + available_height < moves.len() {
+        available_height = available_height.saturating_sub(1);
+    }
+
+    let visible_moves_count = available_height.min(moves.len() - scroll_offset);
+    let end_offset = (scroll_offset + visible_moves_count).min(moves.len());
     let visible_moves = &moves[scroll_offset..end_offset];
 
     let move_blocks = visible_moves
@@ -422,11 +432,7 @@ fn render_moves(
                 Style::default()
             };
 
-            Paragraph::new(content).style(style).block(
-                Block::default()
-                    .borders(Borders::ALL)
-                    .border_style(border_style),
-            )
+            Paragraph::new(content).style(style)
         })
         .collect::<Vec<_>>();
 
@@ -441,11 +447,11 @@ fn render_moves(
 
     // Add constraints for each visible move
     for _ in 0..num_visible {
-        constraints.push(Constraint::Length(3));
+        constraints.push(Constraint::Length(1));
     }
 
     // Add scroll indicator at bottom if needed
-    if scroll_offset + VISIBLE_MOVES < moves.len() {
+    if scroll_offset + visible_moves_count < moves.len() {
         constraints.push(Constraint::Length(1));
     }
 
@@ -456,7 +462,8 @@ fn render_moves(
     if scroll_offset > 0 {
         let scroll_up = Paragraph::new("▲ More above")
             .style(Style::default().fg(Color::Gray))
-            .alignment(Alignment::Center);
+            .alignment(Alignment::Center)
+            .block(Block::default().borders(Borders::NONE));
         f.render_widget(scroll_up, move_chunks[chunk_index]);
         chunk_index += 1;
     }
@@ -473,11 +480,12 @@ fn render_moves(
     chunk_index += num_visible;
 
     // Render bottom scroll indicator
-    if scroll_offset + VISIBLE_MOVES < moves.len() {
+    if scroll_offset + visible_moves_count < moves.len() {
         if chunk_index < move_chunks.len() {
             let scroll_down = Paragraph::new("▼ More below")
                 .style(Style::default().fg(Color::Gray))
-                .alignment(Alignment::Center);
+                .alignment(Alignment::Center)
+                .block(Block::default().borders(Borders::NONE));
             f.render_widget(scroll_down, move_chunks[chunk_index]);
         }
     }
