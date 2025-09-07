@@ -56,6 +56,19 @@ clean:
     rm -f perf.data.old
     rm -f flamegraph.svg
     rm -rf steampipe_out/
+    rm -f *.speedscope
+    rm -f profile_cpu.svg
+    rm -f security-report.json
+    rm -f security-report.html
+    rm -f code-analysis.json
+    rm -f modules.svg
+    rm -f client-deps.svg
+    rm -f core-deps.svg
+    rm -f client-structure.txt
+    rm -f core-structure.txt
+    rm -f client-deps.txt
+    rm -f core-deps.txt
+    rm -f code-analysis.json
 
 git-data:
     git describe --tags --abbrev=0 > VERSION
@@ -197,23 +210,30 @@ analyze-modules:
     {{cargo_base}} install cargo-modules --locked
     @echo "=== Core crate structure ==="
     {{cargo_base}} modules structure -p lithicrivers-core --lib
+    {{cargo_base}} modules structure -p lithicrivers-core --lib > core-structure.txt
     @echo ""
     @echo "=== Client main binary structure ==="
     {{cargo_base}} modules structure -p lithicrivers-client --bin lithicrivers-client
+    {{cargo_base}} modules structure -p lithicrivers-client --bin lithicrivers-client > client-structure.txt
     @echo "Use 'just analyze-deps' for dependency graph"
 
 # Analyze module dependencies as graph
 analyze-deps:
     {{cargo_base}} install cargo-modules --locked
+
     {{cargo_base}} modules dependencies -p lithicrivers-core --lib | dot -Tsvg > core-deps.svg
+    {{cargo_base}} modules dependencies -p lithicrivers-core --lib > core-deps.txt
+
     {{cargo_base}} modules dependencies -p lithicrivers-client --bin lithicrivers-client | dot -Tsvg > client-deps.svg
+    {{cargo_base}} modules dependencies -p lithicrivers-client --bin lithicrivers-client > client-deps.txt
     @echo "Dependency graphs saved to core-deps.svg and client-deps.svg"
 
 # Analyze code complexity and metrics
 analyze-code:
     {{cargo_base}} install rust-code-analysis-cli --locked
-    rust-code-analysis-cli -p crates/ -O json -o code-analysis.json
-    @echo "Code analysis saved to code-analysis.json"
+    mkdir -p code-analysis
+    ~/.cargo/bin/rust-code-analysis-cli -p crates/ --metrics -O json -o code-analysis/
+    @echo "Code analysis saved to code-analysis/ directory"
 
 # Show toolchain information
 toolchain:
