@@ -2,6 +2,8 @@
 
 You are allowed to run `just build` and `just install`, and also `just run-*`. This game was going to use a GUI (bevy), but I decided that `ratatui` would be faster, so we're back to using a TUI.
 
+If you're running NixOS, make sure to run `nix-shell` to get the right environment.
+
 `./docs/*.md` contains lots of useful documentation.
 
 You should use `rustup` to run `cargo` and other tools.
