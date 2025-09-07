@@ -26,6 +26,12 @@ code-analysis.json
 modules.svg
 client-deps.svg
 core-deps.svg
+client-structure.txt
+core-structure.txt
+client-deps.txt
+core-deps.txt
+code-analysis.json
+code-analysis/
 
 # other
 *.pyc
