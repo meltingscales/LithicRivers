@@ -228,9 +228,15 @@ analyze-deps:
     {{cargo_base}} modules dependencies -p lithicrivers-client --bin lithicrivers-client > client-deps.txt
     @echo "Dependency graphs saved to core-deps.svg and client-deps.svg"
 
-# Analyze code complexity and metrics
+# Analyze code complexity using clippy
+complexity:
+    {{cargoz_env}} clippy --all-targets --all-features -- -W clippy::cognitive_complexity -W clippy::cyclomatic_complexity
+
+# Analyze code complexity and metrics (DEPRECATED - use 'complexity' instead)
 analyze-code:
+    @echo "WARNING: 'analyze-code' is deprecated. Use 'just complexity' for better output."
     {{cargo_base}} install rust-code-analysis-cli --locked
+    rm -rf code-analysis/
     mkdir -p code-analysis
     ~/.cargo/bin/rust-code-analysis-cli -p crates/ --metrics -O json -o code-analysis/
     @echo "Code analysis saved to code-analysis/ directory"
