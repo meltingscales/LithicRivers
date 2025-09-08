@@ -339,9 +339,17 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<(), 
             app.combat = CombatUiState::None;
         }
 
-        // Auto-advance ticks when combat is active (10 ticks per second)
+        // Auto-advance ticks when combat is active (1 tick per second)
         if app.combat.is_active() {
-            const TICK_INTERVAL: std::time::Duration = std::time::Duration::from_millis(100); // 10 ticks per second
+            let TICK_INTERVAL: std::time::Duration = std::time::Duration::from_millis(
+                app.core
+                    .game
+                    .res
+                    .config
+                    .get_setting("game", "COMBAT_MS_PER_TICK")
+                    .and_then(|v| v.as_u64())
+                    .unwrap_or(panic!("COMBAT_MS_PER_TICK must be set in config")),
+            );
 
             let current_time = std::time::Instant::now();
             let should_tick = match app.last_combat_tick {
