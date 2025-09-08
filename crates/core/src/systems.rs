@@ -237,7 +237,7 @@ pub enum CombatState {
     CombatEnded,
 }
 
-pub fn combat_trigger_system(world: &mut World, _res: &mut Resources) -> CombatState {
+pub fn combat_trigger_system(world: &mut World, res: &mut Resources) -> CombatState {
     // get player position
     let player_pos = match get_player_position(world) {
         Some(pos) => pos,
@@ -279,6 +279,9 @@ pub fn combat_trigger_system(world: &mut World, _res: &mut Resources) -> CombatS
         };
 
         if combat_triggered {
+            // Mark combat as active
+            res.player_state.combat_active = true;
+
             // Ensure player has an ActionQueue component for combat
             if let Some(player_entity) = get_player_entity(world) {
                 if world.get::<&ActionQueue>(player_entity).is_err() {
@@ -310,8 +313,8 @@ pub fn feral_dog_system(world: &mut World, res: &mut Resources) {
 
     // Process each dog
     for (dog_entity, dog_pos) in dogs {
-        // Skip stunned dogs - they cannot move
-        if is_stunned(world, dog_entity) {
+        // Skip stunned or dead dogs - they cannot move
+        if is_stunned(world, dog_entity) || world.get::<&Dead>(dog_entity).is_ok() {
             continue;
         }
 
@@ -493,18 +496,14 @@ fn check_combat_end_conditions(world: &mut World, res: &mut Resources) {
         }
     }
 
-    // Clear all action queues if combat should end
-    if player_dead || !has_living_enemies {
-        let mut entities_to_clear = Vec::new();
-        for (entity, _) in world.query::<&ActionQueue>().iter() {
-            entities_to_clear.push(entity);
-        }
+    // Check if combat should end and handle the end conditions
+    let combat_should_end = player_dead || !has_living_enemies;
 
-        for entity in entities_to_clear {
-            if let Ok(mut queue) = world.get::<&mut ActionQueue>(entity) {
-                queue.clear();
-            }
-        }
+    if combat_should_end && res.player_state.combat_active {
+        // Only end combat if it was actually active
+        res.player_state.combat_active = false;
+        res.player_state.last_combat_end_tick = res.time.tick;
+        res.player_state.combat_ended_this_tick = true;
 
         if player_dead {
             res.events.combat_event(
@@ -517,6 +516,40 @@ fn check_combat_end_conditions(world: &mut World, res: &mut Resources) {
                 res.time.tick,
             );
         }
+
+        // Clear all action queues
+        let mut entities_to_clear = Vec::new();
+        for (entity, _) in world.query::<&ActionQueue>().iter() {
+            entities_to_clear.push(entity);
+        }
+
+        for entity in entities_to_clear {
+            if let Ok(mut queue) = world.get::<&mut ActionQueue>(entity) {
+                queue.clear();
+            }
+        }
+
+        // TODO: Implement delayed entity cleanup - don't remove dead entities immediately
+        // This allows UI and tests to see dead entities before they're cleaned up
+        // let mut dead_entities = Vec::new();
+        // for (entity, _) in world.query::<&Dead>().iter() {
+        //     // Don't remove the player entity - let the game handle player death
+        //     if !is_player_entity(world, entity) {
+        //         dead_entities.push(entity);
+        //     }
+        // }
+        //
+        // // Remove dead entities from the world
+        // for entity in dead_entities {
+        //     if let Err(e) = world.despawn(entity) {
+        //         tracing::warn!(target: "combat", "Failed to despawn dead entity {:?}: {}", entity, e);
+        //     } else {
+        //         tracing::debug!(target: "combat", "Removed dead entity {:?} from world", entity);
+        //     }
+        // }
+    } else {
+        // Reset combat end flag if combat is still active
+        res.player_state.combat_ended_this_tick = false;
     }
 }
 
@@ -600,7 +633,14 @@ fn execute_player_move(
             if let Some(target) = target_entity {
                 apply_damage(world, res, target, move_data.damage, "tackle");
 
-                // Push effect
+                // Store original enemy position before pushing
+                let original_enemy_pos = if let Ok(target_pos) = world.get::<&Position>(target) {
+                    *target_pos
+                } else {
+                    player_pos // Fallback to player position if we can't get target position
+                };
+
+                // Push effect - push enemy back 2 spaces
                 if let Ok(target_pos) = world.get::<&Position>(target) {
                     let pushed_pos =
                         crate::moves::calculate_push_position(player_pos, *target_pos, 2);
@@ -611,10 +651,63 @@ fn execute_player_move(
                     }
                 }
 
+                // Move player into enemy's original space
+                if let Ok(mut player_position) = world.get::<&mut Position>(player_entity) {
+                    player_position.x = original_enemy_pos.x;
+                    player_position.y = original_enemy_pos.y;
+                    player_position.z = original_enemy_pos.z;
+                    res.log(format!(
+                        "You tackle and move to ({}, {})",
+                        original_enemy_pos.x, original_enemy_pos.y
+                    ));
+                }
+
                 // 50% chance to stun
                 if res.world_state.rng.gen_bool(0.5) {
                     world.insert_one(target, Stunned::new(600)).ok();
                     res.log("Target is stunned!".to_string());
+                }
+
+                // Check if there are any enemies adjacent to the player after the tackle
+                let new_player_pos = original_enemy_pos; // Player is now at enemy's original position
+                let mut has_adjacent_enemies = false;
+
+                for (entity, (pos, combat, _)) in
+                    world.query::<(&Position, &Combat, &GameEntity)>().iter()
+                {
+                    if entity != player_entity && combat.triggered {
+                        // Check if enemy is dead (skip dead enemies)
+                        if world.get::<&Dead>(entity).is_ok() {
+                            continue;
+                        }
+
+                        let dx = (pos.x - new_player_pos.x).abs();
+                        let dy = (pos.y - new_player_pos.y).abs();
+                        let distance_sq = dx * dx + dy * dy;
+
+                        if distance_sq <= 1 {
+                            // Adjacent (including diagonally)
+                            has_adjacent_enemies = true;
+                            break;
+                        }
+                    }
+                }
+
+                // If no enemies are adjacent after tackle, end combat
+                if !has_adjacent_enemies {
+                    res.log("No enemies adjacent after tackle - combat ends!".to_string());
+                    end_combat_for_nearby_enemies(world, new_player_pos);
+
+                    // Clear the player's action queue since combat is ending
+                    if let Ok(mut queue) = world.get::<&mut ActionQueue>(player_entity) {
+                        queue.clear();
+                        res.log("Action queue cleared after tackle combat end");
+                    }
+
+                    // Set combat end flag
+                    res.player_state.combat_active = false;
+                    res.player_state.combat_ended_this_tick = true;
+                    res.player_state.last_combat_end_tick = res.time.tick;
                 }
             }
         }
@@ -625,6 +718,9 @@ fn execute_player_move(
 
             // End combat for all nearby enemies
             end_combat_for_nearby_enemies(world, player_pos);
+
+            // Mark combat as inactive
+            res.player_state.combat_active = false;
 
             // Clear the player's action queue since combat is ending
             if let Ok(mut queue) = world.get::<&mut ActionQueue>(player_entity) {
@@ -853,7 +949,7 @@ mod tests {
                 target_position: None,
             },
             execution_time_ticks: 150,
-            remaining_time_ticks: 0, // Ready to execute immediately
+            remaining_time_ticks: 1, // Will complete after 1 tick
         };
 
         // Add action to player's queue and execute it

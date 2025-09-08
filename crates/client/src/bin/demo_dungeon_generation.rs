@@ -1,8 +1,8 @@
 // Removed crossterm and ratatui imports for simpler console output
 use std::{
     collections::{HashMap, HashSet},
-    io,
     f32::consts::PI,
+    io,
 };
 
 const TARGET_FPS: u64 = 60;
@@ -30,7 +30,10 @@ impl Vec2 {
     fn normalize(&self) -> Self {
         let len = (self.x.powi(2) + self.y.powi(2)).sqrt();
         if len > 0.0 {
-            Self { x: self.x / len, y: self.y / len }
+            Self {
+                x: self.x / len,
+                y: self.y / len,
+            }
         } else {
             Self { x: 0.0, y: 0.0 }
         }
@@ -115,7 +118,7 @@ impl App {
             // Generate cells with normal distribution for size
             let width = self.normal_random(3.0, 15.0, 2.0, 12.0);
             let height = self.normal_random(3.0, 15.0, 2.0, 12.0);
-            
+
             // Ensure reasonable aspect ratio
             let aspect_ratio = width / height;
             let (final_width, final_height) = if aspect_ratio > 2.0 {
@@ -132,7 +135,8 @@ impl App {
             let x = radius * angle.cos();
             let y = radius * angle.sin();
 
-            self.cells.push(Cell::new(x, y, final_width, final_height, i));
+            self.cells
+                .push(Cell::new(x, y, final_width, final_height, i));
         }
     }
 
@@ -146,7 +150,8 @@ impl App {
     }
 
     fn separate_cells(&mut self) {
-        for _ in 0..200 { // Multiple iterations for better separation
+        for _ in 0..200 {
+            // Multiple iterations for better separation
             let mut forces = vec![Vec2::new(0.0, 0.0); self.cells.len()];
             let mut any_overlap = false;
 
@@ -214,13 +219,13 @@ impl App {
             }
 
             distances.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
-            
+
             // Connect to 2-3 nearest neighbors
             for (other_id, distance) in distances.iter().take(3) {
-                if !self.edges.iter().any(|e| 
-                    (e.from == room_id && e.to == *other_id) || 
-                    (e.from == *other_id && e.to == room_id)
-                ) {
+                if !self.edges.iter().any(|e| {
+                    (e.from == room_id && e.to == *other_id)
+                        || (e.from == *other_id && e.to == room_id)
+                }) {
                     self.edges.push(Edge {
                         from: room_id,
                         to: *other_id,
@@ -237,7 +242,8 @@ impl App {
         }
 
         // Kruskal's algorithm
-        self.edges.sort_by(|a, b| a.weight.partial_cmp(&b.weight).unwrap());
+        self.edges
+            .sort_by(|a, b| a.weight.partial_cmp(&b.weight).unwrap());
         let mut parent: HashMap<usize, usize> = HashMap::new();
         let mut mst_edges = Vec::new();
 
@@ -258,7 +264,7 @@ impl App {
         for edge in &self.edges {
             let root_from = find(&mut parent, edge.from);
             let root_to = find(&mut parent, edge.to);
-            
+
             if root_from != root_to {
                 mst_edges.push(edge.clone());
                 parent.insert(root_from, root_to);
@@ -266,13 +272,17 @@ impl App {
         }
 
         // Add back 15% of remaining edges for loops
-        let remaining_edges: Vec<_> = self.edges.iter()
-            .filter(|e| !mst_edges.iter().any(|mst_e| 
-                (mst_e.from == e.from && mst_e.to == e.to) ||
-                (mst_e.from == e.to && mst_e.to == e.from)
-            ))
+        let remaining_edges: Vec<_> = self
+            .edges
+            .iter()
+            .filter(|e| {
+                !mst_edges.iter().any(|mst_e| {
+                    (mst_e.from == e.from && mst_e.to == e.to)
+                        || (mst_e.from == e.to && mst_e.to == e.from)
+                })
+            })
             .collect();
-        
+
         let num_to_add = (remaining_edges.len() as f32 * 0.15) as usize;
         for i in 0..num_to_add.min(remaining_edges.len()) {
             mst_edges.push(remaining_edges[i].clone());
@@ -283,11 +293,11 @@ impl App {
 
     fn generate_corridors(&mut self) {
         self.corridors.clear();
-        
+
         for edge in &self.edges {
             let room1 = &self.cells[edge.from];
             let room2 = &self.cells[edge.to];
-            
+
             let start = room1.center();
             let end = room2.center();
 
@@ -356,7 +366,6 @@ impl App {
         self.rng = SplitMix64::new(self.rng.next_u64()); // New seed
     }
 
-
     fn get_bounds(&self) -> (f32, f32, f32, f32) {
         if self.cells.is_empty() {
             return (-50.0, -50.0, 50.0, 50.0);
@@ -376,45 +385,67 @@ impl App {
 
         // Add padding
         let padding = 10.0;
-        (min_x - padding, min_y - padding, max_x + padding, max_y + padding)
+        (
+            min_x - padding,
+            min_y - padding,
+            max_x + padding,
+            max_y + padding,
+        )
     }
 }
 
 fn main() -> io::Result<()> {
-    println!("{}🏰 Procedural Dungeon Generation Demo 🏰{}", BRIGHT_BLUE, RESET);
-    println!("{}======================================={}",  BRIGHT_BLUE, RESET);
-    
+    println!(
+        "{}🏰 Procedural Dungeon Generation Demo 🏰{}",
+        BRIGHT_BLUE, RESET
+    );
+    println!(
+        "{}======================================={}",
+        BRIGHT_BLUE, RESET
+    );
+
     let mut app = App::new();
-    
+
     // Run all steps automatically
     for step in 0..6 {
         let step_color = match step {
             0 => BLUE,
-            1 => CYAN, 
+            1 => CYAN,
             2 => BRIGHT_GREEN,
             3 => MAGENTA,
             4 => YELLOW,
             5 => BRIGHT_YELLOW,
             _ => WHITE,
         };
-        
-        println!("\n{}🔸 Step {}: {}{}", step_color, step + 1, match step {
-            0 => "Generating initial cells",
-            1 => "Separating overlapping cells", 
-            2 => "Identifying rooms",
-            3 => "Creating Delaunay triangulation",
-            4 => "Building minimal spanning tree with loops",
-            5 => "Generating corridors",
-            _ => "Complete",
-        }, RESET);
-        
+
+        println!(
+            "\n{}🔸 Step {}: {}{}",
+            step_color,
+            step + 1,
+            match step {
+                0 => "Generating initial cells",
+                1 => "Separating overlapping cells",
+                2 => "Identifying rooms",
+                3 => "Creating Delaunay triangulation",
+                4 => "Building minimal spanning tree with loops",
+                5 => "Generating corridors",
+                _ => "Complete",
+            },
+            RESET
+        );
+
         app.next_step();
         print_dungeon_ascii(&app);
     }
-    
+
     println!("\n{}✨ Dungeon generation complete! ✨{}", GREEN, RESET);
-    println!("{}Generated {} rooms connected by corridors.{}", BRIGHT_GREEN, app.rooms.len(), RESET);
-    
+    println!(
+        "{}Generated {} rooms connected by corridors.{}",
+        BRIGHT_GREEN,
+        app.rooms.len(),
+        RESET
+    );
+
     Ok(())
 }
 
@@ -504,8 +535,11 @@ fn print_dungeon_ascii(app: &App) {
             let end_y = ((end.y - min_y) * scale) as usize;
 
             // Simple line drawing
-            if start_x < grid_width && start_y < grid_height &&
-               end_x < grid_width && end_y < grid_height {
+            if start_x < grid_width
+                && start_y < grid_height
+                && end_x < grid_width
+                && end_y < grid_height
+            {
                 if start_x < grid[0].len() && start_y < grid.len() {
                     grid[start_y][start_x] = ('+', MAGENTA);
                 }
@@ -523,13 +557,23 @@ fn print_dungeon_ascii(app: &App) {
         }
         println!();
     }
-    
+
     // Print colorized stats
-    println!("{}Cells: {}{}, {}Rooms: {}{}, {}Edges: {}{}, {}Corridor tiles: {}{}", 
-             CYAN, app.cells.len(), RESET,
-             BRIGHT_GREEN, app.rooms.len(), RESET,
-             MAGENTA, app.edges.len(), RESET,
-             BRIGHT_YELLOW, app.corridors.len(), RESET);
+    println!(
+        "{}Cells: {}{}, {}Rooms: {}{}, {}Edges: {}{}, {}Corridor tiles: {}{}",
+        CYAN,
+        app.cells.len(),
+        RESET,
+        BRIGHT_GREEN,
+        app.rooms.len(),
+        RESET,
+        MAGENTA,
+        app.edges.len(),
+        RESET,
+        BRIGHT_YELLOW,
+        app.corridors.len(),
+        RESET
+    );
 }
 
 // Simple PRNG implementation
