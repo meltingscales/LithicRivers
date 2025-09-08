@@ -44,10 +44,10 @@ if "%TERMINAL%"=="" (
 
 :: Run the game in the found terminal
 if "%TERMINAL%"=="wt" (
-    start "" wt -d "%SCRIPT_DIR%" cmd /k ""%GAME_BIN%" %GAME_ARGS% && echo. && echo Game exited with code !ERRORLEVEL! && pause"
+    start "" wt -d "%SCRIPT_DIR%" cmd /k ""%GAME_BIN%" %GAME_ARGS% && echo. && echo [LithicRivers Windows Launcher] Game exited with code !ERRORLEVEL! && pause"
 ) else if "%TERMINAL%"=="powershell" (
-    start "" powershell -NoExit -Command "cd '%SCRIPT_DIR%'; & '%GAME_BIN%' %GAME_ARGS%; Write-Host 'Press Enter to exit...'; $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')"
+    start "" powershell -NoExit -Command "cd '%SCRIPT_DIR%'; & '%GAME_BIN%' %GAME_ARGS%; Write-Host '[LithicRivers Windows Launcher] Press Enter to exit...'; $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')"
 ) else (
     :: Default to cmd
-    start "" cmd /k "cd /d "%SCRIPT_DIR%" && "%GAME_BIN%" %GAME_ARGS% && echo. && echo Game exited with code !ERRORLEVEL! && pause"
+    start "" cmd /k "cd /d "%SCRIPT_DIR%" && "%GAME_BIN%" %GAME_ARGS% && echo. && echo [LithicRivers Windows Launcher] Game exited with code !ERRORLEVEL! && pause"
 )

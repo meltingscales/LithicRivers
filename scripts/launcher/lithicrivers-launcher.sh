@@ -65,7 +65,7 @@ else
             ;;
         *)
             echo_and_log_to_file "$log_file" "Running game in $TERMINAL"
-            exec "$TERMINAL" -e "cd \"$SCRIPT_DIR\" && \"$GAME_BIN\" $GAME_ARGS; echo 'Press Enter to close...'; read"
+            exec "$TERMINAL" -e "cd \"$SCRIPT_DIR\" && \"$GAME_BIN\" $GAME_ARGS; echo '[LithicRivers Unix Launcher] Press Enter to close...'; read"
             ;;
     esac
 fi
