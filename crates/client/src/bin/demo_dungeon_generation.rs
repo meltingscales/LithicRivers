@@ -381,14 +381,24 @@ impl App {
 }
 
 fn main() -> io::Result<()> {
-    println!("Procedural Dungeon Generation Demo");
-    println!("==================================");
+    println!("{}🏰 Procedural Dungeon Generation Demo 🏰{}", BRIGHT_BLUE, RESET);
+    println!("{}======================================={}",  BRIGHT_BLUE, RESET);
     
     let mut app = App::new();
     
     // Run all steps automatically
     for step in 0..6 {
-        println!("\nStep {}: {}", step + 1, match step {
+        let step_color = match step {
+            0 => BLUE,
+            1 => CYAN, 
+            2 => BRIGHT_GREEN,
+            3 => MAGENTA,
+            4 => YELLOW,
+            5 => BRIGHT_YELLOW,
+            _ => WHITE,
+        };
+        
+        println!("\n{}🔸 Step {}: {}{}", step_color, step + 1, match step {
             0 => "Generating initial cells",
             1 => "Separating overlapping cells", 
             2 => "Identifying rooms",
@@ -396,21 +406,34 @@ fn main() -> io::Result<()> {
             4 => "Building minimal spanning tree with loops",
             5 => "Generating corridors",
             _ => "Complete",
-        });
+        }, RESET);
         
         app.next_step();
         print_dungeon_ascii(&app);
     }
     
-    println!("\nDungeon generation complete!");
-    println!("Generated {} rooms connected by corridors.", app.rooms.len());
+    println!("\n{}✨ Dungeon generation complete! ✨{}", GREEN, RESET);
+    println!("{}Generated {} rooms connected by corridors.{}", BRIGHT_GREEN, app.rooms.len(), RESET);
     
     Ok(())
 }
 
+// ANSI color codes
+const RESET: &str = "\x1b[0m";
+const RED: &str = "\x1b[31m";
+const GREEN: &str = "\x1b[32m";
+const YELLOW: &str = "\x1b[33m";
+const BLUE: &str = "\x1b[34m";
+const MAGENTA: &str = "\x1b[35m";
+const CYAN: &str = "\x1b[36m";
+const WHITE: &str = "\x1b[37m";
+const BRIGHT_GREEN: &str = "\x1b[92m";
+const BRIGHT_BLUE: &str = "\x1b[94m";
+const BRIGHT_YELLOW: &str = "\x1b[93m";
+
 fn print_dungeon_ascii(app: &App) {
     if app.cells.is_empty() {
-        println!("No cells generated yet");
+        println!("{}No cells generated yet{}", YELLOW, RESET);
         return;
     }
 
@@ -422,10 +445,10 @@ fn print_dungeon_ascii(app: &App) {
         return;
     }
 
-    // Create a smaller ASCII grid
+    // Create a smaller ASCII grid with color information
     let grid_width = 80;
     let grid_height = 40;
-    let mut grid = vec![vec![' '; grid_width]; grid_height];
+    let mut grid = vec![vec![(' ', RESET); grid_width]; grid_height];
 
     // Scale factor to fit world in ASCII
     let scale_x = (grid_width as f32 - 2.0) / world_width;
@@ -438,7 +461,7 @@ fn print_dungeon_ascii(app: &App) {
             let screen_x = ((x as f32 - min_x) * scale) as usize;
             let screen_y = ((y as f32 - min_y) * scale) as usize;
             if screen_x < grid_width && screen_y < grid_height {
-                grid[screen_y][screen_x] = '.';
+                grid[screen_y][screen_x] = ('·', BRIGHT_YELLOW); // Using middle dot for corridors
             }
         }
     }
@@ -450,18 +473,18 @@ fn print_dungeon_ascii(app: &App) {
         let end_x = (((cell.position.x + cell.size.x) - min_x) * scale) as usize;
         let end_y = (((cell.position.y + cell.size.y) - min_y) * scale) as usize;
 
-        let symbol = if cell.is_room && app.step >= 2 {
-            '#'
+        let (symbol, color) = if cell.is_room && app.step >= 2 {
+            ('█', BRIGHT_GREEN) // Full block for rooms
         } else if app.step >= 1 {
-            'o'
+            ('░', CYAN) // Light shade for separated cells
         } else {
-            'X'
+            ('▓', BLUE) // Medium shade for initial cells
         };
 
         for y in start_y..end_y.min(grid_height) {
             for x in start_x..end_x.min(grid_width) {
                 if y < grid.len() && x < grid[y].len() {
-                    grid[y][x] = symbol;
+                    grid[y][x] = (symbol, color);
                 }
             }
         }
@@ -484,23 +507,29 @@ fn print_dungeon_ascii(app: &App) {
             if start_x < grid_width && start_y < grid_height &&
                end_x < grid_width && end_y < grid_height {
                 if start_x < grid[0].len() && start_y < grid.len() {
-                    grid[start_y][start_x] = '+';
+                    grid[start_y][start_x] = ('+', MAGENTA);
                 }
                 if end_x < grid[0].len() && end_y < grid.len() {
-                    grid[end_y][end_x] = '+';
+                    grid[end_y][end_x] = ('+', MAGENTA);
                 }
             }
         }
     }
 
-    // Print the grid
+    // Print the grid with colors
     for row in grid {
-        println!("{}", row.iter().collect::<String>());
+        for (symbol, color) in row {
+            print!("{}{}{}", color, symbol, RESET);
+        }
+        println!();
     }
     
-    // Print stats
-    println!("Cells: {}, Rooms: {}, Edges: {}, Corridor tiles: {}", 
-             app.cells.len(), app.rooms.len(), app.edges.len(), app.corridors.len());
+    // Print colorized stats
+    println!("{}Cells: {}{}, {}Rooms: {}{}, {}Edges: {}{}, {}Corridor tiles: {}{}", 
+             CYAN, app.cells.len(), RESET,
+             BRIGHT_GREEN, app.rooms.len(), RESET,
+             MAGENTA, app.edges.len(), RESET,
+             BRIGHT_YELLOW, app.corridors.len(), RESET);
 }
 
 // Simple PRNG implementation
