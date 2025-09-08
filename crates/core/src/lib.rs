@@ -12,6 +12,7 @@ pub mod message_log;
 pub mod model;
 pub mod moves;
 pub mod palettekey;
+pub mod pathfinding;
 pub mod player_state;
 pub mod recipe_handler;
 pub mod resources;
