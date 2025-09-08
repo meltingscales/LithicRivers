@@ -10,6 +10,7 @@ dist/
 
 # game
 *.lithicriversworlddata
+config/
 
 # coverage stuff
 *.lcov

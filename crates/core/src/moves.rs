@@ -15,11 +15,11 @@ pub enum MoveType {
 impl MoveType {
     pub fn execution_time_ticks(&self) -> u64 {
         match self {
-            MoveType::Melee => 150,
-            MoveType::Fireball => 400,
-            MoveType::Tackle => 800,
-            MoveType::Escape => 250,
-            MoveType::DebugInstantKill => 50,
+            MoveType::Melee => 15,
+            MoveType::Fireball => 40,
+            MoveType::Tackle => 80,
+            MoveType::Escape => 25,
+            MoveType::DebugInstantKill => 5,
         }
     }
 
