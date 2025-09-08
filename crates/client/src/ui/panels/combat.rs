@@ -545,8 +545,8 @@ fn get_enemy_combat_data(app: &mut crate::App) -> Vec<CombatEnemy> {
         if let Ok(player_pos) = app.core.game.world.get::<&Position>(player_entity) {
             let player_pos = *player_pos;
 
-            // Look for nearby combat entities
-            for (entity, (pos, _, _)) in app
+            // Look for nearby combat entities that are actually in combat
+            for (entity, (pos, combat, _)) in app
                 .core
                 .game
                 .world
@@ -557,11 +557,36 @@ fn get_enemy_combat_data(app: &mut crate::App) -> Vec<CombatEnemy> {
                     continue;
                 } // Skip player
 
-                let dx = player_pos.x - pos.x;
-                let dy = player_pos.y - pos.y;
-                let distance_sq = dx * dx + dy * dy;
+                // Define the 8 adjacent positions around the player (same as combat_trigger_system)
+                let adjacent_positions = [
+                    (player_pos.x - 1, player_pos.y - 1), // NW
+                    (player_pos.x, player_pos.y - 1),     // N
+                    (player_pos.x + 1, player_pos.y - 1), // NE
+                    (player_pos.x - 1, player_pos.y),     // W
+                    (player_pos.x + 1, player_pos.y),     // E
+                    (player_pos.x - 1, player_pos.y + 1), // SW
+                    (player_pos.x, player_pos.y + 1),     // S
+                    (player_pos.x + 1, player_pos.y + 1), // SE
+                ];
 
-                if distance_sq <= 1 {
+                // Check if enemy is in any of the 8 adjacent positions
+                let is_adjacent = adjacent_positions.iter().any(|&(adj_x, adj_y)| {
+                    pos.x == adj_x && pos.y == adj_y && pos.z == player_pos.z
+                });
+
+                if is_adjacent && combat.triggered {
+                    // Skip dead enemies
+                    if app
+                        .core
+                        .game
+                        .world
+                        .get::<&lithicrivers_core::components::Dead>(entity)
+                        .is_ok()
+                    {
+                        continue;
+                    }
+
+                    // Only include enemies that are actually in combat
                     // Adjacent enemies - health should always exist
                     let health = *app
                         .core

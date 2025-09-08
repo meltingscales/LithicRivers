@@ -257,16 +257,26 @@ pub fn combat_trigger_system(world: &mut World, res: &mut Resources) -> CombatSt
         combat_entities.push((e, *pos));
     }
 
+    // Define the 8 adjacent positions around the player
+    let adjacent_positions = [
+        (player_pos.x - 1, player_pos.y - 1), // NW
+        (player_pos.x, player_pos.y - 1),     // N
+        (player_pos.x + 1, player_pos.y - 1), // NE
+        (player_pos.x - 1, player_pos.y),     // W
+        (player_pos.x + 1, player_pos.y),     // E
+        (player_pos.x - 1, player_pos.y + 1), // SW
+        (player_pos.x, player_pos.y + 1),     // S
+        (player_pos.x + 1, player_pos.y + 1), // SE
+    ];
+
     // process each combat entity
     for (e, pos) in combat_entities {
-        // calculate distance to player
-        let dx = player_pos.x - pos.x;
-        let dy = player_pos.y - pos.y;
-        let distance_sq = dx * dx + dy * dy;
+        // check if entity is in any of the 8 adjacent positions
+        let is_adjacent = adjacent_positions
+            .iter()
+            .any(|&(adj_x, adj_y)| pos.x == adj_x && pos.y == adj_y && pos.z == player_pos.z);
 
-        // only trigger combat if player is touching on any of the 8 cardinal directions
-        if distance_sq > 1 {
-            // 1^2
+        if !is_adjacent {
             continue;
         }
 
