@@ -300,7 +300,7 @@ mod tests {
                     .iter()
                     .find(|s| s.kind == crate::components::ItemKind::Log)
                     .map(|s| s.qty)
-                    .unwrap_or(panic!("No wood in inventory"));
+                    .unwrap_or(0);
             }
         }
         0

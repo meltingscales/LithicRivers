@@ -88,6 +88,10 @@ impl RecipeHandler {
         &self.recipes
     }
 
+    pub fn find_recipe_by_name(&self, name: &str) -> Option<usize> {
+        self.recipes.iter().position(|r| r.name == name)
+    }
+
     pub fn can_craft(&self, recipe_index: usize, inventory: &HashMap<ItemKind, u32>) -> bool {
         if let Some(recipe) = self.recipes.get(recipe_index) {
             recipe
@@ -134,16 +138,21 @@ mod tests {
         inventory.insert(ItemKind::Stick, 2);
         inventory.insert(ItemKind::String, 1);
 
+        // Find Stone Axe recipe by name
+        let stone_axe_recipe = handler
+            .find_recipe_by_name("Stone Axe")
+            .expect("Stone Axe recipe should exist");
+
         // Should be able to craft Stone Axe
-        assert!(handler.can_craft(0, &inventory));
+        assert!(handler.can_craft(stone_axe_recipe, &inventory));
 
         // Craft Stone Axe
-        assert!(handler.craft(0, &mut inventory));
+        assert!(handler.craft(stone_axe_recipe, &mut inventory));
         assert_eq!(inventory[&ItemKind::Stone], 1);
         assert_eq!(inventory[&ItemKind::Stick], 1);
         assert_eq!(inventory[&ItemKind::StoneAxe], 1);
 
         // Not enough materials for another Stone Axe
-        assert!(!handler.can_craft(0, &inventory));
+        assert!(!handler.can_craft(stone_axe_recipe, &inventory));
     }
 }
