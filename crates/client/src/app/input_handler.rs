@@ -55,110 +55,112 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
 
     // First, handle configurable keybind actions
     // Toggle Look mode
-    if app.ui.keybinds.matches("action", "LOOK_TOGGLE", &key) {
-        app.panels.look.mode = !app.panels.look.mode;
-        // Reset cursor to player on toggle on
-        if app.panels.look.mode {
-            if let Some(e) = app.core.game.get_player_entity() {
-                if let Ok(pos) = app
-                    .core
-                    .game
-                    .world
-                    .get::<&lithicrivers_core::components::Position>(e)
-                {
-                    app.panels.look.cursor = *pos;
-                    // Align all view coords to cursor
-                    app.ui.view_x = app.panels.look.cursor.x;
-                    app.ui.view_y = app.panels.look.cursor.y;
-                    app.ui.view_z = app.panels.look.cursor.z;
+    if app.ui.current_tab == MenuTab::World {
+        if app.ui.keybinds.matches("action", "LOOK_TOGGLE", &key) {
+            app.panels.look.mode = !app.panels.look.mode;
+            // Reset cursor to player on toggle on
+            if app.panels.look.mode {
+                if let Some(e) = app.core.game.get_player_entity() {
+                    if let Ok(pos) = app
+                        .core
+                        .game
+                        .world
+                        .get::<&lithicrivers_core::components::Position>(e)
+                    {
+                        app.panels.look.cursor = *pos;
+                        // Align all view coords to cursor
+                        app.ui.view_x = app.panels.look.cursor.x;
+                        app.ui.view_y = app.panels.look.cursor.y;
+                        app.ui.view_z = app.panels.look.cursor.z;
+                    }
                 }
+                app.core.game.res.log("Look mode: ON");
+            } else {
+                app.core.game.res.log("Look mode: OFF");
             }
-            app.core.game.res.log("Look mode: ON");
-        } else {
-            app.core.game.res.log("Look mode: OFF");
-        }
-        return Ok(());
-    }
-
-    // In Look mode, remap movement keys to move the look cursor without ticking
-    if app.panels.look.mode {
-        let mut moved = false;
-        if app.ui.keybinds.matches("movement", "MOVE_NORTH", &key) {
-            app.panels.look.cursor.y -= 1;
-            app.ui.view_y = app.panels.look.cursor.y;
-            moved = true;
-        } else if app.ui.keybinds.matches("movement", "MOVE_SOUTH", &key) {
-            app.panels.look.cursor.y += 1;
-            app.ui.view_y = app.panels.look.cursor.y;
-            moved = true;
-        } else if app.ui.keybinds.matches("movement", "MOVE_WEST", &key) {
-            app.panels.look.cursor.x -= 1;
-            app.ui.view_x = app.panels.look.cursor.x;
-            moved = true;
-        } else if app.ui.keybinds.matches("movement", "MOVE_EAST", &key) {
-            app.panels.look.cursor.x += 1;
-            app.ui.view_x = app.panels.look.cursor.x;
-            moved = true;
-        } else if app.ui.keybinds.matches("movement", "MOVE_NORTHWEST", &key) {
-            app.panels.look.cursor.x -= 1;
-            app.panels.look.cursor.y -= 1;
-            app.ui.view_x = app.panels.look.cursor.x;
-            app.ui.view_y = app.panels.look.cursor.y;
-            moved = true;
-        } else if app.ui.keybinds.matches("movement", "MOVE_NORTHEAST", &key) {
-            app.panels.look.cursor.x += 1;
-            app.panels.look.cursor.y -= 1;
-            app.ui.view_x = app.panels.look.cursor.x;
-            app.ui.view_y = app.panels.look.cursor.y;
-            moved = true;
-        } else if app.ui.keybinds.matches("movement", "MOVE_SOUTHWEST", &key) {
-            app.panels.look.cursor.x -= 1;
-            app.panels.look.cursor.y += 1;
-            app.ui.view_x = app.panels.look.cursor.x;
-            app.ui.view_y = app.panels.look.cursor.y;
-            moved = true;
-        } else if app.ui.keybinds.matches("movement", "MOVE_SOUTHEAST", &key) {
-            app.panels.look.cursor.x += 1;
-            app.panels.look.cursor.y += 1;
-            app.ui.view_x = app.panels.look.cursor.x;
-            app.ui.view_y = app.panels.look.cursor.y;
-            moved = true;
-        } else if app.ui.keybinds.matches("movement", "WAIT", &key) {
-            // no-op, but treat as handled to avoid player waiting
-            moved = true;
-        } else if app.ui.keybinds.matches("movement", "MOVE_UP", &key) {
-            app.panels.look.cursor.z += 1;
-            app.ui.view_z = app.panels.look.cursor.z;
-            moved = true;
-        } else if app.ui.keybinds.matches("movement", "MOVE_DOWN", &key) {
-            app.panels.look.cursor.z -= 1;
-            app.ui.view_z = app.panels.look.cursor.z;
-            moved = true;
-        } else if app.ui.keybinds.matches("viewport", "VIEW_Z_UP", &key) {
-            app.panels.look.cursor.z = app.panels.look.cursor.z.saturating_add(1);
-            app.ui.view_z = app.panels.look.cursor.z;
-            moved = true;
-        } else if app.ui.keybinds.matches("viewport", "VIEW_Z_DOWN", &key) {
-            app.panels.look.cursor.z = app.panels.look.cursor.z.saturating_sub(1);
-            app.ui.view_z = app.panels.look.cursor.z;
-            moved = true;
-        }
-
-        if moved {
-            // Prefetch around the new cursor position for smoother draw
-            let radius = 20i32;
-            let left = app.panels.look.cursor.x - radius;
-            let top = app.panels.look.cursor.y - radius;
-            let right = app.panels.look.cursor.x + radius;
-            let bottom = app.panels.look.cursor.y + radius;
-            app.core.game.res.world_state.world.prefetch_rect_at_z(
-                left,
-                top,
-                right,
-                bottom,
-                app.panels.look.cursor.z,
-            );
             return Ok(());
+        }
+
+        // In Look mode, remap movement keys to move the look cursor without ticking
+        if app.panels.look.mode {
+            let mut moved = false;
+            if app.ui.keybinds.matches("movement", "MOVE_NORTH", &key) {
+                app.panels.look.cursor.y -= 1;
+                app.ui.view_y = app.panels.look.cursor.y;
+                moved = true;
+            } else if app.ui.keybinds.matches("movement", "MOVE_SOUTH", &key) {
+                app.panels.look.cursor.y += 1;
+                app.ui.view_y = app.panels.look.cursor.y;
+                moved = true;
+            } else if app.ui.keybinds.matches("movement", "MOVE_WEST", &key) {
+                app.panels.look.cursor.x -= 1;
+                app.ui.view_x = app.panels.look.cursor.x;
+                moved = true;
+            } else if app.ui.keybinds.matches("movement", "MOVE_EAST", &key) {
+                app.panels.look.cursor.x += 1;
+                app.ui.view_x = app.panels.look.cursor.x;
+                moved = true;
+            } else if app.ui.keybinds.matches("movement", "MOVE_NORTHWEST", &key) {
+                app.panels.look.cursor.x -= 1;
+                app.panels.look.cursor.y -= 1;
+                app.ui.view_x = app.panels.look.cursor.x;
+                app.ui.view_y = app.panels.look.cursor.y;
+                moved = true;
+            } else if app.ui.keybinds.matches("movement", "MOVE_NORTHEAST", &key) {
+                app.panels.look.cursor.x += 1;
+                app.panels.look.cursor.y -= 1;
+                app.ui.view_x = app.panels.look.cursor.x;
+                app.ui.view_y = app.panels.look.cursor.y;
+                moved = true;
+            } else if app.ui.keybinds.matches("movement", "MOVE_SOUTHWEST", &key) {
+                app.panels.look.cursor.x -= 1;
+                app.panels.look.cursor.y += 1;
+                app.ui.view_x = app.panels.look.cursor.x;
+                app.ui.view_y = app.panels.look.cursor.y;
+                moved = true;
+            } else if app.ui.keybinds.matches("movement", "MOVE_SOUTHEAST", &key) {
+                app.panels.look.cursor.x += 1;
+                app.panels.look.cursor.y += 1;
+                app.ui.view_x = app.panels.look.cursor.x;
+                app.ui.view_y = app.panels.look.cursor.y;
+                moved = true;
+            } else if app.ui.keybinds.matches("movement", "WAIT", &key) {
+                // no-op, but treat as handled to avoid player waiting
+                moved = true;
+            } else if app.ui.keybinds.matches("movement", "MOVE_UP", &key) {
+                app.panels.look.cursor.z += 1;
+                app.ui.view_z = app.panels.look.cursor.z;
+                moved = true;
+            } else if app.ui.keybinds.matches("movement", "MOVE_DOWN", &key) {
+                app.panels.look.cursor.z -= 1;
+                app.ui.view_z = app.panels.look.cursor.z;
+                moved = true;
+            } else if app.ui.keybinds.matches("viewport", "VIEW_Z_UP", &key) {
+                app.panels.look.cursor.z = app.panels.look.cursor.z.saturating_add(1);
+                app.ui.view_z = app.panels.look.cursor.z;
+                moved = true;
+            } else if app.ui.keybinds.matches("viewport", "VIEW_Z_DOWN", &key) {
+                app.panels.look.cursor.z = app.panels.look.cursor.z.saturating_sub(1);
+                app.ui.view_z = app.panels.look.cursor.z;
+                moved = true;
+            }
+
+            if moved {
+                // Prefetch around the new cursor position for smoother draw
+                let radius = 20i32;
+                let left = app.panels.look.cursor.x - radius;
+                let top = app.panels.look.cursor.y - radius;
+                let right = app.panels.look.cursor.x + radius;
+                let bottom = app.panels.look.cursor.y + radius;
+                app.core.game.res.world_state.world.prefetch_rect_at_z(
+                    left,
+                    top,
+                    right,
+                    bottom,
+                    app.panels.look.cursor.z,
+                );
+                return Ok(());
+            }
         }
     }
     // Inventory: toggle item auto-pickup
@@ -663,88 +665,91 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
         return Ok(());
     }
 
-    if app.ui.keybinds.matches_movement(&key) {
-        if app.ui.keybinds.matches("movement", "MOVE_NORTH", &key) {
-            app.core.game.queue_player_move(0, -1);
-        }
-        if app.ui.keybinds.matches("movement", "MOVE_SOUTH", &key) {
-            app.core.game.queue_player_move(0, 1);
-        }
-        if app.ui.keybinds.matches("movement", "MOVE_WEST", &key) {
-            app.core.game.queue_player_move(-1, 0);
-        }
-        if app.ui.keybinds.matches("movement", "MOVE_EAST", &key) {
-            app.core.game.queue_player_move(1, 0);
-        }
-        if app.ui.keybinds.matches("movement", "MOVE_NORTHWEST", &key) {
-            app.core.game.queue_player_move(-1, -1);
-        }
-        if app.ui.keybinds.matches("movement", "MOVE_NORTHEAST", &key) {
-            app.core.game.queue_player_move(1, -1);
-        }
-        if app.ui.keybinds.matches("movement", "MOVE_SOUTHWEST", &key) {
-            app.core.game.queue_player_move(-1, 1);
-        }
-        if app.ui.keybinds.matches("movement", "MOVE_SOUTHEAST", &key) {
-            app.core.game.queue_player_move(1, 1);
-        }
-        if app.ui.keybinds.matches("movement", "WAIT", &key) {
-            app.core.game.queue_player_move(0, 0);
-        }
-        if app.ui.keybinds.matches("movement", "MOVE_UP", &key) {
-            app.core.game.queue_player_move_z(1);
-        }
-        if app.ui.keybinds.matches("movement", "MOVE_DOWN", &key) {
-            app.core.game.queue_player_move_z(-1);
-        }
+    // only process movement if we're currely on the world panel
+    if app.ui.current_tab == MenuTab::World {
+        if app.ui.keybinds.matches_movement(&key) {
+            if app.ui.keybinds.matches("movement", "MOVE_NORTH", &key) {
+                app.core.game.queue_player_move(0, -1);
+            }
+            if app.ui.keybinds.matches("movement", "MOVE_SOUTH", &key) {
+                app.core.game.queue_player_move(0, 1);
+            }
+            if app.ui.keybinds.matches("movement", "MOVE_WEST", &key) {
+                app.core.game.queue_player_move(-1, 0);
+            }
+            if app.ui.keybinds.matches("movement", "MOVE_EAST", &key) {
+                app.core.game.queue_player_move(1, 0);
+            }
+            if app.ui.keybinds.matches("movement", "MOVE_NORTHWEST", &key) {
+                app.core.game.queue_player_move(-1, -1);
+            }
+            if app.ui.keybinds.matches("movement", "MOVE_NORTHEAST", &key) {
+                app.core.game.queue_player_move(1, -1);
+            }
+            if app.ui.keybinds.matches("movement", "MOVE_SOUTHWEST", &key) {
+                app.core.game.queue_player_move(-1, 1);
+            }
+            if app.ui.keybinds.matches("movement", "MOVE_SOUTHEAST", &key) {
+                app.core.game.queue_player_move(1, 1);
+            }
+            if app.ui.keybinds.matches("movement", "WAIT", &key) {
+                app.core.game.queue_player_move(0, 0);
+            }
+            if app.ui.keybinds.matches("movement", "MOVE_UP", &key) {
+                app.core.game.queue_player_move_z(1);
+            }
+            if app.ui.keybinds.matches("movement", "MOVE_DOWN", &key) {
+                app.core.game.queue_player_move_z(-1);
+            }
 
-        let tick_result = app.core.game.tick();
-        if tick_result.contains(GameTickResult::CombatTriggered) {
-            app.combat = CombatUiState::Active {
-                current_move: 0,
-                current_enemy: 0,
-                enemy_timers: vec![], // Deprecated - using ActionQueue now
-                move_scroll_offset: 0,
-            };
-        }
-        if tick_result.contains(GameTickResult::CombatEnded) {
-            app.combat = CombatUiState::None;
-        }
-        app.snap_view_to_player_z();
-        return Ok(());
-    }
-
-    if app.ui.keybinds.matches("action", "MINE", &key) {
-        app.core.game.queue_mine();
-        let tick_result = app.core.game.tick();
-        if tick_result.contains(GameTickResult::MiningSuccess) {
+            let tick_result = app.core.game.tick();
+            if tick_result.contains(GameTickResult::CombatTriggered) {
+                app.combat = CombatUiState::Active {
+                    current_move: 0,
+                    current_enemy: 0,
+                    enemy_timers: vec![], // Deprecated - using ActionQueue now
+                    move_scroll_offset: 0,
+                };
+            }
+            if tick_result.contains(GameTickResult::CombatEnded) {
+                app.combat = CombatUiState::None;
+            }
             app.snap_view_to_player_z();
+            return Ok(());
         }
-        if tick_result.contains(GameTickResult::CombatEnded) {
-            app.combat = CombatUiState::None;
-        }
-        return Ok(());
-    }
 
-    if app.ui.keybinds.matches("scale", "SCALE_UP", &key) {
-        app.ui.scale = match app.ui.scale {
-            Scale::Small => Scale::Medium,
-            Scale::Medium => Scale::Large,
-            Scale::Large => Scale::Large,
-        };
-        return Ok(());
-    }
-    if app.ui.keybinds.matches("scale", "SCALE_DOWN", &key) {
-        app.ui.scale = match app.ui.scale {
-            Scale::Large => Scale::Medium,
-            Scale::Medium => Scale::Small,
-            Scale::Small => Scale::Small,
-        };
-        return Ok(());
-    }
-    if app.ui.keybinds.matches("scale", "SCALE_RESET", &key) {
-        app.ui.scale = Scale::Small;
-        return Ok(());
+        if app.ui.keybinds.matches("action", "MINE", &key) {
+            app.core.game.queue_mine();
+            let tick_result = app.core.game.tick();
+            if tick_result.contains(GameTickResult::MiningSuccess) {
+                app.snap_view_to_player_z();
+            }
+            if tick_result.contains(GameTickResult::CombatEnded) {
+                app.combat = CombatUiState::None;
+            }
+            return Ok(());
+        }
+
+        if app.ui.keybinds.matches("scale", "SCALE_UP", &key) {
+            app.ui.scale = match app.ui.scale {
+                Scale::Small => Scale::Medium,
+                Scale::Medium => Scale::Large,
+                Scale::Large => Scale::Large,
+            };
+            return Ok(());
+        }
+        if app.ui.keybinds.matches("scale", "SCALE_DOWN", &key) {
+            app.ui.scale = match app.ui.scale {
+                Scale::Large => Scale::Medium,
+                Scale::Medium => Scale::Small,
+                Scale::Small => Scale::Small,
+            };
+            return Ok(());
+        }
+        if app.ui.keybinds.matches("scale", "SCALE_RESET", &key) {
+            app.ui.scale = Scale::Small;
+            return Ok(());
+        }
     }
     // UI: Quit
     if app.ui.keybinds.matches("ui", "QUIT", &key) {
