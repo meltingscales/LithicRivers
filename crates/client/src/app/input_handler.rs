@@ -571,7 +571,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
                     };
 
                     // Create queued action
-                    let execution_time = selected_move.move_type.execution_time_ticks();
+                    let execution_time = selected_move.execution_time_ticks;
                     let action = lithicrivers_core::moves::QueuedAction {
                         entity: player_entity,
                         action: lithicrivers_core::moves::CombatAction::PlayerMove {

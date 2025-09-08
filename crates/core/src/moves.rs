@@ -10,19 +10,13 @@ pub enum MoveType {
     Fireball,
     Escape,
     DebugInstantKill,
+    Heal,
+    Shield,
+    LightningBolt,
+    PowerStrike,
 }
 
 impl MoveType {
-    pub fn execution_time_ticks(&self) -> u64 {
-        match self {
-            MoveType::Melee => 15,
-            MoveType::Fireball => 40,
-            MoveType::Tackle => 80,
-            MoveType::Escape => 25,
-            MoveType::DebugInstantKill => 5,
-        }
-    }
-
     pub fn human_name(&self) -> &'static str {
         match self {
             MoveType::Melee => "Melee",
@@ -30,6 +24,10 @@ impl MoveType {
             MoveType::Tackle => "Tackle",
             MoveType::Escape => "Escape",
             MoveType::DebugInstantKill => "Debug Instant Kill",
+            MoveType::Heal => "Heal",
+            MoveType::Shield => "Shield",
+            MoveType::LightningBolt => "Lightning Bolt",
+            MoveType::PowerStrike => "Power Strike",
         }
     }
 }
@@ -39,7 +37,7 @@ pub struct Move {
     pub name: String,
     pub move_type: MoveType,
     pub energy_cost: u32,
-    pub execution_time_ticks: i32,
+    pub execution_time_ticks: u64,
     pub damage: u32,
     pub description: String,
 }
@@ -103,7 +101,7 @@ impl Move {
     pub fn heal() -> Self {
         Self {
             name: "Heal".to_string(),
-            move_type: MoveType::Melee, // Reusing MoveType for now
+            move_type: MoveType::Heal,
             energy_cost: 30,
             execution_time_ticks: 20,
             damage: 0,
@@ -114,7 +112,7 @@ impl Move {
     pub fn shield() -> Self {
         Self {
             name: "Shield".to_string(),
-            move_type: MoveType::Melee, // Reusing MoveType for now
+            move_type: MoveType::Shield,
             energy_cost: 25,
             execution_time_ticks: 10,
             damage: 0,
@@ -125,7 +123,7 @@ impl Move {
     pub fn lightning_bolt() -> Self {
         Self {
             name: "Lightning Bolt".to_string(),
-            move_type: MoveType::Fireball, // Reusing MoveType for now
+            move_type: MoveType::LightningBolt,
             energy_cost: 50,
             execution_time_ticks: 30,
             damage: 40,
@@ -136,7 +134,7 @@ impl Move {
     pub fn power_strike() -> Self {
         Self {
             name: "Power Strike".to_string(),
-            move_type: MoveType::Melee, // Reusing MoveType for now
+            move_type: MoveType::PowerStrike,
             energy_cost: 40,
             execution_time_ticks: 40,
             damage: 50,

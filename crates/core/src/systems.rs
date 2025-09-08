@@ -745,6 +745,24 @@ fn execute_player_move(
                 res.log("DEBUG: Target instantly killed!".to_string());
             }
         }
+        MoveType::Heal => {
+            // TODO: Implement healing logic
+            res.log("Heal move used (not yet implemented)".to_string());
+        }
+        MoveType::Shield => {
+            // TODO: Implement shield/block logic
+            res.log("Shield move used (not yet implemented)".to_string());
+        }
+        MoveType::LightningBolt => {
+            if let Some(target) = target_entity {
+                apply_damage(world, res, target, move_data.damage, "lightning bolt");
+            }
+        }
+        MoveType::PowerStrike => {
+            if let Some(target) = target_entity {
+                apply_damage(world, res, target, move_data.damage, "power strike");
+            }
+        }
     }
 
     res.log(format!("Used {}", move_data.name));
