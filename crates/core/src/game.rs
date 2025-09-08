@@ -24,7 +24,8 @@ bitflags! {
     pub struct GameTickResult: u32 {
         const MiningSuccess = 1 << 0;
         const CombatTriggered = 1 << 1;
-        const NoAction = 1 << 2;
+        const CombatEnded = 1 << 2;
+        const NoAction = 1 << 3;
     }
 }
 
@@ -204,6 +205,9 @@ impl Game {
         }
         if system_results.combat_triggered {
             result |= GameTickResult::CombatTriggered;
+        }
+        if self.res.player_state.combat_ended_this_tick {
+            result |= GameTickResult::CombatEnded;
         }
 
         result

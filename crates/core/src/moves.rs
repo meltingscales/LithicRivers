@@ -17,7 +17,7 @@ impl MoveType {
         match self {
             MoveType::Melee => 150,
             MoveType::Fireball => 400,
-            MoveType::Tackle => 300,
+            MoveType::Tackle => 800,
             MoveType::Escape => 250,
             MoveType::DebugInstantKill => 50,
         }
@@ -61,7 +61,7 @@ impl Move {
             name: "Tackle".to_string(),
             move_type: MoveType::Tackle,
             energy_cost: 20,
-            execution_time_ticks: 300,
+            execution_time_ticks: 800,
             damage: 15,
             description: "Pushes enemy back 2 spaces, 50% chance to stun for 600 ticks".to_string(),
         }

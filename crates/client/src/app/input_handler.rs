@@ -618,6 +618,21 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
                 } else {
                     app.core.game.res.log("Invalid move selected!".to_string());
                 }
+
+                // Process game ticks to allow combat actions to execute and check for combat end
+                // We may need multiple ticks for actions to complete
+                for _ in 0..10 {
+                    // Max 10 ticks to prevent infinite loops
+                    let tick_result = app.core.game.tick();
+                    if tick_result.contains(GameTickResult::CombatEnded) {
+                        app.combat = CombatUiState::None;
+                        break;
+                    }
+                    // If nothing significant happened, stop ticking
+                    if tick_result.contains(GameTickResult::NoAction) {
+                        break;
+                    }
+                }
             }
             return Ok(());
         }
@@ -690,6 +705,9 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
                 move_scroll_offset: 0,
             };
         }
+        if tick_result.contains(GameTickResult::CombatEnded) {
+            app.combat = CombatUiState::None;
+        }
         app.snap_view_to_player_z();
         return Ok(());
     }
@@ -699,6 +717,9 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
         let tick_result = app.core.game.tick();
         if tick_result.contains(GameTickResult::MiningSuccess) {
             app.snap_view_to_player_z();
+        }
+        if tick_result.contains(GameTickResult::CombatEnded) {
+            app.combat = CombatUiState::None;
         }
         return Ok(());
     }
