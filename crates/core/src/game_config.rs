@@ -16,15 +16,26 @@ impl GameConfig {
         let cfg = ConfigManager::new();
 
         // Cache commonly-used settings
+
         let developer_mode = cfg
             .get_setting("game", "DEVELOPER_MODE")
             .and_then(|v| v.as_bool())
-            .unwrap_or(false);
+            .unwrap_or_else(|| {
+                panic!(
+                    "game.DEVELOPER_MODE must be set. Raw value: {:?}",
+                    cfg.get_setting("game", "DEVELOPER_MODE")
+                )
+            });
 
         let player_name = cfg
             .get_setting("game", "DEFAULT_PLAYER_NAME")
             .and_then(|v| v.as_str())
-            .unwrap_or("Player")
+            .unwrap_or_else(|| {
+                panic!(
+                    "game.DEFAULT_PLAYER_NAME must be set. Raw value: {:?}",
+                    cfg.get_setting("game", "DEFAULT_PLAYER_NAME")
+                )
+            })
             .to_string();
 
         let default_player_position =
@@ -33,7 +44,12 @@ impl GameConfig {
         let auto_pickup_enabled = cfg
             .get_setting("inventory", "TOGGLE_ITEM_AUTO_PICKUP_DEFAULT_ENABLED")
             .and_then(|v| v.as_bool())
-            .unwrap_or(true);
+            .unwrap_or_else(|| {
+                panic!(
+                "inventory.TOGGLE_ITEM_AUTO_PICKUP_DEFAULT_ENABLED must be set. Raw value: {:?}", 
+                cfg.get_setting("inventory", "TOGGLE_ITEM_AUTO_PICKUP_DEFAULT_ENABLED")
+            )
+            });
 
         Self {
             config: cfg,

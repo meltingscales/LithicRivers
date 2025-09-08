@@ -348,7 +348,16 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<(), 
                     .config
                     .get_setting("game", "COMBAT_MS_PER_TICK")
                     .and_then(|v| v.as_u64())
-                    .unwrap_or(panic!("COMBAT_MS_PER_TICK must be set in config")),
+                    .unwrap_or_else(|| {
+                        panic!(
+                            "COMBAT_MS_PER_TICK must be set in config. raw value: {:?}",
+                            app.core
+                                .game
+                                .res
+                                .config
+                                .get_setting("game", "COMBAT_MS_PER_TICK")
+                        )
+                    }),
             );
 
             let current_time = std::time::Instant::now();
