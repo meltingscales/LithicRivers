@@ -108,17 +108,18 @@ stage-artifacts-legal:
     cp -f LICENSE artifacts/
     cp -f THIRD-PARTY-NOTICES.txt artifacts/
 
-stage-artifacts: build build-demos stage-artifacts-legal
+# Clean artifacts directory
+clean-artifacts:
     rm -rf artifacts/
     mkdir -p artifacts/
+
+stage-artifacts: clean-artifacts build build-demos stage-artifacts-legal
     cp -f target/debug/lithicrivers-client artifacts/
     cp -f target/debug/demo_* artifacts/
     cp -f scripts/launcher/lithicrivers-launcher.sh artifacts/
 
 # Stage release artifacts
-stage-artifacts-release: build-release build-demos-release stage-artifacts-legal
-    rm -rf artifacts/
-    mkdir -p artifacts/
+stage-artifacts-release: clean-artifacts build-release build-demos-release stage-artifacts-legal
     cp -f target/release/lithicrivers-client artifacts/
     cp -f target/release/demo_* artifacts/
     cp -f scripts/launcher/lithicrivers-launcher.sh artifacts/
