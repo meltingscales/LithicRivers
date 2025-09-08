@@ -101,6 +101,25 @@ impl Game {
             ));
         }
 
+        //spawn 4 feral dogs a little far away, in a diagonal line to test combat
+        let combatTestX = -20;
+        let combatTestY = -20;
+        let combatTestZ = sz;
+        let dog_positions = (5..=8).map(|n| (combatTestX + n, combatTestY + n, combatTestZ));
+        for (x, y, z) in dog_positions {
+            world.spawn((
+                Position { x, y, z },
+                GameEntity,
+                EntityKind::FeralDog,
+                FeralDog,
+                Health::new(80), // Feral dogs have 80 HP
+                Glyph('d'),
+                SpriteRef::new("entities", "feral_dog"),
+                BlocksMovement,
+                Combat::default(),
+            ));
+        }
+
         // Deterministically spawn a few Logs near the player (~5 tiles away)
         // Use a local RNG derived from the seed so we don't perturb the global RNG sequence
         let mut spawn_rng = ChaCha20Rng::seed_from_u64(seed.wrapping_add(0x5eed_cafe_f00d_dead));

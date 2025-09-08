@@ -39,6 +39,17 @@ pub fn render_combat_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     let current_move = current_move.min(available_moves.len().saturating_sub(1));
     let current_enemy = current_enemy.min(combat_enemies.len().saturating_sub(1));
 
+    // Update the combat state with clamped values to prevent desync
+    if let crate::CombatUiState::Active {
+        current_enemy: ref mut state_enemy,
+        current_move: ref mut state_move,
+        ..
+    } = app.combat
+    {
+        *state_enemy = current_enemy;
+        *state_move = current_move;
+    }
+
     // Victory check
     if combat_enemies.is_empty() || combat_enemies.iter().all(|e| e.health <= 0) {
         let victory = Paragraph::new("Victory!")
@@ -129,7 +140,7 @@ fn render_single_enemy(
     let block = Block::default()
         .borders(Borders::ALL)
         .border_style(if is_selected {
-            Style::default().fg(Color::Yellow)
+            Style::default().fg(Color::Green)
         } else {
             Style::default()
         });
@@ -419,7 +430,7 @@ fn render_moves(
             let style = if !can_use {
                 Style::default().fg(Color::DarkGray)
             } else if is_selected {
-                Style::default().fg(Color::Yellow).bold()
+                Style::default().fg(Color::Green).bold()
             } else {
                 Style::default().fg(Color::White)
             };
@@ -427,7 +438,7 @@ fn render_moves(
             let border_style = if !can_use {
                 Style::default().fg(Color::DarkGray)
             } else if is_selected {
-                Style::default().fg(Color::Yellow)
+                Style::default().fg(Color::Green)
             } else {
                 Style::default()
             };

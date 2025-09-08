@@ -498,19 +498,21 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
             return Ok(());
         }
 
-        // Enemy/target selection (Left/Right) - using mock enemy count for now
-        const MAX_ENEMIES: usize = 3; // From CombatEnemy::mock()
-        if app.ui.keybinds.matches("movement", "MOVE_WEST", &key) {
-            *current_enemy = if *current_enemy == 0 {
-                MAX_ENEMIES - 1
-            } else {
-                *current_enemy - 1
-            };
-            return Ok(());
-        }
-        if app.ui.keybinds.matches("movement", "MOVE_EAST", &key) {
-            *current_enemy = (*current_enemy + 1) % MAX_ENEMIES;
-            return Ok(());
+        // Enemy/target selection (Left/Right) - get actual enemy count
+        let enemy_count = get_combat_enemy_count(&mut app.core.game);
+        if enemy_count > 0 {
+            if app.ui.keybinds.matches("movement", "MOVE_WEST", &key) {
+                *current_enemy = if *current_enemy == 0 {
+                    enemy_count - 1
+                } else {
+                    *current_enemy - 1
+                };
+                return Ok(());
+            }
+            if app.ui.keybinds.matches("movement", "MOVE_EAST", &key) {
+                *current_enemy = (*current_enemy + 1) % enemy_count;
+                return Ok(());
+            }
         }
 
         // Use selected move (Space/Enter) - queue the action instead of immediate execution
@@ -832,4 +834,60 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
     }
 
     Ok(())
+}
+
+/// Get the current count of living combat enemies adjacent to the player
+fn get_combat_enemy_count(game: &mut lithicrivers_core::Game) -> usize {
+    use lithicrivers_core::components::{Combat, GameEntity, Position};
+
+    let mut count = 0;
+
+    if let Some(player_entity) = game.get_player_entity() {
+        if let Ok(player_pos) = game.world.get::<&Position>(player_entity) {
+            let player_pos = *player_pos;
+
+            // Define the 8 adjacent positions around the player (same as combat_trigger_system)
+            let adjacent_positions = [
+                (player_pos.x - 1, player_pos.y - 1), // NW
+                (player_pos.x, player_pos.y - 1),     // N
+                (player_pos.x + 1, player_pos.y - 1), // NE
+                (player_pos.x - 1, player_pos.y),     // W
+                (player_pos.x + 1, player_pos.y),     // E
+                (player_pos.x - 1, player_pos.y + 1), // SW
+                (player_pos.x, player_pos.y + 1),     // S
+                (player_pos.x + 1, player_pos.y + 1), // SE
+            ];
+
+            // Look for adjacent combat entities that are alive and in combat
+            for (entity, (pos, combat, _)) in game
+                .world
+                .query::<(&Position, &Combat, &GameEntity)>()
+                .iter()
+            {
+                if entity == player_entity {
+                    continue; // Skip player
+                }
+
+                // Check if enemy is in any of the 8 adjacent positions
+                let is_adjacent = adjacent_positions.iter().any(|&(adj_x, adj_y)| {
+                    pos.x == adj_x && pos.y == adj_y && pos.z == player_pos.z
+                });
+
+                if is_adjacent && combat.triggered {
+                    // Skip dead enemies
+                    if game
+                        .world
+                        .get::<&lithicrivers_core::components::Dead>(entity)
+                        .is_ok()
+                    {
+                        continue;
+                    }
+
+                    count += 1;
+                }
+            }
+        }
+    }
+
+    count
 }
