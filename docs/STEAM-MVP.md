@@ -1,4 +1,10 @@
-# Steam MVP Release Plan (Target: December 2024)
+# Steam MVP Release Plan (Target: December 2026)
+
+## launching
+
+- find out how x-terminal-emulator works on Ubuntu
+  - why is it tiny if steam launches it with crap font?
+  - why does it look great when using gnome terminal?
 
 ## Small temp list
 
