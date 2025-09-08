@@ -1,3 +1,8 @@
+# v0.8.0.1
+
+- fix unit tests
+- clean up combat actions and allow multi enemies to join
+
 # v0.8.0
 
 - combat release
