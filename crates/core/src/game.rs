@@ -326,4 +326,14 @@ impl Game {
     {
         self.get_player_entity().map(f)
     }
+
+    /// End combat for all enemies near the player (used when manually exiting combat)
+    pub fn end_combat_around_player(&mut self) {
+        if let Some(player_pos) = self.get_player_position() {
+            crate::systems::end_combat_for_nearby_enemies(&mut self.world, player_pos);
+            self.res.player_state.combat_active = false;
+            self.res
+                .log("Ended combat for nearby enemies (manual exit)".to_string());
+        }
+    }
 }

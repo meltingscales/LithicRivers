@@ -335,8 +335,14 @@ pub fn feral_dog_system(world: &mut World, res: &mut Resources) {
 
     // Process each dog
     for (dog_entity, dog_pos, ai_state) in dogs {
-        // Skip stunned or dead dogs - they cannot move
-        if is_stunned(world, dog_entity) || world.get::<&Dead>(dog_entity).is_ok() {
+        // Skip stunned, dead, or combat-engaged dogs - they cannot move
+        if is_stunned(world, dog_entity)
+            || world.get::<&Dead>(dog_entity).is_ok()
+            || world
+                .get::<&Combat>(dog_entity)
+                .map(|c| c.triggered)
+                .unwrap_or(false)
+        {
             continue;
         }
 
@@ -1081,7 +1087,7 @@ fn handle_entity_death(world: &mut World, res: &mut Resources, entity: hecs::Ent
 }
 
 /// End combat for all enemies near the given position
-fn end_combat_for_nearby_enemies(world: &mut World, center_pos: Position) {
+pub fn end_combat_for_nearby_enemies(world: &mut World, center_pos: Position) {
     let mut entities_to_update = Vec::new();
 
     for (entity, (pos, combat, _)) in world.query::<(&Position, &Combat, &GameEntity)>().iter() {

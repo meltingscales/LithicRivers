@@ -656,6 +656,9 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
                 }
             }
 
+            // End combat for all nearby enemies (this was missing!)
+            app.core.game.end_combat_around_player();
+
             app.combat = CombatUiState::None;
             app.core.game.res.log("Exited combat (cheat mode)");
             return Ok(());
