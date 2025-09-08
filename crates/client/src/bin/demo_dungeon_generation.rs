@@ -1,13 +1,7 @@
-use crossterm::{
-    event::{self, Event, KeyCode, KeyEvent, KeyEventKind},
-    execute,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
-};
-use ratatui::{prelude::*, symbols::border, widgets::*};
+// Removed crossterm and ratatui imports for simpler console output
 use std::{
-    collections::{HashMap, HashSet, VecDeque},
+    collections::{HashMap, HashSet},
     io,
-    time::{Duration, Instant},
     f32::consts::PI,
 };
 
@@ -99,10 +93,6 @@ struct App {
     corridors: HashSet<(i32, i32)>,
     rng: SplitMix64,
     step: usize,
-    last_tick: Instant,
-    should_quit: bool,
-    auto_advance: bool,
-    viewport: Rect,
 }
 
 impl App {
@@ -114,10 +104,6 @@ impl App {
             corridors: HashSet::new(),
             rng: SplitMix64::new(42),
             step: 0,
-            last_tick: Instant::now(),
-            should_quit: false,
-            auto_advance: false,
-            viewport: Rect::default(),
         };
         app.generate_initial_cells();
         app
@@ -262,7 +248,9 @@ impl App {
 
         fn find(parent: &mut HashMap<usize, usize>, x: usize) -> usize {
             if parent[&x] != x {
-                parent.insert(x, find(parent, parent[&x]));
+                let parent_x = parent[&x];
+                let root = find(parent, parent_x);
+                parent.insert(x, root);
             }
             parent[&x]
         }
@@ -368,15 +356,6 @@ impl App {
         self.rng = SplitMix64::new(self.rng.next_u64()); // New seed
     }
 
-    fn on_tick(&mut self) {
-        if self.auto_advance {
-            let frame_time = Duration::from_millis(1000);
-            if self.last_tick.elapsed() >= frame_time && self.step < 6 {
-                self.last_tick = Instant::now();
-                self.next_step();
-            }
-        }
-    }
 
     fn get_bounds(&self) -> (f32, f32, f32, f32) {
         if self.cells.is_empty() {
@@ -402,109 +381,36 @@ impl App {
 }
 
 fn main() -> io::Result<()> {
-    enable_raw_mode()?;
-    let mut stdout = io::stdout();
-    execute!(stdout, EnterAlternateScreen)?;
-    let backend = CrosstermBackend::new(stdout);
-    let mut terminal = Terminal::new(backend)?;
-
+    println!("Procedural Dungeon Generation Demo");
+    println!("==================================");
+    
     let mut app = App::new();
-    let res = run_app(&mut terminal, &mut app);
-
-    disable_raw_mode()?;
-    execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
-    terminal.show_cursor()?;
-
-    if let Err(err) = res {
-        eprintln!("{err:?}");
+    
+    // Run all steps automatically
+    for step in 0..6 {
+        println!("\nStep {}: {}", step + 1, match step {
+            0 => "Generating initial cells",
+            1 => "Separating overlapping cells", 
+            2 => "Identifying rooms",
+            3 => "Creating Delaunay triangulation",
+            4 => "Building minimal spanning tree with loops",
+            5 => "Generating corridors",
+            _ => "Complete",
+        });
+        
+        app.next_step();
+        print_dungeon_ascii(&app);
     }
-
+    
+    println!("\nDungeon generation complete!");
+    println!("Generated {} rooms connected by corridors.", app.rooms.len());
+    
     Ok(())
 }
 
-fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<()> {
-    loop {
-        terminal.draw(|f| ui(f, app))?;
-
-        if event::poll(Duration::from_millis(16))? {
-            match event::read()? {
-                Event::Key(KeyEvent { code, kind, .. }) => {
-                    if kind == KeyEventKind::Press {
-                        match code {
-                            KeyCode::Char('q') | KeyCode::Esc => {
-                                app.should_quit = true;
-                            }
-                            KeyCode::Char(' ') | KeyCode::Enter => {
-                                app.next_step();
-                            }
-                            KeyCode::Char('r') => {
-                                app.reset();
-                            }
-                            KeyCode::Char('a') => {
-                                app.auto_advance = !app.auto_advance;
-                            }
-                            _ => {}
-                        }
-                    }
-                }
-                Event::Resize(_, _) => {
-                    app.viewport = terminal.size()?;
-                }
-                _ => {}
-            }
-        }
-
-        app.on_tick();
-
-        if app.should_quit {
-            return Ok(());
-        }
-    }
-}
-
-fn ui(f: &mut Frame, app: &App) {
-    let size = f.size();
-    
-    // Title and instructions
-    let title = format!(" Dungeon Generation - Step {} ", app.step);
-    let instructions = if app.auto_advance {
-        "Space/Enter: Next Step | R: Reset | A: Auto (ON) | Q: Quit"
-    } else {
-        "Space/Enter: Next Step | R: Reset | A: Auto (OFF) | Q: Quit"
-    };
-
-    let main_block = Block::default()
-        .borders(Borders::ALL)
-        .border_set(border::THICK)
-        .title(title)
-        .title_alignment(Alignment::Center)
-        .border_style(Style::default().fg(Color::LightBlue));
-
-    let chunks = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([Constraint::Min(3), Constraint::Length(3)])
-        .split(size);
-
-    // Main content area
-    let inner = main_block.inner(chunks[0]);
-    render_dungeon(f, app, inner);
-    f.render_widget(main_block, chunks[0]);
-
-    // Instructions
-    let instructions_block = Block::default()
-        .borders(Borders::ALL)
-        .title(" Controls ");
-    let instructions_para = Paragraph::new(instructions)
-        .block(instructions_block)
-        .alignment(Alignment::Center);
-    f.render_widget(instructions_para, chunks[1]);
-}
-
-fn render_dungeon(f: &mut Frame, app: &App, area: Rect) {
+fn print_dungeon_ascii(app: &App) {
     if app.cells.is_empty() {
-        let text = Paragraph::new("Press SPACE or ENTER to start generation")
-            .alignment(Alignment::Center);
-        f.render_widget(text, area);
+        println!("No cells generated yet");
         return;
     }
 
@@ -516,12 +422,14 @@ fn render_dungeon(f: &mut Frame, app: &App, area: Rect) {
         return;
     }
 
-    // Create a grid to render the dungeon
-    let mut grid = vec![vec![' '; area.width as usize]; area.height as usize];
+    // Create a smaller ASCII grid
+    let grid_width = 80;
+    let grid_height = 40;
+    let mut grid = vec![vec![' '; grid_width]; grid_height];
 
-    // Scale factor to fit world in terminal
-    let scale_x = (area.width as f32 - 2.0) / world_width;
-    let scale_y = (area.height as f32 - 2.0) / world_height;
+    // Scale factor to fit world in ASCII
+    let scale_x = (grid_width as f32 - 2.0) / world_width;
+    let scale_y = (grid_height as f32 - 2.0) / world_height;
     let scale = scale_x.min(scale_y);
 
     // Draw corridors first
@@ -529,7 +437,7 @@ fn render_dungeon(f: &mut Frame, app: &App, area: Rect) {
         for &(x, y) in &app.corridors {
             let screen_x = ((x as f32 - min_x) * scale) as usize;
             let screen_y = ((y as f32 - min_y) * scale) as usize;
-            if screen_x < area.width as usize && screen_y < area.height as usize {
+            if screen_x < grid_width && screen_y < grid_height {
                 grid[screen_y][screen_x] = '.';
             }
         }
@@ -545,13 +453,13 @@ fn render_dungeon(f: &mut Frame, app: &App, area: Rect) {
         let symbol = if cell.is_room && app.step >= 2 {
             '#'
         } else if app.step >= 1 {
-            '░'
+            'o'
         } else {
-            '▓'
+            'X'
         };
 
-        for y in start_y..end_y.min(area.height as usize) {
-            for x in start_x..end_x.min(area.width as usize) {
+        for y in start_y..end_y.min(grid_height) {
+            for x in start_x..end_x.min(grid_width) {
                 if y < grid.len() && x < grid[y].len() {
                     grid[y][x] = symbol;
                 }
@@ -573,8 +481,8 @@ fn render_dungeon(f: &mut Frame, app: &App, area: Rect) {
             let end_y = ((end.y - min_y) * scale) as usize;
 
             // Simple line drawing
-            if start_x < area.width as usize && start_y < area.height as usize &&
-               end_x < area.width as usize && end_y < area.height as usize {
+            if start_x < grid_width && start_y < grid_height &&
+               end_x < grid_width && end_y < grid_height {
                 if start_x < grid[0].len() && start_y < grid.len() {
                     grid[start_y][start_x] = '+';
                 }
@@ -585,37 +493,14 @@ fn render_dungeon(f: &mut Frame, app: &App, area: Rect) {
         }
     }
 
-    // Convert grid to string
-    let mut content = String::new();
+    // Print the grid
     for row in grid {
-        content.push_str(&row.iter().collect::<String>());
-        content.push('\n');
+        println!("{}", row.iter().collect::<String>());
     }
-
-    let paragraph = Paragraph::new(content);
-    f.render_widget(paragraph, area);
-
-    // Step description
-    let step_desc = match app.step {
-        0 => "Ready to generate dungeon",
-        1 => "Generated cells with separation steering",
-        2 => "Identified rooms (larger cells)",
-        3 => "Created Delaunay triangulation",
-        4 => "Built minimal spanning tree + loops",
-        5 => "Generated L-shaped corridors",
-        6 => "Dungeon complete!",
-        _ => "Unknown step",
-    };
-
-    let desc_area = Rect {
-        x: area.x + 1,
-        y: area.y + area.height - 2,
-        width: area.width - 2,
-        height: 1,
-    };
-    let desc = Paragraph::new(step_desc)
-        .style(Style::default().fg(Color::Yellow));
-    f.render_widget(desc, desc_area);
+    
+    // Print stats
+    println!("Cells: {}, Rooms: {}, Edges: {}, Corridor tiles: {}", 
+             app.cells.len(), app.rooms.len(), app.edges.len(), app.corridors.len());
 }
 
 // Simple PRNG implementation
