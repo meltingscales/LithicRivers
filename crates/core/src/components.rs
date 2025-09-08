@@ -34,6 +34,14 @@ pub struct Sheep;
 #[derive(Debug, Clone, Copy)]
 pub struct FeralDog;
 
+/// AI behavior state for feral dogs
+#[derive(Debug, Clone, Copy)]
+pub struct DogAI {
+    pub behavior: crate::pathfinding::DogBehavior,
+    pub behavior_timer: u64, // Ticks remaining in current behavior
+    pub circle_center: Option<Position>, // Center for circular movement
+}
+
 /// Component for entities that can engage in combat
 #[derive(Debug, Clone, Copy)]
 pub struct Combat {

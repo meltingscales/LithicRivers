@@ -1,10 +1,11 @@
 use crate::component_access::{ComponentAccess, ComponentUpdate, DamageResult};
 use crate::components::{
-    BattleDelay, BlocksMovement, Combat, Dead, DroppedItem, Energy, FeralDog, GameEntity,
+    BattleDelay, BlocksMovement, Combat, Dead, DogAI, DroppedItem, Energy, FeralDog, GameEntity,
     Inventory, ItemKind, Player, Position, Sheep, SpriteRef, Stunned,
 };
 use crate::intent::PlayerAction;
 use crate::moves::{ActionQueue, CombatAction, Move, MoveType, QueuedAction};
+use crate::pathfinding::{DogBehavior, Pathfinder};
 use crate::resources::Resources;
 use hecs::World;
 use tracing::info;
@@ -305,24 +306,35 @@ pub fn combat_trigger_system(world: &mut World, res: &mut Resources) -> CombatSt
     CombatState::Idle
 }
 
-// Feral dogs will chase the player if they get too close.
+// Feral dogs with A* pathfinding that chase the player intelligently
 pub fn feral_dog_system(world: &mut World, res: &mut Resources) {
-    use rand::Rng;
-
     // Get player position if available
     let player_pos = match get_player_position(world) {
         Some(pos) => pos,
-        None => return, // No player to chase
+        None => {
+            tracing::info!("No player found for dogs to chase");
+            return; // No player to chase
+        }
     };
 
-    // Collect dogs with their positions to avoid borrowing issues
+    // Create pathfinder with 33% efficiency as requested
+    let pathfinder = Pathfinder::new(33);
+
+    // Collect dogs with their positions and AI state to avoid borrowing issues
     let mut dogs = Vec::new();
     for (e, (pos, _)) in world.query::<(&Position, &FeralDog)>().iter() {
-        dogs.push((e, *pos));
+        let ai_state = world.get::<&DogAI>(e).ok().map(|ai| *ai);
+        dogs.push((e, *pos, ai_state));
     }
 
+    tracing::info!(
+        "Found {} dogs to process, player at {:?}",
+        dogs.len(),
+        player_pos
+    );
+
     // Process each dog
-    for (dog_entity, dog_pos) in dogs {
+    for (dog_entity, dog_pos, ai_state) in dogs {
         // Skip stunned or dead dogs - they cannot move
         if is_stunned(world, dog_entity) || world.get::<&Dead>(dog_entity).is_ok() {
             continue;
@@ -333,45 +345,263 @@ pub fn feral_dog_system(world: &mut World, res: &mut Resources) {
         let dy = player_pos.y - dog_pos.y;
         let distance_sq = dx * dx + dy * dy;
 
-        // Only chase if player is within 10 tiles
-        if distance_sq > 100 {
-            // 10^2
+        // Only chase if player is within 15 tiles (increased range for smarter dogs)
+        if distance_sq > 225 {
+            // 15^2
+            tracing::info!(
+                "Dog at {:?} too far from player (distance_sq: {})",
+                dog_pos,
+                distance_sq
+            );
             continue;
         }
 
-        // decide if dog should do nothing for a turn (50% chance)
-        if res.world_state.rng.gen_range(0..2) == 0 {
-            continue;
+        tracing::info!(
+            "Processing dog at {:?}, distance_sq: {}",
+            dog_pos,
+            distance_sq
+        );
+
+        // Initialize or get AI state
+        let mut current_ai = ai_state.unwrap_or(DogAI {
+            behavior: DogBehavior::Hunting,
+            behavior_timer: 20, // Start with 20 tick behavior
+            circle_center: None,
+        });
+
+        // Update behavior timer
+        current_ai.behavior_timer = current_ai.behavior_timer.saturating_sub(1);
+
+        // Check if we should change behavior
+        if current_ai.behavior_timer == 0 {
+            current_ai.behavior = DogBehavior::next_behavior(
+                current_ai.behavior,
+                res.world_state.seed,
+                res.time.tick,
+                dog_pos,
+            );
+            // Set new behavior timer
+            current_ai.behavior_timer = match current_ai.behavior {
+                DogBehavior::Hunting => 15 + ((res.time.tick + dog_pos.x as u64) % 10),
+                DogBehavior::Circling => 8 + ((res.time.tick + dog_pos.y as u64) % 5),
+                DogBehavior::Wandering => 5 + ((res.time.tick + dog_pos.x as u64) % 8),
+            };
         }
 
-        // Determine movement direction (signum gives -1, 0, or 1)
-        let move_x = dx.signum();
-        let move_y = dy.signum();
-
-        // Calculate new position
-        let new_x = dog_pos.x + move_x;
-        let new_y = dog_pos.y + move_y;
-        let new_z = dog_pos.z;
-
-        // Check if new position is blocked by terrain
-        if !res.world_state.world.is_passable(new_x, new_y, new_z) {
-            continue;
-        }
-
-        // Check for blocking entities at new position
-        let mut blocked = false;
-        for (_, (other_pos, _)) in world.query::<(&Position, &BlocksMovement)>().iter() {
-            if other_pos.x == new_x && other_pos.y == new_y && other_pos.z == new_z {
-                blocked = true;
-                break;
+        // Rarely skip movement (5% chance for more active dogs)
+        if ((res.world_state.seed + res.time.tick + dog_pos.x as u64 + dog_pos.y as u64) % 20) == 0
+        {
+            // Update AI state and continue
+            if world.get::<&DogAI>(dog_entity).is_err() {
+                world.insert_one(dog_entity, current_ai).ok();
+            } else {
+                if let Ok(mut ai) = world.get::<&mut DogAI>(dog_entity) {
+                    *ai = current_ai;
+                }
             }
+            continue;
         }
 
-        // Move the dog if not blocked
-        if !blocked {
+        // Create passability checker
+        let is_passable = |pos: Position| -> bool {
+            // Check terrain
+            if !res.world_state.world.is_passable(pos.x, pos.y, pos.z) {
+                tracing::info!(
+                    "Position {:?} blocked by terrain (tile: {:?})",
+                    pos,
+                    res.world_state.world.get_tile(pos.x, pos.y, pos.z)
+                );
+                return false;
+            }
+
+            // Check for blocking entities
+            for (entity, (other_pos, _)) in world.query::<(&Position, &BlocksMovement)>().iter() {
+                if *other_pos == pos {
+                    tracing::info!(
+                        "Position {:?} blocked by entity {:?} at same position",
+                        pos,
+                        entity
+                    );
+                    return false;
+                }
+            }
+            true
+        };
+
+        // Determine next move based on behavior
+        let next_pos = match current_ai.behavior {
+            DogBehavior::Hunting => {
+                // Use A* pathfinding to get adjacent to player (not on top of player)
+                // Find the closest adjacent position to the player that's passable
+                let adjacent_positions = [
+                    Position {
+                        x: player_pos.x - 1,
+                        y: player_pos.y - 1,
+                        z: player_pos.z,
+                    },
+                    Position {
+                        x: player_pos.x - 1,
+                        y: player_pos.y,
+                        z: player_pos.z,
+                    },
+                    Position {
+                        x: player_pos.x - 1,
+                        y: player_pos.y + 1,
+                        z: player_pos.z,
+                    },
+                    Position {
+                        x: player_pos.x,
+                        y: player_pos.y - 1,
+                        z: player_pos.z,
+                    },
+                    Position {
+                        x: player_pos.x,
+                        y: player_pos.y + 1,
+                        z: player_pos.z,
+                    },
+                    Position {
+                        x: player_pos.x + 1,
+                        y: player_pos.y - 1,
+                        z: player_pos.z,
+                    },
+                    Position {
+                        x: player_pos.x + 1,
+                        y: player_pos.y,
+                        z: player_pos.z,
+                    },
+                    Position {
+                        x: player_pos.x + 1,
+                        y: player_pos.y + 1,
+                        z: player_pos.z,
+                    },
+                ];
+
+                // Find the closest adjacent position to the dog
+                let mut best_target = None;
+                let mut best_distance = i32::MAX;
+
+                for &adj_pos in &adjacent_positions {
+                    if is_passable(adj_pos) {
+                        let distance =
+                            (adj_pos.x - dog_pos.x).abs() + (adj_pos.y - dog_pos.y).abs();
+                        if distance < best_distance {
+                            best_distance = distance;
+                            best_target = Some(adj_pos);
+                        }
+                    }
+                }
+
+                if let Some(target) = best_target {
+                    tracing::info!(
+                        "Dog at {:?} hunting toward adjacent target {:?} near player {:?}",
+                        dog_pos,
+                        target,
+                        player_pos
+                    );
+                    pathfinder.find_next_step(
+                        dog_pos,
+                        target,
+                        is_passable,
+                        res.world_state.seed,
+                        res.time.tick,
+                    )
+                } else {
+                    tracing::info!("Dog at {:?} no adjacent targets passable, trying to reach player {:?} directly", dog_pos, player_pos);
+                    // No adjacent position is passable, fall back to trying to reach player directly
+                    pathfinder.find_next_step(
+                        dog_pos,
+                        player_pos,
+                        is_passable,
+                        res.world_state.seed,
+                        res.time.tick,
+                    )
+                }
+            }
+            DogBehavior::Circling => {
+                // Set circle center if not set
+                if current_ai.circle_center.is_none() {
+                    current_ai.circle_center = Some(player_pos);
+                }
+
+                if let Some(center) = current_ai.circle_center {
+                    // Generate circular movement around the center
+                    let target = pathfinder.circular_move(
+                        dog_pos,
+                        center,
+                        res.world_state.seed,
+                        res.time.tick,
+                    );
+                    if let Some(target_pos) = target {
+                        // Try to path to the circular target
+                        pathfinder.find_next_step(
+                            dog_pos,
+                            target_pos,
+                            is_passable,
+                            res.world_state.seed,
+                            res.time.tick,
+                        )
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            }
+            DogBehavior::Wandering => {
+                // Just wander randomly
+                let directions = [
+                    (-1, -1),
+                    (-1, 0),
+                    (-1, 1),
+                    (0, -1),
+                    (0, 1),
+                    (1, -1),
+                    (1, 0),
+                    (1, 1),
+                ];
+                let random_index = ((res.world_state.seed + res.time.tick + dog_pos.x as u64)
+                    % directions.len() as u64) as usize;
+                let (dx, dy) = directions[random_index];
+
+                let wander_pos = Position {
+                    x: dog_pos.x + dx,
+                    y: dog_pos.y + dy,
+                    z: dog_pos.z,
+                };
+
+                if is_passable(wander_pos) {
+                    Some(wander_pos)
+                } else {
+                    None
+                }
+            }
+        };
+
+        // Move the dog if we have a valid next position
+        if let Some(new_pos) = next_pos {
+            tracing::info!(
+                "Moving dog from {:?} to {:?} (behavior: {:?})",
+                dog_pos,
+                new_pos,
+                current_ai.behavior
+            );
             if let Ok(mut pos) = world.get::<&mut Position>(dog_entity) {
-                pos.x = new_x;
-                pos.y = new_y;
+                *pos = new_pos;
+            }
+        } else {
+            tracing::info!(
+                "Dog at {:?} found no valid move (behavior: {:?})",
+                dog_pos,
+                current_ai.behavior
+            );
+        }
+
+        // Update or insert AI state
+        if world.get::<&DogAI>(dog_entity).is_err() {
+            world.insert_one(dog_entity, current_ai).ok();
+        } else {
+            if let Ok(mut ai) = world.get::<&mut DogAI>(dog_entity) {
+                *ai = current_ai;
             }
         }
     }
