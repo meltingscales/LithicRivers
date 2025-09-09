@@ -373,25 +373,33 @@ pub fn feral_dog_system(world: &mut World, res: &mut Resources) {
             behavior: DogBehavior::Hunting,
             behavior_timer: 20, // Start with 20 tick behavior
             circle_center: None,
+            steps_taken: 0,
         });
 
         // Update behavior timer
         current_ai.behavior_timer = current_ai.behavior_timer.saturating_sub(1);
 
-        // Check if we should change behavior
-        if current_ai.behavior_timer == 0 {
+        // Check if we should change behavior (timer expired or too many steps taken)
+        if current_ai.behavior_timer == 0 || current_ai.steps_taken >= 12 {
+            tracing::info!(
+                "Dog behavior change: timer={}, steps_taken={}, old_behavior={:?}",
+                current_ai.behavior_timer,
+                current_ai.steps_taken,
+                current_ai.behavior
+            );
             current_ai.behavior = DogBehavior::next_behavior(
                 current_ai.behavior,
                 res.world_state.seed,
                 res.time.tick,
                 dog_pos,
             );
-            // Set new behavior timer
+            // Set new behavior timer and reset steps
             current_ai.behavior_timer = match current_ai.behavior {
                 DogBehavior::Hunting => 15 + ((res.time.tick + dog_pos.x as u64) % 10),
                 DogBehavior::Circling => 8 + ((res.time.tick + dog_pos.y as u64) % 5),
                 DogBehavior::Wandering => 5 + ((res.time.tick + dog_pos.x as u64) % 8),
             };
+            current_ai.steps_taken = 0; // Reset step counter
         }
 
         // Rarely skip movement (5% chance for more active dogs)
@@ -586,19 +594,22 @@ pub fn feral_dog_system(world: &mut World, res: &mut Resources) {
         // Move the dog if we have a valid next position
         if let Some(new_pos) = next_pos {
             tracing::info!(
-                "Moving dog from {:?} to {:?} (behavior: {:?})",
+                "Moving dog from {:?} to {:?} (behavior: {:?}, steps_taken: {})",
                 dog_pos,
                 new_pos,
-                current_ai.behavior
+                current_ai.behavior,
+                current_ai.steps_taken
             );
             if let Ok(mut pos) = world.get::<&mut Position>(dog_entity) {
                 *pos = new_pos;
+                current_ai.steps_taken += 1; // Increment step counter after successful move
             }
         } else {
             tracing::info!(
-                "Dog at {:?} found no valid move (behavior: {:?})",
+                "Dog at {:?} found no valid move (behavior: {:?}, steps_taken: {})",
                 dog_pos,
-                current_ai.behavior
+                current_ai.behavior,
+                current_ai.steps_taken
             );
         }
 

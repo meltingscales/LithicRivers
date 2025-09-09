@@ -40,6 +40,7 @@ pub struct DogAI {
     pub behavior: crate::pathfinding::DogBehavior,
     pub behavior_timer: u64, // Ticks remaining in current behavior
     pub circle_center: Option<Position>, // Center for circular movement
+    pub steps_taken: u32,    // Steps taken in current behavior (reset on behavior change)
 }
 
 /// Component for entities that can engage in combat
