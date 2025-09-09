@@ -48,7 +48,7 @@ impl Move {
             name: "Melee".to_string(),
             move_type: MoveType::Melee,
             energy_cost: 0,
-            execution_time_ticks: 15,
+            execution_time_ticks: 5,
             damage: 10,
             description: "Basic melee attack".to_string(),
         }
@@ -59,7 +59,7 @@ impl Move {
             name: "Tackle".to_string(),
             move_type: MoveType::Tackle,
             energy_cost: 20,
-            execution_time_ticks: 80,
+            execution_time_ticks: 10,
             damage: 15,
             description: "Pushes enemy back 2 spaces, 50% chance to stun for 600 ticks".to_string(),
         }
@@ -70,7 +70,7 @@ impl Move {
             name: "Fireball (AoE)".to_string(),
             move_type: MoveType::Fireball,
             energy_cost: 40,
-            execution_time_ticks: 40,
+            execution_time_ticks: 12,
             damage: 30,
             description: "Area of effect fire damage".to_string(),
         }
@@ -81,7 +81,7 @@ impl Move {
             name: "Escape".to_string(),
             move_type: MoveType::Escape,
             energy_cost: 20,
-            execution_time_ticks: 25,
+            execution_time_ticks: 15,
             damage: 0,
             description: "Flee from combat, adds BattleDelay".to_string(),
         }
@@ -103,7 +103,7 @@ impl Move {
             name: "Heal".to_string(),
             move_type: MoveType::Heal,
             energy_cost: 30,
-            execution_time_ticks: 20,
+            execution_time_ticks: 10,
             damage: 0,
             description: "Restore health".to_string(),
         }
@@ -114,7 +114,7 @@ impl Move {
             name: "Shield".to_string(),
             move_type: MoveType::Shield,
             energy_cost: 25,
-            execution_time_ticks: 10,
+            execution_time_ticks: 5,
             damage: 0,
             description: "Block incoming attacks".to_string(),
         }
@@ -125,7 +125,7 @@ impl Move {
             name: "Lightning Bolt".to_string(),
             move_type: MoveType::LightningBolt,
             energy_cost: 50,
-            execution_time_ticks: 30,
+            execution_time_ticks: 10,
             damage: 40,
             description: "Fast electric attack".to_string(),
         }
@@ -136,7 +136,7 @@ impl Move {
             name: "Power Strike".to_string(),
             move_type: MoveType::PowerStrike,
             energy_cost: 40,
-            execution_time_ticks: 40,
+            execution_time_ticks: 13,
             damage: 50,
             description: "Powerful melee attack".to_string(),
         }
