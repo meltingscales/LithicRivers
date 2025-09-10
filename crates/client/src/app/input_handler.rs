@@ -645,6 +645,12 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
 
         // Use selected move (Space/Enter) - queue the action instead of immediate execution
         if app.ui.keybinds.matches("ui", "MENU_ACTIVATE", &key) {
+            // Check if combat is actually active before allowing move queuing
+            if !app.core.game.res.player_state.combat_active {
+                app.core.game.res.log("Cannot use moves - not in combat!".to_string());
+                return Ok(());
+            }
+
             // Get the player entity
             if let Some(player_entity) = app.core.game.get_player_entity() {
                 // Get available moves and selected move
@@ -669,7 +675,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
 
                     // Find target entity if needed
                     let target_entity = if *current_move != 3 {
-                        // Not escape move
+                        // Not escape move - need a target
                         // Find the actual entity for the selected enemy
                         let mut enemy_count = 0;
                         let mut target = None;
@@ -687,11 +693,21 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
                             if entity == player_entity || !combat.triggered {
                                 continue;
                             }
+                            // Skip dead enemies
+                            if app.core.game.world.get::<&lithicrivers_core::components::Dead>(entity).is_ok() {
+                                continue;
+                            }
                             if enemy_count == *current_enemy {
                                 target = Some(entity);
                                 break;
                             }
                             enemy_count += 1;
+                        }
+                        
+                        // Validate we have a target for moves that need one
+                        if target.is_none() {
+                            app.core.game.res.log("No valid target for this move!".to_string());
+                            return Ok(());
                         }
                         target
                     } else {

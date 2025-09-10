@@ -33,7 +33,8 @@
       "Bash(RUSTFLAGS='-Z unstable-options' RUSTDOCFLAGS='-Z unstable-options' RUSTC_BOOTSTRAP=1 rustup run nightly cargo test -p lithicrivers-core --lib systems::tests::test_combat_system_enemy_death -- --nocapture)",
       "Bash(RUSTFLAGS='-Z unstable-options' RUSTDOCFLAGS='-Z unstable-options' RUSTC_BOOTSTRAP=1 rustup run nightly cargo test -p lithicrivers-core --lib systems::tests::test_queue_cleanup_on_enemy_death -- --nocapture)",
       "Bash(RUST_BACKTRACE=1 RUSTFLAGS='-Z unstable-options' RUSTDOCFLAGS='-Z unstable-options' RUSTC_BOOTSTRAP=1 rustup run nightly cargo test -p lithicrivers-core --lib systems::tests::test_queue_cleanup_on_enemy_death -- --nocapture)",
-      "Bash(RUSTFLAGS='-Z unstable-options' RUSTDOCFLAGS='-Z unstable-options' RUSTC_BOOTSTRAP=1 rustup run nightly cargo test -p lithicrivers-core --lib systems::tests -- --nocapture)"
+      "Bash(RUSTFLAGS='-Z unstable-options' RUSTDOCFLAGS='-Z unstable-options' RUSTC_BOOTSTRAP=1 rustup run nightly cargo test -p lithicrivers-core --lib systems::tests -- --nocapture)",
+      "Bash(RUSTFLAGS='-Z unstable-options' RUSTDOCFLAGS='-Z unstable-options' RUSTC_BOOTSTRAP=1 rustup run nightly cargo test -p lithicrivers-core --lib systems::tests::test_centralized_cleanup_function -- --nocapture)"
     ],
     "deny": [],
     "ask": []
