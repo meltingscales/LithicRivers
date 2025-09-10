@@ -74,25 +74,8 @@ impl<'w> ComponentAccess<'w> {
                 // Mark as dead consistently
                 self.world.insert_one(entity, Dead).ok();
 
-                // Remove all queued actions targeting this dead entity from all other entities' queues
-                let mut entities_with_queues = Vec::new();
-                for (queue_entity, _) in self.world.query::<&crate::moves::ActionQueue>().iter() {
-                    entities_with_queues.push(queue_entity);
-                }
-
-                for queue_entity in entities_with_queues {
-                    if let Ok(mut queue) = self
-                        .world
-                        .get::<&mut crate::moves::ActionQueue>(queue_entity)
-                    {
-                        queue.remove_actions_targeting(entity);
-                    }
-                }
-
-                // Clear any action queues on the dead entity itself
-                if let Ok(mut queue) = self.world.get::<&mut crate::moves::ActionQueue>(entity) {
-                    queue.clear();
-                }
+                // Use centralized cleanup function
+                crate::systems::cleanup_actions_targeting_dead_entity(self.world, entity);
 
                 // Remove combat capability
                 self.world.remove_one::<Combat>(entity).ok();
