@@ -1,3 +1,8 @@
+# v0.8.1.0
+
+- dead enemies turn into corpses
+- allow looting corpses' items
+
 # v0.8.0.1
 
 - fix unit tests
