@@ -6,9 +6,14 @@
   - why is it tiny if steam launches it with crap font?
   - why does it look great when using gnome terminal?
 
-## combat polish
+## first quest and associated dungeons
 
-During combat, if you queue 10 moves against an enemy, and then you kill the enemy with your first move, the remaining 9 moves remain in the queue and waste time. If a move kills an enemy and there are still queued moves targetting the now-dead enemy, the remaining moves with a now-dead target should get removed. Also, we should display in the queue what the target of each player's move is.
+- use goxel (see `crates/client/assets/goxel/test.gox`) to design a multi-level dungeon that is the first quest
+- have a build step that exports .gox files to our weird custom .txt format
+  - store it in `src/bin/utility_goxel_exporter.rs` or something, next to our demos
+  - for now, just hardcode input/output paths in `utility_goxel_exporter.rs`...
+- add a Stairs block that you must use to traverse up/down in the world
+- add randomly generated loot that you can use to replace your Arm that's guaranteed to spawn in a specific chest near the assembly line
 
 ## Small temp list
 
