@@ -1104,7 +1104,7 @@ fn handle_entity_death(world: &mut World, res: &mut Resources, entity: hecs::Ent
     // Remove combat capability
     world.remove_one::<Combat>(entity).ok();
 
-    // For FeralDog entities, create a corpse with inventory
+    // For FeralDog entities, create a corpse with inventory and remove the original entity
     if is_feral_dog {
         if let Some(pos) = entity_pos {
             // Create corpse inventory with the items
@@ -1123,6 +1123,11 @@ fn handle_entity_death(world: &mut World, res: &mut Resources, entity: hecs::Ent
                 // Note: Corpses don't block movement and aren't combatants
             ));
             res.log("A corpse remains...".to_string());
+
+            // Remove the original FeralDog entity since it's been replaced by a corpse
+            if let Err(e) = world.despawn(entity) {
+                tracing::warn!(target: "combat", "Failed to despawn dead FeralDog entity {:?}: {}", entity, e);
+            }
         }
     }
 
@@ -1293,5 +1298,103 @@ mod tests {
         if let Ok(health) = world.get::<&Health>(player) {
             assert!(health.is_alive(), "Player should still be alive");
         };
+    }
+
+    #[test]
+    fn test_corpse_death_and_movement() {
+        // Setup a minimal world with player and feral dog
+        let mut world = World::new();
+        let mut res = Resources::new(12345);
+
+        // Create player at position (0, 0)
+        let _player = world.spawn((
+            Position { x: 0, y: 0, z: 0 },
+            Player,
+            GameEntity,
+            Health::new(100),
+            Energy::new(100),
+            ActionQueue::new(),
+            BlocksMovement,
+        ));
+
+        // Create a feral dog with inventory at position (1, 0)
+        let mut dog_inventory = Inventory::default();
+        dog_inventory.add(ItemKind::Leather, 2);
+        dog_inventory.add(ItemKind::Meat, 3);
+
+        let dog = world.spawn((
+            Position { x: 1, y: 0, z: 0 },
+            GameEntity,
+            EntityKind::FeralDog,
+            FeralDog,
+            Health::new(10), // Low health - will die easily
+            Combat::default(),
+            BlocksMovement, // Dogs block movement when alive
+            dog_inventory,
+        ));
+
+        // Kill the dog and verify corpse creation
+        handle_entity_death(&mut world, &mut res, dog);
+
+        // Verify the dog is gone (despawned)
+        assert!(
+            world.get::<&FeralDog>(dog).is_err(),
+            "Dog should be despawned"
+        );
+
+        // Find the corpse entity
+        let mut corpse_entity = None;
+        for (entity, (pos, kind)) in world.query::<(&Position, &EntityKind)>().iter() {
+            if *kind == EntityKind::Corpse && pos.x == 1 && pos.y == 0 && pos.z == 0 {
+                corpse_entity = Some(entity);
+                break;
+            }
+        }
+
+        let corpse = corpse_entity.expect("Corpse should exist at dog's former position");
+
+        // Verify corpse has the dog's inventory
+        if let Ok(corpse_inv) = world.get::<&Inventory>(corpse) {
+            let leather_count = corpse_inv
+                .slots
+                .iter()
+                .find(|s| s.kind == ItemKind::Leather)
+                .map(|s| s.qty)
+                .unwrap_or(0);
+            let meat_count = corpse_inv
+                .slots
+                .iter()
+                .find(|s| s.kind == ItemKind::Meat)
+                .map(|s| s.qty)
+                .unwrap_or(0);
+
+            assert_eq!(leather_count, 2, "Corpse should have 2 leather");
+            assert_eq!(meat_count, 3, "Corpse should have 3 meat");
+        } else {
+            panic!("Corpse should have an inventory");
+        }
+
+        // Most importantly: Verify corpse doesn't block movement
+        assert!(
+            world.get::<&BlocksMovement>(corpse).is_err(),
+            "Corpse should NOT have BlocksMovement component"
+        );
+
+        // Verify that movement system would not consider the corpse position blocked
+        let corpse_pos = world.get::<&Position>(corpse).unwrap();
+        let mut is_blocked_by_corpse = false;
+        for (_, (_, other_pos)) in world.query::<(&BlocksMovement, &Position)>().iter() {
+            if other_pos.x == corpse_pos.x
+                && other_pos.y == corpse_pos.y
+                && other_pos.z == corpse_pos.z
+            {
+                is_blocked_by_corpse = true;
+                break;
+            }
+        }
+        assert!(
+            !is_blocked_by_corpse,
+            "Corpse position should not be blocked by any BlocksMovement entity"
+        );
     }
 }
