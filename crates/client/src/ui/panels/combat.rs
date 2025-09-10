@@ -211,13 +211,46 @@ fn render_action_queue(f: &mut Frame, area: Rect, app: &mut crate::App) {
             // Show current action
             if let Some(current_action) = &queue.current_action {
                 let ticks = current_action.remaining_time_ticks;
-                let action_name = match &current_action.action {
-                    lithicrivers_core::moves::CombatAction::PlayerMove { move_data, .. } => {
-                        move_data.move_type.human_name()
+                let action_text = match &current_action.action {
+                    lithicrivers_core::moves::CombatAction::PlayerMove {
+                        move_data,
+                        target_entity,
+                        ..
+                    } => {
+                        if let Some(target) = target_entity {
+                            // Try to get target name from the world
+                            let target_name =
+                                if let Some(player_entity) = app.core.game.get_player_entity() {
+                                    if *target == player_entity {
+                                        "Player".to_string()
+                                    } else {
+                                        format!("Enemy {}", target.id())
+                                    }
+                                } else {
+                                    format!("Entity {}", target.id())
+                                };
+                            format!("{} → {}", move_data.move_type.human_name(), target_name)
+                        } else {
+                            format!("{} (no target)", move_data.move_type.human_name())
+                        }
                     }
-                    lithicrivers_core::moves::CombatAction::EnemyAttack { .. } => "Enemy Attack",
+                    lithicrivers_core::moves::CombatAction::EnemyAttack {
+                        target_entity, ..
+                    } => {
+                        let target_name =
+                            if let Some(player_entity) = app.core.game.get_player_entity() {
+                                if *target_entity == player_entity {
+                                    "Player".to_string()
+                                } else {
+                                    format!("Entity {}", target_entity.id())
+                                }
+                            } else {
+                                format!("Entity {}", target_entity.id())
+                            };
+                        format!("Enemy Attack → {}", target_name)
+                    }
                 };
-                lines.push(Line::from(format!("> {} ({}t)", action_name, ticks)));
+                lines.push(Line::from(format!("> {} ({}t)", action_text, ticks)));
             } else {
                 lines.push(Line::from("> Ready"));
             }
@@ -239,15 +272,48 @@ fn render_action_queue(f: &mut Frame, area: Rect, app: &mut crate::App) {
                         break;
                     }
 
-                    let action_name = match &action.action {
+                    let action_text = match &action.action {
                         lithicrivers_core::moves::CombatAction::PlayerMove {
-                            move_data, ..
-                        } => move_data.move_type.human_name(),
-                        lithicrivers_core::moves::CombatAction::EnemyAttack { .. } => {
-                            "Enemy Attack"
+                            move_data,
+                            target_entity,
+                            ..
+                        } => {
+                            if let Some(target) = target_entity {
+                                // Try to get target name from the world
+                                let target_name = if let Some(player_entity) =
+                                    app.core.game.get_player_entity()
+                                {
+                                    if *target == player_entity {
+                                        "Player".to_string()
+                                    } else {
+                                        format!("Enemy {}", target.id())
+                                    }
+                                } else {
+                                    format!("Entity {}", target.id())
+                                };
+                                format!("{} → {}", move_data.move_type.human_name(), target_name)
+                            } else {
+                                format!("{} (no target)", move_data.move_type.human_name())
+                            }
+                        }
+                        lithicrivers_core::moves::CombatAction::EnemyAttack {
+                            target_entity,
+                            ..
+                        } => {
+                            let target_name =
+                                if let Some(player_entity) = app.core.game.get_player_entity() {
+                                    if *target_entity == player_entity {
+                                        "Player".to_string()
+                                    } else {
+                                        format!("Entity {}", target_entity.id())
+                                    }
+                                } else {
+                                    format!("Entity {}", target_entity.id())
+                                };
+                            format!("Enemy Attack → {}", target_name)
                         }
                     };
-                    lines.push(Line::from(format!("* {}", action_name)));
+                    lines.push(Line::from(format!("* {}", action_text)));
                 }
             }
         } else {
@@ -339,13 +405,31 @@ fn render_moves(
         {
             if let Some(current_action) = &queue.current_action {
                 let ticks = current_action.remaining_time_ticks;
-                let action_name = match &current_action.action {
-                    lithicrivers_core::moves::CombatAction::PlayerMove { move_data, .. } => {
-                        move_data.move_type.human_name()
+                let action_text = match &current_action.action {
+                    lithicrivers_core::moves::CombatAction::PlayerMove {
+                        move_data,
+                        target_entity,
+                        ..
+                    } => {
+                        if let Some(target) = target_entity {
+                            let target_name =
+                                if let Some(player_entity) = app.core.game.get_player_entity() {
+                                    if *target == player_entity {
+                                        "Player".to_string()
+                                    } else {
+                                        format!("Enemy {}", target.id())
+                                    }
+                                } else {
+                                    format!("Entity {}", target.id())
+                                };
+                            format!("{} → {}", move_data.move_type.human_name(), target_name)
+                        } else {
+                            format!("{} (no target)", move_data.move_type.human_name())
+                        }
                     }
-                    _ => "Action",
+                    _ => "Action".to_string(),
                 };
-                format!("[z] {} ({}t)", action_name, ticks)
+                format!("[z] {} ({}t)", action_text, ticks)
             } else {
                 "[z] Ready".to_string()
             }

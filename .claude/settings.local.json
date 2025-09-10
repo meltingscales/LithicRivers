@@ -1,0 +1,41 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(make:*)",
+      "Bash(grep:*)",
+      "Bash(mkdir:*)",
+      "Bash(sed:*)",
+      "Bash(cargo check:*)",
+      "Bash(find:*)",
+      "Bash(rustup run nightly cargo clippy:*)",
+      "Bash(just clippy:*)",
+      "Bash(rustup run stable cargo check)",
+      "Bash(just build)",
+      "Bash(rustc:*)",
+      "Bash(rustup run nightly cargo build:*)",
+      "Bash(/dev/null)",
+      "Bash(cargo:*)",
+      "Bash(timeout 2s cargo run --bin lithicrivers-client)",
+      "Bash(timeout 3s cargo run --bin lithicrivers-client)",
+      "Bash(timeout 10s make build)",
+      "Bash(timeout 3s make build)",
+      "Bash(just test:*)",
+      "Bash(RUSTFLAGS='-Z unstable-options' RUSTDOCFLAGS='-Z unstable-options' RUSTC_BOOTSTRAP=1 rustup run nightly cargo test -p lithicrivers-core --lib systems::tests::test_combat_system_enemy_death)",
+      "Bash(timeout 10s cargo run --bin lithicrivers-client)",
+      "Bash(timeout:*)",
+      "Bash(cat:*)",
+      "Bash(RUSTFLAGS='-Z unstable-options' RUSTDOCFLAGS='-Z unstable-options' RUSTC_BOOTSTRAP=1 rustup run nightly cargo test -p lithicrivers-core --lib -- --nocapture)",
+      "Bash(RUSTFLAGS='-Z unstable-options' RUSTDOCFLAGS='-Z unstable-options' RUSTC_BOOTSTRAP=1 rustup run nightly cargo test -p lithicrivers-core --lib recipe_handler::tests::test_crafting save_load::tests::save_load_msgpack_roundtrip_after_actions)",
+      "Bash(RUSTFLAGS='-Z unstable-options' RUSTDOCFLAGS='-Z unstable-options' RUSTC_BOOTSTRAP=1 rustup run nightly cargo test -p lithicrivers-core --lib)",
+      "Bash(RUSTFLAGS='-Z unstable-options' RUSTDOCFLAGS='-Z unstable-options' RUSTC_BOOTSTRAP=1 rustup run nightly cargo test -p lithicrivers-core --lib pathfinding::tests)",
+      "Bash(RUSTFLAGS='-Z unstable-options' RUSTDOCFLAGS='-Z unstable-options' RUSTC_BOOTSTRAP=1 rustup run nightly cargo test -p lithicrivers-core --lib pathfinding::tests::test_pathfinding_efficiency_imperfection -- --nocapture)",
+      "Bash(RUSTFLAGS='-Z unstable-options' RUSTDOCFLAGS='-Z unstable-options' RUSTC_BOOTSTRAP=1 rustup run nightly cargo test -p lithicrivers-core --lib pathfinding::tests::test_dog_behavior_transitions -- --nocapture)",
+      "Bash(RUSTFLAGS='-Z unstable-options' RUSTDOCFLAGS='-Z unstable-options' RUSTC_BOOTSTRAP=1 rustup run nightly cargo test -p lithicrivers-core --lib systems::tests::test_combat_system_enemy_death -- --nocapture)",
+      "Bash(RUSTFLAGS='-Z unstable-options' RUSTDOCFLAGS='-Z unstable-options' RUSTC_BOOTSTRAP=1 rustup run nightly cargo test -p lithicrivers-core --lib systems::tests::test_queue_cleanup_on_enemy_death -- --nocapture)",
+      "Bash(RUST_BACKTRACE=1 RUSTFLAGS='-Z unstable-options' RUSTDOCFLAGS='-Z unstable-options' RUSTC_BOOTSTRAP=1 rustup run nightly cargo test -p lithicrivers-core --lib systems::tests::test_queue_cleanup_on_enemy_death -- --nocapture)",
+      "Bash(RUSTFLAGS='-Z unstable-options' RUSTDOCFLAGS='-Z unstable-options' RUSTC_BOOTSTRAP=1 rustup run nightly cargo test -p lithicrivers-core --lib systems::tests -- --nocapture)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

@@ -5,6 +5,7 @@ use std::collections::HashMap;
 pub enum BodyPartType {
     Head,
     Torso,
+    FusionCore,
     LeftArm,
     RightArm,
     LeftLeg,
@@ -146,6 +147,13 @@ impl Default for Body {
             100,
             "Torso",
             "Reinforced chassis",
+        );
+        insert(
+            BodyPartType::FusionCore,
+            BodyPartState::Damaged,
+            21,
+            "Fusion Core",
+            "Nearly limitless energy source, very degraded voltage output detected",
         );
         insert(
             BodyPartType::LeftArm,

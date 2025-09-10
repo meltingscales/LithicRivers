@@ -6,6 +6,10 @@
   - why is it tiny if steam launches it with crap font?
   - why does it look great when using gnome terminal?
 
+## combat polish
+
+During combat, if you queue 10 moves against an enemy, and then you kill the enemy with your first move, the remaining 9 moves remain in the queue and waste time. If a move kills an enemy and there are still queued moves targetting the now-dead enemy, the remaining moves with a now-dead target should get removed. Also, we should display in the queue what the target of each player's move is.
+
 ## Small temp list
 
 - structure gen seems like it gets "stretched" across infinite z?

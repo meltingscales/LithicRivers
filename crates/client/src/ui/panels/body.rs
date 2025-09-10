@@ -31,7 +31,7 @@ pub fn render_body_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
                     BodyPartState::Enhanced => ("Enhanced", Color::Cyan),
                 };
                 list_lines.push(Line::from(Span::styled(
-                    format!("{:>9}: {} ({})", p.name, label, p.integrity),
+                    format!("{:>15}: {} ({})", p.name, label, p.integrity),
                     Style::default().fg(color),
                 )));
             }

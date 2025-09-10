@@ -1096,7 +1096,19 @@ fn handle_entity_death(world: &mut World, res: &mut Resources, entity: hecs::Ent
     // Add Dead marker
     world.insert_one(entity, Dead).ok();
 
-    // Clear any action queues
+    // Remove all queued actions targeting this dead entity from all other entities' queues
+    let mut entities_with_queues = Vec::new();
+    for (queue_entity, _) in world.query::<&ActionQueue>().iter() {
+        entities_with_queues.push(queue_entity);
+    }
+
+    for queue_entity in entities_with_queues {
+        if let Ok(mut queue) = world.get::<&mut ActionQueue>(queue_entity) {
+            queue.remove_actions_targeting(entity);
+        }
+    }
+
+    // Clear any action queues on the dead entity itself
     if let Ok(mut queue) = world.get::<&mut ActionQueue>(entity) {
         queue.clear();
     }
@@ -1232,6 +1244,117 @@ mod tests {
     use super::*;
     use crate::components::{Energy, GameEntity, Health, Player};
     use crate::moves::{ActionQueue, CombatAction, MoveType, QueuedAction};
+
+    #[test]
+    fn test_queue_cleanup_on_enemy_death() {
+        // Setup a minimal world with player and enemy
+        let mut world = World::new();
+        let mut res = Resources::new(12345);
+
+        // Create player
+        let player = world.spawn((
+            Position { x: 0, y: 0, z: 0 },
+            Player,
+            GameEntity,
+            Health::new(100),
+            Energy::new(100),
+            ActionQueue::new(),
+        ));
+
+        // Create enemy with low health (will die from one hit)
+        let enemy = world.spawn((
+            Position { x: 1, y: 0, z: 0 },
+            GameEntity,
+            Health::new(10), // Low health - will die from melee attack
+            Combat::default(),
+        ));
+
+        // Create multiple player actions targeting the enemy
+        let action1 = QueuedAction {
+            entity: player,
+            action: CombatAction::PlayerMove {
+                move_data: Move::melee(),
+                target_entity: Some(enemy),
+                target_position: None,
+            },
+            execution_time_ticks: 150,
+            remaining_time_ticks: 1, // Will complete after 1 tick (kills enemy)
+        };
+
+        let action2 = QueuedAction {
+            entity: player,
+            action: CombatAction::PlayerMove {
+                move_data: Move::melee(),
+                target_entity: Some(enemy),
+                target_position: None,
+            },
+            execution_time_ticks: 150,
+            remaining_time_ticks: 150, // Should be removed when enemy dies
+        };
+
+        let action3 = QueuedAction {
+            entity: player,
+            action: CombatAction::PlayerMove {
+                move_data: Move::fireball(),
+                target_entity: Some(enemy),
+                target_position: None,
+            },
+            execution_time_ticks: 200,
+            remaining_time_ticks: 200, // Should be removed when enemy dies
+        };
+
+        // Add actions to player's queue
+        if let Ok(mut queue) = world.get::<&mut ActionQueue>(player) {
+            queue.queue_action(action1);
+            queue.queue_action(action2);
+            queue.queue_action(action3);
+            queue.start_next_action();
+        }
+
+        // Verify we have 3 actions initially (1 current, 2 queued)
+        if let Ok(queue) = world.get::<&ActionQueue>(player) {
+            assert!(queue.current_action.is_some(), "Should have current action");
+            assert_eq!(queue.actions.len(), 2, "Should have 2 queued actions");
+        }
+
+        // Process one tick of the action queue system - this should kill the enemy
+        action_queue_system(&mut world, &mut res);
+
+        // Verify the enemy is now dead
+        assert!(
+            world.get::<&Dead>(enemy).is_ok(),
+            "Enemy should be marked as Dead"
+        );
+
+        // Verify all remaining actions targeting the dead enemy are removed
+        if let Ok(queue) = world.get::<&ActionQueue>(player) {
+            // Current action should be None (or not targeting the dead enemy)
+            if let Some(current) = &queue.current_action {
+                if let CombatAction::PlayerMove { target_entity, .. } = &current.action {
+                    assert!(
+                        target_entity.map_or(true, |t| t != enemy),
+                        "Current action should not target dead enemy"
+                    );
+                }
+            }
+
+            // No queued actions should target the dead enemy
+            for action in &queue.actions {
+                if let CombatAction::PlayerMove { target_entity, .. } = &action.action {
+                    assert!(
+                        target_entity.map_or(true, |t| t != enemy),
+                        "Queued action should not target dead enemy"
+                    );
+                }
+            }
+        }
+
+        // Verify player is still alive
+        assert!(
+            world.get::<&Dead>(player).is_err(),
+            "Player should still be alive"
+        );
+    }
 
     #[test]
     fn test_combat_system_enemy_death() {

@@ -324,6 +324,43 @@ impl ActionQueue {
         self.actions.clear();
         self.current_action = None;
     }
+
+    /// Remove all actions targeting a specific dead entity
+    pub fn remove_actions_targeting(&mut self, dead_entity: Entity) {
+        // Check current action
+        if let Some(ref current) = self.current_action {
+            let should_remove_current = match &current.action {
+                CombatAction::PlayerMove { target_entity, .. } => {
+                    target_entity.map_or(false, |target| target == dead_entity)
+                }
+                CombatAction::EnemyAttack { target_entity, .. } => *target_entity == dead_entity,
+            };
+
+            if should_remove_current {
+                self.current_action = None;
+                // Don't immediately start next action - let the normal flow handle it
+                // This prevents starting another action that might also target the dead entity
+            }
+        }
+
+        // Remove queued actions targeting the dead entity
+        let original_len = self.actions.len();
+        self.actions.retain(|action| match &action.action {
+            CombatAction::PlayerMove { target_entity, .. } => {
+                target_entity.map_or(true, |target| target != dead_entity)
+            }
+            CombatAction::EnemyAttack { target_entity, .. } => *target_entity != dead_entity,
+        });
+        let _removed_count = original_len - self.actions.len();
+
+        // After removing actions, if we have no current action and there are remaining
+        // valid actions in the queue, start the next one
+        if self.current_action.is_none() && !self.actions.is_empty() {
+            self.start_next_action();
+        }
+
+        // Log was here but removed to avoid adding tracing dependency
+    }
 }
 
 /// Get a description of body state for display
