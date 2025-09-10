@@ -32,7 +32,7 @@ pub fn render_look_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
 
     // Entity and item info
     let mut any_entity = false;
-    for (_e, (e_pos, maybe_player, maybe_sr, maybe_drop)) in app
+    for (_e, (e_pos, maybe_player, maybe_sr, maybe_drop, maybe_inventory)) in app
         .core
         .game
         .world
@@ -41,11 +41,15 @@ pub fn render_look_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
             Option<&lithicrivers_core::components::Player>,
             Option<&lithicrivers_core::components::SpriteRef>,
             Option<&lithicrivers_core::components::DroppedItem>,
+            Option<&lithicrivers_core::components::Inventory>,
         )>()
         .iter()
     {
+        //are we at the right position?
         if *e_pos == pos {
             any_entity = true;
+
+            // determine if we have any entity.
             if maybe_player.is_some() {
                 lines.push(Line::from(Span::styled(
                     "Entity: Player",
@@ -64,11 +68,33 @@ pub fn render_look_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
             } else {
                 lines.push(Line::from(Span::raw("Entity: (unknown)")));
             }
+
+            //display inventory
+            if let Some(inventory) = maybe_inventory {
+                if inventory.slots.is_empty() {
+                    lines.push(Line::from(Span::raw("Entity Inventory: (empty)")));
+                } else {
+                    lines.push(Line::from(Span::raw("Entity Inventory:")));
+                    for item_stack in &inventory.slots {
+                        let item_name =
+                            lithicrivers_core::components::itemkind_name(item_stack.kind);
+
+                        lines.push(Line::from(Span::raw(format!(
+                            "  {} x{}",
+                            item_name, item_stack.qty
+                        ))));
+                    }
+                }
+            }
         }
     }
     if !any_entity {
         lines.push(Line::from(Span::raw("Entities: (none)")));
     }
+
+    // print the entity's inventory in the Look panel if it exists, with a special case for empty
+    //TODO: Claude: Please educate me on how to add this by showing me, not by editing the file yourself.
+    //  I'm a great Python developer but don't really know Rust well.
 
     lines.push(Line::from("Entity art:"));
     // Gather 12x8 art for entity under cursor (if any)
