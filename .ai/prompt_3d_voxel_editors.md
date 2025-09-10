@@ -1,0 +1,3 @@
+> What would be a good choice for making custom structures or maps? I know that @crates/client/assets/structures/small_temple.lrstructure/shape_layers.txt is one way to store it but...it's not really easy to visualize. Are there any low-res voxel 3D editors that I could then make a custom exporter for? I want to make the main questline's factory that's 10 miles away [- the first quest is to travel 10 miles to the robotics factory that made you to replace your damaged fusion core and fix your limbs. you remember the location. TODO add a maps and waypoint system.] and I want to design it by hand, but not in our shape_layers.txt  format because it's pretty limited.
+
+(TODO experiment with MagicaVoxel on windows, use it for our first quest)
