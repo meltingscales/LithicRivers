@@ -66,9 +66,10 @@ impl Corpse {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 enum UiMode {
     WorldMap,
+    SelectingCorpse(Vec<usize>), // List of adjacent corpse indices to choose from
     LootingCorpse(usize), // Index of corpse being looted
 }
 
@@ -80,6 +81,7 @@ struct App {
     ui_mode: UiMode,
     selected_loot_item: usize,
     selected_player_item: usize,
+    selected_corpse: usize, // For corpse selection mode
     loot_panel_focus: bool, // true = corpse inventory, false = player inventory
     should_quit: bool,
     message: Option<String>,
@@ -88,8 +90,9 @@ struct App {
 
 impl App {
     fn new() -> Self {
-        // Create some demo corpses with loot
+        // Create demo corpses showing multi-corpse selection scenarios
         let corpses = vec![
+            // Scenario 1: 2 corpses next to each other at (3,2) and (4,2)
             Corpse::new(
                 "Feral Dog",
                 3, 2,
@@ -99,20 +102,70 @@ impl App {
                 ],
             ),
             Corpse::new(
-                "Bandit",
-                7, 5,
-                vec![
-                    ItemStack { item: Item::Torch, quantity: 1 },
-                    ItemStack { item: Item::String, quantity: 4 },
-                    ItemStack { item: Item::Wood, quantity: 2 },
-                ],
-            ),
-            Corpse::new(
                 "Wolf",
-                2, 8,
+                4, 2,
                 vec![
                     ItemStack { item: Item::Meat, quantity: 1 },
                     ItemStack { item: Item::Leather, quantity: 1 },
+                ],
+            ),
+            // Scenario 2: 5 corpses clustered around (7,8) 
+            Corpse::new(
+                "Bandit Leader",
+                7, 8,
+                vec![
+                    ItemStack { item: Item::Torch, quantity: 2 },
+                    ItemStack { item: Item::String, quantity: 4 },
+                ],
+            ),
+            Corpse::new(
+                "Bandit Scout",
+                6, 8,
+                vec![
+                    ItemStack { item: Item::Wood, quantity: 3 },
+                    ItemStack { item: Item::String, quantity: 1 },
+                ],
+            ),
+            Corpse::new(
+                "Bandit Archer",
+                8, 8,
+                vec![
+                    ItemStack { item: Item::Wood, quantity: 2 },
+                    ItemStack { item: Item::String, quantity: 2 },
+                ],
+            ),
+            Corpse::new(
+                "Bandit Warrior",
+                7, 7,
+                vec![
+                    ItemStack { item: Item::Leather, quantity: 1 },
+                    ItemStack { item: Item::Meat, quantity: 2 },
+                ],
+            ),
+            Corpse::new(
+                "Bandit Mage",
+                7, 9,
+                vec![
+                    ItemStack { item: Item::Torch, quantity: 1 },
+                    ItemStack { item: Item::Stone, quantity: 3 },
+                ],
+            ),
+            // Single corpse for contrast
+            Corpse::new(
+                "Lone Traveler",
+                10, 4,
+                vec![
+                    ItemStack { item: Item::Wood, quantity: 1 },
+                    ItemStack { item: Item::Torch, quantity: 1 },
+                ],
+            ),
+            // Corpse directly under player starting position to test standing on corpse
+            Corpse::new(
+                "Fallen Hero",
+                5, 5,
+                vec![
+                    ItemStack { item: Item::Torch, quantity: 3 },
+                    ItemStack { item: Item::Stone, quantity: 2 },
                 ],
             ),
         ];
@@ -131,6 +184,7 @@ impl App {
             ui_mode: UiMode::WorldMap,
             selected_loot_item: 0,
             selected_player_item: 0,
+            selected_corpse: 0,
             loot_panel_focus: true,
             should_quit: false,
             message: None,
@@ -154,7 +208,8 @@ impl App {
         for (i, corpse) in self.corpses.iter().enumerate() {
             let dx = (corpse.x - self.player_x).abs();
             let dy = (corpse.y - self.player_y).abs();
-            if dx <= 1 && dy <= 1 && !(dx == 0 && dy == 0) {
+            // Include all 9 tiles: 3x3 grid centered on player (including player's tile)
+            if dx <= 1 && dy <= 1 {
                 adjacent.push(i);
             }
         }
@@ -164,8 +219,10 @@ impl App {
     fn try_interact(&mut self) {
         if matches!(self.ui_mode, UiMode::WorldMap) {
             let adjacent = self.get_adjacent_corpses();
-            if !adjacent.is_empty() {
-                // For demo, just interact with the first adjacent corpse
+            if adjacent.is_empty() {
+                self.set_message("No corpses nearby to loot".to_string());
+            } else if adjacent.len() == 1 {
+                // Single corpse - go directly to looting
                 let corpse_idx = adjacent[0];
                 self.ui_mode = UiMode::LootingCorpse(corpse_idx);
                 self.selected_loot_item = 0;
@@ -173,9 +230,25 @@ impl App {
                 self.loot_panel_focus = true;
                 self.set_message(format!("Looting {}", self.corpses[corpse_idx].name));
             } else {
-                self.set_message("No corpses nearby to loot".to_string());
+                // Multiple corpses - show selection screen
+                self.ui_mode = UiMode::SelectingCorpse(adjacent);
+                self.selected_corpse = 0;
+                self.set_message("Choose which corpse to loot".to_string());
             }
         }
+    }
+
+    fn select_corpse(&mut self, corpse_idx: usize) {
+        self.ui_mode = UiMode::LootingCorpse(corpse_idx);
+        self.selected_loot_item = 0;
+        self.selected_player_item = 0;
+        self.loot_panel_focus = true;
+        self.set_message(format!("Looting {}", self.corpses[corpse_idx].name));
+    }
+
+    fn cancel_corpse_selection(&mut self) {
+        self.ui_mode = UiMode::WorldMap;
+        self.set_message("Cancelled interaction".to_string());
     }
 
     fn close_loot_modal(&mut self) {
@@ -290,6 +363,25 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
                                 _ => {}
                             }
                         }
+                        UiMode::SelectingCorpse(ref adjacent_corpses) => {
+                            let corpses_clone = adjacent_corpses.clone();
+                            match key.code {
+                                KeyCode::Esc => app.cancel_corpse_selection(),
+                                KeyCode::Up => {
+                                    app.selected_corpse = app.selected_corpse.saturating_sub(1);
+                                }
+                                KeyCode::Down => {
+                                    app.selected_corpse = (app.selected_corpse + 1).min(corpses_clone.len().saturating_sub(1));
+                                }
+                                KeyCode::Enter => {
+                                    if app.selected_corpse < corpses_clone.len() {
+                                        let corpse_idx = corpses_clone[app.selected_corpse];
+                                        app.select_corpse(corpse_idx);
+                                    }
+                                }
+                                _ => {}
+                            }
+                        }
                         UiMode::LootingCorpse(corpse_idx) => {
                             match key.code {
                                 KeyCode::Esc => app.close_loot_modal(),
@@ -366,6 +458,11 @@ fn ui(f: &mut Frame, app: &App) {
     
     // Render instructions
     render_instructions(f, app, right_chunks[1]);
+
+    // Render corpse selection modal if selecting
+    if let UiMode::SelectingCorpse(ref adjacent_corpses) = app.ui_mode {
+        render_corpse_selection_modal(f, app, adjacent_corpses);
+    }
 
     // Render loot modal if in looting mode
     if let UiMode::LootingCorpse(corpse_idx) = app.ui_mode {
@@ -486,7 +583,19 @@ fn render_instructions(f: &mut Frame, app: &App, area: Rect) {
             "General:",
             "  q / Esc    Quit demo",
             "",
-            "Find corpses (%) to loot!",
+            "Try (3,2) for 2 corpses,",
+            "(7,8) for 5, or press 'i'",
+            "to loot corpse under you!",
+        ],
+        UiMode::SelectingCorpse(_) => vec![
+            "Multiple Corpses Found:",
+            "  ↑ ↓        Select corpse",
+            "  Enter      Loot selected",
+            "  Esc        Cancel",
+            "",
+            "Choose which corpse to",
+            "interact with from the",
+            "selection modal.",
         ],
         UiMode::LootingCorpse(_) => vec![
             "Looting Mode:",
@@ -507,6 +616,64 @@ fn render_instructions(f: &mut Frame, app: &App, area: Rect) {
         .style(Style::default().fg(Color::Cyan));
 
     f.render_widget(paragraph, area);
+}
+
+fn render_corpse_selection_modal(f: &mut Frame, app: &App, adjacent_corpses: &[usize]) {
+    // Create modal area (centered, 50% width, 40% height)
+    let area = centered_rect(50, 40, f.size());
+    
+    // Clear the background
+    f.render_widget(Clear, area);
+    
+    // Main modal block
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .title(" Choose Corpse to Loot ")
+        .title_alignment(Alignment::Center)
+        .style(Style::default().bg(Color::Black));
+    
+    let inner = block.inner(area);
+    f.render_widget(block, area);
+    
+    // Create list of corpses
+    let corpse_items: Vec<ListItem> = adjacent_corpses
+        .iter()
+        .enumerate()
+        .map(|(i, &corpse_idx)| {
+            let corpse = &app.corpses[corpse_idx];
+            let is_selected = app.selected_corpse == i;
+            let style = if is_selected {
+                Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
+            } else {
+                Style::default()
+            };
+
+            // Show corpse name and item count
+            let item_count = corpse.inventory.len();
+            let text = format!("{} ({} items)", corpse.name, item_count);
+
+            ListItem::new(Line::from(Span::styled(text, style)))
+        })
+        .collect();
+    
+    let list = List::new(corpse_items)
+        .highlight_style(Style::default().add_modifier(Modifier::BOLD));
+    
+    f.render_widget(list, inner);
+    
+    // Controls at bottom
+    let controls = Paragraph::new("↑↓: Select | Enter: Loot | Esc: Cancel")
+        .alignment(Alignment::Center)
+        .style(Style::default().fg(Color::Gray));
+    
+    let controls_area = Rect {
+        x: inner.x,
+        y: inner.y + inner.height - 1,
+        width: inner.width,
+        height: 1,
+    };
+    
+    f.render_widget(controls, controls_area);
 }
 
 fn render_loot_modal(f: &mut Frame, app: &App, corpse_idx: usize) {
