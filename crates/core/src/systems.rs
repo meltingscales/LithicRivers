@@ -1,7 +1,7 @@
 use crate::component_access::{ComponentAccess, ComponentUpdate, DamageResult};
 use crate::components::{
-    BattleDelay, BlocksMovement, Combat, Dead, DogAI, DroppedItem, Energy, FeralDog, GameEntity,
-    Inventory, ItemKind, Player, Position, Sheep, SpriteRef, Stunned,
+    BattleDelay, BlocksMovement, Combat, Dead, DogAI, DroppedItem, Energy, EntityKind, FeralDog,
+    GameEntity, Inventory, ItemKind, Player, Position, Sheep, SpriteRef, Stunned,
 };
 use crate::intent::PlayerAction;
 use crate::moves::{ActionQueue, CombatAction, Move, MoveType, QueuedAction};
@@ -1077,6 +1077,22 @@ fn apply_damage(
 
 /// Handle entity death - add Dead marker and clean up
 fn handle_entity_death(world: &mut World, res: &mut Resources, entity: hecs::Entity) {
+    // Check if it's a feral dog and get its position for corpse spawning
+    let is_feral_dog = world.get::<&FeralDog>(entity).is_ok();
+    let entity_pos = world.get::<&Position>(entity).ok().map(|p| *p);
+    let is_player = is_player_entity(world, entity);
+
+    // If it's a feral dog, collect inventory items before entity cleanup
+    let inventory_items = if is_feral_dog {
+        if let Ok(inv) = world.get::<&Inventory>(entity) {
+            inv.slots.clone()
+        } else {
+            vec![]
+        }
+    } else {
+        vec![]
+    };
+
     // Add Dead marker
     world.insert_one(entity, Dead).ok();
 
@@ -1088,8 +1104,30 @@ fn handle_entity_death(world: &mut World, res: &mut Resources, entity: hecs::Ent
     // Remove combat capability
     world.remove_one::<Combat>(entity).ok();
 
+    // For FeralDog entities, create a corpse with inventory
+    if is_feral_dog {
+        if let Some(pos) = entity_pos {
+            // Create corpse inventory with the items
+            let mut corpse_inventory = Inventory::default();
+            for item_stack in inventory_items {
+                corpse_inventory.add(item_stack.kind, item_stack.qty);
+            }
+
+            // Create a corpse entity
+            world.spawn((
+                pos,
+                GameEntity,
+                EntityKind::Corpse,
+                SpriteRef::new("entities", "corpse"),
+                corpse_inventory,
+                // Note: Corpses don't block movement and aren't combatants
+            ));
+            res.log("A corpse remains...".to_string());
+        }
+    }
+
     // Log death
-    if is_player_entity(world, entity) {
+    if is_player {
         res.log("You have died!".to_string());
         // TODO: Trigger game over state
     } else {

@@ -88,6 +88,12 @@ impl Game {
         // spawn 2 feral dogs a bit further
         let dog_positions = [(sx + 12, sy + 12, sz), (sx + 13, sy + 13, sz)];
         for (x, y, z) in dog_positions {
+            // Create dog inventory with 0-2 Leather and 1-3 Meat using deterministic RNG
+            let mut dog_rng = ChaCha20Rng::seed_from_u64(seed.wrapping_add((x + y + z) as u64));
+            let mut dog_inventory = Inventory::default();
+            dog_inventory.add(ItemKind::Leather, dog_rng.gen_range(0..=2));
+            dog_inventory.add(ItemKind::Meat, dog_rng.gen_range(1..=3));
+
             world.spawn((
                 Position { x, y, z },
                 GameEntity,
@@ -98,6 +104,7 @@ impl Game {
                 SpriteRef::new("entities", "feral_dog"),
                 BlocksMovement,
                 Combat::default(),
+                dog_inventory,
             ));
         }
 
@@ -107,6 +114,12 @@ impl Game {
         let combatTestZ = sz;
         let dog_positions = (5..=8).map(|n| (combatTestX + n, combatTestY + n, combatTestZ));
         for (x, y, z) in dog_positions {
+            // Create dog inventory with 0-2 Leather and 1-3 Meat using deterministic RNG
+            let mut dog_rng = ChaCha20Rng::seed_from_u64(seed.wrapping_add((x + y + z) as u64));
+            let mut dog_inventory = Inventory::default();
+            dog_inventory.add(ItemKind::Leather, dog_rng.gen_range(0..=2));
+            dog_inventory.add(ItemKind::Meat, dog_rng.gen_range(1..=3));
+
             world.spawn((
                 Position { x, y, z },
                 GameEntity,
@@ -117,6 +130,7 @@ impl Game {
                 SpriteRef::new("entities", "feral_dog"),
                 BlocksMovement,
                 Combat::default(),
+                dog_inventory,
             ));
         }
 
