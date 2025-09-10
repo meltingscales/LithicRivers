@@ -1026,6 +1026,27 @@ fn execute_enemy_attack(
     apply_damage(world, res, target_entity, damage, "enemy attack");
 }
 
+/// Centralized function to clean up all action queues targeting a dead entity
+pub fn cleanup_actions_targeting_dead_entity(world: &mut World, dead_entity: hecs::Entity) {
+    // Collect all entities with action queues to avoid borrowing conflicts
+    let mut entities_with_queues = Vec::new();
+    for (queue_entity, _) in world.query::<&ActionQueue>().iter() {
+        entities_with_queues.push(queue_entity);
+    }
+
+    // Remove actions targeting the dead entity from all queues
+    for queue_entity in entities_with_queues {
+        if let Ok(mut queue) = world.get::<&mut ActionQueue>(queue_entity) {
+            queue.remove_actions_targeting(dead_entity);
+        }
+    }
+
+    // Clear any action queues on the dead entity itself
+    if let Ok(mut queue) = world.get::<&mut ActionQueue>(dead_entity) {
+        queue.clear();
+    }
+}
+
 /// Apply damage to an entity using safe component access
 fn apply_damage(
     world: &mut World,
@@ -1096,22 +1117,8 @@ fn handle_entity_death(world: &mut World, res: &mut Resources, entity: hecs::Ent
     // Add Dead marker
     world.insert_one(entity, Dead).ok();
 
-    // Remove all queued actions targeting this dead entity from all other entities' queues
-    let mut entities_with_queues = Vec::new();
-    for (queue_entity, _) in world.query::<&ActionQueue>().iter() {
-        entities_with_queues.push(queue_entity);
-    }
-
-    for queue_entity in entities_with_queues {
-        if let Ok(mut queue) = world.get::<&mut ActionQueue>(queue_entity) {
-            queue.remove_actions_targeting(entity);
-        }
-    }
-
-    // Clear any action queues on the dead entity itself
-    if let Ok(mut queue) = world.get::<&mut ActionQueue>(entity) {
-        queue.clear();
-    }
+    // Use centralized cleanup function
+    cleanup_actions_targeting_dead_entity(world, entity);
 
     // Remove combat capability
     world.remove_one::<Combat>(entity).ok();
@@ -1354,6 +1361,136 @@ mod tests {
             world.get::<&Dead>(player).is_err(),
             "Player should still be alive"
         );
+    }
+
+    #[test]
+    fn test_centralized_cleanup_function() {
+        // Test the centralized cleanup function directly
+        let mut world = World::new();
+        let _res = Resources::new(12345);
+
+        // Create player and enemy entities
+        let player = world.spawn((
+            Position { x: 0, y: 0, z: 0 },
+            Player,
+            GameEntity,
+            ActionQueue::new(),
+        ));
+
+        let enemy1 = world.spawn((
+            Position { x: 1, y: 0, z: 0 },
+            GameEntity,
+            ActionQueue::new(),
+        ));
+
+        let enemy2 = world.spawn((
+            Position { x: 2, y: 0, z: 0 },
+            GameEntity,
+            ActionQueue::new(),
+        ));
+
+        // Create actions targeting enemy1 from multiple entities
+        let player_action = QueuedAction {
+            entity: player,
+            action: CombatAction::PlayerMove {
+                move_data: Move::melee(),
+                target_entity: Some(enemy1),
+                target_position: None,
+            },
+            execution_time_ticks: 150,
+            remaining_time_ticks: 150,
+        };
+
+        let enemy_action = QueuedAction {
+            entity: enemy2,
+            action: CombatAction::EnemyAttack {
+                target_entity: enemy1,
+                damage: 10,
+            },
+            execution_time_ticks: 100,
+            remaining_time_ticks: 100,
+        };
+
+        // Add actions to queues
+        if let Ok(mut queue) = world.get::<&mut ActionQueue>(player) {
+            queue.queue_action(player_action.clone());
+            queue.start_next_action();
+        }
+
+        if let Ok(mut queue) = world.get::<&mut ActionQueue>(enemy2) {
+            queue.queue_action(enemy_action.clone());
+            queue.start_next_action();
+        }
+
+        // Add an action queue to enemy1 itself
+        if let Ok(mut queue) = world.get::<&mut ActionQueue>(enemy1) {
+            queue.queue_action(QueuedAction {
+                entity: enemy1,
+                action: CombatAction::EnemyAttack {
+                    target_entity: player,
+                    damage: 5,
+                },
+                execution_time_ticks: 80,
+                remaining_time_ticks: 80,
+            });
+        }
+
+        // Verify initial state - should have actions targeting enemy1
+        assert!(world
+            .get::<&ActionQueue>(player)
+            .unwrap()
+            .current_action
+            .is_some());
+        assert!(world
+            .get::<&ActionQueue>(enemy2)
+            .unwrap()
+            .current_action
+            .is_some());
+        assert!(!world
+            .get::<&ActionQueue>(enemy1)
+            .unwrap()
+            .actions
+            .is_empty());
+
+        // Call centralized cleanup for enemy1
+        cleanup_actions_targeting_dead_entity(&mut world, enemy1);
+
+        // Verify cleanup worked
+        // Player's current action targeting enemy1 should be removed
+        if let Ok(queue) = world.get::<&ActionQueue>(player) {
+            if let Some(current) = &queue.current_action {
+                if let CombatAction::PlayerMove { target_entity, .. } = &current.action {
+                    assert!(
+                        target_entity.map_or(true, |t| t != enemy1),
+                        "Player should not have current action targeting enemy1"
+                    );
+                }
+            }
+        }
+
+        // Enemy2's current action targeting enemy1 should be removed
+        if let Ok(queue) = world.get::<&ActionQueue>(enemy2) {
+            if let Some(current) = &queue.current_action {
+                if let CombatAction::EnemyAttack { target_entity, .. } = &current.action {
+                    assert!(
+                        *target_entity != enemy1,
+                        "Enemy2 should not have current action targeting enemy1"
+                    );
+                }
+            }
+        }
+
+        // Enemy1's own queue should be cleared
+        assert!(world
+            .get::<&ActionQueue>(enemy1)
+            .unwrap()
+            .actions
+            .is_empty());
+        assert!(world
+            .get::<&ActionQueue>(enemy1)
+            .unwrap()
+            .current_action
+            .is_none());
     }
 
     #[test]
