@@ -70,6 +70,7 @@ pub struct PanelStates {
     pub credits: CreditsPanelState,
     pub help: HelpPanelState,
     pub look: LookPanelState,
+    pub corpse_looting: CorpseLootingState,
 }
 
 /// Inventory panel state
@@ -99,6 +100,28 @@ pub struct HelpPanelState {
 pub struct LookPanelState {
     pub mode: bool,
     pub cursor: Position,
+}
+
+/// Corpse looting interaction state
+#[derive(Debug, Clone, PartialEq)]
+pub enum CorpseLootingState {
+    None,
+    SelectingCorpse {
+        adjacent_entities: Vec<hecs::Entity>, // List of adjacent corpse entities
+        selected_corpse: usize,
+    },
+    LootingCorpse {
+        entity: hecs::Entity, // Entity being looted
+        selected_loot_item: usize,
+        selected_player_item: usize,
+        loot_panel_focus: bool, // true = corpse inventory, false = player inventory
+    },
+}
+
+impl Default for CorpseLootingState {
+    fn default() -> Self {
+        CorpseLootingState::None
+    }
 }
 
 /// Splash screen system state - handles startup sequence

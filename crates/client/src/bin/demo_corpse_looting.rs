@@ -21,7 +21,7 @@ impl Item {
     fn name(&self) -> &'static str {
         match self {
             Item::Leather => "Leather",
-            Item::Meat => "Meat", 
+            Item::Meat => "Meat",
             Item::Wood => "Wood",
             Item::Stone => "Stone",
             Item::String => "String",
@@ -34,7 +34,7 @@ impl Item {
             Item::Leather => 'L',
             Item::Meat => 'M',
             Item::Wood => 'W',
-            Item::Stone => 'S', 
+            Item::Stone => 'S',
             Item::String => 's',
             Item::Torch => 'T',
         }
@@ -70,7 +70,7 @@ impl Corpse {
 enum UiMode {
     WorldMap,
     SelectingCorpse(Vec<usize>), // List of adjacent corpse indices to choose from
-    LootingCorpse(usize), // Index of corpse being looted
+    LootingCorpse(usize),        // Index of corpse being looted
 }
 
 struct App {
@@ -95,85 +95,154 @@ impl App {
             // Scenario 1: 2 corpses next to each other at (3,2) and (4,2)
             Corpse::new(
                 "Feral Dog",
-                3, 2,
+                3,
+                2,
                 vec![
-                    ItemStack { item: Item::Leather, quantity: 2 },
-                    ItemStack { item: Item::Meat, quantity: 3 },
+                    ItemStack {
+                        item: Item::Leather,
+                        quantity: 2,
+                    },
+                    ItemStack {
+                        item: Item::Meat,
+                        quantity: 3,
+                    },
                 ],
             ),
             Corpse::new(
                 "Wolf",
-                4, 2,
+                4,
+                2,
                 vec![
-                    ItemStack { item: Item::Meat, quantity: 1 },
-                    ItemStack { item: Item::Leather, quantity: 1 },
+                    ItemStack {
+                        item: Item::Meat,
+                        quantity: 1,
+                    },
+                    ItemStack {
+                        item: Item::Leather,
+                        quantity: 1,
+                    },
                 ],
             ),
-            // Scenario 2: 5 corpses clustered around (7,8) 
+            // Scenario 2: 5 corpses clustered around (7,8)
             Corpse::new(
                 "Bandit Leader",
-                7, 8,
+                7,
+                8,
                 vec![
-                    ItemStack { item: Item::Torch, quantity: 2 },
-                    ItemStack { item: Item::String, quantity: 4 },
+                    ItemStack {
+                        item: Item::Torch,
+                        quantity: 2,
+                    },
+                    ItemStack {
+                        item: Item::String,
+                        quantity: 4,
+                    },
                 ],
             ),
             Corpse::new(
                 "Bandit Scout",
-                6, 8,
+                6,
+                8,
                 vec![
-                    ItemStack { item: Item::Wood, quantity: 3 },
-                    ItemStack { item: Item::String, quantity: 1 },
+                    ItemStack {
+                        item: Item::Wood,
+                        quantity: 3,
+                    },
+                    ItemStack {
+                        item: Item::String,
+                        quantity: 1,
+                    },
                 ],
             ),
             Corpse::new(
                 "Bandit Archer",
-                8, 8,
+                8,
+                8,
                 vec![
-                    ItemStack { item: Item::Wood, quantity: 2 },
-                    ItemStack { item: Item::String, quantity: 2 },
+                    ItemStack {
+                        item: Item::Wood,
+                        quantity: 2,
+                    },
+                    ItemStack {
+                        item: Item::String,
+                        quantity: 2,
+                    },
                 ],
             ),
             Corpse::new(
                 "Bandit Warrior",
-                7, 7,
+                7,
+                7,
                 vec![
-                    ItemStack { item: Item::Leather, quantity: 1 },
-                    ItemStack { item: Item::Meat, quantity: 2 },
+                    ItemStack {
+                        item: Item::Leather,
+                        quantity: 1,
+                    },
+                    ItemStack {
+                        item: Item::Meat,
+                        quantity: 2,
+                    },
                 ],
             ),
             Corpse::new(
                 "Bandit Mage",
-                7, 9,
+                7,
+                9,
                 vec![
-                    ItemStack { item: Item::Torch, quantity: 1 },
-                    ItemStack { item: Item::Stone, quantity: 3 },
+                    ItemStack {
+                        item: Item::Torch,
+                        quantity: 1,
+                    },
+                    ItemStack {
+                        item: Item::Stone,
+                        quantity: 3,
+                    },
                 ],
             ),
             // Single corpse for contrast
             Corpse::new(
                 "Lone Traveler",
-                10, 4,
+                10,
+                4,
                 vec![
-                    ItemStack { item: Item::Wood, quantity: 1 },
-                    ItemStack { item: Item::Torch, quantity: 1 },
+                    ItemStack {
+                        item: Item::Wood,
+                        quantity: 1,
+                    },
+                    ItemStack {
+                        item: Item::Torch,
+                        quantity: 1,
+                    },
                 ],
             ),
             // Corpse directly under player starting position to test standing on corpse
             Corpse::new(
                 "Fallen Hero",
-                5, 5,
+                5,
+                5,
                 vec![
-                    ItemStack { item: Item::Torch, quantity: 3 },
-                    ItemStack { item: Item::Stone, quantity: 2 },
+                    ItemStack {
+                        item: Item::Torch,
+                        quantity: 3,
+                    },
+                    ItemStack {
+                        item: Item::Stone,
+                        quantity: 2,
+                    },
                 ],
             ),
         ];
 
         // Player starts with some basic items
         let player_inventory = vec![
-            ItemStack { item: Item::Wood, quantity: 5 },
-            ItemStack { item: Item::Stone, quantity: 3 },
+            ItemStack {
+                item: Item::Wood,
+                quantity: 5,
+            },
+            ItemStack {
+                item: Item::Stone,
+                quantity: 3,
+            },
         ];
 
         Self {
@@ -196,7 +265,7 @@ impl App {
         if matches!(self.ui_mode, UiMode::WorldMap) {
             self.player_x += dx;
             self.player_y += dy;
-            
+
             // Keep player in bounds (simple demo bounds)
             self.player_x = self.player_x.clamp(0, 12);
             self.player_y = self.player_y.clamp(0, 12);
@@ -270,16 +339,20 @@ impl App {
         } else {
             None
         };
-        
+
         if let Some(name) = item_name {
             if let Some(corpse) = self.corpses.get_mut(corpse_idx) {
                 if let Some(item_stack) = corpse.inventory.get_mut(item_idx) {
                     if item_stack.quantity > 0 {
                         // Take one item
                         item_stack.quantity -= 1;
-                        
+
                         // Add to player inventory
-                        if let Some(player_stack) = self.player_inventory.iter_mut().find(|stack| stack.item == item_stack.item) {
+                        if let Some(player_stack) = self
+                            .player_inventory
+                            .iter_mut()
+                            .find(|stack| stack.item == item_stack.item)
+                        {
                             player_stack.quantity += 1;
                         } else {
                             self.player_inventory.push(ItemStack {
@@ -287,18 +360,20 @@ impl App {
                                 quantity: 1,
                             });
                         }
-                        
+
                         // Remove empty stacks
                         corpse.inventory.retain(|stack| stack.quantity > 0);
-                        
+
                         // Adjust selection if needed
-                        if self.selected_loot_item >= corpse.inventory.len() && corpse.inventory.len() > 0 {
+                        if self.selected_loot_item >= corpse.inventory.len()
+                            && corpse.inventory.len() > 0
+                        {
                             self.selected_loot_item = corpse.inventory.len() - 1;
                         }
                     }
                 }
             }
-            
+
             self.set_message(format!("Took {}", name));
         }
     }
@@ -350,19 +425,17 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
             if let Event::Key(key) = event::read()? {
                 if key.kind == KeyEventKind::Press {
                     match app.ui_mode {
-                        UiMode::WorldMap => {
-                            match key.code {
-                                KeyCode::Char('q') | KeyCode::Esc => {
-                                    app.should_quit = true;
-                                }
-                                KeyCode::Up => app.move_player(0, -1),
-                                KeyCode::Down => app.move_player(0, 1), 
-                                KeyCode::Left => app.move_player(-1, 0),
-                                KeyCode::Right => app.move_player(1, 0),
-                                KeyCode::Char('i') | KeyCode::Enter => app.try_interact(),
-                                _ => {}
+                        UiMode::WorldMap => match key.code {
+                            KeyCode::Char('q') | KeyCode::Esc => {
+                                app.should_quit = true;
                             }
-                        }
+                            KeyCode::Up => app.move_player(0, -1),
+                            KeyCode::Down => app.move_player(0, 1),
+                            KeyCode::Left => app.move_player(-1, 0),
+                            KeyCode::Right => app.move_player(1, 0),
+                            KeyCode::Char('i') | KeyCode::Enter => app.try_interact(),
+                            _ => {}
+                        },
                         UiMode::SelectingCorpse(ref adjacent_corpses) => {
                             let corpses_clone = adjacent_corpses.clone();
                             match key.code {
@@ -371,7 +444,8 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
                                     app.selected_corpse = app.selected_corpse.saturating_sub(1);
                                 }
                                 KeyCode::Down => {
-                                    app.selected_corpse = (app.selected_corpse + 1).min(corpses_clone.len().saturating_sub(1));
+                                    app.selected_corpse = (app.selected_corpse + 1)
+                                        .min(corpses_clone.len().saturating_sub(1));
                                 }
                                 KeyCode::Enter => {
                                     if app.selected_corpse < corpses_clone.len() {
@@ -382,46 +456,48 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
                                 _ => {}
                             }
                         }
-                        UiMode::LootingCorpse(corpse_idx) => {
-                            match key.code {
-                                KeyCode::Esc => app.close_loot_modal(),
-                                KeyCode::Left | KeyCode::Right => {
-                                    app.loot_panel_focus = !app.loot_panel_focus;
-                                }
-                                KeyCode::Up => {
-                                    if app.loot_panel_focus {
-                                        if let Some(corpse) = app.corpses.get(corpse_idx) {
-                                            if !corpse.inventory.is_empty() {
-                                                app.selected_loot_item = app.selected_loot_item.saturating_sub(1);
-                                            }
-                                        }
-                                    } else {
-                                        if !app.player_inventory.is_empty() {
-                                            app.selected_player_item = app.selected_player_item.saturating_sub(1);
-                                        }
-                                    }
-                                }
-                                KeyCode::Down => {
-                                    if app.loot_panel_focus {
-                                        if let Some(corpse) = app.corpses.get(corpse_idx) {
-                                            if !corpse.inventory.is_empty() {
-                                                app.selected_loot_item = (app.selected_loot_item + 1).min(corpse.inventory.len() - 1);
-                                            }
-                                        }
-                                    } else {
-                                        if !app.player_inventory.is_empty() {
-                                            app.selected_player_item = (app.selected_player_item + 1).min(app.player_inventory.len() - 1);
-                                        }
-                                    }
-                                }
-                                KeyCode::Enter => {
-                                    if app.loot_panel_focus {
-                                        app.take_item_from_corpse(corpse_idx, app.selected_loot_item);
-                                    }
-                                }
-                                _ => {}
+                        UiMode::LootingCorpse(corpse_idx) => match key.code {
+                            KeyCode::Esc => app.close_loot_modal(),
+                            KeyCode::Left | KeyCode::Right => {
+                                app.loot_panel_focus = !app.loot_panel_focus;
                             }
-                        }
+                            KeyCode::Up => {
+                                if app.loot_panel_focus {
+                                    if let Some(corpse) = app.corpses.get(corpse_idx) {
+                                        if !corpse.inventory.is_empty() {
+                                            app.selected_loot_item =
+                                                app.selected_loot_item.saturating_sub(1);
+                                        }
+                                    }
+                                } else {
+                                    if !app.player_inventory.is_empty() {
+                                        app.selected_player_item =
+                                            app.selected_player_item.saturating_sub(1);
+                                    }
+                                }
+                            }
+                            KeyCode::Down => {
+                                if app.loot_panel_focus {
+                                    if let Some(corpse) = app.corpses.get(corpse_idx) {
+                                        if !corpse.inventory.is_empty() {
+                                            app.selected_loot_item = (app.selected_loot_item + 1)
+                                                .min(corpse.inventory.len() - 1);
+                                        }
+                                    }
+                                } else {
+                                    if !app.player_inventory.is_empty() {
+                                        app.selected_player_item = (app.selected_player_item + 1)
+                                            .min(app.player_inventory.len() - 1);
+                                    }
+                                }
+                            }
+                            KeyCode::Enter => {
+                                if app.loot_panel_focus {
+                                    app.take_item_from_corpse(corpse_idx, app.selected_loot_item);
+                                }
+                            }
+                            _ => {}
+                        },
                     }
                 }
             }
@@ -452,10 +528,10 @@ fn ui(f: &mut Frame, app: &App) {
 
     // Render world map
     render_world_map(f, app, chunks[0]);
-    
+
     // Render player inventory
     render_player_inventory(f, app, right_chunks[0]);
-    
+
     // Render instructions
     render_instructions(f, app, right_chunks[1]);
 
@@ -476,9 +552,7 @@ fn ui(f: &mut Frame, app: &App) {
 }
 
 fn render_world_map(f: &mut Frame, app: &App, area: Rect) {
-    let block = Block::default()
-        .borders(Borders::ALL)
-        .title(" World Map ");
+    let block = Block::default().borders(Borders::ALL).title(" World Map ");
 
     let inner = block.inner(area);
     f.render_widget(block, area);
@@ -486,18 +560,22 @@ fn render_world_map(f: &mut Frame, app: &App, area: Rect) {
     // Create a mini world map
     let map_width = inner.width as usize;
     let map_height = inner.height as usize;
-    
+
     let mut map_content = String::new();
-    
+
     for y in 0..map_height {
         for x in 0..map_width {
             let world_x = x as i32;
             let world_y = y as i32;
-            
+
             // Check what's at this position
             if world_x == app.player_x && world_y == app.player_y {
                 map_content.push('@'); // Player
-            } else if let Some(_) = app.corpses.iter().find(|c| c.x == world_x && c.y == world_y) {
+            } else if let Some(_) = app
+                .corpses
+                .iter()
+                .find(|c| c.x == world_x && c.y == world_y)
+            {
                 map_content.push('%'); // Corpse
             } else {
                 map_content.push('.'); // Empty ground
@@ -508,9 +586,8 @@ fn render_world_map(f: &mut Frame, app: &App, area: Rect) {
         }
     }
 
-    let map_widget = Paragraph::new(map_content)
-        .style(Style::default().fg(Color::Green));
-    
+    let map_widget = Paragraph::new(map_content).style(Style::default().fg(Color::Green));
+
     f.render_widget(map_widget, inner);
 
     // Show interaction hint
@@ -527,10 +604,9 @@ fn render_world_map(f: &mut Frame, app: &App, area: Rect) {
         width: area.width,
         height: 1,
     };
-    
+
     if hint_area.y < f.size().height {
-        let hint_widget = Paragraph::new(hint)
-            .style(Style::default().fg(Color::Yellow));
+        let hint_widget = Paragraph::new(hint).style(Style::default().fg(Color::Yellow));
         f.render_widget(hint_widget, hint_area);
     }
 }
@@ -540,16 +616,19 @@ fn render_player_inventory(f: &mut Frame, app: &App, area: Rect) {
         .borders(Borders::ALL)
         .title(" Player Inventory ");
 
-    let items_list: Vec<ListItem> = app.player_inventory
+    let items_list: Vec<ListItem> = app
+        .player_inventory
         .iter()
         .enumerate()
         .map(|(i, stack)| {
-            let is_selected = !app.loot_panel_focus && 
-                             matches!(app.ui_mode, UiMode::LootingCorpse(_)) && 
-                             app.selected_player_item == i;
-            
+            let is_selected = !app.loot_panel_focus
+                && matches!(app.ui_mode, UiMode::LootingCorpse(_))
+                && app.selected_player_item == i;
+
             let style = if is_selected {
-                Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
+                Style::default()
+                    .fg(Color::Yellow)
+                    .add_modifier(Modifier::BOLD)
             } else {
                 Style::default()
             };
@@ -561,16 +640,13 @@ fn render_player_inventory(f: &mut Frame, app: &App, area: Rect) {
         })
         .collect();
 
-    let list = List::new(items_list)
-        .block(block);
+    let list = List::new(items_list).block(block);
 
     f.render_widget(list, area);
 }
 
 fn render_instructions(f: &mut Frame, app: &App, area: Rect) {
-    let block = Block::default()
-        .borders(Borders::ALL)
-        .title(" Controls ");
+    let block = Block::default().borders(Borders::ALL).title(" Controls ");
 
     let instructions = match app.ui_mode {
         UiMode::WorldMap => vec![
@@ -621,20 +697,20 @@ fn render_instructions(f: &mut Frame, app: &App, area: Rect) {
 fn render_corpse_selection_modal(f: &mut Frame, app: &App, adjacent_corpses: &[usize]) {
     // Create modal area (centered, 50% width, 40% height)
     let area = centered_rect(50, 40, f.size());
-    
+
     // Clear the background
     f.render_widget(Clear, area);
-    
+
     // Main modal block
     let block = Block::default()
         .borders(Borders::ALL)
         .title(" Choose Corpse to Loot ")
         .title_alignment(Alignment::Center)
         .style(Style::default().bg(Color::Black));
-    
+
     let inner = block.inner(area);
     f.render_widget(block, area);
-    
+
     // Create list of corpses
     let corpse_items: Vec<ListItem> = adjacent_corpses
         .iter()
@@ -643,7 +719,9 @@ fn render_corpse_selection_modal(f: &mut Frame, app: &App, adjacent_corpses: &[u
             let corpse = &app.corpses[corpse_idx];
             let is_selected = app.selected_corpse == i;
             let style = if is_selected {
-                Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
+                Style::default()
+                    .fg(Color::Yellow)
+                    .add_modifier(Modifier::BOLD)
             } else {
                 Style::default()
             };
@@ -655,52 +733,52 @@ fn render_corpse_selection_modal(f: &mut Frame, app: &App, adjacent_corpses: &[u
             ListItem::new(Line::from(Span::styled(text, style)))
         })
         .collect();
-    
-    let list = List::new(corpse_items)
-        .highlight_style(Style::default().add_modifier(Modifier::BOLD));
-    
+
+    let list =
+        List::new(corpse_items).highlight_style(Style::default().add_modifier(Modifier::BOLD));
+
     f.render_widget(list, inner);
-    
+
     // Controls at bottom
     let controls = Paragraph::new("↑↓: Select | Enter: Loot | Esc: Cancel")
         .alignment(Alignment::Center)
         .style(Style::default().fg(Color::Gray));
-    
+
     let controls_area = Rect {
         x: inner.x,
         y: inner.y + inner.height - 1,
         width: inner.width,
         height: 1,
     };
-    
+
     f.render_widget(controls, controls_area);
 }
 
 fn render_loot_modal(f: &mut Frame, app: &App, corpse_idx: usize) {
     let corpse = &app.corpses[corpse_idx];
-    
+
     // Create modal area (centered, 70% width, 60% height)
     let area = centered_rect(70, 60, f.size());
-    
+
     // Clear the background
     f.render_widget(Clear, area);
-    
+
     // Main modal block
     let block = Block::default()
         .borders(Borders::ALL)
         .title(format!(" Looting {} ", corpse.name))
         .title_alignment(Alignment::Center)
         .style(Style::default().bg(Color::Black));
-    
+
     let inner = block.inner(area);
     f.render_widget(block, area);
-    
+
     // Split into two columns
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
         .split(inner);
-    
+
     // Left side: Corpse inventory
     let corpse_block = Block::default()
         .borders(Borders::ALL)
@@ -710,14 +788,17 @@ fn render_loot_modal(f: &mut Frame, app: &App, corpse_idx: usize) {
         } else {
             Style::default()
         });
-    
-    let corpse_items: Vec<ListItem> = corpse.inventory
+
+    let corpse_items: Vec<ListItem> = corpse
+        .inventory
         .iter()
         .enumerate()
         .map(|(i, stack)| {
             let is_selected = app.loot_panel_focus && app.selected_loot_item == i;
             let style = if is_selected {
-                Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
+                Style::default()
+                    .fg(Color::Yellow)
+                    .add_modifier(Modifier::BOLD)
             } else {
                 Style::default()
             };
@@ -728,10 +809,10 @@ fn render_loot_modal(f: &mut Frame, app: &App, corpse_idx: usize) {
             )))
         })
         .collect();
-    
+
     let corpse_list = List::new(corpse_items).block(corpse_block);
     f.render_widget(corpse_list, chunks[0]);
-    
+
     // Right side: Player inventory
     let player_block = Block::default()
         .borders(Borders::ALL)
@@ -741,14 +822,17 @@ fn render_loot_modal(f: &mut Frame, app: &App, corpse_idx: usize) {
         } else {
             Style::default()
         });
-    
-    let player_items: Vec<ListItem> = app.player_inventory
+
+    let player_items: Vec<ListItem> = app
+        .player_inventory
         .iter()
         .enumerate()
         .map(|(i, stack)| {
             let is_selected = !app.loot_panel_focus && app.selected_player_item == i;
             let style = if is_selected {
-                Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
+                Style::default()
+                    .fg(Color::Yellow)
+                    .add_modifier(Modifier::BOLD)
             } else {
                 Style::default()
             };
@@ -759,22 +843,22 @@ fn render_loot_modal(f: &mut Frame, app: &App, corpse_idx: usize) {
             )))
         })
         .collect();
-    
+
     let player_list = List::new(player_items).block(player_block);
     f.render_widget(player_list, chunks[1]);
-    
+
     // Controls at bottom
     let controls = Paragraph::new("←→: Switch Panel | ↑↓: Select | Enter: Take Item | Esc: Close")
         .alignment(Alignment::Center)
         .style(Style::default().fg(Color::Gray));
-    
+
     let controls_area = Rect {
         x: inner.x,
         y: inner.y + inner.height - 1,
         width: inner.width,
         height: 1,
     };
-    
+
     f.render_widget(controls, controls_area);
 }
 
@@ -785,11 +869,11 @@ fn render_message(f: &mut Frame, message: &str, area: Rect) {
         width: area.width,
         height: 1,
     };
-    
+
     let message_widget = Paragraph::new(message)
         .style(Style::default().fg(Color::Yellow).bg(Color::DarkGray))
         .alignment(Alignment::Center);
-    
+
     f.render_widget(message_widget, message_area);
 }
 

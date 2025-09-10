@@ -138,6 +138,7 @@ impl App {
                     mode: false,
                     cursor: look_cursor,
                 },
+                corpse_looting: CorpseLootingState::default(),
             },
             splash: SplashScreenState {
                 state: SplashState::Logo,
