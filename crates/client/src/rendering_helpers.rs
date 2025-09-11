@@ -183,7 +183,7 @@ pub fn build_body_ascii(body: &Body) -> Vec<Line<'static>> {
         let (part_type, present) = match marker {
             'H' => (BodyPartType::Head, true),
             'X' => (BodyPartType::Torso, true),
-            'F' => (BodyPartType::FusionCore, true),
+            'F' => (BodyPartType::PowerSource, true),
             'A' => (BodyPartType::LeftArm, true),
             'a' => (BodyPartType::RightArm, true),
             'L' => (BodyPartType::LeftLeg, true),

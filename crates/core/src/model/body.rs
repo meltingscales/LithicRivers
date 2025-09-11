@@ -5,7 +5,7 @@ use std::collections::HashMap;
 pub enum BodyPartType {
     Head,
     Torso,
-    FusionCore,
+    PowerSource,
     LeftArm,
     RightArm,
     LeftLeg,
@@ -149,7 +149,7 @@ impl Default for Body {
             "Reinforced chassis",
         );
         insert(
-            BodyPartType::FusionCore,
+            BodyPartType::PowerSource,
             BodyPartState::Damaged,
             21,
             "Fusion Core",
