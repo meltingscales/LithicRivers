@@ -140,6 +140,7 @@ impl App {
                 },
                 build: BuildPanelState::default(),
                 corpse_looting: CorpseLootingState::default(),
+                hotbar_assignment: HotbarAssignmentState::default(),
             },
             splash: SplashScreenState {
                 state: SplashState::Logo,
