@@ -178,6 +178,7 @@ pub enum ItemKind {
     WoodenShavings,
     Leather,
     Meat,
+    PlankBlock,
 }
 
 pub fn itemkind_name(kind: ItemKind) -> &'static str {
@@ -199,6 +200,7 @@ pub fn itemkind_name(kind: ItemKind) -> &'static str {
         ItemKind::WoodenShavings => "Wooden Shavings",
         ItemKind::Leather => "Leather",
         ItemKind::Meat => "Meat",
+        ItemKind::PlankBlock => "Plank Block",
     }
 }
 
@@ -221,6 +223,7 @@ pub fn itemkind_sprite_name(kind: ItemKind) -> &'static str {
         ItemKind::WoodenShavings => "wooden_shavings",
         ItemKind::Leather => "leather",
         ItemKind::Meat => "meat",
+        ItemKind::PlankBlock => "plank_block",
     }
 }
 

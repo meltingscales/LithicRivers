@@ -15,6 +15,7 @@ pub enum PaletteKey {
     ScrapElectronics,
     PlasteelScrap,
     Treasure,
+    PlankBlock,
     // Fluids
     Water,
     Oil,
