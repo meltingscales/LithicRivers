@@ -647,7 +647,10 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
         if app.ui.keybinds.matches("ui", "MENU_ACTIVATE", &key) {
             // Check if combat is actually active before allowing move queuing
             if !app.core.game.res.player_state.combat_active {
-                app.core.game.res.log("Cannot use moves - not in combat!".to_string());
+                app.core
+                    .game
+                    .res
+                    .log("Cannot use moves - not in combat!".to_string());
                 return Ok(());
             }
 
@@ -694,7 +697,13 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
                                 continue;
                             }
                             // Skip dead enemies
-                            if app.core.game.world.get::<&lithicrivers_core::components::Dead>(entity).is_ok() {
+                            if app
+                                .core
+                                .game
+                                .world
+                                .get::<&lithicrivers_core::components::Dead>(entity)
+                                .is_ok()
+                            {
                                 continue;
                             }
                             if enemy_count == *current_enemy {
@@ -703,10 +712,13 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
                             }
                             enemy_count += 1;
                         }
-                        
+
                         // Validate we have a target for moves that need one
                         if target.is_none() {
-                            app.core.game.res.log("No valid target for this move!".to_string());
+                            app.core
+                                .game
+                                .res
+                                .log("No valid target for this move!".to_string());
                             return Ok(());
                         }
                         target

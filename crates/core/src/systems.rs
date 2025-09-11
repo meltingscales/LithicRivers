@@ -883,7 +883,41 @@ fn execute_player_move(
         MoveType::Fireball => {
             if let Some(target) = target_entity {
                 apply_damage(world, res, target, move_data.damage, "fireball");
-                // TODO: Add AoE damage to nearby enemies
+                //TODO: Get all entities in a radius and apply splash damage
+                let target_xyz = if let Ok(pos) = world.get::<&Position>(target) {
+                    *pos
+                } else {
+                    player_pos // Fallback to player position if we can't get target position
+                };
+                let splash_radius = move_data
+                    .splash_radius
+                    .unwrap_or(panic!("Fireball missing splash radius"));
+                if splash_radius > 0 {
+                    for (entity, (pos, combat, _)) in
+                        world.query::<(&Position, &Combat, &GameEntity)>().iter()
+                    {
+                        if entity != target && entity != player_entity && combat.triggered {
+                            // Check if enemy is dead (skip dead enemies)
+                            if world.get::<&Dead>(entity).is_ok() {
+                                continue;
+                            }
+
+                            let dx = pos.x - target_xyz.x;
+                            let dy = pos.y - target_xyz.y;
+                            let distance_sq = dx * dx + dy * dy;
+
+                            if distance_sq <= (splash_radius * splash_radius) as i32 {
+                                apply_damage(
+                                    world,
+                                    res,
+                                    entity,
+                                    move_data.damage,
+                                    "fireball splash",
+                                );
+                            }
+                        }
+                    }
+                }
             }
         }
         MoveType::Tackle => {

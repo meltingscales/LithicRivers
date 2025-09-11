@@ -38,6 +38,7 @@ pub struct Move {
     pub move_type: MoveType,
     pub energy_cost: u32,
     pub execution_time_ticks: u64,
+    pub splash_radius: Option<i32>,
     pub damage: u32,
     pub description: String,
 }
@@ -49,6 +50,7 @@ impl Move {
             move_type: MoveType::Melee,
             energy_cost: 0,
             execution_time_ticks: 5,
+            splash_radius: None,
             damage: 10,
             description: "Basic melee attack".to_string(),
         }
@@ -60,6 +62,7 @@ impl Move {
             move_type: MoveType::Tackle,
             energy_cost: 20,
             execution_time_ticks: 10,
+            splash_radius: None,
             damage: 15,
             description: "Pushes enemy back 2 spaces, 50% chance to stun for 600 ticks".to_string(),
         }
@@ -71,6 +74,7 @@ impl Move {
             move_type: MoveType::Fireball,
             energy_cost: 40,
             execution_time_ticks: 12,
+            splash_radius: Some(1),
             damage: 30,
             description: "Area of effect fire damage".to_string(),
         }
@@ -82,6 +86,7 @@ impl Move {
             move_type: MoveType::Escape,
             energy_cost: 20,
             execution_time_ticks: 15,
+            splash_radius: None,
             damage: 0,
             description: "Flee from combat, adds BattleDelay".to_string(),
         }
@@ -93,6 +98,7 @@ impl Move {
             move_type: MoveType::DebugInstantKill,
             energy_cost: 0,
             execution_time_ticks: 5,
+            splash_radius: None,
             damage: 9999,
             description: "Debug instant kill".to_string(),
         }
@@ -104,6 +110,7 @@ impl Move {
             move_type: MoveType::Heal,
             energy_cost: 30,
             execution_time_ticks: 10,
+            splash_radius: None,
             damage: 0,
             description: "Restore health".to_string(),
         }
@@ -115,6 +122,7 @@ impl Move {
             move_type: MoveType::Shield,
             energy_cost: 25,
             execution_time_ticks: 5,
+            splash_radius: None,
             damage: 0,
             description: "Block incoming attacks".to_string(),
         }
@@ -126,6 +134,7 @@ impl Move {
             move_type: MoveType::LightningBolt,
             energy_cost: 50,
             execution_time_ticks: 10,
+            splash_radius: None,
             damage: 40,
             description: "Fast electric attack".to_string(),
         }
@@ -137,6 +146,7 @@ impl Move {
             move_type: MoveType::PowerStrike,
             energy_cost: 40,
             execution_time_ticks: 13,
+            splash_radius: None,
             damage: 50,
             description: "Powerful melee attack".to_string(),
         }
