@@ -306,8 +306,9 @@ fn battle_delay_timer_system_wrapper(
 }
 
 fn combat_trigger_system_wrapper(world: &mut World, res: &mut Resources) -> Option<SystemResults> {
-    let combat_state = crate::systems::combat_trigger_system(world, res);
-    let combat_triggered = matches!(combat_state, crate::systems::CombatState::CombatStarted);
+    let (_combat_state, tick_result) =
+        crate::combat_state_manager::CombatStateManager::update_combat_state(world, res);
+    let combat_triggered = tick_result.contains(crate::game::GameTickResult::CombatTriggered);
     Some(SystemResults {
         combat_triggered,
         ..Default::default()

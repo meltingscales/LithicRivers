@@ -18,12 +18,12 @@ fn is_stunned(world: &World, entity: hecs::Entity) -> bool {
 /// ECS Helper Functions for Systems
 
 /// Get the player entity using proper ECS query
-fn get_player_entity(world: &World) -> Option<hecs::Entity> {
+pub fn get_player_entity(world: &World) -> Option<hecs::Entity> {
     world.query::<&Player>().iter().next().map(|(e, _)| e)
 }
 
 /// Get player position using ECS query  
-fn get_player_position(world: &World) -> Option<Position> {
+pub fn get_player_position(world: &World) -> Option<Position> {
     world
         .query::<(&Player, &Position)>()
         .iter()
@@ -1036,14 +1036,8 @@ fn execute_player_move(
             // End combat for all nearby enemies
             end_combat_for_nearby_enemies(world, player_pos);
 
-            // Mark combat as inactive
-            res.player_state.combat_active = false;
-
-            // Clear the player's action queue since combat is ending
-            if let Ok(mut queue) = world.get::<&mut ActionQueue>(player_entity) {
-                queue.clear();
-                res.log("Action queue cleared after escape");
-            }
+            // Use centralized combat state manager to end combat
+            crate::combat_state_manager::CombatStateManager::force_end_combat(world, res);
         }
         MoveType::DebugInstantKill => {
             if let Some(target) = target_entity {

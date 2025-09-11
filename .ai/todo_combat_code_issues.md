@@ -17,12 +17,12 @@ Generated: 2025-01-27
 
 ### 🟡 **MEDIUM SEVERITY**
 
-#### 3. **Inconsistent Combat State Management** ⚡ *Medium Effort*
+#### 3. **Inconsistent Combat State Management** ⚡ *Medium Effort* ✅ **RESOLVED**
 - **Location**: Multiple files - combat state checked in various places
 - **Issue**: Combat state is checked/set in multiple places with different conditions
 - **Impact**: Possible states where combat UI shows but combat logic isn't active
-- **Fix**: Centralize combat state management in a single system
-- **Code Changes**: Create `CombatStateManager` system, consolidate all state transitions
+- **Fix**: ✅ Created centralized `CombatStateManager` system in `/home/melty/Git/LithicRivers/crates/core/src/combat_state_manager.rs`
+- **Code Changes**: ✅ Centralized all combat state transitions, replaced old `combat_trigger_system` usage in system_scheduler.rs
 
 #### 4. **Performance: O(n²) Queue Cleanup** ⚡ *Medium Effort*
 - **Location**: `cleanup_actions_targeting_dead_entity()` in `/home/melty/Git/LithicRivers/crates/core/src/systems.rs:1030`
@@ -79,7 +79,7 @@ Generated: 2025-01-27
 
 ### By Severity:
 - **High**: 0 issues ✅ (All resolved!)
-- **Medium**: 4 issues (performance/UX problems) 
+- **Medium**: 3 issues (performance/UX problems) - 1 resolved ✅
 - **Low**: 4 issues (polish/maintainability)
 
 ### By Effort:
