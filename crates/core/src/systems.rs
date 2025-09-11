@@ -706,7 +706,6 @@ pub fn battle_delay_timer_system(world: &mut World, _res: &mut Resources) {
 pub fn action_queue_system(world: &mut World, res: &mut Resources) {
     const DELTA_TICKS: u64 = 1; // Each game tick advances by 1
 
-    let mut completed_actions = Vec::new();
     let mut entities_with_queues = Vec::new();
 
     // Collect entities that have action queues
@@ -714,17 +713,24 @@ pub fn action_queue_system(world: &mut World, res: &mut Resources) {
         entities_with_queues.push(entity);
     }
 
-    // Process each entity's action queue
-    for entity in entities_with_queues {
-        if let Ok(mut queue) = world.get::<&mut ActionQueue>(entity) {
-            // Update timers and check for completed actions
-            if let Some(completed_action) = queue.update_timers(DELTA_TICKS) {
+    // Phase 1: Update all timers first (no entity state changes)
+    for entity in &entities_with_queues {
+        if let Ok(mut queue) = world.get::<&mut ActionQueue>(*entity) {
+            queue.advance_timers(DELTA_TICKS);
+        }
+    }
+
+    // Phase 2: Collect all completed actions
+    let mut completed_actions = Vec::new();
+    for entity in &entities_with_queues {
+        if let Ok(mut queue) = world.get::<&mut ActionQueue>(*entity) {
+            if let Some(completed_action) = queue.pop_completed_action() {
                 completed_actions.push(completed_action);
             }
         }
     }
 
-    // Execute all completed actions
+    // Phase 3: Execute all completed actions (entities may be killed here)
     for action in completed_actions {
         execute_combat_action(world, res, &action);
     }
@@ -818,6 +824,17 @@ fn execute_combat_action(world: &mut World, res: &mut Resources, action: &Queued
             target_entity,
             target_position,
         } => {
+            // Validate target is still alive if action requires a target
+            if let Some(target) = target_entity {
+                if world.get::<&Dead>(*target).is_ok() {
+                    res.events.combat_event(
+                        "Target is already dead, move wasted!".to_string(),
+                        res.time.tick,
+                    );
+                    return;
+                }
+            }
+
             execute_player_move(
                 world,
                 res,
@@ -831,6 +848,15 @@ fn execute_combat_action(world: &mut World, res: &mut Resources, action: &Queued
             target_entity,
             damage,
         } => {
+            // Validate target is still alive before attacking
+            if world.get::<&Dead>(*target_entity).is_ok() {
+                res.events.combat_event(
+                    "Enemy attacks a dead target, attack wasted!".to_string(),
+                    res.time.tick,
+                );
+                return;
+            }
+
             execute_enemy_attack(world, res, action.entity, *target_entity, *damage);
         }
     }

@@ -322,6 +322,32 @@ impl ActionQueue {
         None
     }
 
+    /// Advance timers without executing actions (Phase 1 of two-phase processing)
+    pub fn advance_timers(&mut self, delta_ticks: u64) {
+        // Start next action if none is current
+        if self.current_action.is_none() {
+            self.start_next_action();
+        }
+
+        // Update timer for current action
+        if let Some(ref mut current) = self.current_action {
+            current.remaining_time_ticks = current.remaining_time_ticks.saturating_sub(delta_ticks);
+        }
+    }
+
+    /// Pop a completed action if one is ready (Phase 2 of two-phase processing)
+    pub fn pop_completed_action(&mut self) -> Option<QueuedAction> {
+        if let Some(ref current) = self.current_action {
+            if current.remaining_time_ticks == 0 {
+                let completed = self.current_action.take();
+                // Start the next action for future ticks
+                self.start_next_action();
+                return completed;
+            }
+        }
+        None
+    }
+
     pub fn get_queued_actions(&self) -> &VecDeque<QueuedAction> {
         &self.actions
     }
