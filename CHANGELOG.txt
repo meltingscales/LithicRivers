@@ -1,3 +1,9 @@
+# v0.8.1.1
+
+- combat officially merged into release branch
+- combat behavior is more stable
+- added unit tests for combat
+
 # v0.8.1.0
 
 - dead enemies turn into corpses
