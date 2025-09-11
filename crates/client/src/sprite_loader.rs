@@ -128,6 +128,7 @@ impl SpriteLoader {
             EntityKind::Player => ("entities".to_string(), "player".to_string()),
             EntityKind::Sheep => ("entities".to_string(), "sheep".to_string()),
             EntityKind::FeralDog => ("entities".to_string(), "feral_dog".to_string()),
+            EntityKind::Corpse => ("entities".to_string(), "corpse".to_string()),
             _ => panic!("Unknown entity kind: {:?}", kind),
         }
     }

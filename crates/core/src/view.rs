@@ -1,4 +1,4 @@
-use crate::components::Position;
+use crate::components::{Player, Position};
 use crate::resources::Resources;
 use hecs::World;
 
@@ -11,14 +11,15 @@ pub struct RenderView {
 
 pub fn build_render_view(world: &World, res: &Resources) -> RenderView {
     // Provide minimal data to the client; sizing and rendering are handled there
-    let mut player_pos = Position { x: 0, y: 0, z: 0 };
-    if let Some(e) = res.player_entity {
-        if let Ok(p) = world.get::<&Position>(e) {
-            player_pos = *p;
-        }
-    }
+    let player_pos = world
+        .query::<(&Player, &Position)>()
+        .iter()
+        .next()
+        .map(|(_, (_, pos))| *pos)
+        .unwrap_or(Position { x: 0, y: 0, z: 0 });
+
     RenderView {
-        gametick: res.gametick,
+        gametick: res.time.tick,
         player_pos,
         map_lines: Vec::new(),
     }

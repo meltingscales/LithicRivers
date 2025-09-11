@@ -1,40 +1,44 @@
-use crate::components::*;
+use crate::components::{
+    BlocksMovement, Combat, DroppedItem, Energy, EntityKind, FeralDog, GameEntity, Glyph, Health,
+    Inventory, ItemKind, Player, Position, Sheep, SpriteRef,
+};
 use crate::model::body::Body;
 use crate::resources::Resources;
-use crate::systems::{
-    feral_dog_system, mining_system, move_player_system, pickup_system, stumbling_sheep_system,
-};
+use crate::system_scheduler::SystemScheduler;
 use crate::view::{build_render_view, RenderView};
 
-use anyhow::Result;
 use hecs::World;
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha20Rng;
 
+use bitflags::bitflags;
+
 pub struct Game {
     pub world: World,
     pub res: Resources,
+    pub scheduler: SystemScheduler,
+}
+
+bitflags! {
+    // What happened during a tick?
+    pub struct GameTickResult: u32 {
+        const MiningSuccess = 1 << 0;
+        const CombatTriggered = 1 << 1;
+        const CombatEnded = 1 << 2;
+        const NoAction = 1 << 3;
+    }
 }
 
 impl Game {
     pub fn new(seed: u64) -> Self {
         let mut world = World::new();
         let mut res = Resources::new(seed);
-        // Determine starting position from config (production environment)
-        let [sx, sy, sz] =
-            res.config
-                .get_vector_setting("world", "DEFAULT_PLAYER_POSITION", "production");
-        // Initialize viewport center to player's starting position
-        res.view_x = sx;
-        res.view_y = sy;
-        res.view_z = sz;
-        res.world.set_generation_z(sz);
-        // Read auto-pickup default from config
-        let auto_pickup_default = res
-            .config
-            .get_setting("inventory", "TOGGLE_ITEM_AUTO_PICKUP_DEFAULT_ENABLED")
-            .and_then(|v| v.as_bool())
-            .unwrap_or(true);
+        // Determine starting position from cached config
+        let [sx, sy, sz] = res.config.default_player_position;
+        // Note: viewport is now managed by client UI, not core game
+        // Core game no longer sets generation Z - let client manage viewport
+        // Read auto-pickup default from cached config
+        let auto_pickup_default = res.config.auto_pickup_enabled;
 
         // Build starting inventory
         let mut starting_inv = Inventory {
@@ -49,7 +53,7 @@ impl Game {
         starting_inv.add(ItemKind::String, 2);
 
         // Spawn a player entity with a Position and starting inventory
-        let player = world.spawn((
+        let _player = world.spawn((
             Position {
                 x: sx,
                 y: sy,
@@ -59,12 +63,13 @@ impl Game {
             EntityKind::Player,
             Player,
             Body::default(),
+            Energy::new(100),
             Glyph('@'),
             SpriteRef::new("entities", "player"),
             BlocksMovement,
             starting_inv,
         ));
-        res.player_entity = Some(player);
+        // Note: player_entity field will be removed - use ECS queries instead
         // Spawn several StumblingSheep near the player for visibility
         let sheep_positions = [(sx + 2, sy + 2, sz), (sx + 3, sy, sz), (sx, sy + 3, sz)];
         for (x, y, z) in sheep_positions {
@@ -73,6 +78,7 @@ impl Game {
                 GameEntity,
                 EntityKind::Sheep,
                 Sheep,
+                Health::new(50), // Sheep have 50 HP
                 Glyph('s'),
                 SpriteRef::new("entities", "sheep"),
                 BlocksMovement,
@@ -82,14 +88,49 @@ impl Game {
         // spawn 2 feral dogs a bit further
         let dog_positions = [(sx + 12, sy + 12, sz), (sx + 13, sy + 13, sz)];
         for (x, y, z) in dog_positions {
+            // Create dog inventory with 0-2 Leather and 1-3 Meat using deterministic RNG
+            let mut dog_rng = ChaCha20Rng::seed_from_u64(seed.wrapping_add((x + y + z) as u64));
+            let mut dog_inventory = Inventory::default();
+            dog_inventory.add(ItemKind::Leather, dog_rng.gen_range(0..=2));
+            dog_inventory.add(ItemKind::Meat, dog_rng.gen_range(1..=3));
+
             world.spawn((
                 Position { x, y, z },
                 GameEntity,
                 EntityKind::FeralDog,
                 FeralDog,
+                Health::new(80), // Feral dogs have 80 HP
                 Glyph('d'),
                 SpriteRef::new("entities", "feral_dog"),
                 BlocksMovement,
+                Combat::default(),
+                dog_inventory,
+            ));
+        }
+
+        //spawn 4 feral dogs a little far away, in a diagonal line to test combat
+        let combatTestX = -20;
+        let combatTestY = -20;
+        let combatTestZ = sz;
+        let dog_positions = (5..=8).map(|n| (combatTestX + n, combatTestY + n, combatTestZ));
+        for (x, y, z) in dog_positions {
+            // Create dog inventory with 0-2 Leather and 1-3 Meat using deterministic RNG
+            let mut dog_rng = ChaCha20Rng::seed_from_u64(seed.wrapping_add((x + y + z) as u64));
+            let mut dog_inventory = Inventory::default();
+            dog_inventory.add(ItemKind::Leather, dog_rng.gen_range(0..=2));
+            dog_inventory.add(ItemKind::Meat, dog_rng.gen_range(1..=3));
+
+            world.spawn((
+                Position { x, y, z },
+                GameEntity,
+                EntityKind::FeralDog,
+                FeralDog,
+                Health::new(80), // Feral dogs have 80 HP
+                Glyph('d'),
+                SpriteRef::new("entities", "feral_dog"),
+                BlocksMovement,
+                Combat::default(),
+                dog_inventory,
             ));
         }
 
@@ -122,7 +163,7 @@ impl Game {
                     for oy in -rad..=rad {
                         let px = tx + ox;
                         let py = ty + oy;
-                        let t = res.world.get_tile_cached(px, py, tz);
+                        let t = res.world_state.world.get_tile_cached(px, py, tz);
                         if !t.is_passable() {
                             continue;
                         }
@@ -160,44 +201,49 @@ impl Game {
                 ));
             }
         }
-        Self { world, res }
+        Self {
+            world,
+            res,
+            scheduler: SystemScheduler::new(),
+        }
     }
 
     pub fn queue_player_move(&mut self, dx: i32, dy: i32) {
-        self.res.player_move_intent = Some((dx, dy));
-        // Set the move cost so the next tick advances by this many ticks,
-        // using the player's Body.walk_speed_mult if available.
-        let mult: f32 = if let Some(e) = self.res.player_entity {
-            if let Ok(body) = self.world.get::<&Body>(e) {
-                body.walk_speed_modifier()
-            } else {
-                1.0
-            }
-        } else {
-            1.0
-        };
+        // Calculate move cost using player's Body modifiers
+        let mult: f32 = self
+            .get_player_component::<Body>()
+            .map(|body| body.walk_speed_modifier())
+            .unwrap_or(1.0);
         let base: f32 = 200.0;
         let cost = (base / mult.max(0.01)).round().max(1.0) as u64;
-        self.res.pending_tick_increase = Some(cost);
+
+        // Set movement intent with cost
+        self.res.player_state.intent = crate::intent::PlayerIntent::movement(dx, dy, 0, cost);
     }
 
-    /// Advance the game state by one tick.
-    /// Returns true if mining was successful during this tick, false otherwise.
-    pub fn tick(&mut self) -> bool {
-        // In the future, run an ordered system schedule.
-        // For now, just increment tick and maybe move the player slowly.
-        let inc = self.res.pending_tick_increase.take().unwrap_or(1);
-        self.res.gametick = self.res.gametick.saturating_add(inc);
+    /// Advance the game state by one tick using the system scheduler.
+    pub fn tick(&mut self) -> GameTickResult {
+        // Increment tick based on pending action cost
+        let inc = self.res.player_state.intent.cost().max(1);
+        self.res.time.tick = self.res.time.tick.saturating_add(inc);
 
-        // Process systems
-        let mining_success = mining_system(&mut self.world, &mut self.res);
-        move_player_system(&mut self.world, &mut self.res);
-        pickup_system(&mut self.world, &mut self.res);
-        feral_dog_system(&mut self.world, &mut self.res);
-        stumbling_sheep_system(&mut self.world, &mut self.res);
-        // combat_trigger_system(&mut self.world, &mut self.res);//TODO
+        // Run all systems through the scheduler
+        let system_results = self
+            .scheduler
+            .run_all_systems(&mut self.world, &mut self.res);
 
-        mining_success
+        let mut result = GameTickResult::NoAction;
+        if system_results.mining_success {
+            result |= GameTickResult::MiningSuccess;
+        }
+        if system_results.combat_triggered {
+            result |= GameTickResult::CombatTriggered;
+        }
+        if self.res.player_state.combat_ended_this_tick {
+            result |= GameTickResult::CombatEnded;
+        }
+
+        result
     }
 
     pub fn build_view(&self) -> RenderView {
@@ -205,20 +251,16 @@ impl Game {
     }
 
     pub fn queue_mine(&mut self) {
-        self.res.mining_intent = true;
         // Set an action cost similar to moving; could use Body modifiers later
-        let mult: f32 = if let Some(e) = self.res.player_entity {
-            if let Ok(body) = self.world.get::<&Body>(e) {
-                body.walk_speed_modifier()
-            } else {
-                1.0
-            }
-        } else {
-            1.0
-        };
+        let mult: f32 = self
+            .get_player_component::<Body>()
+            .map(|body| body.walk_speed_modifier())
+            .unwrap_or(1.0);
         let base: f32 = 300.0; // slightly slower than a normal move
         let cost = (base / mult.max(0.01)).round().max(1.0) as u64;
-        self.res.pending_tick_increase = Some(cost);
+
+        // Set mining intent with cost
+        self.res.player_state.intent = crate::intent::PlayerIntent::mine(cost);
     }
 
     // Convenience save/load wrappers
@@ -237,19 +279,75 @@ impl Game {
 
     /// Queue a vertical movement for the player by dz levels.
     pub fn queue_player_move_z(&mut self, dz: i32) {
-        self.res.player_move_intent_z = Some(dz);
         // Use same base cost as lateral movement for now
-        let mult: f32 = if let Some(e) = self.res.player_entity {
-            if let Ok(body) = self.world.get::<&Body>(e) {
-                body.walk_speed_modifier()
-            } else {
-                1.0
-            }
-        } else {
-            1.0
-        };
+        let mult: f32 = self
+            .get_player_component::<Body>()
+            .map(|body| body.walk_speed_modifier())
+            .unwrap_or(1.0);
         let base: f32 = 200.0;
         let cost = (base / mult.max(0.01)).round().max(1.0) as u64;
-        self.res.pending_tick_increase = Some(cost);
+
+        // Set vertical movement intent
+        self.res.player_state.intent = crate::intent::PlayerIntent::movement(0, 0, dz, cost);
+    }
+
+    // ECS Helper Functions - Replace direct player_entity access
+
+    /// Get the player entity using proper ECS query
+    pub fn get_player_entity(&self) -> Option<hecs::Entity> {
+        self.world.query::<&Player>().iter().next().map(|(e, _)| e)
+    }
+
+    /// Get player position using ECS query  
+    pub fn get_player_position(&self) -> Option<Position> {
+        self.world
+            .query::<(&Player, &Position)>()
+            .iter()
+            .next()
+            .map(|(_, (_, pos))| *pos)
+    }
+
+    /// Check if given entity is the player
+    pub fn is_player_entity(&self, entity: hecs::Entity) -> bool {
+        self.world.get::<&Player>(entity).is_ok()
+    }
+
+    /// Get player component of specified type
+    pub fn get_player_component<T: hecs::Component>(&self) -> Option<T>
+    where
+        T: Clone,
+    {
+        self.world
+            .query::<(&Player, &T)>()
+            .iter()
+            .next()
+            .map(|(_, (_, component))| component.clone())
+    }
+
+    /// Get mutable reference to player component
+    pub fn get_player_component_mut<T: hecs::Component>(&mut self) -> Option<hecs::RefMut<'_, T>> {
+        if let Some(player_entity) = self.get_player_entity() {
+            self.world.get::<&mut T>(player_entity).ok()
+        } else {
+            None
+        }
+    }
+
+    /// Apply function to player entity if it exists
+    pub fn with_player_entity<F, R>(&self, f: F) -> Option<R>
+    where
+        F: FnOnce(hecs::Entity) -> R,
+    {
+        self.get_player_entity().map(f)
+    }
+
+    /// End combat for all enemies near the player (used when manually exiting combat)
+    pub fn end_combat_around_player(&mut self) {
+        if let Some(player_pos) = self.get_player_position() {
+            crate::systems::end_combat_for_nearby_enemies(&mut self.world, player_pos);
+            self.res.player_state.combat_active = false;
+            self.res
+                .log("Ended combat for nearby enemies (manual exit)".to_string());
+        }
     }
 }

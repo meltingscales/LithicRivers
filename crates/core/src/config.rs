@@ -1,6 +1,5 @@
 use crate::default_config::default_config;
 use crate::keycode_mapping;
-use crossterm::event::KeyCode;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};

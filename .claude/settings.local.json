@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(make:*)",
+      "Bash(grep:*)",
+      "Bash(mkdir:*)",
+      "Bash(sed:*)",
+      "Bash(cargo check:*)",
+      "Bash(find:*)",
+      "Bash(rustup run nightly cargo clippy:*)",
+      "Bash(just clippy:*)",
+      "Bash(rustup run stable cargo check)",
+      "Bash(just build)",
+      "Bash(rustc:*)",
+      "Bash(rustup run nightly cargo build:*)",
+      "Bash(/dev/null)",
+      "Bash(cargo:*)",
+      "Bash(timeout 2s cargo run --bin lithicrivers-client)",
+      "Bash(timeout 3s cargo run --bin lithicrivers-client)",
+      "Bash(timeout 10s make build)",
+      "Bash(timeout 3s make build)",
+      "Bash(just test:*)",
+      "Bash(RUSTFLAGS='-Z unstable-options' RUSTDOCFLAGS='-Z unstable-options' RUSTC_BOOTSTRAP=1 rustup run nightly cargo test -p lithicrivers-core --lib systems::tests::test_combat_system_enemy_death)",
+      "Bash(timeout 10s cargo run --bin lithicrivers-client)",
+      "Bash(timeout:*)",
+      "Bash(cat:*)",
+      "Bash(rustup:*)",
+      "Bash(RUSTFLAGS=* rustup:*)",
+      "Bash(RUST_BACKTRACE=* RUSTFLAGS=* rustup:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
