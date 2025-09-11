@@ -876,23 +876,19 @@ fn execute_player_move(
             if let Some(target) = target_entity {
                 apply_damage(world, res, target, move_data.damage, "tackle");
 
-                // Store original enemy position before pushing
-                let original_enemy_pos = if let Ok(target_pos) = world.get::<&Position>(target) {
-                    *target_pos
-                } else {
-                    player_pos // Fallback to player position if we can't get target position
-                };
-
-                // Push effect - push enemy back 2 spaces
-                if let Ok(target_pos) = world.get::<&Position>(target) {
-                    let pushed_pos =
-                        crate::moves::calculate_push_position(player_pos, *target_pos, 2);
-                    if let Ok(mut pos) = world.get::<&mut Position>(target) {
-                        pos.x = pushed_pos.x;
-                        pos.y = pushed_pos.y;
-                        pos.z = pushed_pos.z;
-                    }
-                }
+                // Store original enemy position and push enemy back 2 spaces
+                let original_enemy_pos =
+                    if let Ok(mut target_pos) = world.get::<&mut Position>(target) {
+                        let original_pos = *target_pos;
+                        let pushed_pos =
+                            crate::moves::calculate_push_position(player_pos, original_pos, 2);
+                        target_pos.x = pushed_pos.x;
+                        target_pos.y = pushed_pos.y;
+                        target_pos.z = pushed_pos.z;
+                        original_pos
+                    } else {
+                        player_pos // Fallback to player position if we can't get target position
+                    };
 
                 // Move player into enemy's original space
                 if let Ok(mut player_position) = world.get::<&mut Position>(player_entity) {
