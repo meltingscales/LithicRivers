@@ -82,21 +82,55 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
         if app.panels.build.mode != BuildMode::Movement {
             let mut handled = false;
 
-            // Map QWEASDZXC to 9 directions:
-            // Q W E
-            // A S D
-            // Z X C
-            let direction_offset = match key {
-                KeyCode::Char('Q') | KeyCode::Char('q') => Some((-1, -1)), // Northwest
-                KeyCode::Char('W') | KeyCode::Char('w') => Some((0, -1)),  // North
-                KeyCode::Char('E') | KeyCode::Char('e') => Some((1, -1)),  // Northeast
-                KeyCode::Char('A') | KeyCode::Char('a') => Some((-1, 0)),  // West
-                KeyCode::Char('S') | KeyCode::Char('s') => Some((0, 0)), // Center (current position)
-                KeyCode::Char('D') | KeyCode::Char('d') => Some((1, 0)), // East
-                KeyCode::Char('Z') | KeyCode::Char('z') => Some((-1, 1)), // Southwest
-                KeyCode::Char('X') | KeyCode::Char('x') => Some((0, 1)), // South
-                KeyCode::Char('C') | KeyCode::Char('c') => Some((1, 1)), // Southeast
-                _ => None,
+            // Map build keys to 9 directions using keybind configuration
+            let direction_offset = match app.panels.build.mode {
+                BuildMode::Break => {
+                    if app.ui.keybinds.matches("build", "BREAK_NORTHWEST", &key) {
+                        Some((-1, -1))
+                    } else if app.ui.keybinds.matches("build", "BREAK_NORTH", &key) {
+                        Some((0, -1))
+                    } else if app.ui.keybinds.matches("build", "BREAK_NORTHEAST", &key) {
+                        Some((1, -1))
+                    } else if app.ui.keybinds.matches("build", "BREAK_WEST", &key) {
+                        Some((-1, 0))
+                    } else if app.ui.keybinds.matches("build", "BREAK_CENTER", &key) {
+                        Some((0, 0))
+                    } else if app.ui.keybinds.matches("build", "BREAK_EAST", &key) {
+                        Some((1, 0))
+                    } else if app.ui.keybinds.matches("build", "BREAK_SOUTHWEST", &key) {
+                        Some((-1, 1))
+                    } else if app.ui.keybinds.matches("build", "BREAK_SOUTH", &key) {
+                        Some((0, 1))
+                    } else if app.ui.keybinds.matches("build", "BREAK_SOUTHEAST", &key) {
+                        Some((1, 1))
+                    } else {
+                        None
+                    }
+                }
+                BuildMode::Place => {
+                    if app.ui.keybinds.matches("build", "PLACE_NORTHWEST", &key) {
+                        Some((-1, -1))
+                    } else if app.ui.keybinds.matches("build", "PLACE_NORTH", &key) {
+                        Some((0, -1))
+                    } else if app.ui.keybinds.matches("build", "PLACE_NORTHEAST", &key) {
+                        Some((1, -1))
+                    } else if app.ui.keybinds.matches("build", "PLACE_WEST", &key) {
+                        Some((-1, 0))
+                    } else if app.ui.keybinds.matches("build", "PLACE_CENTER", &key) {
+                        Some((0, 0))
+                    } else if app.ui.keybinds.matches("build", "PLACE_EAST", &key) {
+                        Some((1, 0))
+                    } else if app.ui.keybinds.matches("build", "PLACE_SOUTHWEST", &key) {
+                        Some((-1, 1))
+                    } else if app.ui.keybinds.matches("build", "PLACE_SOUTH", &key) {
+                        Some((0, 1))
+                    } else if app.ui.keybinds.matches("build", "PLACE_SOUTHEAST", &key) {
+                        Some((1, 1))
+                    } else {
+                        None
+                    }
+                }
+                BuildMode::Movement => None, // This shouldn't happen due to outer condition
             };
 
             if let Some((dx, dy)) = direction_offset {

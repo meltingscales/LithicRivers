@@ -23,6 +23,27 @@ pub fn default_config() -> ConfigRoot {
             "PICKUP_ITEMS": ["r"],  // Quick grab
             "LOOK_TOGGLE": ["c"],   // Look around
         },
+        "build": {
+            "TOGGLE_BREAK_PLACE_MODE": ["v"], // Cycle break/place mode
+            "BREAK_NORTHWEST": ["Q"],
+            "BREAK_NORTH": ["W"],
+            "BREAK_NORTHEAST": ["E"],
+            "BREAK_WEST": ["A"],
+            "BREAK_CENTER": ["S"],
+            "BREAK_EAST": ["D"],
+            "BREAK_SOUTHWEST": ["Z"],
+            "BREAK_SOUTH": ["X"],
+            "BREAK_SOUTHEAST": ["C"],
+            "PLACE_NORTHWEST": ["Q"],
+            "PLACE_NORTH": ["W"],
+            "PLACE_NORTHEAST": ["E"],
+            "PLACE_WEST": ["A"],
+            "PLACE_CENTER": ["S"],
+            "PLACE_EAST": ["D"],
+            "PLACE_SOUTHWEST": ["Z"],
+            "PLACE_SOUTH": ["X"],
+            "PLACE_SOUTHEAST": ["C"]
+        },
         "ui": {
             "CLOSE_HELP_MENU": ["ESCAPE"],
             "OPEN_COMMAND_MENU": ["/"],

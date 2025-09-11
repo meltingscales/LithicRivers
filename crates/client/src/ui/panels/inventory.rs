@@ -117,9 +117,24 @@ pub fn render_inventory_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
         left_lines.push(Line::from(Span::raw(sd.description.clone())));
         left_lines.push(Line::from(""));
         left_lines.push(Line::from(Span::raw("Keys:")));
-        left_lines.push(Line::from(Span::raw("  d=drop")));
-        left_lines.push(Line::from(Span::raw("  .=duplicate")));
-        left_lines.push(Line::from(Span::raw("  x=destroy")));
+        left_lines.push(Line::from(Span::raw(format!(
+            "  {}=drop",
+            app.core
+                .config_manager
+                .get_printable_key_for_keybind("inventory", "DROP_ITEM")
+        ))));
+        left_lines.push(Line::from(Span::raw(format!(
+            "  {}=duplicate",
+            app.core
+                .config_manager
+                .get_printable_key_for_keybind("inventory", "CHEAT_DUPLICATE_ITEM")
+        ))));
+        left_lines.push(Line::from(Span::raw(format!(
+            "  {}=destroy",
+            app.core
+                .config_manager
+                .get_printable_key_for_keybind("inventory", "DESTROY_ITEM")
+        ))));
     } else {
         left_lines.push(Line::from(Span::raw("Select an item")));
     }

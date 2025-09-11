@@ -68,6 +68,62 @@ pub fn render_help_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
         movement_keys_list[6], movement_keys_list[7], movement_keys_list[8]
     )));
     lines.push(Line::from(Span::raw("")));
+
+    // Build mode keys visual layout
+    let build_keys_list = vec![
+        app.core
+            .config_manager
+            .get_printable_key_for_keybind("build", "BREAK_NORTHWEST"),
+        app.core
+            .config_manager
+            .get_printable_key_for_keybind("build", "BREAK_NORTH"),
+        app.core
+            .config_manager
+            .get_printable_key_for_keybind("build", "BREAK_NORTHEAST"),
+        app.core
+            .config_manager
+            .get_printable_key_for_keybind("build", "BREAK_WEST"),
+        app.core
+            .config_manager
+            .get_printable_key_for_keybind("build", "BREAK_CENTER"),
+        app.core
+            .config_manager
+            .get_printable_key_for_keybind("build", "BREAK_EAST"),
+        app.core
+            .config_manager
+            .get_printable_key_for_keybind("build", "BREAK_SOUTHWEST"),
+        app.core
+            .config_manager
+            .get_printable_key_for_keybind("build", "BREAK_SOUTH"),
+        app.core
+            .config_manager
+            .get_printable_key_for_keybind("build", "BREAK_SOUTHEAST"),
+    ];
+    lines.push(Line::from(Span::raw(format!(
+        "Build Mode Keys: Use '{}' to cycle Movement --> Break --> Place",
+        app.core
+            .config_manager
+            .get_printable_key_for_keybind("build", "TOGGLE_BREAK_PLACE_MODE")
+    ))));
+    lines.push(Line::from(Span::raw("")));
+    lines.push(Line::from(Span::raw(" NW N NE ")));
+    lines.push(Line::from(Span::raw(" W  .  E ")));
+    lines.push(Line::from(Span::raw(" SW S SE ")));
+    lines.push(Line::from(Span::raw("")));
+    lines.push(Line::from(Span::raw("Break/Place Keys: ")));
+    lines.push(Line::from(format!(
+        " {}  {}  {} ",
+        build_keys_list[0], build_keys_list[1], build_keys_list[2]
+    )));
+    lines.push(Line::from(format!(
+        " {}  {}  {} ",
+        build_keys_list[3], build_keys_list[4], build_keys_list[5]
+    )));
+    lines.push(Line::from(format!(
+        " {}  {}  {} ",
+        build_keys_list[6], build_keys_list[7], build_keys_list[8]
+    )));
+    lines.push(Line::from(Span::raw("")));
     // Group keybinds by category
     let mut categorized_binds: HashMap<String, Vec<(String, Vec<KeyCode>)>> = HashMap::new();
     for (key, value) in app.ui.keybinds.get_map() {
@@ -82,7 +138,7 @@ pub fn render_help_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
         }
     }
     // Define the order of categories
-    let categories = vec!["viewport", "scale", "action", "ui", "inventory"];
+    let categories = vec!["viewport", "scale", "action", "build", "ui", "inventory"];
     for category in categories {
         if let Some(binds) = categorized_binds.get(category) {
             let category_title = category.replace('_', " ");
