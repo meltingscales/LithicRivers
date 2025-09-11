@@ -12,6 +12,28 @@ use lithicrivers_core::{
 
 use crate::{ui::panels::get_player_inventory, App, CombatUiState, MenuTab, Scale, SplashState};
 
+/// Calculate the maximum scroll value for the credits panel
+fn get_max_credits_scroll(app: &App) -> u16 {
+    // Count lines in credits text and subtract visible area height
+    let line_count = app.panels.credits.text.lines().count() as u16;
+    // Assume panel height is around 20 lines (terminal height minus UI elements)
+    // This is a conservative estimate - in practice the panel might be larger
+    let visible_lines = 20;
+    line_count.saturating_sub(visible_lines)
+}
+
+/// Calculate the maximum scroll value for the help panel
+fn get_max_help_scroll(app: &App) -> u16 {
+    // For help panel, we need to count the dynamically generated lines
+    // This is an approximation based on the keybinds structure
+    let base_lines = 15; // Movement diagram and basic text
+    let keybind_categories = 5; // viewport, scale, action, ui, inventory
+    let avg_keybinds_per_category = 8;
+    let total_lines = base_lines + (keybind_categories * (avg_keybinds_per_category + 2)) as u16; // +2 for category header and spacing
+    let visible_lines = 20;
+    total_lines.saturating_sub(visible_lines)
+}
+
 pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
     // Handle splash screen skipping first
     if let Some(_start_time) = app.splash.start_time {
@@ -938,24 +960,36 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
     }
     // Credits scroll
     if app.ui.current_tab == MenuTab::Credits {
+        let max_scroll = get_max_credits_scroll(app);
         if app.ui.keybinds.matches("ui", "CREDITS_SCROLL_UP", &key) {
             app.panels.credits.scroll = app.panels.credits.scroll.saturating_sub(1);
             return Ok(());
         }
         if app.ui.keybinds.matches("ui", "CREDITS_SCROLL_DOWN", &key) {
-            app.panels.credits.scroll = app.panels.credits.scroll.saturating_add(1);
+            app.panels.credits.scroll =
+                (app.panels.credits.scroll.saturating_add(1)).min(max_scroll);
             return Ok(());
         }
     }
     // Help scroll
     if app.ui.current_tab == MenuTab::Help {
+        let max_scroll = get_max_help_scroll(app);
+        if app.ui.keybinds.matches("ui", "HELP_SCROLL_UP", &key) {
+            app.panels.help.scroll = app.panels.help.scroll.saturating_sub(1);
+            return Ok(());
+        }
+        if app.ui.keybinds.matches("ui", "HELP_SCROLL_DOWN", &key) {
+            app.panels.help.scroll = (app.panels.help.scroll.saturating_add(1)).min(max_scroll);
+            return Ok(());
+        }
+        // Fallback to arrow keys for help scrolling
         match key {
             KeyCode::Up => {
                 app.panels.help.scroll = app.panels.help.scroll.saturating_sub(1);
                 return Ok(());
             }
             KeyCode::Down => {
-                app.panels.help.scroll = app.panels.help.scroll.saturating_add(1);
+                app.panels.help.scroll = (app.panels.help.scroll.saturating_add(1)).min(max_scroll);
                 return Ok(());
             }
             _ => {}
@@ -965,6 +999,8 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
     if app.ui.keybinds.matches("viewport", "VIEW_Z_UP", &key) {
         if app.ui.current_tab == MenuTab::Credits {
             app.panels.credits.scroll = app.panels.credits.scroll.saturating_sub(10);
+        } else if app.ui.current_tab == MenuTab::Help {
+            app.panels.help.scroll = app.panels.help.scroll.saturating_sub(10);
         } else {
             app.ui.view_z = app.ui.view_z.saturating_add(1);
         }
@@ -972,7 +1008,12 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
     }
     if app.ui.keybinds.matches("viewport", "VIEW_Z_DOWN", &key) {
         if app.ui.current_tab == MenuTab::Credits {
-            app.panels.credits.scroll = app.panels.credits.scroll.saturating_add(10);
+            let max_scroll = get_max_credits_scroll(app);
+            app.panels.credits.scroll =
+                (app.panels.credits.scroll.saturating_add(10)).min(max_scroll);
+        } else if app.ui.current_tab == MenuTab::Help {
+            let max_scroll = get_max_help_scroll(app);
+            app.panels.help.scroll = (app.panels.help.scroll.saturating_add(10)).min(max_scroll);
         } else {
             app.ui.view_z = app.ui.view_z.saturating_sub(1);
         }

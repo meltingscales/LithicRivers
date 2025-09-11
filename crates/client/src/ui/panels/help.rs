@@ -4,7 +4,7 @@ use ratatui::{
     layout::{Alignment, Rect},
     style::{Color, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, Paragraph},
+    widgets::{Block, Borders, Paragraph, Wrap},
     Frame,
 };
 use std::collections::HashMap;
@@ -102,9 +102,11 @@ pub fn render_help_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
         }
     }
     let block = Block::default().borders(Borders::ALL).title("Help");
-    let _inner = block.inner(area);
+    let inner = block.inner(area);
     let p = Paragraph::new(lines)
         .alignment(Alignment::Left)
-        .block(block);
-    f.render_widget(p, area);
+        .wrap(Wrap { trim: false })
+        .scroll((app.panels.help.scroll, 0));
+    f.render_widget(p, inner);
+    f.render_widget(block, area);
 }
