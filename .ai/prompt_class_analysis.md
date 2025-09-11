@@ -1,0 +1,1 @@
+Run `just analyze-modules` and `just complexity` and give me a summary of what I should do to improve the codebase, and any good patterns you see as well. You can also run `just analyze-deps` to see what dependencies we're using.

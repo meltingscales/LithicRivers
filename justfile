@@ -41,9 +41,21 @@ install:
 security:
     {{cargoz_env}} audit
 
-# Run tests
-test:
+test: build
     {{cargoz_env}} test
+
+test-release: build-release
+    {{cargoz_env}} test --release
+
+# Run tests with coverage report using cargo-tarpaulin
+coverage:
+    @echo "Installing cargo-tarpaulin if not present..."
+    {{cargo_base}} install cargo-tarpaulin --locked
+    @echo "Running tests with coverage..."
+    # --verbose
+    {{cargoz_env}} tarpaulin --skip-clean --all-features --workspace --timeout 120 --out Html --out Xml --output-dir coverage/
+    @echo "Coverage report generated in coverage/ directory"
+    @echo "Open coverage/tarpaulin-report.html in your browser to view the report"
 
 clean:
     rm -rf target/debug/config/
@@ -54,6 +66,20 @@ clean:
     rm -f perf.data.old
     rm -f flamegraph.svg
     rm -rf steampipe_out/
+    rm -f *.speedscope
+    rm -f profile_cpu.svg
+    rm -f security-report.json
+    rm -f security-report.html
+    rm -f code-analysis.json
+    rm -f modules.svg
+    rm -f client-deps.svg
+    rm -f core-deps.svg
+    rm -f client-structure.txt
+    rm -f core-structure.txt
+    rm -f client-deps.txt
+    rm -f core-deps.txt
+    rm -f code-analysis.json
+    rm -rf coverage/
 
 git-data:
     git describe --tags --abbrev=0 > VERSION
@@ -93,17 +119,18 @@ stage-artifacts-legal:
     cp -f LICENSE artifacts/
     cp -f THIRD-PARTY-NOTICES.txt artifacts/
 
-stage-artifacts: build build-demos stage-artifacts-legal
+# Clean artifacts directory
+clean-artifacts:
     rm -rf artifacts/
     mkdir -p artifacts/
+
+stage-artifacts: clean-artifacts build build-demos stage-artifacts-legal
     cp -f target/debug/lithicrivers-client artifacts/
     cp -f target/debug/demo_* artifacts/
     cp -f scripts/launcher/lithicrivers-launcher.sh artifacts/
 
 # Stage release artifacts
-stage-artifacts-release: build-release build-demos-release stage-artifacts-legal
-    rm -rf artifacts/
-    mkdir -p artifacts/
+stage-artifacts-release: clean-artifacts build-release build-demos-release stage-artifacts-legal
     cp -f target/release/lithicrivers-client artifacts/
     cp -f target/release/demo_* artifacts/
     cp -f scripts/launcher/lithicrivers-launcher.sh artifacts/
@@ -117,6 +144,8 @@ build-demos: fmt
     {{cargoz_env}} build -p lithicrivers-client --bin demo_beezzaroll_sprite_test {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin demo_portrait_sprite_test {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin demo_combat_chrono_trigger {{build_flags}}
+    {{cargoz_env}} build -p lithicrivers-client --bin demo_dungeon_generation {{build_flags}}
+    {{cargoz_env}} build -p lithicrivers-client --bin demo_corpse_looting {{build_flags}}
 
 # Optional: build demo binaries (release)
 build-demos-release: fmt
@@ -127,6 +156,8 @@ build-demos-release: fmt
     {{cargoz_env}} build -p lithicrivers-client --bin demo_beezzaroll_sprite_test --release {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin demo_portrait_sprite_test --release {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin demo_combat_chrono_trigger --release {{build_flags}}
+    {{cargoz_env}} build -p lithicrivers-client --bin demo_dungeon_generation --release {{build_flags}}
+    {{cargoz_env}} build -p lithicrivers-client --bin demo_corpse_looting --release {{build_flags}}
 
 # Run debug build (alias for client)
 run-debug: client
@@ -171,6 +202,14 @@ demo-body:
 demo-combat-chrono-trigger:
     {{cargoz_env}} run -p lithicrivers-client --bin demo_combat_chrono_trigger
 
+# Run the dungeon generation demo
+demo-dungeon-generation:
+    {{cargoz_env}} run -p lithicrivers-client --bin demo_dungeon_generation
+
+# Run the corpse looting demo
+demo-corpse-looting:
+    {{cargoz_env}} run -p lithicrivers-client --bin demo_corpse_looting
+
 # Blind mode (not implemented)
 client-blind:
     @echo "Blind mode not implemented yet."
@@ -187,8 +226,44 @@ clippy:
 # tokei, code stats
 tokei:
     rustup run {{toolchain}} cargo install tokei --locked
-    rustup run {{toolchain}} tokei --sort lines
-    rustup run {{toolchain}} tokei --files --sort lines
+    rustup run {{toolchain}} tokei --sort lines --type rust
+    rustup run {{toolchain}} tokei --files --sort lines --type rust
+
+# Analyze module structure and dependencies
+analyze-modules:
+    {{cargo_base}} install cargo-modules --locked
+    @echo "=== Core crate structure ==="
+    {{cargo_base}} modules structure -p lithicrivers-core --lib
+    {{cargo_base}} modules structure -p lithicrivers-core --lib > core-structure.txt
+    @echo ""
+    @echo "=== Client main binary structure ==="
+    {{cargo_base}} modules structure -p lithicrivers-client --bin lithicrivers-client
+    {{cargo_base}} modules structure -p lithicrivers-client --bin lithicrivers-client > client-structure.txt
+    @echo "Use 'just analyze-deps' for dependency graph"
+
+# Analyze module dependencies as graph
+analyze-deps:
+    {{cargo_base}} install cargo-modules --locked
+
+    {{cargo_base}} modules dependencies -p lithicrivers-core --lib | dot -Tsvg > core-deps.svg
+    {{cargo_base}} modules dependencies -p lithicrivers-core --lib > core-deps.txt
+
+    {{cargo_base}} modules dependencies -p lithicrivers-client --bin lithicrivers-client | dot -Tsvg > client-deps.svg
+    {{cargo_base}} modules dependencies -p lithicrivers-client --bin lithicrivers-client > client-deps.txt
+    @echo "Dependency graphs saved to core-deps.svg and client-deps.svg"
+
+# Analyze code complexity using clippy
+complexity:
+    {{cargoz_env}} clippy --all-targets --all-features -- -W clippy::cognitive_complexity -W clippy::cyclomatic_complexity
+
+# Analyze code complexity and metrics (DEPRECATED - use 'complexity' instead)
+analyze-code:
+    @echo "WARNING: 'analyze-code' is deprecated. Use 'just complexity' for better output."
+    {{cargo_base}} install rust-code-analysis-cli --locked
+    rm -rf code-analysis/
+    mkdir -p code-analysis
+    ~/.cargo/bin/rust-code-analysis-cli -p crates/ --metrics -O json -o code-analysis/
+    @echo "Code analysis saved to code-analysis/ directory"
 
 # Show toolchain information
 toolchain:

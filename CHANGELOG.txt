@@ -1,3 +1,18 @@
+# v0.8.1.0
+
+- dead enemies turn into corpses
+- allow looting corpses' items
+
+# v0.8.0.1
+
+- fix unit tests
+- clean up combat actions and allow multi enemies to join
+
+# v0.8.0
+
+- combat release
+- still needs polish but technically functional
+
 # v0.7.6.2
 
 - add boot message and intro screens

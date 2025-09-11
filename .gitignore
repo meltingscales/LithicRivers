@@ -2,6 +2,7 @@
 .idea/
 __pycache__/
 *.log
+desktop.ini
 
 # build and distribution directories
 build/
@@ -9,6 +10,7 @@ dist/
 
 # game
 *.lithicriversworlddata
+config/
 
 # coverage stuff
 *.lcov
@@ -17,13 +19,21 @@ coverage/
 .run/
 htmlcov/
 
-# profiling
+# profiling/other tools
 *.speedscope
 profile_cpu.svg
-
-# security
 security-report.json
 security-report.html
+code-analysis.json
+modules.svg
+client-deps.svg
+core-deps.svg
+client-structure.txt
+core-structure.txt
+client-deps.txt
+core-deps.txt
+code-analysis.json
+code-analysis/
 
 # other
 *.pyc

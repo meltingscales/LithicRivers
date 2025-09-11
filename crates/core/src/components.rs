@@ -34,6 +34,122 @@ pub struct Sheep;
 #[derive(Debug, Clone, Copy)]
 pub struct FeralDog;
 
+/// AI behavior state for feral dogs
+#[derive(Debug, Clone, Copy)]
+pub struct DogAI {
+    pub behavior: crate::pathfinding::DogBehavior,
+    pub behavior_timer: u64, // Ticks remaining in current behavior
+    pub circle_center: Option<Position>, // Center for circular movement
+    pub steps_taken: u32,    // Steps taken in current behavior (reset on behavior change)
+}
+
+/// Component for entities that can engage in combat
+#[derive(Debug, Clone, Copy)]
+pub struct Combat {
+    pub triggered: bool,
+}
+
+impl Default for Combat {
+    fn default() -> Self {
+        Self { triggered: false }
+    }
+}
+
+/// Component for entities that have escaped combat and cannot re-engage for a while
+#[derive(Debug, Clone, Copy)]
+pub struct BattleDelay {
+    pub remaining_ticks: u64,
+}
+
+impl BattleDelay {
+    pub fn new(ticks: u64) -> Self {
+        Self {
+            remaining_ticks: ticks,
+        }
+    }
+}
+
+/// Component for entity health
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct Health {
+    pub current: u32,
+    pub max: u32,
+}
+
+impl Health {
+    pub fn new(max: u32) -> Self {
+        Self { current: max, max }
+    }
+
+    pub fn damage(&mut self, amount: u32) {
+        self.current = self.current.saturating_sub(amount);
+    }
+
+    pub fn heal(&mut self, amount: u32) {
+        self.current = (self.current + amount).min(self.max);
+    }
+
+    pub fn is_alive(&self) -> bool {
+        self.current > 0
+    }
+
+    pub fn percentage(&self) -> f32 {
+        if self.max == 0 {
+            0.0
+        } else {
+            self.current as f32 / self.max as f32
+        }
+    }
+}
+
+/// Component for entity energy (replaces mana)
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct Energy {
+    pub current: u32,
+    pub max: u32,
+}
+
+impl Energy {
+    pub fn new(max: u32) -> Self {
+        Self { current: max, max }
+    }
+
+    pub fn consume(&mut self, amount: u32) -> bool {
+        if self.current >= amount {
+            self.current -= amount;
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn restore(&mut self, amount: u32) {
+        self.current = (self.current + amount).min(self.max);
+    }
+
+    pub fn percentage(&self) -> f32 {
+        if self.max == 0 {
+            0.0
+        } else {
+            self.current as f32 / self.max as f32
+        }
+    }
+}
+
+/// Component for entities that are stunned
+#[derive(Debug, Clone, Copy)]
+pub struct Stunned {
+    pub remaining_ticks: u64,
+}
+
+impl Stunned {
+    pub fn new(ticks: u64) -> Self {
+        Self {
+            remaining_ticks: ticks,
+        }
+    }
+}
+
 /// Marker for entities that block movement
 #[derive(Debug, Clone, Copy)]
 pub struct BlocksMovement;
@@ -60,6 +176,8 @@ pub enum ItemKind {
     Rope,
     IronBar,
     WoodenShavings,
+    Leather,
+    Meat,
 }
 
 pub fn itemkind_name(kind: ItemKind) -> &'static str {
@@ -79,6 +197,8 @@ pub fn itemkind_name(kind: ItemKind) -> &'static str {
         ItemKind::Rope => "Rope",
         ItemKind::IronBar => "Iron Bar",
         ItemKind::WoodenShavings => "Wooden Shavings",
+        ItemKind::Leather => "Leather",
+        ItemKind::Meat => "Meat",
     }
 }
 
@@ -99,6 +219,8 @@ pub fn itemkind_sprite_name(kind: ItemKind) -> &'static str {
         ItemKind::Rope => "rope",
         ItemKind::IronBar => "ironbar",
         ItemKind::WoodenShavings => "wooden_shavings",
+        ItemKind::Leather => "leather",
+        ItemKind::Meat => "meat",
     }
 }
 
@@ -177,6 +299,10 @@ pub struct SpriteRef {
     pub category: String,
     pub name: String,
 }
+
+/// Marker component for entities that are dead
+#[derive(Debug, Clone, Copy)]
+pub struct Dead;
 
 impl SpriteRef {
     pub fn new(category: &str, name: &str) -> Self {

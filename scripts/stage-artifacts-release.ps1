@@ -1,6 +1,6 @@
-Remove-Item -Recurse -Force artifacts -ErrorAction SilentlyContinue
+Remove-Item -Recurse -Force "./artifacts/" -ErrorAction SilentlyContinue
 
-New-Item -ItemType Directory -Force -Path artifacts | Out-Null
+New-Item -ItemType Directory -Force -Path "./artifacts/" | Out-Null
 
 $bins = @(
     'target/release/lithicrivers-client.exe'
@@ -22,9 +22,16 @@ foreach ($b in $bins)
 { 
     if (Test-Path $b) 
     { 
-        Copy-Item -Force $b artifacts/ 
+        Copy-Item -Force $b "./artifacts/" 
     } 
 }
 
+# add changelog
+Copy-Item -Force CHANGELOG.txt "./artifacts/"
+
+# add license and third party notices
+Copy-Item -Force LICENSE.txt "./artifacts/"
+Copy-Item -Force THIRD-PARTY-NOTICES.txt "./artifacts/"
+
 # add launcher script
-Copy-Item -Force scripts/launcher/lithicrivers-launcher.bat artifacts/
+Copy-Item -Force scripts/launcher/lithicrivers-launcher.bat "./artifacts/"
