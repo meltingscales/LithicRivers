@@ -15,6 +15,7 @@ pub enum TileKind {
     ScrapElectronics,
     PlasteelScrap,
     Treasure,
+    PlankBlock,
 
     //special tile that gets replaced by existing worldgen
     ExistingWorldgen,
@@ -33,6 +34,7 @@ pub static TILE_KIND_STRS: &[&str] = &[
     "scrap_electronics",
     "plasteel_scrap",
     "treasure",
+    "plank_block",
     "existing_worldgen",
 ];
 
@@ -51,6 +53,7 @@ impl TileKind {
             TileKind::ScrapElectronics => "scrap_electronics",
             TileKind::PlasteelScrap => "plasteel_scrap",
             TileKind::Treasure => "treasure",
+            TileKind::PlankBlock => "plank_block",
             TileKind::ExistingWorldgen => "existing_worldgen",
         }
     }
@@ -68,6 +71,7 @@ impl TileKind {
             TileKind::ScrapElectronics => PaletteKey::ScrapElectronics,
             TileKind::PlasteelScrap => PaletteKey::PlasteelScrap,
             TileKind::Treasure => PaletteKey::Treasure,
+            TileKind::PlankBlock => PaletteKey::PlankBlock,
             TileKind::ExistingWorldgen => PaletteKey::ExistingWorldgen,
         }
     }
@@ -85,6 +89,7 @@ impl TileKind {
             "scrap_electronics" => Some(TileKind::ScrapElectronics),
             "plasteel_scrap" => Some(TileKind::PlasteelScrap),
             "treasure" => Some(TileKind::Treasure),
+            "plank_block" => Some(TileKind::PlankBlock),
             "existing_worldgen" => Some(TileKind::ExistingWorldgen),
             _ => None,
         }
@@ -104,6 +109,7 @@ impl TileKind {
             TileKind::ScrapElectronics => false,
             TileKind::PlasteelScrap => true,
             TileKind::Treasure => false,
+            TileKind::PlankBlock => false,
             TileKind::ExistingWorldgen => false,
         }
     }
@@ -128,6 +134,7 @@ mod tests {
             TileKind::ScrapElectronics,
             TileKind::PlasteelScrap,
             TileKind::Treasure,
+            TileKind::PlankBlock,
             TileKind::ExistingWorldgen,
         ];
         for &k in &kinds {

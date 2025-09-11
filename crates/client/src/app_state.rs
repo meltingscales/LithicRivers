@@ -70,6 +70,7 @@ pub struct PanelStates {
     pub credits: CreditsPanelState,
     pub help: HelpPanelState,
     pub look: LookPanelState,
+    pub build: BuildPanelState,
     pub corpse_looting: CorpseLootingState,
 }
 
@@ -100,6 +101,47 @@ pub struct HelpPanelState {
 pub struct LookPanelState {
     pub mode: bool,
     pub cursor: Position,
+}
+
+/// Build mode states: Movement -> Break -> Place
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BuildMode {
+    Movement,
+    Break,
+    Place,
+}
+
+impl BuildMode {
+    pub fn next(self) -> Self {
+        match self {
+            BuildMode::Movement => BuildMode::Break,
+            BuildMode::Break => BuildMode::Place,
+            BuildMode::Place => BuildMode::Movement,
+        }
+    }
+
+    pub fn name(self) -> &'static str {
+        match self {
+            BuildMode::Movement => "Movement",
+            BuildMode::Break => "Break",
+            BuildMode::Place => "Place",
+        }
+    }
+}
+
+/// Build mode panel state
+pub struct BuildPanelState {
+    pub mode: BuildMode,
+    pub selected_hotbar_slot: usize,
+}
+
+impl Default for BuildPanelState {
+    fn default() -> Self {
+        Self {
+            mode: BuildMode::Movement,
+            selected_hotbar_slot: 0,
+        }
+    }
 }
 
 /// Corpse looting interaction state

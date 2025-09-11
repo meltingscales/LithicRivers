@@ -23,6 +23,13 @@ impl RecipeHandler {
                 result: ItemKind::WoodenPlank,
                 quantity: 3,
             },
+            // 4 Plank Blocks: 1x Wooden Plank
+            Recipe {
+                name: "Plank Blocks",
+                ingredients: &[(ItemKind::WoodenPlank, 1)],
+                result: ItemKind::PlankBlock,
+                quantity: 4,
+            },
             // 2 sticks: 1x plank
             Recipe {
                 name: "Sticks",
