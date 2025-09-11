@@ -21,6 +21,8 @@ pub mod save_load;
 pub mod structure;
 pub mod system_scheduler;
 pub mod systems;
+#[cfg(test)]
+mod systems_tests;
 pub mod target_tracker;
 pub mod tiles;
 pub mod view;

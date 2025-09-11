@@ -36,6 +36,9 @@ install:
     rustup toolchain install {{toolchain}}
     rustup override set {{toolchain}}
     rustup default {{toolchain}}
+    @echo "Installing cargo-tarpaulin..."
+    {{cargo_base}} install cargo-tarpaulin --locked
+
 
 # Run security audit
 security:
@@ -49,8 +52,6 @@ test-release: build-release
 
 # Run tests with coverage report using cargo-tarpaulin
 coverage:
-    @echo "Installing cargo-tarpaulin if not present..."
-    {{cargo_base}} install cargo-tarpaulin --locked
     @echo "Running tests with coverage..."
     # --verbose
     {{cargoz_env}} tarpaulin --skip-clean --all-features --workspace --timeout 120 --out Html --out Xml --output-dir coverage/

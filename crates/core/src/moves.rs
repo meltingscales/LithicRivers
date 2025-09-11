@@ -456,3 +456,274 @@ pub fn damage_random_body_part(
         None
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_move_creation() {
+        let melee = Move::melee();
+        assert_eq!(melee.move_type, MoveType::Melee);
+        assert_eq!(melee.damage, 10);
+        assert_eq!(melee.energy_cost, 0);
+
+        let tackle = Move::tackle();
+        assert_eq!(tackle.move_type, MoveType::Tackle);
+        assert_eq!(tackle.damage, 15);
+        assert_eq!(tackle.energy_cost, 20);
+
+        let fireball = Move::fireball();
+        assert_eq!(fireball.move_type, MoveType::Fireball);
+        assert_eq!(fireball.damage, 30);
+        assert_eq!(fireball.splash_radius, Some(1));
+    }
+
+    #[test]
+    fn test_move_human_names() {
+        assert_eq!(MoveType::Melee.human_name(), "Melee");
+        assert_eq!(MoveType::Tackle.human_name(), "Tackle");
+        assert_eq!(MoveType::Fireball.human_name(), "Fireball");
+        assert_eq!(MoveType::Escape.human_name(), "Escape");
+        assert_eq!(
+            MoveType::DebugInstantKill.human_name(),
+            "Debug Instant Kill"
+        );
+    }
+
+    #[test]
+    fn test_get_available_moves() {
+        let moves = get_available_moves();
+        assert_eq!(moves.len(), 9);
+
+        let move_types: Vec<MoveType> = moves.iter().map(|m| m.move_type).collect();
+        assert!(move_types.contains(&MoveType::Melee));
+        assert!(move_types.contains(&MoveType::Tackle));
+        assert!(move_types.contains(&MoveType::Fireball));
+        assert!(move_types.contains(&MoveType::Escape));
+    }
+
+    #[test]
+    fn test_calculate_push_position() {
+        let player_pos = Position { x: 0, y: 0, z: 0 };
+
+        // Test pushing east
+        let enemy_east = Position { x: 1, y: 0, z: 0 };
+        let pushed = calculate_push_position(player_pos, enemy_east, 2);
+        assert_eq!(pushed, Position { x: 3, y: 0, z: 0 });
+
+        // Test pushing west
+        let enemy_west = Position { x: -1, y: 0, z: 0 };
+        let pushed = calculate_push_position(player_pos, enemy_west, 2);
+        assert_eq!(pushed, Position { x: -3, y: 0, z: 0 });
+
+        // Test pushing north
+        let enemy_north = Position { x: 0, y: 1, z: 0 };
+        let pushed = calculate_push_position(player_pos, enemy_north, 2);
+        assert_eq!(pushed, Position { x: 0, y: 3, z: 0 });
+
+        // Test pushing south
+        let enemy_south = Position { x: 0, y: -1, z: 0 };
+        let pushed = calculate_push_position(player_pos, enemy_south, 2);
+        assert_eq!(pushed, Position { x: 0, y: -3, z: 0 });
+
+        // Test same position (no push)
+        let pushed = calculate_push_position(player_pos, player_pos, 2);
+        assert_eq!(pushed, Position { x: 0, y: 0, z: 0 });
+    }
+
+    #[test]
+    fn test_tackle_mechanics() {
+        let tackle = Move::tackle();
+
+        // Verify tackle properties match specification
+        assert_eq!(tackle.damage, 15);
+        assert_eq!(tackle.energy_cost, 20);
+        assert_eq!(tackle.execution_time_ticks, 10);
+        assert_eq!(tackle.move_type, MoveType::Tackle);
+        assert!(tackle.description.contains("Pushes enemy back 2 spaces"));
+        assert!(tackle.description.contains("50% chance to stun"));
+        assert!(tackle.description.contains("600 ticks"));
+    }
+
+    #[test]
+    fn test_action_queue_basic_operations() {
+        let mut queue = ActionQueue::new();
+        assert!(queue.current_action.is_none());
+        assert_eq!(queue.actions.len(), 0);
+
+        // Create a mock entity (Entity is opaque, so we'll use Entity::DANGLING for testing)
+        let entity = Entity::DANGLING;
+
+        let action = QueuedAction {
+            entity,
+            action: CombatAction::PlayerMove {
+                move_data: Move::melee(),
+                target_entity: None,
+                target_position: None,
+            },
+            execution_time_ticks: 5,
+            remaining_time_ticks: 5,
+        };
+
+        queue.queue_action(action);
+        assert_eq!(queue.actions.len(), 1);
+
+        // Start next action
+        let started = queue.start_next_action();
+        assert!(started.is_some());
+        assert!(queue.current_action.is_some());
+        assert_eq!(queue.actions.len(), 0);
+    }
+
+    #[test]
+    fn test_action_queue_timer_updates() {
+        let mut queue = ActionQueue::new();
+        let entity = Entity::DANGLING;
+
+        let action = QueuedAction {
+            entity,
+            action: CombatAction::PlayerMove {
+                move_data: Move::melee(),
+                target_entity: None,
+                target_position: None,
+            },
+            execution_time_ticks: 10,
+            remaining_time_ticks: 10,
+        };
+
+        queue.queue_action(action);
+        queue.start_next_action();
+
+        // Advance timers by 3 ticks
+        queue.advance_timers(3);
+        if let Some(ref current) = queue.current_action {
+            assert_eq!(current.remaining_time_ticks, 7);
+        }
+
+        // Complete the action
+        queue.advance_timers(7);
+        let completed = queue.pop_completed_action();
+        assert!(completed.is_some());
+        assert!(queue.current_action.is_none());
+    }
+
+    #[test]
+    fn test_calculate_body_integrity() {
+        use crate::model::body::{Body, BodyPart, BodyPartState, BodyPartType};
+        use std::collections::HashMap;
+
+        let mut parts = HashMap::new();
+        parts.insert(
+            BodyPartType::Head,
+            BodyPart {
+                part_type: BodyPartType::Head,
+                state: BodyPartState::Functional,
+                integrity: 100,
+                name: "Head".to_string(),
+                description: "Test head".to_string(),
+                walk_speed_modifier: 1.0,
+                break_speed_modifier: 1.0,
+                health_modifier: 0,
+                stamina_modifier: 0,
+            },
+        );
+        parts.insert(
+            BodyPartType::LeftArm,
+            BodyPart {
+                part_type: BodyPartType::LeftArm,
+                state: BodyPartState::Functional,
+                integrity: 100,
+                name: "Left Arm".to_string(),
+                description: "Test arm".to_string(),
+                walk_speed_modifier: 1.0,
+                break_speed_modifier: 1.0,
+                health_modifier: 0,
+                stamina_modifier: 0,
+            },
+        );
+
+        let body = Body { parts };
+        let integrity = calculate_body_integrity(&body);
+        assert_eq!(integrity, 1.0); // 100% functional
+
+        // Test with damaged parts
+        let mut parts = HashMap::new();
+        parts.insert(
+            BodyPartType::Head,
+            BodyPart {
+                part_type: BodyPartType::Head,
+                state: BodyPartState::Functional,
+                integrity: 100,
+                name: "Head".to_string(),
+                description: "Test head".to_string(),
+                walk_speed_modifier: 1.0,
+                break_speed_modifier: 1.0,
+                health_modifier: 0,
+                stamina_modifier: 0,
+            },
+        );
+        parts.insert(
+            BodyPartType::LeftArm,
+            BodyPart {
+                part_type: BodyPartType::LeftArm,
+                state: BodyPartState::Damaged,
+                integrity: 25,
+                name: "Left Arm".to_string(),
+                description: "Damaged arm".to_string(),
+                walk_speed_modifier: 1.0,
+                break_speed_modifier: 1.0,
+                health_modifier: 0,
+                stamina_modifier: 0,
+            },
+        );
+
+        let body = Body { parts };
+        let integrity = calculate_body_integrity(&body);
+        assert_eq!(integrity, 0.75); // (1.0 + 0.5) / 2 = 0.75
+    }
+
+    #[test]
+    fn test_get_body_status_description() {
+        use crate::model::body::{Body, BodyPart, BodyPartState, BodyPartType};
+        use std::collections::HashMap;
+
+        // Test nominal status
+        let mut parts = HashMap::new();
+        parts.insert(
+            BodyPartType::Head,
+            BodyPart {
+                part_type: BodyPartType::Head,
+                state: BodyPartState::Functional,
+                integrity: 100,
+                name: "Head".to_string(),
+                description: "Test head".to_string(),
+                walk_speed_modifier: 1.0,
+                break_speed_modifier: 1.0,
+                health_modifier: 0,
+                stamina_modifier: 0,
+            },
+        );
+        let body = Body { parts };
+        assert_eq!(get_body_status_description(&body), "Systems Nominal");
+
+        // Test critical damage
+        let mut parts = HashMap::new();
+        parts.insert(
+            BodyPartType::Head,
+            BodyPart {
+                part_type: BodyPartType::Head,
+                state: BodyPartState::Missing,
+                integrity: 0,
+                name: "Head".to_string(),
+                description: "Missing head".to_string(),
+                walk_speed_modifier: 1.0,
+                break_speed_modifier: 1.0,
+                health_modifier: 0,
+                stamina_modifier: 0,
+            },
+        );
+        let body = Body { parts };
+        assert_eq!(get_body_status_description(&body), "Severe System Failure");
+    }
+}

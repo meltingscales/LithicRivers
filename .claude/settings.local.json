@@ -6,6 +6,7 @@
       "Bash(mkdir:*)",
       "Bash(sed:*)",
       "Bash(cargo check:*)",
+      "Bash(cargo test:*)",
       "Bash(find:*)",
       "Bash(rustup run nightly cargo clippy:*)",
       "Bash(just clippy:*)",
