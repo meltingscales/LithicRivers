@@ -47,6 +47,15 @@ test: build
 test-release: build-release
     {{cargoz_env}} test --release
 
+# Run tests with coverage report using cargo-tarpaulin
+coverage:
+    @echo "Installing cargo-tarpaulin if not present..."
+    {{cargo_base}} install cargo-tarpaulin --locked
+    @echo "Running tests with coverage..."
+    {{cargoz_env}} tarpaulin --verbose --all-features --workspace --timeout 120 --out Html --out Xml --output-dir coverage/
+    @echo "Coverage report generated in coverage/ directory"
+    @echo "Open coverage/tarpaulin-report.html in your browser to view the report"
+
 clean:
     rm -rf target/debug/config/
     rm -rf target/release/config/
@@ -69,6 +78,7 @@ clean:
     rm -f client-deps.txt
     rm -f core-deps.txt
     rm -f code-analysis.json
+    rm -rf coverage/
 
 git-data:
     git describe --tags --abbrev=0 > VERSION

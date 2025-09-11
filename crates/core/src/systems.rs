@@ -1250,6 +1250,7 @@ mod tests {
     use super::*;
     use crate::components::{Energy, GameEntity, Health, Player};
     use crate::moves::{ActionQueue, CombatAction, MoveType, QueuedAction};
+    use rand::Rng;
 
     #[test]
     fn test_queue_cleanup_on_enemy_death() {
@@ -1557,6 +1558,236 @@ mod tests {
         if let Ok(health) = world.get::<&Health>(player) {
             assert!(health.is_alive(), "Player should still be alive");
         };
+    }
+
+    #[test]
+    fn test_comprehensive_combat_simulation() {
+        // Comprehensive combat simulation test that exercises:
+        // 1. Combat triggering when enemy becomes adjacent
+        // 2. Multiple enemies joining mid-combat
+        // 3. Enemy death and cleanup
+        // 4. debugInstantKill functionality
+        // 5. Combat state transitions
+
+        let mut world = World::new();
+        let mut res = Resources::new(12345);
+
+        // Create player at origin
+        let player = world.spawn((
+            Position { x: 5, y: 5, z: 0 },
+            Player,
+            GameEntity,
+            Health::new(100),
+            Energy::new(100),
+            ActionQueue::new(),
+        ));
+
+        // Create first enemy adjacent to player (should trigger combat)
+        let enemy1 = world.spawn((
+            Position { x: 6, y: 5, z: 0 }, // Adjacent to player
+            GameEntity,
+            Health::new(50),
+            Combat::default(),
+        ));
+
+        // Create second enemy nearby but not adjacent (should not trigger combat initially)
+        let enemy2 = world.spawn((
+            Position { x: 8, y: 5, z: 0 }, // 3 tiles away
+            GameEntity,
+            Health::new(30),
+            Combat::default(),
+        ));
+
+        // Step 1: Update combat state - should trigger combat with enemy1
+        let (new_state, tick_result) =
+            crate::combat_state_manager::CombatStateManager::update_combat_state(
+                &mut world, &mut res,
+            );
+        assert_eq!(new_state, crate::combat_state_manager::CombatState::Active);
+        assert!(tick_result.contains(crate::game::GameTickResult::CombatTriggered));
+        assert!(res.player_state.combat_active);
+
+        // Verify enemy1 has triggered flag set
+        assert!(world.get::<&Combat>(enemy1).unwrap().triggered);
+        // Verify enemy2 does not have triggered flag set (not adjacent)
+        assert!(!world.get::<&Combat>(enemy2).unwrap().triggered);
+
+        // Step 2: Move enemy2 to be adjacent to player (simulate it walking up)
+        if let Ok(mut pos) = world.get::<&mut Position>(enemy2) {
+            pos.x = 4; // Now adjacent to player at (5,5)
+            pos.y = 5;
+        }
+
+        // Update combat state again - should update participants
+        let (new_state, _) = crate::combat_state_manager::CombatStateManager::update_combat_state(
+            &mut world, &mut res,
+        );
+        assert_eq!(new_state, crate::combat_state_manager::CombatState::Active);
+
+        // Now enemy2 should also be triggered (joined mid-combat)
+        assert!(world.get::<&Combat>(enemy2).unwrap().triggered);
+
+        // Step 3: Test debugInstantKill - kill enemy1
+        if let Ok(mut health) = world.get::<&mut Health>(enemy1) {
+            health.current = 0; // Simulate instant kill
+        }
+        world.insert_one(enemy1, Dead).ok();
+
+        // Run cleanup for the dead enemy
+        crate::systems::cleanup_actions_targeting_dead_entity(&mut world, &mut res, enemy1);
+
+        // Verify enemy1 is dead
+        assert!(world.get::<&Dead>(enemy1).is_ok());
+        assert!(!world.get::<&Health>(enemy1).unwrap().is_alive());
+
+        // Step 4: Combat should still be active because enemy2 is alive and adjacent
+        let (new_state, _) = crate::combat_state_manager::CombatStateManager::update_combat_state(
+            &mut world, &mut res,
+        );
+        assert_eq!(new_state, crate::combat_state_manager::CombatState::Active);
+        assert!(res.player_state.combat_active);
+
+        // Step 5: Move enemy2 away (simulate it fleeing)
+        if let Ok(mut pos) = world.get::<&mut Position>(enemy2) {
+            pos.x = 20; // Far away
+            pos.y = 20;
+        }
+
+        // Now combat should end
+        let (new_state, tick_result) =
+            crate::combat_state_manager::CombatStateManager::update_combat_state(
+                &mut world, &mut res,
+            );
+        assert_eq!(
+            new_state,
+            crate::combat_state_manager::CombatState::JustEnded
+        );
+        assert!(tick_result.contains(crate::game::GameTickResult::CombatEnded));
+        assert!(!res.player_state.combat_active);
+        assert!(res.player_state.combat_ended_this_tick);
+
+        // Step 6: Next tick should transition to Idle
+        let (new_state, _) = crate::combat_state_manager::CombatStateManager::update_combat_state(
+            &mut world, &mut res,
+        );
+        assert_eq!(new_state, crate::combat_state_manager::CombatState::Idle);
+        assert!(!res.player_state.combat_active);
+        assert!(!res.player_state.combat_ended_this_tick);
+
+        // Verify player is still alive
+        assert!(world.get::<&Dead>(player).is_err());
+        assert!(world.get::<&Health>(player).unwrap().is_alive());
+    }
+
+    #[test]
+    fn test_world_simulation_stress() {
+        // Stress test simulating many game ticks with various scenarios
+        // Uses deterministic seeded RNG for reproducible tests
+        let mut world = World::new();
+        let mut res = Resources::new(12345); // Fixed seed for determinism
+
+        // Create player
+        let player = world.spawn((
+            Position { x: 0, y: 0, z: 0 },
+            Player,
+            GameEntity,
+            Health::new(1000), // High health for stress test
+            Energy::new(1000),
+            ActionQueue::new(),
+        ));
+
+        // Create multiple enemies at various distances
+        let mut enemies = Vec::new();
+        for i in 0..10 {
+            let enemy = world.spawn((
+                Position {
+                    x: i as i32 * 2,
+                    y: 0,
+                    z: 0,
+                }, // Spread out
+                GameEntity,
+                Health::new(20),
+                Combat::default(),
+            ));
+            enemies.push(enemy);
+        }
+
+        let mut combat_triggers = 0;
+        let mut combat_ends = 0;
+
+        // Simulate 1000 ticks of game time
+        for tick in 0..1000 {
+            res.time.tick = tick;
+
+            // Randomly move enemies closer/further
+            if tick % 50 == 0 {
+                // Every 50 ticks
+                for &enemy in &enemies {
+                    if world.get::<&Dead>(enemy).is_err() {
+                        // Only move living enemies
+                        if let Ok(mut pos) = world.get::<&mut Position>(enemy) {
+                            // Sometimes move adjacent to player
+                            if res.world_state.rng.gen_bool(0.3) {
+                                pos.x = if res.world_state.rng.gen_bool(0.5) {
+                                    -1
+                                } else {
+                                    1
+                                };
+                                pos.y = 0;
+                            } else {
+                                // Sometimes move far away
+                                pos.x = res.world_state.rng.gen_range(-10..=10);
+                                pos.y = res.world_state.rng.gen_range(-10..=10);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Update combat state
+            let (_, tick_result) =
+                crate::combat_state_manager::CombatStateManager::update_combat_state(
+                    &mut world, &mut res,
+                );
+
+            if tick_result.contains(crate::game::GameTickResult::CombatTriggered) {
+                combat_triggers += 1;
+            }
+            if tick_result.contains(crate::game::GameTickResult::CombatEnded) {
+                combat_ends += 1;
+            }
+
+            // Occasionally kill an enemy (simulate debugInstantKill or combat)
+            if tick % 100 == 0 && res.player_state.combat_active {
+                for &enemy in &enemies {
+                    if world.get::<&Dead>(enemy).is_err() && res.world_state.rng.gen_bool(0.2) {
+                        if let Ok(mut health) = world.get::<&mut Health>(enemy) {
+                            health.current = 0;
+                        }
+                        world.insert_one(enemy, Dead).ok();
+                        crate::systems::cleanup_actions_targeting_dead_entity(
+                            &mut world, &mut res, enemy,
+                        );
+                        break; // Only kill one per check
+                    }
+                }
+            }
+        }
+
+        // Verify the simulation ran and had combat activity
+        assert!(
+            combat_triggers > 0,
+            "Should have had some combat triggers during 1000 ticks"
+        );
+
+        // Player should still be alive after stress test
+        assert!(world.get::<&Dead>(player).is_err());
+        assert!(world.get::<&Health>(player).unwrap().is_alive());
+
+        println!(
+            "Stress test completed: {} combat triggers, {} combat ends over 1000 ticks",
+            combat_triggers, combat_ends
+        );
     }
 
     #[test]
