@@ -52,11 +52,11 @@
 - [ ] Basic survival mechanics (damage, repair, body parts)
   - [ ] Body panel shows part states; player can incur and repair at least 1 damage type
 - [ ] NPC interactions and conversations just like the python version
-- [ ] Combat system with tick-based moves and an option to use items and run away
-  - [ ] Running away costs 600 ticks
-  - [ ] Tackling an enemy costs 800 ticks
-  - [ ] Tackling an enemy stuns it for 400 ticks (50% chance)
-  - [ ] Tackling an enemy pushes it back 2 spaces
+- [x] Combat system with tick-based moves and an option to use items and run away
+  - [x] Running away costs 600 ticks
+  - [x] Tackling an enemy costs 800 ticks
+  - [x] Tackling an enemy stuns it for 400 ticks (50% chance)
+  - [x] Tackling an enemy pushes it back 2 spaces
 
 ## Technical Requirements
 - [x] Stable save/load system
