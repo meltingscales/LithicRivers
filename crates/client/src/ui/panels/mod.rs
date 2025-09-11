@@ -6,6 +6,7 @@ pub mod help;
 pub mod inventory;
 pub mod look;
 pub mod menu;
+pub mod modes;
 pub mod quit;
 pub mod world;
 
@@ -17,5 +18,6 @@ pub use help::render_help_panel;
 pub use inventory::{get_player_inventory, render_inventory_list_only, render_inventory_panel};
 pub use look::render_look_panel;
 pub use menu::render_menu_panel;
+pub use modes::render_modes_panel;
 pub use quit::render_quit_panel;
 pub use world::render_game_view;
