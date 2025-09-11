@@ -411,7 +411,6 @@ impl ActionQueue {
         self.actions.clear();
         self.current_action = None;
     }
-
 }
 
 /// Get a description of body state for display

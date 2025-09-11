@@ -232,7 +232,6 @@ pub fn pickup_system(world: &mut World, res: &mut Resources) {
     }
 }
 
-
 // Feral dogs with A* pathfinding that chase the player intelligently
 pub fn feral_dog_system(world: &mut World, res: &mut Resources) {
     // Get player position if available
@@ -1022,7 +1021,8 @@ pub fn cleanup_actions_targeting_dead_entity(
         for queue_entity in entities_targeting_dead {
             if let Ok(mut queue) = world.get::<&mut ActionQueue>(queue_entity) {
                 queue.remove_actions_targeting(dead_entity);
-                res.target_tracker.remove_targeting(queue_entity, dead_entity);
+                res.target_tracker
+                    .remove_targeting(queue_entity, dead_entity);
             }
         }
     } else {
@@ -1045,7 +1045,6 @@ pub fn cleanup_actions_targeting_dead_entity(
         queue.clear_with_tracker(dead_entity, &mut res.target_tracker);
     }
 }
-
 
 /// Apply damage to an entity using safe component access
 fn apply_damage(
