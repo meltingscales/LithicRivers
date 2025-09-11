@@ -76,8 +76,72 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
     // tracing::info!(target: "game", "key pressed: {:?}", key);
 
     // First, handle configurable keybind actions
-    // Toggle Look mode
     if app.ui.current_tab == MenuTab::World {
+        // In Break/Place mode, handle 9-directional actions FIRST (before look toggle)
+        use crate::app_state::BuildMode;
+        if app.panels.build.mode != BuildMode::Movement {
+            let mut handled = false;
+
+            // Map QWEASDZXC to 9 directions:
+            // Q W E
+            // A S D
+            // Z X C
+            let direction_offset = match key {
+                KeyCode::Char('Q') | KeyCode::Char('q') => Some((-1, -1)), // Northwest
+                KeyCode::Char('W') | KeyCode::Char('w') => Some((0, -1)),  // North
+                KeyCode::Char('E') | KeyCode::Char('e') => Some((1, -1)),  // Northeast
+                KeyCode::Char('A') | KeyCode::Char('a') => Some((-1, 0)),  // West
+                KeyCode::Char('S') | KeyCode::Char('s') => Some((0, 0)), // Center (current position)
+                KeyCode::Char('D') | KeyCode::Char('d') => Some((1, 0)), // East
+                KeyCode::Char('Z') | KeyCode::Char('z') => Some((-1, 1)), // Southwest
+                KeyCode::Char('X') | KeyCode::Char('x') => Some((0, 1)), // South
+                KeyCode::Char('C') | KeyCode::Char('c') => Some((1, 1)), // Southeast
+                _ => None,
+            };
+
+            if let Some((dx, dy)) = direction_offset {
+                if let Some(player_entity) = app.core.game.get_player_entity() {
+                    if let Ok(player_pos) =
+                        app.core
+                            .game
+                            .world
+                            .get::<&lithicrivers_core::components::Position>(player_entity)
+                    {
+                        let target_x = player_pos.x + dx;
+                        let target_y = player_pos.y + dy;
+                        let target_z = player_pos.z;
+
+                        match app.panels.build.mode {
+                            BuildMode::Break => {
+                                // TODO: Implement instant break at target position
+                                app.core.game.res.log(format!(
+                                    "Break at ({}, {}, {})",
+                                    target_x, target_y, target_z
+                                ));
+                                handled = true;
+                            }
+                            BuildMode::Place => {
+                                // TODO: Implement place block at target position
+                                app.core.game.res.log(format!(
+                                    "Place at ({}, {}, {})",
+                                    target_x, target_y, target_z
+                                ));
+                                handled = true;
+                            }
+                            BuildMode::Movement => {
+                                // This case shouldn't happen due to the outer condition
+                            }
+                        }
+                    }
+                }
+            }
+
+            if handled {
+                return Ok(());
+            }
+        }
+
+        // Toggle Look mode (only if not handled by build mode above)
         if app.ui.keybinds.matches("action", "LOOK_TOGGLE", &key) {
             app.panels.look.mode = !app.panels.look.mode;
             // Reset cursor to player on toggle on
@@ -218,70 +282,6 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
                     bottom,
                     app.panels.look.cursor.z,
                 );
-                return Ok(());
-            }
-        }
-
-        // In Break/Place mode, handle 9-directional actions
-        use crate::app_state::BuildMode;
-        if app.panels.build.mode != BuildMode::Movement {
-            let mut handled = false;
-
-            // Map QWEASDZXC to 9 directions:
-            // Q W E
-            // A S D
-            // Z X C
-            let direction_offset = match key {
-                KeyCode::Char('Q') | KeyCode::Char('q') => Some((-1, -1)), // Northwest
-                KeyCode::Char('W') | KeyCode::Char('w') => Some((0, -1)),  // North
-                KeyCode::Char('E') | KeyCode::Char('e') => Some((1, -1)),  // Northeast
-                KeyCode::Char('A') | KeyCode::Char('a') => Some((-1, 0)),  // West
-                KeyCode::Char('S') | KeyCode::Char('s') => Some((0, 0)), // Center (current position)
-                KeyCode::Char('D') | KeyCode::Char('d') => Some((1, 0)), // East
-                KeyCode::Char('Z') | KeyCode::Char('z') => Some((-1, 1)), // Southwest
-                KeyCode::Char('X') | KeyCode::Char('x') => Some((0, 1)), // South
-                KeyCode::Char('C') | KeyCode::Char('c') => Some((1, 1)), // Southeast
-                _ => None,
-            };
-
-            if let Some((dx, dy)) = direction_offset {
-                if let Some(player_entity) = app.core.game.get_player_entity() {
-                    if let Ok(player_pos) =
-                        app.core
-                            .game
-                            .world
-                            .get::<&lithicrivers_core::components::Position>(player_entity)
-                    {
-                        let target_x = player_pos.x + dx;
-                        let target_y = player_pos.y + dy;
-                        let target_z = player_pos.z;
-
-                        match app.panels.build.mode {
-                            BuildMode::Break => {
-                                // TODO: Implement instant break at target position
-                                app.core.game.res.log(format!(
-                                    "Break at ({}, {}, {})",
-                                    target_x, target_y, target_z
-                                ));
-                                handled = true;
-                            }
-                            BuildMode::Place => {
-                                // TODO: Implement place block at target position
-                                app.core.game.res.log(format!(
-                                    "Place at ({}, {}, {})",
-                                    target_x, target_y, target_z
-                                ));
-                                handled = true;
-                            }
-                            BuildMode::Movement => {
-                                // This case shouldn't happen due to the outer condition
-                            }
-                        }
-                    }
-                }
-            }
-
-            if handled {
                 return Ok(());
             }
         }
