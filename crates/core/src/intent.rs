@@ -14,6 +14,8 @@ pub enum PlayerAction {
     Move { dx: i32, dy: i32, dz: i32 },
     /// Mine the current tile
     Mine,
+    /// Mine at specific coordinates
+    MineAt { x: i32, y: i32, z: i32 },
     // Future actions: Attack, Use, Craft, etc.
 }
 
@@ -30,6 +32,14 @@ impl PlayerIntent {
     pub fn mine(cost: u64) -> Self {
         Self {
             action: Some(PlayerAction::Mine),
+            tick_cost: cost,
+        }
+    }
+
+    /// Create a mining intent at specific coordinates
+    pub fn mine_at(x: i32, y: i32, z: i32, cost: u64) -> Self {
+        Self {
+            action: Some(PlayerAction::MineAt { x, y, z }),
             tick_cost: cost,
         }
     }

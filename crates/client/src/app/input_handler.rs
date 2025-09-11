@@ -101,36 +101,43 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
 
             if let Some((dx, dy)) = direction_offset {
                 if let Some(player_entity) = app.core.game.get_player_entity() {
-                    if let Ok(player_pos) =
-                        app.core
-                            .game
-                            .world
-                            .get::<&lithicrivers_core::components::Position>(player_entity)
+                    // Extract coordinates first to avoid borrow conflicts
+                    let (target_x, target_y, target_z) = if let Ok(player_pos) = app
+                        .core
+                        .game
+                        .world
+                        .get::<&lithicrivers_core::components::Position>(player_entity)
                     {
-                        let target_x = player_pos.x + dx;
-                        let target_y = player_pos.y + dy;
-                        let target_z = player_pos.z;
+                        (player_pos.x + dx, player_pos.y + dy, player_pos.z)
+                    } else {
+                        return Ok(()); // No position component
+                    };
 
-                        match app.panels.build.mode {
-                            BuildMode::Break => {
-                                // TODO: Implement instant break at target position
+                    match app.panels.build.mode {
+                        BuildMode::Break => {
+                            // Queue mining at target position
+                            app.core.game.queue_mine_at(target_x, target_y, target_z);
+                            let tick_result = app.core.game.tick();
+                            if tick_result
+                                .contains(lithicrivers_core::game::GameTickResult::MiningSuccess)
+                            {
                                 app.core.game.res.log(format!(
-                                    "Break at ({}, {}, {})",
+                                    "Broke block at ({}, {}, {})",
                                     target_x, target_y, target_z
                                 ));
-                                handled = true;
                             }
-                            BuildMode::Place => {
-                                // TODO: Implement place block at target position
-                                app.core.game.res.log(format!(
-                                    "Place at ({}, {}, {})",
-                                    target_x, target_y, target_z
-                                ));
-                                handled = true;
-                            }
-                            BuildMode::Movement => {
-                                // This case shouldn't happen due to the outer condition
-                            }
+                            handled = true;
+                        }
+                        BuildMode::Place => {
+                            // TODO: Implement place block at target position
+                            app.core.game.res.log(format!(
+                                "Place at ({}, {}, {})",
+                                target_x, target_y, target_z
+                            ));
+                            handled = true;
+                        }
+                        BuildMode::Movement => {
+                            // This case shouldn't happen due to the outer condition
                         }
                     }
                 }
