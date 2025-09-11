@@ -44,6 +44,11 @@ impl CombatStateManager {
                 Self::start_combat(world, res);
                 (CombatState::Active, GameTickResult::CombatTriggered)
             }
+            // In combat, enemies still present -> update triggered flags for new enemies
+            (CombatState::Active, true) => {
+                Self::update_combat_participants(world, res);
+                (CombatState::Active, GameTickResult::empty())
+            }
             // In combat, no enemies -> end combat
             (CombatState::Active, false) => {
                 Self::end_combat(world, res);
@@ -147,6 +152,55 @@ impl CombatStateManager {
         }
 
         false
+    }
+
+    /// Update combat participants - ensure all adjacent enemies have triggered = true
+    /// This is called every tick while in combat to handle enemies joining mid-combat
+    fn update_combat_participants(world: &mut World, res: &mut Resources) {
+        // Get player position for adjacency checks
+        let player_pos = match get_player_position(world) {
+            Some(pos) => pos,
+            None => return, // No player
+        };
+
+        // Define the 8 adjacent positions around the player
+        let adjacent_positions = [
+            (player_pos.x - 1, player_pos.y - 1), // NW
+            (player_pos.x, player_pos.y - 1),     // N
+            (player_pos.x + 1, player_pos.y - 1), // NE
+            (player_pos.x - 1, player_pos.y),     // W
+            (player_pos.x + 1, player_pos.y),     // E
+            (player_pos.x - 1, player_pos.y + 1), // SW
+            (player_pos.x, player_pos.y + 1),     // S
+            (player_pos.x + 1, player_pos.y + 1), // SE
+        ];
+
+        // Set combat.triggered = true for all adjacent combat entities
+        for (entity, (pos, combat, _)) in world
+            .query::<(&Position, &mut Combat, &GameEntity)>()
+            .iter()
+        {
+            // Skip dead entities
+            if world.get::<&Dead>(entity).is_ok() {
+                continue;
+            }
+
+            // Skip entities with BattleDelay
+            if world.get::<&BattleDelay>(entity).is_ok() {
+                continue;
+            }
+
+            // Check if entity is in any of the 8 adjacent positions
+            let is_adjacent = adjacent_positions
+                .iter()
+                .any(|&(adj_x, adj_y)| pos.x == adj_x && pos.y == adj_y && pos.z == player_pos.z);
+
+            if is_adjacent && !combat.triggered {
+                combat.triggered = true;
+                // Log when a new enemy joins combat
+                // Note: This might spam the log, but useful for debugging
+            }
+        }
     }
 
     /// Start combat - set all necessary state and components
