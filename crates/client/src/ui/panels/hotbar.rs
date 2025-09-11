@@ -1,4 +1,5 @@
 use crate::App;
+use lithicrivers_core::components::itemkind_sprite_name;
 use ratatui::{
     layout::{Alignment, Rect},
     style::{Color, Style},
@@ -27,8 +28,28 @@ pub fn render_hotbar_panel(f: &mut Frame, app: &mut App, area: Rect) {
         // Create slot display (F1, F2, etc.)
         let slot_text = format!("F{}", slot_number);
 
-        // Add slot content (placeholder for now - could show item icons/names later)
-        let content = "[ ]"; // Empty slot placeholder
+        // Get assigned block content
+        let content = if let Some(block_kind) = app.panels.build.hotbar_assignments[i] {
+            // Get the actual 1x1 sprite from SpriteLoader
+            let sprite_name = itemkind_sprite_name(block_kind);
+            // Parse category and name from sprite_name (format: "category/name")
+            if let Some(slash_pos) = sprite_name.find('/') {
+                let (category, name) = sprite_name.split_at(slash_pos);
+                let name = &name[1..]; // Remove the '/'
+                let sprite_data = app.core.sprite_loader.load_sprite(name, category);
+                // Get the first character from the 1x1 sprite (sprites[0])
+                let sprite_char = sprite_data
+                    .sprites
+                    .get(0)
+                    .and_then(|s| s.chars().next())
+                    .unwrap_or('?');
+                format!("[{}]", sprite_char)
+            } else {
+                "[?]".to_string() // Invalid sprite name format
+            }
+        } else {
+            "[ ]".to_string() // Empty slot
+        };
 
         slot_spans.push(Span::styled(format!("{}{}", slot_text, content), style));
 

@@ -1,6 +1,6 @@
 use crate::{audio, MenuTab, Scale, SplashState, SpriteLoader};
 use crossterm::event::KeyCode;
-use lithicrivers_core::components::Position;
+use lithicrivers_core::components::{ItemKind, Position};
 use lithicrivers_core::config::ConfigManager;
 use lithicrivers_core::recipe_handler::RecipeHandler;
 use lithicrivers_core::Game;
@@ -72,6 +72,7 @@ pub struct PanelStates {
     pub look: LookPanelState,
     pub build: BuildPanelState,
     pub corpse_looting: CorpseLootingState,
+    pub hotbar_assignment: HotbarAssignmentState,
 }
 
 /// Inventory panel state
@@ -133,6 +134,10 @@ impl BuildMode {
 pub struct BuildPanelState {
     pub mode: BuildMode,
     pub selected_hotbar_slot: usize,
+    /// Assigned blocks for each hotbar slot (None = empty slot)
+    pub hotbar_assignments: [Option<ItemKind>; 12],
+    /// Track last F-key press for double-tap detection
+    pub last_fkey_press: Option<(usize, Instant)>,
 }
 
 impl Default for BuildPanelState {
@@ -140,6 +145,8 @@ impl Default for BuildPanelState {
         Self {
             mode: BuildMode::Movement,
             selected_hotbar_slot: 0,
+            hotbar_assignments: [None; 12],
+            last_fkey_press: None,
         }
     }
 }
@@ -163,6 +170,23 @@ pub enum CorpseLootingState {
 impl Default for CorpseLootingState {
     fn default() -> Self {
         CorpseLootingState::None
+    }
+}
+
+/// Hotbar assignment interaction state
+#[derive(Debug, Clone, PartialEq)]
+pub enum HotbarAssignmentState {
+    None,
+    ChoosingBlock {
+        hotbar_slot: usize,              // Which F-key slot we're assigning to
+        available_blocks: Vec<ItemKind>, // Blocks available in inventory
+        selected_block: usize,           // Currently selected block in the list
+    },
+}
+
+impl Default for HotbarAssignmentState {
+    fn default() -> Self {
+        HotbarAssignmentState::None
     }
 }
 

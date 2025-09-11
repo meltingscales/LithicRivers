@@ -10,6 +10,7 @@ use lithicrivers_core::{
     moves::get_available_moves,
 };
 
+use crate::app_state::HotbarAssignmentState;
 use crate::{ui::panels::get_player_inventory, App, CombatUiState, MenuTab, Scale, SplashState};
 
 /// Calculate the maximum scroll value for the credits panel
@@ -223,29 +224,79 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
             return Ok(());
         }
 
-        // Handle F1-F12 hotbar selection
-        let hotbar_slot = match key {
-            KeyCode::F(1) => Some(0),
-            KeyCode::F(2) => Some(1),
-            KeyCode::F(3) => Some(2),
-            KeyCode::F(4) => Some(3),
-            KeyCode::F(5) => Some(4),
-            KeyCode::F(6) => Some(5),
-            KeyCode::F(7) => Some(6),
-            KeyCode::F(8) => Some(7),
-            KeyCode::F(9) => Some(8),
-            KeyCode::F(10) => Some(9),
-            KeyCode::F(11) => Some(10),
-            KeyCode::F(12) => Some(11),
-            _ => None,
+        // Handle hotbar selection using configured keys
+        let hotbar_slot = if app.ui.keybinds.matches("hotbar", "HOTBAR_SLOT_1", &key) {
+            Some(0)
+        } else if app.ui.keybinds.matches("hotbar", "HOTBAR_SLOT_2", &key) {
+            Some(1)
+        } else if app.ui.keybinds.matches("hotbar", "HOTBAR_SLOT_3", &key) {
+            Some(2)
+        } else if app.ui.keybinds.matches("hotbar", "HOTBAR_SLOT_4", &key) {
+            Some(3)
+        } else if app.ui.keybinds.matches("hotbar", "HOTBAR_SLOT_5", &key) {
+            Some(4)
+        } else if app.ui.keybinds.matches("hotbar", "HOTBAR_SLOT_6", &key) {
+            Some(5)
+        } else if app.ui.keybinds.matches("hotbar", "HOTBAR_SLOT_7", &key) {
+            Some(6)
+        } else if app.ui.keybinds.matches("hotbar", "HOTBAR_SLOT_8", &key) {
+            Some(7)
+        } else if app.ui.keybinds.matches("hotbar", "HOTBAR_SLOT_9", &key) {
+            Some(8)
+        } else if app.ui.keybinds.matches("hotbar", "HOTBAR_SLOT_10", &key) {
+            Some(9)
+        } else if app.ui.keybinds.matches("hotbar", "HOTBAR_SLOT_11", &key) {
+            Some(10)
+        } else if app.ui.keybinds.matches("hotbar", "HOTBAR_SLOT_12", &key) {
+            Some(11)
+        } else {
+            None
         };
 
         if let Some(slot) = hotbar_slot {
-            app.panels.build.selected_hotbar_slot = slot;
-            app.core
-                .game
-                .res
-                .log(format!("Selected hotbar slot: {}", slot + 1));
+            let now = std::time::Instant::now();
+            const DOUBLE_TAP_WINDOW_MS: u128 = 500; // 500ms window for double-tap
+
+            // Check for double-tap
+            let is_double_tap =
+                if let Some((last_slot, last_time)) = app.panels.build.last_fkey_press {
+                    last_slot == slot
+                        && now.duration_since(last_time).as_millis() <= DOUBLE_TAP_WINDOW_MS
+                } else {
+                    false
+                };
+
+            if is_double_tap {
+                // Double-tap detected - open block picker
+                if app.ui.current_tab == MenuTab::World {
+                    // Get available blocks from player inventory
+                    let available_blocks = get_blocks_from_inventory(app);
+                    if !available_blocks.is_empty() {
+                        app.panels.hotbar_assignment = HotbarAssignmentState::ChoosingBlock {
+                            hotbar_slot: slot,
+                            available_blocks,
+                            selected_block: 0,
+                        };
+                        app.core
+                            .game
+                            .res
+                            .log(format!("Choose block for slot F{}", slot + 1));
+                    } else {
+                        app.core.game.res.log("No blocks available in inventory");
+                    }
+                }
+                // Reset the double-tap tracker
+                app.panels.build.last_fkey_press = None;
+            } else {
+                // Single tap - select hotbar slot
+                app.panels.build.selected_hotbar_slot = slot;
+                app.core
+                    .game
+                    .res
+                    .log(format!("Selected hotbar slot: {}", slot + 1));
+                // Update double-tap tracker
+                app.panels.build.last_fkey_press = Some((slot, now));
+            }
             return Ok(());
         }
 
@@ -623,6 +674,52 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
             }
             return Ok(());
         }
+    }
+
+    // Handle hotbar assignment input when active
+    if let HotbarAssignmentState::ChoosingBlock {
+        hotbar_slot,
+        available_blocks,
+        selected_block,
+    } = &app.panels.hotbar_assignment
+    {
+        let slot = *hotbar_slot;
+        let blocks = available_blocks.clone();
+        let mut selected = *selected_block;
+
+        if app.ui.keybinds.matches("ui", "CLOSE_HELP_MENU", &key) {
+            app.panels.hotbar_assignment = HotbarAssignmentState::None;
+            app.core.game.res.log("Cancelled block assignment");
+            return Ok(());
+        }
+        if app.ui.keybinds.matches("movement", "MOVE_NORTH", &key) {
+            selected = selected.saturating_sub(1);
+        }
+        if app.ui.keybinds.matches("movement", "MOVE_SOUTH", &key) {
+            if selected < blocks.len().saturating_sub(1) {
+                selected += 1;
+            }
+        }
+        if app.ui.keybinds.matches("ui", "MENU_ACTIVATE", &key) || key == KeyCode::Enter {
+            if selected < blocks.len() {
+                let chosen_block = blocks[selected];
+                app.panels.build.hotbar_assignments[slot] = Some(chosen_block);
+                app.panels.hotbar_assignment = HotbarAssignmentState::None;
+                app.core.game.res.log(format!(
+                    "Assigned {} to slot F{}",
+                    lithicrivers_core::components::itemkind_name(chosen_block),
+                    slot + 1
+                ));
+            }
+            return Ok(());
+        }
+
+        app.panels.hotbar_assignment = HotbarAssignmentState::ChoosingBlock {
+            hotbar_slot: slot,
+            available_blocks: blocks,
+            selected_block: selected,
+        };
+        return Ok(());
     }
 
     // Handle corpse looting input when active
@@ -1369,4 +1466,30 @@ fn take_item_from_corpse(app: &mut App, corpse_entity: hecs::Entity, item_idx: u
             }
         }
     }
+}
+
+/// Get blocks available for hotbar assignment from player inventory
+fn get_blocks_from_inventory(app: &App) -> Vec<lithicrivers_core::components::ItemKind> {
+    use lithicrivers_core::components::{Inventory as InvComp, ItemKind};
+
+    let mut blocks = Vec::new();
+
+    if let Some(player_entity) = app.core.game.get_player_entity() {
+        if let Ok(inv) = app.core.game.world.get::<&InvComp>(player_entity) {
+            for stack in &inv.slots {
+                // Only include items that are placeable blocks
+                // For now, let's include all ItemKind variants that could be blocks
+                match stack.kind {
+                    ItemKind::Stone | ItemKind::PlankBlock => {
+                        if !blocks.contains(&stack.kind) {
+                            blocks.push(stack.kind);
+                        }
+                    }
+                    _ => {} // Skip non-block items
+                }
+            }
+        }
+    }
+
+    blocks
 }

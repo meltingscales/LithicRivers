@@ -138,7 +138,15 @@ pub fn render_help_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
         }
     }
     // Define the order of categories
-    let categories = vec!["viewport", "scale", "action", "build", "ui", "inventory"];
+    let categories = vec![
+        "viewport",
+        "scale",
+        "action",
+        "build",
+        "hotbar",
+        "ui",
+        "inventory",
+    ];
     for category in categories {
         if let Some(binds) = categorized_binds.get(category) {
             let category_title = category.replace('_', " ");
