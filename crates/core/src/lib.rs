@@ -21,6 +21,7 @@ pub mod save_load;
 pub mod structure;
 pub mod system_scheduler;
 pub mod systems;
+pub mod target_tracker;
 pub mod tiles;
 pub mod view;
 pub mod world;

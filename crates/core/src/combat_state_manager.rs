@@ -88,8 +88,19 @@ impl CombatStateManager {
     }
 
     /// Check if combat should start (enemies nearby)
+    /// Uses exact adjacency logic like the original system for compatibility
     fn should_start_combat(world: &World, player_pos: Position) -> bool {
-        const COMBAT_TRIGGER_DISTANCE: f32 = 5.0;
+        // Define the 8 adjacent positions around the player (original logic)
+        let adjacent_positions = [
+            (player_pos.x - 1, player_pos.y - 1), // NW
+            (player_pos.x, player_pos.y - 1),     // N
+            (player_pos.x + 1, player_pos.y - 1), // NE
+            (player_pos.x - 1, player_pos.y),     // W
+            (player_pos.x + 1, player_pos.y),     // E
+            (player_pos.x - 1, player_pos.y + 1), // SW
+            (player_pos.x, player_pos.y + 1),     // S
+            (player_pos.x + 1, player_pos.y + 1), // SE
+        ];
 
         for (entity, (pos, _, _)) in world.query::<(&Position, &Combat, &GameEntity)>().iter() {
             // Skip dead entities
@@ -102,12 +113,12 @@ impl CombatStateManager {
                 continue;
             }
 
-            let distance = ((pos.x as f32 - player_pos.x as f32).powi(2)
-                + (pos.y as f32 - player_pos.y as f32).powi(2)
-                + (pos.z as f32 - player_pos.z as f32).powi(2))
-            .sqrt();
+            // Check if entity is in any of the 8 adjacent positions
+            let is_adjacent = adjacent_positions
+                .iter()
+                .any(|&(adj_x, adj_y)| pos.x == adj_x && pos.y == adj_y && pos.z == player_pos.z);
 
-            if distance <= COMBAT_TRIGGER_DISTANCE {
+            if is_adjacent {
                 return true;
             }
         }
@@ -142,6 +153,49 @@ impl CombatStateManager {
     fn start_combat(world: &mut World, res: &mut Resources) {
         res.player_state.combat_active = true;
         res.player_state.combat_ended_this_tick = false;
+
+        // Get player position for adjacency checks
+        let player_pos = match get_player_position(world) {
+            Some(pos) => pos,
+            None => return, // No player to start combat with
+        };
+
+        // Define the 8 adjacent positions around the player
+        let adjacent_positions = [
+            (player_pos.x - 1, player_pos.y - 1), // NW
+            (player_pos.x, player_pos.y - 1),     // N
+            (player_pos.x + 1, player_pos.y - 1), // NE
+            (player_pos.x - 1, player_pos.y),     // W
+            (player_pos.x + 1, player_pos.y),     // E
+            (player_pos.x - 1, player_pos.y + 1), // SW
+            (player_pos.x, player_pos.y + 1),     // S
+            (player_pos.x + 1, player_pos.y + 1), // SE
+        ];
+
+        // Set combat.triggered = true for adjacent combat entities (original behavior)
+        for (entity, (pos, combat, _)) in world
+            .query::<(&Position, &mut Combat, &GameEntity)>()
+            .iter()
+        {
+            // Skip dead entities
+            if world.get::<&Dead>(entity).is_ok() {
+                continue;
+            }
+
+            // Skip entities with BattleDelay
+            if world.get::<&BattleDelay>(entity).is_ok() {
+                continue;
+            }
+
+            // Check if entity is in any of the 8 adjacent positions
+            let is_adjacent = adjacent_positions
+                .iter()
+                .any(|&(adj_x, adj_y)| pos.x == adj_x && pos.y == adj_y && pos.z == player_pos.z);
+
+            if is_adjacent {
+                combat.triggered = true;
+            }
+        }
 
         // Ensure player has an ActionQueue component for combat
         if let Some(player_entity) = get_player_entity(world) {

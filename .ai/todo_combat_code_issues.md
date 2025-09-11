@@ -24,12 +24,12 @@ Generated: 2025-01-27
 - **Fix**: ✅ Created centralized `CombatStateManager` system in `/home/melty/Git/LithicRivers/crates/core/src/combat_state_manager.rs`
 - **Code Changes**: ✅ Centralized all combat state transitions, replaced old `combat_trigger_system` usage in system_scheduler.rs
 
-#### 4. **Performance: O(n²) Queue Cleanup** ⚡ *Medium Effort*
-- **Location**: `cleanup_actions_targeting_dead_entity()` in `/home/melty/Git/LithicRivers/crates/core/src/systems.rs:1030`
+#### 4. **Performance: O(n²) Queue Cleanup** ⚡ *Medium Effort* ✅ **RESOLVED**
+- **Location**: `cleanup_actions_targeting_dead_entity()` in `/home/melty/Git/LithicRivers/crates/core/src/systems.rs:1085`
 - **Issue**: Every entity death iterates through ALL entities with queues 
 - **Impact**: Performance degrades with many entities in large battles
-- **Fix**: Maintain reverse lookup: `HashMap<Entity, Vec<Entity>>` of who targets whom
-- **Code Changes**: Add targeting relationship tracking component/system
+- **Fix**: ✅ Implemented `TargetTracker` resource with reverse lookup `HashMap<Entity, HashSet<Entity>>`
+- **Code Changes**: ✅ Created `/home/melty/Git/LithicRivers/crates/core/src/target_tracker.rs`, optimized cleanup function reduces from O(n²) to O(1) + O(k) where k = entities targeting dead one
 
 #### 5. **Memory Leak: Dead Entities with Components** ⚡ *Low Effort*
 - **Location**: Entity cleanup throughout codebase
@@ -79,7 +79,7 @@ Generated: 2025-01-27
 
 ### By Severity:
 - **High**: 0 issues ✅ (All resolved!)
-- **Medium**: 3 issues (performance/UX problems) - 1 resolved ✅
+- **Medium**: 2 issues (performance/UX problems) - 2 resolved ✅  
 - **Low**: 4 issues (polish/maintainability)
 
 ### By Effort:

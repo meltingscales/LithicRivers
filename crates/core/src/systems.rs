@@ -80,7 +80,7 @@ pub fn move_player_system(world: &mut World, res: &mut Resources) {
                             y: ny,
                             z: nz,
                         };
-                        let mut comp_access = ComponentAccess::new(world);
+                        let mut comp_access = ComponentAccess::new(world, res);
                         if let Err(e) = comp_access.atomic_update(
                             player_e,
                             ComponentUpdate::Move {
@@ -208,7 +208,7 @@ pub fn pickup_system(world: &mut World, res: &mut Resources) {
     }
 
     // Process inventory updates using safe component access
-    let mut comp_access = ComponentAccess::new(world);
+    let mut comp_access = ComponentAccess::new(world, res);
     if let Ok(()) = comp_access.modify_inventory(player_e, |inv| {
         let mut total = 0u32;
         for di in &items {
@@ -232,79 +232,6 @@ pub fn pickup_system(world: &mut World, res: &mut Resources) {
     }
 }
 
-pub enum CombatState {
-    Idle,
-    CombatStarted,
-    CombatEnded,
-}
-
-pub fn combat_trigger_system(world: &mut World, res: &mut Resources) -> CombatState {
-    // get player position
-    let player_pos = match get_player_position(world) {
-        Some(pos) => pos,
-        None => return CombatState::Idle, // No player to chase
-    };
-
-    //if we're already in combat, check to see if we should exit combat
-    //TODO
-
-    // collect all entities with a combat component that aren't in battle delay
-    let mut combat_entities = Vec::new();
-    for (e, (pos, _, _)) in world.query::<(&Position, &Combat, &GameEntity)>().iter() {
-        // Skip entities with BattleDelay - they can't re-engage in combat yet
-        if world.get::<&BattleDelay>(e).is_ok() {
-            continue;
-        }
-        combat_entities.push((e, *pos));
-    }
-
-    // Define the 8 adjacent positions around the player
-    let adjacent_positions = [
-        (player_pos.x - 1, player_pos.y - 1), // NW
-        (player_pos.x, player_pos.y - 1),     // N
-        (player_pos.x + 1, player_pos.y - 1), // NE
-        (player_pos.x - 1, player_pos.y),     // W
-        (player_pos.x + 1, player_pos.y),     // E
-        (player_pos.x - 1, player_pos.y + 1), // SW
-        (player_pos.x, player_pos.y + 1),     // S
-        (player_pos.x + 1, player_pos.y + 1), // SE
-    ];
-
-    // process each combat entity
-    for (e, pos) in combat_entities {
-        // check if entity is in any of the 8 adjacent positions
-        let is_adjacent = adjacent_positions
-            .iter()
-            .any(|&(adj_x, adj_y)| pos.x == adj_x && pos.y == adj_y && pos.z == player_pos.z);
-
-        if !is_adjacent {
-            continue;
-        }
-
-        // trigger combat
-        let combat_triggered = if let Ok(mut combat) = world.get::<&mut Combat>(e) {
-            combat.triggered = true;
-            true
-        } else {
-            false
-        };
-
-        if combat_triggered {
-            // Mark combat as active
-            res.player_state.combat_active = true;
-
-            // Ensure player has an ActionQueue component for combat
-            if let Some(player_entity) = get_player_entity(world) {
-                if world.get::<&ActionQueue>(player_entity).is_err() {
-                    world.insert_one(player_entity, ActionQueue::new()).ok();
-                }
-            }
-
-            return CombatState::CombatStarted;
-        }
-    }
-    CombatState::Idle
-}
 
 // Feral dogs with A* pathfinding that chase the player intelligently
 pub fn feral_dog_system(world: &mut World, res: &mut Resources) {
@@ -1081,25 +1008,44 @@ fn execute_enemy_attack(
 }
 
 /// Centralized function to clean up all action queues targeting a dead entity
-pub fn cleanup_actions_targeting_dead_entity(world: &mut World, dead_entity: hecs::Entity) {
-    // Collect all entities with action queues to avoid borrowing conflicts
-    let mut entities_with_queues = Vec::new();
-    for (queue_entity, _) in world.query::<&ActionQueue>().iter() {
-        entities_with_queues.push(queue_entity);
-    }
+/// OPTIMIZED: O(1) lookup using target tracker, with O(n) fallback for robustness
+pub fn cleanup_actions_targeting_dead_entity(
+    world: &mut World,
+    res: &mut Resources,
+    dead_entity: hecs::Entity,
+) {
+    // Fast O(1) lookup: find all entities that have actions targeting the dead entity
+    let entities_targeting_dead = res.target_tracker.get_entities_targeting(dead_entity);
 
-    // Remove actions targeting the dead entity from all queues
-    for queue_entity in entities_with_queues {
-        if let Ok(mut queue) = world.get::<&mut ActionQueue>(queue_entity) {
-            queue.remove_actions_targeting(dead_entity);
+    if !entities_targeting_dead.is_empty() {
+        // Optimized path: only check entities we know are targeting the dead entity
+        for queue_entity in entities_targeting_dead {
+            if let Ok(mut queue) = world.get::<&mut ActionQueue>(queue_entity) {
+                queue.remove_actions_targeting(dead_entity);
+                res.target_tracker.remove_targeting(queue_entity, dead_entity);
+            }
+        }
+    } else {
+        // Fallback path: target tracker might be empty (e.g., in tests or during transition)
+        // Fall back to scanning all entities - still works but slower
+        let mut entities_with_queues = Vec::new();
+        for (queue_entity, _) in world.query::<&ActionQueue>().iter() {
+            entities_with_queues.push(queue_entity);
+        }
+
+        for queue_entity in entities_with_queues {
+            if let Ok(mut queue) = world.get::<&mut ActionQueue>(queue_entity) {
+                queue.remove_actions_targeting(dead_entity);
+            }
         }
     }
 
-    // Clear any action queues on the dead entity itself
+    // Clear any action queues on the dead entity itself and remove from tracker
     if let Ok(mut queue) = world.get::<&mut ActionQueue>(dead_entity) {
-        queue.clear();
+        queue.clear_with_tracker(dead_entity, &mut res.target_tracker);
     }
 }
+
 
 /// Apply damage to an entity using safe component access
 fn apply_damage(
@@ -1109,7 +1055,7 @@ fn apply_damage(
     damage: u32,
     source: &str,
 ) {
-    let mut comp_access = ComponentAccess::new(world);
+    let mut comp_access = ComponentAccess::new(world, res);
 
     match comp_access.apply_damage(target_entity, damage) {
         Ok(DamageResult::Damaged {
@@ -1172,7 +1118,7 @@ fn handle_entity_death(world: &mut World, res: &mut Resources, entity: hecs::Ent
     world.insert_one(entity, Dead).ok();
 
     // Use centralized cleanup function
-    cleanup_actions_targeting_dead_entity(world, entity);
+    cleanup_actions_targeting_dead_entity(world, res, entity);
 
     // Remove combat capability
     world.remove_one::<Combat>(entity).ok();
@@ -1421,7 +1367,7 @@ mod tests {
     fn test_centralized_cleanup_function() {
         // Test the centralized cleanup function directly
         let mut world = World::new();
-        let _res = Resources::new(12345);
+        let mut res = Resources::new(12345);
 
         // Create player and enemy entities
         let player = world.spawn((
@@ -1507,7 +1453,7 @@ mod tests {
             .is_empty());
 
         // Call centralized cleanup for enemy1
-        cleanup_actions_targeting_dead_entity(&mut world, enemy1);
+        cleanup_actions_targeting_dead_entity(&mut world, &mut res, enemy1);
 
         // Verify cleanup worked
         // Player's current action targeting enemy1 should be removed

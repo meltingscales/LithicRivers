@@ -1,14 +1,16 @@
 use crate::components::*;
+use crate::resources::Resources;
 use hecs::{Entity, World};
 
 /// Safe component access patterns that ensure data consistency
 pub struct ComponentAccess<'w> {
     world: &'w mut World,
+    res: &'w mut Resources,
 }
 
 impl<'w> ComponentAccess<'w> {
-    pub fn new(world: &'w mut World) -> Self {
-        Self { world }
+    pub fn new(world: &'w mut World, res: &'w mut Resources) -> Self {
+        Self { world, res }
     }
 
     /// Safely update entity position with validation
@@ -74,8 +76,8 @@ impl<'w> ComponentAccess<'w> {
                 // Mark as dead consistently
                 self.world.insert_one(entity, Dead).ok();
 
-                // Use centralized cleanup function
-                crate::systems::cleanup_actions_targeting_dead_entity(self.world, entity);
+                // Use optimized cleanup function
+                crate::systems::cleanup_actions_targeting_dead_entity(self.world, self.res, entity);
 
                 // Remove combat capability
                 self.world.remove_one::<Combat>(entity).ok();

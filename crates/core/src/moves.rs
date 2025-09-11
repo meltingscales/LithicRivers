@@ -397,6 +397,21 @@ impl ActionQueue {
 
         // Log was here but removed to avoid adding tracing dependency
     }
+
+    /// Clear all actions and update target tracker
+    pub fn clear_with_tracker(
+        &mut self,
+        entity: Entity,
+        target_tracker: &mut crate::target_tracker::TargetTracker,
+    ) {
+        // Remove this entity from all target tracking relationships
+        target_tracker.clear_entity_targeting(entity);
+
+        // Clear the queue
+        self.actions.clear();
+        self.current_action = None;
+    }
+
 }
 
 /// Get a description of body state for display
