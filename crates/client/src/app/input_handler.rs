@@ -209,7 +209,11 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
         }
 
         // Toggle Build mode (cycles between Movement -> Break -> Place)
-        if key == KeyCode::Char('B') || key == KeyCode::Char('b') {
+        if app
+            .ui
+            .keybinds
+            .matches("build", "TOGGLE_BREAK_PLACE_MODE", &key)
+        {
             use crate::app_state::BuildMode;
             app.panels.build.mode = app.panels.build.mode.next();
             app.core
