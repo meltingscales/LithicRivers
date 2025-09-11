@@ -52,7 +52,7 @@ coverage:
     @echo "Installing cargo-tarpaulin if not present..."
     {{cargo_base}} install cargo-tarpaulin --locked
     @echo "Running tests with coverage..."
-    {{cargoz_env}} tarpaulin --verbose --all-features --workspace --timeout 120 --out Html --out Xml --output-dir coverage/
+    {{cargoz_env}} tarpaulin --verbose --skip-clean --all-features --workspace --timeout 120 --out Html --out Xml --output-dir coverage/
     @echo "Coverage report generated in coverage/ directory"
     @echo "Open coverage/tarpaulin-report.html in your browser to view the report"
 
