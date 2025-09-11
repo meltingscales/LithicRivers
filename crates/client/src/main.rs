@@ -46,7 +46,8 @@ use crate::{
         panels::{
             render_body_panel, render_combat_panel, render_crafting_panel, render_credits_panel,
             render_game_view, render_help_panel, render_inventory_list_only,
-            render_inventory_panel, render_look_panel, render_menu_panel, render_quit_panel,
+            render_inventory_panel, render_look_panel, render_menu_panel, render_modes_panel,
+            render_quit_panel,
         },
     },
 };
@@ -587,21 +588,35 @@ fn ui(f: &mut Frame, app: &mut App) {
                 render_combat_panel(f, app, main_chunks[0]);
                 render_game_view(f, app, main_chunks[1]);
             } else if app.panels.look.mode {
-                // With Look mode: show look panel on the right
+                // With Look mode: show modes panel and look panel on the right
                 let main_chunks = Layout::default()
                     .direction(Direction::Horizontal)
                     .constraints([Constraint::Min(20), Constraint::Length(24)])
                     .split(root_chunks[1]);
                 render_game_view(f, app, main_chunks[0]);
-                render_look_panel(f, app, main_chunks[1]);
+
+                // Split right panel vertically: modes (3 lines) + look panel (rest)
+                let right_chunks = Layout::default()
+                    .direction(Direction::Vertical)
+                    .constraints([Constraint::Length(3), Constraint::Min(0)])
+                    .split(main_chunks[1]);
+                render_modes_panel(f, app, right_chunks[0]);
+                render_look_panel(f, app, right_chunks[1]);
             } else {
-                // Show inventory list as sidebar, but hide Item detail panel
+                // Show modes panel and inventory list as sidebar
                 let main_chunks = Layout::default()
                     .direction(Direction::Horizontal)
                     .constraints([Constraint::Min(20), Constraint::Length(24)])
                     .split(root_chunks[1]);
                 render_game_view(f, app, main_chunks[0]);
-                render_inventory_list_only(f, app, main_chunks[1]);
+
+                // Split right panel vertically: modes (3 lines) + inventory (rest)
+                let right_chunks = Layout::default()
+                    .direction(Direction::Vertical)
+                    .constraints([Constraint::Length(3), Constraint::Min(0)])
+                    .split(main_chunks[1]);
+                render_modes_panel(f, app, right_chunks[0]);
+                render_inventory_list_only(f, app, right_chunks[1]);
             }
         }
         MenuTab::Crafting => {
