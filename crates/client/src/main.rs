@@ -45,7 +45,7 @@ use crate::{
         centered_rect,
         panels::{
             render_body_panel, render_combat_panel, render_crafting_panel, render_credits_panel,
-            render_game_view, render_help_panel, render_inventory_list_only,
+            render_game_view, render_help_panel, render_hotbar_panel, render_inventory_list_only,
             render_inventory_panel, render_look_panel, render_menu_panel, render_modes_panel,
             render_quit_panel,
         },
@@ -559,16 +559,34 @@ fn ui(f: &mut Frame, app: &mut App) {
         return;
     }
 
-    let root_chunks = Layout::default()
-        .direction(Direction::Vertical)
-        .margin(0)
-        .constraints([
-            Constraint::Length(1), // Title line
-            Constraint::Min(0),    // Main area (map + inventory)
-            Constraint::Length(7), // Message log
-            Constraint::Length(3), // Bottom menu bar (needs 3 for borders + content)
-        ])
-        .split(f.size());
+    // Check if we should show hotbar (place mode + world tab)
+    let show_hotbar = app.ui.current_tab == MenuTab::World
+        && matches!(app.panels.build.mode, crate::app_state::BuildMode::Place);
+
+    let root_chunks = if show_hotbar {
+        Layout::default()
+            .direction(Direction::Vertical)
+            .margin(0)
+            .constraints([
+                Constraint::Length(1), // Title line
+                Constraint::Min(0),    // Main area (map + inventory)
+                Constraint::Length(3), // Hotbar
+                Constraint::Length(7), // Message log
+                Constraint::Length(3), // Bottom menu bar (needs 3 for borders + content)
+            ])
+            .split(f.size())
+    } else {
+        Layout::default()
+            .direction(Direction::Vertical)
+            .margin(0)
+            .constraints([
+                Constraint::Length(1), // Title line
+                Constraint::Min(0),    // Main area (map + inventory)
+                Constraint::Length(7), // Message log
+                Constraint::Length(3), // Bottom menu bar (needs 3 for borders + content)
+            ])
+            .split(f.size())
+    };
 
     // Title
     let title = Paragraph::new("LithicRivers (Ratatui Client)")
@@ -652,11 +670,19 @@ fn ui(f: &mut Frame, app: &mut App) {
     // Render corpse looting modals if active
     render_corpse_looting_modals(f, app);
 
-    // Message log
-    render_message_log(f, app, root_chunks[2]);
-
-    // Bottom menu bar
-    render_bottom_menu(f, app, root_chunks[3]);
+    // Render hotbar if in place mode
+    if show_hotbar {
+        render_hotbar_panel(f, app, root_chunks[2]);
+        // Message log
+        render_message_log(f, app, root_chunks[3]);
+        // Bottom menu bar
+        render_bottom_menu(f, app, root_chunks[4]);
+    } else {
+        // Message log
+        render_message_log(f, app, root_chunks[2]);
+        // Bottom menu bar
+        render_bottom_menu(f, app, root_chunks[3]);
+    }
 }
 
 fn render_message_log(f: &mut Frame, app: &mut App, area: Rect) {
