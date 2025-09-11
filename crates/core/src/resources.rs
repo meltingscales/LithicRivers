@@ -2,6 +2,7 @@ use crate::game_config::GameConfig;
 use crate::game_events::GameEvents;
 use crate::game_time::GameTime;
 use crate::player_state::PlayerState;
+use crate::target_tracker::TargetTracker;
 use crate::world_state::WorldState;
 
 pub struct Resources {
@@ -10,6 +11,7 @@ pub struct Resources {
     pub config: GameConfig,
     pub player_state: PlayerState,
     pub events: GameEvents,
+    pub target_tracker: TargetTracker,
 }
 
 impl Resources {
@@ -20,6 +22,7 @@ impl Resources {
             config: GameConfig::new(),
             player_state: PlayerState::new(),
             events: GameEvents::new(),
+            target_tracker: TargetTracker::new(),
         }
     }
 
