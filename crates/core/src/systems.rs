@@ -103,21 +103,29 @@ pub fn move_player_system(world: &mut World, res: &mut Resources) {
 /// Process mining intent: if the player requested mining, act on current tile.
 /// Returns true if mining was successful (e.g. chopped a tree), false otherwise.
 pub fn mining_system(world: &mut World, res: &mut Resources) -> bool {
-    // Check if there's a mining action in the intent
-    let has_mining_action = matches!(res.player_state.intent.action, Some(PlayerAction::Mine));
-    if !has_mining_action {
-        return false;
-    }
-
-    let Some(player_e) = get_player_entity(world) else {
-        return false;
+    // Check if there's a mining action in the intent and get coordinates
+    let (x, y, z) = match &res.player_state.intent.action {
+        Some(PlayerAction::Mine) => {
+            // Mine at player's current position
+            let Some(player_e) = get_player_entity(world) else {
+                return false;
+            };
+            let Ok(pos) = world.get::<&Position>(player_e) else {
+                return false;
+            };
+            let coords = (pos.x, pos.y, pos.z);
+            // End immutable borrow before mutating the world
+            drop(pos);
+            coords
+        }
+        Some(PlayerAction::MineAt { x, y, z }) => {
+            // Mine at specified coordinates
+            (*x, *y, *z)
+        }
+        _ => {
+            return false;
+        }
     };
-    let Ok(pos) = world.get::<&Position>(player_e) else {
-        return false;
-    };
-    let (x, y, z) = (pos.x, pos.y, pos.z);
-    // End immutable borrow before mutating the world
-    drop(pos);
     let t = res.world_state.world.get_tile_cached(x, y, z);
     use crate::tiles::TileKind;
     use rand::Rng;

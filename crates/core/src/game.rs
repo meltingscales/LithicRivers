@@ -263,6 +263,19 @@ impl Game {
         self.res.player_state.intent = crate::intent::PlayerIntent::mine(cost);
     }
 
+    pub fn queue_mine_at(&mut self, x: i32, y: i32, z: i32) {
+        // Set an action cost similar to moving; could use Body modifiers later
+        let mult: f32 = self
+            .get_player_component::<Body>()
+            .map(|body| body.walk_speed_modifier())
+            .unwrap_or(1.0);
+        let base: f32 = 300.0; // slightly slower than a normal move
+        let cost = (base / mult.max(0.01)).round().max(1.0) as u64;
+
+        // Set mining intent with cost at specific coordinates
+        self.res.player_state.intent = crate::intent::PlayerIntent::mine_at(x, y, z, cost);
+    }
+
     // Convenience save/load wrappers
     pub fn save_json<P: AsRef<std::path::Path>>(&self, path: P) -> anyhow::Result<()> {
         crate::save_load::save_game_json(self, path)
