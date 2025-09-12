@@ -1,5 +1,6 @@
 {
     "name": "Corpse",
     "color": "#8B4513",
-    "description": "The remains of a fallen creature"
+    "description": "The remains of a fallen creature",
+    "has_emotion_states": false
 }

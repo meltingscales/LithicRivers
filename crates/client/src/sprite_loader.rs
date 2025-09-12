@@ -64,6 +64,8 @@ pub struct SpriteMetadata {
     pub color: String,
     pub description: String,
     pub scales: Option<Vec<u32>>, // Not strictly needed for loading, but present in JSON
+    #[serde(default)]
+    pub has_emotion_states: bool, // For NPCs that need mood-specific portraits
 }
 
 // Multi-scale: return the full sprite block string (may be multi-line) and color
@@ -134,6 +136,7 @@ impl SpriteLoader {
             EntityKind::Sheep => ("entities".to_string(), "sheep".to_string()),
             EntityKind::FeralDog => ("entities".to_string(), "feral_dog".to_string()),
             EntityKind::Corpse => ("entities".to_string(), "corpse".to_string()),
+            EntityKind::QuestTesty => ("entities".to_string(), "quest_testy".to_string()),
             _ => panic!("Unknown entity kind: {:?}", kind),
         }
     }
@@ -167,7 +170,13 @@ impl SpriteLoader {
 
         // Load metadata from embedded assets
         let metadata: SpriteMetadata = serde_json::from_str(&Self::get_embedded_text(&data_path))
-            .expect("Failed to parse embedded data.json");
+            .expect(
+                format!(
+                    "Failed to parse embedded data.json at {}",
+                    data_path.as_str()
+                )
+                .as_str(),
+            );
         // Load sprite lines from embedded assets
         let content = Self::get_embedded_text(&sprites_path);
         let lines: Vec<&str> = content.lines().collect();
@@ -184,18 +193,53 @@ impl SpriteLoader {
         // Validate sprites
         Self::validate_sprite_dimensions(&sprites, sprite_name, category);
         // Load optional 12x8 art as a single multi-line string into a Vec<String>
-        let art12x8_sprites: Vec<String> = if let Some(d) = EmbeddedAssets::get(&art12x8_path) {
+        // Also check for mood-specific portrait files
+        let mut art12x8_sprites: Vec<String> = Vec::new();
+
+        // Try to load the main art12x8.txt first
+        if let Some(d) = EmbeddedAssets::get(&art12x8_path) {
             let text = match d.data {
                 Cow::Borrowed(b) => String::from_utf8(b.to_vec()).expect("art12x8 not UTF-8"),
                 Cow::Owned(v) => String::from_utf8(v).expect("art12x8 not UTF-8"),
             };
-            vec![text]
-        } else {
+            art12x8_sprites.push(text);
+        }
+
+        // Try to load mood-specific portrait files for NPCs
+        let mood_files = [
+            "art12x8happy.txt",
+            "art12x8sad.txt",
+            "art12x8neutral.txt",
+            "art12x8weird.txt",
+        ];
+        for mood_file in &mood_files {
+            let mood_path = format!("{}{}", base, mood_file);
+            if let Some(d) = EmbeddedAssets::get(&mood_path) {
+                let text = match d.data {
+                    Cow::Borrowed(b) => String::from_utf8(b.to_vec()).expect("mood art not UTF-8"),
+                    Cow::Owned(v) => String::from_utf8(v).expect("mood art not UTF-8"),
+                };
+                art12x8_sprites.push(text);
+            } else {
+                // Panic if mood files are expected but missing
+                if category == "npcs" || category == "entities" {
+                    if metadata.has_emotion_states {
+                        panic!(
+                            "Missing required mood portrait '{}' for sprite '{}::{}'",
+                            mood_file, category, sprite_name
+                        );
+                    }
+                }
+            }
+        }
+
+        // If no art was loaded at all, panic
+        if art12x8_sprites.is_empty() {
             panic!(
                 "Missing required 12x8 art for sprite '{}::{}'",
                 category, sprite_name
             );
-        };
+        }
 
         let sprite_data = SpriteData {
             name: metadata.name,
@@ -218,6 +262,28 @@ impl SpriteLoader {
         sr: &lithicrivers_core::components::SpriteRef,
     ) -> &SpriteData {
         self.load_sprite(&sr.name, &sr.category)
+    }
+
+    // Get mood-specific portrait for NPCs
+    pub fn get_mood_portrait(
+        &mut self,
+        sprite_ref: &lithicrivers_core::components::SpriteRef,
+        mood: lithicrivers_core::components::NPCMood,
+    ) -> Option<String> {
+        let sprite_data = self.load_by_spriteref(sprite_ref);
+        let mood_index = match mood {
+            lithicrivers_core::components::NPCMood::Happy => 1, // art12x8happy.txt
+            lithicrivers_core::components::NPCMood::Sad => 2,   // art12x8sad.txt
+            lithicrivers_core::components::NPCMood::Neutral => 3, // art12x8neutral.txt
+            lithicrivers_core::components::NPCMood::Weird => 4, // art12x8weird.txt
+        };
+
+        if mood_index < sprite_data.art12x8_sprites.len() {
+            Some(sprite_data.art12x8_sprites[mood_index].clone())
+        } else {
+            // Fallback to main portrait if mood-specific one doesn't exist
+            sprite_data.art12x8_sprites.get(0).cloned()
+        }
     }
 
     // Discover and preload all sprites from embedded assets under sprites/<category>/<name>.lrsprite/

@@ -1,5 +1,6 @@
 {
     "name": "Feral Dog",
     "color": "#FF0000",
-    "description": "A dog that attacks you"
+    "description": "A dog that attacks you",
+    "has_emotion_states": false
 } 

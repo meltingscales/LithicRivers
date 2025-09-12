@@ -255,6 +255,7 @@ pub enum EntityKind {
     Chest,
     Rock,
     Corpse,
+    QuestTesty,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -306,6 +307,28 @@ pub struct SpriteRef {
 /// Marker component for entities that are dead
 #[derive(Debug, Clone, Copy)]
 pub struct Dead;
+
+/// Quest-giving NPC marker
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct QuestTesty;
+
+/// NPC mood states for dialogue system
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum NPCMood {
+    Happy,
+    Sad,
+    Neutral,
+    Weird,
+}
+
+/// Component for NPCs that can engage in dialogue
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Dialogue {
+    pub current_mood: NPCMood,
+    pub met_before: bool,
+    pub current_dialogue_id: Option<usize>,
+    pub name: String,
+}
 
 impl SpriteRef {
     pub fn new(category: &str, name: &str) -> Self {

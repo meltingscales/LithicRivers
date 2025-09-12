@@ -1,5 +1,6 @@
 {
     "name": "Stumbling Sheep",
     "color": "#FFFFFF",
-    "description": "A sheep that stumbles around aimlessly"
+    "description": "A sheep that stumbles around aimlessly",
+    "has_emotion_states": false
 } 

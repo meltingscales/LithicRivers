@@ -1214,7 +1214,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
         }
 
         if app.ui.keybinds.matches("action", "INTERACT", &key) {
-            handle_corpse_interaction(app);
+            handle_interaction(app);
             return Ok(());
         }
 
@@ -1422,6 +1422,13 @@ fn get_combat_enemy_count(game: &mut lithicrivers_core::Game) -> usize {
     }
 
     count
+}
+
+/// Handle general interaction - items, corpses, NPCs
+fn handle_interaction(app: &mut App) {
+    // Set player intent to interact - let the core system handle the logic
+    app.core.game.res.player_state.intent = lithicrivers_core::intent::PlayerIntent::interact(100);
+    // 100 tick cost
 }
 
 /// Handle corpse interaction - find adjacent corpses and initiate looting
