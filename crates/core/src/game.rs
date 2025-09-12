@@ -85,8 +85,8 @@ impl Game {
             ));
         }
 
-        //spawn 1 feral dog and immediately kill it 2 spaces away from the player for testing
-        let dead_dog_position = (sx + 2, sy + 0, sz);
+        //spawn 1 feral dog and immediately kill it next to an npc for testing
+        let dead_dog_position = (sx - 7, sy - 4, sz);
         let dead_dog = world.spawn((
             Position {
                 x: dead_dog_position.0,
