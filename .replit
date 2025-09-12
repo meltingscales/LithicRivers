@@ -1,2 +1,0 @@
-language = "python3"
-run = "bash scripts/setup.sh && bash scripts/start.sh"
