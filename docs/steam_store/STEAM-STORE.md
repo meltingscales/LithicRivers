@@ -45,10 +45,12 @@ Automation & Emergence
 Conveyors, fluids, and procedural systems interact in unexpected ways. Build, automate, or exploit the physics of ASCII itself.
 
 ASCII Worldbuilding
-From tiny 1×1 blocks to detailed 12×8 sprites, the entire game is rendered in expressive ASCII art. Retro roguelike feel, modern depth.
+From tiny 1x1 blocks to detailed 12x8 sprites, the entire game is rendered in expressive ASCII art. Retro roguelike feel, modern depth.
 
 Why LithicRivers?
 
 If Minecraft is about freedom, Factorio about optimization, Caves of Qud about narrative strangeness, and Dwarf Fortress about simulation, then LithicRivers is about determinism and embodiment. It’s a survival sandbox where nothing is left to chance — and where rebuilding your body is as important as rebuilding the world.
 
 Target price: accessible indie ($3). Optimized to run in your terminal or on a potato laptop, but deep enough to live alongside the great roguelikes.
+
+Platforms: Built natively in Rust for Windows, Debian Linux, and MacOS.

@@ -148,6 +148,7 @@ build-demos: fmt
     {{cargoz_env}} build -p lithicrivers-client --bin demo_combat_chrono_trigger {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin demo_dungeon_generation {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin demo_corpse_looting {{build_flags}}
+    {{cargoz_env}} build -p lithicrivers-client --bin demo_dialogue_interactions {{build_flags}}
 
 # Optional: build demo binaries (release)
 build-demos-release: fmt
@@ -160,6 +161,7 @@ build-demos-release: fmt
     {{cargoz_env}} build -p lithicrivers-client --bin demo_combat_chrono_trigger --release {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin demo_dungeon_generation --release {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin demo_corpse_looting --release {{build_flags}}
+    {{cargoz_env}} build -p lithicrivers-client --bin demo_dialogue_interactions --release {{build_flags}}
 
 # Run debug build (alias for client)
 run-debug: client
@@ -211,6 +213,10 @@ demo-dungeon-generation:
 # Run the corpse looting demo
 demo-corpse-looting:
     {{cargoz_env}} run -p lithicrivers-client --bin demo_corpse_looting
+
+# Run the dialogue interactions demo
+demo-dialogue-interactions:
+    {{cargoz_env}} run -p lithicrivers-client --bin demo_dialogue_interactions
 
 # Blind mode (not implemented)
 client-blind:
