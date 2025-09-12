@@ -13,9 +13,37 @@ pub fn render_menu_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
         Style::default().fg(Color::Cyan),
     )));
     lines.push(Line::from(""));
-    lines.push(Line::from(Span::raw(
-        "Use configured keybinds to Save/Load/Quit (see config).",
+
+    // Display save/load keybinds
+    let save_keys = app.ui.keybinds.get_map().get("ui:SAVE_JSON");
+    let load_keys = app.ui.keybinds.get_map().get("ui:LOAD_JSON");
+
+    let save_key_str = if let Some(keys) = save_keys {
+        if keys.is_empty() {
+            "not bound".to_string()
+        } else {
+            format!("{:?}", keys[0])
+        }
+    } else {
+        "not bound".to_string()
+    };
+
+    let load_key_str = if let Some(keys) = load_keys {
+        if keys.is_empty() {
+            "not bound".to_string()
+        } else {
+            format!("{:?}", keys[0])
+        }
+    } else {
+        "not bound".to_string()
+    };
+
+    lines.push(Line::from(Span::styled(
+        "Save/Load Controls:",
+        Style::default().fg(Color::Yellow),
     )));
+    lines.push(Line::from(Span::raw(format!("  Save: {}", save_key_str))));
+    lines.push(Line::from(Span::raw(format!("  Load: {}", load_key_str))));
     lines.push(Line::from(""));
     // Config source
     lines.push(Line::from(Span::styled(
