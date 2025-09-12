@@ -43,8 +43,9 @@
 - [x] Player movement and basic interactions
   - [x] Numpad movement plus '<'/'>' vertical movement
   - [x] Mining action with SFX and message log feedback
-  - [ ] Make building/placing blocks/mining fun and fast!
-    - [ ] vim-style build/break toggle?
+  - [x] Make building/placing blocks/mining fun and fast!
+    - [x] ~~vim-style build/break toggle?~~ **DONE: 'v' key toggles break/place mode (v0.8.2.0)**
+    - [x] **Block placement with inventory consumption implemented**
 - [x] Simple crafting system
   - [x] 3 starter recipes (stick, plank, torch) with deterministic outputs
 - [ ] Day/night cycle
@@ -57,9 +58,14 @@
   - [x] Tackling an enemy costs 800 ticks
   - [x] Tackling an enemy stuns it for 400 ticks (50% chance)
   - [x] Tackling an enemy pushes it back 2 spaces
+  - [x] **Dead enemies turn into lootable corpses (v0.8.1.0)**
+  - [x] **Combat fully merged and stable (v0.8.1.1)**
 
 ## Technical Requirements
 - [x] Stable save/load system
+  - [x] **Viewport position now saved/restored on load**
+  - [x] **FeralDogs (and all entities) now persist correctly across save/load**
+  - [x] **Save/load restricted to menu tab only for safety**
 - [x] 3D world slices (Z-level viewing and vertical movement)
   - [x] View snaps to player Z after movement (toggle later if needed)
   - [x] Worldgen Perlin noise includes Z; slices deterministic by seed
@@ -69,6 +75,9 @@
   - [x] Upload artifacts to Releases (draft)
 - [x] Basic settings/controls menu
   - [x] Rebind keys (movement, vertical, snap toggle)
+  - [x] **F1-F12 hotbar assignment system (v0.8.2.0)**
+  - [x] **Mode toggling blocked during combat**
+  - [x] **Colored message log system with red NumLock warnings**
   - [ ] Volume sliders (music/sfx)
 - [ ] Performance optimizations for target hardware
   - [ ] Profiling budget: ~60 FPS at 80x24; ≤16 ms tick under normal load
@@ -82,10 +91,14 @@
 
 ## Polish & UX
 - [x] intro sequence
+  - [x] **Boot message and intro screens (v0.7.6.2)**
 - [ ] tutorial sequence that can be accessed anytime
 - [ ] Basic sound effects, not just music
 - [ ] Main menu with new game/load game
-- [ ] Basic UI feedback for player actions
+- [x] Basic UI feedback for player actions
+  - [x] **Save/load keybinds displayed in menu**
+  - [x] **Cross-platform NumLock detection and warnings**
+  - [x] **Colored message system for better user feedback**
 
 ## Post-MVP (After Release)
 - [ ] Multiplayer support
@@ -94,9 +107,42 @@
 - [ ] Advanced AI behaviors
 - [ ] Expanded building mechanics
 
+## Next Priority Items (Suggested Order)
+
+### HIGH PRIORITY (Core Gameplay Gaps)
+1. **Basic survival mechanics (damage, repair, body parts)**
+   - Body panel shows part states; player can incur and repair at least 1 damage type
+   - This is essential for the core survival loop
+   
+2. **Day/night cycle**
+   - Full cycle length ~10–20 minutes with visual cue
+   - Affects gameplay rhythm and difficulty
+
+3. **NPC interactions and conversations**
+   - Port from Python version for quest/story content
+   - Critical for engagement beyond just mining/combat
+
+### MEDIUM PRIORITY (Polish & Performance)
+4. **Performance optimizations**
+   - Profiling budget: ~60 FPS at 80x24; ≤16 ms tick under normal load
+   - Identify and fix top 2 hotspots
+
+5. **Volume sliders (music/sfx)**
+   - Complete the settings menu
+   - Important for user customization
+
+6. **Tutorial sequence**
+   - Accessible anytime for new players
+   - Critical for Steam release onboarding
+
+### LOWER PRIORITY (Nice to Have)
+7. **Main menu with new game/load game**
+8. **More biome variety and structure generation**
+9. **Basic sound effects** (beyond just music)
+
 ## Timeline
-- [ ] September: Core gameplay implementation
-- [ ] October: Steam integration and performance
-- [ ] November: Polish and bug fixing
+- [ ] September: Core gameplay implementation (**Body mechanics, Day/night, NPCs**)
+- [ ] October: Steam integration and performance (**Optimization, Tutorial**)
+- [ ] November: Polish and bug fixing (**UI/UX refinements**)
 - [ ] Early December: Beta testing
 - [ ] Mid-December: Release
