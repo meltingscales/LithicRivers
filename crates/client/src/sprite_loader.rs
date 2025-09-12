@@ -67,6 +67,7 @@ pub struct SpriteMetadata {
 }
 
 // Multi-scale: return the full sprite block string (may be multi-line) and color
+// This code maps TileKind to sprite names which is eventually used for rendering.
 pub fn sprite_block_for_tile(
     loader: &mut SpriteLoader,
     kind: TileKind,
@@ -87,7 +88,11 @@ pub fn sprite_block_for_tile(
             TileKind::ScrapElectronics => "scrap_electronics",
             TileKind::PlasteelScrap => "plasteel_scrap",
             TileKind::Treasure => "treasure",
-            _ => return None,
+            TileKind::PlankBlock => "plank_block",
+            _ => panic!(
+                "Unknown tile kind: {:?}. Without this enum->name mapping, we cannot render.",
+                kind
+            ),
         },
     );
     let sd = loader.load_sprite(name, category);
