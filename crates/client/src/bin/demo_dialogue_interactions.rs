@@ -8,11 +8,11 @@ use std::{io, time::Duration};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum DialogueType {
-    Linear,      // Simple linear conversation
-    Branching,   // Player choices affect dialogue
-    Shop,        // Trading interface with dialogue
-    Quest,       // Quest giving with conditions
-    Battle,      // Pre/post battle dialogue
+    Linear,    // Simple linear conversation
+    Branching, // Player choices affect dialogue
+    Shop,      // Trading interface with dialogue
+    Quest,     // Quest giving with conditions
+    Battle,    // Pre/post battle dialogue
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -113,13 +113,18 @@ impl App {
     ║   │ $ │   ║
     ║   └───┘   ║
     ╚═══════════╝
-".to_string(),
+"
+                .to_string(),
                 dialogue_type: DialogueType::Shop,
                 current_mood: NPCMood::Friendly,
                 initial_dialogue: 0,
                 met_before: false,
                 has_quest: false,
-                shop_inventory: vec!["Iron Sword".to_string(), "Magic Scroll".to_string(), "Elixir".to_string()],
+                shop_inventory: vec![
+                    "Iron Sword".to_string(),
+                    "Magic Scroll".to_string(),
+                    "Elixir".to_string(),
+                ],
             },
             NPC {
                 name: "Knight Captain Elena".to_string(),
@@ -131,7 +136,8 @@ impl App {
     ║   │ ⚔ │   ║
     ║   └───┘   ║
     ╚═══════════╝
-".to_string(),
+"
+                .to_string(),
                 dialogue_type: DialogueType::Quest,
                 current_mood: NPCMood::Neutral,
                 initial_dialogue: 10,
@@ -149,7 +155,8 @@ impl App {
     ║   │ 🔮 │   ║
     ║   └───┘   ║
     ╚═══════════╝
-".to_string(),
+"
+                .to_string(),
                 dialogue_type: DialogueType::Branching,
                 current_mood: NPCMood::Mysterious,
                 initial_dialogue: 20,
@@ -167,7 +174,8 @@ impl App {
     ║   │ 🍺 │   ║
     ║   └───┘   ║
     ╚═══════════╝
-".to_string(),
+"
+                .to_string(),
                 dialogue_type: DialogueType::Linear,
                 current_mood: NPCMood::Friendly,
                 initial_dialogue: 30,
@@ -185,7 +193,8 @@ impl App {
     ║   │ 💀 │   ║
     ║   └───┘   ║
     ╚═══════════╝
-".to_string(),
+"
+                .to_string(),
                 dialogue_type: DialogueType::Battle,
                 current_mood: NPCMood::Hostile,
                 initial_dialogue: 40,
@@ -845,7 +854,10 @@ impl App {
             },
         ];
 
-        self.add_message("Welcome to the Dialogue Demo! Talk to NPCs with Enter, navigate with arrows/numbers.".to_string());
+        self.add_message(
+            "Welcome to the Dialogue Demo! Talk to NPCs with Enter, navigate with arrows/numbers."
+                .to_string(),
+        );
     }
 
     fn get_mood_color(&self, mood: NPCMood) -> Color {
@@ -921,7 +933,7 @@ impl App {
         }
 
         self.current_npc = Some(npc_index);
-        
+
         // Mark as met and get initial dialogue
         let (initial_dialogue, npc_name) = {
             let npc = &mut self.npcs[npc_index];
@@ -933,7 +945,7 @@ impl App {
 
         self.current_dialogue = Some(initial_dialogue);
         self.selected_choice = 0;
-        
+
         self.add_message(format!("Started conversation with {}", npc_name));
         self.conversation_log.clear();
     }
@@ -941,27 +953,28 @@ impl App {
     fn select_choice(&mut self, choice_index: usize) {
         if let (Some(npc_idx), Some(dialogue_idx)) = (self.current_npc, self.current_dialogue) {
             // First, get all the data we need from the dialogue tree
-            let (choice_data, shop_item) = if let Some(dialogue) = self.dialogue_tree.iter().find(|d| d.id == dialogue_idx) {
-                if choice_index < dialogue.choices.len() {
-                    let choice = &dialogue.choices[choice_index];
-                    let choice_data = (
-                        choice.text.clone(),
-                        choice.mood_change,
-                        choice.unlocks_quest,
-                        choice.leads_to,
-                    );
-                    (Some(choice_data), dialogue.shop_item.clone())
+            let (choice_data, shop_item) =
+                if let Some(dialogue) = self.dialogue_tree.iter().find(|d| d.id == dialogue_idx) {
+                    if choice_index < dialogue.choices.len() {
+                        let choice = &dialogue.choices[choice_index];
+                        let choice_data = (
+                            choice.text.clone(),
+                            choice.mood_change,
+                            choice.unlocks_quest,
+                            choice.leads_to,
+                        );
+                        (Some(choice_data), dialogue.shop_item.clone())
+                    } else {
+                        (None, None)
+                    }
                 } else {
                     (None, None)
-                }
-            } else {
-                (None, None)
-            };
+                };
 
             if let Some((choice_text, mood_change, unlocks_quest, leads_to)) = choice_data {
                 // Log the player's choice
                 self.conversation_log.push(format!("You: {}", choice_text));
-                
+
                 // Handle mood changes
                 if let Some(new_mood) = mood_change {
                     self.npcs[npc_idx].current_mood = new_mood;
@@ -976,7 +989,10 @@ impl App {
                 // Handle shop transactions
                 if let Some(item) = shop_item {
                     // Simple shop logic
-                    if choice_text.contains("take it") || choice_text.contains("buy") || choice_text.contains("I'll take") {
+                    if choice_text.contains("take it")
+                        || choice_text.contains("buy")
+                        || choice_text.contains("I'll take")
+                    {
                         self.player.inventory.push(item.clone());
                         self.player.gold = self.player.gold.saturating_sub(25); // Simple price
                         self.add_message(format!("Purchased {} for 25 gold", item));
@@ -1109,17 +1125,21 @@ fn render_npc_selection_screen(f: &mut Frame, app: &App, area: Rect) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(3),  // Title
-            Constraint::Min(10),    // NPCs
-            Constraint::Length(8),  // Player info
-            Constraint::Length(6),  // Message log
-            Constraint::Length(3),  // Controls
+            Constraint::Length(3), // Title
+            Constraint::Min(10),   // NPCs
+            Constraint::Length(8), // Player info
+            Constraint::Length(6), // Message log
+            Constraint::Length(3), // Controls
         ])
         .split(area);
 
     // Title
     let title = Paragraph::new("🎭 Dialogue System Demo 🎭")
-        .style(Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD))
+        .style(
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
+        )
         .alignment(Alignment::Center);
     f.render_widget(title, chunks[0]);
 
@@ -1132,8 +1152,9 @@ fn render_npc_selection_screen(f: &mut Frame, app: &App, area: Rect) {
     for (i, npc) in app.npcs.iter().enumerate() {
         let mood_color = app.get_mood_color(npc.current_mood);
         let mood_prefix = app.get_mood_prefix(npc.current_mood);
-        
-        let npc_text = format!("{}\n{}\n\n{}{}",
+
+        let npc_text = format!(
+            "{}\n{}\n\n{}{}",
             npc.portrait,
             npc.name,
             mood_prefix,
@@ -1143,7 +1164,7 @@ fn render_npc_selection_screen(f: &mut Frame, app: &App, area: Rect) {
         let mut block = Block::default()
             .borders(Borders::ALL)
             .title(format!(" {} ", i + 1));
-        
+
         if npc.met_before {
             block = block.border_style(Style::default().fg(Color::Green));
         }
@@ -1163,14 +1184,14 @@ fn render_npc_selection_screen(f: &mut Frame, app: &App, area: Rect) {
         app.player.gold,
         app.player.inventory.len()
     );
-    
+
     let inventory_text = app.player.inventory.join(", ");
     let full_player_text = format!("{}\nInventory: {}", player_info, inventory_text);
 
     let player_block = Block::default()
         .borders(Borders::ALL)
         .title(" Player Info ");
-    
+
     let player_widget = Paragraph::new(full_player_text)
         .block(player_block)
         .style(Style::default().fg(Color::Yellow));
@@ -1179,10 +1200,8 @@ fn render_npc_selection_screen(f: &mut Frame, app: &App, area: Rect) {
 
     // Message log
     let messages = app.message_log.join("\n");
-    let log_block = Block::default()
-        .borders(Borders::ALL)
-        .title(" Messages ");
-    
+    let log_block = Block::default().borders(Borders::ALL).title(" Messages ");
+
     let log_widget = Paragraph::new(messages)
         .block(log_block)
         .style(Style::default().fg(Color::White));
@@ -1201,7 +1220,7 @@ fn render_npc_selection_screen(f: &mut Frame, app: &App, area: Rect) {
 fn render_dialogue_screen(f: &mut Frame, app: &App, area: Rect) {
     if let (Some(npc_idx), Some(dialogue)) = (app.current_npc, app.get_current_dialogue()) {
         let npc = &app.npcs[npc_idx];
-        
+
         // Summon Night style layout: portraits at top, message box at bottom
         let main_chunks = Layout::default()
             .direction(Direction::Vertical)
@@ -1237,7 +1256,7 @@ fn render_dialogue_screen(f: &mut Frame, app: &App, area: Rect) {
             .borders(Borders::ALL)
             .title(format!(" {} ", app.player.name))
             .border_style(Style::default().fg(Color::Cyan));
-        
+
         let player_widget = Paragraph::new(player_portrait)
             .block(player_block)
             .style(Style::default().fg(Color::Cyan))
@@ -1246,8 +1265,9 @@ fn render_dialogue_screen(f: &mut Frame, app: &App, area: Rect) {
         f.render_widget(player_widget, portrait_chunks[0]);
 
         // Scene info (center)
-        let scene_info = format!("Location: Town Square\n\nGold: {}\nItems: {}", 
-            app.player.gold, 
+        let scene_info = format!(
+            "Location: Town Square\n\nGold: {}\nItems: {}",
+            app.player.gold,
             app.player.inventory.len()
         );
 
@@ -1266,12 +1286,12 @@ fn render_dialogue_screen(f: &mut Frame, app: &App, area: Rect) {
         // NPC portrait (right side) - with dynamic mood
         let mood_color = app.get_mood_color(npc.current_mood);
         let npc_portrait = app.get_portrait_with_mood(npc);
-        
+
         let npc_block = Block::default()
             .borders(Borders::ALL)
             .title(format!(" {} ", npc.name))
             .border_style(Style::default().fg(mood_color));
-        
+
         let npc_widget = Paragraph::new(npc_portrait)
             .block(npc_block)
             .style(Style::default().fg(mood_color))
@@ -1283,8 +1303,8 @@ fn render_dialogue_screen(f: &mut Frame, app: &App, area: Rect) {
         let message_chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
-                Constraint::Length(8),  // Main dialogue text
-                Constraint::Length(4),  // Choices/options
+                Constraint::Length(8), // Main dialogue text
+                Constraint::Length(4), // Choices/options
             ])
             .split(main_chunks[2]);
 
@@ -1292,18 +1312,26 @@ fn render_dialogue_screen(f: &mut Frame, app: &App, area: Rect) {
         let speaker_indicator = if dialogue.speaker == app.player.name {
             format!("🗡️ {}", dialogue.speaker)
         } else {
-            format!("{} {}", app.get_mood_prefix(npc.current_mood), dialogue.speaker)
+            format!(
+                "{} {}",
+                app.get_mood_prefix(npc.current_mood),
+                dialogue.speaker
+            )
         };
 
         let dialogue_text = format!("{}\n\n\"{}\"", speaker_indicator, dialogue.text);
-        
+
         let dialogue_block = Block::default()
             .borders(Borders::ALL)
             .border_set(symbols::border::ROUNDED)
             .title(" Dialogue ")
-            .title_style(Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD))
+            .title_style(
+                Style::default()
+                    .fg(Color::Yellow)
+                    .add_modifier(Modifier::BOLD),
+            )
             .border_style(Style::default().fg(Color::Yellow));
-        
+
         let dialogue_widget = Paragraph::new(dialogue_text)
             .block(dialogue_block)
             .wrap(Wrap { trim: true })
@@ -1313,12 +1341,21 @@ fn render_dialogue_screen(f: &mut Frame, app: &App, area: Rect) {
 
         // Choice selection area
         if !dialogue.choices.is_empty() {
-            let choice_text = dialogue.choices
+            let choice_text = dialogue
+                .choices
                 .iter()
                 .enumerate()
                 .map(|(i, choice)| {
-                    let prefix = if i == app.selected_choice { "→ " } else { "  " };
-                    let style_marker = if i == app.selected_choice { "◆" } else { "◇" };
+                    let prefix = if i == app.selected_choice {
+                        "→ "
+                    } else {
+                        "  "
+                    };
+                    let style_marker = if i == app.selected_choice {
+                        "◆"
+                    } else {
+                        "◇"
+                    };
                     format!("{}{} {}", prefix, style_marker, choice.text)
                 })
                 .collect::<Vec<_>>()

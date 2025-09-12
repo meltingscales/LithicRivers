@@ -16,7 +16,10 @@ pub enum PlayerAction {
     Mine,
     /// Mine at specific coordinates
     MineAt { x: i32, y: i32, z: i32 },
-    // Future actions: Attack, Use, Craft, etc.
+    /// Interact with nearby objects (items, corpses, NPCs)
+    Interact,
+    /// Interact with specific target
+    InteractWith { target_id: Option<usize> },
 }
 
 impl PlayerIntent {
@@ -40,6 +43,22 @@ impl PlayerIntent {
     pub fn mine_at(x: i32, y: i32, z: i32, cost: u64) -> Self {
         Self {
             action: Some(PlayerAction::MineAt { x, y, z }),
+            tick_cost: cost,
+        }
+    }
+
+    /// Create an interact intent
+    pub fn interact(cost: u64) -> Self {
+        Self {
+            action: Some(PlayerAction::Interact),
+            tick_cost: cost,
+        }
+    }
+
+    /// Create an interact intent with specific target
+    pub fn interact_with(target_id: Option<usize>, cost: u64) -> Self {
+        Self {
+            action: Some(PlayerAction::InteractWith { target_id }),
             tick_cost: cost,
         }
     }

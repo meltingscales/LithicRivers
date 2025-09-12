@@ -1,6 +1,6 @@
 use crate::components::{
-    BlocksMovement, Combat, DroppedItem, Energy, EntityKind, FeralDog, GameEntity, Glyph, Health,
-    Inventory, ItemKind, Player, Position, Sheep, SpriteRef,
+    BlocksMovement, Combat, Dialogue, DroppedItem, Energy, EntityKind, FeralDog, GameEntity, Glyph,
+    Health, Inventory, ItemKind, NPCMood, Player, Position, QuestTesty, Sheep, SpriteRef,
 };
 use crate::model::body::Body;
 use crate::resources::Resources;
@@ -131,6 +131,38 @@ impl Game {
                 BlocksMovement,
                 Combat::default(),
                 dog_inventory,
+            ));
+        }
+
+        // Spawn QuestTesty NPCs for dialogue testing
+        let quest_npc_positions = [
+            (sx + 8, sy + 3, sz), // East of player
+            (sx - 8, sy - 3, sz), // West of player
+            (sx + 2, sy + 8, sz), // North of player
+        ];
+
+        for (i, (x, y, z)) in quest_npc_positions.iter().enumerate() {
+            let npc_name = format!("QuestTesty #{}", i + 1);
+
+            world.spawn((
+                Position {
+                    x: *x,
+                    y: *y,
+                    z: *z,
+                },
+                GameEntity,
+                EntityKind::QuestTesty,
+                QuestTesty,
+                Health::new(100),
+                Glyph('Q'),
+                SpriteRef::new("entities", "quest_testy"),
+                BlocksMovement,
+                Dialogue {
+                    current_mood: NPCMood::Happy,
+                    met_before: false,
+                    current_dialogue_id: Some(0), // Start with greeting
+                    name: npc_name,
+                },
             ));
         }
 
