@@ -1133,7 +1133,7 @@ fn apply_damage(
 }
 
 /// Handle entity death - add Dead marker and clean up
-fn handle_entity_death(world: &mut World, res: &mut Resources, entity: hecs::Entity) {
+pub fn handle_entity_death(world: &mut World, res: &mut Resources, entity: hecs::Entity) {
     // Check if it's a feral dog and get its position for corpse spawning
     let is_feral_dog = world.get::<&FeralDog>(entity).is_ok();
     let entity_pos = world.get::<&Position>(entity).ok().map(|p| *p);
@@ -1936,6 +1936,11 @@ pub fn interaction_system(world: &mut World, res: &mut Resources, player_entity:
         return;
     };
 
+    res.log(format!(
+        "Player interaction at ({}, {}, {})",
+        player_pos.x, player_pos.y, player_pos.z
+    ));
+
     // Find all nearby interactable objects in a 3x3 area around player
     let mut nearby_items = Vec::new();
     let mut nearby_corpses = Vec::new();
@@ -1948,24 +1953,47 @@ pub fn interaction_system(world: &mut World, res: &mut Resources, player_entity:
             && pos.z == player_pos.z
         {
             nearby_items.push((entity, *item, *pos));
+            res.log(format!(
+                "Found item {} (qty: {}) at ({}, {}, {})",
+                crate::components::itemkind_name(item.kind),
+                item.qty,
+                pos.x,
+                pos.y,
+                pos.z
+            ));
         }
     }
 
-    // Check for corpses with inventory
-    for (entity, (inv, pos)) in world.query::<(&Inventory, &Position)>().iter() {
-        // Skip if this is the player
-        if entity == player_entity {
-            continue;
-        }
-        // Check if this is a corpse (has inventory but no player marker and is dead)
-        if world.get::<&Player>(entity).is_err()
-            && (pos.x - player_pos.x).abs() <= 1
-            && (pos.y - player_pos.y).abs() <= 1
-            && pos.z == player_pos.z
-        {
-            // Check if it has items to loot
+    // Check for corpses with inventory - collect entities first to avoid borrow conflicts
+    let corpse_candidates: Vec<(hecs::Entity, Position)> = world
+        .query::<(&Position, &EntityKind)>()
+        .iter()
+        .filter_map(|(entity, (pos, kind))| {
+            if entity != player_entity
+                && *kind == EntityKind::Corpse
+                && (pos.x - player_pos.x).abs() <= 1
+                && (pos.y - player_pos.y).abs() <= 1
+                && pos.z == player_pos.z
+            {
+                Some((entity, *pos))
+            } else {
+                None
+            }
+        })
+        .collect();
+
+    // Now check each corpse's inventory separately
+    for (entity, pos) in corpse_candidates {
+        if let Ok(inv) = world.get::<&Inventory>(entity) {
             if !inv.slots.is_empty() {
-                nearby_corpses.push((entity, *pos));
+                nearby_corpses.push((entity, pos));
+                res.log(format!(
+                    "Found corpse with {} items at ({}, {}, {})",
+                    inv.slots.len(),
+                    pos.x,
+                    pos.y,
+                    pos.z
+                ));
             }
         }
     }
@@ -1977,6 +2005,10 @@ pub fn interaction_system(world: &mut World, res: &mut Resources, player_entity:
             && pos.z == player_pos.z
         {
             nearby_npcs.push((entity, dialogue.name.clone(), *pos));
+            res.log(format!(
+                "Found NPC '{}' at ({}, {}, {})",
+                dialogue.name, pos.x, pos.y, pos.z
+            ));
         }
     }
 
@@ -2074,27 +2106,43 @@ fn pickup_item(
 fn start_corpse_looting(world: &mut World, res: &mut Resources, corpse_entity: hecs::Entity) {
     // For now, just transfer all items automatically
     // Later this will open the looting UI
-    if let (Ok(corpse_inv), Ok(mut player_inv)) = (
-        world.get::<&Inventory>(corpse_entity),
-        world.get::<&mut Inventory>(world.query::<&Player>().iter().next().unwrap().0),
-    ) {
-        for item_stack in &corpse_inv.slots {
-            player_inv.add(item_stack.kind, item_stack.qty);
-            res.log(format!(
-                "Looted {} {}.",
-                item_stack.qty,
-                crate::components::itemkind_name(item_stack.kind)
-            ));
-        }
+    // First, collect the items from the corpse
+    let items_to_loot: Vec<(ItemKind, u32)> =
+        if let Ok(corpse_inv) = world.get::<&Inventory>(corpse_entity) {
+            corpse_inv
+                .slots
+                .iter()
+                .map(|stack| (stack.kind, stack.qty))
+                .collect()
+        } else {
+            Vec::new()
+        };
 
-        // Clear corpse inventory
-        if let Ok(mut corpse_inv) = world.get::<&mut Inventory>(corpse_entity) {
-            corpse_inv.slots.clear();
-        }
+    if items_to_loot.is_empty() {
+        res.log("Nothing to loot from this corpse.".to_string());
+        return;
+    }
 
+    // Find player and add items to their inventory
+    if let Some((player_entity, _)) = world.query::<&Player>().iter().next() {
+        if let Ok(mut player_inv) = world.get::<&mut Inventory>(player_entity) {
+            for (item_kind, qty) in items_to_loot {
+                player_inv.add(item_kind, qty);
+                res.log(format!(
+                    "Looted {} {}.",
+                    qty,
+                    crate::components::itemkind_name(item_kind)
+                ));
+            }
+        }
+    }
+
+    // Clear corpse inventory
+    if let Ok(mut corpse_inv) = world.get::<&mut Inventory>(corpse_entity) {
+        corpse_inv.slots.clear();
         res.log("Finished looting corpse.".to_string());
     } else {
-        res.log("Failed to access inventories for looting.".to_string());
+        res.log("Failed to access corpse inventory for clearing.".to_string());
     }
 }
 
@@ -2265,5 +2313,106 @@ fn execute_dialogue_choice(
         res.log("Conversation continues...".to_string());
     } else {
         res.log("Conversation ended.".to_string());
+    }
+}
+
+#[cfg(test)]
+mod interaction_tests {
+    use super::*;
+    use crate::components::*;
+
+    #[test]
+    fn test_interaction_system_finds_nearby_items() {
+        let mut world = hecs::World::new();
+        let mut res = Resources::new(12345);
+
+        // Create a player at (0, 0, 0)
+        let player = world.spawn((
+            Position { x: 0, y: 0, z: 0 },
+            Player,
+            GameEntity,
+            Inventory::default(),
+        ));
+
+        // Create a dropped item nearby at (1, 0, 0)
+        world.spawn((
+            Position { x: 1, y: 0, z: 0 },
+            DroppedItem {
+                kind: ItemKind::Stone,
+                qty: 1,
+            },
+        ));
+
+        // Create an NPC nearby at (0, 1, 0)
+        world.spawn((
+            Position { x: 0, y: 1, z: 0 },
+            QuestTesty,
+            EntityKind::QuestTesty,
+            Dialogue {
+                current_mood: NPCMood::Happy,
+                met_before: false,
+                current_dialogue_id: Some(0),
+                name: "Test NPC".to_string(),
+            },
+        ));
+
+        // Test interaction system
+        interaction_system(&mut world, &mut res, player);
+
+        // Check that log contains expected messages - access through events.get_message_log()
+        let log_messages: Vec<String> = res
+            .events
+            .get_message_log()
+            .messages
+            .iter()
+            .map(|msg| msg.text.clone())
+            .collect();
+        let logs = log_messages.join(" ");
+
+        assert!(logs.contains("Player interaction at (0, 0, 0)"));
+        assert!(logs.contains("Found item Stone (qty: 1) at (1, 0, 0)"));
+        assert!(logs.contains("Found NPC 'Test NPC' at (0, 1, 0)"));
+    }
+
+    #[test]
+    fn test_interaction_system_finds_corpses() {
+        let mut world = hecs::World::new();
+        let mut res = Resources::new(12345);
+
+        // Create a player at (0, 0, 0)
+        let player = world.spawn((
+            Position { x: 0, y: 0, z: 0 },
+            Player,
+            GameEntity,
+            Inventory::default(),
+        ));
+
+        // Create a corpse with inventory nearby
+        let corpse_inventory = {
+            let mut inv = Inventory::default();
+            inv.add(ItemKind::Meat, 2);
+            inv
+        };
+        world.spawn((
+            Position { x: 1, y: 1, z: 0 },
+            EntityKind::Corpse,
+            corpse_inventory,
+        ));
+
+        // Test interaction system
+        interaction_system(&mut world, &mut res, player);
+
+        // Check that log contains expected messages
+        let log_messages: Vec<String> = res
+            .events
+            .get_message_log()
+            .messages
+            .iter()
+            .map(|msg| msg.text.clone())
+            .collect();
+        let logs = log_messages.join(" ");
+
+        assert!(logs.contains("Player interaction at (0, 0, 0)"));
+        assert!(logs.contains("Found corpse with"));
     }
 }
