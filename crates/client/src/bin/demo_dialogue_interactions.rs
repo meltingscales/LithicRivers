@@ -106,11 +106,13 @@ impl App {
             NPC {
                 name: "Merchant Aldric".to_string(),
                 portrait: "
-  ╭─────╮
-  │ $ $ │  💰
-  │  ◡  │
-  ╰─┬─┬─╯
-    │ │
+    ╔═══════════╗
+    ║  ◉     ◉  ║
+    ║     ◡     ║
+    ║   ┌───┐   ║
+    ║   │ $ │   ║
+    ║   └───┘   ║
+    ╚═══════════╝
 ".to_string(),
                 dialogue_type: DialogueType::Shop,
                 current_mood: NPCMood::Friendly,
@@ -122,11 +124,13 @@ impl App {
             NPC {
                 name: "Knight Captain Elena".to_string(),
                 portrait: "
-  ╭─────╮
-  │ ◉ ◉ │  ⚔️
-  │  ─  │
-  ╰─┬─┬─╯
-   ║│ │║
+    ╔═══════════╗
+    ║  ◉     ◉  ║
+    ║     ─     ║
+    ║   ┌───┐   ║
+    ║   │ ⚔ │   ║
+    ║   └───┘   ║
+    ╚═══════════╝
 ".to_string(),
                 dialogue_type: DialogueType::Quest,
                 current_mood: NPCMood::Neutral,
@@ -138,11 +142,13 @@ impl App {
             NPC {
                 name: "Mysterious Oracle".to_string(),
                 portrait: "
-  ╭─────╮
-  │ ◌ ◌ │  🔮
-  │  ~  │
-  ╰─┬─┬─╯
-   ╱│ │╲
+    ╔═══════════╗
+    ║  ◌     ◌  ║
+    ║     ~     ║
+    ║   ┌───┐   ║
+    ║   │ 🔮 │   ║
+    ║   └───┘   ║
+    ╚═══════════╝
 ".to_string(),
                 dialogue_type: DialogueType::Branching,
                 current_mood: NPCMood::Mysterious,
@@ -154,11 +160,13 @@ impl App {
             NPC {
                 name: "Innkeeper Marta".to_string(),
                 portrait: "
-  ╭─────╮
-  │ ♥ ♥ │  🍺
-  │  ⌣  │
-  ╰─┬─┬─╯
-    │ │
+    ╔═══════════╗
+    ║  ♥     ♥  ║
+    ║     ⌣     ║
+    ║   ┌───┐   ║
+    ║   │ 🍺 │   ║
+    ║   └───┘   ║
+    ╚═══════════╝
 ".to_string(),
                 dialogue_type: DialogueType::Linear,
                 current_mood: NPCMood::Friendly,
@@ -170,11 +178,13 @@ impl App {
             NPC {
                 name: "Bandit Leader Raven".to_string(),
                 portrait: "
-  ╭─────╮
-  │ ▲ ▲ │  💀
-  │ \\▼/ │
-  ╰─┬─┬─╯
-   ╱│ │╲
+    ╔═══════════╗
+    ║  ▲     ▲  ║
+    ║    \\▼/    ║
+    ║   ┌───┐   ║
+    ║   │ 💀 │   ║
+    ║   └───┘   ║
+    ╚═══════════╝
 ".to_string(),
                 dialogue_type: DialogueType::Battle,
                 current_mood: NPCMood::Hostile,
@@ -860,6 +870,51 @@ impl App {
         }
     }
 
+    fn get_mood_face(&self, mood: NPCMood) -> &'static str {
+        match mood {
+            NPCMood::Friendly => "◡",
+            NPCMood::Neutral => "─",
+            NPCMood::Hostile => "▼",
+            NPCMood::Sad => "︶",
+            NPCMood::Excited => "◠",
+            NPCMood::Mysterious => "~",
+        }
+    }
+
+    fn get_mood_eyes(&self, mood: NPCMood) -> &'static str {
+        match mood {
+            NPCMood::Friendly => "◉     ◉",
+            NPCMood::Neutral => "○     ○",
+            NPCMood::Hostile => "▲     ▲",
+            NPCMood::Sad => "◌     ◌",
+            NPCMood::Excited => "★     ★",
+            NPCMood::Mysterious => "◇     ◇",
+        }
+    }
+
+    fn get_portrait_with_mood(&self, npc: &NPC) -> String {
+        let eyes = self.get_mood_eyes(npc.current_mood);
+        let mouth = self.get_mood_face(npc.current_mood);
+        let symbol = match npc.dialogue_type {
+            DialogueType::Shop => "$",
+            DialogueType::Quest => "⚔",
+            DialogueType::Branching => "🔮",
+            DialogueType::Linear => "🍺",
+            DialogueType::Battle => "💀",
+        };
+
+        format!(
+            "    ╔═══════════╗
+    ║  {}  ║
+    ║     {}     ║
+    ║   ┌───┐   ║
+    ║   │ {} │   ║
+    ║   └───┘   ║
+    ╚═══════════╝",
+            eyes, mouth, symbol
+        )
+    }
+
     fn start_conversation(&mut self, npc_index: usize) {
         if npc_index >= self.npcs.len() {
             return;
@@ -1147,97 +1202,140 @@ fn render_dialogue_screen(f: &mut Frame, app: &App, area: Rect) {
     if let (Some(npc_idx), Some(dialogue)) = (app.current_npc, app.get_current_dialogue()) {
         let npc = &app.npcs[npc_idx];
         
-        // Main layout for dialogue
-        let chunks = Layout::default()
+        // Summon Night style layout: portraits at top, message box at bottom
+        let main_chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
-                Constraint::Length(10), // NPC portrait and info
-                Constraint::Min(8),     // Dialogue text
-                Constraint::Length(8),  // Choices
-                Constraint::Length(4),  // Controls
+                Constraint::Length(10), // Portrait area
+                Constraint::Min(1),     // Background/scene area
+                Constraint::Length(12), // Message box area
+                Constraint::Length(3),  // Controls
             ])
             .split(area);
 
-        // NPC portrait and info
-        let npc_layout = Layout::default()
+        // Portrait area - side by side like Summon Night
+        let portrait_chunks = Layout::default()
             .direction(Direction::Horizontal)
-            .constraints([Constraint::Length(15), Constraint::Min(20)])
-            .split(chunks[0]);
+            .constraints([
+                Constraint::Percentage(30), // Player portrait
+                Constraint::Percentage(40), // Empty space / scene info
+                Constraint::Percentage(30), // NPC portrait
+            ])
+            .split(main_chunks[0]);
 
-        // Portrait
-        let mood_color = app.get_mood_color(npc.current_mood);
-        let mood_prefix = app.get_mood_prefix(npc.current_mood);
-        
-        let portrait_block = Block::default()
+        // Player portrait (left side)
+        let player_portrait = "
+    ╔═══════════╗
+    ║  ◉     ◉  ║
+    ║     ◡     ║
+    ║   ┌───┐   ║
+    ║   │ 🗡️ │   ║
+    ║   └───┘   ║
+    ╚═══════════╝";
+
+        let player_block = Block::default()
             .borders(Borders::ALL)
+            .title(format!(" {} ", app.player.name))
+            .border_style(Style::default().fg(Color::Cyan));
+        
+        let player_widget = Paragraph::new(player_portrait)
+            .block(player_block)
+            .style(Style::default().fg(Color::Cyan))
+            .alignment(Alignment::Center);
+
+        f.render_widget(player_widget, portrait_chunks[0]);
+
+        // Scene info (center)
+        let scene_info = format!("Location: Town Square\n\nGold: {}\nItems: {}", 
+            app.player.gold, 
+            app.player.inventory.len()
+        );
+
+        let scene_block = Block::default()
+            .borders(Borders::ALL)
+            .title(" Scene ")
+            .border_style(Style::default().fg(Color::White));
+
+        let scene_widget = Paragraph::new(scene_info)
+            .block(scene_block)
+            .style(Style::default().fg(Color::White))
+            .alignment(Alignment::Center);
+
+        f.render_widget(scene_widget, portrait_chunks[1]);
+
+        // NPC portrait (right side) - with dynamic mood
+        let mood_color = app.get_mood_color(npc.current_mood);
+        let npc_portrait = app.get_portrait_with_mood(npc);
+        
+        let npc_block = Block::default()
+            .borders(Borders::ALL)
+            .title(format!(" {} ", npc.name))
             .border_style(Style::default().fg(mood_color));
         
-        let portrait_widget = Paragraph::new(npc.portrait.clone())
-            .block(portrait_block)
+        let npc_widget = Paragraph::new(npc_portrait)
+            .block(npc_block)
             .style(Style::default().fg(mood_color))
             .alignment(Alignment::Center);
 
-        f.render_widget(portrait_widget, npc_layout[0]);
+        f.render_widget(npc_widget, portrait_chunks[2]);
 
-        // NPC name and mood
-        let npc_info = format!("{}\n{}{:?}\n\nType: {:?}",
-            npc.name,
-            mood_prefix,
-            npc.current_mood,
-            npc.dialogue_type
-        );
+        // Message box area (like Summon Night's dialogue box)
+        let message_chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([
+                Constraint::Length(8),  // Main dialogue text
+                Constraint::Length(4),  // Choices/options
+            ])
+            .split(main_chunks[2]);
 
-        let info_block = Block::default()
-            .borders(Borders::ALL)
-            .title(" Speaking ");
-        
-        let info_widget = Paragraph::new(npc_info)
-            .block(info_block)
-            .style(Style::default().fg(mood_color));
+        // Main dialogue text with classic RPG styling
+        let speaker_indicator = if dialogue.speaker == app.player.name {
+            format!("🗡️ {}", dialogue.speaker)
+        } else {
+            format!("{} {}", app.get_mood_prefix(npc.current_mood), dialogue.speaker)
+        };
 
-        f.render_widget(info_widget, npc_layout[1]);
-
-        // Dialogue text
-        let dialogue_text = format!("{}: \"{}\"", dialogue.speaker, dialogue.text);
+        let dialogue_text = format!("{}\n\n\"{}\"", speaker_indicator, dialogue.text);
         
         let dialogue_block = Block::default()
             .borders(Borders::ALL)
-            .title(" Dialogue ");
+            .border_set(symbols::border::ROUNDED)
+            .title(" Dialogue ")
+            .title_style(Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD))
+            .border_style(Style::default().fg(Color::Yellow));
         
         let dialogue_widget = Paragraph::new(dialogue_text)
             .block(dialogue_block)
             .wrap(Wrap { trim: true })
             .style(Style::default().fg(Color::White));
 
-        f.render_widget(dialogue_widget, chunks[1]);
+        f.render_widget(dialogue_widget, message_chunks[0]);
 
-        // Choices
-        let choice_items: Vec<ListItem> = dialogue.choices
-            .iter()
-            .enumerate()
-            .map(|(i, choice)| {
-                let style = if i == app.selected_choice {
-                    Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
-                } else {
-                    Style::default()
-                };
+        // Choice selection area
+        if !dialogue.choices.is_empty() {
+            let choice_text = dialogue.choices
+                .iter()
+                .enumerate()
+                .map(|(i, choice)| {
+                    let prefix = if i == app.selected_choice { "→ " } else { "  " };
+                    let style_marker = if i == app.selected_choice { "◆" } else { "◇" };
+                    format!("{}{} {}", prefix, style_marker, choice.text)
+                })
+                .collect::<Vec<_>>()
+                .join("\n");
 
-                // Show requirements
-                let choice_text = if let Some(item) = &choice.requires_item {
-                    format!("{} [Requires: {}]", choice.text, item)
-                } else {
-                    choice.text.clone()
-                };
+            let choice_block = Block::default()
+                .borders(Borders::ALL)
+                .border_set(symbols::border::ROUNDED)
+                .title(" Choose ")
+                .border_style(Style::default().fg(Color::Green));
 
-                ListItem::new(choice_text).style(style)
-            })
-            .collect();
+            let choice_widget = Paragraph::new(choice_text)
+                .block(choice_block)
+                .style(Style::default().fg(Color::White));
 
-        let choices_list = List::new(choice_items)
-            .block(Block::default().borders(Borders::ALL).title(" Your Response "))
-            .highlight_style(Style::default().add_modifier(Modifier::BOLD));
-
-        f.render_widget(choices_list, chunks[2]);
+            f.render_widget(choice_widget, message_chunks[1]);
+        }
 
         // Controls
         let controls = "↑↓: Select | Enter: Choose | x: End conversation | q: Quit";
@@ -1245,6 +1343,6 @@ fn render_dialogue_screen(f: &mut Frame, app: &App, area: Rect) {
             .style(Style::default().fg(Color::Gray))
             .alignment(Alignment::Center);
 
-        f.render_widget(controls_widget, chunks[3]);
+        f.render_widget(controls_widget, main_chunks[3]);
     }
 }
