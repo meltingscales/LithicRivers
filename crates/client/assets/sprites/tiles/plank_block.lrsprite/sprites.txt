@@ -1,6 +1,6 @@
-p
-pp
-pp
-ppp
-ppp
-ppp
+P
+P!
+!P
+P!P
+!P!
+P!P

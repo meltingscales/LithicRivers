@@ -126,10 +126,30 @@ pub fn mining_system(world: &mut World, res: &mut Resources) -> bool {
             return false;
         }
     };
-    let t = res.world_state.world.get_tile_cached(x, y, z);
+    let tile_to_mine = res.world_state.world.get_tile_cached(x, y, z);
     use crate::tiles::TileKind;
     use rand::Rng;
-    match t {
+    match tile_to_mine {
+        // This is the place that mining gets processed.
+        TileKind::PlankBlock => {
+            // Mine plank block: Remove block and drop 1 ItemKind::PlankBlock
+            res.world_state
+                .world
+                .set_tile_cached(x, y, z, TileKind::Air);
+            world.spawn((
+                Position { x, y, z },
+                DroppedItem {
+                    kind: ItemKind::PlankBlock,
+                    qty: 1,
+                },
+                SpriteRef::new("items", "plank_block"),
+            ));
+            res.events.interaction_event(
+                "You mine the plank block. (+1 Plank Block)".to_string(),
+                res.time.tick,
+            );
+            true
+        }
         TileKind::Tree => {
             // Chop tree: convert to Dirt and drop items
             res.world_state
@@ -171,6 +191,11 @@ pub fn mining_system(world: &mut World, res: &mut Resources) -> bool {
         }
         _ => {
             // No-op for other tiles for now
+            // print that this block isn't mineable
+            res.events.interaction_event(
+                format!("You can't mine the {:?} tile.", tile_to_mine),
+                res.time.tick,
+            );
             false
         }
     }

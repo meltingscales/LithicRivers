@@ -699,7 +699,19 @@ fn render_message_log(f: &mut Frame, app: &mut App, area: Rect) {
         0
     };
     for msg in messages.iter().skip(start) {
-        lines.push(Line::from(Span::raw(msg.clone())));
+        let color = match msg.color {
+            lithicrivers_core::message_log::MessageColor::Default => Color::White,
+            lithicrivers_core::message_log::MessageColor::Red => Color::Red,
+            lithicrivers_core::message_log::MessageColor::Yellow => Color::Yellow,
+            lithicrivers_core::message_log::MessageColor::Green => Color::Green,
+            lithicrivers_core::message_log::MessageColor::Blue => Color::Blue,
+            lithicrivers_core::message_log::MessageColor::Cyan => Color::Cyan,
+            lithicrivers_core::message_log::MessageColor::Magenta => Color::Magenta,
+        };
+        lines.push(Line::from(Span::styled(
+            &msg.text,
+            Style::default().fg(color),
+        )));
     }
     let paragraph = Paragraph::new(lines)
         .style(Style::default().fg(Color::Gray))

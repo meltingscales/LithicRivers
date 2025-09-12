@@ -44,6 +44,13 @@ pub struct DroppedItemSave {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ViewportSave {
+    pub view_x: i32,
+    pub view_y: i32,
+    pub view_z: i32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SaveData {
     pub version: u32,
     pub seed: u64,
@@ -53,10 +60,22 @@ pub struct SaveData {
     pub sheep: Vec<SheepSave>,
     pub feral_dogs: Vec<FeralDogSave>,
     pub dropped_items: Vec<DroppedItemSave>,
+    pub viewport: ViewportSave,
 }
 
 impl SaveData {
     pub fn from_game(game: &crate::Game) -> Result<Self> {
+        Self::from_game_with_viewport(
+            game,
+            ViewportSave {
+                view_x: 0,
+                view_y: 0,
+                view_z: 0,
+            },
+        )
+    }
+
+    pub fn from_game_with_viewport(game: &crate::Game, viewport: ViewportSave) -> Result<Self> {
         let mut player_save: Option<PlayerSave> = None;
         let mut sheep: Vec<SheepSave> = Vec::new();
         let mut feral_dogs: Vec<FeralDogSave> = Vec::new();
@@ -121,6 +140,7 @@ impl SaveData {
             sheep,
             feral_dogs,
             dropped_items,
+            viewport,
         })
     }
 
@@ -203,6 +223,7 @@ struct SaveDataJson {
     pub sheep: Vec<SheepSave>,
     pub feral_dogs: Vec<FeralDogSave>,
     pub dropped_items: Vec<DroppedItemSave>,
+    pub viewport: ViewportSave,
 }
 
 impl From<TileWorld> for WorldJson {
@@ -238,6 +259,7 @@ impl From<SaveData> for SaveDataJson {
             sheep: s.sheep,
             feral_dogs: s.feral_dogs,
             dropped_items: s.dropped_items,
+            viewport: s.viewport,
         }
     }
 }
@@ -253,6 +275,7 @@ impl From<SaveDataJson> for SaveData {
             sheep: j.sheep,
             feral_dogs: j.feral_dogs,
             dropped_items: j.dropped_items,
+            viewport: j.viewport,
         }
     }
 }
@@ -587,6 +610,39 @@ mod tests {
             "FeralDog without AI not found after load"
         );
     }
+
+    #[test]
+    fn save_load_viewport_roundtrip() {
+        let seed = 42u64;
+        let game = crate::Game::new(seed);
+
+        // Test viewport save/load
+        let original_viewport = ViewportSave {
+            view_x: 100,
+            view_y: 200,
+            view_z: 5,
+        };
+
+        // Save with viewport
+        let returned_viewport =
+            save_game_json_with_viewport(&game, "test_viewport.json", original_viewport.clone())
+                .expect("save with viewport");
+        assert_eq!(returned_viewport.view_x, 100);
+        assert_eq!(returned_viewport.view_y, 200);
+        assert_eq!(returned_viewport.view_z, 5);
+
+        // Load and verify viewport is restored
+        let mut loaded_game = crate::Game::new(0);
+        let loaded_viewport = load_game_json_with_viewport(&mut loaded_game, "test_viewport.json")
+            .expect("load with viewport");
+
+        assert_eq!(loaded_viewport.view_x, 100);
+        assert_eq!(loaded_viewport.view_y, 200);
+        assert_eq!(loaded_viewport.view_z, 5);
+
+        // Clean up test file
+        let _ = std::fs::remove_file("test_viewport.json");
+    }
 }
 
 // JSON helpers for debug
@@ -612,4 +668,38 @@ pub fn load_game_json<P: AsRef<Path>>(game: &mut crate::Game, path: P) -> Result
     }
     let data: SaveData = data_json.into();
     data.apply_to_game(game)
+}
+
+// Viewport-aware save/load functions for client use
+pub fn save_game_json_with_viewport<P: AsRef<Path>>(
+    game: &crate::Game,
+    path: P,
+    viewport: ViewportSave,
+) -> Result<ViewportSave> {
+    let data = SaveData::from_game_with_viewport(game, viewport)?;
+    let data_json: SaveDataJson = data.into();
+    let f = File::create(path.as_ref()).with_context(|| format!("create {:?}", path.as_ref()))?;
+    let writer = BufWriter::new(f);
+    serde_json::to_writer_pretty(writer, &data_json).context("serialize json")?;
+    Ok(data_json.viewport)
+}
+
+pub fn load_game_json_with_viewport<P: AsRef<Path>>(
+    game: &mut crate::Game,
+    path: P,
+) -> Result<ViewportSave> {
+    let f = File::open(path.as_ref()).with_context(|| format!("open {:?}", path.as_ref()))?;
+    let reader = BufReader::new(f);
+    let data_json: SaveDataJson = serde_json::from_reader(reader).context("deserialize json")?;
+    if data_json.version != SAVE_VERSION {
+        anyhow::bail!(
+            "Unsupported save version: {} (expected {})",
+            data_json.version,
+            SAVE_VERSION
+        );
+    }
+    let viewport = data_json.viewport.clone();
+    let data: SaveData = data_json.into();
+    data.apply_to_game(game)?;
+    Ok(viewport)
 }

@@ -21,10 +21,10 @@ pub fn default_config() -> ConfigRoot {
             "BUILD": ["e"],         // Quick build toggle
             "INTERACT": ["f"],      // Interact/use
             "PICKUP_ITEMS": ["r"],  // Quick grab
-            "LOOK_TOGGLE": ["c"],   // Look around
+            "LOOK_TOGGLE": ["v"],   // Look around
         },
         "build": {
-            "TOGGLE_BREAK_PLACE_MODE": ["v"], // Cycle break/place mode
+            "TOGGLE_BREAK_PLACE_MODE": ["`"], // Cycle break/place mode
             "BREAK_NORTHWEST": ["q"],
             "BREAK_NORTH": ["w"],
             "BREAK_NORTHEAST": ["e"],

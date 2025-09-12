@@ -1,5 +1,6 @@
 use crate::default_config::default_config;
 use crate::keycode_mapping;
+use core::panic;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -106,6 +107,34 @@ impl ConfigManager {
         self.data.keybinds.get(category).and_then(|c| c.get(key))
     }
 
+    pub fn get_keybind_str(&self, category: &str, key: &str) -> String {
+        let keybinds = self
+            .data
+            .keybinds
+            .get(category)
+            .unwrap_or_else(|| panic!("Keybind category '{}' not found", category));
+
+        let key_value = keybinds
+            .get(key)
+            .unwrap_or_else(|| panic!("Key '{}' not found in category '{}'", key, category));
+
+        // handle when key_value is an array, just take the first one
+        let key_value = if let Some(arr) = key_value.as_array() {
+            arr[0].clone()
+        } else {
+            key_value.clone()
+        };
+
+        let key_str = key_value.as_str().unwrap_or_else(|| {
+            panic!(
+                "Keybind {}.{} is not a string: {:?}",
+                category, key, key_value
+            )
+        });
+
+        key_str.to_string()
+    }
+
     pub fn get_printable_key_for_keybind(&self, category: &str, key: &str) -> &'static str {
         let keybinds = self
             .data
@@ -146,7 +175,10 @@ impl ConfigManager {
         } else if let Some(arr) = v.and_then(|v| v.as_array()) {
             return Self::vec3_from_json(arr);
         }
-        [0, 0, 0]
+        panic!(
+            "Vector setting {}.{} for environment '{}' not found or invalid: {:?}",
+            category, key, environment, v
+        );
     }
 
     fn vec3_from_json(arr: &[serde_json::Value]) -> [i32; 3] {

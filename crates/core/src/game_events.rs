@@ -21,6 +21,18 @@ impl GameEvents {
         info!(target: "game_events", "tick={} {}", tick, msg);
     }
 
+    /// Log a player-visible game event with color (shows in UI message log)
+    pub fn game_event_colored<S: Into<String>>(
+        &mut self,
+        message: S,
+        tick: u64,
+        color: crate::message_log::MessageColor,
+    ) {
+        let msg = message.into();
+        self.message_log.log_colored(&msg, tick, color);
+        info!(target: "game_events", "tick={} {}", tick, msg);
+    }
+
     /// Log debug information (development/troubleshooting only)
     pub fn debug<S: Into<String>>(&self, message: S, tick: u64) {
         let msg = message.into();
