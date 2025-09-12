@@ -26,7 +26,13 @@ pub fn render_hotbar_panel(f: &mut Frame, app: &mut App, area: Rect) {
         };
 
         // Create slot display (F1, F2, etc.)
-        let slot_text = format!("F{}", slot_number);
+        // let slot_text = format!("F{}", slot_number);
+        let slot_text = format!(
+            "{}",
+            app.core
+                .config_manager
+                .get_keybind_str("hotbar", &format!("HOTBAR_SLOT_{}", slot_number))
+        );
 
         // Get assigned block content
         let content = if let Some(block_kind) = app.panels.build.hotbar_assignments[i] {
@@ -68,7 +74,15 @@ pub fn render_hotbar_panel(f: &mut Frame, app: &mut App, area: Rect) {
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .title("Hotbar (F1-F12)")
+                .title(format!(
+                    "Hotbar ({}-{})",
+                    app.core
+                        .config_manager
+                        .get_keybind_str("hotbar", "HOTBAR_SLOT_1"),
+                    app.core
+                        .config_manager
+                        .get_keybind_str("hotbar", "HOTBAR_SLOT_12")
+                ))
                 .style(Style::default().fg(Color::White)),
         );
     f.render_widget(content, area);
