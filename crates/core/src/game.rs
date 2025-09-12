@@ -85,6 +85,32 @@ impl Game {
             ));
         }
 
+        //spawn 1 feral dog and immediately kill it 2 spaces away from the player for testing
+        let dead_dog_position = (sx + 2, sy + 0, sz);
+        let dead_dog = world.spawn((
+            Position {
+                x: dead_dog_position.0,
+                y: dead_dog_position.1,
+                z: dead_dog_position.2,
+            },
+            GameEntity,
+            EntityKind::FeralDog,
+            FeralDog,
+            Health::new(80), // Create with full health first
+            Glyph('d'),
+            SpriteRef::new("entities", "feral_dog"),
+            BlocksMovement,
+            Combat::default(),
+        ));
+        // Add inventory before killing
+        let mut dead_dog_inventory = Inventory::default();
+        dead_dog_inventory.add(ItemKind::Leather, 1);
+        dead_dog_inventory.add(ItemKind::Meat, 2);
+        world.insert_one(dead_dog, dead_dog_inventory).unwrap();
+
+        // Now properly kill it and convert to corpse
+        crate::systems::handle_entity_death(&mut world, &mut res, dead_dog);
+
         // spawn 2 feral dogs a bit further
         let dog_positions = [(sx + 12, sy + 12, sz), (sx + 13, sy + 13, sz)];
         for (x, y, z) in dog_positions {
