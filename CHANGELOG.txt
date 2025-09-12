@@ -1,3 +1,10 @@
+# v0.8.2.0
+
+- building/breaking fully functional
+- F1-F12 mappable to different buttons
+- '`' backtick char switches place/break
+- 'v' char toggles look
+
 # v0.8.1.1
 
 - combat officially merged into release branch
