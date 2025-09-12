@@ -62,6 +62,7 @@ clean:
     rm -rf target/debug/config/
     rm -rf target/release/config/
     rm -rf artifacts/
+    rm -f save.json
     rm -f LithicRivers.log.*
     rm -f perf.data
     rm -f perf.data.old

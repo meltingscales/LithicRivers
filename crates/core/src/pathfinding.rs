@@ -1,4 +1,5 @@
 use crate::components::Position;
+use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashMap, HashSet};
 
@@ -324,7 +325,7 @@ impl Pathfinder {
 }
 
 /// Behavioral states for dog AI
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum DogBehavior {
     Hunting,   // Normal pathfinding toward player
     Circling,  // Running in circles near player

@@ -8,7 +8,8 @@ use hecs::World;
 use serde::{Deserialize, Serialize};
 
 use crate::components::{
-    BlocksMovement, DroppedItem, Glyph, Inventory, ItemKind, Player, Position, Sheep, SpriteRef,
+    BlocksMovement, DogAI, DroppedItem, FeralDog, Glyph, Health, Inventory, ItemKind, Player,
+    Position, Sheep, SpriteRef,
 };
 use crate::model::body::Body; // currently not persisted (MVP)
 use crate::resources::Resources;
@@ -29,6 +30,13 @@ pub struct SheepSave {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FeralDogSave {
+    pub pos: Position,
+    pub health: Health,
+    pub ai: Option<DogAI>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DroppedItemSave {
     pub pos: Position,
     pub kind: ItemKind,
@@ -43,6 +51,7 @@ pub struct SaveData {
     pub world: TileWorld,
     pub player: PlayerSave,
     pub sheep: Vec<SheepSave>,
+    pub feral_dogs: Vec<FeralDogSave>,
     pub dropped_items: Vec<DroppedItemSave>,
 }
 
@@ -50,14 +59,30 @@ impl SaveData {
     pub fn from_game(game: &crate::Game) -> Result<Self> {
         let mut player_save: Option<PlayerSave> = None;
         let mut sheep: Vec<SheepSave> = Vec::new();
+        let mut feral_dogs: Vec<FeralDogSave> = Vec::new();
         let mut dropped_items: Vec<DroppedItemSave> = Vec::new();
-        for (_e, (pos, maybe_player, maybe_inventory, maybe_sheep, maybe_drop)) in game
+        for (
+            _e,
+            (
+                pos,
+                maybe_player,
+                maybe_inventory,
+                maybe_sheep,
+                maybe_feral_dog,
+                maybe_health,
+                maybe_dog_ai,
+                maybe_drop,
+            ),
+        ) in game
             .world
             .query::<(
                 &Position,
                 Option<&Player>,
                 Option<&Inventory>,
                 Option<&Sheep>,
+                Option<&FeralDog>,
+                Option<&Health>,
+                Option<&DogAI>,
                 Option<&DroppedItem>,
             )>()
             .iter()
@@ -70,6 +95,14 @@ impl SaveData {
                 });
             } else if maybe_sheep.is_some() {
                 sheep.push(SheepSave { pos: *pos });
+            } else if maybe_feral_dog.is_some() {
+                let health = maybe_health.cloned().expect("FeralDog missing health");
+                let ai = maybe_dog_ai.cloned(); // AI is optional
+                feral_dogs.push(FeralDogSave {
+                    pos: *pos,
+                    health,
+                    ai,
+                });
             } else if let Some(di) = maybe_drop {
                 dropped_items.push(DroppedItemSave {
                     pos: *pos,
@@ -86,6 +119,7 @@ impl SaveData {
             world: game.res.world_state.world.clone(),
             player,
             sheep,
+            feral_dogs,
             dropped_items,
         })
     }
@@ -120,6 +154,21 @@ impl SaveData {
             ));
         }
 
+        // Feral Dogs
+        for dog in self.feral_dogs.into_iter() {
+            let mut entity_builder = hecs::EntityBuilder::new();
+            entity_builder.add(dog.pos);
+            entity_builder.add(Glyph('d'));
+            entity_builder.add(FeralDog);
+            entity_builder.add(dog.health);
+            if let Some(ai) = dog.ai {
+                entity_builder.add(ai);
+            }
+            entity_builder.add(BlocksMovement);
+            entity_builder.add(SpriteRef::new("entities", "feral_dog"));
+            game.world.spawn(entity_builder.build());
+        }
+
         // Dropped items
         for d in self.dropped_items.into_iter() {
             let sprite_name = itemkind_sprite_name(d.kind);
@@ -152,6 +201,7 @@ struct SaveDataJson {
     pub world: WorldJson,
     pub player: PlayerSave,
     pub sheep: Vec<SheepSave>,
+    pub feral_dogs: Vec<FeralDogSave>,
     pub dropped_items: Vec<DroppedItemSave>,
 }
 
@@ -186,6 +236,7 @@ impl From<SaveData> for SaveDataJson {
             world: s.world.into(),
             player: s.player,
             sheep: s.sheep,
+            feral_dogs: s.feral_dogs,
             dropped_items: s.dropped_items,
         }
     }
@@ -200,6 +251,7 @@ impl From<SaveDataJson> for SaveData {
             world: j.world.into(),
             player: j.player,
             sheep: j.sheep,
+            feral_dogs: j.feral_dogs,
             dropped_items: j.dropped_items,
         }
     }
@@ -396,6 +448,144 @@ mod tests {
         let p_after = loaded.get_player_position().unwrap();
         assert_eq!(p_after, p_before);
         assert_eq!(wood_count(&loaded), wood_count(&game));
+    }
+
+    #[test]
+    fn save_load_feral_dog_roundtrip() {
+        use crate::pathfinding::DogBehavior;
+
+        let seed = 12345u64;
+        let mut game = crate::Game::new(seed);
+
+        // Clear any existing FeralDogs that Game::new() might have created
+        let existing_dogs: Vec<hecs::Entity> = game
+            .world
+            .query::<&FeralDog>()
+            .iter()
+            .map(|(e, _)| e)
+            .collect();
+        for dog in existing_dogs {
+            let _ = game.world.despawn(dog);
+        }
+
+        // Test 1: FeralDog with AI (like what the AI system creates)
+        let dog_pos_with_ai = Position { x: 10, y: 15, z: 0 };
+        let dog_health_with_ai = Health {
+            current: 80,
+            max: 100,
+        };
+        let dog_ai = DogAI {
+            behavior: DogBehavior::Hunting,
+            behavior_timer: 50,
+            circle_center: Some(Position { x: 12, y: 16, z: 0 }),
+            steps_taken: 25,
+        };
+
+        let _dog_entity_with_ai = game.world.spawn((
+            dog_pos_with_ai,
+            Glyph('d'),
+            FeralDog,
+            dog_health_with_ai,
+            dog_ai,
+            BlocksMovement,
+            SpriteRef::new("entities", "feral_dog"),
+        ));
+
+        // Test 2: FeralDog without AI (like what Game::new creates initially)
+        let dog_pos_no_ai = Position { x: 20, y: 25, z: 0 };
+        let dog_health_no_ai = Health {
+            current: 90,
+            max: 100,
+        };
+
+        let _dog_entity_no_ai = game.world.spawn((
+            dog_pos_no_ai,
+            Glyph('d'),
+            FeralDog,
+            dog_health_no_ai,
+            BlocksMovement,
+            SpriteRef::new("entities", "feral_dog"),
+        ));
+
+        // Save the game
+        let data = SaveData::from_game(&game).expect("save");
+
+        // Verify both dogs are in save data
+        assert_eq!(data.feral_dogs.len(), 2);
+
+        // Find the dog with AI
+        let dog_with_ai = data
+            .feral_dogs
+            .iter()
+            .find(|d| d.pos == dog_pos_with_ai)
+            .expect("dog with AI not found");
+        assert_eq!(dog_with_ai.pos, dog_pos_with_ai);
+        assert_eq!(dog_with_ai.health.current, 80);
+        assert_eq!(dog_with_ai.health.max, 100);
+        assert!(dog_with_ai.ai.is_some());
+        let ai = dog_with_ai.ai.as_ref().unwrap();
+        assert_eq!(ai.behavior, DogBehavior::Hunting);
+        assert_eq!(ai.behavior_timer, 50);
+        assert_eq!(ai.steps_taken, 25);
+
+        // Find the dog without AI
+        let dog_without_ai = data
+            .feral_dogs
+            .iter()
+            .find(|d| d.pos == dog_pos_no_ai)
+            .expect("dog without AI not found");
+        assert_eq!(dog_without_ai.pos, dog_pos_no_ai);
+        assert_eq!(dog_without_ai.health.current, 90);
+        assert_eq!(dog_without_ai.health.max, 100);
+        assert!(dog_without_ai.ai.is_none());
+
+        // Test JSON roundtrip
+        let data_json: SaveDataJson = data.into();
+        let s = serde_json::to_string(&data_json).expect("to json");
+        let decoded_json: SaveDataJson = serde_json::from_str(&s).expect("from json");
+        let decoded: SaveData = decoded_json.into();
+
+        let mut loaded = crate::Game::new(0);
+        decoded.apply_to_game(&mut loaded).expect("apply");
+
+        // Verify both feral dogs were restored correctly
+        let mut found_dogs = 0;
+        let mut found_dog_with_ai = false;
+        let mut found_dog_without_ai = false;
+
+        for (e, (pos, _feral_dog, health)) in loaded
+            .world
+            .query::<(&Position, &FeralDog, &Health)>()
+            .iter()
+        {
+            found_dogs += 1;
+
+            if *pos == dog_pos_with_ai {
+                found_dog_with_ai = true;
+                assert_eq!(health.current, 80);
+                assert_eq!(health.max, 100);
+                // This dog should have AI
+                assert!(
+                    loaded.world.get::<&DogAI>(e).is_ok(),
+                    "Dog with AI should have DogAI component"
+                );
+            } else if *pos == dog_pos_no_ai {
+                found_dog_without_ai = true;
+                assert_eq!(health.current, 90);
+                assert_eq!(health.max, 100);
+                // This dog should not have AI
+                assert!(
+                    loaded.world.get::<&DogAI>(e).is_err(),
+                    "Dog without AI should not have DogAI component"
+                );
+            }
+        }
+        assert_eq!(found_dogs, 2, "Should find exactly 2 FeralDogs after load");
+        assert!(found_dog_with_ai, "FeralDog with AI not found after load");
+        assert!(
+            found_dog_without_ai,
+            "FeralDog without AI not found after load"
+        );
     }
 }
 

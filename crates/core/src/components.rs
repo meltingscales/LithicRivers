@@ -31,11 +31,11 @@ pub struct Glyph(pub char);
 pub struct Sheep;
 
 /// Marker for a simple wandering feral dog
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct FeralDog;
 
 /// AI behavior state for feral dogs
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct DogAI {
     pub behavior: crate::pathfinding::DogBehavior,
     pub behavior_timer: u64, // Ticks remaining in current behavior
@@ -44,7 +44,7 @@ pub struct DogAI {
 }
 
 /// Component for entities that can engage in combat
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Combat {
     pub triggered: bool,
 }
@@ -56,7 +56,7 @@ impl Default for Combat {
 }
 
 /// Component for entities that have escaped combat and cannot re-engage for a while
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct BattleDelay {
     pub remaining_ticks: u64,
 }

@@ -268,6 +268,14 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
             .keybinds
             .matches("build", "TOGGLE_BREAK_PLACE_MODE", &key)
         {
+            // Prevent mode switching during combat
+            if lithicrivers_core::combat_state_manager::CombatStateManager::is_in_combat(
+                &app.core.game.res,
+            ) {
+                app.core.game.res.log("Cannot change modes during combat!");
+                return Ok(());
+            }
+
             use crate::app_state::BuildMode;
             app.panels.build.mode = app.panels.build.mode.next();
             app.core
@@ -1315,8 +1323,12 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
         }
         return Ok(());
     }
-    // Save/Load via config
+    // Save/Load via config (only in Menu tab)
     if app.ui.keybinds.matches("ui", "SAVE_JSON", &key) {
+        if app.ui.current_tab != crate::MenuTab::Menu {
+            app.core.game.res.log("Save only available in Menu tab");
+            return Ok(());
+        }
         tracing::info!(target: "game", "save_begin path=save.json tick={}", app.core.game.res.time.tick);
         app.core
             .game
@@ -1327,6 +1339,10 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
         return Ok(());
     }
     if app.ui.keybinds.matches("ui", "LOAD_JSON", &key) {
+        if app.ui.current_tab != crate::MenuTab::Menu {
+            app.core.game.res.log("Load only available in Menu tab");
+            return Ok(());
+        }
         tracing::info!(target: "game", "load_begin path=save.json tick={}", app.core.game.res.time.tick);
         app.core
             .game
