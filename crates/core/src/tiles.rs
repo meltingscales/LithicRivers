@@ -113,6 +113,18 @@ impl TileKind {
             TileKind::ExistingWorldgen => false,
         }
     }
+
+    /// Convert an ItemKind to a TileKind for placing blocks
+    /// Returns Some(TileKind) if the item can be placed as a block, None otherwise
+    pub fn from_item_kind(item: crate::components::ItemKind) -> Option<TileKind> {
+        use crate::components::ItemKind;
+        match item {
+            // Exact name matches between ItemKind and TileKind
+            ItemKind::PlankBlock => Some(TileKind::PlankBlock),
+            ItemKind::Stone => Some(TileKind::Rock), // Stone item places as Rock tile
+            _ => None,                               // Other items are not placeable as blocks
+        }
+    }
 }
 
 #[cfg(test)]

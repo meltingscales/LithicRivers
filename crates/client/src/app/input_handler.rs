@@ -164,11 +164,64 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
                             handled = true;
                         }
                         BuildMode::Place => {
-                            // TODO: Implement place block at target position
-                            app.core.game.res.log(format!(
-                                "Place at ({}, {}, {})",
-                                target_x, target_y, target_z
-                            ));
+                            // Check if player has a block assigned to the selected hotbar slot
+                            let selected_slot = app.panels.build.selected_hotbar_slot;
+                            if let Some(block_item) =
+                                app.panels.build.hotbar_assignments[selected_slot]
+                            {
+                                // Check if this item can be placed as a block
+                                if let Some(tile_kind) =
+                                    lithicrivers_core::tiles::TileKind::from_item_kind(block_item)
+                                {
+                                    // Check if player has this item in inventory
+                                    if has_item_in_inventory(app, block_item) {
+                                        // Check if placement position is valid
+                                        if is_valid_placement_position(
+                                            app, target_x, target_y, target_z,
+                                        ) {
+                                            // Place the block in the world
+                                            app.core.game.res.world_state.world.set_tile_cached(
+                                                target_x, target_y, target_z, tile_kind,
+                                            );
+
+                                            // Remove 1 from player inventory
+                                            remove_item_from_inventory(app, block_item, 1);
+
+                                            let item_name =
+                                                lithicrivers_core::components::itemkind_name(
+                                                    block_item,
+                                                );
+                                            app.core.game.res.log(format!(
+                                                "Placed {} at ({}, {}, {})",
+                                                item_name, target_x, target_y, target_z
+                                            ));
+                                        } else {
+                                            app.core.game.res.log("Cannot place block here");
+                                        }
+                                    } else {
+                                        let item_name =
+                                            lithicrivers_core::components::itemkind_name(
+                                                block_item,
+                                            );
+                                        app.core
+                                            .game
+                                            .res
+                                            .log(format!("No {} in inventory", item_name));
+                                    }
+                                } else {
+                                    let item_name =
+                                        lithicrivers_core::components::itemkind_name(block_item);
+                                    app.core
+                                        .game
+                                        .res
+                                        .log(format!("{} cannot be placed as a block", item_name));
+                                }
+                            } else {
+                                app.core.game.res.log(format!(
+                                    "No block assigned to slot F{}",
+                                    selected_slot + 1
+                                ));
+                            }
                             handled = true;
                         }
                         BuildMode::Movement => {
@@ -1492,4 +1545,91 @@ fn get_blocks_from_inventory(app: &App) -> Vec<lithicrivers_core::components::It
     }
 
     blocks
+}
+
+/// Check if the player has a specific item in their inventory
+fn has_item_in_inventory(app: &App, item_kind: lithicrivers_core::components::ItemKind) -> bool {
+    use lithicrivers_core::components::Inventory as InvComp;
+
+    if let Some(player_entity) = app.core.game.get_player_entity() {
+        if let Ok(inv) = app.core.game.world.get::<&InvComp>(player_entity) {
+            for stack in &inv.slots {
+                if stack.kind == item_kind && stack.qty > 0 {
+                    return true;
+                }
+            }
+        }
+    }
+    false
+}
+
+/// Remove a quantity of an item from the player's inventory
+fn remove_item_from_inventory(
+    app: &mut App,
+    item_kind: lithicrivers_core::components::ItemKind,
+    quantity: u32,
+) {
+    use lithicrivers_core::components::Inventory as InvComp;
+
+    if let Some(player_entity) = app.core.game.get_player_entity() {
+        if let Ok(mut inv) = app.core.game.world.get::<&mut InvComp>(player_entity) {
+            // Find the first stack with this item kind
+            for i in 0..inv.slots.len() {
+                if inv.slots[i].kind == item_kind {
+                    if inv.slots[i].qty >= quantity {
+                        inv.slots[i].qty -= quantity;
+                        // Remove the stack if quantity reaches 0
+                        if inv.slots[i].qty == 0 {
+                            inv.slots.remove(i);
+                        }
+                        return;
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Check if a position is valid for placing a block
+fn is_valid_placement_position(app: &mut App, x: i32, y: i32, z: i32) -> bool {
+    // Check if there's already a solid block at this position
+    let current_tile = app.core.game.res.world_state.world.get_tile_cached(x, y, z);
+
+    // Can only place on passable tiles (not on solid blocks)
+    if !current_tile.is_passable() {
+        return false;
+    }
+
+    // Check if there's an entity (like the player) at this position
+    for (_, (pos, _)) in app
+        .core
+        .game
+        .world
+        .query::<(
+            &lithicrivers_core::components::Position,
+            &lithicrivers_core::components::Player,
+        )>()
+        .iter()
+    {
+        if pos.x == x && pos.y == y && pos.z == z {
+            return false; // Can't place on player
+        }
+    }
+
+    // Additional check: don't place on other entities either
+    for (_, pos) in app
+        .core
+        .game
+        .world
+        .query::<&lithicrivers_core::components::Position>()
+        .iter()
+    {
+        if pos.x == x && pos.y == y && pos.z == z {
+            // There's some entity at this position, check if it blocks placement
+            // For now, let's be conservative and not place blocks where entities are
+            return false;
+        }
+    }
+
+    true
 }
