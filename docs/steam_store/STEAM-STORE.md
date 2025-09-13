@@ -2,7 +2,7 @@
 
 ## Tagline
 
-“An ASCII sandbox where your body is the core crafting system — and every seed is reproducible down to the tick.”
+An android wakes up in a world past its time. An ASCII sandbox where your body is the core crafting system, and every seed is reproducible down to the tick.
 
 ## Short Description
 

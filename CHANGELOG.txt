@@ -1,3 +1,9 @@
+# v0.8.3.0
+
+- dialogue beta is functional
+- emotions and custom portrait art skeleton exists
+- dang, we need some artists
+
 # v0.8.2.0
 
 - building/breaking fully functional

@@ -6,13 +6,15 @@ use crossterm::{
 mod app;
 mod app_state;
 mod boot_message;
+mod dialogue_engine;
+mod dialogue_presenter;
 mod input;
 mod ui;
 
 use ratatui::{
     backend::{Backend, CrosstermBackend},
     layout::{Alignment, Constraint, Direction, Layout, Margin, Rect},
-    style::{Color, Style},
+    style::{Color, Modifier, Style},
     symbols::border,
     text::{Line, Span},
     widgets::{Block, Borders, Clear, Paragraph, Tabs, Wrap},
@@ -30,6 +32,7 @@ use tracing_appender as _tracing_appender_hidden; // avoid "unused extern crate"
 struct EmbeddedAssets;
 
 use crate::app_state::*;
+use crate::dialogue_presenter::DialoguePresenter;
 use lithicrivers_core::{
     components::{BattleDelay, Combat, GameEntity, Position},
     config::ConfigManager,
@@ -670,6 +673,12 @@ fn ui(f: &mut Frame, app: &mut App) {
     // Render corpse looting modals if active
     render_corpse_looting_modals(f, app);
 
+    // Calculate game viewport area for modal positioning
+    let game_viewport = calculate_game_viewport_area(f, app);
+
+    // Render NPC interaction modals if active (constrained to game viewport)
+    render_npc_interaction_modals(f, app, game_viewport);
+
     // Render hotbar assignment modal if active
     render_hotbar_assignment_modal(f, app);
 
@@ -986,6 +995,329 @@ fn render_corpse_loot_modal(
 
     // Controls at bottom
     let controls = Paragraph::new("←→: Switch Panel | ↑↓: Select | Enter: Take Item | Esc: Close")
+        .alignment(Alignment::Center)
+        .style(Style::default().fg(Color::Gray));
+
+    if inner.height > 1 {
+        let controls_area = Rect {
+            x: inner.x,
+            y: inner.y + inner.height - 1,
+            width: inner.width,
+            height: 1,
+        };
+        f.render_widget(controls, controls_area);
+    }
+}
+
+/// Calculate the game viewport area based on current UI layout
+fn calculate_game_viewport_area(f: &Frame, app: &App) -> Rect {
+    use crate::app_state::BuildMode;
+
+    // Replicate the main UI layout logic to find game viewport bounds
+    let show_hotbar =
+        app.ui.current_tab == MenuTab::World && matches!(app.panels.build.mode, BuildMode::Place);
+
+    let root_chunks = if show_hotbar {
+        Layout::default()
+            .direction(Direction::Vertical)
+            .margin(0)
+            .constraints([
+                Constraint::Length(1), // Title line
+                Constraint::Min(0),    // Main area (map + inventory)
+                Constraint::Length(3), // Hotbar
+                Constraint::Length(7), // Message log
+                Constraint::Length(3), // Bottom menu bar
+            ])
+            .split(f.size())
+    } else {
+        Layout::default()
+            .direction(Direction::Vertical)
+            .margin(0)
+            .constraints([
+                Constraint::Length(1), // Title line
+                Constraint::Min(0),    // Main area (map + inventory)
+                Constraint::Length(7), // Message log
+                Constraint::Length(3), // Bottom menu bar
+            ])
+            .split(f.size())
+    };
+
+    // Calculate game view area based on current tab and combat state
+    match app.ui.current_tab {
+        MenuTab::World => {
+            if app.combat.is_active() {
+                // Combat mode: game view is right 50%
+                let main_chunks = Layout::default()
+                    .direction(Direction::Horizontal)
+                    .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+                    .split(root_chunks[1]);
+                main_chunks[1]
+            } else if app.panels.look.mode {
+                // With Look mode: game view is left side
+                let main_chunks = Layout::default()
+                    .direction(Direction::Horizontal)
+                    .constraints([Constraint::Min(20), Constraint::Length(24)])
+                    .split(root_chunks[1]);
+                main_chunks[0]
+            } else {
+                // Normal mode: game view is left side
+                let main_chunks = Layout::default()
+                    .direction(Direction::Horizontal)
+                    .constraints([Constraint::Min(20), Constraint::Length(24)])
+                    .split(root_chunks[1]);
+                main_chunks[0]
+            }
+        }
+        MenuTab::Crafting
+        | MenuTab::Body
+        | MenuTab::Help
+        | MenuTab::Inventory
+        | MenuTab::Menu
+        | MenuTab::Credits
+        | MenuTab::Quit => {
+            // For non-world tabs, use the full main area
+            root_chunks[1]
+        }
+    }
+}
+
+/// Render NPC interaction modals when active
+fn render_npc_interaction_modals(f: &mut Frame, app: &mut App, viewport_area: Rect) {
+    use crate::app_state::NPCInteractionState;
+    let interaction_state = app.panels.npc_interaction.clone();
+    match interaction_state {
+        NPCInteractionState::SelectingNPC {
+            adjacent_npcs,
+            selected_npc,
+        } => {
+            render_npc_selection_modal(f, app, &adjacent_npcs, selected_npc, viewport_area);
+        }
+        NPCInteractionState::InDialogue {
+            npc_entity,
+            conversation,
+            selected_choice,
+        } => {
+            render_npc_dialogue_modal(f, app, npc_entity, selected_choice, viewport_area);
+        }
+        NPCInteractionState::None => {
+            // No modal to render
+        }
+    }
+}
+
+/// Render the NPC selection modal when multiple NPCs are nearby
+fn render_npc_selection_modal(
+    f: &mut Frame,
+    app: &mut App,
+    adjacent_npcs: &[(hecs::Entity, String)],
+    selected_npc: usize,
+    viewport_area: Rect,
+) {
+    // Create modal area constrained to viewport (centered, 60% width, 50% height)
+    let area = centered_rect(60, 50, viewport_area);
+
+    // Clear the background
+    f.render_widget(Clear, area);
+
+    // Create the modal block
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .border_set(border::ROUNDED)
+        .title(" Choose NPC to Talk To ")
+        .title_style(
+            Style::default()
+                .fg(Color::Green)
+                .add_modifier(Modifier::BOLD),
+        )
+        .style(Style::default().bg(Color::Black).fg(Color::White));
+
+    let inner = block.inner(area);
+    f.render_widget(block, area);
+
+    // Create the list of NPCs
+    let mut npc_lines = Vec::new();
+    for (i, (npc_entity, npc_name)) in adjacent_npcs.iter().enumerate() {
+        let prefix = if i == selected_npc { "→ " } else { "  " };
+
+        // Get NPC position for display
+        let pos_info = if let Ok(pos) = app
+            .core
+            .game
+            .world
+            .get::<&lithicrivers_core::components::Position>(*npc_entity)
+        {
+            format!(" at ({}, {})", pos.x, pos.y)
+        } else {
+            String::new()
+        };
+
+        let line = format!("{}{}{}", prefix, npc_name, pos_info);
+        npc_lines.push(line);
+    }
+
+    // Render the list
+    let npc_text = npc_lines.join("\n");
+    let paragraph = Paragraph::new(npc_text)
+        .alignment(Alignment::Left)
+        .style(Style::default().fg(Color::White));
+
+    if inner.height > 2 {
+        let text_area = Rect {
+            x: inner.x,
+            y: inner.y,
+            width: inner.width,
+            height: inner.height - 2,
+        };
+        f.render_widget(paragraph, text_area);
+    }
+
+    // Controls at bottom
+    let controls = Paragraph::new("↑↓: Select | Enter: Talk | Esc: Cancel")
+        .alignment(Alignment::Center)
+        .style(Style::default().fg(Color::Gray));
+
+    if inner.height > 1 {
+        let controls_area = Rect {
+            x: inner.x,
+            y: inner.y + inner.height - 1,
+            width: inner.width,
+            height: 1,
+        };
+        f.render_widget(controls, controls_area);
+    }
+}
+
+/// Render the NPC dialogue modal
+fn render_npc_dialogue_modal(
+    f: &mut Frame,
+    app: &mut App,
+    npc_entity: hecs::Entity,
+    selected_choice: usize,
+    viewport_area: Rect,
+) {
+    // Create modal area constrained to viewport (not full screen)
+    let area = centered_rect(90, 80, viewport_area);
+
+    // Clear the background
+    f.render_widget(Clear, area);
+
+    // Create the modal block
+    let npc_name = if let Ok(dialogue) = app
+        .core
+        .game
+        .world
+        .get::<&lithicrivers_core::components::Dialogue>(npc_entity)
+    {
+        dialogue.name.clone()
+    } else {
+        "Unknown NPC".to_string()
+    };
+
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .border_set(border::ROUNDED)
+        .title(format!(" Talking to {} ", npc_name))
+        .title_style(
+            Style::default()
+                .fg(Color::Yellow)
+                .add_modifier(Modifier::BOLD),
+        )
+        .style(Style::default().bg(Color::Black).fg(Color::White));
+
+    let inner = block.inner(area);
+    f.render_widget(block, inner);
+
+    // Get current dialogue and both portraits using the new DialoguePresenter with Summon Night style
+    let (dialogue_text, npc_portrait, player_portrait) =
+        if let NPCInteractionState::InDialogue { conversation, .. } = &app.panels.npc_interaction {
+            DialoguePresenter::format_dialogue_with_portraits(
+                &mut app.core.sprite_loader,
+                &app.panels.dialogue_engine,
+                conversation,
+                selected_choice,
+            )
+        } else {
+            (format!("{}: \"Hello, traveler!\"", npc_name), None, None)
+        };
+
+    // Create Summon Night-style layout: portrait on left, dialogue on right
+    if inner.height > 2 {
+        let content_area = Rect {
+            x: inner.x,
+            y: inner.y,
+            width: inner.width,
+            height: inner.height - 2,
+        };
+
+        // Clear the content area to prevent rendering artifacts on resize
+        f.render_widget(Clear, content_area);
+
+        // Split the content area horizontally for portrait and text
+        let portrait_width = 16; // Width for 12x8 portrait + padding
+
+        // Create Summon Night-style three-panel layout: NPC portrait | dialogue text | player portrait
+        let has_npc = npc_portrait.is_some();
+        let has_player = player_portrait.is_some();
+
+        let left_width = if has_npc {
+            portrait_width.min(content_area.width / 4)
+        } else {
+            0
+        };
+        let right_width = if has_player {
+            portrait_width.min(content_area.width / 4)
+        } else {
+            0
+        };
+        let text_width = content_area.width - left_width - right_width;
+
+        // NPC portrait area (left side)
+        if let Some(npc_port) = npc_portrait {
+            let npc_area = Rect {
+                x: content_area.x,
+                y: content_area.y,
+                width: left_width,
+                height: content_area.height,
+            };
+
+            let npc_paragraph = Paragraph::new(npc_port)
+                .alignment(Alignment::Left)
+                .style(Style::default().fg(Color::Cyan));
+            f.render_widget(npc_paragraph, npc_area);
+        }
+
+        // Player portrait area (right side)
+        if let Some(player_port) = player_portrait {
+            let player_area = Rect {
+                x: content_area.x + left_width + text_width,
+                y: content_area.y,
+                width: right_width,
+                height: content_area.height,
+            };
+
+            let player_paragraph = Paragraph::new(player_port)
+                .alignment(Alignment::Left)
+                .style(Style::default().fg(Color::Yellow));
+            f.render_widget(player_paragraph, player_area);
+        }
+
+        // Dialogue text area (center)
+        let text_area = Rect {
+            x: content_area.x + left_width,
+            y: content_area.y,
+            width: text_width,
+            height: content_area.height,
+        };
+
+        let dialogue_paragraph = Paragraph::new(dialogue_text)
+            .alignment(Alignment::Left)
+            .wrap(Wrap { trim: true })
+            .style(Style::default().fg(Color::White));
+        f.render_widget(dialogue_paragraph, text_area);
+    }
+
+    // Controls at bottom
+    let controls = Paragraph::new("Up/Down: Select Choice | Enter: Choose | Esc: End Conversation")
         .alignment(Alignment::Center)
         .style(Style::default().fg(Color::Gray));
 
