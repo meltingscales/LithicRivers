@@ -915,6 +915,89 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
         return Ok(());
     }
 
+    // Handle NPC interaction input when active
+    if let crate::app_state::NPCInteractionState::SelectingNPC {
+        adjacent_npcs,
+        selected_npc,
+    } = &app.panels.npc_interaction
+    {
+        let npcs_clone = adjacent_npcs.clone();
+        let selected = *selected_npc;
+        if app.ui.keybinds.matches("ui", "CLOSE_HELP_MENU", &key) {
+            app.panels.npc_interaction = crate::app_state::NPCInteractionState::None;
+            app.core.game.res.log("Cancelled NPC interaction");
+            return Ok(());
+        }
+        if app.ui.keybinds.matches("movement", "MOVE_NORTH", &key) {
+            app.panels.npc_interaction = crate::app_state::NPCInteractionState::SelectingNPC {
+                adjacent_npcs: npcs_clone.clone(),
+                selected_npc: selected.saturating_sub(1),
+            };
+            return Ok(());
+        }
+        if app.ui.keybinds.matches("movement", "MOVE_SOUTH", &key) {
+            app.panels.npc_interaction = crate::app_state::NPCInteractionState::SelectingNPC {
+                adjacent_npcs: npcs_clone.clone(),
+                selected_npc: (selected + 1).min(npcs_clone.len().saturating_sub(1)),
+            };
+            return Ok(());
+        }
+        if app.ui.keybinds.matches("ui", "MENU_ACTIVATE", &key) || key == KeyCode::Enter {
+            if selected < npcs_clone.len() {
+                let (npc_entity, npc_name) = npcs_clone[selected].clone();
+                app.panels.npc_interaction = crate::app_state::NPCInteractionState::InDialogue {
+                    npc_entity,
+                    current_dialogue_node: Some(0), // Start with first dialogue node
+                    selected_choice: 0,
+                };
+                app.core
+                    .game
+                    .res
+                    .log(format!("Started conversation with {}", npc_name));
+            }
+            return Ok(());
+        }
+        return Ok(());
+    }
+
+    if let crate::app_state::NPCInteractionState::InDialogue {
+        npc_entity,
+        current_dialogue_node: _,
+        selected_choice,
+    } = &app.panels.npc_interaction
+    {
+        let entity = *npc_entity;
+        let mut choice = *selected_choice;
+
+        if app.ui.keybinds.matches("ui", "CLOSE_HELP_MENU", &key) {
+            app.panels.npc_interaction = crate::app_state::NPCInteractionState::None;
+            app.core.game.res.log("Ended conversation");
+            return Ok(());
+        }
+
+        // For now, just handle basic navigation - we'll implement full dialogue later
+        if app.ui.keybinds.matches("movement", "MOVE_NORTH", &key) {
+            choice = choice.saturating_sub(1);
+        }
+        if app.ui.keybinds.matches("movement", "MOVE_SOUTH", &key) {
+            choice = (choice + 1).min(2); // Limit to reasonable number of choices for now
+        }
+        if app.ui.keybinds.matches("ui", "MENU_ACTIVATE", &key) || key == KeyCode::Enter {
+            // For now, just end the conversation
+            app.panels.npc_interaction = crate::app_state::NPCInteractionState::None;
+            app.core.game.res.log("Conversation ended");
+            return Ok(());
+        }
+
+        // Update state
+        app.panels.npc_interaction = crate::app_state::NPCInteractionState::InDialogue {
+            npc_entity: entity,
+            current_dialogue_node: Some(0),
+            selected_choice: choice,
+        };
+        return Ok(());
+    }
+
     // Handle combat-specific input when combat is active
     if let CombatUiState::Active {
         current_move,
@@ -1561,38 +1644,25 @@ fn handle_interaction(app: &mut App) {
             app.combat = CombatUiState::None;
         }
     } else if total_interactables == 1 && nearby_npcs.len() == 1 {
-        // Single NPC - start dialogue via core system
-        tracing::info!(target: "game", "Single NPC found, starting dialogue via core system");
-        app.core.game.res.player_state.intent =
-            lithicrivers_core::intent::PlayerIntent::interact(100);
-        let tick_result = app.core.game.tick();
-
-        // Handle combat state changes
-        if tick_result.contains(lithicrivers_core::game::GameTickResult::CombatTriggered) {
-            app.combat = CombatUiState::Active {
-                current_move: 0,
-                current_enemy: 0,
-                enemy_timers: vec![],
-                move_scroll_offset: 0,
-            };
-        }
-        if tick_result.contains(lithicrivers_core::game::GameTickResult::CombatEnded) {
-            app.combat = CombatUiState::None;
-        }
+        // Single NPC - use the existing NPC interaction system
+        tracing::info!(target: "game", "Single NPC found, using NPC interaction system");
+        handle_npc_interaction(app);
     } else {
-        // Multiple targets - for now, prioritize corpses and use corpse selection UI
-        // TODO: Implement full multi-type interaction menu
+        // Multiple targets - prioritize based on what's available
         if nearby_corpses.len() > 0 {
             tracing::info!(target: "game", "Multiple targets with corpses, using corpse interaction system");
             handle_corpse_interaction(app);
+        } else if nearby_npcs.len() > 0 {
+            tracing::info!(target: "game", "Multiple targets with NPCs, using NPC interaction system");
+            handle_npc_interaction(app);
         } else {
-            tracing::info!(target: "game", "Multiple non-corpse targets, falling back to core system");
+            tracing::info!(target: "game", "Multiple item targets, falling back to core system");
             app.core
                 .game
                 .res
-                .log("Multiple things to interact with (selection UI coming soon)");
+                .log("Multiple items to interact with (selection UI coming soon)");
 
-            // Fall back to core system for now
+            // Fall back to core system for items
             app.core.game.res.player_state.intent =
                 lithicrivers_core::intent::PlayerIntent::interact(100);
             let tick_result = app.core.game.tick();
@@ -1610,6 +1680,68 @@ fn handle_interaction(app: &mut App) {
                 app.combat = CombatUiState::None;
             }
         }
+    }
+}
+
+/// Handle NPC interaction - find adjacent NPCs and initiate dialogue
+fn handle_npc_interaction(app: &mut App) {
+    use crate::app_state::NPCInteractionState;
+    use lithicrivers_core::components::{Dialogue, Position};
+
+    // Get player position
+    let player_pos = if let Some(player_entity) = app.core.game.get_player_entity() {
+        if let Ok(pos) = app.core.game.world.get::<&Position>(player_entity) {
+            *pos
+        } else {
+            app.core.game.res.log("Cannot find player position");
+            return;
+        }
+    } else {
+        app.core.game.res.log("Cannot find player entity");
+        return;
+    };
+
+    // Find all adjacent NPCs (3x3 grid centered on player)
+    let mut adjacent_npcs = Vec::new();
+    for (entity, (pos, dialogue)) in app.core.game.world.query::<(&Position, &Dialogue)>().iter() {
+        let dx = (pos.x - player_pos.x).abs();
+        let dy = (pos.y - player_pos.y).abs();
+        let dz = (pos.z - player_pos.z).abs();
+
+        if dx <= 1 && dy <= 1 && dz == 0 {
+            adjacent_npcs.push((entity, dialogue.name.clone()));
+            app.core.game.res.log(format!(
+                "Found NPC '{}' at ({}, {}, {})",
+                dialogue.name, pos.x, pos.y, pos.z
+            ));
+        }
+    }
+
+    if adjacent_npcs.is_empty() {
+        app.core
+            .game
+            .res
+            .log("No NPCs nearby to talk to.".to_string());
+        return;
+    } else if adjacent_npcs.len() == 1 {
+        // Single NPC - start dialogue directly
+        let (npc_entity, npc_name) = adjacent_npcs[0].clone();
+        app.panels.npc_interaction = NPCInteractionState::InDialogue {
+            npc_entity,
+            current_dialogue_node: Some(0), // Start with first dialogue node
+            selected_choice: 0,
+        };
+        app.core
+            .game
+            .res
+            .log(format!("Started conversation with {}", npc_name));
+    } else {
+        // Multiple NPCs - show selection modal
+        app.panels.npc_interaction = NPCInteractionState::SelectingNPC {
+            adjacent_npcs,
+            selected_npc: 0,
+        };
+        app.core.game.res.log("Choose which NPC to talk to");
     }
 }
 

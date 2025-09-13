@@ -12,7 +12,7 @@ mod ui;
 use ratatui::{
     backend::{Backend, CrosstermBackend},
     layout::{Alignment, Constraint, Direction, Layout, Margin, Rect},
-    style::{Color, Style},
+    style::{Color, Modifier, Style},
     symbols::border,
     text::{Line, Span},
     widgets::{Block, Borders, Clear, Paragraph, Tabs, Wrap},
@@ -670,6 +670,9 @@ fn ui(f: &mut Frame, app: &mut App) {
     // Render corpse looting modals if active
     render_corpse_looting_modals(f, app);
 
+    // Render NPC interaction modals if active
+    render_npc_interaction_modals(f, app);
+
     // Render hotbar assignment modal if active
     render_hotbar_assignment_modal(f, app);
 
@@ -986,6 +989,193 @@ fn render_corpse_loot_modal(
 
     // Controls at bottom
     let controls = Paragraph::new("←→: Switch Panel | ↑↓: Select | Enter: Take Item | Esc: Close")
+        .alignment(Alignment::Center)
+        .style(Style::default().fg(Color::Gray));
+
+    if inner.height > 1 {
+        let controls_area = Rect {
+            x: inner.x,
+            y: inner.y + inner.height - 1,
+            width: inner.width,
+            height: 1,
+        };
+        f.render_widget(controls, controls_area);
+    }
+}
+
+/// Render NPC interaction modals when active
+fn render_npc_interaction_modals(f: &mut Frame, app: &mut App) {
+    use crate::app_state::NPCInteractionState;
+    let interaction_state = app.panels.npc_interaction.clone();
+    match interaction_state {
+        NPCInteractionState::SelectingNPC {
+            adjacent_npcs,
+            selected_npc,
+        } => {
+            render_npc_selection_modal(f, app, &adjacent_npcs, selected_npc);
+        }
+        NPCInteractionState::InDialogue {
+            npc_entity,
+            current_dialogue_node: _,
+            selected_choice,
+        } => {
+            render_npc_dialogue_modal(f, app, npc_entity, selected_choice);
+        }
+        NPCInteractionState::None => {
+            // No modal to render
+        }
+    }
+}
+
+/// Render the NPC selection modal when multiple NPCs are nearby
+fn render_npc_selection_modal(
+    f: &mut Frame,
+    app: &mut App,
+    adjacent_npcs: &[(hecs::Entity, String)],
+    selected_npc: usize,
+) {
+    // Create modal area (centered, 60% width, 50% height)
+    let area = centered_rect(60, 50, f.size());
+
+    // Clear the background
+    f.render_widget(Clear, area);
+
+    // Create the modal block
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .border_set(border::ROUNDED)
+        .title(" Choose NPC to Talk To ")
+        .title_style(
+            Style::default()
+                .fg(Color::Green)
+                .add_modifier(Modifier::BOLD),
+        )
+        .style(Style::default().bg(Color::Black).fg(Color::White));
+
+    let inner = block.inner(area);
+    f.render_widget(block, area);
+
+    // Create the list of NPCs
+    let mut npc_lines = Vec::new();
+    for (i, (npc_entity, npc_name)) in adjacent_npcs.iter().enumerate() {
+        let prefix = if i == selected_npc { "→ " } else { "  " };
+
+        // Get NPC position for display
+        let pos_info = if let Ok(pos) = app
+            .core
+            .game
+            .world
+            .get::<&lithicrivers_core::components::Position>(*npc_entity)
+        {
+            format!(" at ({}, {})", pos.x, pos.y)
+        } else {
+            String::new()
+        };
+
+        let line = format!("{}{}{}", prefix, npc_name, pos_info);
+        npc_lines.push(line);
+    }
+
+    // Render the list
+    let npc_text = npc_lines.join("\n");
+    let paragraph = Paragraph::new(npc_text)
+        .alignment(Alignment::Left)
+        .style(Style::default().fg(Color::White));
+
+    if inner.height > 2 {
+        let text_area = Rect {
+            x: inner.x,
+            y: inner.y,
+            width: inner.width,
+            height: inner.height - 2,
+        };
+        f.render_widget(paragraph, text_area);
+    }
+
+    // Controls at bottom
+    let controls = Paragraph::new("↑↓: Select | Enter: Talk | Esc: Cancel")
+        .alignment(Alignment::Center)
+        .style(Style::default().fg(Color::Gray));
+
+    if inner.height > 1 {
+        let controls_area = Rect {
+            x: inner.x,
+            y: inner.y + inner.height - 1,
+            width: inner.width,
+            height: 1,
+        };
+        f.render_widget(controls, controls_area);
+    }
+}
+
+/// Render the NPC dialogue modal
+fn render_npc_dialogue_modal(
+    f: &mut Frame,
+    app: &mut App,
+    npc_entity: hecs::Entity,
+    selected_choice: usize,
+) {
+    // Create modal area (most of screen)
+    let area = centered_rect(90, 80, f.size());
+
+    // Clear the background
+    f.render_widget(Clear, area);
+
+    // Create the modal block
+    let npc_name = if let Ok(dialogue) = app
+        .core
+        .game
+        .world
+        .get::<&lithicrivers_core::components::Dialogue>(npc_entity)
+    {
+        dialogue.name.clone()
+    } else {
+        "Unknown NPC".to_string()
+    };
+
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .border_set(border::ROUNDED)
+        .title(format!(" Talking to {} ", npc_name))
+        .title_style(
+            Style::default()
+                .fg(Color::Yellow)
+                .add_modifier(Modifier::BOLD),
+        )
+        .style(Style::default().bg(Color::Black).fg(Color::White));
+
+    let inner = block.inner(area);
+    f.render_widget(block, inner);
+
+    // For now, show a simple dialogue interface
+    // Later we'll integrate the full dialogue system from the demo
+    let dialogue_text = format!(
+        "{}: \"Hello, traveler! How can I help you today?\"\n\n\
+        → 1. Tell me about this place\n\
+        {} 2. Do you have any quests?\n\
+        {} 3. Goodbye",
+        npc_name,
+        if selected_choice == 1 { "→" } else { " " },
+        if selected_choice == 2 { "→" } else { " " }
+    );
+
+    let paragraph = Paragraph::new(dialogue_text)
+        .alignment(Alignment::Left)
+        .wrap(Wrap { trim: true })
+        .style(Style::default().fg(Color::White));
+
+    if inner.height > 2 {
+        let text_area = Rect {
+            x: inner.x,
+            y: inner.y,
+            width: inner.width,
+            height: inner.height - 2,
+        };
+        f.render_widget(paragraph, text_area);
+    }
+
+    // Controls at bottom
+    let controls = Paragraph::new("↑↓: Select Choice | Enter: Choose | Esc: End Conversation")
         .alignment(Alignment::Center)
         .style(Style::default().fg(Color::Gray));
 

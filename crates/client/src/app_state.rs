@@ -73,6 +73,7 @@ pub struct PanelStates {
     pub build: BuildPanelState,
     pub corpse_looting: CorpseLootingState,
     pub hotbar_assignment: HotbarAssignmentState,
+    pub npc_interaction: NPCInteractionState,
 }
 
 /// Inventory panel state
@@ -280,5 +281,26 @@ impl Keybinds {
 
     fn parse_keycode(s: &str) -> Option<KeyCode> {
         lithicrivers_core::keycode_mapping::parse_keycode(s)
+    }
+}
+
+/// NPC interaction state - handles NPC selection and dialogue
+#[derive(Debug, Clone, PartialEq)]
+pub enum NPCInteractionState {
+    None,
+    SelectingNPC {
+        adjacent_npcs: Vec<(hecs::Entity, String)>, // (entity, name) pairs
+        selected_npc: usize,
+    },
+    InDialogue {
+        npc_entity: hecs::Entity,
+        current_dialogue_node: Option<usize>,
+        selected_choice: usize,
+    },
+}
+
+impl Default for NPCInteractionState {
+    fn default() -> Self {
+        NPCInteractionState::None
     }
 }
