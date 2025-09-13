@@ -1,5 +1,17 @@
 # Steam MVP Release Plan (Target: December 2026)
 
+## NEXT TODO: Survival Mechanics Implementation
+**Priority**: HIGH - Essential for core survival gameplay loop
+
+**Implementation Plan**:
+1. **Damage System**: Combat affects specific body parts with varying damage types (physical/mechanical)
+2. **Body Panel Integration**: Visual indicators showing part condition in existing UI
+3. **Repair Mechanics**: Use crafted items or rest to restore damaged parts 
+4. **Resource Management**: Create meaningful trade-offs between combat risk and repair costs
+5. **Gameplay Impact**: At least one damage type with clear mechanical consequences
+
+**Why This Matters**: Completes the survival loop - explore → combat → damage → repair → explore. Currently combat has no lasting consequences, making it feel disconnected from the crafting/resource systems.
+
 ## launching
 
 - find out how x-terminal-emulator works on Ubuntu
@@ -52,7 +64,10 @@
   - [ ] Full cycle length ~10–20 minutes with visual cue
 - [ ] Basic survival mechanics (damage, repair, body parts)
   - [ ] Body panel shows part states; player can incur and repair at least 1 damage type
-- [ ] NPC interactions and conversations just like the python version
+- [x] NPC interactions and conversations just like the python version
+  - [x] **Dialogue engine with clean architecture and unit tests**
+  - [x] **15+ emotional dialogue states for rich NPC interactions**
+  - [x] **Summon Night-style dual portraits (NPC + player mood-based)**
 - [x] Combat system with tick-based moves and an option to use items and run away
   - [x] Running away costs 600 ticks
   - [x] Tackling an enemy costs 800 ticks
@@ -118,9 +133,9 @@
    - Full cycle length ~10–20 minutes with visual cue
    - Affects gameplay rhythm and difficulty
 
-3. **NPC interactions and conversations**
-   - Port from Python version for quest/story content
-   - Critical for engagement beyond just mining/combat
+3. **~~NPC interactions and conversations~~** ✅ **COMPLETED**
+   - ~~Port from Python version for quest/story content~~
+   - ✅ **Full dialogue system with portraits and emotional states implemented**
 
 ### MEDIUM PRIORITY (Polish & Performance)
 4. **Performance optimizations**
