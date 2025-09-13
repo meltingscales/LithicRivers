@@ -6,6 +6,7 @@ use crossterm::{
 mod app;
 mod app_state;
 mod boot_message;
+mod dialogue_system;
 mod input;
 mod ui;
 
@@ -1018,6 +1019,7 @@ fn render_npc_interaction_modals(f: &mut Frame, app: &mut App) {
             npc_entity,
             current_dialogue_node: _,
             selected_choice,
+            ..
         } => {
             render_npc_dialogue_modal(f, app, npc_entity, selected_choice);
         }
@@ -1147,17 +1149,56 @@ fn render_npc_dialogue_modal(
     let inner = block.inner(area);
     f.render_widget(block, inner);
 
-    // For now, show a simple dialogue interface
-    // Later we'll integrate the full dialogue system from the demo
-    let dialogue_text = format!(
-        "{}: \"Hello, traveler! How can I help you today?\"\n\n\
-        → 1. Tell me about this place\n\
-        {} 2. Do you have any quests?\n\
-        {} 3. Goodbye",
-        npc_name,
-        if selected_choice == 1 { "→" } else { " " },
-        if selected_choice == 2 { "→" } else { " " }
-    );
+    // Get current dialogue from the NPC interaction state using the full dialogue system
+    let dialogue_text = if let NPCInteractionState::InDialogue {
+        npc_data,
+        current_dialogue_node,
+        ..
+    } = &app.panels.npc_interaction
+    {
+        if let Some(node_id) = current_dialogue_node {
+            // Use the dialogue system to get the actual dialogue
+            if let Some(dialogue_node) = app.panels.dialogue_system.get_dialogue_by_id(*node_id) {
+                let mood_prefix = app
+                    .panels
+                    .dialogue_system
+                    .get_mood_prefix(dialogue_node.mood);
+                let speaker_text = format!(
+                    "{}{}: \"{}\"",
+                    mood_prefix, dialogue_node.speaker, dialogue_node.text
+                );
+
+                let mut full_text = format!("{}\n\n", speaker_text);
+                for (i, choice) in dialogue_node.choices.iter().enumerate() {
+                    let prefix = if i == selected_choice { ">" } else { " " };
+                    full_text.push_str(&format!("{} {}. {}\n", prefix, i + 1, choice.text));
+                }
+                full_text
+            } else {
+                // Fallback if no dialogue node found
+                let speaker_text = format!(
+                    "{}: \"Hello, traveler! How can I help you today?\"",
+                    npc_data.name
+                );
+                let choices_text = vec![
+                    "Tell me about this place",
+                    "Do you have any quests?",
+                    "Goodbye",
+                ];
+
+                let mut full_text = format!("{}\n\n", speaker_text);
+                for (i, choice) in choices_text.iter().enumerate() {
+                    let prefix = if i == selected_choice { ">" } else { " " };
+                    full_text.push_str(&format!("{} {}. {}\n", prefix, i + 1, choice));
+                }
+                full_text
+            }
+        } else {
+            format!("{}: \"Hello, traveler!\"", npc_data.name)
+        }
+    } else {
+        format!("{}: \"Hello, traveler!\"", npc_name)
+    };
 
     let paragraph = Paragraph::new(dialogue_text)
         .alignment(Alignment::Left)
@@ -1175,7 +1216,7 @@ fn render_npc_dialogue_modal(
     }
 
     // Controls at bottom
-    let controls = Paragraph::new("↑↓: Select Choice | Enter: Choose | Esc: End Conversation")
+    let controls = Paragraph::new("Up/Down: Select Choice | Enter: Choose | Esc: End Conversation")
         .alignment(Alignment::Center)
         .style(Style::default().fg(Color::Gray));
 
