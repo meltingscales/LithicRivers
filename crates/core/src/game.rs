@@ -85,8 +85,8 @@ impl Game {
             ));
         }
 
-        //spawn 1 feral dog and immediately kill it 2 spaces away from the player for testing
-        let dead_dog_position = (sx + 2, sy + 0, sz);
+        //spawn 1 feral dog and immediately kill it next to an npc for testing
+        let dead_dog_position = (sx - 7, sy - 4, sz);
         let dead_dog = world.spawn((
             Position {
                 x: dead_dog_position.0,
@@ -160,37 +160,27 @@ impl Game {
             ));
         }
 
-        // Spawn QuestTesty NPCs for dialogue testing
-        let quest_npc_positions = [
-            (sx + 8, sy + 3, sz), // East of player
-            (sx - 8, sy - 3, sz), // West of player
-            (sx + 2, sy + 8, sz), // North of player
-        ];
-
-        for (i, (x, y, z)) in quest_npc_positions.iter().enumerate() {
-            let npc_name = format!("QuestTesty #{}", i + 1);
-
-            world.spawn((
-                Position {
-                    x: *x,
-                    y: *y,
-                    z: *z,
-                },
-                GameEntity,
-                EntityKind::QuestTesty,
-                QuestTesty,
-                Health::new(100),
-                Glyph('Q'),
-                SpriteRef::new("entities", "quest_testy"),
-                BlocksMovement,
-                Dialogue {
-                    current_mood: NPCMood::Happy,
-                    met_before: false,
-                    current_dialogue_id: Some(0), // Start with greeting
-                    name: npc_name,
-                },
-            ));
-        }
+        // Spawn single QuestTesty NPC for dialogue testing
+        world.spawn((
+            Position {
+                x: sx - 8,
+                y: sy - 3,
+                z: sz,
+            },
+            GameEntity,
+            EntityKind::QuestTesty,
+            QuestTesty,
+            Health::new(100),
+            Glyph('Q'),
+            SpriteRef::new("entities", "quest_testy"),
+            BlocksMovement,
+            Dialogue {
+                current_mood: NPCMood::Happy,
+                met_before: false,
+                current_dialogue_id: Some(20), // Start with QuestTesty's dialogue tree
+                name: "QuestTesty".to_string(),
+            },
+        ));
 
         // Deterministically spawn a few Logs near the player (~5 tiles away)
         // Use a local RNG derived from the seed so we don't perturb the global RNG sequence

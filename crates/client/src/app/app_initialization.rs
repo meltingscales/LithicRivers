@@ -1,4 +1,5 @@
 use crate::app_state::*;
+use crate::dialogue_engine::DialogueEngine;
 use crate::{audio, boot_message, App, EmbeddedAssets, MenuTab, Scale, SplashState, SpriteLoader};
 use chrono::prelude::Local;
 use lithicrivers_core::components::Position;
@@ -141,6 +142,8 @@ impl App {
                 build: BuildPanelState::default(),
                 corpse_looting: CorpseLootingState::default(),
                 hotbar_assignment: HotbarAssignmentState::default(),
+                npc_interaction: NPCInteractionState::default(),
+                dialogue_engine: DialogueEngine::new(),
             },
             splash: SplashScreenState {
                 state: SplashState::Logo,

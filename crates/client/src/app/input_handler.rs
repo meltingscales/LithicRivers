@@ -74,7 +74,13 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
     }
 
     // log key to log
-    // tracing::info!(target: "game", "key pressed: {:?}", key);
+    tracing::info!(target: "game", "key pressed: {:?}", key);
+
+    // Special debug for F key
+    if key == KeyCode::Char('f') || key == KeyCode::Char('F') {
+        tracing::info!(target: "game", "F key detected! Current tab: {:?}, splash state: {:?}", 
+            app.ui.current_tab, app.splash.state);
+    }
 
     // First, handle configurable keybind actions
     if app.ui.current_tab == MenuTab::World {
@@ -909,6 +915,129 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
         return Ok(());
     }
 
+    // Handle NPC interaction input when active
+    if let crate::app_state::NPCInteractionState::SelectingNPC {
+        adjacent_npcs,
+        selected_npc,
+    } = &app.panels.npc_interaction
+    {
+        let npcs_clone = adjacent_npcs.clone();
+        let selected = *selected_npc;
+        if app.ui.keybinds.matches("ui", "CLOSE_HELP_MENU", &key) {
+            app.panels.npc_interaction = crate::app_state::NPCInteractionState::None;
+            app.core.game.res.log("Cancelled NPC interaction");
+            return Ok(());
+        }
+        if app.ui.keybinds.matches("movement", "MOVE_NORTH", &key) {
+            app.panels.npc_interaction = crate::app_state::NPCInteractionState::SelectingNPC {
+                adjacent_npcs: npcs_clone.clone(),
+                selected_npc: selected.saturating_sub(1),
+            };
+            return Ok(());
+        }
+        if app.ui.keybinds.matches("movement", "MOVE_SOUTH", &key) {
+            app.panels.npc_interaction = crate::app_state::NPCInteractionState::SelectingNPC {
+                adjacent_npcs: npcs_clone.clone(),
+                selected_npc: (selected + 1).min(npcs_clone.len().saturating_sub(1)),
+            };
+            return Ok(());
+        }
+        if app.ui.keybinds.matches("ui", "MENU_ACTIVATE", &key) || key == KeyCode::Enter {
+            if selected < npcs_clone.len() {
+                let (npc_entity, npc_name) = npcs_clone[selected].clone();
+                // Start conversation using the new dialogue engine
+
+                if let Some(conversation) = app.panels.dialogue_engine.start_conversation(0) {
+                    app.panels.npc_interaction =
+                        crate::app_state::NPCInteractionState::InDialogue {
+                            npc_entity,
+                            conversation,
+                            selected_choice: 0,
+                        };
+                } else {
+                    app.core
+                        .game
+                        .res
+                        .log("Failed to start conversation - no NPC available");
+                }
+                app.core
+                    .game
+                    .res
+                    .log(format!("Started conversation with {}", npc_name));
+            }
+            return Ok(());
+        }
+        return Ok(());
+    }
+
+    if let crate::app_state::NPCInteractionState::InDialogue {
+        npc_entity,
+        conversation,
+        selected_choice,
+    } = &app.panels.npc_interaction
+    {
+        let entity = *npc_entity;
+        let mut choice = *selected_choice;
+
+        if app.ui.keybinds.matches("ui", "CLOSE_HELP_MENU", &key) {
+            app.panels.npc_interaction = crate::app_state::NPCInteractionState::None;
+            app.core.game.res.log("Ended conversation");
+            return Ok(());
+        }
+
+        // Handle dialogue navigation using the new engine
+        if app.ui.keybinds.matches("movement", "MOVE_NORTH", &key) {
+            choice = choice.saturating_sub(1);
+        }
+        if app.ui.keybinds.matches("movement", "MOVE_SOUTH", &key) {
+            // Get the current dialogue node to check how many choices are available
+            if let Some(node) = app.panels.dialogue_engine.get_current_node(conversation) {
+                choice = (choice + 1).min(node.choices.len().saturating_sub(1));
+            }
+        }
+        if app.ui.keybinds.matches("ui", "MENU_ACTIVATE", &key) || key == KeyCode::Enter {
+            // Process the choice using the dialogue engine
+            if let Some(result) = app
+                .panels
+                .dialogue_engine
+                .process_choice(conversation, choice)
+            {
+                if result.conversation_ended {
+                    app.panels.npc_interaction = crate::app_state::NPCInteractionState::None;
+                    app.core.game.res.log("Conversation ended");
+                } else if let Some(next_node_id) = result.next_node_id {
+                    // Continue conversation with next node
+                    let mut new_conversation = conversation.clone();
+                    new_conversation.current_node_id = Some(next_node_id);
+                    new_conversation.selected_choice = 0; // Reset choice selection
+
+                    app.panels.npc_interaction =
+                        crate::app_state::NPCInteractionState::InDialogue {
+                            npc_entity: entity,
+                            conversation: new_conversation,
+                            selected_choice: 0,
+                        };
+
+                    if result.unlocked_quest {
+                        app.core.game.res.log("New quest unlocked!");
+                    }
+                    if let Some(_shop_item) = result.shop_transaction {
+                        app.core.game.res.log("Shop transaction available");
+                    }
+                }
+            }
+            return Ok(());
+        }
+
+        // Update the selected choice
+        app.panels.npc_interaction = crate::app_state::NPCInteractionState::InDialogue {
+            npc_entity: entity,
+            conversation: conversation.clone(),
+            selected_choice: choice,
+        };
+        return Ok(());
+    }
+
     // Handle combat-specific input when combat is active
     if let CombatUiState::Active {
         current_move,
@@ -1213,8 +1342,17 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
             return Ok(());
         }
 
+        // Debug F key specifically
+        if key == KeyCode::Char('f') || key == KeyCode::Char('F') {
+            tracing::info!(target: "game", "Checking F key against INTERACT keybind");
+            let matches = app.ui.keybinds.matches("action", "INTERACT", &key);
+            tracing::info!(target: "game", "F key matches INTERACT: {}", matches);
+        }
+
         if app.ui.keybinds.matches("action", "INTERACT", &key) {
+            tracing::info!(target: "game", "F key matched INTERACT action, calling handle_interaction");
             handle_interaction(app);
+            tracing::info!(target: "game", "handle_interaction completed");
             return Ok(());
         }
 
@@ -1365,6 +1503,11 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
         return Ok(());
     }
 
+    // Debug: if we reach the end without handling F key, log it
+    if key == KeyCode::Char('f') || key == KeyCode::Char('F') {
+        tracing::info!(target: "game", "F key reached end of input handler without being handled!");
+    }
+
     Ok(())
 }
 
@@ -1426,9 +1569,228 @@ fn get_combat_enemy_count(game: &mut lithicrivers_core::Game) -> usize {
 
 /// Handle general interaction - items, corpses, NPCs
 fn handle_interaction(app: &mut App) {
-    // Set player intent to interact - let the core system handle the logic
-    app.core.game.res.player_state.intent = lithicrivers_core::intent::PlayerIntent::interact(100);
-    // 100 tick cost
+    tracing::info!(target: "game", "handle_interaction called, checking for nearby interactables");
+
+    // Instead of using core auto-interaction, use client-side selection UI
+    // First, check what's nearby
+    let player_pos = if let Some(player_entity) = app.core.game.get_player_entity() {
+        if let Ok(pos) = app
+            .core
+            .game
+            .world
+            .get::<&lithicrivers_core::components::Position>(player_entity)
+        {
+            *pos
+        } else {
+            app.core.game.res.log("Cannot find player position");
+            return;
+        }
+    } else {
+        app.core.game.res.log("Cannot find player entity");
+        return;
+    };
+
+    // Find nearby items
+    let mut nearby_items = Vec::new();
+    for (entity, (item, pos)) in app
+        .core
+        .game
+        .world
+        .query::<(
+            &lithicrivers_core::components::DroppedItem,
+            &lithicrivers_core::components::Position,
+        )>()
+        .iter()
+    {
+        if (pos.x - player_pos.x).abs() <= 1
+            && (pos.y - player_pos.y).abs() <= 1
+            && pos.z == player_pos.z
+        {
+            nearby_items.push((entity, *item, *pos));
+        }
+    }
+
+    // Find nearby corpses using existing function
+    let mut nearby_corpses = Vec::new();
+    for (entity, (pos, entity_kind, _inv)) in app
+        .core
+        .game
+        .world
+        .query::<(
+            &lithicrivers_core::components::Position,
+            &lithicrivers_core::components::EntityKind,
+            &lithicrivers_core::components::Inventory,
+        )>()
+        .iter()
+    {
+        if *entity_kind == lithicrivers_core::components::EntityKind::Corpse {
+            let dx = (pos.x - player_pos.x).abs();
+            let dy = (pos.y - player_pos.y).abs();
+            let dz = (pos.z - player_pos.z).abs();
+
+            if dx <= 1 && dy <= 1 && dz == 0 {
+                nearby_corpses.push(entity);
+            }
+        }
+    }
+
+    // Find nearby NPCs
+    let mut nearby_npcs = Vec::new();
+    for (entity, (dialogue, pos)) in app
+        .core
+        .game
+        .world
+        .query::<(
+            &lithicrivers_core::components::Dialogue,
+            &lithicrivers_core::components::Position,
+        )>()
+        .iter()
+    {
+        if (pos.x - player_pos.x).abs() <= 1
+            && (pos.y - player_pos.y).abs() <= 1
+            && pos.z == player_pos.z
+        {
+            nearby_npcs.push((entity, dialogue.name.clone(), *pos));
+        }
+    }
+
+    let total_interactables = nearby_items.len() + nearby_corpses.len() + nearby_npcs.len();
+    tracing::info!(target: "game", "Found {} items, {} corpses, {} NPCs nearby", 
+        nearby_items.len(), nearby_corpses.len(), nearby_npcs.len());
+
+    if total_interactables == 0 {
+        app.core.game.res.log("Nothing to interact with nearby.");
+    } else if total_interactables == 1 && nearby_corpses.len() == 1 {
+        // Single corpse - use the existing corpse interaction system
+        tracing::info!(target: "game", "Single corpse found, using corpse interaction system");
+        handle_corpse_interaction(app);
+    } else if total_interactables == 1 && nearby_items.len() == 1 {
+        // Single item - pick it up directly via core system
+        tracing::info!(target: "game", "Single item found, picking up via core system");
+        app.core.game.res.player_state.intent =
+            lithicrivers_core::intent::PlayerIntent::interact(100);
+        let tick_result = app.core.game.tick();
+
+        // Handle combat state changes
+        if tick_result.contains(lithicrivers_core::game::GameTickResult::CombatTriggered) {
+            app.combat = CombatUiState::Active {
+                current_move: 0,
+                current_enemy: 0,
+                enemy_timers: vec![],
+                move_scroll_offset: 0,
+            };
+        }
+        if tick_result.contains(lithicrivers_core::game::GameTickResult::CombatEnded) {
+            app.combat = CombatUiState::None;
+        }
+    } else if total_interactables == 1 && nearby_npcs.len() == 1 {
+        // Single NPC - use the existing NPC interaction system
+        tracing::info!(target: "game", "Single NPC found, using NPC interaction system");
+        handle_npc_interaction(app);
+    } else {
+        // Multiple targets - prioritize based on what's available
+        if nearby_corpses.len() > 0 {
+            tracing::info!(target: "game", "Multiple targets with corpses, using corpse interaction system");
+            handle_corpse_interaction(app);
+        } else if nearby_npcs.len() > 0 {
+            tracing::info!(target: "game", "Multiple targets with NPCs, using NPC interaction system");
+            handle_npc_interaction(app);
+        } else {
+            tracing::info!(target: "game", "Multiple item targets, falling back to core system");
+            app.core
+                .game
+                .res
+                .log("Multiple items to interact with (selection UI coming soon)");
+
+            // Fall back to core system for items
+            app.core.game.res.player_state.intent =
+                lithicrivers_core::intent::PlayerIntent::interact(100);
+            let tick_result = app.core.game.tick();
+
+            // Handle combat state changes
+            if tick_result.contains(lithicrivers_core::game::GameTickResult::CombatTriggered) {
+                app.combat = CombatUiState::Active {
+                    current_move: 0,
+                    current_enemy: 0,
+                    enemy_timers: vec![],
+                    move_scroll_offset: 0,
+                };
+            }
+            if tick_result.contains(lithicrivers_core::game::GameTickResult::CombatEnded) {
+                app.combat = CombatUiState::None;
+            }
+        }
+    }
+}
+
+/// Handle NPC interaction - find adjacent NPCs and initiate dialogue
+fn handle_npc_interaction(app: &mut App) {
+    use crate::app_state::NPCInteractionState;
+    use lithicrivers_core::components::{Dialogue, Position};
+
+    // Get player position
+    let player_pos = if let Some(player_entity) = app.core.game.get_player_entity() {
+        if let Ok(pos) = app.core.game.world.get::<&Position>(player_entity) {
+            *pos
+        } else {
+            app.core.game.res.log("Cannot find player position");
+            return;
+        }
+    } else {
+        app.core.game.res.log("Cannot find player entity");
+        return;
+    };
+
+    // Find all adjacent NPCs (3x3 grid centered on player)
+    let mut adjacent_npcs = Vec::new();
+    for (entity, (pos, dialogue)) in app.core.game.world.query::<(&Position, &Dialogue)>().iter() {
+        let dx = (pos.x - player_pos.x).abs();
+        let dy = (pos.y - player_pos.y).abs();
+        let dz = (pos.z - player_pos.z).abs();
+
+        if dx <= 1 && dy <= 1 && dz == 0 {
+            adjacent_npcs.push((entity, dialogue.name.clone()));
+            app.core.game.res.log(format!(
+                "Found NPC '{}' at ({}, {}, {})",
+                dialogue.name, pos.x, pos.y, pos.z
+            ));
+        }
+    }
+
+    if adjacent_npcs.is_empty() {
+        app.core
+            .game
+            .res
+            .log("No NPCs nearby to talk to.".to_string());
+        return;
+    } else if adjacent_npcs.len() == 1 {
+        // Single NPC - start dialogue directly
+        let (npc_entity, npc_name) = adjacent_npcs[0].clone();
+        // Start conversation using the new dialogue engine
+        if let Some(conversation) = app.panels.dialogue_engine.start_conversation(0) {
+            app.panels.npc_interaction = NPCInteractionState::InDialogue {
+                npc_entity,
+                conversation,
+                selected_choice: 0,
+            };
+        } else {
+            app.core
+                .game
+                .res
+                .log("Failed to start conversation - no NPC available");
+        }
+        app.core
+            .game
+            .res
+            .log(format!("Started conversation with {}", npc_name));
+    } else {
+        // Multiple NPCs - show selection modal
+        app.panels.npc_interaction = NPCInteractionState::SelectingNPC {
+            adjacent_npcs,
+            selected_npc: 0,
+        };
+        app.core.game.res.log("Choose which NPC to talk to");
+    }
 }
 
 /// Handle corpse interaction - find adjacent corpses and initiate looting
