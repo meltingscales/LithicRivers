@@ -1,6 +1,18 @@
 # Steam MVP Release Plan (Target: December 2026)
 
-## NEXT TODO: Survival Mechanics Implementation
+## NEXT TODO: Goxel Quest Location Design - Abandoned SapienCorp Factory
+**Priority**: HIGH - First quest location implementation
+
+**Implementation Plan**:
+1. **Goxel File Investigation**: Create feature branch to import `crates/client/assets/goxel/test.gox` and analyze data structure
+2. **Factory Layout Design**: Design the abandoned SapienCorp factory structure in Goxel where player seeks replacement arm
+3. **Quest Integration**: Connect the location to first major quest narrative
+4. **Asset Pipeline**: Establish workflow for importing Goxel structures into game world
+5. **Environmental Storytelling**: Place lore elements and visual clues about SapienCorp's downfall
+
+**Why This Matters**: Creates the first major quest destination and establishes the asset pipeline for structured locations. The abandoned factory serves as the game's first major narrative and gameplay milestone.
+
+## TODO: Survival Mechanics Implementation
 **Priority**: HIGH - Essential for core survival gameplay loop
 
 **Implementation Plan**:

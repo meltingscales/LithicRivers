@@ -127,6 +127,7 @@ pub struct PanelStates {
     pub corpse_looting: CorpseLootingState,
     pub hotbar_assignment: HotbarAssignmentState,
     pub npc_interaction: NPCInteractionState,
+    pub multi_action_select: MultiActionSelectState,
     pub dialogue_engine: DialogueEngine,
 }
 
@@ -335,6 +336,59 @@ impl Keybinds {
 
     fn parse_keycode(s: &str) -> Option<KeyCode> {
         lithicrivers_core::keycode_mapping::parse_keycode(s)
+    }
+}
+
+/// Different types of interactions available
+#[derive(Debug, Clone, PartialEq)]
+pub enum InteractionType {
+    PickupItem {
+        entity: hecs::Entity,
+        item_name: String,
+        position: Position,
+    },
+    LootCorpse {
+        entity: hecs::Entity,
+        position: Position,
+    },
+    TalkToNPC {
+        entity: hecs::Entity,
+        npc_name: String,
+        position: Position,
+    },
+}
+
+impl InteractionType {
+    pub fn display_name(&self) -> String {
+        match self {
+            InteractionType::PickupItem { item_name, .. } => format!("Pick up {}", item_name),
+            InteractionType::LootCorpse { .. } => "Loot corpse".to_string(),
+            InteractionType::TalkToNPC { npc_name, .. } => format!("Talk to {}", npc_name),
+        }
+    }
+
+    pub fn icon(&self) -> &'static str {
+        match self {
+            InteractionType::PickupItem { .. } => "^", // Up arrow for pickup
+            InteractionType::LootCorpse { .. } => "x", // x for corpse looting
+            InteractionType::TalkToNPC { .. } => "t",  // t for talking
+        }
+    }
+}
+
+/// Multi-action selection state - handles choosing between multiple available interactions
+#[derive(Debug, Clone, PartialEq)]
+pub enum MultiActionSelectState {
+    None,
+    SelectingAction {
+        available_actions: Vec<InteractionType>,
+        selected_action: usize,
+    },
+}
+
+impl Default for MultiActionSelectState {
+    fn default() -> Self {
+        MultiActionSelectState::None
     }
 }
 
