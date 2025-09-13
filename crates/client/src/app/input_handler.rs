@@ -945,10 +945,29 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
         if app.ui.keybinds.matches("ui", "MENU_ACTIVATE", &key) || key == KeyCode::Enter {
             if selected < npcs_clone.len() {
                 let (npc_entity, npc_name) = npcs_clone[selected].clone();
+                // Get real NPC data from dialogue system or use the first available NPC
+                let npc_data = if let Some(npc) = app.panels.dialogue_system.npcs.first() {
+                    npc.clone()
+                } else {
+                    // Fallback dummy NPC data if no NPCs in dialogue system
+                    crate::app_state::NPCData {
+                        name: npc_name.clone(),
+                        portrait: "".to_string(),
+                        dialogue_type: crate::app_state::DialogueType::Linear,
+                        current_mood: crate::app_state::NPCMood::Neutral,
+                        initial_dialogue: 0,
+                        met_before: false,
+                        has_quest: false,
+                        shop_inventory: vec![],
+                    }
+                };
+
                 app.panels.npc_interaction = crate::app_state::NPCInteractionState::InDialogue {
                     npc_entity,
+                    npc_data,
                     current_dialogue_node: Some(0), // Start with first dialogue node
                     selected_choice: 0,
+                    conversation_log: vec![],
                 };
                 app.core
                     .game
@@ -964,6 +983,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
         npc_entity,
         current_dialogue_node: _,
         selected_choice,
+        ..
     } = &app.panels.npc_interaction
     {
         let entity = *npc_entity;
@@ -990,10 +1010,29 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
         }
 
         // Update state
+        // Get real NPC data from dialogue system or use the first available NPC
+        let npc_data = if let Some(npc) = app.panels.dialogue_system.npcs.first() {
+            npc.clone()
+        } else {
+            // Fallback dummy NPC data if no NPCs in dialogue system
+            crate::app_state::NPCData {
+                name: "Unknown NPC".to_string(),
+                portrait: "".to_string(),
+                dialogue_type: crate::app_state::DialogueType::Linear,
+                current_mood: crate::app_state::NPCMood::Neutral,
+                initial_dialogue: 0,
+                met_before: false,
+                has_quest: false,
+                shop_inventory: vec![],
+            }
+        };
+
         app.panels.npc_interaction = crate::app_state::NPCInteractionState::InDialogue {
             npc_entity: entity,
+            npc_data,
             current_dialogue_node: Some(0),
             selected_choice: choice,
+            conversation_log: vec![],
         };
         return Ok(());
     }
@@ -1726,10 +1765,29 @@ fn handle_npc_interaction(app: &mut App) {
     } else if adjacent_npcs.len() == 1 {
         // Single NPC - start dialogue directly
         let (npc_entity, npc_name) = adjacent_npcs[0].clone();
+        // Get real NPC data from dialogue system or use the first available NPC
+        let npc_data = if let Some(npc) = app.panels.dialogue_system.npcs.first() {
+            npc.clone()
+        } else {
+            // Fallback dummy NPC data if no NPCs in dialogue system
+            crate::app_state::NPCData {
+                name: npc_name.clone(),
+                portrait: "".to_string(),
+                dialogue_type: crate::app_state::DialogueType::Linear,
+                current_mood: crate::app_state::NPCMood::Neutral,
+                initial_dialogue: 0,
+                met_before: false,
+                has_quest: false,
+                shop_inventory: vec![],
+            }
+        };
+
         app.panels.npc_interaction = NPCInteractionState::InDialogue {
             npc_entity,
+            npc_data,
             current_dialogue_node: Some(0), // Start with first dialogue node
             selected_choice: 0,
+            conversation_log: vec![],
         };
         app.core
             .game

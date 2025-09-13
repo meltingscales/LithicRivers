@@ -1,3 +1,4 @@
+use crate::dialogue_system::DialogueSystem;
 use crate::{audio, MenuTab, Scale, SplashState, SpriteLoader};
 use crossterm::event::KeyCode;
 use lithicrivers_core::components::{ItemKind, Position};
@@ -7,6 +8,58 @@ use lithicrivers_core::Game;
 use ratatui::layout::Rect;
 use std::collections::HashMap;
 use std::time::Instant;
+
+/// Comprehensive dialogue system types from demo integration
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DialogueType {
+    Linear,    // Simple linear conversation
+    Branching, // Player choices affect dialogue
+    Shop,      // Trading interface with dialogue
+    Quest,     // Quest giving with conditions
+    Battle,    // Pre/post battle dialogue
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum NPCMood {
+    Friendly,
+    Neutral,
+    Hostile,
+    Sad,
+    Excited,
+    Mysterious,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct DialogueChoice {
+    pub text: String,
+    pub leads_to: Option<usize>, // Index of next dialogue node, None = end conversation
+    pub requires_item: Option<String>,
+    pub mood_change: Option<NPCMood>,
+    pub unlocks_quest: bool,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct DialogueNode {
+    pub id: usize,
+    pub speaker: String,
+    pub text: String,
+    pub mood: NPCMood,
+    pub choices: Vec<DialogueChoice>,
+    pub auto_continue: bool, // If true, automatically continues without player input
+    pub shop_item: Option<String>, // If set, this node offers to sell/trade this item
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct NPCData {
+    pub name: String,
+    pub portrait: String, // ASCII art portrait
+    pub dialogue_type: DialogueType,
+    pub current_mood: NPCMood,
+    pub initial_dialogue: usize, // Starting dialogue node ID
+    pub met_before: bool,
+    pub has_quest: bool,
+    pub shop_inventory: Vec<String>,
+}
 
 /// Core game engine state - the fundamental game systems
 pub struct CoreState {
@@ -74,6 +127,7 @@ pub struct PanelStates {
     pub corpse_looting: CorpseLootingState,
     pub hotbar_assignment: HotbarAssignmentState,
     pub npc_interaction: NPCInteractionState,
+    pub dialogue_system: DialogueSystem,
 }
 
 /// Inventory panel state
@@ -284,7 +338,7 @@ impl Keybinds {
     }
 }
 
-/// NPC interaction state - handles NPC selection and dialogue
+/// NPC interaction state - handles NPC selection and dialogue with full dialogue tree system
 #[derive(Debug, Clone, PartialEq)]
 pub enum NPCInteractionState {
     None,
@@ -294,8 +348,10 @@ pub enum NPCInteractionState {
     },
     InDialogue {
         npc_entity: hecs::Entity,
+        npc_data: NPCData,
         current_dialogue_node: Option<usize>,
         selected_choice: usize,
+        conversation_log: Vec<String>,
     },
 }
 
