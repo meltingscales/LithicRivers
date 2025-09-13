@@ -673,8 +673,11 @@ fn ui(f: &mut Frame, app: &mut App) {
     // Render corpse looting modals if active
     render_corpse_looting_modals(f, app);
 
-    // Render NPC interaction modals if active
-    render_npc_interaction_modals(f, app);
+    // Calculate game viewport area for modal positioning
+    let game_viewport = calculate_game_viewport_area(f, app);
+
+    // Render NPC interaction modals if active (constrained to game viewport)
+    render_npc_interaction_modals(f, app, game_viewport);
 
     // Render hotbar assignment modal if active
     render_hotbar_assignment_modal(f, app);
@@ -1006,8 +1009,80 @@ fn render_corpse_loot_modal(
     }
 }
 
+/// Calculate the game viewport area based on current UI layout
+fn calculate_game_viewport_area(f: &Frame, app: &App) -> Rect {
+    use crate::app_state::BuildMode;
+
+    // Replicate the main UI layout logic to find game viewport bounds
+    let show_hotbar =
+        app.ui.current_tab == MenuTab::World && matches!(app.panels.build.mode, BuildMode::Place);
+
+    let root_chunks = if show_hotbar {
+        Layout::default()
+            .direction(Direction::Vertical)
+            .margin(0)
+            .constraints([
+                Constraint::Length(1), // Title line
+                Constraint::Min(0),    // Main area (map + inventory)
+                Constraint::Length(3), // Hotbar
+                Constraint::Length(7), // Message log
+                Constraint::Length(3), // Bottom menu bar
+            ])
+            .split(f.size())
+    } else {
+        Layout::default()
+            .direction(Direction::Vertical)
+            .margin(0)
+            .constraints([
+                Constraint::Length(1), // Title line
+                Constraint::Min(0),    // Main area (map + inventory)
+                Constraint::Length(7), // Message log
+                Constraint::Length(3), // Bottom menu bar
+            ])
+            .split(f.size())
+    };
+
+    // Calculate game view area based on current tab and combat state
+    match app.ui.current_tab {
+        MenuTab::World => {
+            if app.combat.is_active() {
+                // Combat mode: game view is right 50%
+                let main_chunks = Layout::default()
+                    .direction(Direction::Horizontal)
+                    .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+                    .split(root_chunks[1]);
+                main_chunks[1]
+            } else if app.panels.look.mode {
+                // With Look mode: game view is left side
+                let main_chunks = Layout::default()
+                    .direction(Direction::Horizontal)
+                    .constraints([Constraint::Min(20), Constraint::Length(24)])
+                    .split(root_chunks[1]);
+                main_chunks[0]
+            } else {
+                // Normal mode: game view is left side
+                let main_chunks = Layout::default()
+                    .direction(Direction::Horizontal)
+                    .constraints([Constraint::Min(20), Constraint::Length(24)])
+                    .split(root_chunks[1]);
+                main_chunks[0]
+            }
+        }
+        MenuTab::Crafting
+        | MenuTab::Body
+        | MenuTab::Help
+        | MenuTab::Inventory
+        | MenuTab::Menu
+        | MenuTab::Credits
+        | MenuTab::Quit => {
+            // For non-world tabs, use the full main area
+            root_chunks[1]
+        }
+    }
+}
+
 /// Render NPC interaction modals when active
-fn render_npc_interaction_modals(f: &mut Frame, app: &mut App) {
+fn render_npc_interaction_modals(f: &mut Frame, app: &mut App, viewport_area: Rect) {
     use crate::app_state::NPCInteractionState;
     let interaction_state = app.panels.npc_interaction.clone();
     match interaction_state {
@@ -1015,14 +1090,14 @@ fn render_npc_interaction_modals(f: &mut Frame, app: &mut App) {
             adjacent_npcs,
             selected_npc,
         } => {
-            render_npc_selection_modal(f, app, &adjacent_npcs, selected_npc);
+            render_npc_selection_modal(f, app, &adjacent_npcs, selected_npc, viewport_area);
         }
         NPCInteractionState::InDialogue {
             npc_entity,
             conversation,
             selected_choice,
         } => {
-            render_npc_dialogue_modal(f, app, npc_entity, selected_choice);
+            render_npc_dialogue_modal(f, app, npc_entity, selected_choice, viewport_area);
         }
         NPCInteractionState::None => {
             // No modal to render
@@ -1036,9 +1111,10 @@ fn render_npc_selection_modal(
     app: &mut App,
     adjacent_npcs: &[(hecs::Entity, String)],
     selected_npc: usize,
+    viewport_area: Rect,
 ) {
-    // Create modal area (centered, 60% width, 50% height)
-    let area = centered_rect(60, 50, f.size());
+    // Create modal area constrained to viewport (centered, 60% width, 50% height)
+    let area = centered_rect(60, 50, viewport_area);
 
     // Clear the background
     f.render_widget(Clear, area);
@@ -1117,9 +1193,10 @@ fn render_npc_dialogue_modal(
     app: &mut App,
     npc_entity: hecs::Entity,
     selected_choice: usize,
+    viewport_area: Rect,
 ) {
-    // Create modal area (most of screen)
-    let area = centered_rect(90, 80, f.size());
+    // Create modal area constrained to viewport (not full screen)
+    let area = centered_rect(90, 80, viewport_area);
 
     // Clear the background
     f.render_widget(Clear, area);
