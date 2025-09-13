@@ -1,4 +1,4 @@
-use crate::dialogue_system::DialogueSystem;
+use crate::dialogue_engine::{ConversationState, DialogueEngine};
 use crate::{audio, MenuTab, Scale, SplashState, SpriteLoader};
 use crossterm::event::KeyCode;
 use lithicrivers_core::components::{ItemKind, Position};
@@ -127,7 +127,7 @@ pub struct PanelStates {
     pub corpse_looting: CorpseLootingState,
     pub hotbar_assignment: HotbarAssignmentState,
     pub npc_interaction: NPCInteractionState,
-    pub dialogue_system: DialogueSystem,
+    pub dialogue_engine: DialogueEngine,
 }
 
 /// Inventory panel state
@@ -338,7 +338,7 @@ impl Keybinds {
     }
 }
 
-/// NPC interaction state - handles NPC selection and dialogue with full dialogue tree system
+/// NPC interaction state - handles NPC selection and dialogue with new architecture
 #[derive(Debug, Clone, PartialEq)]
 pub enum NPCInteractionState {
     None,
@@ -348,10 +348,8 @@ pub enum NPCInteractionState {
     },
     InDialogue {
         npc_entity: hecs::Entity,
-        npc_data: NPCData,
-        current_dialogue_node: Option<usize>,
+        conversation: ConversationState,
         selected_choice: usize,
-        conversation_log: Vec<String>,
     },
 }
 

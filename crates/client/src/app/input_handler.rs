@@ -945,30 +945,21 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
         if app.ui.keybinds.matches("ui", "MENU_ACTIVATE", &key) || key == KeyCode::Enter {
             if selected < npcs_clone.len() {
                 let (npc_entity, npc_name) = npcs_clone[selected].clone();
-                // Get real NPC data from dialogue system or use the first available NPC
-                let npc_data = if let Some(npc) = app.panels.dialogue_system.npcs.first() {
-                    npc.clone()
-                } else {
-                    // Fallback dummy NPC data if no NPCs in dialogue system
-                    crate::app_state::NPCData {
-                        name: npc_name.clone(),
-                        portrait: "".to_string(),
-                        dialogue_type: crate::app_state::DialogueType::Linear,
-                        current_mood: crate::app_state::NPCMood::Neutral,
-                        initial_dialogue: 0,
-                        met_before: false,
-                        has_quest: false,
-                        shop_inventory: vec![],
-                    }
-                };
+                // Start conversation using the new dialogue engine
 
-                app.panels.npc_interaction = crate::app_state::NPCInteractionState::InDialogue {
-                    npc_entity,
-                    npc_data,
-                    current_dialogue_node: Some(0), // Start with first dialogue node
-                    selected_choice: 0,
-                    conversation_log: vec![],
-                };
+                if let Some(conversation) = app.panels.dialogue_engine.start_conversation(0) {
+                    app.panels.npc_interaction =
+                        crate::app_state::NPCInteractionState::InDialogue {
+                            npc_entity,
+                            conversation,
+                            selected_choice: 0,
+                        };
+                } else {
+                    app.core
+                        .game
+                        .res
+                        .log("Failed to start conversation - no NPC available");
+                }
                 app.core
                     .game
                     .res
@@ -981,9 +972,8 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
 
     if let crate::app_state::NPCInteractionState::InDialogue {
         npc_entity,
-        current_dialogue_node: _,
+        conversation,
         selected_choice,
-        ..
     } = &app.panels.npc_interaction
     {
         let entity = *npc_entity;
@@ -995,44 +985,55 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
             return Ok(());
         }
 
-        // For now, just handle basic navigation - we'll implement full dialogue later
+        // Handle dialogue navigation using the new engine
         if app.ui.keybinds.matches("movement", "MOVE_NORTH", &key) {
             choice = choice.saturating_sub(1);
         }
         if app.ui.keybinds.matches("movement", "MOVE_SOUTH", &key) {
-            choice = (choice + 1).min(2); // Limit to reasonable number of choices for now
+            // Get the current dialogue node to check how many choices are available
+            if let Some(node) = app.panels.dialogue_engine.get_current_node(conversation) {
+                choice = (choice + 1).min(node.choices.len().saturating_sub(1));
+            }
         }
         if app.ui.keybinds.matches("ui", "MENU_ACTIVATE", &key) || key == KeyCode::Enter {
-            // For now, just end the conversation
-            app.panels.npc_interaction = crate::app_state::NPCInteractionState::None;
-            app.core.game.res.log("Conversation ended");
+            // Process the choice using the dialogue engine
+            if let Some(result) = app
+                .panels
+                .dialogue_engine
+                .process_choice(conversation, choice)
+            {
+                if result.conversation_ended {
+                    app.panels.npc_interaction = crate::app_state::NPCInteractionState::None;
+                    app.core.game.res.log("Conversation ended");
+                } else if let Some(next_node_id) = result.next_node_id {
+                    // Continue conversation with next node
+                    let mut new_conversation = conversation.clone();
+                    new_conversation.current_node_id = Some(next_node_id);
+                    new_conversation.selected_choice = 0; // Reset choice selection
+
+                    app.panels.npc_interaction =
+                        crate::app_state::NPCInteractionState::InDialogue {
+                            npc_entity: entity,
+                            conversation: new_conversation,
+                            selected_choice: 0,
+                        };
+
+                    if result.unlocked_quest {
+                        app.core.game.res.log("New quest unlocked!");
+                    }
+                    if let Some(_shop_item) = result.shop_transaction {
+                        app.core.game.res.log("Shop transaction available");
+                    }
+                }
+            }
             return Ok(());
         }
 
-        // Update state
-        // Get real NPC data from dialogue system or use the first available NPC
-        let npc_data = if let Some(npc) = app.panels.dialogue_system.npcs.first() {
-            npc.clone()
-        } else {
-            // Fallback dummy NPC data if no NPCs in dialogue system
-            crate::app_state::NPCData {
-                name: "Unknown NPC".to_string(),
-                portrait: "".to_string(),
-                dialogue_type: crate::app_state::DialogueType::Linear,
-                current_mood: crate::app_state::NPCMood::Neutral,
-                initial_dialogue: 0,
-                met_before: false,
-                has_quest: false,
-                shop_inventory: vec![],
-            }
-        };
-
+        // Update the selected choice
         app.panels.npc_interaction = crate::app_state::NPCInteractionState::InDialogue {
             npc_entity: entity,
-            npc_data,
-            current_dialogue_node: Some(0),
+            conversation: conversation.clone(),
             selected_choice: choice,
-            conversation_log: vec![],
         };
         return Ok(());
     }
@@ -1765,30 +1766,19 @@ fn handle_npc_interaction(app: &mut App) {
     } else if adjacent_npcs.len() == 1 {
         // Single NPC - start dialogue directly
         let (npc_entity, npc_name) = adjacent_npcs[0].clone();
-        // Get real NPC data from dialogue system or use the first available NPC
-        let npc_data = if let Some(npc) = app.panels.dialogue_system.npcs.first() {
-            npc.clone()
+        // Start conversation using the new dialogue engine
+        if let Some(conversation) = app.panels.dialogue_engine.start_conversation(0) {
+            app.panels.npc_interaction = NPCInteractionState::InDialogue {
+                npc_entity,
+                conversation,
+                selected_choice: 0,
+            };
         } else {
-            // Fallback dummy NPC data if no NPCs in dialogue system
-            crate::app_state::NPCData {
-                name: npc_name.clone(),
-                portrait: "".to_string(),
-                dialogue_type: crate::app_state::DialogueType::Linear,
-                current_mood: crate::app_state::NPCMood::Neutral,
-                initial_dialogue: 0,
-                met_before: false,
-                has_quest: false,
-                shop_inventory: vec![],
-            }
-        };
-
-        app.panels.npc_interaction = NPCInteractionState::InDialogue {
-            npc_entity,
-            npc_data,
-            current_dialogue_node: Some(0), // Start with first dialogue node
-            selected_choice: 0,
-            conversation_log: vec![],
-        };
+            app.core
+                .game
+                .res
+                .log("Failed to start conversation - no NPC available");
+        }
         app.core
             .game
             .res
