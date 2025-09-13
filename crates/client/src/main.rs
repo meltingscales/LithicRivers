@@ -1172,6 +1172,9 @@ fn render_npc_dialogue_modal(
             height: inner.height - 2,
         };
 
+        // Clear the content area to prevent rendering artifacts on resize
+        f.render_widget(Clear, content_area);
+
         // Split the content area horizontally for portrait and text
         let portrait_width = 16; // Width for 12x8 portrait + padding
 
