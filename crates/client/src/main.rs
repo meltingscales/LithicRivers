@@ -1150,31 +1150,90 @@ fn render_npc_dialogue_modal(
     let inner = block.inner(area);
     f.render_widget(block, inner);
 
-    // Get current dialogue using the new DialoguePresenter
-    let dialogue_text =
+    // Get current dialogue and both portraits using the new DialoguePresenter with Summon Night style
+    let (dialogue_text, npc_portrait, player_portrait) =
         if let NPCInteractionState::InDialogue { conversation, .. } = &app.panels.npc_interaction {
-            DialoguePresenter::format_dialogue_text(
+            DialoguePresenter::format_dialogue_with_portraits(
+                &mut app.core.sprite_loader,
                 &app.panels.dialogue_engine,
                 conversation,
                 selected_choice,
             )
         } else {
-            format!("{}: \"Hello, traveler!\"", npc_name)
+            (format!("{}: \"Hello, traveler!\"", npc_name), None, None)
         };
 
-    let paragraph = Paragraph::new(dialogue_text)
-        .alignment(Alignment::Left)
-        .wrap(Wrap { trim: true })
-        .style(Style::default().fg(Color::White));
-
+    // Create Summon Night-style layout: portrait on left, dialogue on right
     if inner.height > 2 {
-        let text_area = Rect {
+        let content_area = Rect {
             x: inner.x,
             y: inner.y,
             width: inner.width,
             height: inner.height - 2,
         };
-        f.render_widget(paragraph, text_area);
+
+        // Split the content area horizontally for portrait and text
+        let portrait_width = 16; // Width for 12x8 portrait + padding
+
+        // Create Summon Night-style three-panel layout: NPC portrait | dialogue text | player portrait
+        let has_npc = npc_portrait.is_some();
+        let has_player = player_portrait.is_some();
+
+        let left_width = if has_npc {
+            portrait_width.min(content_area.width / 4)
+        } else {
+            0
+        };
+        let right_width = if has_player {
+            portrait_width.min(content_area.width / 4)
+        } else {
+            0
+        };
+        let text_width = content_area.width - left_width - right_width;
+
+        // NPC portrait area (left side)
+        if let Some(npc_port) = npc_portrait {
+            let npc_area = Rect {
+                x: content_area.x,
+                y: content_area.y,
+                width: left_width,
+                height: content_area.height,
+            };
+
+            let npc_paragraph = Paragraph::new(npc_port)
+                .alignment(Alignment::Left)
+                .style(Style::default().fg(Color::Cyan));
+            f.render_widget(npc_paragraph, npc_area);
+        }
+
+        // Player portrait area (right side)
+        if let Some(player_port) = player_portrait {
+            let player_area = Rect {
+                x: content_area.x + left_width + text_width,
+                y: content_area.y,
+                width: right_width,
+                height: content_area.height,
+            };
+
+            let player_paragraph = Paragraph::new(player_port)
+                .alignment(Alignment::Left)
+                .style(Style::default().fg(Color::Yellow));
+            f.render_widget(player_paragraph, player_area);
+        }
+
+        // Dialogue text area (center)
+        let text_area = Rect {
+            x: content_area.x + left_width,
+            y: content_area.y,
+            width: text_width,
+            height: content_area.height,
+        };
+
+        let dialogue_paragraph = Paragraph::new(dialogue_text)
+            .alignment(Alignment::Left)
+            .wrap(Wrap { trim: true })
+            .style(Style::default().fg(Color::White));
+        f.render_widget(dialogue_paragraph, text_area);
     }
 
     // Controls at bottom

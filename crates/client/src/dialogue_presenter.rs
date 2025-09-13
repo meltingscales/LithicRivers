@@ -1,11 +1,103 @@
 use crate::app_state::{DialogueNode, NPCMood};
 use crate::dialogue_engine::{ConversationState, DialogueEngine};
+use crate::sprite_loader::SpriteLoader;
+use lithicrivers_core::components::{NPCMood as CoreNPCMood, SpriteRef};
 use ratatui::style::Color;
 
 /// UI presentation layer for dialogue system - handles only formatting and display
 pub struct DialoguePresenter;
 
 impl DialoguePresenter {
+    /// Convert dialogue mood to core NPC mood for sprite loader
+    fn dialogue_mood_to_core_mood(mood: NPCMood) -> CoreNPCMood {
+        match mood {
+            NPCMood::Friendly => CoreNPCMood::Happy,
+            NPCMood::Neutral => CoreNPCMood::Neutral,
+            NPCMood::Hostile => CoreNPCMood::Weird, // Hostile maps to "weird" expression
+            NPCMood::Sad => CoreNPCMood::Sad,
+            NPCMood::Excited => CoreNPCMood::Happy, // Excited is also happy
+            NPCMood::Mysterious => CoreNPCMood::Weird, // Mysterious maps to "weird" expression
+        }
+    }
+
+    /// Get character portrait for NPC in current mood
+    pub fn get_character_portrait(
+        sprite_loader: &mut SpriteLoader,
+        npc_name: &str,
+        mood: NPCMood,
+    ) -> Option<String> {
+        // Map NPC names to sprite references - this would normally come from NPC data
+        let sprite_ref = match npc_name {
+            "Merchant Aldric" => SpriteRef {
+                category: "npcs".to_string(),
+                name: "merchant".to_string(),
+            },
+            "Knight Captain Elena" => SpriteRef {
+                category: "npcs".to_string(),
+                name: "knight".to_string(),
+            },
+            "Mysterious Oracle" => SpriteRef {
+                category: "npcs".to_string(),
+                name: "oracle".to_string(),
+            },
+            "Innkeeper Marta" => SpriteRef {
+                category: "npcs".to_string(),
+                name: "innkeeper".to_string(),
+            },
+            "Bandit Leader Raven" => SpriteRef {
+                category: "npcs".to_string(),
+                name: "bandit".to_string(),
+            },
+            "QuestTesty" => SpriteRef {
+                category: "entities".to_string(),
+                name: "quest_testy".to_string(),
+            },
+            _ => return None,
+        };
+
+        let core_mood = Self::dialogue_mood_to_core_mood(mood);
+        sprite_loader.get_mood_portrait(&sprite_ref, core_mood)
+    }
+
+    /// Format dialogue with Summon Night-style layout including both player and NPC portraits
+    pub fn format_dialogue_with_portraits(
+        sprite_loader: &mut SpriteLoader,
+        engine: &DialogueEngine,
+        conversation: &ConversationState,
+        selected_choice: usize,
+    ) -> (String, Option<String>, Option<String>) {
+        if let Some(node) = engine.get_current_node(conversation) {
+            let npc_portrait =
+                Self::get_character_portrait(sprite_loader, &node.speaker, node.mood);
+            let player_portrait = Self::get_player_portrait(sprite_loader, selected_choice);
+            let dialogue_text = Self::format_dialogue_text(engine, conversation, selected_choice);
+            (dialogue_text, npc_portrait, player_portrait)
+        } else {
+            ("No dialogue available".to_string(), None, None)
+        }
+    }
+
+    /// Get player portrait based on current dialogue context (player mood/response)
+    pub fn get_player_portrait(
+        sprite_loader: &mut SpriteLoader,
+        selected_choice: usize,
+    ) -> Option<String> {
+        let sprite_ref = SpriteRef {
+            category: "entities".to_string(),
+            name: "player".to_string(),
+        };
+
+        // Map player choice index to mood - this simulates player emotional response
+        let player_mood = match selected_choice % 4 {
+            0 => CoreNPCMood::Happy,   // First choice - confident/positive
+            1 => CoreNPCMood::Neutral, // Second choice - neutral/thoughtful
+            2 => CoreNPCMood::Sad,     // Third choice - cautious/worried
+            3 => CoreNPCMood::Weird,   // Fourth choice - suspicious/confused
+            _ => CoreNPCMood::Neutral,
+        };
+
+        sprite_loader.get_mood_portrait(&sprite_ref, player_mood)
+    }
     /// Format dialogue text for display in UI
     pub fn format_dialogue_text(
         engine: &DialogueEngine,
@@ -118,10 +210,10 @@ mod tests {
 
         let text = DialoguePresenter::format_dialogue_text(&engine, &conversation, 0);
 
-        assert!(text.contains("Merchant Aldric"));
-        assert!(text.contains("Welcome, traveler"));
-        assert!(text.contains("> 1. Show me your weapons")); // First choice selected
-        assert!(text.contains("  2. I need healing supplies")); // Other choices not selected
+        assert!(text.contains("QuestTesty"));
+        assert!(text.contains("Greetings, brave traveler"));
+        assert!(text.contains("> 1. Tell me about these mysteries")); // First choice selected
+        assert!(text.contains("  2. I'm looking for adventure")); // Other choices not selected
     }
 
     #[test]
