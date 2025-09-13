@@ -1,0 +1,112 @@
+UNREGISTERED HYPERDOG 2
+
+hello youtube
+
+this is a more recent, 09/13/2025, version of LithicRivers...
+
+# v0.8.3.0 - this version adds dialogue. theres a lot thats been added that i havent covered in a video:
+
+- combat
+- crafting
+- body parts and damage
+- combat (chrono trigger inspired)
+- dialogue (Summon Night Swordcraft Story inspired)
+  - emotion portraits just like SNSS^ (no art yet, sadly)
+- ...probably more stuff. let's check it out!
+
+so, I revamped the keybinds.
+
+QWE  789
+ASD  456
+ZXC  123
+
+plus,
+
+V and ` (backtick, near ESC)
+
+This way, both hands are supposed to be equidistant and I want to minimize
+wrist movement.
+
+
+QWEASDZXC controls either BREAK/PLACE mode, or various actions.
+
+of course, numpad controls movement.
+
+Let's show you how to break and place blocks!
+
+So...BACKTICK (`) will toggle BREAK/PLACE.
+Note the top right for the mode indicator.
+
+If you are in PLACE mode, a hotbar, like Factorio, will show up.
+
+You double-tap the key (F1, function1, in this case - it can be rebound
+to whatever you like) to open a block picker.
+
+And if you're in place mode, you can use QWE ASD ZXC to place in nine 
+directions around yourself.
+Making complex building a bit easier.
+
+Breaking is literally the same.
+
+Let's move on to combat.
+Sadly, the moves are...a bunch of random crap I made up.
+
+The content in this game is pretty lacking, but the 
+mechanics are all I've been focusing on.
+
+I entered "LOOK" mode by tapping...uh..."V". There are 2 FeralDog enemies
+that are south of us. Let's attack them and then loot their corpses.
+
+
+Note that...inspired by CHrono Trigger....the game actively ticks during
+combat!! I want battles to be stressful. I don't want this to be like 
+Caves of Qud or uh...Final Fantasy where you can just wait during
+combat.
+
+The enemy will slowly damage you during this time.
+Right now it just damages a random body part.
+
+TODO...dequeue moves that were queued when you had enough energy
+that you no longer have enough energy to queue.
+
+And, TODO, make the portraits actually load the 12x8 art from
+the sprite_loader.rs class,  and not random dog ascii art.
+
+Oh, another TODO, you shouldn't be able to select "X"-ed out moves
+that you lack energy to execute with the move cursor.
+
+Yet another TODO, the "Victory!" screen should be a modal popup and 
+is inconsistently displayed - perhaps we have a race condition.
+
+So, upon death, enemies drop corpse entities that have
+inventories that you can loot with "F".
+
+And...Honestly...that's kind of it. LEt me see what else we have.
+
+OH! Body parts and dialogue. w00t.
+
+So...yeah. You have a body. It affects action costs and movement cost.
+
+That's kind of it. This is the next thing I'm working on.
+
+Now let's uh. See how dialogue works.
+
+I'm sad I don't have good art yet for this game. So far all of it
+was made by myself.
+
+The music artist for this project rocks. I'll release updates soon when we have
+more music.
+
+SO! Portraits.
+
+Yes. CYAN is the questTesty entity that I made, and ORANGE is the PLayer.
+
+You can see that I've...lazily just embedded the emotion into the 
+12x8 portrait.
+
+When our artist finishes this, it'll be like Summon Night Swordcraft
+Story, where every interaction is fun and full of emotion.
+
+And, I selected a dialogue option that made QuestTesty sad!
+
+So...That's all. I hope to have more updates for you all soon :)
