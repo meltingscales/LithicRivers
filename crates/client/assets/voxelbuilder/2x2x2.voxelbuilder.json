@@ -1,0 +1,43 @@
+{
+    "version": "Voxel Builder 4.7.0",
+    "project": {
+        "name": "untitled",
+        "voxels": 17
+    },
+    "camera": {
+        "offset": 1.7,
+        "fov": 0.8,
+        "fstop": 1.4,
+        "focal": 25
+    },
+    "render": {
+        "dpr": 0.8,
+        "samples": 512,
+        "bounces": 1,
+        "tiles": 4,
+        "tonemap": 0,
+        "environment": {
+            "background": false,
+            "power": 0.65,
+            "blur": 0.05
+        },
+        "lights": {
+            "directional": {
+                "color": "#FFE484",
+                "intensity": 0.8
+            }
+        },
+        "materials": {
+            "default": {
+                "roughness": 0.8,
+                "metalness": 0,
+                "transmission": 0,
+                "emissive": "#5EC3C5",
+                "emissive_intensity": 2
+            }
+        }
+    },
+    "data": {
+        "voxels": "0,0,0,9113F5,1;0,0,1,9113F5,1;0,1,0,9113F5,1;0,1,1,9113F5,1;1,0,0,9113F5,1;1,0,1,9113F5,1;1,1,0,9113F5,1;1,1,1,9113F5,1;0,0,3,90A0B3,1;1,0,3,90A0B3,1;2,0,3,90A0B3,1;2,0,4,90A0B3,1;0,0,4,90A0B3,1;1,0,5,90A0B3,1;3,0,5,90A0B3,1;0,0,6,90A0B3,1;3,0,6,90A0B3,1;"
+    }
+}

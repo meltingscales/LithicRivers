@@ -16,6 +16,7 @@ pub enum TileKind {
     PlasteelScrap,
     Treasure,
     PlankBlock,
+    Stairs,
 
     //special tile that gets replaced by existing worldgen
     ExistingWorldgen,
@@ -35,6 +36,7 @@ pub static TILE_KIND_STRS: &[&str] = &[
     "plasteel_scrap",
     "treasure",
     "plank_block",
+    "stairs",
     "existing_worldgen",
 ];
 
@@ -54,6 +56,7 @@ impl TileKind {
             TileKind::PlasteelScrap => "plasteel_scrap",
             TileKind::Treasure => "treasure",
             TileKind::PlankBlock => "plank_block",
+            TileKind::Stairs => "stairs",
             TileKind::ExistingWorldgen => "existing_worldgen",
         }
     }
@@ -72,6 +75,7 @@ impl TileKind {
             TileKind::PlasteelScrap => PaletteKey::PlasteelScrap,
             TileKind::Treasure => PaletteKey::Treasure,
             TileKind::PlankBlock => PaletteKey::PlankBlock,
+            TileKind::Stairs => PaletteKey::Stairs,
             TileKind::ExistingWorldgen => PaletteKey::ExistingWorldgen,
         }
     }
@@ -90,6 +94,7 @@ impl TileKind {
             "plasteel_scrap" => Some(TileKind::PlasteelScrap),
             "treasure" => Some(TileKind::Treasure),
             "plank_block" => Some(TileKind::PlankBlock),
+            "stairs" => Some(TileKind::Stairs),
             "existing_worldgen" => Some(TileKind::ExistingWorldgen),
             _ => None,
         }
@@ -110,6 +115,7 @@ impl TileKind {
             TileKind::PlasteelScrap => true,
             TileKind::Treasure => false,
             TileKind::PlankBlock => false,
+            TileKind::Stairs => true, // Stairs are passable for movement but special for Z-level transitions
             TileKind::ExistingWorldgen => false,
         }
     }
