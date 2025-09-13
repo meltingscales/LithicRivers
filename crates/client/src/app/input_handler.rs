@@ -789,6 +789,47 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
         return Ok(());
     }
 
+    // Handle multi-action selection input when active
+    if let crate::app_state::MultiActionSelectState::SelectingAction {
+        available_actions,
+        selected_action,
+    } = &app.panels.multi_action_select
+    {
+        let actions = available_actions.clone();
+        let mut selected = *selected_action;
+
+        if app.ui.keybinds.matches("ui", "CLOSE_HELP_MENU", &key) {
+            app.panels.multi_action_select = crate::app_state::MultiActionSelectState::None;
+            app.core.game.res.log("Cancelled interaction");
+            return Ok(());
+        }
+        if app.ui.keybinds.matches("movement", "MOVE_NORTH", &key) {
+            selected = selected.saturating_sub(1);
+        }
+        if app.ui.keybinds.matches("movement", "MOVE_SOUTH", &key) {
+            if selected < actions.len().saturating_sub(1) {
+                selected += 1;
+            }
+        }
+        if app.ui.keybinds.matches("ui", "MENU_ACTIVATE", &key) || key == KeyCode::Enter {
+            if selected < actions.len() {
+                let chosen_action = &actions[selected];
+                app.panels.multi_action_select = crate::app_state::MultiActionSelectState::None;
+
+                // Execute the chosen interaction
+                execute_interaction_action(app, chosen_action);
+            }
+            return Ok(());
+        }
+
+        app.panels.multi_action_select =
+            crate::app_state::MultiActionSelectState::SelectingAction {
+                available_actions: actions,
+                selected_action: selected,
+            };
+        return Ok(());
+    }
+
     // Handle corpse looting input when active
     if let crate::app_state::CorpseLootingState::SelectingCorpse {
         adjacent_entities,
@@ -1571,8 +1612,7 @@ fn get_combat_enemy_count(game: &mut lithicrivers_core::Game) -> usize {
 fn handle_interaction(app: &mut App) {
     tracing::info!(target: "game", "handle_interaction called, checking for nearby interactables");
 
-    // Instead of using core auto-interaction, use client-side selection UI
-    // First, check what's nearby
+    // Get player position
     let player_pos = if let Some(player_entity) = app.core.game.get_player_entity() {
         if let Ok(pos) = app
             .core
@@ -1590,119 +1630,100 @@ fn handle_interaction(app: &mut App) {
         return;
     };
 
+    // Build a list of all available interactions
+    use crate::app_state::{InteractionType, MultiActionSelectState};
+    use lithicrivers_core::components::{
+        itemkind_name, Dialogue, DroppedItem, EntityKind, Inventory, Position,
+    };
+
+    let mut available_actions = Vec::new();
+
     // Find nearby items
-    let mut nearby_items = Vec::new();
     for (entity, (item, pos)) in app
         .core
         .game
         .world
-        .query::<(
-            &lithicrivers_core::components::DroppedItem,
-            &lithicrivers_core::components::Position,
-        )>()
+        .query::<(&DroppedItem, &Position)>()
         .iter()
     {
         if (pos.x - player_pos.x).abs() <= 1
             && (pos.y - player_pos.y).abs() <= 1
             && pos.z == player_pos.z
         {
-            nearby_items.push((entity, *item, *pos));
+            available_actions.push(InteractionType::PickupItem {
+                entity,
+                item_name: itemkind_name(item.kind).to_string(),
+                position: *pos,
+            });
         }
     }
 
-    // Find nearby corpses using existing function
-    let mut nearby_corpses = Vec::new();
+    // Find nearby corpses
     for (entity, (pos, entity_kind, _inv)) in app
         .core
         .game
         .world
-        .query::<(
-            &lithicrivers_core::components::Position,
-            &lithicrivers_core::components::EntityKind,
-            &lithicrivers_core::components::Inventory,
-        )>()
+        .query::<(&Position, &EntityKind, &Inventory)>()
         .iter()
     {
-        if *entity_kind == lithicrivers_core::components::EntityKind::Corpse {
+        if *entity_kind == EntityKind::Corpse {
             let dx = (pos.x - player_pos.x).abs();
             let dy = (pos.y - player_pos.y).abs();
             let dz = (pos.z - player_pos.z).abs();
 
             if dx <= 1 && dy <= 1 && dz == 0 {
-                nearby_corpses.push(entity);
+                available_actions.push(InteractionType::LootCorpse {
+                    entity,
+                    position: *pos,
+                });
             }
         }
     }
 
     // Find nearby NPCs
-    let mut nearby_npcs = Vec::new();
-    for (entity, (dialogue, pos)) in app
-        .core
-        .game
-        .world
-        .query::<(
-            &lithicrivers_core::components::Dialogue,
-            &lithicrivers_core::components::Position,
-        )>()
-        .iter()
-    {
+    for (entity, (dialogue, pos)) in app.core.game.world.query::<(&Dialogue, &Position)>().iter() {
         if (pos.x - player_pos.x).abs() <= 1
             && (pos.y - player_pos.y).abs() <= 1
             && pos.z == player_pos.z
         {
-            nearby_npcs.push((entity, dialogue.name.clone(), *pos));
+            available_actions.push(InteractionType::TalkToNPC {
+                entity,
+                npc_name: dialogue.name.clone(),
+                position: *pos,
+            });
         }
     }
 
-    let total_interactables = nearby_items.len() + nearby_corpses.len() + nearby_npcs.len();
-    tracing::info!(target: "game", "Found {} items, {} corpses, {} NPCs nearby", 
-        nearby_items.len(), nearby_corpses.len(), nearby_npcs.len());
+    tracing::info!(target: "game", "Found {} total interactions nearby", available_actions.len());
 
-    if total_interactables == 0 {
-        app.core.game.res.log("Nothing to interact with nearby.");
-    } else if total_interactables == 1 && nearby_corpses.len() == 1 {
-        // Single corpse - use the existing corpse interaction system
-        tracing::info!(target: "game", "Single corpse found, using corpse interaction system");
-        handle_corpse_interaction(app);
-    } else if total_interactables == 1 && nearby_items.len() == 1 {
-        // Single item - pick it up directly via core system
-        tracing::info!(target: "game", "Single item found, picking up via core system");
-        app.core.game.res.player_state.intent =
-            lithicrivers_core::intent::PlayerIntent::interact(100);
-        let tick_result = app.core.game.tick();
-
-        // Handle combat state changes
-        if tick_result.contains(lithicrivers_core::game::GameTickResult::CombatTriggered) {
-            app.combat = CombatUiState::Active {
-                current_move: 0,
-                current_enemy: 0,
-                enemy_timers: vec![],
-                move_scroll_offset: 0,
+    match available_actions.len() {
+        0 => {
+            app.core.game.res.log("Nothing to interact with nearby.");
+        }
+        1 => {
+            // Single interaction - execute directly
+            let action = &available_actions[0];
+            execute_interaction_action(app, action);
+        }
+        _ => {
+            // Multiple interactions - show selection modal
+            tracing::info!(target: "game", "Multiple interactions found, showing selection modal");
+            app.panels.multi_action_select = MultiActionSelectState::SelectingAction {
+                available_actions,
+                selected_action: 0,
             };
+            app.core.game.res.log("Choose interaction:");
         }
-        if tick_result.contains(lithicrivers_core::game::GameTickResult::CombatEnded) {
-            app.combat = CombatUiState::None;
-        }
-    } else if total_interactables == 1 && nearby_npcs.len() == 1 {
-        // Single NPC - use the existing NPC interaction system
-        tracing::info!(target: "game", "Single NPC found, using NPC interaction system");
-        handle_npc_interaction(app);
-    } else {
-        // Multiple targets - prioritize based on what's available
-        if nearby_corpses.len() > 0 {
-            tracing::info!(target: "game", "Multiple targets with corpses, using corpse interaction system");
-            handle_corpse_interaction(app);
-        } else if nearby_npcs.len() > 0 {
-            tracing::info!(target: "game", "Multiple targets with NPCs, using NPC interaction system");
-            handle_npc_interaction(app);
-        } else {
-            tracing::info!(target: "game", "Multiple item targets, falling back to core system");
-            app.core
-                .game
-                .res
-                .log("Multiple items to interact with (selection UI coming soon)");
+    }
+}
 
-            // Fall back to core system for items
+/// Execute a specific interaction action
+fn execute_interaction_action(app: &mut App, action: &crate::app_state::InteractionType) {
+    use crate::app_state::{CorpseLootingState, InteractionType, NPCInteractionState};
+
+    match action {
+        InteractionType::PickupItem { .. } => {
+            // Use core system for item pickup
             app.core.game.res.player_state.intent =
                 lithicrivers_core::intent::PlayerIntent::interact(100);
             let tick_result = app.core.game.tick();
@@ -1719,6 +1740,37 @@ fn handle_interaction(app: &mut App) {
             if tick_result.contains(lithicrivers_core::game::GameTickResult::CombatEnded) {
                 app.combat = CombatUiState::None;
             }
+        }
+        InteractionType::LootCorpse { entity, .. } => {
+            // Start corpse looting directly
+            app.panels.corpse_looting = CorpseLootingState::LootingCorpse {
+                entity: *entity,
+                selected_loot_item: 0,
+                selected_player_item: 0,
+                loot_panel_focus: true,
+            };
+            app.core.game.res.log("Started looting corpse");
+        }
+        InteractionType::TalkToNPC {
+            entity, npc_name, ..
+        } => {
+            // Start NPC dialogue directly
+            if let Some(conversation) = app.panels.dialogue_engine.start_conversation(0) {
+                app.panels.npc_interaction = NPCInteractionState::InDialogue {
+                    npc_entity: *entity,
+                    conversation,
+                    selected_choice: 0,
+                };
+            } else {
+                app.core
+                    .game
+                    .res
+                    .log("Failed to start conversation - no NPC available");
+            }
+            app.core
+                .game
+                .res
+                .log(format!("Started conversation with {}", npc_name));
         }
     }
 }

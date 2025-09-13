@@ -143,6 +143,7 @@ impl App {
                 corpse_looting: CorpseLootingState::default(),
                 hotbar_assignment: HotbarAssignmentState::default(),
                 npc_interaction: NPCInteractionState::default(),
+                multi_action_select: MultiActionSelectState::default(),
                 dialogue_engine: DialogueEngine::new(),
             },
             splash: SplashScreenState {
