@@ -218,6 +218,31 @@ demo-corpse-looting:
 demo-dialogue-interactions:
     {{cargoz_env}} run -p lithicrivers-client --bin demo_dialogue_interactions
 
+# Import Voxel Builder JSON files to LithicRivers .lrstructure format
+voxelbuilder-import:
+    @echo "🧊 Running Voxel Builder Structure Importer..."
+    {{cargoz_env}} run -p lithicrivers-client --bin utility_voxelbuilder_importer
+
+# Test structure loading system
+structure-test:
+    @echo "🧪 Testing Structure Loading System..."
+    {{cargoz_env}} run -p lithicrivers-client --bin test_structure_loading
+
+# Test quest structure loading
+quest-test:
+    @echo "🏭 Testing Quest Structure Loading..."
+    {{cargoz_env}} run -p lithicrivers-client --bin test_quest_loading
+
+# Complete quest development workflow: import structures and test loading
+quest-dev: voxelbuilder-import quest-test
+    @echo ""
+    @echo "✅ Quest development workflow complete!"
+    @echo ""
+    @echo "🎮 To test in-game:"
+    @echo "   1. Run: just client"
+    @echo "   2. Navigate to coordinates (100, 100, 0)"
+    @echo "   3. Look for voxel structures"
+
 # Blind mode (not implemented)
 client-blind:
     @echo "Blind mode not implemented yet."
