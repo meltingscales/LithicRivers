@@ -1,7 +1,37 @@
 /// Voxel Builder Importer for LithicRivers
 /// Converts Voxel Builder JSON exports to .lrstructure format
 
+
+/// Convert hex color to RGB values
+fn hex_to_rgb(hex: &str) -> (u8, u8, u8) {
+    if hex.len() == 6 {
+        let r = u8::from_str_radix(&hex[0..2], 16).unwrap_or(0);
+        let g = u8::from_str_radix(&hex[2..4], 16).unwrap_or(0);
+        let b = u8::from_str_radix(&hex[4..6], 16).unwrap_or(0);
+        (r, g, b)
+    } else {
+        (0, 0, 0)
+    }
+}
+
 // No additional imports needed for basic parsing
+/// Create mapping from hex colors to LithicRivers block characters
+fn create_hex_color_block_mapping(hex_color: &str) -> char {
+    let (r, g, b) = hex_to_rgb(hex_color);
+
+    match (r, g, b) {
+        // Map specific colors to blocks based on RGB values
+        (145, 19, 245) => 'P',  // Purple (9113F5) -> special purple block
+        (144, 160, 179) => 'S', // Gray-blue (90A0B3) -> stone
+        (255, 0, 0) => 'T',     // Red -> treasure
+        (0, 255, 0) => 'D',     // Green -> door
+        (139, 69, 19) => 'W',   // Brown -> wood/walls
+        (128, 128, 128) => '#', // Gray -> stone
+        (0, 0, 0) => '.',       // Black -> air
+        (255, 255, 255) => '#', // White -> generic block
+        _ => '#',               // Default to generic block
+    }
+}
 
 /// Voxel Builder Importer v1.0
 /// Converts Voxel Builder JSON exports to LithicRivers .lrstructure format
@@ -125,36 +155,6 @@ fn parse_voxel_string(
     }
 
     Ok(voxels)
-}
-
-/// Convert hex color to RGB values
-fn hex_to_rgb(hex: &str) -> (u8, u8, u8) {
-    if hex.len() == 6 {
-        let r = u8::from_str_radix(&hex[0..2], 16).unwrap_or(0);
-        let g = u8::from_str_radix(&hex[2..4], 16).unwrap_or(0);
-        let b = u8::from_str_radix(&hex[4..6], 16).unwrap_or(0);
-        (r, g, b)
-    } else {
-        (0, 0, 0)
-    }
-}
-
-/// Create mapping from hex colors to LithicRivers block characters
-fn create_hex_color_block_mapping(hex_color: &str) -> char {
-    let (r, g, b) = hex_to_rgb(hex_color);
-
-    match (r, g, b) {
-        // Map specific colors to blocks based on RGB values
-        (145, 19, 245) => 'P',  // Purple (9113F5) -> special purple block
-        (144, 160, 179) => 'S', // Gray-blue (90A0B3) -> stone
-        (255, 0, 0) => 'T',     // Red -> treasure
-        (0, 255, 0) => 'D',     // Green -> door
-        (139, 69, 19) => 'W',   // Brown -> wood/walls
-        (128, 128, 128) => '#', // Gray -> stone
-        (0, 0, 0) => '.',       // Black -> air
-        (255, 255, 255) => '#', // White -> generic block
-        _ => '#',               // Default to generic block
-    }
 }
 
 /// Convert voxels to 2D layer structure and create the structure files
