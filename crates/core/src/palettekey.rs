@@ -16,6 +16,7 @@ pub enum PaletteKey {
     PlasteelScrap,
     Treasure,
     PlankBlock,
+    Stairs,
     // Fluids
     Water,
     Oil,

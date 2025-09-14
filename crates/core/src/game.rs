@@ -256,6 +256,43 @@ impl Game {
         }
     }
 
+    /// Load a quest structure at a specific world position
+    /// This is used for placing story-specific structures like the SapienCorp factory
+    pub fn load_quest_structure(
+        &mut self,
+        structure_name: &str,
+        world_x: i32,
+        world_y: i32,
+        world_z: i32,
+    ) {
+        use crate::structure::StructureDefinition;
+        use tracing::info;
+
+        let structure = StructureDefinition::load_from_embedded(structure_name);
+        info!(target: "game", "Loading quest structure '{}' at ({}, {}, {})", structure_name, world_x, world_y, world_z);
+
+        // Convert world coordinates to chunk coordinates and local offset
+        let chunk_x = world_x.div_euclid(crate::world::CHUNK_SIZE as i32) as i64;
+        let chunk_y = world_y.div_euclid(crate::world::CHUNK_SIZE as i32) as i64;
+        let chunk_z = world_z.div_euclid(crate::world::CHUNK_SIZE_Z as i32) as i64;
+
+        let local_x = world_x.rem_euclid(crate::world::CHUNK_SIZE as i32);
+        let local_y = world_y.rem_euclid(crate::world::CHUNK_SIZE as i32);
+
+        // Ensure the chunk exists
+        self.res
+            .world_state
+            .world
+            .ensure_chunk(chunk_x, chunk_y, chunk_z);
+
+        // Apply the structure
+        self.res
+            .world_state
+            .world
+            .apply_structure_world(chunk_x, chunk_y, chunk_z, &structure, local_x, local_y);
+        info!(target: "game", "Quest structure '{}' loaded successfully", structure_name);
+    }
+
     pub fn queue_player_move(&mut self, dx: i32, dy: i32) {
         // Calculate move cost using player's Body modifiers
         let mult: f32 = self
