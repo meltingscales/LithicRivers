@@ -220,6 +220,11 @@ util-voxelbuilder-import:
     @echo "🧊 Running Voxel Builder Structure Importer..."
     {{cargoz_env}} run -p lithicrivers-client --bin utility_voxelbuilder_importer
 
+util-voxelbuilder-import-site:
+    @echo "Visit https://nimadez.github.io/voxel-builder/ to create voxel models."
+    @echo "Export as JSON format and add to input_output_map in utility_voxelbuilder_importer.rs."
+    @echo "Then run 'just util-voxelbuilder-import' to import the structure."
+
 # Blind mode (not implemented)
 client-blind:
     @echo "Blind mode not implemented yet."
