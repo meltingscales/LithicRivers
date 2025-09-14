@@ -41,8 +41,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Define input -> output mappings
     let input_output_map: Vec<(&str, &str)> = vec![(
-        "crates/client/assets/voxelbuilder/2x2x2.voxelbuilder.json",
-        "crates/client/assets/structures/voxel_test_structure.lrstructure",
+        "crates/client/assets/voxelbuilder/first-quest-sapiencorp.voxelbuilder.json",
+        "crates/client/assets/structures/first-quest-sapiencorp.lrstructure",
     )];
 
     if input_output_map.is_empty() {
