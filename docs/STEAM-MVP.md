@@ -3,6 +3,16 @@
 ## NEXT TODO: Goxel Quest Location Design - Abandoned SapienCorp Factory
 **Priority**: HIGH - First quest location implementation
 
+first quest and associated dungeons
+
+- use goxel (see `crates/client/assets/goxel/test.gox`) to design a multi-level dungeon that is the first quest
+- have a build step that exports .gox files to our weird custom .txt format
+  - store it in `src/bin/utility_goxel_exporter.rs` or something, next to our demos
+  - for now, just hardcode input/output paths in `utility_goxel_exporter.rs`...
+- add a Stairs block that you must use to traverse up/down in the world
+- add randomly generated loot that you can use to replace your Arm that's guaranteed to spawn in a specific chest near the assembly line
+
+
 **Implementation Plan**:
 1. **Goxel File Investigation**: Create feature branch to import `crates/client/assets/goxel/test.gox` and analyze data structure
 2. **Factory Layout Design**: Design the abandoned SapienCorp factory structure in Goxel where player seeks replacement arm
@@ -29,15 +39,6 @@
 - find out how x-terminal-emulator works on Ubuntu
   - why is it tiny if steam launches it with crap font?
   - why does it look great when using gnome terminal?
-
-## first quest and associated dungeons
-
-- use goxel (see `crates/client/assets/goxel/test.gox`) to design a multi-level dungeon that is the first quest
-- have a build step that exports .gox files to our weird custom .txt format
-  - store it in `src/bin/utility_goxel_exporter.rs` or something, next to our demos
-  - for now, just hardcode input/output paths in `utility_goxel_exporter.rs`...
-- add a Stairs block that you must use to traverse up/down in the world
-- add randomly generated loot that you can use to replace your Arm that's guaranteed to spawn in a specific chest near the assembly line
 
 ## Small temp list
 

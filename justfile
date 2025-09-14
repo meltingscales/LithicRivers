@@ -41,7 +41,7 @@ install:
 
 
 # Run security audit
-security:
+code-security:
     {{cargoz_env}} audit
 
 test: build
@@ -51,7 +51,7 @@ test-release: build-release
     {{cargoz_env}} test --release
 
 # Run tests with coverage report using cargo-tarpaulin
-coverage:
+code-coverage:
     @echo "Running tests with coverage..."
     # --verbose
     {{cargoz_env}} tarpaulin --skip-clean --all-features --workspace --timeout 120 --out Html --out Xml --output-dir coverage/
@@ -98,19 +98,19 @@ copy-config-data:
     cp -f THIRD-PARTY-NOTICES.txt crates/client/assets/config/THIRD-PARTY-NOTICES.txt
 
 # Build the project
-build: fmt clean git-data copy-config-data
+build: code-fmt util-voxelbuilder-import clean git-data copy-config-data
     {{cargo_base}} --version
     # Build only the stable targets to keep `just build` green
     {{cargoz_env}} build -p lithicrivers-core {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin lithicrivers-client {{build_flags}}
 
 # Build the project in release mode
-build-release: fmt clean git-data copy-config-data build-demos-release
+build-release: code-fmt util-voxelbuilder-import clean git-data copy-config-data build-demos-release
     {{cargo_base}} --version
     {{cargoz_env}} build -p lithicrivers-core --release {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin lithicrivers-client --release {{build_flags}}
 
-build-release-no-clean: fmt git-data copy-config-data build-demos-release
+build-release-no-clean: code-fmt util-voxelbuilder-import git-data copy-config-data build-demos-release
     {{cargo_base}} --version
     {{cargoz_env}} build -p lithicrivers-core --release {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin lithicrivers-client --release {{build_flags}}
@@ -138,7 +138,7 @@ stage-artifacts-release: clean-artifacts build-release build-demos-release stage
     cp -f scripts/launcher/lithicrivers-launcher.sh artifacts/
 
 ## Optional: build demo binaries (may require ratatui API updates)
-build-demos: fmt
+build-demos: code-fmt util-voxelbuilder-import
     {{cargoz_env}} build -p lithicrivers-client --bin demo_inventory {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin demo_crafting {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin demo_body {{build_flags}}
@@ -151,7 +151,7 @@ build-demos: fmt
     {{cargoz_env}} build -p lithicrivers-client --bin demo_dialogue_interactions {{build_flags}}
 
 # Optional: build demo binaries (release)
-build-demos-release: fmt
+build-demos-release: code-fmt util-voxelbuilder-import
     {{cargoz_env}} build -p lithicrivers-client --bin demo_inventory --release {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin demo_crafting --release {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin demo_body --release {{build_flags}}
@@ -162,9 +162,6 @@ build-demos-release: fmt
     {{cargoz_env}} build -p lithicrivers-client --bin demo_dungeon_generation --release {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin demo_corpse_looting --release {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin demo_dialogue_interactions --release {{build_flags}}
-
-# Run debug build (alias for client)
-run-debug: client
 
 # Run the client
 client: build
@@ -218,27 +215,32 @@ demo-corpse-looting:
 demo-dialogue-interactions:
     {{cargoz_env}} run -p lithicrivers-client --bin demo_dialogue_interactions
 
+# Import Voxel Builder JSON files to LithicRivers .lrstructure format
+util-voxelbuilder-import:
+    @echo "🧊 Running Voxel Builder Structure Importer..."
+    {{cargoz_env}} run -p lithicrivers-client --bin utility_voxelbuilder_importer
+
 # Blind mode (not implemented)
 client-blind:
     @echo "Blind mode not implemented yet."
     @exit 1
 
 # Format code
-fmt:
+code-fmt:
     {{cargo_env}} fmt --all
 
 # Run clippy
-clippy:
+code-clippy:
     {{cargoz_env}} clippy --all-targets --all-features {{build_flags}} -- -D warnings
 
 # tokei, code stats
-tokei:
+code-tokei:
     rustup run {{toolchain}} cargo install tokei --locked
     rustup run {{toolchain}} tokei --sort lines --type rust
     rustup run {{toolchain}} tokei --files --sort lines --type rust
 
 # Analyze module structure and dependencies
-analyze-modules:
+code-analyze-modules:
     {{cargo_base}} install cargo-modules --locked
     @echo "=== Core crate structure ==="
     {{cargo_base}} modules structure -p lithicrivers-core --lib
@@ -250,7 +252,7 @@ analyze-modules:
     @echo "Use 'just analyze-deps' for dependency graph"
 
 # Analyze module dependencies as graph
-analyze-deps:
+code-analyze-deps:
     {{cargo_base}} install cargo-modules --locked
 
     {{cargo_base}} modules dependencies -p lithicrivers-core --lib | dot -Tsvg > core-deps.svg
@@ -261,17 +263,8 @@ analyze-deps:
     @echo "Dependency graphs saved to core-deps.svg and client-deps.svg"
 
 # Analyze code complexity using clippy
-complexity:
+code-complexity:
     {{cargoz_env}} clippy --all-targets --all-features -- -W clippy::cognitive_complexity -W clippy::cyclomatic_complexity
-
-# Analyze code complexity and metrics (DEPRECATED - use 'complexity' instead)
-analyze-code:
-    @echo "WARNING: 'analyze-code' is deprecated. Use 'just complexity' for better output."
-    {{cargo_base}} install rust-code-analysis-cli --locked
-    rm -rf code-analysis/
-    mkdir -p code-analysis
-    ~/.cargo/bin/rust-code-analysis-cli -p crates/ --metrics -O json -o code-analysis/
-    @echo "Code analysis saved to code-analysis/ directory"
 
 # Show toolchain information
 toolchain:
