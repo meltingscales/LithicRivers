@@ -1,7 +1,6 @@
 /// Voxel Builder Importer for LithicRivers
 /// Converts Voxel Builder JSON exports to .lrstructure format
 
-
 /// Convert hex color to RGB values
 fn hex_to_rgb(hex: &str) -> (u8, u8, u8) {
     if hex.len() == 6 {
@@ -31,6 +30,23 @@ fn create_hex_color_block_mapping(hex_color: &str) -> char {
         (255, 255, 255) => '#', // White -> generic block
         _ => '#',               // Default to generic block
     }
+}
+
+fn gen_data_json(height: usize) -> serde_json::Value {
+    serde_json::json!({
+        "blocks": {
+            ".": "air",
+            "#": "plank_block",
+            "P": "scrap_electronics", // Purple voxels -> electronics
+            "S": "rock", // Gray-blue -> stone
+            "T": "treasure",
+            "D": "door",
+            "W": "plank_block"
+        },
+        "gen_biomes": "QUEST_ONLY",
+        "gen_chance": 0.0,
+        "y_layer_gen_range": [0, height - 1]
+    })
 }
 
 /// Voxel Builder Importer v1.0
@@ -220,20 +236,7 @@ fn create_structure_files(
     std::fs::write(&shape_path, shape_layers)?;
 
     // Create the JSON metadata
-    let data = serde_json::json!({
-        "blocks": {
-            ".": "air",
-            "#": "plank_block",
-            "P": "scrap_electronics", // Purple voxels -> electronics
-            "S": "rock", // Gray-blue -> stone
-            "T": "treasure",
-            "D": "door",
-            "W": "plank_block"
-        },
-        "gen_biomes": "QUEST_ONLY",
-        "gen_chance": 0.0,
-        "y_layer_gen_range": [0, height - 1]
-    });
+    let data = serde_json::json!(gen_data_json(height));
 
     let data_path = format!("{}/data.json", output_dir);
     std::fs::write(&data_path, serde_json::to_string_pretty(&data)?)?;

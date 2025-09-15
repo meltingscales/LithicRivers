@@ -1,23 +1,34 @@
 # Steam MVP Release Plan (Target: December 2026)
 
-## NEXT TODO: Goxel Quest Location Design - Abandoned SapienCorp Factory
+## NEXT TODO: VoxelBuilder Quest Location Design - Abandoned SapienCorp Factory
 **Priority**: HIGH - First quest location implementation
 
 first quest and associated dungeons
 
-- use goxel (see `crates/client/assets/goxel/test.gox`) to design a multi-level dungeon that is the first quest
-- have a build step that exports .gox files to our weird custom .txt format
-  - store it in `src/bin/utility_goxel_exporter.rs` or something, next to our demos
-  - for now, just hardcode input/output paths in `utility_goxel_exporter.rs`...
+- use VoxelBuilder (https://nimadez.github.io/voxel-builder/) to design a multi-level dungeon that is the first quest
+- use the existing `utility_voxelbuilder_importer.rs` to convert VoxelBuilder JSON exports to .lrstructure format
 - add a Stairs block that you must use to traverse up/down in the world
 - add randomly generated loot that you can use to replace your Arm that's guaranteed to spawn in a specific chest near the assembly line
 
+**SapienCorp Facility Design - 3-Level Structure**:
+- **Ground Level (Entry)**: ~20x15 tiles
+  - Light combat encounters (1-2 enemies)
+  - Basic repair station tutorial area
+  - Environmental storytelling about the facility's purpose
+- **Lower Level (Assembly Line)**: ~25x20 tiles
+  - Main combat area with 3-4 enemies guarding the assembly line
+  - Guaranteed arm replacement loot chest
+  - Damaged machinery requiring repair skill demonstration
+- **Sub-Level (Storage/Labs)**: ~15x12 tiles
+  - Optional exploration area with additional loot and lore
+  - 1-2 tougher enemies for advanced players
+- **Total**: ~60x47 tiles across 3 levels with stairs connecting each level
 
 **Implementation Plan**:
-1. **Goxel File Investigation**: Create feature branch to import `crates/client/assets/goxel/test.gox` and analyze data structure
-2. **Factory Layout Design**: Design the abandoned SapienCorp factory structure in Goxel where player seeks replacement arm
+1. **VoxelBuilder Design**: Create the 3-level SapienCorp factory structure in VoxelBuilder
+2. (DONE) **Import Pipeline**: Use existing `utility_voxelbuilder_importer.rs` to convert to .lrstructure format
 3. **Quest Integration**: Connect the location to first major quest narrative
-4. **Asset Pipeline**: Establish workflow for importing Goxel structures into game world
+4. (DONE) **Stairs Implementation**: Add Stairs block for vertical traversal between levels
 5. **Environmental Storytelling**: Place lore elements and visual clues about SapienCorp's downfall
 
 **Why This Matters**: Creates the first major quest destination and establishes the asset pipeline for structured locations. The abandoned factory serves as the game's first major narrative and gameplay milestone.
@@ -28,7 +39,7 @@ first quest and associated dungeons
 **Implementation Plan**:
 1. **Damage System**: Combat affects specific body parts with varying damage types (physical/mechanical)
 2. **Body Panel Integration**: Visual indicators showing part condition in existing UI
-3. **Repair Mechanics**: Use crafted items or rest to restore damaged parts 
+3. **Repair Mechanics**: Use crafted items or rest to restore damaged parts
 4. **Resource Management**: Create meaningful trade-offs between combat risk and repair costs
 5. **Gameplay Impact**: At least one damage type with clear mechanical consequences
 
@@ -141,7 +152,7 @@ first quest and associated dungeons
 1. **Basic survival mechanics (damage, repair, body parts)**
    - Body panel shows part states; player can incur and repair at least 1 damage type
    - This is essential for the core survival loop
-   
+
 2. **Day/night cycle**
    - Full cycle length ~10–20 minutes with visual cue
    - Affects gameplay rhythm and difficulty
