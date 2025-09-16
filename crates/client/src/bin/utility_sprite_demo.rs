@@ -73,7 +73,7 @@ struct App {
     index: usize,
     scale: Scale,
     mood_index: usize,
-    zoom_level: f32,
+    zoom_level: u8,
     structures: Vec<StructureDefinition>,
     item_kinds: Vec<ItemKind>,
     entity_kinds: Vec<EntityKind>,
@@ -94,7 +94,7 @@ impl App {
             index: 0,
             scale: Scale::Small,
             mood_index: 0,
-            zoom_level: 1.0,
+            zoom_level: 1,
             structures,
             item_kinds,
             entity_kinds,
@@ -192,11 +192,19 @@ impl App {
     }
 
     fn zoom_in(&mut self) {
-        self.zoom_level = (self.zoom_level * 1.2).min(5.0);
+        self.zoom_level = if self.zoom_level < 3 {
+            self.zoom_level + 1
+        } else {
+            1
+        };
     }
 
     fn zoom_out(&mut self) {
-        self.zoom_level = (self.zoom_level / 1.2).max(0.2);
+        self.zoom_level = if self.zoom_level > 1 {
+            self.zoom_level - 1
+        } else {
+            3
+        };
     }
 
     fn get_current_mood(&self) -> NPCMood {
@@ -208,14 +216,24 @@ impl App {
         }
     }
 
+    fn get_current_scale(&self) -> Scale {
+        match self.zoom_level {
+            1 => Scale::Small,
+            2 => Scale::Medium,
+            3 => Scale::Large,
+            _ => Scale::Small,
+        }
+    }
+
     fn get_current_sprite_info(&mut self) -> Option<(String, Color, String, String, String)> {
         match self.current_category() {
             SpriteCategory::Tiles => {
                 let tiles = TileKind::all_variants();
                 if self.index < tiles.len() {
                     let tile = tiles[self.index];
+                    let current_scale = self.get_current_scale();
                     if let Some((sprite, color)) =
-                        sprite_block_for_tile(&mut self.sprite_loader, tile, self.scale)
+                        sprite_block_for_tile(&mut self.sprite_loader, tile, current_scale)
                     {
                         let name = format!("{:?}", tile);
                         let sprite_key = tile.sprite_key();
@@ -228,10 +246,11 @@ impl App {
             SpriteCategory::Items => {
                 if self.index < self.item_kinds.len() {
                     let item = self.item_kinds[self.index];
+                    let current_scale = self.get_current_scale();
                     let sprite_name = lithicrivers_core::components::itemkind_sprite_name(item);
                     let sprite_data = self.sprite_loader.load_sprite(sprite_name, "items");
 
-                    let sprite = match self.scale {
+                    let sprite = match current_scale {
                         Scale::Small => sprite_data
                             .sprites
                             .get(0)
@@ -271,11 +290,12 @@ impl App {
                 if self.index < self.entity_kinds.len() {
                     let entity = self.entity_kinds[self.index];
                     let current_mood = self.get_current_mood();
+                    let current_scale = self.get_current_scale();
                     let (category, sprite_name) =
                         self.sprite_loader.sprite_path_for_entitykind(entity);
                     let sprite_data = self.sprite_loader.load_sprite(&sprite_name, &category);
 
-                    let sprite = match self.scale {
+                    let sprite = match current_scale {
                         Scale::Small => sprite_data
                             .sprites
                             .get(0)
@@ -421,12 +441,14 @@ fn ui(f: &mut Frame, app: &mut App) {
     let category_name = app.current_category().name();
     let count = app.get_current_count();
     let info_text = format!(
-        "Category: {} ({}/{}) | Scale: {}x{} | Zoom: {:.1}x",
+        "Category: {} ({}/{}) | Scale: {}x{} | Zoom: {}x{} ({})",
         category_name,
         app.index + 1,
         count,
-        app.scale.as_u32(),
-        app.scale.as_u32(),
+        app.zoom_level,
+        app.zoom_level,
+        app.zoom_level,
+        app.zoom_level,
         app.zoom_level
     );
 
