@@ -21,7 +21,6 @@ impl Item {
         match self {
             Item::Wood => "Wood",
             Item::Stone => "Stone",
-            Item::IronOre => "Iron Ore",
             Item::String => "String",
             Item::Stick => "Stick",
             Item::Torch => "Torch",
@@ -53,7 +52,6 @@ impl App {
         let items = [
             Item::Wood,
             Item::Stone,
-            Item::IronOre,
             Item::String,
             Item::Stick,
             Item::Torch,
