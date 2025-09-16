@@ -20,15 +20,11 @@ fn create_hex_color_block_mapping(hex_color: &str) -> char {
 
     match (r, g, b) {
         // Map specific colors to blocks based on RGB values
-        (145, 19, 245) => 'P',  // Purple (9113F5) -> special purple block
-        (144, 160, 179) => 'S', // Gray-blue (90A0B3) -> stone
-        (255, 0, 0) => 'T',     // Red -> treasure
-        (0, 255, 0) => 'D',     // Green -> door
-        (139, 69, 19) => 'W',   // Brown -> wood/walls
-        (128, 128, 128) => '#', // Gray -> stone
-        (0, 0, 0) => '.',       // Black -> air
-        (255, 255, 255) => '#', // White -> generic block
-        _ => '#',               // Default to generic block
+        (145, 19, 245) => 'E',  // Purple (9113F5) -> Enemy spawns
+        (144, 160, 179) => '#', // Gray-blue (90A0B3) -> stone
+        (255, 255, 0) => 'T',   // Yellow (FFFF00) -> treasure
+        (0, 255, 0) => 'D',     // Green (00FF00) -> door
+        _ => panic!("{}", format!("Unknown color {}", hex_color)), // Default will panic
     }
 }
 
@@ -36,12 +32,10 @@ fn gen_data_json(height: usize) -> serde_json::Value {
     serde_json::json!({
         "blocks": {
             ".": "air",
-            "#": "plank_block",
-            "P": "scrap_electronics", // Purple voxels -> electronics
-            "S": "rock", // Gray-blue -> stone
+            "#": "rock",
+            "E": "enemy_spawn",
             "T": "treasure",
             "D": "door",
-            "W": "plank_block"
         },
         "gen_biomes": "QUEST_ONLY",
         "gen_chance": 0.0,
