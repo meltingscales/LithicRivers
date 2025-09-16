@@ -77,25 +77,7 @@ pub fn sprite_block_for_tile(
 ) -> Option<(String, Color)> {
     let (category, name) = (
         "tiles",
-        match kind {
-            TileKind::Rock => "rock",
-            TileKind::Dirt => "dirt",
-            TileKind::Grass => "grass",
-            TileKind::Tree => "tree",
-            TileKind::Air => "air",
-            TileKind::BoneBlock => "bone_block",
-            TileKind::IronScrap => "iron_scrap",
-            TileKind::Door => "door",
-            TileKind::Bedrock => "bedrock",
-            TileKind::ScrapElectronics => "scrap_electronics",
-            TileKind::PlasteelScrap => "plasteel_scrap",
-            TileKind::Treasure => "treasure",
-            TileKind::PlankBlock => "plank_block",
-            _ => panic!(
-                "Unknown tile kind: {:?}. Without this enum->name mapping, we cannot render.",
-                kind
-            ),
-        },
+        lithicrivers_core::tiles::sprite_name_for_tile(kind),
     );
     let sd = loader.load_sprite(name, category);
     let block = sprite_block_for_scale(sd, scale).to_string();

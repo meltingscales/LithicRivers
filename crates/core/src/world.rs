@@ -164,12 +164,6 @@ impl World {
         }
     }
 
-    /// Check if a chunk exists in the cache (for testing)
-    #[cfg(test)]
-    pub fn has_chunk(&self, cx: i64, cy: i64, cz: i64) -> bool {
-        self.chunks.contains_key(&(cx, cy, cz))
-    }
-
     fn generate_chunk(&self, cx: i64, cy: i64, cz: i64, chunk: &mut Chunk) {
         // Create Perlin noise generators with different seeds for different features
         let perlin = Perlin::new(self.seed as u32);

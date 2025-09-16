@@ -32,7 +32,7 @@ fn create_hex_color_block_mapping(hex_color: &str) -> char {
 fn gen_data_json(height: usize) -> serde_json::Value {
     serde_json::json!({
         "blocks": {
-            ".": "air",
+            ".": "existing_worldgen",
             "#": "rock",
             "E": "enemy_spawn",
             "T": "treasure",

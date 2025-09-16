@@ -25,6 +25,7 @@ pub mod systems;
 #[cfg(test)]
 mod systems_tests;
 pub mod target_tracker;
+pub mod tile_registry;
 pub mod tiles;
 pub mod view;
 pub mod world;
