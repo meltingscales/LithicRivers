@@ -225,6 +225,93 @@ impl App {
         }
     }
 
+    fn create_hexagonal_sprite_pattern(
+        &self,
+        sprite: &str,
+        container_width: u16,
+        container_height: u16,
+    ) -> String {
+        let mut pattern = String::new();
+        let current_scale = self.get_current_scale();
+
+        // Determine sprite dimensions based on scale
+        let (sprite_width, sprite_height) = match current_scale {
+            Scale::Small => (1, 1),  // 1x1
+            Scale::Medium => (2, 2), // 2x2
+            Scale::Large => (3, 3),  // 3x3
+        };
+
+        // Parse the sprite into lines for multi-line sprites
+        let sprite_lines: Vec<&str> = sprite.lines().collect();
+
+        // Calculate how many sprites can fit with 2-space separation
+        let sprites_per_row = (container_width as usize + 2) / (sprite_width + 2);
+        let sprite_rows = container_height as usize / sprite_height;
+
+        for sprite_row in 0..sprite_rows {
+            for sprite_line in 0..sprite_height {
+                let mut line = String::new();
+
+                // Hex offset every other sprite row
+                let hex_offset = if sprite_row % 2 == 1 {
+                    (sprite_width + 2) / 2
+                } else {
+                    0
+                };
+                for _ in 0..hex_offset {
+                    line.push(' ');
+                }
+
+                for sprite_col in 0..sprites_per_row {
+                    // Add 2-space separation between sprites (except first)
+                    if sprite_col > 0 {
+                        line.push(' ');
+                        line.push(' ');
+                    }
+
+                    // Get the appropriate line from the sprite
+                    let sprite_line_content = if sprite_line < sprite_lines.len() {
+                        sprite_lines[sprite_line]
+                    } else {
+                        ""
+                    };
+
+                    // Pad or truncate the sprite line to match sprite width
+                    let mut current_sprite_line = String::new();
+                    for char_pos in 0..sprite_width {
+                        if char_pos < sprite_line_content.len() {
+                            current_sprite_line
+                                .push(sprite_line_content.chars().nth(char_pos).unwrap_or(' '));
+                        } else {
+                            current_sprite_line.push(' ');
+                        }
+                    }
+
+                    line.push_str(&current_sprite_line);
+
+                    // Stop if we've reached the container width
+                    if line.len() >= container_width as usize {
+                        break;
+                    }
+                }
+
+                // Truncate line if it exceeds container width
+                if line.len() > container_width as usize {
+                    line.truncate(container_width as usize);
+                }
+
+                pattern.push_str(&line);
+                if sprite_row * sprite_height + sprite_line
+                    < (container_height as usize).saturating_sub(1)
+                {
+                    pattern.push('\n');
+                }
+            }
+        }
+
+        pattern
+    }
+
     fn get_current_sprite_info(&mut self) -> Option<(String, Color, String, String, String)> {
         match self.current_category() {
             SpriteCategory::Tiles => {
@@ -235,11 +322,13 @@ impl App {
                     if let Some((sprite, color)) =
                         sprite_block_for_tile(&mut self.sprite_loader, tile, current_scale)
                     {
+                        // Create hexagonal tiling pattern that fills the container
+                        let hex_pattern = self.create_hexagonal_sprite_pattern(&sprite, 35, 15);
                         let name = format!("{:?}", tile);
                         let sprite_key = tile.sprite_key();
                         let passable = if tile.is_passable() { "Yes" } else { "No" };
                         let info = format!("Sprite: {} | Passable: {}", sprite_key, passable);
-                        return Some((sprite, color, name, info, String::new()));
+                        return Some((hex_pattern, color, name, info, String::new()));
                     }
                 }
             }
@@ -272,7 +361,6 @@ impl App {
                     };
 
                     let color = parse_color_string(&sprite_data.color).unwrap_or(Color::White);
-                    let name = lithicrivers_core::components::itemkind_name(item).to_string();
                     let info = format!(
                         "Sprite: {} | Description: {}",
                         sprite_name, sprite_data.description
@@ -283,7 +371,11 @@ impl App {
                         .cloned()
                         .unwrap_or_else(|| "No art".to_string());
 
-                    return Some((sprite, color, name, info, art12x8));
+                    // Create hexagonal tiling pattern for items too
+                    let hex_pattern = self.create_hexagonal_sprite_pattern(&sprite, 35, 15);
+                    let name = lithicrivers_core::components::itemkind_name(item).to_string();
+
+                    return Some((hex_pattern, color, name, info, art12x8));
                 }
             }
             SpriteCategory::Entities => {
@@ -424,7 +516,7 @@ fn ui(f: &mut Frame, app: &mut App) {
     // Main border
     let block = Block::default()
         .borders(Borders::ALL)
-        .title(" Sprite Demo - All Tiles, Items, Entities & Structures ")
+        .title(" LithicRivers Sprite Demo - All Tiles, Items, Entities & Structures ")
         .title_alignment(Alignment::Center);
     let inner = block.inner(size);
     f.render_widget(block, size);
@@ -483,7 +575,7 @@ fn ui(f: &mut Frame, app: &mut App) {
 
         // Art and details area
         let art_chunks = Layout::vertical([
-            Constraint::Length(3), // Info
+            Constraint::Length(6), // Info
             Constraint::Min(8),    // Art
         ])
         .split(content_chunks[1]);
