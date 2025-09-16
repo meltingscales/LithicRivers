@@ -4,6 +4,27 @@ use crate::game_time::GameTime;
 use crate::player_state::PlayerState;
 use crate::target_tracker::TargetTracker;
 use crate::world_state::WorldState;
+use std::collections::HashMap;
+
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub enum StructureGenerationState {
+    NotGenerated,
+    Generated,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub enum ChunkGenerationState {
+    NotGenerated,
+    Generated,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct PendingStructure {
+    pub name: String,
+    pub x: i32,
+    pub y: i32,
+    pub z: i32,
+}
 
 pub struct Resources {
     pub time: GameTime,
@@ -12,6 +33,9 @@ pub struct Resources {
     pub player_state: PlayerState,
     pub events: GameEvents,
     pub target_tracker: TargetTracker,
+    pub pending_structures: Vec<PendingStructure>,
+    pub chunk_generation_states: HashMap<(i64, i64, i64), ChunkGenerationState>,
+    pub structure_generation_states: HashMap<String, StructureGenerationState>,
 }
 
 impl Resources {
@@ -23,6 +47,9 @@ impl Resources {
             player_state: PlayerState::new(),
             events: GameEvents::new(),
             target_tracker: TargetTracker::new(),
+            pending_structures: Vec::new(),
+            chunk_generation_states: HashMap::new(),
+            structure_generation_states: HashMap::new(),
         }
     }
 

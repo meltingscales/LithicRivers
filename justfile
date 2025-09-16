@@ -225,6 +225,10 @@ util-voxelbuilder-import-site:
     @echo "Export as JSON format and add to input_output_map in utility_voxelbuilder_importer.rs."
     @echo "Then run 'just util-voxelbuilder-import' to import the structure."
 
+util-monitor-logs:
+    @echo "Monitoring logs..."
+    @tail -f LithicRivers.log.`date +%Y-%m-%d`
+
 # Blind mode (not implemented)
 client-blind:
     @echo "Blind mode not implemented yet."
