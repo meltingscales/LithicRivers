@@ -74,6 +74,7 @@ struct App {
     scale: Scale,
     mood_index: usize,
     zoom_level: u8,
+    layer_index: usize,
     structures: Vec<StructureDefinition>,
     item_kinds: Vec<ItemKind>,
     entity_kinds: Vec<EntityKind>,
@@ -95,6 +96,7 @@ impl App {
             scale: Scale::Small,
             mood_index: 0,
             zoom_level: 1,
+            layer_index: 0,
             structures,
             item_kinds,
             entity_kinds,
@@ -149,6 +151,7 @@ impl App {
         self.category = (self.category + 1) % SpriteCategory::all().len();
         self.index = 0;
         self.mood_index = 0;
+        self.layer_index = 0;
     }
 
     fn prev_category(&mut self) {
@@ -159,12 +162,14 @@ impl App {
         }
         self.index = 0;
         self.mood_index = 0;
+        self.layer_index = 0;
     }
 
     fn next_item(&mut self) {
         let count = self.get_current_count();
         if count > 0 {
             self.index = (self.index + 1) % count;
+            self.layer_index = 0; // Reset layer when changing items
         }
     }
 
@@ -175,6 +180,33 @@ impl App {
                 self.index = count - 1;
             } else {
                 self.index -= 1;
+            }
+            self.layer_index = 0; // Reset layer when changing items
+        }
+    }
+
+    fn next_layer(&mut self) {
+        if matches!(self.current_category(), SpriteCategory::Structures) {
+            if self.index < self.structures.len() {
+                let layer_count = self.structures[self.index].layers.len();
+                if layer_count > 0 {
+                    self.layer_index = (self.layer_index + 1) % layer_count;
+                }
+            }
+        }
+    }
+
+    fn prev_layer(&mut self) {
+        if matches!(self.current_category(), SpriteCategory::Structures) {
+            if self.index < self.structures.len() {
+                let layer_count = self.structures[self.index].layers.len();
+                if layer_count > 0 {
+                    if self.layer_index == 0 {
+                        self.layer_index = layer_count - 1;
+                    } else {
+                        self.layer_index -= 1;
+                    }
+                }
             }
         }
     }
@@ -428,16 +460,22 @@ impl App {
             SpriteCategory::Structures => {
                 if self.index < self.structures.len() {
                     let structure = &self.structures[self.index];
-                    let layer_display = if !structure.layers.is_empty() {
-                        structure.layers[0].clone()
+                    let layer_display = if !structure.layers.is_empty()
+                        && self.layer_index < structure.layers.len()
+                    {
+                        structure.layers[self.layer_index].clone()
+                    } else if !structure.layers.is_empty() {
+                        structure.layers[0].clone() // Fallback to first layer
                     } else {
                         "Empty structure".to_string()
                     };
 
                     let name = structure.name.clone();
                     let info = format!(
-                        "Layers: {} | Biomes: {} | Spawn Chance: {:.1}%",
+                        "Layers: {} | Current Layer: {} (Z={}) | Biomes: {} | Spawn Chance: {:.1}%",
                         structure.layers.len(),
+                        self.layer_index + 1,
+                        self.layer_index,
                         structure.gen_biomes,
                         structure.gen_chance * 100.0
                     );
@@ -488,6 +526,8 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>) -> io::Result<()> {
                     KeyCode::Char('m') => app.next_mood(),
                     KeyCode::Char('+') | KeyCode::Char('=') => app.zoom_in(),
                     KeyCode::Char('-') => app.zoom_out(),
+                    KeyCode::PageUp | KeyCode::Char('u') => app.prev_layer(),
+                    KeyCode::PageDown | KeyCode::Char('d') => app.next_layer(),
                     _ => {}
                 }
             }
@@ -610,6 +650,7 @@ fn ui(f: &mut Frame, app: &mut App) {
         "s: Cycle scale (1x1/2x2/3x3)",
         "m: Cycle mood (entities)",
         "+/-: Zoom in/out",
+        "PgUp/PgDn or u/d: Cycle Z layers (structures)",
         "q: Quit",
     ];
 
