@@ -215,6 +215,10 @@ demo-corpse-looting:
 demo-dialogue-interactions:
     {{cargoz_env}} run -p lithicrivers-client --bin demo_dialogue_interactions
 
+# Run a sprite demo that showcases sprite animations and interactions
+util-sprite-demo:
+    {{cargoz_env}} run -p lithicrivers-client --bin utility_sprite_demo
+
 # Import Voxel Builder JSON files to LithicRivers .lrstructure format
 util-voxelbuilder-import:
     @echo "🧊 Running Voxel Builder Structure Importer..."
