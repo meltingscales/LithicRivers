@@ -8,13 +8,14 @@ $bins = @(
 
 # add demo bins using globbing
 $bins += Get-ChildItem -Path 'target/debug/demo_*.exe' -Name
+$bins += Get-ChildItem -Path 'target/debug/utility_*.exe' -Name
 
-foreach ($b in $bins) 
-{ 
-    if (Test-Path $b) 
-    { 
-        Copy-Item -Force $b artifacts/ 
-    } 
+foreach ($b in $bins)
+{
+    if (Test-Path $b)
+    {
+        Copy-Item -Force $b artifacts/
+    }
 }
 
 # add launcher script
