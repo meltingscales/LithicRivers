@@ -53,6 +53,13 @@ first quest and associated dungeons
   - remove "z" char
   - rework it with Kaya
 
+## rust warnings
+
+- let's fix all the rust warnings.
+  - fix all the warnings in the codebase
+  - ensure all warnings are addressed before merging any PRs
+    - add a cargo check to fail CI if warnings are present
+
 ## launching
 
 - find out how x-terminal-emulator works on Ubuntu

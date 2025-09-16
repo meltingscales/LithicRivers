@@ -256,10 +256,47 @@ impl Game {
             scheduler: SystemScheduler::new(),
         };
 
-        // spawn the starting dungeon at 30, 30, 0
-        new_game.load_quest_structure("first-quest-sapiencorp.lrstructure", 30, 30, 0);
+        // Queue the starting dungeon at 30, 30, 0 for lazy loading
+        new_game
+            .res
+            .pending_structures
+            .push(crate::resources::PendingStructure {
+                name: "first-quest-sapiencorp.lrstructure".to_string(),
+                x: 30,
+                y: 30,
+                z: 0,
+            });
 
         return new_game;
+    }
+
+    /// Ensure a chunk exists and check for any pending structures in that chunk
+    pub fn ensure_chunk_with_pending_structures(
+        &mut self,
+        chunk_x: i64,
+        chunk_y: i64,
+        chunk_z: i64,
+    ) {
+        tracing::info!(target: "game", "ensure_chunk_with_pending_structures called for ({}, {}, {})", chunk_x, chunk_y, chunk_z);
+        // First check and load any pending structures for this chunk
+        self.load_pending_structures_for_chunk(chunk_x, chunk_y, chunk_z);
+
+        // Then ensure the chunk exists - but only if it doesn't already exist
+        if !self
+            .res
+            .world_state
+            .world
+            .has_chunk(chunk_x, chunk_y, chunk_z)
+        {
+            tracing::info!(target: "game", "Calling world.ensure_chunk for ({}, {}, {})", chunk_x, chunk_y, chunk_z);
+            self.res
+                .world_state
+                .world
+                .ensure_chunk(chunk_x, chunk_y, chunk_z);
+        } else {
+            tracing::info!(target: "game", "Chunk ({}, {}, {}) already exists, skipping ensure_chunk", chunk_x, chunk_y, chunk_z);
+        }
+        tracing::info!(target: "game", "ensure_chunk_with_pending_structures completed for ({}, {}, {})", chunk_x, chunk_y, chunk_z);
     }
 
     /// Load a quest structure at a specific world position
@@ -314,6 +351,33 @@ impl Game {
 
     /// Advance the game state by one tick using the system scheduler.
     pub fn tick(&mut self) -> GameTickResult {
+        // Check for pending structures around the player before running systems
+        if let Some(player_pos) = self.get_player_position() {
+            let chunk_x = player_pos.x.div_euclid(crate::world::CHUNK_SIZE as i32) as i64;
+            let chunk_y = player_pos.y.div_euclid(crate::world::CHUNK_SIZE as i32) as i64;
+            let chunk_z = player_pos.z.div_euclid(crate::world::CHUNK_SIZE_Z as i32) as i64;
+            tracing::info!(target: "game", "Player at world pos ({}, {}, {}) -> chunk ({}, {}, {})",
+                player_pos.x, player_pos.y, player_pos.z, chunk_x, chunk_y, chunk_z);
+
+            // Check a small radius around the player's chunk
+            for dx in -1..=1 {
+                for dy in -1..=1 {
+                    for dz in -1..=1 {
+                        let target_chunk_x = chunk_x + dx;
+                        let target_chunk_y = chunk_y + dy;
+                        let target_chunk_z = chunk_z + dz;
+                        tracing::info!(target: "game", "Processing chunk ({}, {}, {}) in 3x3x3 around player",
+                            target_chunk_x, target_chunk_y, target_chunk_z);
+                        self.ensure_chunk_with_pending_structures(
+                            target_chunk_x,
+                            target_chunk_y,
+                            target_chunk_z,
+                        );
+                    }
+                }
+            }
+        }
+
         // Increment tick based on pending action cost
         let inc = self.res.player_state.intent.cost().max(1);
         self.res.time.tick = self.res.time.tick.saturating_add(inc);
@@ -469,5 +533,395 @@ impl Game {
             self.res
                 .log("Ended combat for nearby enemies (manual exit)".to_string());
         }
+    }
+
+    // === Generation State Management ===
+
+    /// Check if a chunk has been processed for structure generation
+    pub fn is_chunk_generated(&self, chunk_x: i64, chunk_y: i64, chunk_z: i64) -> bool {
+        use crate::resources::ChunkGenerationState;
+        let is_generated = matches!(
+            self.res
+                .chunk_generation_states
+                .get(&(chunk_x, chunk_y, chunk_z)),
+            Some(ChunkGenerationState::Generated)
+        );
+        tracing::info!(target: "game", "Checking chunk generation state for ({}, {}, {}): {}",
+            chunk_x, chunk_y, chunk_z, if is_generated { "Generated" } else { "Not Generated" });
+        is_generated
+    }
+
+    /// Mark a chunk as processed for structure generation
+    pub fn mark_chunk_generated(&mut self, chunk_x: i64, chunk_y: i64, chunk_z: i64) {
+        use crate::resources::ChunkGenerationState;
+        tracing::info!(target: "game", "Marking chunk ({}, {}, {}) as generated", chunk_x, chunk_y, chunk_z);
+        self.res
+            .chunk_generation_states
+            .insert((chunk_x, chunk_y, chunk_z), ChunkGenerationState::Generated);
+    }
+
+    /// Check if a specific structure has been generated
+    pub fn is_structure_generated(&self, structure_name: &str, x: i32, y: i32, z: i32) -> bool {
+        use crate::resources::StructureGenerationState;
+        let structure_key = format!("{}@{},{},{}", structure_name, x, y, z);
+        let is_generated = matches!(
+            self.res.structure_generation_states.get(&structure_key),
+            Some(StructureGenerationState::Generated)
+        );
+        tracing::info!(target: "game", "Checking structure generation state for '{}' at ({}, {}, {}): {}",
+            structure_name, x, y, z, if is_generated { "Generated" } else { "Not Generated" });
+        is_generated
+    }
+
+    /// Mark a specific structure as generated
+    pub fn mark_structure_generated(&mut self, structure_name: &str, x: i32, y: i32, z: i32) {
+        use crate::resources::StructureGenerationState;
+        let structure_key = format!("{}@{},{},{}", structure_name, x, y, z);
+        tracing::info!(target: "game", "Marking structure '{}' at ({}, {}, {}) as generated", structure_name, x, y, z);
+        self.res
+            .structure_generation_states
+            .insert(structure_key, StructureGenerationState::Generated);
+    }
+
+    /// Mark all Z chunks that a structure spans as generated to prevent infinite loops
+    pub fn mark_all_structure_chunks_generated(
+        &mut self,
+        structure_name: &str,
+        x: i32,
+        y: i32,
+        z: i32,
+    ) {
+        use crate::structure::StructureDefinition;
+        use crate::world::{CHUNK_SIZE, CHUNK_SIZE_Z};
+
+        // Load the structure to get its dimensions
+        let structure = StructureDefinition::load_from_embedded(structure_name);
+
+        // Calculate base chunk coordinates
+        let chunk_x = x.div_euclid(CHUNK_SIZE) as i64;
+        let chunk_y = y.div_euclid(CHUNK_SIZE) as i64;
+        let base_chunk_z = z.div_euclid(CHUNK_SIZE_Z) as i64;
+
+        // Calculate the range of Z chunks this structure spans
+        let structure_height = structure.layers.len() as i32;
+        let max_z = z + structure_height - 1;
+        let max_chunk_z = max_z.div_euclid(CHUNK_SIZE_Z) as i64;
+
+        tracing::info!(target: "game", "Structure '{}' spans {} layers, marking chunks ({}, {}, {}) to ({}, {}, {})",
+            structure_name, structure_height, chunk_x, chunk_y, base_chunk_z, chunk_x, chunk_y, max_chunk_z);
+
+        // Mark all Z chunks in the range as generated
+        for cz in base_chunk_z..=max_chunk_z {
+            self.mark_chunk_generated(chunk_x, chunk_y, cz);
+        }
+    }
+
+    // === Bounds Checking Utilities ===
+
+    /// Convert world coordinates to chunk coordinates
+    pub fn world_to_chunk_coords(world_x: i32, world_y: i32, world_z: i32) -> (i64, i64, i64) {
+        use crate::world::{CHUNK_SIZE, CHUNK_SIZE_Z};
+        let chunk_x = world_x.div_euclid(CHUNK_SIZE as i32) as i64;
+        let chunk_y = world_y.div_euclid(CHUNK_SIZE as i32) as i64;
+        let chunk_z = world_z.div_euclid(CHUNK_SIZE_Z as i32) as i64;
+        (chunk_x, chunk_y, chunk_z)
+    }
+
+    /// Get world bounds for a chunk
+    pub fn chunk_world_bounds(
+        chunk_x: i64,
+        chunk_y: i64,
+        chunk_z: i64,
+    ) -> ((i64, i64, i64), (i64, i64, i64)) {
+        use crate::world::{CHUNK_SIZE, CHUNK_SIZE_Z};
+        let min_x = chunk_x * CHUNK_SIZE as i64;
+        let max_x = min_x + CHUNK_SIZE as i64;
+        let min_y = chunk_y * CHUNK_SIZE as i64;
+        let max_y = min_y + CHUNK_SIZE as i64;
+        let min_z = chunk_z * CHUNK_SIZE_Z as i64;
+        let max_z = min_z + CHUNK_SIZE_Z as i64;
+        ((min_x, min_y, min_z), (max_x, max_y, max_z))
+    }
+
+    /// Check if a point is within a chunk's bounds
+    pub fn is_point_in_chunk(
+        point_x: i32,
+        point_y: i32,
+        point_z: i32,
+        chunk_x: i64,
+        chunk_y: i64,
+        chunk_z: i64,
+    ) -> bool {
+        let ((min_x, min_y, min_z), (max_x, max_y, max_z)) =
+            Self::chunk_world_bounds(chunk_x, chunk_y, chunk_z);
+        (point_x as i64) >= min_x
+            && (point_x as i64) < max_x
+            && (point_y as i64) >= min_y
+            && (point_y as i64) < max_y
+            && (point_z as i64) >= min_z
+            && (point_z as i64) < max_z
+    }
+
+    /// Check if any pending structures should be loaded for a given chunk
+    /// Called during chunk generation to place quest structures
+    pub fn load_pending_structures_for_chunk(&mut self, chunk_x: i64, chunk_y: i64, chunk_z: i64) {
+        // Check if we've already processed this chunk for structure loading
+        if self.is_chunk_generated(chunk_x, chunk_y, chunk_z) {
+            tracing::info!(target: "game", "Chunk ({}, {}, {}) already processed for structures", chunk_x, chunk_y, chunk_z);
+            return; // Already processed this chunk
+        }
+
+        tracing::info!(target: "game", "Processing chunk ({}, {}, {}) for structures", chunk_x, chunk_y, chunk_z);
+        // Mark this chunk as processed
+        self.mark_chunk_generated(chunk_x, chunk_y, chunk_z);
+
+        // No need to calculate bounds manually anymore - we have abstraction methods
+
+        let mut structures_to_load = Vec::new();
+        let mut remaining_structures = Vec::new();
+
+        // Collect all pending structures first to avoid borrow checker issues
+        let pending_structures: Vec<_> = self.res.pending_structures.drain(..).collect();
+        tracing::info!(target: "game", "Found {} pending structures to evaluate for chunk ({}, {}, {})",
+            pending_structures.len(), chunk_x, chunk_y, chunk_z);
+
+        for structure in pending_structures {
+            // Check if this specific structure has already been generated
+            if self.is_structure_generated(&structure.name, structure.x, structure.y, structure.z) {
+                tracing::info!(target: "game", "Skipping already generated structure '{}' at ({}, {}, {})",
+                    structure.name, structure.x, structure.y, structure.z);
+                continue; // Skip already generated structures
+            }
+
+            // Check if structure is within or overlaps this chunk
+            let structure_in_chunk = Self::is_point_in_chunk(
+                structure.x,
+                structure.y,
+                structure.z,
+                chunk_x,
+                chunk_y,
+                chunk_z,
+            );
+
+            if structure_in_chunk {
+                tracing::info!(target: "game", "Structure '{}' at ({}, {}, {}) belongs to chunk ({}, {}, {}) - will load",
+                    structure.name, structure.x, structure.y, structure.z, chunk_x, chunk_y, chunk_z);
+                structures_to_load.push(structure);
+            } else {
+                tracing::info!(target: "game", "Structure '{}' at ({}, {}, {}) does not belong to chunk ({}, {}, {}) - keeping pending",
+                    structure.name, structure.x, structure.y, structure.z, chunk_x, chunk_y, chunk_z);
+                remaining_structures.push(structure);
+            }
+        }
+
+        // Put back structures that don't belong in this chunk
+        self.res.pending_structures = remaining_structures;
+        tracing::info!(target: "game", "Kept {} structures pending, loading {} structures for chunk ({}, {}, {})",
+            self.res.pending_structures.len(), structures_to_load.len(), chunk_x, chunk_y, chunk_z);
+
+        // Load structures that belong in this chunk
+        let num_structures_to_load = structures_to_load.len();
+        for structure in structures_to_load {
+            self.res.log(format!(
+                "Loading structure '{}' at ({}, {}, {}) for chunk ({}, {}, {})",
+                structure.name, structure.x, structure.y, structure.z, chunk_x, chunk_y, chunk_z
+            ));
+
+            self.load_quest_structure(&structure.name, structure.x, structure.y, structure.z);
+
+            // Mark this structure as generated
+            self.mark_structure_generated(&structure.name, structure.x, structure.y, structure.z);
+
+            // Also mark all Z chunks that this structure spans as generated
+            self.mark_all_structure_chunks_generated(
+                &structure.name,
+                structure.x,
+                structure.y,
+                structure.z,
+            );
+        }
+
+        tracing::info!(target: "game", "Completed structure processing for chunk ({}, {}, {}) - loaded {} structures",
+            chunk_x, chunk_y, chunk_z, num_structures_to_load);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_lazy_structure_loading() {
+        // Create a new game with a test seed
+        let mut game = Game::new(12345);
+
+        // Verify that a structure was queued during initialization
+        assert_eq!(game.res.pending_structures.len(), 1);
+        assert_eq!(
+            game.res.pending_structures[0].name,
+            "first-quest-sapiencorp.lrstructure"
+        );
+        assert_eq!(game.res.pending_structures[0].x, 30);
+        assert_eq!(game.res.pending_structures[0].y, 30);
+        assert_eq!(game.res.pending_structures[0].z, 0);
+
+        // The structure should not be loaded yet (no chunks generated at that location)
+        let chunk_x = 30_i64.div_euclid(crate::world::CHUNK_SIZE as i64);
+        let chunk_y = 30_i64.div_euclid(crate::world::CHUNK_SIZE as i64);
+        let chunk_z = 0_i64.div_euclid(crate::world::CHUNK_SIZE_Z as i64);
+
+        // Note: The chunk might already exist due to player spawn area generation
+        // The important thing is that the structure is queued and gets loaded when needed
+
+        // Load structures for the chunk containing our queued structure
+        game.load_pending_structures_for_chunk(chunk_x, chunk_y, chunk_z);
+
+        // After loading, the pending structure should be removed from the queue
+        assert_eq!(game.res.pending_structures.len(), 0);
+
+        // Now ensure the chunk exists (this should work without infinite loops)
+        game.res
+            .world_state
+            .world
+            .ensure_chunk(chunk_x, chunk_y, chunk_z);
+
+        // Verify the chunk now exists
+        assert!(game
+            .res
+            .world_state
+            .world
+            .has_chunk(chunk_x, chunk_y, chunk_z));
+    }
+
+    #[test]
+    fn test_structure_not_loaded_for_different_chunk() {
+        let mut game = Game::new(12345);
+
+        // Verify structure is queued
+        assert_eq!(game.res.pending_structures.len(), 1);
+
+        // Try loading structures for a chunk far away from the queued structure
+        let far_chunk_x = 100_i64;
+        let far_chunk_y = 100_i64;
+        let far_chunk_z = 10_i64;
+
+        game.load_pending_structures_for_chunk(far_chunk_x, far_chunk_y, far_chunk_z);
+
+        // The structure should still be in the queue since it's not in this chunk
+        assert_eq!(game.res.pending_structures.len(), 1);
+        assert_eq!(
+            game.res.pending_structures[0].name,
+            "first-quest-sapiencorp.lrstructure"
+        );
+    }
+
+    #[test]
+    fn test_ensure_chunk_with_pending_structures() {
+        let mut game = Game::new(12345);
+
+        // Get the chunk coordinates for our queued structure
+        let chunk_x = 30_i64.div_euclid(crate::world::CHUNK_SIZE as i64);
+        let chunk_y = 30_i64.div_euclid(crate::world::CHUNK_SIZE as i64);
+        let chunk_z = 0_i64.div_euclid(crate::world::CHUNK_SIZE_Z as i64);
+
+        // Verify structure is queued
+        assert_eq!(game.res.pending_structures.len(), 1);
+
+        // Use the combined method that checks pending structures and ensures chunk
+        game.ensure_chunk_with_pending_structures(chunk_x, chunk_y, chunk_z);
+
+        // Both the structure should be loaded (removed from queue) and chunk should exist
+        assert_eq!(game.res.pending_structures.len(), 0);
+        assert!(game
+            .res
+            .world_state
+            .world
+            .has_chunk(chunk_x, chunk_y, chunk_z));
+    }
+
+    #[test]
+    fn test_z_coordinate_movement_no_infinite_loop() {
+        let mut game = Game::new(12345);
+
+        // Test Z coordinate chunk generation without structures
+
+        // Get player entity and position them for testing
+        let player_entity = game.get_player_entity().expect("Player should exist");
+        if let Ok(mut pos) = game.world.get::<&mut Position>(player_entity) {
+            pos.x = 30;
+            pos.y = 30;
+            pos.z = 0;
+        }
+
+        // Force some chunk generation by running ticks
+        for _ in 0..3 {
+            let _result = game.tick();
+        }
+
+        // Add some pending structures to trigger the real issue scenario
+        // Using existing structure files to avoid panics
+        let existing_structures = [
+            "small_ship.lrstructure",
+            "small_temple.lrstructure",
+            "giant_corpse.lrstructure",
+            "starter_ship.lrstructure",
+            "first-quest-sapiencorp.lrstructure",
+        ];
+        for (i, structure_name) in existing_structures.iter().enumerate() {
+            game.res
+                .pending_structures
+                .push(crate::resources::PendingStructure {
+                    name: structure_name.to_string(),
+                    x: 25 + (i as i32),
+                    y: 25 + (i as i32),
+                    z: -1 + (i as i32), // Include negative Z structures
+                });
+        }
+
+        let initial_chunk_count = game.res.chunk_generation_states.len();
+
+        // Now test moving the player in a 3x3x3 cube, especially testing z = -1
+        // This should not cause infinite loops in chunk processing even with pending structures
+        for dz in -1..=1 {
+            for dy in -1..=1 {
+                for dx in -1..=1 {
+                    // Move player to this position
+                    if let Ok(mut pos) = game.world.get::<&mut Position>(player_entity) {
+                        pos.x = 30 + dx;
+                        pos.y = 30 + dy;
+                        pos.z = 0 + dz; // This is the critical test - going to z = -1
+                    }
+
+                    // Track chunk states before tick
+                    let pre_tick_chunks = game.res.chunk_generation_states.len();
+
+                    // Run a few ticks - this should not infinite loop
+                    for _tick in 0..3 {
+                        let _result = game.tick();
+
+                        // Check that we're not generating excessive chunks
+                        let current_chunks = game.res.chunk_generation_states.len();
+                        assert!(
+                            current_chunks <= pre_tick_chunks + 10,
+                            "Excessive chunk generation at position ({}, {}, {}): {} -> {}",
+                            30 + dx,
+                            30 + dy,
+                            0 + dz,
+                            pre_tick_chunks,
+                            current_chunks
+                        );
+                    }
+                }
+            }
+        }
+
+        // Verify final chunk count is reasonable
+        let final_chunk_count = game.res.chunk_generation_states.len();
+        assert!(
+            final_chunk_count <= initial_chunk_count + 50,
+            "Too many total chunks generated: {} -> {}",
+            initial_chunk_count,
+            final_chunk_count
+        );
     }
 }

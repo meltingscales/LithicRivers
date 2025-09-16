@@ -167,6 +167,12 @@ impl World {
         }
     }
 
+    /// Check if a chunk exists in the cache (for testing)
+    #[cfg(test)]
+    pub fn has_chunk(&self, cx: i64, cy: i64, cz: i64) -> bool {
+        self.chunks.contains_key(&(cx, cy, cz))
+    }
+
     /// Set the Z slice that generation should use when sampling 3D noise.
     /// Clears cached chunks when Z changes so slices regenerate with new noise.
     pub fn set_generation_z(&mut self, z: i32) {
@@ -440,24 +446,58 @@ impl World {
 
     // Cached variant: generate-if-absent and store in self.chunks, then return tile.
     pub fn get_tile_cached(&mut self, x: i32, y: i32, z: i32) -> TileKind {
+        tracing::info!(target: "world", "get_tile_cached called for world pos ({}, {}, {})", x, y, z);
         let cx = Self::div_floor(x, CHUNK_SIZE) as i64;
         let cy = Self::div_floor(y, CHUNK_SIZE) as i64;
         let cz = Self::div_floor(z, CHUNK_SIZE_Z) as i64;
         let tx = Self::mod_floor(x, CHUNK_SIZE);
         let ty = Self::mod_floor(y, CHUNK_SIZE);
         let _tz = Self::mod_floor(z, CHUNK_SIZE_Z);
-        self.ensure_chunk(cx, cy, cz);
+
+        // Only call ensure_chunk if the chunk doesn't already exist
+        if !self.has_chunk(cx, cy, cz) {
+            self.ensure_chunk(cx, cy, cz);
+        }
+
         self.chunks
             .get(&(cx, cy, cz))
             .expect("chunk must exist after ensure_chunk")
             .get(tx, ty)
     }
 
+    /// Check if a chunk exists in the cache
+    pub fn has_chunk(&self, cx: i64, cy: i64, cz: i64) -> bool {
+        self.chunks.contains_key(&(cx, cy, cz))
+    }
+
+    /// Get a tile without triggering world generation - for rendering only
+    /// Returns a default tile (Stone) if the chunk doesn't exist
+    pub fn get_tile_cached_no_worldgen(&self, x: i32, y: i32, z: i32) -> TileKind {
+        let cx = Self::div_floor(x, CHUNK_SIZE) as i64;
+        let cy = Self::div_floor(y, CHUNK_SIZE) as i64;
+        let cz = Self::div_floor(z, CHUNK_SIZE_Z) as i64;
+        let tx = Self::mod_floor(x, CHUNK_SIZE);
+        let ty = Self::mod_floor(y, CHUNK_SIZE);
+        let _tz = Self::mod_floor(z, CHUNK_SIZE_Z);
+
+        // Only return tile if chunk already exists, otherwise return default
+        if let Some(chunk) = self.chunks.get(&(cx, cy, cz)) {
+            chunk.get(tx, ty)
+        } else {
+            // Return a default tile for ungenerated areas (visible in render but doesn't trigger generation)
+            TileKind::Rock
+        }
+    }
+
     // Ensure a chunk exists in cache by generating and inserting if absent.
     pub fn ensure_chunk(&mut self, cx: i64, cy: i64, cz: i64) {
+        tracing::info!(target: "world", "ensure_chunk called for ({}, {}, {}) - cache has {} chunks",
+            cx, cy, cz, self.chunks.len());
         if self.chunks.contains_key(&(cx, cy, cz)) {
+            tracing::info!(target: "world", "Chunk ({}, {}, {}) already exists in cache", cx, cy, cz);
             return;
         }
+        tracing::info!(target: "world", "Generating new chunk ({}, {}, {})", cx, cy, cz);
         let start = Instant::now();
         let mut chunk = Chunk::new_filled(TileKind::Dirt);
         self.generate_chunk(cx, cy, cz, &mut chunk);
@@ -557,9 +597,25 @@ impl World {
         // Re-entrancy guard: signal that we are in structure placement so ensure_chunk()
         // will not schedule additional placements while we write tiles.
         self.structure_placement_depth = self.structure_placement_depth.saturating_add(1);
+
+        // First, ensure all Z chunks that this structure will span are generated
+        let wz0 = (cz as i32) * CHUNK_SIZE_Z;
+        let max_structure_z = wz0 + structure.layers.len() as i32 - 1;
+        let max_chunk_z = Self::div_floor(max_structure_z, CHUNK_SIZE_Z) as i64;
+
+        tracing::info!(target: "world", "Structure '{}' spans Z levels {} to {}, chunks {} to {}",
+            structure.name, wz0, max_structure_z, cz, max_chunk_z);
+
+        // Ensure all required Z chunks exist before applying structure
+        for required_cz in cz..=max_chunk_z {
+            if !self.has_chunk(cx, cy, required_cz) {
+                tracing::info!(target: "world", "Pre-generating chunk ({}, {}, {}) for structure '{}'",
+                    cx, cy, required_cz, structure.name);
+                self.ensure_chunk(cx, cy, required_cz);
+            }
+        }
         let wx0 = (cx as i32) * CHUNK_SIZE;
         let wy0 = (cy as i32) * CHUNK_SIZE;
-        let wz0 = (cz as i32) * CHUNK_SIZE_Z;
 
         let mut edits: usize = 0;
         for (li, layer) in structure.layers.iter().enumerate() {
@@ -617,6 +673,13 @@ impl World {
             self.set_generation_z(original_gen_z);
         }
         tile
+    }
+
+    /// Get a tile at a specific Z level without triggering world generation - for rendering only
+    /// Returns a default tile if the chunk doesn't exist
+    pub fn get_tile_at_z_no_worldgen(&self, x: i32, y: i32, z: i32) -> TileKind {
+        // No need to change gen_z since we're not generating anything
+        self.get_tile_cached_no_worldgen(x, y, z)
     }
 
     /// Viewport-safe prefetch: prefetches chunks without affecting world generation state

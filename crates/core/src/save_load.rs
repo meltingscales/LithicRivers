@@ -61,6 +61,11 @@ pub struct SaveData {
     pub feral_dogs: Vec<FeralDogSave>,
     pub dropped_items: Vec<DroppedItemSave>,
     pub viewport: ViewportSave,
+    pub chunk_generation_states:
+        std::collections::HashMap<(i64, i64, i64), crate::resources::ChunkGenerationState>,
+    pub structure_generation_states:
+        std::collections::HashMap<String, crate::resources::StructureGenerationState>,
+    pub pending_structures: Vec<crate::resources::PendingStructure>,
 }
 
 impl SaveData {
@@ -141,6 +146,9 @@ impl SaveData {
             feral_dogs,
             dropped_items,
             viewport,
+            chunk_generation_states: game.res.chunk_generation_states.clone(),
+            structure_generation_states: game.res.structure_generation_states.clone(),
+            pending_structures: game.res.pending_structures.clone(),
         })
     }
 
@@ -149,6 +157,11 @@ impl SaveData {
         game.res = Resources::new(self.seed);
         game.res.time.tick = self.gametick;
         game.res.world_state.world = self.world;
+
+        // Restore state tracking data
+        game.res.chunk_generation_states = self.chunk_generation_states;
+        game.res.structure_generation_states = self.structure_generation_states;
+        game.res.pending_structures = self.pending_structures;
 
         // Rebuild entity world
         game.world = World::new();
@@ -276,6 +289,9 @@ impl From<SaveDataJson> for SaveData {
             feral_dogs: j.feral_dogs,
             dropped_items: j.dropped_items,
             viewport: j.viewport,
+            chunk_generation_states: std::collections::HashMap::new(),
+            structure_generation_states: std::collections::HashMap::new(),
+            pending_structures: Vec::new(),
         }
     }
 }
