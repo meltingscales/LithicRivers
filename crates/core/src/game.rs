@@ -249,11 +249,17 @@ impl Game {
                 ));
             }
         }
-        Self {
+
+        let mut new_game = Self {
             world,
             res,
             scheduler: SystemScheduler::new(),
-        }
+        };
+
+        // spawn the starting dungeon at 30, 30, 0
+        new_game.load_quest_structure("first-quest-sapiencorp.lrstructure", 30, 30, 0);
+
+        return new_game;
     }
 
     /// Load a quest structure at a specific world position
@@ -412,7 +418,7 @@ impl Game {
         self.world.query::<&Player>().iter().next().map(|(e, _)| e)
     }
 
-    /// Get player position using ECS query  
+    /// Get player position using ECS query
     pub fn get_player_position(&self) -> Option<Position> {
         self.world
             .query::<(&Player, &Position)>()
