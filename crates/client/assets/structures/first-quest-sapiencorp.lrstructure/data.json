@@ -1,17 +1,15 @@
 {
   "blocks": {
-    "#": "plank_block",
+    "#": "rock",
     ".": "air",
     "D": "door",
-    "P": "scrap_electronics",
-    "S": "rock",
-    "T": "treasure",
-    "W": "plank_block"
+    "E": "enemy_spawn",
+    "T": "treasure"
   },
   "gen_biomes": "QUEST_ONLY",
   "gen_chance": 0.0,
   "y_layer_gen_range": [
     0,
-    1
+    10
   ]
 }
