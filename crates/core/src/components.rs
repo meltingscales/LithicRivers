@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use strum::EnumIter;
 
 use std::fmt;
 
@@ -160,7 +161,7 @@ pub struct BlocksMovement;
 // Items & Inventory Components
 // -----------------------------
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, Eq, PartialEq, Hash, EnumIter)]
 pub enum ItemKind {
     Log,
     WoodenPlank,
@@ -168,13 +169,8 @@ pub enum ItemKind {
     Stick,
     Nail,
     Stone,
-    IronOre,
     String,
-    StoneAxe,
-    StonePickaxe,
     Torch,
-    Rope,
-    IronBar,
     WoodenShavings,
     Leather,
     Meat,
@@ -190,13 +186,8 @@ pub fn itemkind_name(kind: ItemKind) -> &'static str {
         ItemKind::Stick => "Stick",
         ItemKind::Nail => "Nail",
         ItemKind::Stone => "Stone",
-        ItemKind::IronOre => "Iron Ore",
         ItemKind::String => "String",
-        ItemKind::StoneAxe => "Stone Axe",
-        ItemKind::StonePickaxe => "Stone Pickaxe",
         ItemKind::Torch => "Torch",
-        ItemKind::Rope => "Rope",
-        ItemKind::IronBar => "Iron Bar",
         ItemKind::WoodenShavings => "Wooden Shavings",
         ItemKind::Leather => "Leather",
         ItemKind::Meat => "Meat",
@@ -213,13 +204,8 @@ pub fn itemkind_sprite_name(kind: ItemKind) -> &'static str {
         ItemKind::Stick => "stick",
         ItemKind::Nail => "nail",
         ItemKind::Stone => "stone",
-        ItemKind::IronOre => "ironore",
         ItemKind::String => "string",
-        ItemKind::StoneAxe => "stoneaxe",
-        ItemKind::StonePickaxe => "stonepickaxe",
         ItemKind::Torch => "torch",
-        ItemKind::Rope => "rope",
-        ItemKind::IronBar => "ironbar",
         ItemKind::WoodenShavings => "wooden_shavings",
         ItemKind::Leather => "leather",
         ItemKind::Meat => "meat",
@@ -245,15 +231,11 @@ impl ItemStack {
 
 /// High-level kind for an entity. Prefer ECS composition for behavior; `EntityKind`
 /// is a convenient category for rendering defaults and simple logic tables.
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, Eq, PartialEq, Hash, EnumIter)]
 pub enum EntityKind {
     Player,
     Sheep,
     FeralDog,
-    Bot,
-    Turret,
-    Chest,
-    Rock,
     Corpse,
     QuestTesty,
 }

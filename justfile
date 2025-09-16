@@ -105,12 +105,12 @@ build: code-fmt util-voxelbuilder-import clean git-data copy-config-data
     {{cargoz_env}} build -p lithicrivers-client --bin lithicrivers-client {{build_flags}}
 
 # Build the project in release mode
-build-release: code-fmt util-voxelbuilder-import clean git-data copy-config-data build-demos-release
+build-release: code-fmt util-voxelbuilder-import-release clean git-data copy-config-data build-demos-release
     {{cargo_base}} --version
     {{cargoz_env}} build -p lithicrivers-core --release {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin lithicrivers-client --release {{build_flags}}
 
-build-release-no-clean: code-fmt util-voxelbuilder-import git-data copy-config-data build-demos-release
+build-release-no-clean: code-fmt util-voxelbuilder-import-release git-data copy-config-data build-demos-release
     {{cargo_base}} --version
     {{cargoz_env}} build -p lithicrivers-core --release {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin lithicrivers-client --release {{build_flags}}
@@ -129,12 +129,14 @@ clean-artifacts:
 stage-artifacts: clean-artifacts build build-demos stage-artifacts-legal
     cp -f target/debug/lithicrivers-client artifacts/
     cp -f target/debug/demo_* artifacts/
+    cp -f target/debug/utility_* artifacts/
     cp -f scripts/launcher/lithicrivers-launcher.sh artifacts/
 
 # Stage release artifacts
 stage-artifacts-release: clean-artifacts build-release build-demos-release stage-artifacts-legal
     cp -f target/release/lithicrivers-client artifacts/
     cp -f target/release/demo_* artifacts/
+    cp -f target/release/utility_* artifacts/
     cp -f scripts/launcher/lithicrivers-launcher.sh artifacts/
 
 ## Optional: build demo binaries (may require ratatui API updates)
@@ -149,6 +151,8 @@ build-demos: code-fmt util-voxelbuilder-import
     {{cargoz_env}} build -p lithicrivers-client --bin demo_dungeon_generation {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin demo_corpse_looting {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin demo_dialogue_interactions {{build_flags}}
+    {{cargoz_env}} build -p lithicrivers-client --bin utility_voxelbuilder_importer {{build_flags}}
+    {{cargoz_env}} build -p lithicrivers-client --bin utility_sprite_demo {{build_flags}}
 
 # Optional: build demo binaries (release)
 build-demos-release: code-fmt util-voxelbuilder-import
@@ -162,6 +166,8 @@ build-demos-release: code-fmt util-voxelbuilder-import
     {{cargoz_env}} build -p lithicrivers-client --bin demo_dungeon_generation --release {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin demo_corpse_looting --release {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin demo_dialogue_interactions --release {{build_flags}}
+    {{cargoz_env}} build -p lithicrivers-client --bin utility_sprite_demo --release {{build_flags}}
+    {{cargoz_env}} build -p lithicrivers-client --bin utility_voxelbuilder_importer --release {{build_flags}}
 
 # Run the client
 client: build
@@ -215,10 +221,18 @@ demo-corpse-looting:
 demo-dialogue-interactions:
     {{cargoz_env}} run -p lithicrivers-client --bin demo_dialogue_interactions
 
+# Run a sprite demo that showcases sprite animations and interactions
+util-sprite-demo:
+    {{cargoz_env}} run -p lithicrivers-client --bin utility_sprite_demo
+
 # Import Voxel Builder JSON files to LithicRivers .lrstructure format
 util-voxelbuilder-import:
     @echo "🧊 Running Voxel Builder Structure Importer..."
     {{cargoz_env}} run -p lithicrivers-client --bin utility_voxelbuilder_importer
+
+util-voxelbuilder-import-release:
+    @echo "🧊 Running Voxel Builder Structure Importer..."
+    {{cargoz_env}} run -p lithicrivers-client --bin utility_voxelbuilder_importer --release
 
 util-voxelbuilder-import-site:
     @echo "Visit https://nimadez.github.io/voxel-builder/ to create voxel models."

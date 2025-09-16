@@ -12,12 +12,12 @@ cpu_count := "$env:NUMBER_OF_PROCESSORS"
 
 git-data:
     powershell.exe scripts/git-data.ps1
-    
+
 copy-config-data:
     powershell.exe scripts/copy-config-data.ps1
 
 # remove artifacts/ folder but NOT cargo cache or target/ folder.
-clean: 
+clean:
     powershell.exe scripts/clean.ps1
 
 # Build in debug mode (default)
@@ -48,6 +48,8 @@ build-demos:
     cargo build -p lithicrivers-client --bin demo_beezzaroll_sprite_test
     cargo build -p lithicrivers-client --bin demo_portrait_sprite_test
     cargo build -p lithicrivers-client --bin demo_combat_chrono_trigger
+    cargo build -p lithicrivers-client --bin utility_sprite_demo
+    cargo build -p lithicrivers-client --bin utility_voxelbuilder_importer
 
 build-demos-release:
     cargo build -p lithicrivers-client --bin demo_inventory --release
@@ -57,6 +59,8 @@ build-demos-release:
     cargo build -p lithicrivers-client --bin demo_beezzaroll_sprite_test --release
     cargo build -p lithicrivers-client --bin demo_portrait_sprite_test --release
     cargo build -p lithicrivers-client --bin demo_combat_chrono_trigger --release
+    cargo build -p lithicrivers-client --bin utility_sprite_demo --release
+    cargo build -p lithicrivers-client --bin utility_voxelbuilder_importer --release
 
 # Run debug build
 client: build
