@@ -51,40 +51,12 @@ impl RecipeHandler {
                 result: ItemKind::WoodenShavings,
                 quantity: 1,
             },
-            // Stone Axe: 2x Stone + 1x Stick
-            Recipe {
-                name: "Stone Axe",
-                ingredients: &[(ItemKind::Stone, 2), (ItemKind::Stick, 1)],
-                result: ItemKind::StoneAxe,
-                quantity: 1,
-            },
-            // Stone Pickaxe: 3x Stone + 2x Stick
-            Recipe {
-                name: "Stone Pickaxe",
-                ingredients: &[(ItemKind::Stone, 3), (ItemKind::Stick, 2)],
-                result: ItemKind::StonePickaxe,
-                quantity: 1,
-            },
             // Torch: 1x Stick + 1x String
             Recipe {
                 name: "Torch",
                 ingredients: &[(ItemKind::Stick, 1), (ItemKind::String, 1)],
                 result: ItemKind::Torch,
                 quantity: 4,
-            },
-            // Rope: 3x String
-            Recipe {
-                name: "Rope",
-                ingredients: &[(ItemKind::String, 3)],
-                result: ItemKind::Rope,
-                quantity: 1,
-            },
-            // Iron Bar: 2x Iron Ore
-            Recipe {
-                name: "Iron Bar",
-                ingredients: &[(ItemKind::IronOre, 2)],
-                result: ItemKind::IronBar,
-                quantity: 1,
             },
         ];
 
