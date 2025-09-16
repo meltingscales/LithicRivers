@@ -398,7 +398,7 @@ fn sprite_block_for_scale(sd: &SpriteData, scale: Scale) -> &str {
     }
 }
 
-fn parse_color_string(s: &str) -> Option<Color> {
+pub fn parse_color_string(s: &str) -> Option<Color> {
     // Support #RRGGBB
     let s = s.trim();
     if let Some(hex) = s.strip_prefix('#') {

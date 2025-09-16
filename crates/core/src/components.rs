@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use strum::EnumIter;
 
 use std::fmt;
 
@@ -160,7 +161,7 @@ pub struct BlocksMovement;
 // Items & Inventory Components
 // -----------------------------
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, Eq, PartialEq, Hash, EnumIter)]
 pub enum ItemKind {
     Log,
     WoodenPlank,
@@ -245,7 +246,7 @@ impl ItemStack {
 
 /// High-level kind for an entity. Prefer ECS composition for behavior; `EntityKind`
 /// is a convenient category for rendering defaults and simple logic tables.
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, Eq, PartialEq, Hash, EnumIter)]
 pub enum EntityKind {
     Player,
     Sheep,
