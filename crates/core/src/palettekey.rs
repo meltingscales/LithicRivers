@@ -29,4 +29,6 @@ pub enum PaletteKey {
     Sheep,
     // special tile that gets replaced by existing worldgen
     ExistingWorldgen,
+    // special tile that spawns enemies
+    EnemySpawn,
 }

@@ -45,6 +45,14 @@ first quest and associated dungeons
 
 **Why This Matters**: Completes the survival loop - explore → combat → damage → repair → explore. Currently combat has no lasting consequences, making it feel disconnected from the crafting/resource systems.
 
+## ugly combat UI
+
+- the combat UI is kind of ugly
+  - way too much spacing, remove margins on buttons
+  - remove emojis
+  - remove "z" char
+  - rework it with Kaya
+
 ## launching
 
 - find out how x-terminal-emulator works on Ubuntu

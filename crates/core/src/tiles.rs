@@ -20,6 +20,9 @@ pub enum TileKind {
 
     //special tile that gets replaced by existing worldgen
     ExistingWorldgen,
+
+    // tiles for enemy spawns
+    EnemySpawn,
 }
 
 pub static TILE_KIND_STRS: &[&str] = &[
@@ -38,6 +41,7 @@ pub static TILE_KIND_STRS: &[&str] = &[
     "plank_block",
     "stairs",
     "existing_worldgen",
+    "enemy_spawn",
 ];
 
 impl TileKind {
@@ -58,6 +62,7 @@ impl TileKind {
             TileKind::PlankBlock => "plank_block",
             TileKind::Stairs => "stairs",
             TileKind::ExistingWorldgen => "existing_worldgen",
+            TileKind::EnemySpawn => "enemy_spawn",
         }
     }
     pub fn palette_key(self) -> PaletteKey {
@@ -77,6 +82,7 @@ impl TileKind {
             TileKind::PlankBlock => PaletteKey::PlankBlock,
             TileKind::Stairs => PaletteKey::Stairs,
             TileKind::ExistingWorldgen => PaletteKey::ExistingWorldgen,
+            TileKind::EnemySpawn => PaletteKey::EnemySpawn,
         }
     }
     pub fn from_str(s: &str) -> Option<TileKind> {
@@ -96,6 +102,7 @@ impl TileKind {
             "plank_block" => Some(TileKind::PlankBlock),
             "stairs" => Some(TileKind::Stairs),
             "existing_worldgen" => Some(TileKind::ExistingWorldgen),
+            "enemy_spawn" => Some(TileKind::EnemySpawn),
             _ => None,
         }
     }
@@ -117,6 +124,7 @@ impl TileKind {
             TileKind::PlankBlock => false,
             TileKind::Stairs => true, // Stairs are passable for movement but special for Z-level transitions
             TileKind::ExistingWorldgen => false,
+            TileKind::EnemySpawn => false,
         }
     }
 
@@ -154,6 +162,7 @@ mod tests {
             TileKind::Treasure,
             TileKind::PlankBlock,
             TileKind::ExistingWorldgen,
+            TileKind::EnemySpawn,
         ];
         for &k in &kinds {
             let s = serde_json::to_string(&k).expect("serialize");
