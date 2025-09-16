@@ -105,12 +105,12 @@ build: code-fmt util-voxelbuilder-import clean git-data copy-config-data
     {{cargoz_env}} build -p lithicrivers-client --bin lithicrivers-client {{build_flags}}
 
 # Build the project in release mode
-build-release: code-fmt util-voxelbuilder-import clean git-data copy-config-data build-demos-release
+build-release: code-fmt util-voxelbuilder-import-release clean git-data copy-config-data build-demos-release
     {{cargo_base}} --version
     {{cargoz_env}} build -p lithicrivers-core --release {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin lithicrivers-client --release {{build_flags}}
 
-build-release-no-clean: code-fmt util-voxelbuilder-import git-data copy-config-data build-demos-release
+build-release-no-clean: code-fmt util-voxelbuilder-import-release git-data copy-config-data build-demos-release
     {{cargo_base}} --version
     {{cargoz_env}} build -p lithicrivers-core --release {{build_flags}}
     {{cargoz_env}} build -p lithicrivers-client --bin lithicrivers-client --release {{build_flags}}
@@ -229,6 +229,10 @@ util-sprite-demo:
 util-voxelbuilder-import:
     @echo "🧊 Running Voxel Builder Structure Importer..."
     {{cargoz_env}} run -p lithicrivers-client --bin utility_voxelbuilder_importer
+
+util-voxelbuilder-import-release:
+    @echo "🧊 Running Voxel Builder Structure Importer..."
+    {{cargoz_env}} run -p lithicrivers-client --bin utility_voxelbuilder_importer --release
 
 util-voxelbuilder-import-site:
     @echo "Visit https://nimadez.github.io/voxel-builder/ to create voxel models."
