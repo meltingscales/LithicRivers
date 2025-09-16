@@ -24,6 +24,7 @@ fn create_hex_color_block_mapping(hex_color: &str) -> char {
         (144, 160, 179) => '#', // Gray-blue (90A0B3) -> stone
         (255, 255, 0) => 'T',   // Yellow (FFFF00) -> treasure
         (0, 255, 0) => 'D',     // Green (00FF00) -> door
+        (255, 128, 0) => '>',   // Orange (FF8000) -> stairs
         _ => panic!("{}", format!("Unknown color {}", hex_color)), // Default will panic
     }
 }
@@ -36,6 +37,7 @@ fn gen_data_json(height: usize) -> serde_json::Value {
             "E": "enemy_spawn",
             "T": "treasure",
             "D": "door",
+            ">": "stairs",
         },
         "gen_biomes": "QUEST_ONLY",
         "gen_chance": 0.0,

@@ -2,6 +2,7 @@
   "blocks": {
     "#": "rock",
     ".": "air",
+    ">": "stairs",
     "D": "door",
     "E": "enemy_spawn",
     "T": "treasure"
