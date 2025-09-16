@@ -1,7 +1,7 @@
 {
   "blocks": {
     "#": "rock",
-    ".": "air",
+    ".": "existing_worldgen",
     ">": "stairs",
     "D": "door",
     "E": "enemy_spawn",
