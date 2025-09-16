@@ -1,3 +1,7 @@
+# v0.8.4.1
+
+- ci crash fixed
+
 # v0.8.4.0
 
 - added utility to view sprites for structures, items, entities, and their moods
