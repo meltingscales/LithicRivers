@@ -222,7 +222,6 @@ impl SaveData {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct WorldJson {
     pub seed: u64,
-    pub gen_z: i32,
     pub chunks: Vec<((i64, i64, i64), TileChunk)>,
 }
 
@@ -245,7 +244,6 @@ impl From<TileWorld> for WorldJson {
         let chunks = w.chunks_to_vec();
         WorldJson {
             seed: w.seed,
-            gen_z: w.gen_z,
             chunks,
         }
     }
@@ -254,8 +252,6 @@ impl From<TileWorld> for WorldJson {
 impl From<WorldJson> for TileWorld {
     fn from(j: WorldJson) -> Self {
         let mut w = TileWorld::new(0, 0, j.seed);
-        // Set gen_z directly to avoid clearing inserted chunks
-        w.gen_z = j.gen_z;
         w.set_chunks_from_vec(j.chunks);
         w
     }
