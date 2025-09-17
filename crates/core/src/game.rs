@@ -267,6 +267,9 @@ impl Game {
                 z: 0,
             });
 
+        // Run one tick to generate structures around the player spawn
+        new_game.tick();
+
         return new_game;
     }
 
