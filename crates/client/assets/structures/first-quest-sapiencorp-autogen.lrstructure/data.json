@@ -2,7 +2,6 @@
   "blocks": {
     "#": "rock",
     ".": "existing_worldgen",
-    "-": "air",
     ">": "stairs",
     "D": "door",
     "E": "enemy_spawn",
@@ -10,5 +9,8 @@
   },
   "gen_biomes": "QUEST_ONLY",
   "gen_chance": 0.0,
-  "y_layer_gen_range": [0, 10]
+  "y_layer_gen_range": [
+    0,
+    10
+  ]
 }
