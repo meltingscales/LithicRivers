@@ -83,11 +83,13 @@ impl DialogueEngine {
     }
 
     /// Get NPC data by ID
+    #[allow(dead_code)]
     pub fn get_npc(&self, npc_id: usize) -> Option<&NPCData> {
         self.npcs.get(npc_id)
     }
 
     /// Get NPC data by name
+    #[allow(dead_code)]
     pub fn find_npc_by_name(&self, name: &str) -> Option<(usize, &NPCData)> {
         self.npcs
             .iter()
@@ -96,6 +98,7 @@ impl DialogueEngine {
     }
 
     /// Update NPC mood (mutable operation)
+    #[allow(dead_code)]
     pub fn update_npc_mood(&mut self, npc_id: usize, new_mood: NPCMood) -> bool {
         if let Some(npc) = self.npcs.get_mut(npc_id) {
             npc.current_mood = new_mood;
@@ -106,6 +109,7 @@ impl DialogueEngine {
     }
 
     /// Get all available NPCs
+    #[allow(dead_code)]
     pub fn get_all_npcs(&self) -> &[NPCData] {
         &self.npcs
     }

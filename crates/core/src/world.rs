@@ -11,7 +11,7 @@ use crate::structure::StructureDefinition;
 use crate::tiles::TileKind;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum BiomeBand {
+pub enum BiomeBand {
     Plains,
     Forest,
     Rocky,

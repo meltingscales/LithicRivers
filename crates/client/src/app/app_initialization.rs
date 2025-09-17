@@ -11,7 +11,7 @@ use std::time::Instant;
 impl App {
     pub fn new_with_seed(seed: u64) -> App {
         // Initialize game and sprite loader
-        let mut game = Game::new(seed);
+        let game = Game::new(seed);
         let mut sprite_loader = SpriteLoader::new(None);
         // Preload all assets to eliminate runtime I/O during rendering
         sprite_loader.preload_all();

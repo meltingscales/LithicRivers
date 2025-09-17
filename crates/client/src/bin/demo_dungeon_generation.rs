@@ -5,7 +5,6 @@ use std::{
     io,
 };
 
-const TARGET_FPS: u64 = 60;
 const NUM_CELLS: usize = 150;
 const SPAWN_RADIUS: f32 = 30.0;
 const ROOM_THRESHOLD: (u16, u16) = (7, 7); // min width, min height for rooms
@@ -26,21 +25,10 @@ impl Vec2 {
     fn distance(&self, other: &Vec2) -> f32 {
         ((self.x - other.x).powi(2) + (self.y - other.y).powi(2)).sqrt()
     }
-
-    fn normalize(&self) -> Self {
-        let len = (self.x.powi(2) + self.y.powi(2)).sqrt();
-        if len > 0.0 {
-            Self {
-                x: self.x / len,
-                y: self.y / len,
-            }
-        } else {
-            Self { x: 0.0, y: 0.0 }
-        }
-    }
 }
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct Cell {
     position: Vec2,
     size: Vec2,
@@ -357,15 +345,6 @@ impl App {
         }
     }
 
-    fn reset(&mut self) {
-        self.step = 0;
-        self.cells.clear();
-        self.rooms.clear();
-        self.edges.clear();
-        self.corridors.clear();
-        self.rng = SplitMix64::new(self.rng.next_u64()); // New seed
-    }
-
     fn get_bounds(&self) -> (f32, f32, f32, f32) {
         if self.cells.is_empty() {
             return (-50.0, -50.0, 50.0, 50.0);
@@ -451,6 +430,7 @@ fn main() -> io::Result<()> {
 
 // ANSI color codes
 const RESET: &str = "\x1b[0m";
+#[allow(dead_code)]
 const RED: &str = "\x1b[31m";
 const GREEN: &str = "\x1b[32m";
 const YELLOW: &str = "\x1b[33m";

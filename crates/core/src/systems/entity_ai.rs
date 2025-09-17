@@ -1,5 +1,5 @@
 use crate::components::{
-    BlocksMovement, Combat, Dead, DogAI, FeralDog, GameEntity, Player, Position, Sheep, Stunned,
+    BlocksMovement, Combat, Dead, DogAI, FeralDog, GameEntity, Position, Sheep, Stunned,
 };
 use crate::moves::{ActionQueue, CombatAction, QueuedAction};
 use crate::pathfinding::{DogBehavior, Pathfinder};

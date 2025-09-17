@@ -1,10 +1,8 @@
 use crate::component_access::{ComponentAccess, ComponentUpdate};
-use crate::components::{
-    BlocksMovement, DroppedItem, Inventory, ItemKind, Player, Position, SpriteRef,
-};
+use crate::components::{BlocksMovement, DroppedItem, Inventory, ItemKind, Position, SpriteRef};
 use crate::intent::PlayerAction;
 use crate::resources::Resources;
-use crate::systems::ecs_utils::{get_player_entity, get_player_position, is_player_entity};
+use crate::systems::ecs_utils::get_player_entity;
 use hecs::World;
 use tracing::info;
 
@@ -69,7 +67,7 @@ pub fn move_player_system(world: &mut World, res: &mut Resources) {
                     // Note: interaction_system function is not included as it's not directly depended upon
                     // by the move_player_system logic flow
                 }
-                PlayerAction::InteractWith { target_id } => {
+                PlayerAction::InteractWith { target_id: _ } => {
                     // Handle interaction with specific target
                     // Note: interaction_with_target_system function is not included as it's not directly depended upon
                     // by the move_player_system logic flow

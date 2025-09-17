@@ -14,7 +14,7 @@ rustc_bin := `which rustc 2>/dev/null || echo rustc`
 
 # Common flags/env
 lockfile_flag := "-Z next-lockfile-bump"
-rustflags_common := "-Z unstable-options"
+rustflags_common := "-Z unstable-options -D warnings"
 bootstrap := "1"
 
 # Cargo helpers

@@ -1,7 +1,7 @@
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Style, Stylize},
-    widgets::{Block, Borders, Gauge, Paragraph, Wrap},
+    widgets::{Block, Borders, Gauge, Paragraph},
     Frame,
 };
 
@@ -519,7 +519,7 @@ fn render_moves(
                 Style::default().fg(Color::White)
             };
 
-            let border_style = if !can_use {
+            let _border_style = if !can_use {
                 Style::default().fg(Color::DarkGray)
             } else if is_selected {
                 Style::default().fg(Color::Green)

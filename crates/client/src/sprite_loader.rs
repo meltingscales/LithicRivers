@@ -4,7 +4,6 @@ use ratatui::prelude::Color;
 use serde::Deserialize;
 use std::borrow::Cow;
 use std::collections::HashMap;
-use std::fmt;
 use std::path::{Path, PathBuf};
 
 use rust_embed::RustEmbed;
@@ -20,6 +19,7 @@ pub enum Scale {
     Large,  // 3x3
 }
 
+#[allow(dead_code)]
 impl Scale {
     pub fn as_u32(self) -> u32 {
         match self {
@@ -42,6 +42,7 @@ impl From<u32> for Scale {
 }
 
 // Multi-scale: return the full sprite block string (may be multi-line) and color for a SpriteRef
+#[allow(dead_code)]
 pub fn sprite_block_for_spriteref(
     loader: &mut SpriteLoader,
     sr: &lithicrivers_core::components::SpriteRef,
@@ -63,6 +64,7 @@ pub struct SpriteMetadata {
     pub name: String,
     pub color: String,
     pub description: String,
+    #[allow(dead_code)]
     pub scales: Option<Vec<u32>>, // Not strictly needed for loading, but present in JSON
     #[serde(default)]
     pub has_emotion_states: bool, // For NPCs that need mood-specific portraits
@@ -104,6 +106,7 @@ pub struct SpriteData {
 }
 
 pub struct SpriteLoader {
+    #[allow(dead_code)]
     pub data_path: PathBuf,
     sprite_cache: HashMap<String, SpriteData>,
 }
@@ -119,7 +122,6 @@ impl SpriteLoader {
             EntityKind::FeralDog => ("entities".to_string(), "feral_dog".to_string()),
             EntityKind::Corpse => ("entities".to_string(), "corpse".to_string()),
             EntityKind::QuestTesty => ("entities".to_string(), "quest_testy".to_string()),
-            _ => panic!("Unknown entity kind: {:?}", kind),
         }
     }
     pub fn new(data_path: Option<&Path>) -> Self {

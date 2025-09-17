@@ -26,6 +26,7 @@ enum NPCMood {
 }
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct DialogueChoice {
     text: String,
     leads_to: Option<usize>, // Index of next dialogue node, None = end conversation
@@ -35,6 +36,7 @@ struct DialogueChoice {
 }
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct DialogueNode {
     id: usize,
     speaker: String,
@@ -46,6 +48,7 @@ struct DialogueNode {
 }
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct NPC {
     name: String,
     portrait: String, // ASCII art portrait
@@ -58,6 +61,7 @@ struct NPC {
 }
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct Player {
     name: String,
     inventory: Vec<String>,

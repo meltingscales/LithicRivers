@@ -319,7 +319,6 @@ pub fn load_game_msgpack<P: AsRef<Path>>(game: &mut crate::Game, path: P) -> Res
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tiles::TileKind;
 
     fn simulate_full_actions(game: &mut crate::Game) {
         // Move player to a non-origin chunk to avoid structure asset dependency in tests
