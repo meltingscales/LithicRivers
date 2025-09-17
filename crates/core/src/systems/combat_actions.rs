@@ -1,7 +1,7 @@
 use crate::component_access::{ComponentAccess, DamageResult};
 use crate::components::{
-    BattleDelay, Combat, Dead, Energy, EntityKind, FeralDog, GameEntity, Inventory, Player,
-    Position, SpriteRef, Stunned,
+    BattleDelay, Combat, Dead, Energy, EntityKind, FeralDog, GameEntity, Inventory, Position,
+    SpriteRef, Stunned,
 };
 use crate::moves::{ActionQueue, CombatAction, Move, MoveType, QueuedAction};
 use crate::resources::Resources;
@@ -244,31 +244,37 @@ pub fn execute_player_move(
                 };
                 let splash_radius = move_data
                     .splash_radius
-                    .unwrap_or(panic!("Fireball missing splash radius"));
+                    .unwrap_or_else(|| panic!("Fireball missing splash radius"));
                 if splash_radius > 0 {
-                    for (entity, (pos, combat, _)) in
-                        world.query::<(&Position, &Combat, &GameEntity)>().iter()
-                    {
-                        if entity != target && entity != player_entity && combat.triggered {
-                            // Check if enemy is dead (skip dead enemies)
-                            if world.get::<&Dead>(entity).is_ok() {
-                                continue;
-                            }
+                    // Collect entities that should take splash damage first to avoid borrowing issues
+                    let splash_targets: Vec<hecs::Entity> = world
+                        .query::<(&Position, &Combat, &GameEntity)>()
+                        .iter()
+                        .filter_map(|(entity, (pos, combat, _))| {
+                            if entity != target && entity != player_entity && combat.triggered {
+                                // Check if enemy is dead (skip dead enemies)
+                                if world.get::<&Dead>(entity).is_ok() {
+                                    return None;
+                                }
 
-                            let dx = pos.x - target_xyz.x;
-                            let dy = pos.y - target_xyz.y;
-                            let distance_sq = dx * dx + dy * dy;
+                                let dx = pos.x - target_xyz.x;
+                                let dy = pos.y - target_xyz.y;
+                                let distance_sq = dx * dx + dy * dy;
 
-                            if distance_sq <= (splash_radius * splash_radius) as i32 {
-                                apply_damage(
-                                    world,
-                                    res,
-                                    entity,
-                                    move_data.damage,
-                                    "fireball splash",
-                                );
+                                if distance_sq <= (splash_radius * splash_radius) as i32 {
+                                    Some(entity)
+                                } else {
+                                    None
+                                }
+                            } else {
+                                None
                             }
-                        }
+                        })
+                        .collect();
+
+                    // Now apply damage to collected targets
+                    for entity in splash_targets {
+                        apply_damage(world, res, entity, move_data.damage, "fireball splash");
                     }
                 }
             }

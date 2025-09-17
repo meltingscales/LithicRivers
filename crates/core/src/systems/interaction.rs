@@ -138,10 +138,10 @@ pub fn interaction_system(world: &mut World, res: &mut Resources, player_entity:
 
 /// Handle interaction with a specific target by ID
 pub fn interaction_with_target_system(
-    world: &mut World,
+    _world: &mut World,
     res: &mut Resources,
-    player_entity: hecs::Entity,
-    target_id: Option<usize>,
+    _player_entity: hecs::Entity,
+    _target_id: Option<usize>,
 ) {
     // TODO: Implement specific target interaction
     // This would be used when the player selects from the interaction menu
@@ -256,7 +256,7 @@ fn simulate_dialogue_interaction(
     world: &mut World,
     res: &mut Resources,
     npc_entity: hecs::Entity,
-    npc_name: &str,
+    _npc_name: &str,
 ) {
     use crate::dialogue::DialogueTree;
 

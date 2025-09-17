@@ -24,7 +24,7 @@ fn get_max_credits_scroll(app: &App) -> u16 {
 }
 
 /// Calculate the maximum scroll value for the help panel
-fn get_max_help_scroll(app: &App) -> u16 {
+fn get_max_help_scroll(_app: &App) -> u16 {
     // For help panel, we need to count the dynamically generated lines
     // This is an approximation based on the keybinds structure
     let base_lines = 15; // Movement diagram and basic text
@@ -78,7 +78,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
 
     // Special debug for F key
     if key == KeyCode::Char('f') || key == KeyCode::Char('F') {
-        tracing::info!(target: "game", "F key detected! Current tab: {:?}, splash state: {:?}", 
+        tracing::info!(target: "game", "F key detected! Current tab: {:?}, splash state: {:?}",
             app.ui.current_tab, app.splash.state);
     }
 
@@ -282,7 +282,6 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
                 return Ok(());
             }
 
-            use crate::app_state::BuildMode;
             app.panels.build.mode = app.panels.build.mode.next();
             app.core
                 .game
@@ -1083,7 +1082,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
     if let CombatUiState::Active {
         current_move,
         current_enemy,
-        enemy_timers,
+        enemy_timers: _,
         move_scroll_offset,
     } = &mut app.combat
     {
@@ -1772,140 +1771,6 @@ fn execute_interaction_action(app: &mut App, action: &crate::app_state::Interact
                 .res
                 .log(format!("Started conversation with {}", npc_name));
         }
-    }
-}
-
-/// Handle NPC interaction - find adjacent NPCs and initiate dialogue
-fn handle_npc_interaction(app: &mut App) {
-    use crate::app_state::NPCInteractionState;
-    use lithicrivers_core::components::{Dialogue, Position};
-
-    // Get player position
-    let player_pos = if let Some(player_entity) = app.core.game.get_player_entity() {
-        if let Ok(pos) = app.core.game.world.get::<&Position>(player_entity) {
-            *pos
-        } else {
-            app.core.game.res.log("Cannot find player position");
-            return;
-        }
-    } else {
-        app.core.game.res.log("Cannot find player entity");
-        return;
-    };
-
-    // Find all adjacent NPCs (3x3 grid centered on player)
-    let mut adjacent_npcs = Vec::new();
-    for (entity, (pos, dialogue)) in app.core.game.world.query::<(&Position, &Dialogue)>().iter() {
-        let dx = (pos.x - player_pos.x).abs();
-        let dy = (pos.y - player_pos.y).abs();
-        let dz = (pos.z - player_pos.z).abs();
-
-        if dx <= 1 && dy <= 1 && dz == 0 {
-            adjacent_npcs.push((entity, dialogue.name.clone()));
-            app.core.game.res.log(format!(
-                "Found NPC '{}' at ({}, {}, {})",
-                dialogue.name, pos.x, pos.y, pos.z
-            ));
-        }
-    }
-
-    if adjacent_npcs.is_empty() {
-        app.core
-            .game
-            .res
-            .log("No NPCs nearby to talk to.".to_string());
-        return;
-    } else if adjacent_npcs.len() == 1 {
-        // Single NPC - start dialogue directly
-        let (npc_entity, npc_name) = adjacent_npcs[0].clone();
-        // Start conversation using the new dialogue engine
-        if let Some(conversation) = app.panels.dialogue_engine.start_conversation(0) {
-            app.panels.npc_interaction = NPCInteractionState::InDialogue {
-                npc_entity,
-                conversation,
-                selected_choice: 0,
-            };
-        } else {
-            app.core
-                .game
-                .res
-                .log("Failed to start conversation - no NPC available");
-        }
-        app.core
-            .game
-            .res
-            .log(format!("Started conversation with {}", npc_name));
-    } else {
-        // Multiple NPCs - show selection modal
-        app.panels.npc_interaction = NPCInteractionState::SelectingNPC {
-            adjacent_npcs,
-            selected_npc: 0,
-        };
-        app.core.game.res.log("Choose which NPC to talk to");
-    }
-}
-
-/// Handle corpse interaction - find adjacent corpses and initiate looting
-fn handle_corpse_interaction(app: &mut App) {
-    use crate::app_state::CorpseLootingState;
-    use lithicrivers_core::components::{EntityKind, Inventory as InvComp, Position};
-
-    // Get player position
-    let player_pos = if let Some(player_entity) = app.core.game.get_player_entity() {
-        if let Ok(pos) = app.core.game.world.get::<&Position>(player_entity) {
-            *pos
-        } else {
-            app.core.game.res.log("Cannot find player position");
-            return;
-        }
-    } else {
-        app.core.game.res.log("Cannot find player entity");
-        return;
-    };
-
-    // Find all adjacent corpses (3x3 grid centered on player)
-    let mut adjacent_corpses = Vec::new();
-    for (entity, (pos, entity_kind, _inv)) in app
-        .core
-        .game
-        .world
-        .query::<(&Position, &EntityKind, &InvComp)>()
-        .iter()
-    {
-        if *entity_kind == EntityKind::Corpse {
-            let dx = (pos.x - player_pos.x).abs();
-            let dy = (pos.y - player_pos.y).abs();
-            let dz = (pos.z - player_pos.z).abs();
-
-            // Check if within 3x3 grid on same Z level
-            if dx <= 1 && dy <= 1 && dz == 0 {
-                adjacent_corpses.push(entity);
-            }
-        }
-    }
-
-    if adjacent_corpses.is_empty() {
-        app.core.game.res.log("No corpses nearby to loot");
-        return;
-    }
-
-    if adjacent_corpses.len() == 1 {
-        // Single corpse - go directly to looting
-        let entity = adjacent_corpses[0];
-        app.panels.corpse_looting = CorpseLootingState::LootingCorpse {
-            entity,
-            selected_loot_item: 0,
-            selected_player_item: 0,
-            loot_panel_focus: true,
-        };
-        app.core.game.res.log("Started looting corpse");
-    } else {
-        // Multiple corpses - show selection modal
-        app.panels.corpse_looting = CorpseLootingState::SelectingCorpse {
-            adjacent_entities: adjacent_corpses,
-            selected_corpse: 0,
-        };
-        app.core.game.res.log("Choose which corpse to loot");
     }
 }
 

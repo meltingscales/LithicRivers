@@ -1,5 +1,6 @@
-use crate::app_state::{DialogueNode, NPCMood};
-use crate::dialogue_engine::{ConversationState, DialogueEngine};
+use crate::app_state::NPCMood;
+use crate::dialogue_engine::ConversationState;
+use crate::dialogue_engine::DialogueEngine;
 use crate::sprite_loader::SpriteLoader;
 use lithicrivers_core::components::{NPCMood as CoreNPCMood, SpriteRef};
 use ratatui::style::Color;
@@ -120,6 +121,7 @@ impl DialoguePresenter {
     }
 
     /// Get mood-based color for UI styling
+    #[allow(dead_code)]
     pub fn get_mood_color(mood: NPCMood) -> Color {
         match mood {
             NPCMood::Friendly => Color::Green,
@@ -132,6 +134,7 @@ impl DialoguePresenter {
     }
 
     /// Get mood prefix for text display
+    #[allow(dead_code)]
     pub fn get_mood_prefix(mood: NPCMood) -> &'static str {
         match mood {
             NPCMood::Friendly => "> ",
@@ -140,60 +143,6 @@ impl DialoguePresenter {
             NPCMood::Sad => "~ ",
             NPCMood::Excited => "* ",
             NPCMood::Mysterious => "? ",
-        }
-    }
-
-    /// Generate ASCII portrait based on NPC data and current mood
-    pub fn generate_portrait(npc_name: &str, mood: NPCMood) -> String {
-        let eyes = Self::get_mood_eyes(mood);
-        let mouth = Self::get_mood_face(mood);
-        let symbol = Self::get_npc_symbol(npc_name);
-
-        format!(
-            "    ╔═══════════╗
-    ║  {}  ║
-    ║     {}     ║
-    ║   ┌───┐   ║
-    ║   │ {} │   ║
-    ║   └───┘   ║
-    ╚═══════════╝",
-            eyes, mouth, symbol
-        )
-    }
-
-    /// Get eyes based on mood
-    fn get_mood_eyes(mood: NPCMood) -> &'static str {
-        match mood {
-            NPCMood::Friendly => "◉     ◉",
-            NPCMood::Neutral => "○     ○",
-            NPCMood::Hostile => "▲     ▲",
-            NPCMood::Sad => "◌     ◌",
-            NPCMood::Excited => "★     ★",
-            NPCMood::Mysterious => "◇     ◇",
-        }
-    }
-
-    /// Get mouth/expression based on mood
-    fn get_mood_face(mood: NPCMood) -> &'static str {
-        match mood {
-            NPCMood::Friendly => "◡",
-            NPCMood::Neutral => "─",
-            NPCMood::Hostile => "▼",
-            NPCMood::Sad => "︶",
-            NPCMood::Excited => "◠",
-            NPCMood::Mysterious => "~",
-        }
-    }
-
-    /// Get symbol based on NPC type/name
-    fn get_npc_symbol(npc_name: &str) -> &'static str {
-        match npc_name {
-            name if name.contains("Merchant") => "$",
-            name if name.contains("Knight") || name.contains("Captain") => ">",
-            name if name.contains("Oracle") || name.contains("Mysterious") => "?",
-            name if name.contains("Innkeeper") => "@",
-            name if name.contains("Bandit") => "X",
-            _ => "*",
         }
     }
 }
@@ -214,49 +163,5 @@ mod tests {
         assert!(text.contains("Greetings, brave traveler"));
         assert!(text.contains("> 1. Tell me about these mysteries")); // First choice selected
         assert!(text.contains("  2. I'm looking for adventure")); // Other choices not selected
-    }
-
-    #[test]
-    fn test_mood_colors() {
-        assert_eq!(
-            DialoguePresenter::get_mood_color(NPCMood::Friendly),
-            Color::Green
-        );
-        assert_eq!(
-            DialoguePresenter::get_mood_color(NPCMood::Hostile),
-            Color::Red
-        );
-        assert_eq!(
-            DialoguePresenter::get_mood_color(NPCMood::Neutral),
-            Color::White
-        );
-    }
-
-    #[test]
-    fn test_mood_prefixes() {
-        assert_eq!(DialoguePresenter::get_mood_prefix(NPCMood::Friendly), "> ");
-        assert_eq!(DialoguePresenter::get_mood_prefix(NPCMood::Hostile), "! ");
-        assert_eq!(DialoguePresenter::get_mood_prefix(NPCMood::Excited), "* ");
-    }
-
-    #[test]
-    fn test_portrait_generation() {
-        let portrait = DialoguePresenter::generate_portrait("Merchant Aldric", NPCMood::Friendly);
-
-        assert!(portrait.contains("◉     ◉")); // Friendly eyes
-        assert!(portrait.contains("◡")); // Friendly mouth
-        assert!(portrait.contains("$")); // Merchant symbol
-    }
-
-    #[test]
-    fn test_npc_symbols() {
-        assert_eq!(DialoguePresenter::get_npc_symbol("Merchant Aldric"), "$");
-        assert_eq!(
-            DialoguePresenter::get_npc_symbol("Knight Captain Elena"),
-            ">"
-        );
-        assert_eq!(DialoguePresenter::get_npc_symbol("Mysterious Oracle"), "?");
-        assert_eq!(DialoguePresenter::get_npc_symbol("Innkeeper Marta"), "@");
-        assert_eq!(DialoguePresenter::get_npc_symbol("Unknown Person"), "*");
     }
 }

@@ -132,7 +132,6 @@ struct VoxelBuilderVoxel {
     y: i32,
     z: i32,
     color: String, // Hex color like "9113F5"
-    material: u8,
 }
 
 #[derive(Debug)]
@@ -154,15 +153,8 @@ fn parse_voxel_string(
             let y = parts[1].parse::<i32>()?;
             let z = parts[2].parse::<i32>()?;
             let color = parts[3].to_string();
-            let material = parts[4].parse::<u8>()?;
 
-            voxels.push(VoxelBuilderVoxel {
-                x,
-                y,
-                z,
-                color,
-                material,
-            });
+            voxels.push(VoxelBuilderVoxel { x, y, z, color });
         }
     }
 

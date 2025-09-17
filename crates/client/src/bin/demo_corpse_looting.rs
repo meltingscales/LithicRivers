@@ -28,17 +28,6 @@ impl Item {
             Item::Torch => "Torch",
         }
     }
-
-    fn symbol(&self) -> char {
-        match self {
-            Item::Leather => 'L',
-            Item::Meat => 'M',
-            Item::Wood => 'W',
-            Item::Stone => 'S',
-            Item::String => 's',
-            Item::Torch => 'T',
-        }
-    }
 }
 
 #[derive(Debug, Clone)]

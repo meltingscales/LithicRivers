@@ -1,5 +1,3 @@
-use ratatui::layout::Rect;
-
 const CORRUPTION_RATE: f32 = 0.0;
 const CORRUPTION_SEED: u64 = 42;
 

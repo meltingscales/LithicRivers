@@ -61,7 +61,6 @@ enum EffectType {
 struct ActiveEffect {
     effect: Effect,
     remaining_ticks: u32,
-    target_index: usize,
 }
 
 #[derive(Debug, Clone)]
@@ -136,21 +135,6 @@ impl Player {
         }
     }
 
-    fn use_move(&mut self, move_index: usize) -> Option<Move> {
-        // Check if we can use the move first
-        if !self.can_use_move(move_index) {
-            return None;
-        }
-
-        // Now we can safely get mutable access since we've done all immutable checks
-        if let Some(mv) = self.moves.get_mut(move_index) {
-            self.mana = self.mana.saturating_sub(mv.mana_cost);
-            mv.current_cooldown = mv.cooldown;
-            return Some(mv.clone());
-        }
-        None
-    }
-
     fn regen(&mut self) {
         self.mana = (self.mana + MANA_REGEN).min(self.max_mana);
         self.health = self.health.min(self.max_health);
@@ -179,16 +163,11 @@ struct Enemy {
 }
 
 impl Enemy {
-    fn is_stunned(&self) -> bool {
-        self.is_stunned
-    }
-
-    fn add_effect(&mut self, effect: Effect, target_index: usize) {
+    fn add_effect(&mut self, effect: Effect) {
         let is_stun = effect.effect_type == EffectType::Stun;
         self.effects.push(ActiveEffect {
             effect,
             remaining_ticks: self.effects.last().map_or(0, |e| e.effect.duration),
-            target_index,
         });
 
         if is_stun {
@@ -236,10 +215,6 @@ impl Enemy {
     fn render_portrait(&self, width: usize, height: usize) -> String {
         let (cx, cy, scale) = self.seed;
         render_mandelbrot(width, height, cx, cy, scale)
-    }
-
-    fn health_percentage(&self) -> u16 {
-        ((self.health as f32 / self.max_health as f32) * 100.0) as u16
     }
 }
 
@@ -444,7 +419,7 @@ impl App {
                                     if let Some(enemy) = self.enemies.get_mut(enemy_idx) {
                                         enemy.health = enemy.health.saturating_sub(mv.damage);
                                         if let Some(effect) = &mv.effect {
-                                            enemy.add_effect(effect.clone(), enemy_idx);
+                                            enemy.add_effect(effect.clone());
                                         }
                                         Some(format!(
                                             "Tackle hits {} for {} damage and stuns!",

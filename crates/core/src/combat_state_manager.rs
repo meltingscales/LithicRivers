@@ -156,7 +156,7 @@ impl CombatStateManager {
 
     /// Update combat participants - ensure all adjacent enemies have triggered = true
     /// This is called every tick while in combat to handle enemies joining mid-combat
-    fn update_combat_participants(world: &mut World, res: &mut Resources) {
+    fn update_combat_participants(world: &mut World, _res: &mut Resources) {
         // Get player position for adjacency checks
         let player_pos = match get_player_position(world) {
             Some(pos) => pos,

@@ -1,5 +1,5 @@
 use crossterm::{
-    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEventKind},
+    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyEventKind},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
@@ -33,10 +33,6 @@ struct EmbeddedAssets;
 
 use crate::app_state::*;
 use crate::dialogue_presenter::DialoguePresenter;
-use lithicrivers_core::{
-    components::{BattleDelay, Combat, GameEntity, Position},
-    config::ConfigManager,
-};
 mod audio;
 mod rendering_helpers;
 mod sprite_constants;
@@ -116,9 +112,10 @@ impl MenuTab {
 struct App {
     /// Core game engine systems
     pub core: CoreState,
-    /// UI framework state  
+    /// UI framework state
     pub ui: UiState,
     /// Audio system
+    #[allow(dead_code)]
     pub audio: AudioState,
     /// Logging configuration
     pub logging: LoggingState,
@@ -344,7 +341,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<(), 
 
         // Auto-advance ticks when combat is active (1 tick per second)
         if app.combat.is_active() {
-            let TICK_INTERVAL: std::time::Duration = std::time::Duration::from_millis(
+            let tick_interval: std::time::Duration = std::time::Duration::from_millis(
                 app.core
                     .game
                     .res
@@ -370,7 +367,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<(), 
                     false
                 }
                 Some(last_time) => {
-                    if current_time.duration_since(last_time) >= TICK_INTERVAL {
+                    if current_time.duration_since(last_time) >= tick_interval {
                         app.last_combat_tick = Some(current_time);
                         true
                     } else {
@@ -1097,7 +1094,7 @@ fn render_npc_interaction_modals(f: &mut Frame, app: &mut App, viewport_area: Re
         }
         NPCInteractionState::InDialogue {
             npc_entity,
-            conversation,
+            conversation: _,
             selected_choice,
         } => {
             render_npc_dialogue_modal(f, app, npc_entity, selected_choice, viewport_area);
@@ -1466,13 +1463,12 @@ fn render_multi_action_selection_modal(f: &mut Frame, app: &mut App) {
 /// Render the action selection modal
 fn render_action_selection_modal(
     f: &mut Frame,
-    app: &mut App,
+    _app: &mut App,
     available_actions: &[crate::app_state::InteractionType],
     selected_action: usize,
 ) {
     use ratatui::{
         style::Modifier,
-        text::{Line, Span},
         widgets::{Clear, List, ListItem},
     };
 

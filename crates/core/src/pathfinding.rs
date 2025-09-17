@@ -443,9 +443,6 @@ mod tests {
                 _ => unreachable!(),
             };
 
-            // Calculate optimal Manhattan distance
-            let optimal_distance = (goal.x - start.x).abs() + (goal.y - start.y).abs();
-
             if let Some(next_step) =
                 pathfinder.find_next_step(start, goal, &is_passable, world_seed, tick)
             {

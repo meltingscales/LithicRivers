@@ -11,6 +11,7 @@ use std::time::Instant;
 
 /// Comprehensive dialogue system types from demo integration
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[allow(dead_code)]
 pub enum DialogueType {
     Linear,    // Simple linear conversation
     Branching, // Player choices affect dialogue
