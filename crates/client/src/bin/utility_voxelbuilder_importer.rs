@@ -218,9 +218,6 @@ fn create_structure_files(
         layers.push(layer_string);
     }
 
-    // reverse layers
-    layers.reverse();
-
     // Create the structure files
     let shape_layers = layers.join("\n~~~~~\n");
     let shape_path = format!("{}/shape_layers.txt", output_dir);
