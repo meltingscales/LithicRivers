@@ -758,37 +758,22 @@ mod tests {
         // Create a new game with a test seed
         let mut game = Game::new(12345);
 
-        // Verify that a structure was queued during initialization
-        assert_eq!(game.res.pending_structures.len(), 1);
-        assert_eq!(
-            game.res.pending_structures[0].name,
-            "first-quest-sapiencorp.lrstructure"
-        );
-        assert_eq!(game.res.pending_structures[0].x, 30);
-        assert_eq!(game.res.pending_structures[0].y, 30);
-        assert_eq!(game.res.pending_structures[0].z, 0);
+        // With the initial tick during game creation, structures near the player spawn
+        // are now loaded immediately. The structure should be processed and removed from queue.
+        assert_eq!(game.res.pending_structures.len(), 0);
 
-        // The structure should not be loaded yet (no chunks generated at that location)
+        // The chunk should exist due to the initial tick processing
         let chunk_x = 30_i64.div_euclid(crate::world::CHUNK_SIZE as i64);
         let chunk_y = 30_i64.div_euclid(crate::world::CHUNK_SIZE as i64);
         let chunk_z = 0_i64.div_euclid(crate::world::CHUNK_SIZE_Z as i64);
 
-        // Note: The chunk might already exist due to player spawn area generation
-        // The important thing is that the structure is queued and gets loaded when needed
-
-        // Load structures for the chunk containing our queued structure
-        game.load_pending_structures_for_chunk(chunk_x, chunk_y, chunk_z);
-
-        // After loading, the pending structure should be removed from the queue
-        assert_eq!(game.res.pending_structures.len(), 0);
-
-        // Now ensure the chunk exists (this should work without infinite loops)
+        // Verify the chunk now exists (this should work without infinite loops)
         game.res
             .world_state
             .world
             .ensure_chunk(chunk_x, chunk_y, chunk_z);
 
-        // Verify the chunk now exists
+        // Verify the chunk exists
         assert!(game
             .res
             .world_state
@@ -800,40 +785,36 @@ mod tests {
     fn test_structure_not_loaded_for_different_chunk() {
         let mut game = Game::new(12345);
 
-        // Verify structure is queued
-        assert_eq!(game.res.pending_structures.len(), 1);
+        // With the initial tick, the structure near player spawn is already loaded
+        assert_eq!(game.res.pending_structures.len(), 0);
 
-        // Try loading structures for a chunk far away from the queued structure
+        // Try loading structures for a chunk far away - this should not cause issues
         let far_chunk_x = 100_i64;
         let far_chunk_y = 100_i64;
         let far_chunk_z = 10_i64;
 
         game.load_pending_structures_for_chunk(far_chunk_x, far_chunk_y, far_chunk_z);
 
-        // The structure should still be in the queue since it's not in this chunk
-        assert_eq!(game.res.pending_structures.len(), 1);
-        assert_eq!(
-            game.res.pending_structures[0].name,
-            "first-quest-sapiencorp.lrstructure"
-        );
+        // The queue should still be empty since no structures are queued for that chunk
+        assert_eq!(game.res.pending_structures.len(), 0);
     }
 
     #[test]
     fn test_ensure_chunk_with_pending_structures() {
         let mut game = Game::new(12345);
 
-        // Get the chunk coordinates for our queued structure
+        // Get the chunk coordinates for our structure location
         let chunk_x = 30_i64.div_euclid(crate::world::CHUNK_SIZE as i64);
         let chunk_y = 30_i64.div_euclid(crate::world::CHUNK_SIZE as i64);
         let chunk_z = 0_i64.div_euclid(crate::world::CHUNK_SIZE_Z as i64);
 
-        // Verify structure is queued
-        assert_eq!(game.res.pending_structures.len(), 1);
+        // With the initial tick, structure is already loaded and queue is empty
+        assert_eq!(game.res.pending_structures.len(), 0);
 
-        // Use the combined method that checks pending structures and ensures chunk
+        // Use the combined method - this should work without issues
         game.ensure_chunk_with_pending_structures(chunk_x, chunk_y, chunk_z);
 
-        // Both the structure should be loaded (removed from queue) and chunk should exist
+        // The queue should remain empty and chunk should exist
         assert_eq!(game.res.pending_structures.len(), 0);
         assert!(game
             .res
