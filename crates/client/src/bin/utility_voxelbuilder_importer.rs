@@ -54,7 +54,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Define input -> output mappings
     let input_output_map: Vec<(&str, &str)> = vec![(
         "crates/client/assets/voxelbuilder/first-quest-sapiencorp.voxelbuilder.json",
-        "crates/client/assets/structures/first-quest-sapiencorp.lrstructure",
+        "crates/client/assets/structures/first-quest-sapiencorp-autogen.lrstructure",
     )];
 
     if input_output_map.is_empty() {
@@ -217,6 +217,9 @@ fn create_structure_files(
 
         layers.push(layer_string);
     }
+
+    // reverse layers
+    layers.reverse();
 
     // Create the structure files
     let shape_layers = layers.join("\n~~~~~\n");
