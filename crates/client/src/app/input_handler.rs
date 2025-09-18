@@ -1693,6 +1693,56 @@ fn handle_interaction(app: &mut App) {
         }
     }
 
+    // Find nearby doors (check adjacent tiles in the world map)
+    use lithicrivers_core::tile_registry::TileKind;
+    let adjacent_positions = [
+        Position {
+            x: player_pos.x - 1,
+            y: player_pos.y,
+            z: player_pos.z,
+        },
+        Position {
+            x: player_pos.x + 1,
+            y: player_pos.y,
+            z: player_pos.z,
+        },
+        Position {
+            x: player_pos.x,
+            y: player_pos.y - 1,
+            z: player_pos.z,
+        },
+        Position {
+            x: player_pos.x,
+            y: player_pos.y + 1,
+            z: player_pos.z,
+        },
+    ];
+
+    for pos in adjacent_positions {
+        let tile = app
+            .core
+            .game
+            .res
+            .world_state
+            .world
+            .get_tile_cached(pos.x, pos.y, pos.z);
+        match tile {
+            TileKind::Door => {
+                available_actions.push(InteractionType::OpenCloseDoor {
+                    position: pos,
+                    is_open: false,
+                });
+            }
+            TileKind::DoorOpen => {
+                available_actions.push(InteractionType::OpenCloseDoor {
+                    position: pos,
+                    is_open: true,
+                });
+            }
+            _ => {}
+        }
+    }
+
     tracing::info!(target: "game", "Found {} total interactions nearby", available_actions.len());
 
     match available_actions.len() {
@@ -1770,6 +1820,31 @@ fn execute_interaction_action(app: &mut App, action: &crate::app_state::Interact
                 .game
                 .res
                 .log(format!("Started conversation with {}", npc_name));
+        }
+        InteractionType::OpenCloseDoor { position, is_open } => {
+            use lithicrivers_core::tile_registry::TileKind;
+
+            // Toggle the door state
+            let new_tile = if *is_open {
+                TileKind::Door // Close the door
+            } else {
+                TileKind::DoorOpen // Open the door
+            };
+
+            // Set the tile in the world map
+            app.core
+                .game
+                .res
+                .world_state
+                .world
+                .set_tile_cached(position.x, position.y, position.z, new_tile);
+
+            // Log the action
+            let action_name = if *is_open { "closed" } else { "opened" };
+            app.core
+                .game
+                .res
+                .log(format!("You {} the door", action_name));
         }
     }
 }

@@ -357,6 +357,10 @@ pub enum InteractionType {
         npc_name: String,
         position: Position,
     },
+    OpenCloseDoor {
+        position: Position,
+        is_open: bool,
+    },
 }
 
 impl InteractionType {
@@ -365,6 +369,13 @@ impl InteractionType {
             InteractionType::PickupItem { item_name, .. } => format!("Pick up {}", item_name),
             InteractionType::LootCorpse { .. } => "Loot corpse".to_string(),
             InteractionType::TalkToNPC { npc_name, .. } => format!("Talk to {}", npc_name),
+            InteractionType::OpenCloseDoor { is_open, .. } => {
+                if *is_open {
+                    "Close door".to_string()
+                } else {
+                    "Open door".to_string()
+                }
+            }
         }
     }
 
@@ -373,6 +384,13 @@ impl InteractionType {
             InteractionType::PickupItem { .. } => "^", // Up arrow for pickup
             InteractionType::LootCorpse { .. } => "x", // x for corpse looting
             InteractionType::TalkToNPC { .. } => "t",  // t for talking
+            InteractionType::OpenCloseDoor { is_open, .. } => {
+                if *is_open {
+                    "▢" // Empty box for close
+                } else {
+                    "▣" // Filled box for open
+                }
+            }
         }
     }
 }
