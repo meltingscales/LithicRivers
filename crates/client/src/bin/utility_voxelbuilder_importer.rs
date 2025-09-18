@@ -1,7 +1,6 @@
 /// Voxel Builder Importer for LithicRivers
 /// Converts Voxel Builder JSON exports to .lrstructure format
 
-
 /// Convert hex color to RGB values
 fn hex_to_rgb(hex: &str) -> (u8, u8, u8) {
     if hex.len() == 6 {
