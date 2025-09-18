@@ -858,13 +858,8 @@ mod tests {
 
         // Add some pending structures to trigger the real issue scenario
         // Using existing structure files to avoid panics
-        let existing_structures = [
-            "small_ship.lrstructure",
-            "small_temple.lrstructure",
-            "giant_corpse.lrstructure",
-            "starter_ship.lrstructure",
-            "first-quest-sapiencorp.lrstructure",
-        ];
+        use crate::structure;
+        let existing_structures = structure::structures_list();
         for (i, structure_name) in existing_structures.iter().enumerate() {
             game.res
                 .pending_structures
@@ -873,6 +868,7 @@ mod tests {
                     x: 25 + (i as i32),
                     y: 25 + (i as i32),
                     z: -1 + (i as i32), // Include negative Z structures
+                    bury_structure: true,
                 });
         }
 

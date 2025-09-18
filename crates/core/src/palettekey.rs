@@ -38,4 +38,5 @@ pub enum PaletteKey {
     // special tiles that spawn treasure
     TreasureCommon,
     TreasureRare,
+    TreasureQuest1,
 }

@@ -1,11 +1,20 @@
+use hecs::World;
+use rust_embed::RustEmbed;
 use serde::Deserialize;
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 
-use rust_embed::RustEmbed;
-
+use crate::components::BlocksMovement;
+use crate::components::Combat;
+use crate::components::EntityKind;
+use crate::components::FeralDog;
+use crate::components::GameEntity;
+use crate::components::Glyph;
+use crate::components::Health;
+use crate::components::Position;
+use crate::components::SpriteRef;
 use crate::tiles::TileKind;
 
 #[derive(Debug, Clone, Deserialize)]
@@ -21,6 +30,69 @@ pub struct StructureDefinition {
 #[derive(RustEmbed)]
 #[folder = "../client/assets/"]
 struct EmbeddedAssets;
+
+pub fn structures_list() -> Vec<String> {
+    let existing_structures = [
+        "small_ship.lrstructure".to_string(),
+        "small_temple.lrstructure".to_string(),
+        "giant_corpse.lrstructure".to_string(),
+        "starter_ship.lrstructure".to_string(),
+        "first-quest-sapiencorp.lrstructure".to_string(),
+    ];
+
+    existing_structures.to_vec()
+}
+
+/// Should this block spawn an entity?
+pub fn block_will_spawn_entity(tile_kind: TileKind) -> bool {
+    match tile_kind {
+        TileKind::ExistingWorldgen => false,
+        TileKind::TreasureCommon => true,
+        TileKind::TreasureRare => true,
+        TileKind::EnemySpawn => true,
+        _ => false,
+    }
+}
+
+/// Spawn an entity for a block in a structure.
+/// For example, a rare treasure block will turn into a rare item.
+pub fn spawn_entity_for_block(
+    world: &mut World,
+    _structure_name: &str,
+    tile_kind: TileKind,
+    block_x: i32,
+    block_y: i32,
+    block_z: i32,
+) {
+    if !block_will_spawn_entity(tile_kind) {
+        return;
+    }
+
+    match tile_kind {
+        TileKind::EnemySpawn => {
+            //by default, enemyspawn just spawns a feral dog.
+            //in the future, we can add more options here
+            let _dog = world.spawn((
+                Position {
+                    x: block_x,
+                    y: block_y,
+                    z: block_z,
+                },
+                GameEntity,
+                EntityKind::FeralDog,
+                FeralDog,
+                Health::new(80),
+                Glyph('d'),
+                SpriteRef::new("entities", "feral_dog"),
+                BlocksMovement,
+                Combat::default(),
+            ));
+        }
+        _ => {
+            panic!("Unknown tile kind for entity spawning {:?}", tile_kind);
+        }
+    }
+}
 
 impl StructureDefinition {
     /// Load from embedded assets (panics on failure). `structure_name` is the

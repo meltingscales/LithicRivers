@@ -70,6 +70,7 @@ define_tiles! {
     PlasteelScrap, "plasteel_scrap", true,
     TreasureCommon, "treasure_common", false,
     TreasureRare, "treasure_rare", false,
+    TreasureQuest1, "treasure_quest_1", false,
     PlankBlock, "plank_block", false,
     Stairs, "stairs", true,
     ExistingWorldgen, "existing_worldgen", false,
