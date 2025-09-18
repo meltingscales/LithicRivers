@@ -8,11 +8,13 @@ use std::path::Path;
 
 use crate::components::BlocksMovement;
 use crate::components::Combat;
+use crate::components::DroppedItem;
 use crate::components::EntityKind;
 use crate::components::FeralDog;
 use crate::components::GameEntity;
 use crate::components::Glyph;
 use crate::components::Health;
+use crate::components::ItemKind;
 use crate::components::Position;
 use crate::components::SpriteRef;
 use crate::tiles::TileKind;
@@ -86,6 +88,34 @@ pub fn spawn_entity_for_block(
                 SpriteRef::new("entities", "feral_dog"),
                 BlocksMovement,
                 Combat::default(),
+            ));
+        }
+        TileKind::TreasureCommon => {
+            let _item = world.spawn((
+                Position {
+                    x: block_x,
+                    y: block_y,
+                    z: block_z,
+                },
+                DroppedItem {
+                    kind: ItemKind::Log,
+                    qty: 1,
+                },
+                SpriteRef::new("items", "log"),
+            ));
+        }
+        TileKind::TreasureRare => {
+            let _item = world.spawn((
+                Position {
+                    x: block_x,
+                    y: block_y,
+                    z: block_z,
+                },
+                DroppedItem {
+                    kind: ItemKind::Acorn,
+                    qty: 1,
+                },
+                SpriteRef::new("items", "acorn"),
             ));
         }
         _ => {

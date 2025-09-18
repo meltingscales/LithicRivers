@@ -286,21 +286,33 @@ impl Game {
         self.load_pending_structures_for_chunk(chunk_x, chunk_y, chunk_z);
 
         // Then ensure the chunk exists - but only if it doesn't already exist
-        if !self
+        let chunk_was_new = !self
             .res
             .world_state
             .world
-            .has_chunk(chunk_x, chunk_y, chunk_z)
-        {
+            .has_chunk(chunk_x, chunk_y, chunk_z);
+
+        if chunk_was_new {
             tracing::info!(target: "game", "Calling world.ensure_chunk for ({}, {}, {})", chunk_x, chunk_y, chunk_z);
             self.res
                 .world_state
                 .world
                 .ensure_chunk(chunk_x, chunk_y, chunk_z);
+
+            // Place structures for the newly generated chunk
+            self.place_structures_for_new_chunk(chunk_x, chunk_y, chunk_z);
         } else {
             tracing::info!(target: "game", "Chunk ({}, {}, {}) already exists, skipping ensure_chunk", chunk_x, chunk_y, chunk_z);
         }
         tracing::info!(target: "game", "ensure_chunk_with_pending_structures completed for ({}, {}, {})", chunk_x, chunk_y, chunk_z);
+    }
+
+    /// Place structures for a newly generated chunk, avoiding borrow checker issues
+    fn place_structures_for_new_chunk(&mut self, chunk_x: i64, chunk_y: i64, chunk_z: i64) {
+        // Split the borrows to avoid the borrow checker issue
+        let world = &mut self.res.world_state.world;
+        let ecs_world = &mut self.world;
+        world.place_structures_for_chunk(ecs_world, chunk_x, chunk_y, chunk_z);
     }
 
     /// Load a quest structure at a specific world position
@@ -334,7 +346,10 @@ impl Game {
             .ensure_chunk(chunk_x, chunk_y, chunk_z);
 
         // Apply the structure
-        self.res.world_state.world.apply_structure_world(
+        let world = &mut self.res.world_state.world;
+        let ecs_world = &mut self.world;
+        world.apply_structure_world(
+            ecs_world,
             chunk_x,
             chunk_y,
             chunk_z,

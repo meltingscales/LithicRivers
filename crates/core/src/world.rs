@@ -495,59 +495,76 @@ impl World {
             self.chunks.len()
         );
 
-        // World-level structure placement so edits can cross chunk boundaries and z layers
-        if self.structure_placement_depth == 0 {
-            // 1) Fixed demo structures near spawn on (0,0) but only once on cz==0
-            if cx == 0 && cy == 0 && cz == 0 {
-                info!(target: "world", "Placing demo structures at chunk ({}, {})", cx, cy);
-                let structure_names = [
-                    "giant_corpse.lrstructure",
-                    "small_ship.lrstructure",
-                    "small_temple.lrstructure",
-                    "starter_ship.lrstructure",
-                ];
-                let offsets = [(8, 8), (20, 40), (40, 20), (32, 32)];
-                for (name, &(ox, oy)) in structure_names.iter().zip(offsets.iter()) {
-                    let structure = StructureDefinition::load_from_embedded(name);
-                    let world_z = (cz as i32) * CHUNK_SIZE_Z;
-                    self.apply_structure_world(cx, cy, cz, &structure, ox, oy, world_z, false);
-                    info!(target: "world", "Placed structure {} at ({}, {})", name, ox, oy);
-                }
-            }
+        // Note: Structure placement is now handled separately via place_structures_for_chunk()
+        // to avoid borrowing issues with apply_structure_world requiring Game reference
+    }
 
-            // 2) Per-biome structure with low probability
-            let center_wx = (cx as f64 * CHUNK_SIZE as f64) + (CHUNK_SIZE as f64 * 0.5);
-            let center_wy = (cy as f64 * CHUNK_SIZE as f64) + (CHUNK_SIZE as f64 * 0.5);
-            let zf = (cz as f64) * (CHUNK_SIZE_Z as f64) + (CHUNK_SIZE_Z as f64 * 0.5);
-            let band_for_chunk = self.biome_for(center_wx, center_wy, zf);
-            let mut rng = ChaCha20Rng::seed_from_u64(self.mix_coords(cx, cy));
-            if rng.gen::<f64>() < 0.05 {
-                let (name, ox, oy) = match band_for_chunk {
-                    BiomeBand::Plains => (
-                        "small_temple.lrstructure",
-                        rng.gen_range(0..CHUNK_SIZE) as i32,
-                        rng.gen_range(0..CHUNK_SIZE) as i32,
-                    ),
-                    BiomeBand::Forest => (
-                        "giant_corpse.lrstructure",
-                        rng.gen_range(0..CHUNK_SIZE) as i32,
-                        rng.gen_range(0..CHUNK_SIZE) as i32,
-                    ),
-                    BiomeBand::Rocky => (
-                        "small_ship.lrstructure",
-                        rng.gen_range(0..CHUNK_SIZE) as i32,
-                        rng.gen_range(0..CHUNK_SIZE) as i32,
-                    ),
-                    BiomeBand::LithicRivers => (
-                        "small_temple.lrstructure",
-                        rng.gen_range(0..CHUNK_SIZE) as i32,
-                        rng.gen_range(0..CHUNK_SIZE) as i32,
-                    ),
-                };
+    /// Place structures for a newly generated chunk. This must be called from the Game layer
+    /// after ensure_chunk() to handle entity spawning.
+    pub fn place_structures_for_chunk(
+        &mut self,
+        ecs_world: &mut hecs::World,
+        cx: i64,
+        cy: i64,
+        cz: i64,
+    ) {
+        // Skip if we're already in structure placement to avoid recursion
+        if self.structure_placement_depth > 0 {
+            return;
+        }
+
+        // 1) Fixed demo structures near spawn on (0,0) but only once on cz==0
+        if cx == 0 && cy == 0 && cz == 0 {
+            info!(target: "world", "Placing demo structures at chunk ({}, {})", cx, cy);
+            let structure_names = [
+                "giant_corpse.lrstructure",
+                "small_ship.lrstructure",
+                "small_temple.lrstructure",
+                "starter_ship.lrstructure",
+            ];
+            let offsets = [(8, 8), (20, 40), (40, 20), (32, 32)];
+            for (name, &(ox, oy)) in structure_names.iter().zip(offsets.iter()) {
                 let structure = StructureDefinition::load_from_embedded(name);
                 let world_z = (cz as i32) * CHUNK_SIZE_Z;
-                self.apply_structure_world(cx, cy, cz, &structure, ox, oy, world_z, false);
+                self.apply_structure_world(
+                    ecs_world, cx, cy, cz, &structure, ox, oy, world_z, false,
+                );
+                info!(target: "world", "Placed structure {} at ({}, {})", name, ox, oy);
             }
+        }
+
+        // 2) Per-biome structure with low probability
+        let center_wx = (cx as f64 * CHUNK_SIZE as f64) + (CHUNK_SIZE as f64 * 0.5);
+        let center_wy = (cy as f64 * CHUNK_SIZE as f64) + (CHUNK_SIZE as f64 * 0.5);
+        let zf = (cz as f64) * (CHUNK_SIZE_Z as f64) + (CHUNK_SIZE_Z as f64 * 0.5);
+        let band_for_chunk = self.biome_for(center_wx, center_wy, zf);
+        let mut rng = ChaCha20Rng::seed_from_u64(self.mix_coords(cx, cy));
+        if rng.gen::<f64>() < 0.05 {
+            let (name, ox, oy) = match band_for_chunk {
+                BiomeBand::Plains => (
+                    "small_temple.lrstructure",
+                    rng.gen_range(0..CHUNK_SIZE) as i32,
+                    rng.gen_range(0..CHUNK_SIZE) as i32,
+                ),
+                BiomeBand::Forest => (
+                    "giant_corpse.lrstructure",
+                    rng.gen_range(0..CHUNK_SIZE) as i32,
+                    rng.gen_range(0..CHUNK_SIZE) as i32,
+                ),
+                BiomeBand::Rocky => (
+                    "small_ship.lrstructure",
+                    rng.gen_range(0..CHUNK_SIZE) as i32,
+                    rng.gen_range(0..CHUNK_SIZE) as i32,
+                ),
+                BiomeBand::LithicRivers => (
+                    "small_temple.lrstructure",
+                    rng.gen_range(0..CHUNK_SIZE) as i32,
+                    rng.gen_range(0..CHUNK_SIZE) as i32,
+                ),
+            };
+            let structure = StructureDefinition::load_from_embedded(name);
+            let world_z = (cz as i32) * CHUNK_SIZE_Z;
+            self.apply_structure_world(ecs_world, cx, cy, cz, &structure, ox, oy, world_z, false);
         }
     }
 
@@ -570,6 +587,7 @@ impl World {
     /// world Z = `cz * CHUNK_SIZE + li`.
     pub fn apply_structure_world(
         &mut self,
+        ecs_world: &mut hecs::World,
         cx: i64,
         cy: i64,
         cz: i64,
@@ -638,20 +656,8 @@ impl World {
                             self.set_tile_cached(tx, ty, tz, tile);
                         }
 
-                        // if tile == TileKind::EnemySpawn {
-                        //     // Spawn an enemy at the location
-                        //     panic!("TODO EnemySpawn at ({}, {}, {})", tx, ty, tz);
-                        // }
-
-                        // if tile == TileKind::TreasureCommon {
-                        //     // Spawn a common treasure at the location
-                        //     panic!("TODO TreasureCommon at ({}, {}, {})", tx, ty, tz);
-                        // }
-
-                        // if tile == TileKind::TreasureRare {
-                        //     // Spawn a rare treasure at the location
-                        //     panic!("TODO TreasureRare at ({}, {}, {})", tx, ty, tz);
-                        // }
+                        use crate::structure::spawn_entity_for_block;
+                        spawn_entity_for_block(ecs_world, &structure.name, tile, tx, ty, tz);
 
                         edits += 1;
                     }
