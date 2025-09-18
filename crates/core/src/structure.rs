@@ -1,4 +1,5 @@
-use hecs::World;
+use crate::world::World as GameWorld;
+use hecs::World as ECSWorld;
 use rust_embed::RustEmbed;
 use serde::Deserialize;
 use std::borrow::Cow;
@@ -59,7 +60,8 @@ pub fn block_will_spawn_entity(tile_kind: TileKind) -> bool {
 /// Spawn an entity for a block in a structure.
 /// For example, a rare treasure block will turn into a rare item.
 pub fn spawn_entity_for_block(
-    world: &mut World,
+    game_world: &mut GameWorld,
+    ecs_world: &mut ECSWorld,
     _structure_name: &str,
     tile_kind: TileKind,
     block_x: i32,
@@ -70,11 +72,13 @@ pub fn spawn_entity_for_block(
         return;
     }
 
+    game_world.set_tile_cached(block_x, block_y, block_z, TileKind::Air);
+
     match tile_kind {
         TileKind::EnemySpawn => {
             //by default, enemyspawn just spawns a feral dog.
             //in the future, we can add more options here
-            let _dog = world.spawn((
+            let _dog = ecs_world.spawn((
                 Position {
                     x: block_x,
                     y: block_y,
@@ -91,7 +95,7 @@ pub fn spawn_entity_for_block(
             ));
         }
         TileKind::TreasureCommon => {
-            let _item = world.spawn((
+            let _item = ecs_world.spawn((
                 Position {
                     x: block_x,
                     y: block_y,
@@ -105,7 +109,7 @@ pub fn spawn_entity_for_block(
             ));
         }
         TileKind::TreasureRare => {
-            let _item = world.spawn((
+            let _item = ecs_world.spawn((
                 Position {
                     x: block_x,
                     y: block_y,
