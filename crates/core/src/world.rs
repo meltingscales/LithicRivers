@@ -637,6 +637,22 @@ impl World {
                         } else {
                             self.set_tile_cached(tx, ty, tz, tile);
                         }
+
+                        if tile == TileKind::EnemySpawn {
+                            // Spawn an enemy at the location
+                            panic!("TODO EnemySpawn at ({}, {}, {})", tx, ty, tz);
+                        }
+
+                        if tile == TileKind::TreasureCommon {
+                            // Spawn a common treasure at the location
+                            panic!("TODO TreasureCommon at ({}, {}, {})", tx, ty, tz);
+                        }
+
+                        if tile == TileKind::TreasureRare {
+                            // Spawn a rare treasure at the location
+                            panic!("TODO TreasureRare at ({}, {}, {})", tx, ty, tz);
+                        }
+
                         edits += 1;
                     }
                 }
