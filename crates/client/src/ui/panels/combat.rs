@@ -429,15 +429,15 @@ fn render_moves(
                     }
                     _ => "Action".to_string(),
                 };
-                format!("[z] {} ({}t)", action_text, ticks)
+                format!("{} ({}t)", action_text, ticks)
             } else {
-                "[z] Ready".to_string()
+                "Ready".to_string()
             }
         } else {
-            "[z] Ready".to_string()
+            "Ready".to_string()
         }
     } else {
-        "[z] No Player".to_string()
+        "No Player".to_string()
     };
 
     let has_action = if let Some(player_entity) = app.core.game.get_player_entity() {
