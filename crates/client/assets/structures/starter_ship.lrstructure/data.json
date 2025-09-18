@@ -2,8 +2,7 @@
   "blocks": {
     ",": "existing_worldgen",
     "S": "plasteel_scrap",
-    "C": "scrap_electronics",
-    "E": "treasure"
+    "C": "scrap_electronics"
   },
   "gen_biomes": "ALL",
   "gen_chance": 0.01,
