@@ -1,3 +1,7 @@
+# v0.8.4.2
+
+- first quest structure spawns successfully with dummy enemies and dummy loot
+
 # v0.8.4.1
 
 - ci crash fixed
