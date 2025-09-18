@@ -3,10 +3,12 @@
     " ": "air",
     "#": "rock",
     ".": "existing_worldgen",
+    "1": "treasure_quest_1",
     ">": "stairs",
     "D": "door",
     "E": "enemy_spawn",
-    "T": "treasure"
+    "T": "treasure_rare",
+    "t": "treasure_common"
   },
   "gen_biomes": "QUEST_ONLY",
   "gen_chance": 0.0,
