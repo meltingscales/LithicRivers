@@ -25,6 +25,7 @@ fn create_hex_color_block_mapping(hex_color: &str) -> char {
         (255, 255, 0) => 'T',   // Yellow (FFFF00) -> treasure
         (0, 255, 0) => 'D',     // Green (00FF00) -> door
         (255, 128, 0) => '>',   // Orange (FF8000) -> stairs
+        (0, 0, 0) => ' ',       // Black (000000) -> air
         _ => panic!("{}", format!("Unknown color {}", hex_color)), // Default will panic
     }
 }
@@ -33,6 +34,7 @@ fn gen_data_json(height: usize) -> serde_json::Value {
     serde_json::json!({
         "blocks": {
             ".": "existing_worldgen",
+            " ": "air",
             "#": "rock",
             "E": "enemy_spawn",
             "T": "treasure",

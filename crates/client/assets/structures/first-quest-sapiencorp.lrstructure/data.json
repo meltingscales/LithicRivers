@@ -1,5 +1,6 @@
 {
   "blocks": {
+    " ": "air",
     "#": "rock",
     ".": "existing_worldgen",
     ">": "stairs",
