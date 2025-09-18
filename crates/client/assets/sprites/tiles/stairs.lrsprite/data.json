@@ -1,5 +1,5 @@
 {
-  "name": "Stairs",
-  "category": "tiles",
-  "scales": [1, 2, 4]
+    "name": "Stairs",
+    "color": "#964B00",
+    "description": "Stairs"
 }
