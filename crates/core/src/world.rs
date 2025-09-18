@@ -509,7 +509,8 @@ impl World {
                 let offsets = [(8, 8), (20, 40), (40, 20), (32, 32)];
                 for (name, &(ox, oy)) in structure_names.iter().zip(offsets.iter()) {
                     let structure = StructureDefinition::load_from_embedded(name);
-                    self.apply_structure_world(cx, cy, cz, &structure, ox, oy);
+                    let world_z = (cz as i32) * CHUNK_SIZE_Z;
+                    self.apply_structure_world(cx, cy, cz, &structure, ox, oy, world_z, false);
                     info!(target: "world", "Placed structure {} at ({}, {})", name, ox, oy);
                 }
             }
@@ -544,7 +545,8 @@ impl World {
                     ),
                 };
                 let structure = StructureDefinition::load_from_embedded(name);
-                self.apply_structure_world(cx, cy, cz, &structure, ox, oy);
+                let world_z = (cz as i32) * CHUNK_SIZE_Z;
+                self.apply_structure_world(cx, cy, cz, &structure, ox, oy, world_z, false);
             }
         }
     }
@@ -574,21 +576,32 @@ impl World {
         structure: &StructureDefinition,
         ox: i32,
         oy: i32,
+        world_z: i32,
+        bury_structure: bool,
     ) {
         // Re-entrancy guard: signal that we are in structure placement so ensure_chunk()
         // will not schedule additional placements while we write tiles.
         self.structure_placement_depth = self.structure_placement_depth.saturating_add(1);
 
         // First, ensure all Z chunks that this structure will span are generated
-        let wz0 = (cz as i32) * CHUNK_SIZE_Z;
-        let max_structure_z = wz0 + structure.layers.len() as i32 - 1;
+        let (min_structure_z, max_structure_z) = if bury_structure {
+            // For buried structures, top layer is at world_z, bottom is world_z - (layers - 1)
+            let bottom_z = world_z - (structure.layers.len() as i32 - 1);
+            (bottom_z, world_z)
+        } else {
+            // For normal structures, bottom layer is at chunk base, top is chunk base + layers - 1
+            let wz0 = (cz as i32) * CHUNK_SIZE_Z;
+            (wz0, wz0 + structure.layers.len() as i32 - 1)
+        };
+
+        let min_chunk_z = Self::div_floor(min_structure_z, CHUNK_SIZE_Z) as i64;
         let max_chunk_z = Self::div_floor(max_structure_z, CHUNK_SIZE_Z) as i64;
 
         tracing::info!(target: "world", "Structure '{}' spans Z levels {} to {}, chunks {} to {}",
-            structure.name, wz0, max_structure_z, cz, max_chunk_z);
+            structure.name, min_structure_z, max_structure_z, min_chunk_z, max_chunk_z);
 
         // Ensure all required Z chunks exist before applying structure
-        for required_cz in cz..=max_chunk_z {
+        for required_cz in min_chunk_z..=max_chunk_z {
             if !self.has_chunk(cx, cy, required_cz) {
                 tracing::info!(target: "world", "Pre-generating chunk ({}, {}, {}) for structure '{}'",
                     cx, cy, required_cz, structure.name);
@@ -609,7 +622,16 @@ impl World {
                     if let Some(tile) = structure.get_tile_for_symbol(&symbol) {
                         let tx = wx0 + ox + x as i32;
                         let ty = wy0 + oy + y as i32;
-                        let tz = wz0 + li as i32;
+                        let tz = if bury_structure {
+                            // For buried structures, spawn point is top of structure
+                            // Layer 0 (bottom) goes at world_z - (total_layers - 1)
+                            // Layer i goes at world_z - (total_layers - 1 - i)
+                            world_z - (structure.layers.len() as i32 - 1 - li as i32)
+                        } else {
+                            // For normal structures, layer 0 is at chunk base, subsequent layers go up
+                            let wz0 = (cz as i32) * CHUNK_SIZE_Z;
+                            wz0 + li as i32
+                        };
 
                         // if the structure wants to use existing worldgen,
                         // don't overwrite it
