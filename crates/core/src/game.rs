@@ -256,15 +256,16 @@ impl Game {
             scheduler: SystemScheduler::new(),
         };
 
-        // Queue the starting dungeon at 30, 30, 0 for lazy loading
+        // Queue the starting dungeon at 30, 30, -1 for lazy loading
         new_game
             .res
             .pending_structures
             .push(crate::resources::PendingStructure {
                 name: "first-quest-sapiencorp.lrstructure".to_string(),
-                x: 30,
-                y: 30,
-                z: 0,
+                x: 10,
+                y: 10,
+                z: 1,
+                bury_structure: true,
             });
 
         // Run one tick to generate structures around the player spawn
@@ -310,6 +311,7 @@ impl Game {
         world_x: i32,
         world_y: i32,
         world_z: i32,
+        bury_structure: bool,
     ) {
         use crate::structure::StructureDefinition;
         use tracing::info;
@@ -332,10 +334,16 @@ impl Game {
             .ensure_chunk(chunk_x, chunk_y, chunk_z);
 
         // Apply the structure
-        self.res
-            .world_state
-            .world
-            .apply_structure_world(chunk_x, chunk_y, chunk_z, &structure, local_x, local_y);
+        self.res.world_state.world.apply_structure_world(
+            chunk_x,
+            chunk_y,
+            chunk_z,
+            &structure,
+            local_x,
+            local_y,
+            world_z,
+            bury_structure,
+        );
         info!(target: "game", "Quest structure '{}' loaded successfully", structure_name);
     }
 
@@ -730,7 +738,13 @@ impl Game {
                 structure.name, structure.x, structure.y, structure.z, chunk_x, chunk_y, chunk_z
             ));
 
-            self.load_quest_structure(&structure.name, structure.x, structure.y, structure.z);
+            self.load_quest_structure(
+                &structure.name,
+                structure.x,
+                structure.y,
+                structure.z,
+                structure.bury_structure,
+            );
 
             // Mark this structure as generated
             self.mark_structure_generated(&structure.name, structure.x, structure.y, structure.z);
