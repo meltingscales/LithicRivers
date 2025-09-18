@@ -657,7 +657,7 @@ impl World {
                         }
 
                         use crate::structure::spawn_entity_for_block;
-                        spawn_entity_for_block(ecs_world, &structure.name, tile, tx, ty, tz);
+                        spawn_entity_for_block(self, ecs_world, &structure.name, tile, tx, ty, tz);
 
                         edits += 1;
                     }
