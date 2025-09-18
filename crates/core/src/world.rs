@@ -615,9 +615,6 @@ impl World {
         for (li, layer) in structure.layers.iter().enumerate() {
             for (y, line) in layer.lines().enumerate() {
                 for (x, ch) in line.chars().enumerate() {
-                    if ch == ' ' {
-                        continue;
-                    }
                     let symbol = ch.to_string();
                     if let Some(tile) = structure.get_tile_for_symbol(&symbol) {
                         let tx = wx0 + ox + x as i32;
