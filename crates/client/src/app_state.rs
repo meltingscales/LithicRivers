@@ -386,9 +386,9 @@ impl InteractionType {
             InteractionType::TalkToNPC { .. } => "t",  // t for talking
             InteractionType::OpenCloseDoor { is_open, .. } => {
                 if *is_open {
-                    "▢" // Empty box for close
+                    "o"
                 } else {
-                    "▣" // Filled box for open
+                    "#"
                 }
             }
         }
