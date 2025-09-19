@@ -19,6 +19,7 @@ pub mod player_state;
 pub mod recipe_handler;
 pub mod resources;
 pub mod save_load;
+pub mod spawn_utils;
 pub mod structure;
 pub mod system_scheduler;
 pub mod systems;
