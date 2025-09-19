@@ -12,9 +12,9 @@ This document summarizes how world generation, chunking, saving/loading, and cli
 
 File: `crates/core/src/resources/world.rs`
 
-* __`CHUNK_SIZE: i32 = 64`__: Chunk width/height in tiles. Z is sliced by chunk Z index; each chunk contains `CHUNK_SIZE * CHUNK_SIZE` tiles.
+* __`CHUNK_SIZE: i64 = 64`__: Chunk width/height in tiles. Z is sliced by chunk Z index; each chunk contains `CHUNK_SIZE * CHUNK_SIZE` tiles.
 * __`World`__:
-  - Fields: `seed: u64`, `gen_z: i32` (current generation slice), `chunks: HashMap<(i64, i64, i64), Chunk>`.
+  - Fields: `seed: u64`, `gen_z: i64` (current generation slice), `chunks: HashMap<(i64, i64, i64), Chunk>`.
   - Purpose: generation, cache management, tile access and mutation.
 * __`Chunk`__:
   - Internals: `tiles: Vec<TileKind>` sized `CHUNK_SIZE * CHUNK_SIZE` (2D only).

@@ -115,7 +115,7 @@ impl Game {
         // spawn 2 feral dogs a bit further
         let dog_positions = [(sx + 12, sy + 12, sz), (sx + 13, sy + 13, sz)];
         for (x, y, z) in dog_positions {
-            spawn_utils::world_spawn_feraldog(&mut world, x, y, z, seed);
+            spawn_utils::world_spawn_feraldog(&mut world, x, y, z, &res.world_state.world);
         }
 
         //spawn 4 feral dogs a little far away, in a diagonal line to test combat
@@ -124,7 +124,7 @@ impl Game {
         let combat_test_z = sz;
         let dog_positions = (5..=8).map(|n| (combat_test_x + n, combat_test_y + n, combat_test_z));
         for (x, y, z) in dog_positions {
-            spawn_utils::world_spawn_feraldog(&mut world, x, y, z, seed);
+            spawn_utils::world_spawn_feraldog(&mut world, x, y, z, &res.world_state.world);
         }
 
         // Spawn single QuestTesty NPC for dialogue testing
@@ -152,7 +152,7 @@ impl Game {
         // Deterministically spawn a few Logs near the player (~5 tiles away)
         // Use a local RNG derived from the seed so we don't perturb the global RNG sequence
         let mut spawn_rng = ChaCha20Rng::seed_from_u64(seed.wrapping_add(0x5eed_cafe_f00d_dead));
-        let dir8: &[(i32, i32)] = &[
+        let dir8: &[(i64, i64)] = &[
             (1, 0),
             (0, 1),
             (-1, 0),
@@ -166,7 +166,7 @@ impl Game {
         for _ in 0..num_logs {
             // Choose direction and radius ~5 +/- 1
             let (dx, dy) = dir8[spawn_rng.gen_range(0..dir8.len())];
-            let r: i32 = 5 + spawn_rng.gen_range(-1..=1);
+            let r: i64 = 5 + spawn_rng.gen_range(-1..=1);
             let mut tx = sx + dx * r;
             let mut ty = sy + dy * r;
             let tz = sz;
@@ -287,9 +287,9 @@ impl Game {
     pub fn load_quest_structure(
         &mut self,
         structure_name: &str,
-        world_x: i32,
-        world_y: i32,
-        world_z: i32,
+        world_x: i64,
+        world_y: i64,
+        world_z: i64,
         bury_structure: bool,
     ) {
         use crate::structure::StructureDefinition;
@@ -299,12 +299,12 @@ impl Game {
         info!(target: "game", "Loading quest structure '{}' at ({}, {}, {})", structure_name, world_x, world_y, world_z);
 
         // Convert world coordinates to chunk coordinates and local offset
-        let chunk_x = world_x.div_euclid(crate::world::CHUNK_SIZE as i32) as i64;
-        let chunk_y = world_y.div_euclid(crate::world::CHUNK_SIZE as i32) as i64;
-        let chunk_z = world_z.div_euclid(crate::world::CHUNK_SIZE_Z as i32) as i64;
+        let chunk_x = world_x.div_euclid(crate::world::CHUNK_SIZE);
+        let chunk_y = world_y.div_euclid(crate::world::CHUNK_SIZE);
+        let chunk_z = world_z.div_euclid(crate::world::CHUNK_SIZE_Z);
 
-        let local_x = world_x.rem_euclid(crate::world::CHUNK_SIZE as i32);
-        let local_y = world_y.rem_euclid(crate::world::CHUNK_SIZE as i32);
+        let local_x = world_x.rem_euclid(crate::world::CHUNK_SIZE);
+        let local_y = world_y.rem_euclid(crate::world::CHUNK_SIZE);
 
         // Ensure the chunk exists
         self.res
@@ -329,13 +329,13 @@ impl Game {
         info!(target: "game", "Quest structure '{}' loaded successfully", structure_name);
     }
 
-    pub fn queue_player_move(&mut self, dx: i32, dy: i32) {
+    pub fn queue_player_move(&mut self, dx: i64, dy: i64) {
         // Calculate move cost using player's Body modifiers
-        let mult: f32 = self
+        let mult: f64 = self
             .get_player_component::<Body>()
             .map(|body| body.walk_speed_modifier())
             .unwrap_or(1.0);
-        let base: f32 = 200.0;
+        let base: f64 = 200.0;
         let cost = (base / mult.max(0.01)).round().max(1.0) as u64;
 
         // Set movement intent with cost
@@ -346,9 +346,9 @@ impl Game {
     pub fn tick(&mut self) -> GameTickResult {
         // Check for pending structures around the player before running systems
         if let Some(player_pos) = self.get_player_position() {
-            let chunk_x = player_pos.x.div_euclid(crate::world::CHUNK_SIZE as i32) as i64;
-            let chunk_y = player_pos.y.div_euclid(crate::world::CHUNK_SIZE as i32) as i64;
-            let chunk_z = player_pos.z.div_euclid(crate::world::CHUNK_SIZE_Z as i32) as i64;
+            let chunk_x = player_pos.x.div_euclid(crate::world::CHUNK_SIZE);
+            let chunk_y = player_pos.y.div_euclid(crate::world::CHUNK_SIZE);
+            let chunk_z = player_pos.z.div_euclid(crate::world::CHUNK_SIZE_Z);
             tracing::info!(target: "game", "Player at world pos ({}, {}, {}) -> chunk ({}, {}, {})",
                 player_pos.x, player_pos.y, player_pos.z, chunk_x, chunk_y, chunk_z);
 
@@ -400,28 +400,28 @@ impl Game {
 
     pub fn queue_mine(&mut self) {
         // Set an action cost similar to moving; could use Body modifiers later
-        let mult: f32 = self
+        let mult: f64 = self
             .get_player_component::<Body>()
             .map(|body| body.walk_speed_modifier())
             .unwrap_or(1.0);
-        let base: f32 = 300.0; // slightly slower than a normal move
+        let base: f64 = 300.0; // slightly slower than a normal move
         let cost = (base / mult.max(0.01)).round().max(1.0) as u64;
 
         // Set mining intent with cost
         self.res.player_state.intent = crate::intent::PlayerIntent::mine(cost);
     }
 
-    pub fn queue_mine_at(&mut self, x: i32, y: i32, z: i32) {
+    pub fn queue_mine_at(&mut self, x: i64, y: i64, z: i64) {
         // Set an action cost similar to moving; could use Body modifiers later
-        let mult: f32 = self
+        let mult: f64 = self
             .get_player_component::<Body>()
             .map(|body| body.walk_speed_modifier())
             .unwrap_or(1.0);
-        let base: f32 = 300.0; // slightly slower than a normal move
-        let cost = (base / mult.max(0.01)).round().max(1.0) as u64;
+        let base: f64 = 300.0; // slightly slower than a normal move
+        let cost = (base / mult.max(0.01)).round().max(1.0);
 
         // Set mining intent with cost at specific coordinates
-        self.res.player_state.intent = crate::intent::PlayerIntent::mine_at(x, y, z, cost);
+        self.res.player_state.intent = crate::intent::PlayerIntent::mine_at(x, y, z, cost as u64);
     }
 
     // Convenience save/load wrappers
@@ -455,17 +455,17 @@ impl Game {
     }
 
     /// Queue a vertical movement for the player by dz levels.
-    pub fn queue_player_move_z(&mut self, dz: i32) {
+    pub fn queue_player_move_z(&mut self, dz: i64) {
         // Use same base cost as lateral movement for now
-        let mult: f32 = self
+        let mult: f64 = self
             .get_player_component::<Body>()
             .map(|body| body.walk_speed_modifier())
             .unwrap_or(1.0);
-        let base: f32 = 200.0;
-        let cost = (base / mult.max(0.01)).round().max(1.0) as u64;
+        let base: f64 = 200.0;
+        let cost = (base / mult.max(0.01)).round().max(1.0);
 
         // Set vertical movement intent
-        self.res.player_state.intent = crate::intent::PlayerIntent::movement(0, 0, dz, cost);
+        self.res.player_state.intent = crate::intent::PlayerIntent::movement(0, 0, dz, cost as u64);
     }
 
     // ECS Helper Functions - Replace direct player_entity access
@@ -554,7 +554,7 @@ impl Game {
     }
 
     /// Check if a specific structure has been generated
-    pub fn is_structure_generated(&self, structure_name: &str, x: i32, y: i32, z: i32) -> bool {
+    pub fn is_structure_generated(&self, structure_name: &str, x: i64, y: i64, z: i64) -> bool {
         use crate::resources::StructureGenerationState;
         let structure_key = format!("{}@{},{},{}", structure_name, x, y, z);
         let is_generated = matches!(
@@ -567,7 +567,7 @@ impl Game {
     }
 
     /// Mark a specific structure as generated
-    pub fn mark_structure_generated(&mut self, structure_name: &str, x: i32, y: i32, z: i32) {
+    pub fn mark_structure_generated(&mut self, structure_name: &str, x: i64, y: i64, z: i64) {
         use crate::resources::StructureGenerationState;
         let structure_key = format!("{}@{},{},{}", structure_name, x, y, z);
         tracing::info!(target: "game", "Marking structure '{}' at ({}, {}, {}) as generated", structure_name, x, y, z);
@@ -580,9 +580,9 @@ impl Game {
     pub fn mark_all_structure_chunks_generated(
         &mut self,
         structure_name: &str,
-        x: i32,
-        y: i32,
-        z: i32,
+        x: i64,
+        y: i64,
+        z: i64,
     ) {
         use crate::structure::StructureDefinition;
         use crate::world::{CHUNK_SIZE, CHUNK_SIZE_Z};
@@ -596,9 +596,9 @@ impl Game {
         let base_chunk_z = z.div_euclid(CHUNK_SIZE_Z) as i64;
 
         // Calculate the range of Z chunks this structure spans
-        let structure_height = structure.layers.len() as i32;
+        let structure_height = structure.layers.len() as i64;
         let max_z = z + structure_height - 1;
-        let max_chunk_z = max_z.div_euclid(CHUNK_SIZE_Z) as i64;
+        let max_chunk_z = max_z.div_euclid(CHUNK_SIZE_Z);
 
         tracing::info!(target: "game", "Structure '{}' spans {} layers, marking chunks ({}, {}, {}) to ({}, {}, {})",
             structure_name, structure_height, chunk_x, chunk_y, base_chunk_z, chunk_x, chunk_y, max_chunk_z);
@@ -612,11 +612,11 @@ impl Game {
     // === Bounds Checking Utilities ===
 
     /// Convert world coordinates to chunk coordinates
-    pub fn world_to_chunk_coords(world_x: i32, world_y: i32, world_z: i32) -> (i64, i64, i64) {
+    pub fn world_to_chunk_coords(world_x: i64, world_y: i64, world_z: i64) -> (i64, i64, i64) {
         use crate::world::{CHUNK_SIZE, CHUNK_SIZE_Z};
-        let chunk_x = world_x.div_euclid(CHUNK_SIZE as i32) as i64;
-        let chunk_y = world_y.div_euclid(CHUNK_SIZE as i32) as i64;
-        let chunk_z = world_z.div_euclid(CHUNK_SIZE_Z as i32) as i64;
+        let chunk_x = world_x.div_euclid(CHUNK_SIZE);
+        let chunk_y = world_y.div_euclid(CHUNK_SIZE);
+        let chunk_z = world_z.div_euclid(CHUNK_SIZE_Z);
         (chunk_x, chunk_y, chunk_z)
     }
 
@@ -638,9 +638,9 @@ impl Game {
 
     /// Check if a point is within a chunk's bounds
     pub fn is_point_in_chunk(
-        point_x: i32,
-        point_y: i32,
-        point_z: i32,
+        point_x: i64,
+        point_y: i64,
+        point_z: i64,
         chunk_x: i64,
         chunk_y: i64,
         chunk_z: i64,
@@ -847,9 +847,9 @@ mod tests {
                 .pending_structures
                 .push(crate::resources::PendingStructure {
                     name: structure_name.to_string(),
-                    x: 25 + (i as i32),
-                    y: 25 + (i as i32),
-                    z: -1 + (i as i32), // Include negative Z structures
+                    x: 25 + (i),
+                    y: 25 + (i),
+                    z: -1 + (i), // Include negative Z structures
                     bury_structure: true,
                 });
         }

@@ -39,13 +39,13 @@ struct ItemStack {
 #[derive(Debug, Clone)]
 struct Corpse {
     name: String,
-    x: i32,
-    y: i32,
+    x: i64,
+    y: i64,
     inventory: Vec<ItemStack>,
 }
 
 impl Corpse {
-    fn new(name: &str, x: i32, y: i32, inventory: Vec<ItemStack>) -> Self {
+    fn new(name: &str, x: i64, y: i64, inventory: Vec<ItemStack>) -> Self {
         Self {
             name: name.to_string(),
             x,
@@ -63,8 +63,8 @@ enum UiMode {
 }
 
 struct App {
-    player_x: i32,
-    player_y: i32,
+    player_x: i64,
+    player_y: i64,
     player_inventory: Vec<ItemStack>,
     corpses: Vec<Corpse>,
     ui_mode: UiMode,
@@ -250,7 +250,7 @@ impl App {
         }
     }
 
-    fn move_player(&mut self, dx: i32, dy: i32) {
+    fn move_player(&mut self, dx: i64, dy: i64) {
         if matches!(self.ui_mode, UiMode::WorldMap) {
             self.player_x += dx;
             self.player_y += dy;
@@ -554,8 +554,8 @@ fn render_world_map(f: &mut Frame, app: &App, area: Rect) {
 
     for y in 0..map_height {
         for x in 0..map_width {
-            let world_x = x as i32;
-            let world_y = y as i32;
+            let world_x = x as i64;
+            let world_y = y as i64;
 
             // Check what's at this position
             if world_x == app.player_x && world_y == app.player_y {

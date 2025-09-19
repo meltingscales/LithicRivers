@@ -7,9 +7,9 @@ use std::collections::{BinaryHeap, HashMap, HashSet};
 #[derive(Clone, Eq, PartialEq)]
 struct PathNode {
     position: Position,
-    cost: i32,
-    heuristic: i32,
-    total_cost: i32,
+    cost: i64,
+    heuristic: i64,
+    total_cost: i64,
 }
 
 impl Ord for PathNode {
@@ -124,7 +124,7 @@ impl Pathfinder {
                 let tentative_g_score = g_score[&current.position] + 1;
 
                 // Skip if path is getting too long
-                if tentative_g_score > self.max_path_length as i32 {
+                if tentative_g_score > self.max_path_length as i64 {
                     continue;
                 }
 
@@ -155,7 +155,7 @@ impl Pathfinder {
     }
 
     /// Calculate Manhattan distance between two positions
-    fn manhattan_distance(&self, a: Position, b: Position) -> i32 {
+    fn manhattan_distance(&self, a: Position, b: Position) -> i64 {
         (a.x - b.x).abs() + (a.y - b.y).abs()
     }
 

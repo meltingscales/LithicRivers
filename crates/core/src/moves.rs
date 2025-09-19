@@ -38,7 +38,7 @@ pub struct Move {
     pub move_type: MoveType,
     pub energy_cost: u32,
     pub execution_time_ticks: u64,
-    pub splash_radius: Option<i32>,
+    pub splash_radius: Option<i64>,
     pub damage: u32,
     pub description: String,
 }
@@ -207,7 +207,7 @@ pub fn get_available_moves() -> Vec<Move> {
 }
 
 /// Calculate distance for tackle push mechanics
-pub fn calculate_push_position(from: Position, target: Position, push_distance: i32) -> Position {
+pub fn calculate_push_position(from: Position, target: Position, push_distance: i64) -> Position {
     let dx = target.x - from.x;
     let dy = target.y - from.y;
 
@@ -450,7 +450,7 @@ pub fn damage_random_body_part(
     if let Some(part) = body.parts.get_mut(&part_type) {
         // 20% chance for severing damage on strong attacks
         let can_sever = damage > 20 && ((world_seed + tick + 1) % 5) == 0;
-        part.receive_damage(damage as i32, can_sever);
+        part.receive_damage(damage as i64, can_sever);
         Some(part_type)
     } else {
         None

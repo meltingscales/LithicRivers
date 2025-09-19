@@ -195,7 +195,7 @@ pub fn feral_dog_system(world: &mut World, res: &mut Resources) {
 
                 // Find the closest adjacent position to the dog
                 let mut best_target = None;
-                let mut best_distance = i32::MAX;
+                let mut best_distance = i64::MAX;
 
                 for &adj_pos in &adjacent_positions {
                     if is_passable(adj_pos) {

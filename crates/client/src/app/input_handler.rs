@@ -432,7 +432,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
 
             if moved {
                 // Prefetch around the new cursor position for smoother draw
-                let radius = 20i32;
+                let radius = 20i64;
                 let left = app.panels.look.cursor.x - radius;
                 let top = app.panels.look.cursor.y - radius;
                 let right = app.panels.look.cursor.x + radius;
@@ -1999,7 +1999,7 @@ fn remove_item_from_inventory(
 }
 
 /// Check if a position is valid for placing a block
-fn is_valid_placement_position(app: &mut App, x: i32, y: i32, z: i32) -> bool {
+fn is_valid_placement_position(app: &mut App, x: i64, y: i64, z: i64) -> bool {
     // Check if there's already a solid block at this position
     let current_tile = app.core.game.res.world_state.world.get_tile_cached(x, y, z);
 

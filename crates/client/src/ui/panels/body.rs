@@ -22,7 +22,7 @@ pub fn render_body_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
         if let Ok(body) = app.core.game.world.get::<&Body>(e) {
             // Build list
             let mut parts: Vec<&BodyPart> = body.parts.values().collect();
-            parts.sort_by_key(|p| p.part_type as i32);
+            parts.sort_by_key(|p| p.part_type as i64);
             for p in parts {
                 let (label, color) = match p.state {
                     BodyPartState::Missing => ("Missing", Color::DarkGray),

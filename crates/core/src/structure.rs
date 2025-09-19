@@ -17,7 +17,7 @@ pub struct StructureDefinition {
     pub layers: Vec<String>,
     pub gen_biomes: String,
     pub gen_chance: f32,
-    pub y_layer_gen_range: Vec<i32>,
+    pub y_layer_gen_range: Vec<i64>,
 }
 
 #[derive(RustEmbed)]
@@ -54,9 +54,9 @@ pub fn spawn_entity_for_block(
     ecs_world: &mut ECSWorld,
     _structure_name: &str,
     tile_kind: TileKind,
-    block_x: i32,
-    block_y: i32,
-    block_z: i32,
+    block_x: i64,
+    block_y: i64,
+    block_z: i64,
 ) {
     if !block_will_spawn_entity(tile_kind) {
         return;
@@ -68,31 +68,15 @@ pub fn spawn_entity_for_block(
         TileKind::EnemySpawn => {
             //by default, enemyspawn just spawns a feral dog.
             //in the future, we can add more options here
-            spawn_utils::world_spawn_feraldog(
-                ecs_world,
-                block_x,
-                block_y,
-                block_z,
-                game_world.seed,
-            );
+            spawn_utils::world_spawn_feraldog(ecs_world, block_x, block_y, block_z, game_world);
         }
         TileKind::TreasureCommon => {
             spawn_utils::world_spawn_treasurecommon(
-                ecs_world,
-                block_x,
-                block_y,
-                block_z,
-                game_world.seed,
+                ecs_world, block_x, block_y, block_z, game_world,
             );
         }
         TileKind::TreasureRare => {
-            spawn_utils::world_spawn_treasurerare(
-                ecs_world,
-                block_x,
-                block_y,
-                block_z,
-                game_world.seed,
-            );
+            spawn_utils::world_spawn_treasurerare(ecs_world, block_x, block_y, block_z, game_world);
         }
         _ => {
             panic!("Unknown tile kind for entity spawning {:?}", tile_kind);
@@ -155,7 +139,7 @@ impl StructureDefinition {
                 .as_array()
                 .unwrap_or(&vec![])
                 .iter()
-                .map(|v| v.as_i64().unwrap_or(0) as i32)
+                .map(|v| v.as_i64().unwrap_or(0))
                 .collect(),
         }
     }
@@ -221,7 +205,7 @@ impl StructureDefinition {
                 .as_array()
                 .unwrap_or(&vec![])
                 .iter()
-                .map(|v| v.as_i64().unwrap_or(0) as i32)
+                .map(|v| v.as_i64().unwrap_or(0))
                 .collect(),
         }
     }

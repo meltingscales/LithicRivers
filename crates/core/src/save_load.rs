@@ -45,9 +45,9 @@ pub struct DroppedItemSave {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ViewportSave {
-    pub view_x: i32,
-    pub view_y: i32,
-    pub view_z: i32,
+    pub view_x: i64,
+    pub view_y: i64,
+    pub view_z: i64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -7,7 +7,7 @@ pub struct GameConfig {
     // Cached settings for performance
     pub developer_mode: bool,
     pub player_name: String,
-    pub default_player_position: [i32; 3],
+    pub default_player_position: [i64; 3],
     pub auto_pickup_enabled: bool,
 }
 
@@ -66,7 +66,7 @@ impl GameConfig {
     }
 
     /// Get vector setting with clean API
-    pub fn get_vector_setting(&self, category: &str, key: &str, environment: &str) -> [i32; 3] {
+    pub fn get_vector_setting(&self, category: &str, key: &str, environment: &str) -> [i64; 3] {
         self.config.get_vector_setting(category, key, environment)
     }
 

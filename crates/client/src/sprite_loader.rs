@@ -19,9 +19,8 @@ pub enum Scale {
     Large,  // 3x3
 }
 
-#[allow(dead_code)]
 impl Scale {
-    pub fn as_u32(self) -> u32 {
+    pub fn as_i64(self) -> i64 {
         match self {
             Scale::Small => 1,
             Scale::Medium => 2,
@@ -30,8 +29,8 @@ impl Scale {
     }
 }
 
-impl From<u32> for Scale {
-    fn from(value: u32) -> Self {
+impl From<i64> for Scale {
+    fn from(value: i64) -> Self {
         match value {
             1 => Scale::Small,
             2 => Scale::Medium,
