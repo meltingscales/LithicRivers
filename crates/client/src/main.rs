@@ -589,7 +589,7 @@ fn ui(f: &mut Frame, app: &mut App) {
     };
 
     // Title
-    let title = Paragraph::new("LithicRivers (Ratatui Client)")
+    let title = Paragraph::new("LithicRivers")
         .style(Style::default().fg(Color::Cyan))
         .alignment(Alignment::Center);
     f.render_widget(title, root_chunks[0]);
