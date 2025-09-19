@@ -7,17 +7,11 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 
-use crate::components::BlocksMovement;
-use crate::components::Combat;
 use crate::components::DroppedItem;
-use crate::components::EntityKind;
-use crate::components::FeralDog;
-use crate::components::GameEntity;
-use crate::components::Glyph;
-use crate::components::Health;
 use crate::components::ItemKind;
 use crate::components::Position;
 use crate::components::SpriteRef;
+use crate::spawn_utils;
 use crate::tiles::TileKind;
 
 #[derive(Debug, Clone, Deserialize)]
@@ -78,21 +72,13 @@ pub fn spawn_entity_for_block(
         TileKind::EnemySpawn => {
             //by default, enemyspawn just spawns a feral dog.
             //in the future, we can add more options here
-            let _dog = ecs_world.spawn((
-                Position {
-                    x: block_x,
-                    y: block_y,
-                    z: block_z,
-                },
-                GameEntity,
-                EntityKind::FeralDog,
-                FeralDog,
-                Health::new(80),
-                Glyph('d'),
-                SpriteRef::new("entities", "feral_dog"),
-                BlocksMovement,
-                Combat::default(),
-            ));
+            spawn_utils::world_spawn_feraldog(
+                ecs_world,
+                block_x,
+                block_y,
+                block_z,
+                game_world.seed,
+            );
         }
         TileKind::TreasureCommon => {
             let _item = ecs_world.spawn((
