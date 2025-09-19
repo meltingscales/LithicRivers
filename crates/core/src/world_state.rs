@@ -1,4 +1,4 @@
-use crate::world::World;
+use crate::world::GameWorld;
 use rand::SeedableRng;
 use rand_chacha::ChaCha20Rng;
 
@@ -6,7 +6,7 @@ use rand_chacha::ChaCha20Rng;
 pub struct WorldState {
     pub seed: u64,
     pub rng: ChaCha20Rng,
-    pub world: World,
+    pub world: GameWorld,
 }
 
 impl WorldState {
@@ -15,7 +15,7 @@ impl WorldState {
         Self {
             seed,
             rng,
-            world: World::new(80, 24, seed),
+            world: GameWorld::new(80, 24, seed),
         }
     }
 }

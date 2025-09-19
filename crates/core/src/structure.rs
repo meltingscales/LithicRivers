@@ -1,4 +1,4 @@
-use crate::world::World as GameWorld;
+use crate::world::GameWorld;
 use hecs::World as ECSWorld;
 use rust_embed::RustEmbed;
 use serde::Deserialize;
@@ -7,10 +7,6 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 
-use crate::components::DroppedItem;
-use crate::components::ItemKind;
-use crate::components::Position;
-use crate::components::SpriteRef;
 use crate::spawn_utils;
 use crate::tiles::TileKind;
 
@@ -81,32 +77,22 @@ pub fn spawn_entity_for_block(
             );
         }
         TileKind::TreasureCommon => {
-            let _item = ecs_world.spawn((
-                Position {
-                    x: block_x,
-                    y: block_y,
-                    z: block_z,
-                },
-                DroppedItem {
-                    kind: ItemKind::Log,
-                    qty: 1,
-                },
-                SpriteRef::new("items", "log"),
-            ));
+            spawn_utils::world_spawn_treasurecommon(
+                ecs_world,
+                block_x,
+                block_y,
+                block_z,
+                game_world.seed,
+            );
         }
         TileKind::TreasureRare => {
-            let _item = ecs_world.spawn((
-                Position {
-                    x: block_x,
-                    y: block_y,
-                    z: block_z,
-                },
-                DroppedItem {
-                    kind: ItemKind::Acorn,
-                    qty: 1,
-                },
-                SpriteRef::new("items", "acorn"),
-            ));
+            spawn_utils::world_spawn_treasurerare(
+                ecs_world,
+                block_x,
+                block_y,
+                block_z,
+                game_world.seed,
+            );
         }
         _ => {
             panic!("Unknown tile kind for entity spawning {:?}", tile_kind);
