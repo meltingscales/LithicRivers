@@ -457,6 +457,10 @@ fn apply_damage(
     damage: u32,
     source: &str,
 ) {
+    // Check if target is the player for better messaging before creating ComponentAccess
+    let is_player = is_player_entity(world, target_entity);
+    let target_name = if is_player { "You" } else { "Enemy" };
+
     let mut comp_access = ComponentAccess::new(world, res);
 
     match comp_access.apply_damage(target_entity, damage) {
@@ -465,25 +469,35 @@ fn apply_damage(
             new_health,
             damage_applied,
         }) => {
-            res.events.combat_event(
+            let message = if is_player {
                 format!(
-                    "Target takes {} damage from {} ({}/{} HP)",
-                    damage_applied, source, new_health, old_health
-                ),
-                res.time.tick,
-            );
+                    "{} take {} damage from {} ({}/{} HP)",
+                    target_name, damage_applied, source, new_health, old_health
+                )
+            } else {
+                format!(
+                    "{} takes {} damage from {} ({}/{} HP)",
+                    target_name, damage_applied, source, new_health, old_health
+                )
+            };
+            res.events.combat_event(message, res.time.tick);
         }
         Ok(DamageResult::Killed {
             old_health,
             damage_applied,
         }) => {
-            res.events.combat_event(
+            let message = if is_player {
                 format!(
-                    "Target takes {} damage from {} and dies! ({} HP)",
-                    damage_applied, source, old_health
-                ),
-                res.time.tick,
-            );
+                    "{} take {} damage from {} and die! ({} HP)",
+                    target_name, damage_applied, source, old_health
+                )
+            } else {
+                format!(
+                    "{} takes {} damage from {} and dies! ({} HP)",
+                    target_name, damage_applied, source, old_health
+                )
+            };
+            res.events.combat_event(message, res.time.tick);
             // Additional death handling is done by ComponentAccess
         }
         Ok(DamageResult::AlreadyDead) => {

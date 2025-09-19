@@ -377,7 +377,11 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<(), 
             };
 
             if should_tick {
-                app.core.game.tick();
+                let tick_result = app.core.game.tick();
+                // Check if combat ended during auto-tick
+                if tick_result.contains(lithicrivers_core::game::GameTickResult::CombatEnded) {
+                    app.combat = CombatUiState::None;
+                }
             }
         } else {
             // Reset tick timer when not in combat

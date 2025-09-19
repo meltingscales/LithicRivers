@@ -439,7 +439,7 @@ impl GameWorld {
 
     // Cached variant: generate-if-absent and store in self.chunks, then return tile.
     pub fn get_tile_cached(&mut self, x: i64, y: i64, z: i64) -> TileKind {
-        tracing::info!(target: "world", "get_tile_cached called for world pos ({}, {}, {})", x, y, z);
+        // tracing::info!(target: "world", "get_tile_cached called for world pos ({}, {}, {})", x, y, z);
         let cx = Self::div_floor(x, CHUNK_SIZE);
         let cy = Self::div_floor(y, CHUNK_SIZE) as i64;
         let cz = Self::div_floor(z, CHUNK_SIZE_Z) as i64;
@@ -484,10 +484,10 @@ impl GameWorld {
 
     // Ensure a chunk exists in cache by generating and inserting if absent.
     pub fn ensure_chunk(&mut self, cx: i64, cy: i64, cz: i64) {
-        tracing::info!(target: "world", "ensure_chunk called for ({}, {}, {}) - cache has {} chunks",
-            cx, cy, cz, self.chunks.len());
+        // tracing::info!(target: "world", "ensure_chunk called for ({}, {}, {}) - cache has {} chunks",
+        //     cx, cy, cz, self.chunks.len());
         if self.chunks.contains_key(&(cx, cy, cz)) {
-            tracing::info!(target: "world", "Chunk ({}, {}, {}) already exists in cache", cx, cy, cz);
+            // tracing::info!(target: "world", "Chunk ({}, {}, {}) already exists in cache", cx, cy, cz);
             return;
         }
         tracing::info!(target: "world", "Generating new chunk ({}, {}, {})", cx, cy, cz);

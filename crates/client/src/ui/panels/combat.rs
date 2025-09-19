@@ -75,7 +75,14 @@ pub fn render_combat_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     render_player_info(f, chunks[0], player_health, player_energy);
 
     // Render enemies with real timers
-    render_enemies(f, chunks[1], &combat_enemies, current_enemy, &enemy_timers);
+    render_enemies(
+        f,
+        chunks[1],
+        &combat_enemies,
+        current_enemy,
+        &enemy_timers,
+        app,
+    );
 
     // Render moves
     render_moves(
@@ -96,11 +103,9 @@ pub fn render_combat_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     f.render_widget(message_para, chunks[3]);
 
     // Controls
-    let controls = Paragraph::new(
-        "[←→] Select Target | [↑↓] Select Move | [1-4] Quick Select | [SPACE] Use Move",
-    )
-    .style(Style::default().fg(Color::Gray))
-    .alignment(Alignment::Center);
+    let controls = Paragraph::new("[←→] Target | [↑↓] Move | [1-4] Quick | [SPACE] Use")
+        .style(Style::default().fg(Color::Gray))
+        .alignment(Alignment::Center);
     f.render_widget(controls, chunks[4]);
 }
 
@@ -112,6 +117,7 @@ fn render_enemies(
     enemies: &[CombatEnemy],
     current_enemy: usize,
     enemy_timers: &[u32],
+    app: &mut crate::App,
 ) {
     if enemies.is_empty() {
         return;
@@ -126,7 +132,7 @@ fn render_enemies(
     for (i, (enemy, chunk)) in enemies.iter().zip(enemy_chunks.iter()).enumerate() {
         let is_selected = i == current_enemy;
         let timer = enemy_timers.get(i).copied().unwrap_or(0);
-        render_single_enemy(f, *chunk, enemy, is_selected, timer);
+        render_single_enemy(f, *chunk, enemy, is_selected, timer, app);
     }
 }
 
@@ -136,6 +142,7 @@ fn render_single_enemy(
     enemy: &CombatEnemy,
     is_selected: bool,
     timer_ms: u32,
+    app: &mut crate::App,
 ) {
     let block = Block::default()
         .borders(Borders::ALL)
@@ -148,12 +155,23 @@ fn render_single_enemy(
     let inner = block.inner(area);
     f.render_widget(block, area);
 
-    // Simple ASCII art placeholder (later this will use sprite system)
-    let portrait_lines = vec!["  /\\_/\\  ", " ( o.o ) ", "  > ^ <  "];
-
-    let portrait = Paragraph::new(portrait_lines.join("\n"))
-        .style(Style::default().fg(Color::Green))
-        .alignment(Alignment::Center);
+    // Use sprite system for enemy portraits
+    let portrait = if let Some(sprite_ref) = &enemy.sprite_ref {
+        let (sprite_block, sprite_color) = crate::sprite_loader::sprite_block_for_spriteref(
+            &mut app.core.sprite_loader,
+            sprite_ref,
+            crate::sprite_loader::Scale::Medium, // Use 2x2 scale for portraits
+        );
+        Paragraph::new(sprite_block)
+            .style(Style::default().fg(sprite_color))
+            .alignment(Alignment::Center)
+    } else {
+        // Fallback ASCII art for entities without sprites
+        let portrait_lines = vec!["  /\\_/\\  ", " ( o.o ) ", "  > ^ <  "];
+        Paragraph::new(portrait_lines.join("\n"))
+            .style(Style::default().fg(Color::Green))
+            .alignment(Alignment::Center)
+    };
 
     // Layout: portrait at top, health bar at bottom
     let enemy_layout = Layout::vertical([
@@ -182,9 +200,9 @@ fn render_single_enemy(
     // Attack timer using real combat timing - only show whole seconds to prevent constant re-renders
     let attack_timer = if timer_ms > 0 {
         let seconds = timer_ms / 1000;
-        format!("⏳ {}s", seconds)
+        format!("{}s", seconds)
     } else {
-        "⚡ ATTACKING!".to_string()
+        "".to_string()
     };
 
     let timer = Paragraph::new(attack_timer)
@@ -628,10 +646,11 @@ struct CombatEnemy {
     name: String,
     health: u32,
     max_health: u32,
+    sprite_ref: Option<lithicrivers_core::components::SpriteRef>,
 }
 
 fn get_enemy_combat_data(app: &mut crate::App) -> Vec<CombatEnemy> {
-    use lithicrivers_core::components::{Combat, GameEntity, Health, Position};
+    use lithicrivers_core::components::{Combat, GameEntity, Health, Position, SpriteRef};
 
     let mut enemies = Vec::new();
 
@@ -641,11 +660,11 @@ fn get_enemy_combat_data(app: &mut crate::App) -> Vec<CombatEnemy> {
             let player_pos = *player_pos;
 
             // Look for nearby combat entities that are actually in combat
-            for (entity, (pos, combat, _)) in app
+            for (entity, (pos, combat, _, sprite_ref)) in app
                 .core
                 .game
                 .world
-                .query::<(&Position, &Combat, &GameEntity)>()
+                .query::<(&Position, &Combat, &GameEntity, Option<&SpriteRef>)>()
                 .iter()
             {
                 if entity == player_entity {
@@ -694,6 +713,7 @@ fn get_enemy_combat_data(app: &mut crate::App) -> Vec<CombatEnemy> {
                         name: format!("Enemy {}", entity.id()), // Use entity ID for now
                         health: health.current,
                         max_health: health.max,
+                        sprite_ref: sprite_ref.cloned(),
                     });
                 }
             }
