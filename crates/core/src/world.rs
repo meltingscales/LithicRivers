@@ -404,15 +404,15 @@ impl GameWorld {
         rand::rngs::StdRng::seed_from_u64(seed)
     }
 
-    pub fn mix_coords(&self, cx: i64, cy: i64, cz: i64) -> u64 {
+    pub fn mix_coords(&self, x: i64, y: i64, z: i64) -> u64 {
         // Zigzag encode signed to unsigned, then mix with seed
-        fn zz(x: i64) -> u64 {
-            ((x << 1) ^ (x >> 31)) as u64
+        fn zz(n: i64) -> u64 {
+            ((n << 1) ^ (n >> 63)) as u64
         }
         let mut v = self.seed.wrapping_mul(0x9E3779B185EBCA87);
-        v ^= zz(cx).wrapping_mul(0x94D049BB133111EB);
-        v = v.rotate_left(27) ^ zz(cy).wrapping_mul(0xD2B74407B1CE6E93);
-        v ^= zz(cz).wrapping_mul(0xC0FFEE);
+        v ^= zz(x).wrapping_mul(0x94D049BB133111EB);
+        v = v.rotate_left(27) ^ zz(y).wrapping_mul(0xD2B74407B1CE6E93);
+        v ^= zz(z).wrapping_mul(0xC0FFEE);
 
         return v;
     }
