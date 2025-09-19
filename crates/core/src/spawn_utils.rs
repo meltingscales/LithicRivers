@@ -43,20 +43,56 @@ pub fn world_spawn_treasurecommon(
     block_x: i64,
     block_y: i64,
     block_z: i64,
-    _game_world: &GameWorld,
+    game_world: &GameWorld,
 ) {
-    let _item = ecs_world.spawn((
-        Position {
-            x: block_x,
-            y: block_y,
-            z: block_z,
-        },
-        DroppedItem {
-            kind: ItemKind::Log,
-            qty: 1,
-        },
-        SpriteRef::new("items", "log"),
-    ));
+    let mut rng = game_world.new_rng(block_x, block_y, block_z);
+    let random_num = rng.gen::<f64>();
+
+    match random_num {
+        0.0..0.10 => {
+            let _item = ecs_world.spawn((
+                Position {
+                    x: block_x,
+                    y: block_y,
+                    z: block_z,
+                },
+                DroppedItem {
+                    kind: ItemKind::Log,
+                    qty: 1,
+                },
+                SpriteRef::new("items", "log"),
+            ));
+        }
+        0.10..0.20 => {
+            let _item = ecs_world.spawn((
+                Position {
+                    x: block_x,
+                    y: block_y,
+                    z: block_z,
+                },
+                DroppedItem {
+                    kind: ItemKind::Leather,
+                    qty: 1,
+                },
+                SpriteRef::new("items", "leather"),
+            ));
+        }
+        0.20..0.70 => {
+            let _item = ecs_world.spawn((
+                Position {
+                    x: block_x,
+                    y: block_y,
+                    z: block_z,
+                },
+                DroppedItem {
+                    kind: ItemKind::Meat,
+                    qty: 1,
+                },
+                SpriteRef::new("items", "meat"),
+            ));
+        }
+        _ => {}
+    }
 }
 
 /// Spawn a FeralDog at the specified position with randomized inventory
