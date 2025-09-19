@@ -20,16 +20,23 @@ pub fn render_modes_panel(f: &mut Frame, app: &mut App, area: Rect) {
 
     // Look mode status
     let look_status = if app.panels.look.mode {
-        Span::styled("LOOK", Style::default().fg(Color::Yellow))
+        Span::styled("L", Style::default().fg(Color::Yellow))
     } else {
-        Span::styled("----", Style::default().fg(Color::DarkGray))
+        Span::styled("-", Style::default().fg(Color::DarkGray))
     };
 
     // Build mode status
     let build_status = match app.panels.build.mode {
-        BuildMode::Movement => Span::styled("-------", Style::default().fg(Color::DarkGray)),
-        BuildMode::Break => Span::styled("BREAK", Style::default().fg(Color::Cyan)),
-        BuildMode::Place => Span::styled("PLACE", Style::default().fg(Color::Green)),
+        BuildMode::Movement => Span::styled("-", Style::default().fg(Color::DarkGray)),
+        BuildMode::Break => Span::styled("B", Style::default().fg(Color::Cyan)),
+        BuildMode::Place => Span::styled("P", Style::default().fg(Color::Green)),
+    };
+
+    // Noclip mode status
+    let noclip_status = if app.core.game.res.player_state.noclip_enabled {
+        Span::styled("NC", Style::default().fg(Color::Magenta))
+    } else {
+        Span::styled("--", Style::default().fg(Color::DarkGray))
     };
 
     // Create a single line with all modes
@@ -39,6 +46,8 @@ pub fn render_modes_panel(f: &mut Frame, app: &mut App, area: Rect) {
         look_status,
         Span::raw(" "),
         build_status,
+        Span::raw(" "),
+        noclip_status,
     ]));
 
     let content = Paragraph::new(lines)

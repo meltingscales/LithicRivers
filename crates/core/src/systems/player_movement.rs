@@ -22,25 +22,67 @@ pub fn move_player_system(world: &mut World, res: &mut Resources) {
                     let ny = cy + dy;
                     let nz = cz + dz;
 
-                    // Check horizontal movement blocking
+                    // Check movement blocking (horizontal and vertical)
                     let mut blocked = false;
-                    if dx != 0 || dy != 0 {
-                        let t = res.world_state.world.get_tile_cached(nx, ny, cz);
-                        blocked = !t.is_passable();
-                        if !blocked {
-                            for (_, (_, epos)) in
-                                world.query::<(&BlocksMovement, &Position)>().iter()
-                            {
-                                if epos.x == nx && epos.y == ny && epos.z == cz {
+
+                    // Skip collision checks if noclip is enabled
+                    if !res.player_state.noclip_enabled {
+                        if dx != 0 || dy != 0 {
+                            // Horizontal movement collision
+                            let t = res.world_state.world.get_tile_cached(nx, ny, cz);
+                            blocked = !t.is_passable();
+                            if !blocked {
+                                for (_, (_, epos)) in
+                                    world.query::<(&BlocksMovement, &Position)>().iter()
+                                {
+                                    if epos.x == nx && epos.y == ny && epos.z == cz {
+                                        blocked = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            if blocked {
+                                info!("Blocked by {:?} at ({}, {})", t, nx, ny);
+                                res.player_state.last_blocked_tile = Some((nx, ny));
+                            }
+                        } else if dz != 0 {
+                            // Vertical movement - requires stairs at current position AND destination
+                            let current_tile = res.world_state.world.get_tile_cached(cx, cy, cz);
+                            use crate::tiles::TileKind;
+                            if current_tile != TileKind::Stairs {
+                                blocked = true;
+                                info!(
+                                    "Vertical movement blocked - not on stairs at ({}, {}, {})",
+                                    cx, cy, cz
+                                );
+                                res.events.interaction_event(
+                                    "You need to be on stairs to move up or down.".to_string(),
+                                    res.time.tick,
+                                );
+                            } else {
+                                // Also check destination has stairs to prevent stranding
+                                let destination_tile =
+                                    res.world_state.world.get_tile_cached(nx, ny, nz);
+                                if destination_tile != TileKind::Stairs {
                                     blocked = true;
-                                    break;
+                                    info!(
+                                        "Vertical movement blocked - no stairs at destination ({}, {}, {})",
+                                        nx, ny, nz
+                                    );
+                                    res.events.interaction_event(
+                                        "Cannot move there - no stairs at the destination level."
+                                            .to_string(),
+                                        res.time.tick,
+                                    );
                                 }
                             }
                         }
-                        if blocked {
-                            info!("Blocked by {:?} at ({}, {})", t, nx, ny);
-                            res.player_state.last_blocked_tile = Some((nx, ny));
-                        }
+                    } else {
+                        // Noclip enabled - bypassing all collision checks
+                        info!(
+                            "Noclip enabled - allowing movement from ({},{},{}) to ({},{},{})",
+                            cx, cy, cz, nx, ny, nz
+                        );
                     }
 
                     // Apply movement if not blocked

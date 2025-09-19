@@ -1424,6 +1424,25 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
         app.core.should_quit = true;
         return Ok(());
     }
+
+    // Global Cheats: Toggle noclip mode
+    if app
+        .ui
+        .keybinds
+        .matches("inventory", "CHEAT_NOCLIP_TOGGLE", &key)
+    {
+        app.core.game.res.player_state.noclip_enabled =
+            !app.core.game.res.player_state.noclip_enabled;
+        let state = if app.core.game.res.player_state.noclip_enabled {
+            "ON"
+        } else {
+            "OFF"
+        };
+        app.core.game.res.log(format!("Noclip mode: {}", state));
+        tracing::info!(target: "game", "Noclip mode toggled: {}", state);
+        return Ok(());
+    }
+
     // UI: Menu activation and paging
     if app.ui.keybinds.matches("ui", "MENU_ACTIVATE", &key) {
         app.activate_menu();
