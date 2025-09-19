@@ -135,13 +135,13 @@ impl App {
         if let Some(start_time) = self.splash.start_time {
             match self.splash.state {
                 SplashState::Logo => {
-                    if start_time.elapsed() >= Duration::from_secs(1) {
+                    if start_time.elapsed() >= Duration::from_secs(3) {
                         self.splash.state = SplashState::GameTitle;
                         self.splash.start_time = Some(Instant::now());
                     }
                 }
                 SplashState::GameTitle => {
-                    if start_time.elapsed() >= Duration::from_secs(1) {
+                    if start_time.elapsed() >= Duration::from_secs(3) {
                         self.splash.state = SplashState::BootMessage;
                         self.splash.start_time = Some(Instant::now());
                         self.splash.boot_display_text.clear();
