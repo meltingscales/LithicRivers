@@ -21,9 +21,9 @@ pub enum ChunkGenerationState {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct PendingStructure {
     pub name: String,
-    pub x: i32,
-    pub y: i32,
-    pub z: i32,
+    pub x: i64,
+    pub y: i64,
+    pub z: i64,
     pub bury_structure: bool,
 }
 

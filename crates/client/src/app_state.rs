@@ -77,9 +77,9 @@ pub struct UiState {
     pub bottom_menu_rect: Option<Rect>, // Remember for click handling
     pub keybinds: Keybinds,
     // UI-owned viewport state - what the player is currently viewing
-    pub view_x: i32,
-    pub view_y: i32,
-    pub view_z: i32,
+    pub view_x: i64,
+    pub view_y: i64,
+    pub view_z: i64,
 }
 
 /// Audio system state

@@ -81,7 +81,7 @@ struct App {
     cells: Vec<Cell>,
     rooms: Vec<usize>,
     edges: Vec<Edge>,
-    corridors: HashSet<(i32, i32)>,
+    corridors: HashSet<(i64, i64)>,
     rng: SplitMix64,
     step: usize,
 }
@@ -294,21 +294,21 @@ impl App {
             let mid_y = end.y;
 
             // Horizontal segment
-            let y = mid_y as i32;
-            let x_start = start.x.min(mid_x) as i32;
-            let x_end = start.x.max(mid_x) as i32;
+            let y = mid_y as i64;
+            let x_start = start.x.min(mid_x) as i64;
+            let x_end = start.x.max(mid_x) as i64;
             for x in x_start..=x_end {
-                for dy in -(CORRIDOR_WIDTH as i32 / 2)..=(CORRIDOR_WIDTH as i32 / 2) {
+                for dy in -(CORRIDOR_WIDTH as i64 / 2)..=(CORRIDOR_WIDTH as i64 / 2) {
                     self.corridors.insert((x, y + dy));
                 }
             }
 
             // Vertical segment
-            let x = mid_x as i32;
-            let y_start = start.y.min(end.y) as i32;
-            let y_end = start.y.max(end.y) as i32;
+            let x = mid_x as i64;
+            let y_start = start.y.min(end.y) as i64;
+            let y_end = start.y.max(end.y) as i64;
             for y in y_start..=y_end {
-                for dx in -(CORRIDOR_WIDTH as i32 / 2)..=(CORRIDOR_WIDTH as i32 / 2) {
+                for dx in -(CORRIDOR_WIDTH as i64 / 2)..=(CORRIDOR_WIDTH as i64 / 2) {
                     self.corridors.insert((x + dx, y));
                 }
             }

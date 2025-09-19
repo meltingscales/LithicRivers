@@ -261,7 +261,7 @@ pub fn execute_player_move(
                                 let dy = pos.y - target_xyz.y;
                                 let distance_sq = dx * dx + dy * dy;
 
-                                if distance_sq <= (splash_radius * splash_radius) as i32 {
+                                if distance_sq <= (splash_radius * splash_radius) {
                                     Some(entity)
                                 } else {
                                     None

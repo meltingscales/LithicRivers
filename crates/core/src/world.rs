@@ -56,8 +56,7 @@ impl GameWorld {
     /// seed and chunk coords so results are deterministic.
     fn add_tree_clusters(&self, cx: i64, cy: i64, cz: i64, chunk: &mut Chunk) {
         // Distinct salt so RNG stream differs from other features
-        let salt: u64 = 0x7B1E_CA11_u64 ^ (cz as u64).wrapping_mul(0x5EED);
-        let mut rng = ChaCha20Rng::seed_from_u64(self.mix_coords(cx, cy) ^ salt);
+        let mut rng = self.new_rng(cx, cy, cz);
 
         // 0-2 clusters per chunk, biased toward 0/1
         let cluster_count = match rng.gen_range(0..100) {
@@ -86,8 +85,8 @@ impl GameWorld {
             // Grow a blob via random frontier expansion
             let target = rng.gen_range(10..=20);
             let mut placed = 0usize;
-            let mut visited: HashSet<(i32, i32)> = HashSet::new();
-            let mut frontier: Vec<(i32, i32)> = vec![(sx, sy)];
+            let mut visited: HashSet<(i64, i64)> = HashSet::new();
+            let mut frontier: Vec<(i64, i64)> = vec![(sx, sy)];
             visited.insert((sx, sy));
 
             while placed < target && !frontier.is_empty() {
@@ -129,22 +128,22 @@ impl Chunk {
         }
     }
     #[inline]
-    pub fn idx(tx: i32, ty: i32) -> usize {
+    pub fn idx(tx: i64, ty: i64) -> usize {
         (ty as usize) * (CHUNK_SIZE as usize) + (tx as usize)
     }
     #[inline]
-    pub fn get(&self, tx: i32, ty: i32) -> TileKind {
+    pub fn get(&self, tx: i64, ty: i64) -> TileKind {
         self.tiles[Self::idx(tx, ty)]
     }
     #[inline]
-    pub fn set(&mut self, tx: i32, ty: i32, t: TileKind) {
+    pub fn set(&mut self, tx: i64, ty: i64, t: TileKind) {
         let i = Self::idx(tx, ty);
         self.tiles[i] = t;
     }
 }
 
-pub const CHUNK_SIZE: i32 = 64;
-pub const CHUNK_SIZE_Z: i32 = 1; // z slices are 1-tile thick for distinct layers
+pub const CHUNK_SIZE: i64 = 64;
+pub const CHUNK_SIZE_Z: i64 = 1; // z slices are 1-tile thick for distinct layers
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GameWorld {
@@ -351,7 +350,7 @@ impl GameWorld {
         self.add_tree_clusters(cx, cy, cz, chunk);
 
         // Add some rare resources; boost frequencies in Lithic Rivers
-        let mut rng = ChaCha20Rng::seed_from_u64(self.mix_coords(cx, cy));
+        let mut rng = ChaCha20Rng::seed_from_u64(self.mix_coords(cx, cy, cz));
         let (p_iron, p_elec, p_plasteel) = if cz <= -5 {
             (0.15, 0.07, 0.03)
         } else {
@@ -364,8 +363,8 @@ impl GameWorld {
         ];
         for (resource, p) in rare_resources.iter() {
             if rng.gen::<f64>() < *p {
-                let x = rng.gen_range(0..CHUNK_SIZE as i32);
-                let y = rng.gen_range(0..CHUNK_SIZE as i32);
+                let x = rng.gen_range(0..CHUNK_SIZE);
+                let y = rng.gen_range(0..CHUNK_SIZE);
                 chunk.set(x, y, *resource);
             }
         }
@@ -374,7 +373,7 @@ impl GameWorld {
     }
 
     #[inline]
-    fn div_floor(a: i32, b: i32) -> i64 {
+    fn div_floor(a: i64, b: i64) -> i64 {
         // floor division for negatives
         let mut q = (a as i64) / (b as i64);
         let r = (a as i64) % (b as i64);
@@ -385,7 +384,7 @@ impl GameWorld {
     }
 
     #[inline]
-    fn mod_floor(a: i32, b: i32) -> i32 {
+    fn mod_floor(a: i64, b: i64) -> i64 {
         let m = a % b;
         if m < 0 {
             m + b
@@ -394,24 +393,37 @@ impl GameWorld {
         }
     }
 
-    fn mix_coords(&self, cx: i64, cy: i64) -> u64 {
+    pub fn random_float(&self, x: i64, y: i64, z: i64) -> f64 {
+        let mut rng = self.new_rng(x, y, z);
+        rng.gen()
+    }
+
+    pub fn new_rng(&self, x: i64, y: i64, z: i64) -> rand::rngs::StdRng {
+        let seed = self.seed;
+        _ = seed.wrapping_add(self.mix_coords(x, y, z));
+        rand::rngs::StdRng::seed_from_u64(seed)
+    }
+
+    pub fn mix_coords(&self, cx: i64, cy: i64, cz: i64) -> u64 {
         // Zigzag encode signed to unsigned, then mix with seed
         fn zz(x: i64) -> u64 {
-            ((x << 1) ^ (x >> 63)) as u64
+            ((x << 1) ^ (x >> 31)) as u64
         }
         let mut v = self.seed.wrapping_mul(0x9E3779B185EBCA87);
         v ^= zz(cx).wrapping_mul(0x94D049BB133111EB);
         v = v.rotate_left(27) ^ zz(cy).wrapping_mul(0xD2B74407B1CE6E93);
-        v ^ 0xC0FFEE
+        v ^= zz(cz).wrapping_mul(0xC0FFEE);
+
+        return v;
     }
 
-    pub fn is_passable(&self, x: i32, y: i32, z: i32) -> bool {
+    pub fn is_passable(&self, x: i64, y: i64, z: i64) -> bool {
         self.get_tile(x, y, z).is_passable()
     }
 
-    pub fn get_tile(&self, x: i32, y: i32, z: i32) -> TileKind {
-        let cx = Self::div_floor(x, CHUNK_SIZE) as i64;
-        let cy = Self::div_floor(y, CHUNK_SIZE) as i64;
+    pub fn get_tile(&self, x: i64, y: i64, z: i64) -> TileKind {
+        let cx = Self::div_floor(x, CHUNK_SIZE);
+        let cy = Self::div_floor(y, CHUNK_SIZE);
         let cz = Self::div_floor(z, CHUNK_SIZE_Z) as i64;
         let tx = Self::mod_floor(x, CHUNK_SIZE);
         let ty = Self::mod_floor(y, CHUNK_SIZE);
@@ -427,9 +439,9 @@ impl GameWorld {
     }
 
     // Cached variant: generate-if-absent and store in self.chunks, then return tile.
-    pub fn get_tile_cached(&mut self, x: i32, y: i32, z: i32) -> TileKind {
+    pub fn get_tile_cached(&mut self, x: i64, y: i64, z: i64) -> TileKind {
         tracing::info!(target: "world", "get_tile_cached called for world pos ({}, {}, {})", x, y, z);
-        let cx = Self::div_floor(x, CHUNK_SIZE) as i64;
+        let cx = Self::div_floor(x, CHUNK_SIZE);
         let cy = Self::div_floor(y, CHUNK_SIZE) as i64;
         let cz = Self::div_floor(z, CHUNK_SIZE_Z) as i64;
         let tx = Self::mod_floor(x, CHUNK_SIZE);
@@ -454,9 +466,9 @@ impl GameWorld {
 
     /// Get a tile without triggering world generation - for rendering only
     /// Returns a default tile (Stone) if the chunk doesn't exist
-    pub fn get_tile_cached_no_worldgen(&self, x: i32, y: i32, z: i32) -> TileKind {
-        let cx = Self::div_floor(x, CHUNK_SIZE) as i64;
-        let cy = Self::div_floor(y, CHUNK_SIZE) as i64;
+    pub fn get_tile_cached_no_worldgen(&self, x: i64, y: i64, z: i64) -> TileKind {
+        let cx = Self::div_floor(x, CHUNK_SIZE);
+        let cy = Self::div_floor(y, CHUNK_SIZE);
         let cz = Self::div_floor(z, CHUNK_SIZE_Z) as i64;
         let tx = Self::mod_floor(x, CHUNK_SIZE);
         let ty = Self::mod_floor(y, CHUNK_SIZE);
@@ -525,7 +537,7 @@ impl GameWorld {
             let offsets = [(8, 8), (20, 40), (40, 20), (32, 32)];
             for (name, &(ox, oy)) in structure_names.iter().zip(offsets.iter()) {
                 let structure = StructureDefinition::load_from_embedded(name);
-                let world_z = (cz as i32) * CHUNK_SIZE_Z;
+                let world_z = cz * CHUNK_SIZE_Z;
                 self.apply_structure_world(
                     ecs_world, cx, cy, cz, &structure, ox, oy, world_z, false,
                 );
@@ -538,40 +550,40 @@ impl GameWorld {
         let center_wy = (cy as f64 * CHUNK_SIZE as f64) + (CHUNK_SIZE as f64 * 0.5);
         let zf = (cz as f64) * (CHUNK_SIZE_Z as f64) + (CHUNK_SIZE_Z as f64 * 0.5);
         let band_for_chunk = self.biome_for(center_wx, center_wy, zf);
-        let mut rng = ChaCha20Rng::seed_from_u64(self.mix_coords(cx, cy));
+        let mut rng = ChaCha20Rng::seed_from_u64(self.mix_coords(cx, cy, cz));
         if rng.gen::<f64>() < 0.05 {
             let (name, ox, oy) = match band_for_chunk {
                 BiomeBand::Plains => (
                     "small_temple.lrstructure",
-                    rng.gen_range(0..CHUNK_SIZE) as i32,
-                    rng.gen_range(0..CHUNK_SIZE) as i32,
+                    rng.gen_range(0..CHUNK_SIZE),
+                    rng.gen_range(0..CHUNK_SIZE),
                 ),
                 BiomeBand::Forest => (
                     "giant_corpse.lrstructure",
-                    rng.gen_range(0..CHUNK_SIZE) as i32,
-                    rng.gen_range(0..CHUNK_SIZE) as i32,
+                    rng.gen_range(0..CHUNK_SIZE),
+                    rng.gen_range(0..CHUNK_SIZE),
                 ),
                 BiomeBand::Rocky => (
                     "small_ship.lrstructure",
-                    rng.gen_range(0..CHUNK_SIZE) as i32,
-                    rng.gen_range(0..CHUNK_SIZE) as i32,
+                    rng.gen_range(0..CHUNK_SIZE),
+                    rng.gen_range(0..CHUNK_SIZE),
                 ),
                 BiomeBand::LithicRivers => (
                     "small_temple.lrstructure",
-                    rng.gen_range(0..CHUNK_SIZE) as i32,
-                    rng.gen_range(0..CHUNK_SIZE) as i32,
+                    rng.gen_range(0..CHUNK_SIZE),
+                    rng.gen_range(0..CHUNK_SIZE),
                 ),
             };
             let structure = StructureDefinition::load_from_embedded(name);
-            let world_z = (cz as i32) * CHUNK_SIZE_Z;
+            let world_z = cz * CHUNK_SIZE_Z;
             self.apply_structure_world(ecs_world, cx, cy, cz, &structure, ox, oy, world_z, false);
         }
     }
 
     /// Mutate a tile at world coordinates, generating and caching the chunk if needed.
-    pub fn set_tile_cached(&mut self, x: i32, y: i32, z: i32, t: TileKind) {
-        let cx = Self::div_floor(x, CHUNK_SIZE) as i64;
-        let cy = Self::div_floor(y, CHUNK_SIZE) as i64;
+    pub fn set_tile_cached(&mut self, x: i64, y: i64, z: i64, t: TileKind) {
+        let cx = Self::div_floor(x, CHUNK_SIZE);
+        let cy = Self::div_floor(y, CHUNK_SIZE);
         let cz = Self::div_floor(z, CHUNK_SIZE_Z) as i64;
         let tx = Self::mod_floor(x, CHUNK_SIZE);
         let ty = Self::mod_floor(y, CHUNK_SIZE);
@@ -592,9 +604,9 @@ impl GameWorld {
         cy: i64,
         cz: i64,
         structure: &StructureDefinition,
-        ox: i32,
-        oy: i32,
-        world_z: i32,
+        ox: i64,
+        oy: i64,
+        world_z: i64,
         bury_structure: bool,
     ) {
         // Re-entrancy guard: signal that we are in structure placement so ensure_chunk()
@@ -604,12 +616,12 @@ impl GameWorld {
         // First, ensure all Z chunks that this structure will span are generated
         let (min_structure_z, max_structure_z) = if bury_structure {
             // For buried structures, top layer is at world_z, bottom is world_z - (layers - 1)
-            let bottom_z = world_z - (structure.layers.len() as i32 - 1);
+            let bottom_z = world_z - (structure.layers.len() as i64 - 1);
             (bottom_z, world_z)
         } else {
             // For normal structures, bottom layer is at chunk base, top is chunk base + layers - 1
-            let wz0 = (cz as i32) * CHUNK_SIZE_Z;
-            (wz0, wz0 + structure.layers.len() as i32 - 1)
+            let wz0 = cz * CHUNK_SIZE_Z;
+            (wz0, wz0 + structure.layers.len() as i64 - 1)
         };
 
         let min_chunk_z = Self::div_floor(min_structure_z, CHUNK_SIZE_Z) as i64;
@@ -626,8 +638,8 @@ impl GameWorld {
                 self.ensure_chunk(cx, cy, required_cz);
             }
         }
-        let wx0 = (cx as i32) * CHUNK_SIZE;
-        let wy0 = (cy as i32) * CHUNK_SIZE;
+        let wx0 = (cx) * CHUNK_SIZE;
+        let wy0 = (cy) * CHUNK_SIZE;
 
         let mut edits: usize = 0;
         for (li, layer) in structure.layers.iter().enumerate() {
@@ -635,17 +647,17 @@ impl GameWorld {
                 for (x, ch) in line.chars().enumerate() {
                     let symbol = ch.to_string();
                     if let Some(tile) = structure.get_tile_for_symbol(&symbol) {
-                        let tx = wx0 + ox + x as i32;
-                        let ty = wy0 + oy + y as i32;
+                        let tx = wx0 + ox + x as i64;
+                        let ty = wy0 + oy + y as i64;
                         let tz = if bury_structure {
                             // For buried structures, spawn point is top of structure
                             // Layer 0 (bottom) goes at world_z - (total_layers - 1)
                             // Layer i goes at world_z - (total_layers - 1 - i)
-                            world_z - (structure.layers.len() as i32 - 1 - li as i32)
+                            world_z - (structure.layers.len() as i64 - 1 - li as i64)
                         } else {
                             // For normal structures, layer 0 is at chunk base, subsequent layers go up
-                            let wz0 = (cz as i32) * CHUNK_SIZE_Z;
-                            wz0 + li as i32
+                            let wz0 = (cz) * CHUNK_SIZE_Z;
+                            wz0 + li as i64
                         };
 
                         // if the structure wants to use existing worldgen,
@@ -685,26 +697,26 @@ impl GameWorld {
     }
 
     /// Get tile at specific Z level - now simplified without gen_z complexity
-    pub fn get_tile_at_z(&mut self, x: i32, y: i32, z: i32) -> TileKind {
+    pub fn get_tile_at_z(&mut self, x: i64, y: i64, z: i64) -> TileKind {
         self.get_tile_cached(x, y, z)
     }
 
     /// Get a tile at a specific Z level without triggering world generation - for rendering only
     /// Returns a default tile if the chunk doesn't exist
-    pub fn get_tile_at_z_no_worldgen(&self, x: i32, y: i32, z: i32) -> TileKind {
+    pub fn get_tile_at_z_no_worldgen(&self, x: i64, y: i64, z: i64) -> TileKind {
         // No need to change gen_z since we're not generating anything
         self.get_tile_cached_no_worldgen(x, y, z)
     }
 
     /// Prefetch chunks at specific Z level - simplified without gen_z complexity
-    pub fn prefetch_rect_at_z(&mut self, left: i32, top: i32, right: i32, bottom: i32, z: i32) {
+    pub fn prefetch_rect_at_z(&mut self, left: i64, top: i64, right: i64, bottom: i64, z: i64) {
         self.prefetch_rect(left, top, right, bottom, z);
     }
 
     // Prefetch all chunks overlapping the given rect at a z-level [left..=right] x [top..=bottom]
-    pub fn prefetch_rect(&mut self, left: i32, top: i32, right: i32, bottom: i32, z: i32) {
-        let min_cx = Self::div_floor(left, CHUNK_SIZE) as i64;
-        let max_cx = Self::div_floor(right, CHUNK_SIZE) as i64;
+    pub fn prefetch_rect(&mut self, left: i64, top: i64, right: i64, bottom: i64, z: i64) {
+        let min_cx = Self::div_floor(left, CHUNK_SIZE);
+        let max_cx = Self::div_floor(right, CHUNK_SIZE);
         let min_cy = Self::div_floor(top, CHUNK_SIZE) as i64;
         let max_cy = Self::div_floor(bottom, CHUNK_SIZE) as i64;
         let cz = Self::div_floor(z, CHUNK_SIZE_Z) as i64;

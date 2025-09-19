@@ -171,8 +171,8 @@ fn build_intro_images(size: Rect) -> Vec<String> {
     let lines = read_boot_lines();
 
     // Margins akin to Python version
-    let top_margin = max(1, size.height as i32 / 6) as u16;
-    let left_margin = max(2, size.width as i32 / 12) as u16;
+    let top_margin = max(1, size.height as i64 / 6) as u16;
+    let left_margin = max(2, size.width as i64 / 12) as u16;
     let viewport_height = size
         .height
         .saturating_sub(top_margin)

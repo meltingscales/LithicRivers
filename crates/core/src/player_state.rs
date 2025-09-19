@@ -3,7 +3,7 @@ use crate::intent::PlayerIntent;
 #[derive(Debug, Clone)]
 pub struct PlayerState {
     pub intent: PlayerIntent,
-    pub last_blocked_tile: Option<(i32, i32)>,
+    pub last_blocked_tile: Option<(i64, i64)>,
     pub combat_ended_this_tick: bool,
     pub last_combat_end_tick: u64,
     pub combat_active: bool,

@@ -24,14 +24,14 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
 
     // Note: No longer need to sync generation Z - using viewport-safe methods
 
-    let scale = app.ui.scale.as_u32() as i32;
+    let scale = app.ui.scale.as_i64() as i64;
 
     // Compute world-space bounds for current UI viewport and prefetch chunks
     let center_x = app.ui.view_x;
     let center_y = app.ui.view_y;
 
-    let world_cols = (target_cols as f32 / scale as f32).ceil() as i32;
-    let world_rows = (target_rows as f32 / scale as f32).ceil() as i32;
+    let world_cols = (target_cols as i64 / scale) as i64;
+    let world_rows = (target_rows as i64 / scale) as i64;
 
     let left = center_x - world_cols / 2;
     let top = center_y - world_rows / 2;
@@ -46,7 +46,7 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
         .prefetch_rect_at_z(left, top, right, bottom, app.ui.view_z);
 
     // Build an entity overlay map for current bounds and Z slice using SpriteRef
-    let mut ent_overlay: HashMap<(i32, i32), (String, String)> = HashMap::new();
+    let mut ent_overlay: HashMap<(i64, i64), (String, String)> = HashMap::new();
     let z = app.ui.view_z;
     for (_e, (pos, sr_opt)) in app
         .core
@@ -71,14 +71,14 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
     for row in 0..target_rows {
         let mut spans = Vec::with_capacity(target_cols);
         for col in 0..target_cols {
-            let offset_x = col as i32 - target_cols as i32 / 2;
-            let offset_y = row as i32 - target_rows as i32 / 2;
+            let offset_x = col as i64 - target_cols as i64 / 2;
+            let offset_y = row as i64 - target_rows as i64 / 2;
             let world_x = center_x + offset_x.div_euclid(scale);
             let world_y = center_y + offset_y.div_euclid(scale);
             let world_z = app.ui.view_z;
 
-            let sprite_x = (col as i32 - target_cols as i32 / 2).rem_euclid(scale);
-            let sprite_y = (row as i32 - target_rows as i32 / 2).rem_euclid(scale);
+            let sprite_x = (col as i64 - target_cols as i64 / 2).rem_euclid(scale);
+            let sprite_y = (row as i64 - target_rows as i64 / 2).rem_euclid(scale);
 
             // Base tile color/glyph
             let tile_kind = app
@@ -96,7 +96,7 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
                 && app.ui.view_z == app.panels.look.cursor.z
             {
                 let reticle_sprites = sprite_for_view_reticle();
-                let scale_index = (app.ui.scale.as_u32() - 1) as usize;
+                let scale_index = (app.ui.scale.as_i64() - 1) as usize;
                 let reticle_block = reticle_sprites
                     .get(scale_index)
                     .unwrap_or(&reticle_sprites[0]);

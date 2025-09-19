@@ -5,9 +5,9 @@ use std::fmt;
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, Eq, Hash, PartialEq)]
 pub struct Position {
-    pub x: i32,
-    pub y: i32,
-    pub z: i32,
+    pub x: i64,
+    pub y: i64,
+    pub z: i64,
 }
 
 impl fmt::Display for Position {

@@ -134,9 +134,9 @@ fn parse_voxelbuilder_json_to_structure(
 
 #[derive(Debug)]
 struct VoxelBuilderVoxel {
-    x: i32,
-    y: i32,
-    z: i32,
+    x: i64,
+    y: i64,
+    z: i64,
     color: String, // Hex color like "9113F5"
 }
 
@@ -155,9 +155,9 @@ fn parse_voxel_string(
     for voxel_entry in voxels_string.split(';').filter(|s| !s.trim().is_empty()) {
         let parts: Vec<&str> = voxel_entry.split(',').collect();
         if parts.len() >= 5 {
-            let x = parts[0].parse::<i32>()?;
-            let y = parts[1].parse::<i32>()?;
-            let z = parts[2].parse::<i32>()?;
+            let x = parts[0].parse::<i64>()?;
+            let y = parts[1].parse::<i64>()?;
+            let z = parts[2].parse::<i64>()?;
             let color = parts[3].to_string();
 
             voxels.push(VoxelBuilderVoxel { x, y, z, color });
@@ -173,12 +173,12 @@ fn create_structure_files(
     output_dir: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Find the bounds of the model
-    let mut min_x = i32::MAX;
-    let mut max_x = i32::MIN;
-    let mut min_y = i32::MAX;
-    let mut max_y = i32::MIN;
-    let mut min_z = i32::MAX;
-    let mut max_z = i32::MIN;
+    let mut min_x = i64::MAX;
+    let mut max_x = i64::MIN;
+    let mut min_y = i64::MAX;
+    let mut max_y = i64::MIN;
+    let mut min_z = i64::MAX;
+    let mut max_z = i64::MIN;
 
     for voxel in &model.voxels {
         min_x = min_x.min(voxel.x);

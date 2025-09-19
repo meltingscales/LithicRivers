@@ -11,11 +11,11 @@ pub struct PlayerIntent {
 #[derive(Debug, Clone)]
 pub enum PlayerAction {
     /// Move in world space (dx, dy, dz)
-    Move { dx: i32, dy: i32, dz: i32 },
+    Move { dx: i64, dy: i64, dz: i64 },
     /// Mine the current tile
     Mine,
     /// Mine at specific coordinates
-    MineAt { x: i32, y: i32, z: i32 },
+    MineAt { x: i64, y: i64, z: i64 },
     /// Interact with nearby objects (items, corpses, NPCs)
     Interact,
     /// Interact with specific target
@@ -24,7 +24,7 @@ pub enum PlayerAction {
 
 impl PlayerIntent {
     /// Create a movement intent
-    pub fn movement(dx: i32, dy: i32, dz: i32, cost: u64) -> Self {
+    pub fn movement(dx: i64, dy: i64, dz: i64, cost: u64) -> Self {
         Self {
             action: Some(PlayerAction::Move { dx, dy, dz }),
             tick_cost: cost,
@@ -40,7 +40,7 @@ impl PlayerIntent {
     }
 
     /// Create a mining intent at specific coordinates
-    pub fn mine_at(x: i32, y: i32, z: i32, cost: u64) -> Self {
+    pub fn mine_at(x: i64, y: i64, z: i64, cost: u64) -> Self {
         Self {
             action: Some(PlayerAction::MineAt { x, y, z }),
             tick_cost: cost,
