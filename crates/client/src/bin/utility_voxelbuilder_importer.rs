@@ -23,6 +23,8 @@ fn create_hex_color_block_mapping(hex_color: &str) -> char {
         (145, 19, 245) => 'E',  // Purple (9113F5) -> Enemy spawns
         (144, 160, 179) => '#', // Gray-blue (90A0B3) -> stone
         (255, 255, 0) => 't',   // Yellow (FFFF00) -> treasure_common
+        (131, 50, 0) => 's',    // Brown (833200) -> scrap_common
+        (255, 155, 94) => 'S',  // lighter Brown (FF9B5E) -> scrap_rare
         //TODO treasure_rare
         //TODO treasure_quest_1
         (0, 255, 0) => 'D',   // Green (00FF00) -> door
@@ -39,6 +41,8 @@ fn gen_data_json(height: usize) -> serde_json::Value {
             " ": "air",
             "#": "rock",
             "E": "enemy_spawn",
+            "s": "scrap_common",
+            "S": "scrap_rare",
             "t": "treasure_common",
             "T": "treasure_rare",
             "1": "treasure_quest_1",

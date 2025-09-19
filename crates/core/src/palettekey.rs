@@ -36,6 +36,8 @@ pub enum PaletteKey {
     // special tile that spawns enemies
     EnemySpawn,
     // special tiles that spawn treasure
+    ScrapCommon,
+    ScrapRare,
     TreasureCommon,
     TreasureRare,
     TreasureQuest1,

@@ -43,6 +43,8 @@ pub fn block_will_spawn_entity(tile_kind: TileKind) -> bool {
         TileKind::TreasureCommon => true,
         TileKind::TreasureRare => true,
         TileKind::EnemySpawn => true,
+        TileKind::ScrapCommon => true,
+        TileKind::ScrapRare => true,
         _ => false,
     }
 }
@@ -77,6 +79,12 @@ pub fn spawn_entity_for_block(
         }
         TileKind::TreasureRare => {
             spawn_utils::world_spawn_treasurerare(ecs_world, block_x, block_y, block_z, game_world);
+        }
+        TileKind::ScrapCommon => {
+            spawn_utils::world_spawn_scrapcommon(ecs_world, block_x, block_y, block_z, game_world);
+        }
+        TileKind::ScrapRare => {
+            spawn_utils::world_spawn_scraprare(ecs_world, block_x, block_y, block_z, game_world);
         }
         _ => {
             panic!("Unknown tile kind for entity spawning {:?}", tile_kind);

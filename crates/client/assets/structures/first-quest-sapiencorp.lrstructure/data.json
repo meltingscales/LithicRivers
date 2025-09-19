@@ -7,7 +7,9 @@
     ">": "stairs",
     "D": "door",
     "E": "enemy_spawn",
+    "S": "scrap_rare",
     "T": "treasure_rare",
+    "s": "scrap_common",
     "t": "treasure_common"
   },
   "gen_biomes": "QUEST_ONLY",
