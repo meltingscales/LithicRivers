@@ -399,8 +399,7 @@ impl GameWorld {
     }
 
     pub fn new_rng(&self, x: i64, y: i64, z: i64) -> rand::rngs::StdRng {
-        let seed = self.seed;
-        _ = seed.wrapping_add(self.mix_coords(x, y, z));
+        let seed = self.seed.wrapping_add(self.mix_coords(x, y, z));
         rand::rngs::StdRng::seed_from_u64(seed)
     }
 
