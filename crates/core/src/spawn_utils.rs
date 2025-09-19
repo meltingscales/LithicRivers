@@ -38,6 +38,64 @@ pub fn world_spawn_treasurerare(
     }
 }
 
+pub fn world_spawn_scraprare(
+    ecs_world: &mut hecs::World,
+    block_x: i64,
+    block_y: i64,
+    block_z: i64,
+    game_world: &GameWorld,
+) {
+    let mut rng = game_world.new_rng(block_x, block_y, block_z);
+    let random_num = rng.gen::<f64>();
+
+    match random_num {
+        0.0..0.90 => {
+            let _item = ecs_world.spawn((
+                Position {
+                    x: block_x,
+                    y: block_y,
+                    z: block_z,
+                },
+                DroppedItem {
+                    kind: ItemKind::Diamond,
+                    qty: 10,
+                },
+                SpriteRef::new("items", "diamond"),
+            ));
+        }
+        _ => {}
+    }
+}
+
+pub fn world_spawn_scrapcommon(
+    ecs_world: &mut hecs::World,
+    block_x: i64,
+    block_y: i64,
+    block_z: i64,
+    game_world: &GameWorld,
+) {
+    let mut rng = game_world.new_rng(block_x, block_y, block_z);
+    let random_num = rng.gen::<f64>();
+
+    match random_num {
+        0.0..0.50 => {
+            let _item = ecs_world.spawn((
+                Position {
+                    x: block_x,
+                    y: block_y,
+                    z: block_z,
+                },
+                DroppedItem {
+                    kind: ItemKind::ScrapElectronics,
+                    qty: 10,
+                },
+                SpriteRef::new("items", "scrap_electronics"),
+            ));
+        }
+        _ => {}
+    }
+}
+
 pub fn world_spawn_treasurecommon(
     ecs_world: &mut hecs::World,
     block_x: i64,
@@ -77,7 +135,7 @@ pub fn world_spawn_treasurecommon(
                 SpriteRef::new("items", "leather"),
             ));
         }
-        0.20..0.70 => {
+        0.20..1.00 => {
             let _item = ecs_world.spawn((
                 Position {
                     x: block_x,
