@@ -389,17 +389,33 @@ pub fn enemy_combat_ai_system(world: &mut World, res: &mut Resources) {
     // Find all combat entities that should act
     let mut enemy_entities = Vec::new();
 
+    tracing::debug!(target: "combat", "Enemy AI system running at tick {}", res.time.tick);
+
     for (entity, (_, combat, _)) in world.query::<(&Position, &Combat, &GameEntity)>().iter() {
         if combat.triggered && !is_player_entity(world, entity) {
+            tracing::debug!(target: "combat", "Found combat entity {:?} with triggered combat", entity);
+
             // Skip if entity is dead, stunned, or already has actions queued
-            if world.get::<&Dead>(entity).is_ok() || world.get::<&Stunned>(entity).is_ok() {
+            if world.get::<&Dead>(entity).is_ok() {
+                tracing::debug!(target: "combat", "Skipping dead entity {:?}", entity);
+                continue;
+            }
+            if world.get::<&Stunned>(entity).is_ok() {
+                tracing::debug!(target: "combat", "Skipping stunned entity {:?}", entity);
                 continue;
             }
 
             // Check if entity has an empty or no action queue
             let needs_action = match world.get::<&ActionQueue>(entity) {
-                Ok(queue) => queue.current_action.is_none() && queue.actions.is_empty(),
-                Err(_) => true, // No queue component means it needs one
+                Ok(queue) => {
+                    let needs = queue.current_action.is_none() && queue.actions.is_empty();
+                    tracing::debug!(target: "combat", "Entity {:?} has queue, needs_action: {}", entity, needs);
+                    needs
+                }
+                Err(_) => {
+                    tracing::debug!(target: "combat", "Entity {:?} has no queue, needs one", entity);
+                    true
+                }
             };
 
             if needs_action {
@@ -408,8 +424,11 @@ pub fn enemy_combat_ai_system(world: &mut World, res: &mut Resources) {
         }
     }
 
+    tracing::debug!(target: "combat", "Found {} enemies that need actions", enemy_entities.len());
+
     // Generate actions for each enemy that needs them
     for enemy_entity in enemy_entities {
+        tracing::debug!(target: "combat", "Generating action for enemy {:?}", enemy_entity);
         generate_enemy_action(world, res, enemy_entity);
     }
 }
@@ -418,20 +437,32 @@ pub fn enemy_combat_ai_system(world: &mut World, res: &mut Resources) {
 pub fn generate_enemy_action(world: &mut World, res: &mut Resources, enemy_entity: hecs::Entity) {
     use rand::Rng;
 
+    tracing::debug!(target: "combat", "Generating action for enemy {:?}", enemy_entity);
+
     // Ensure enemy has an action queue
     if world.get::<&ActionQueue>(enemy_entity).is_err() {
+        tracing::debug!(target: "combat", "Creating new ActionQueue for enemy {:?}", enemy_entity);
         world.insert_one(enemy_entity, ActionQueue::new()).ok();
     }
 
     // Find the player
     let player_entity = match get_player_entity(world) {
-        Some(player) => player,
-        None => return,
+        Some(player) => {
+            tracing::debug!(target: "combat", "Found player entity {:?} to target", player);
+            player
+        }
+        None => {
+            tracing::warn!(target: "combat", "No player entity found for enemy to target");
+            return;
+        }
     };
 
     // Simple AI: attack the player with random damage and timing
     let damage = res.world_state.rng.gen_range(5..=15);
-    let execution_time = res.world_state.rng.gen_range(100..=250); // 100-250 ticks (~1.5-4 seconds at 60 ticks/sec)
+    let execution_time = res.world_state.rng.gen_range(7..=10); // 7-10 ticks for varied enemy attacks
+
+    tracing::debug!(target: "combat", "Enemy {:?} planning attack on player {:?} with {} damage in {} ticks", 
+                   enemy_entity, player_entity, damage, execution_time);
 
     let action = QueuedAction {
         entity: enemy_entity,
@@ -444,7 +475,12 @@ pub fn generate_enemy_action(world: &mut World, res: &mut Resources, enemy_entit
     };
 
     if let Ok(mut queue) = world.get::<&mut ActionQueue>(enemy_entity) {
+        tracing::debug!(target: "combat", "Queueing attack action for enemy {:?}", enemy_entity);
         queue.queue_action(action);
         queue.start_next_action();
+        tracing::debug!(target: "combat", "Enemy {:?} action queue now has {} actions, current_action: {}", 
+                       enemy_entity, queue.actions.len(), queue.current_action.is_some());
+    } else {
+        tracing::error!(target: "combat", "Failed to get mutable ActionQueue for enemy {:?}", enemy_entity);
     }
 }
