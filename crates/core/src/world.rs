@@ -18,7 +18,7 @@ pub enum BiomeBand {
     LithicRivers, // underground lava/rare ore biome
 }
 
-impl World {
+impl GameWorld {
     #[inline]
     pub fn biome_for(&self, wx: f64, wy: f64, zf: f64) -> BiomeBand {
         // Depth rule: Lithic Rivers only below or equal to -5 depth levels.
@@ -50,7 +50,7 @@ pub struct Chunk {
     tiles: Vec<TileKind>, // size CHUNK_SIZE * CHUNK_SIZE
 }
 
-impl World {
+impl GameWorld {
     /// Deterministic post-process that adds small clusters of trees (10-20 tiles)
     /// onto suitable ground (grass/dirt). Uses a seeded RNG derived from
     /// seed and chunk coords so results are deterministic.
@@ -147,14 +147,14 @@ pub const CHUNK_SIZE: i32 = 64;
 pub const CHUNK_SIZE_Z: i32 = 1; // z slices are 1-tile thick for distinct layers
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct World {
+pub struct GameWorld {
     pub seed: u64,
     chunks: HashMap<(i64, i64, i64), Chunk>,
     // Guard against re-entrant structure placement triggering recursive generation
     structure_placement_depth: u32,
 }
 
-impl World {
+impl GameWorld {
     pub fn new(_width: usize, _height: usize, seed: u64) -> Self {
         // Width/height kept for compatibility; world is effectively infinite.
         Self {

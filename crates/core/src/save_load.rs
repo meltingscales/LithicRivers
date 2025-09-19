@@ -14,7 +14,7 @@ use crate::components::{
 use crate::model::body::Body; // currently not persisted (MVP)
 use crate::resources::Resources;
 use crate::world::Chunk as TileChunk;
-use crate::world::World as TileWorld;
+use crate::world::GameWorld as TileWorld;
 
 pub const SAVE_VERSION: u32 = 3;
 
