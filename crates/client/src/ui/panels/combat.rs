@@ -72,7 +72,7 @@ pub fn render_combat_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
         .split(inner);
 
     // Render player info
-    render_player_info(f, chunks[0], player_health, player_energy);
+    render_player_info(f, chunks[0], player_health, player_energy, app);
 
     // Render enemies with real timers
     render_enemies(
@@ -103,7 +103,7 @@ pub fn render_combat_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     f.render_widget(message_para, chunks[3]);
 
     // Controls
-    let controls = Paragraph::new("[←→] Target | [↑↓] Move | [C] Clear Queue | [SPACE] Use")
+    let controls = Paragraph::new("[←→] Target | [↑↓] Move | [C] Clear | [5] Wait | [SPACE] Use")
         .style(Style::default().fg(Color::Gray))
         .alignment(Alignment::Center);
     f.render_widget(controls, chunks[4]);
@@ -520,7 +520,11 @@ fn render_moves(
         .map(|(visible_i, mv)| {
             let actual_i = scroll_offset + visible_i;
             let is_selected = actual_i == current_move;
-            let can_use_energy = energy.current >= mv.energy_cost;
+
+            // Check if player can use this move considering pending energy consumption
+            let pending_energy = calculate_pending_energy_consumption(app);
+            let available_energy = energy.current.saturating_sub(pending_energy);
+            let can_use_energy = available_energy >= mv.energy_cost;
             let can_use = can_use_energy; // Only check energy, action queue handles timing
 
             // Always use the same basic format to ensure consistent rendering
@@ -739,11 +743,46 @@ fn get_enemy_combat_data(app: &mut crate::App) -> Vec<CombatEnemy> {
     enemies
 }
 
+/// Calculate total pending energy consumption from queued moves
+fn calculate_pending_energy_consumption(app: &crate::App) -> u32 {
+    let mut total_pending = 0;
+
+    if let Some(player_entity) = app.core.game.get_player_entity() {
+        if let Ok(queue) = app
+            .core
+            .game
+            .world
+            .get::<&lithicrivers_core::moves::ActionQueue>(player_entity)
+        {
+            // Check current action
+            if let Some(current_action) = &queue.current_action {
+                if let lithicrivers_core::moves::CombatAction::PlayerMove { move_data, .. } =
+                    &current_action.action
+                {
+                    total_pending += move_data.energy_cost;
+                }
+            }
+
+            // Check queued actions
+            for action in queue.get_queued_actions() {
+                if let lithicrivers_core::moves::CombatAction::PlayerMove { move_data, .. } =
+                    &action.action
+                {
+                    total_pending += move_data.energy_cost;
+                }
+            }
+        }
+    }
+
+    total_pending
+}
+
 fn render_player_info(
     f: &mut Frame,
     area: Rect,
     body: Option<lithicrivers_core::model::body::Body>,
     energy: lithicrivers_core::components::Energy,
+    app: &mut crate::App,
 ) {
     use lithicrivers_core::moves::{calculate_body_integrity, get_body_status_description};
 
@@ -757,6 +796,11 @@ fn render_player_info(
     };
 
     let energy_ratio = energy.percentage() as f64;
+    let pending_energy = calculate_pending_energy_consumption(app);
+
+    // Calculate energy after pending consumption
+    let energy_after_pending = energy.current.saturating_sub(pending_energy);
+    let available_energy_ratio = energy_after_pending as f64 / energy.max as f64;
 
     let integrity_bar = Gauge::default()
         .block(
@@ -768,11 +812,44 @@ fn render_player_info(
         .ratio(integrity_ratio)
         .label(format!(" {} ", integrity_label));
 
-    let energy_bar = Gauge::default()
-        .block(Block::default().title("Energy").borders(Borders::ALL))
-        .gauge_style(Style::default().fg(Color::Yellow).bg(Color::DarkGray))
-        .ratio(energy_ratio)
-        .label(format!(" {}/{} ", energy.current, energy.max));
+    // Create energy bar with pending consumption visualization
+    let energy_bar = if pending_energy > 0 {
+        // Show available energy (what's left after pending consumption)
+        // Use a dual-color approach: available in yellow, pending in red
+        if energy_after_pending == 0 {
+            Gauge::default()
+                .block(
+                    Block::default()
+                        .title("Energy (Depleted)")
+                        .borders(Borders::ALL),
+                )
+                .gauge_style(Style::default().fg(Color::Red).bg(Color::DarkGray))
+                .ratio(available_energy_ratio)
+                .label(format!(
+                    " {}/{} (-{}) ",
+                    energy.current, energy.max, pending_energy
+                ))
+        } else {
+            Gauge::default()
+                .block(
+                    Block::default()
+                        .title("Energy (Pending)")
+                        .borders(Borders::ALL),
+                )
+                .gauge_style(Style::default().fg(Color::Yellow).bg(Color::DarkGray))
+                .ratio(available_energy_ratio)
+                .label(format!(
+                    " {}/{} (-{}) ",
+                    energy.current, energy.max, pending_energy
+                ))
+        }
+    } else {
+        Gauge::default()
+            .block(Block::default().title("Energy").borders(Borders::ALL))
+            .gauge_style(Style::default().fg(Color::Yellow).bg(Color::DarkGray))
+            .ratio(energy_ratio)
+            .label(format!(" {}/{} ", energy.current, energy.max))
+    };
 
     let bars = Layout::horizontal([Constraint::Ratio(1, 2), Constraint::Ratio(1, 2)]).split(area);
 
