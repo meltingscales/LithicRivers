@@ -155,21 +155,37 @@ fn render_single_enemy(
     let inner = block.inner(area);
     f.render_widget(block, area);
 
-    // Use sprite system for enemy portraits
+    // Use sprite system for enemy portraits - get the actual 12x8 art
     let portrait = if let Some(sprite_ref) = &enemy.sprite_ref {
-        let (sprite_block, sprite_color) = crate::sprite_loader::sprite_block_for_spriteref(
-            &mut app.core.sprite_loader,
-            sprite_ref,
-            crate::sprite_loader::Scale::Medium, // Use 2x2 scale for portraits
-        );
+        let sprite_data = app.core.sprite_loader.load_by_spriteref(sprite_ref);
+
+        // Get the first 12x8 art sprite (main portrait)
+        let sprite_block = sprite_data
+            .art12x8_sprites
+            .get(0)
+            .cloned()
+            .unwrap_or_else(|| {
+                panic!(
+                    "Missing 12x8 art for sprite '{}::{}'",
+                    sprite_ref.category, sprite_ref.name
+                )
+            });
+
+        let sprite_color = crate::sprite_loader::parse_color_string(&sprite_data.color)
+            .unwrap_or_else(|| {
+                panic!(
+                    "Invalid color for sprite '{}::{}'",
+                    sprite_ref.category, sprite_ref.name
+                )
+            });
+
         Paragraph::new(sprite_block)
             .style(Style::default().fg(sprite_color))
             .alignment(Alignment::Center)
     } else {
-        // Fallback ASCII art for entities without sprites
-        let portrait_lines = vec!["  /\\_/\\  ", " ( o.o ) ", "  > ^ <  "];
-        Paragraph::new(portrait_lines.join("\n"))
-            .style(Style::default().fg(Color::Green))
+        // No fallback - entities without sprites show empty space
+        Paragraph::new("")
+            .style(Style::default())
             .alignment(Alignment::Center)
     };
 
