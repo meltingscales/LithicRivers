@@ -1199,72 +1199,78 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
                 // Get available moves and selected move
                 let available_moves = lithicrivers_core::moves::get_available_moves();
                 if let Some(selected_move) = available_moves.get(current_move) {
-                    // Check if player can use this move (only energy, timing handled by action queue)
+                    // Check if player can use this move considering pending energy consumption
                     let can_use = if let Ok(energy) =
                         app.core
                             .game
                             .world
                             .get::<&lithicrivers_core::components::Energy>(player_entity)
                     {
-                        energy.current >= selected_move.energy_cost
+                        let pending_energy = calculate_pending_energy_consumption(app);
+                        let available_energy = energy.current.saturating_sub(pending_energy);
+                        available_energy >= selected_move.energy_cost
                     } else {
                         false
                     };
 
                     if !can_use {
-                        app.core.game.res.log("Cannot use this move!".to_string());
+                        app.core
+                            .game
+                            .res
+                            .log("Not enough energy (including queued moves)!".to_string());
                         return Ok(());
                     }
 
                     // Find target entity if needed
-                    let target_entity = if selected_move.move_type != lithicrivers_core::moves::MoveType::Escape {
-                        // Not escape move - need a target
-                        // Find the actual entity for the selected enemy
-                        let mut enemy_count = 0;
-                        let mut target = None;
-                        for (entity, (_, combat, _)) in app
-                            .core
-                            .game
-                            .world
-                            .query::<(
-                                &lithicrivers_core::components::Position,
-                                &lithicrivers_core::components::Combat,
-                                &lithicrivers_core::components::GameEntity,
-                            )>()
-                            .iter()
-                        {
-                            if entity == player_entity || !combat.triggered {
-                                continue;
-                            }
-                            // Skip dead enemies
-                            if app
+                    let target_entity =
+                        if selected_move.move_type != lithicrivers_core::moves::MoveType::Escape {
+                            // Not escape move - need a target
+                            // Find the actual entity for the selected enemy
+                            let mut enemy_count = 0;
+                            let mut target = None;
+                            for (entity, (_, combat, _)) in app
                                 .core
                                 .game
                                 .world
-                                .get::<&lithicrivers_core::components::Dead>(entity)
-                                .is_ok()
+                                .query::<(
+                                    &lithicrivers_core::components::Position,
+                                    &lithicrivers_core::components::Combat,
+                                    &lithicrivers_core::components::GameEntity,
+                                )>()
+                                .iter()
                             {
-                                continue;
+                                if entity == player_entity || !combat.triggered {
+                                    continue;
+                                }
+                                // Skip dead enemies
+                                if app
+                                    .core
+                                    .game
+                                    .world
+                                    .get::<&lithicrivers_core::components::Dead>(entity)
+                                    .is_ok()
+                                {
+                                    continue;
+                                }
+                                if enemy_count == current_enemy {
+                                    target = Some(entity);
+                                    break;
+                                }
+                                enemy_count += 1;
                             }
-                            if enemy_count == current_enemy {
-                                target = Some(entity);
-                                break;
-                            }
-                            enemy_count += 1;
-                        }
 
-                        // Validate we have a target for moves that need one
-                        if target.is_none() {
-                            app.core
-                                .game
-                                .res
-                                .log("No valid target for this move!".to_string());
-                            return Ok(());
-                        }
-                        target
-                    } else {
-                        None
-                    };
+                            // Validate we have a target for moves that need one
+                            if target.is_none() {
+                                app.core
+                                    .game
+                                    .res
+                                    .log("No valid target for this move!".to_string());
+                                return Ok(());
+                            }
+                            target
+                        } else {
+                            None
+                        };
 
                     // Create queued action
                     let execution_time = selected_move.execution_time_ticks;
@@ -1348,6 +1354,17 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
                     app.core.game.res.log("Cleared move queue");
                 }
             }
+            return Ok(());
+        }
+
+        // Manual combat tick (NUMPAD_5 / Wait key)
+        if app.ui.keybinds.matches("movement", "WAIT", &key) {
+            // Process a single game tick to advance combat
+            let tick_result = app.core.game.tick();
+            if tick_result.contains(GameTickResult::CombatEnded) {
+                app.combat = CombatUiState::None;
+            }
+            app.core.game.res.log("Advanced combat timing");
             return Ok(());
         }
 
@@ -2059,7 +2076,41 @@ fn remove_item_from_inventory(
     }
 }
 
-/// Check if a move is usable based on player's current energy
+/// Calculate total pending energy consumption from queued moves
+fn calculate_pending_energy_consumption(app: &App) -> u32 {
+    let mut total_pending = 0;
+
+    if let Some(player_entity) = app.core.game.get_player_entity() {
+        if let Ok(queue) = app
+            .core
+            .game
+            .world
+            .get::<&lithicrivers_core::moves::ActionQueue>(player_entity)
+        {
+            // Check current action
+            if let Some(current_action) = &queue.current_action {
+                if let lithicrivers_core::moves::CombatAction::PlayerMove { move_data, .. } =
+                    &current_action.action
+                {
+                    total_pending += move_data.energy_cost;
+                }
+            }
+
+            // Check queued actions
+            for action in queue.get_queued_actions() {
+                if let lithicrivers_core::moves::CombatAction::PlayerMove { move_data, .. } =
+                    &action.action
+                {
+                    total_pending += move_data.energy_cost;
+                }
+            }
+        }
+    }
+
+    total_pending
+}
+
+/// Check if a move is usable based on player's current energy minus pending consumption
 fn is_move_usable(app: &App, move_index: usize) -> bool {
     // Get the player's current energy
     if let Some(player_entity) = app.core.game.get_player_entity() {
@@ -2072,7 +2123,10 @@ fn is_move_usable(app: &App, move_index: usize) -> bool {
             // Get the available moves
             let available_moves = lithicrivers_core::moves::get_available_moves();
             if let Some(selected_move) = available_moves.get(move_index) {
-                return energy.current >= selected_move.energy_cost;
+                // Calculate available energy after pending consumption
+                let pending_energy = calculate_pending_energy_consumption(app);
+                let available_energy = energy.current.saturating_sub(pending_energy);
+                return available_energy >= selected_move.energy_cost;
             }
         }
     }
