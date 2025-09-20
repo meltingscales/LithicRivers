@@ -1079,44 +1079,71 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
     }
 
     // Handle combat-specific input when combat is active
-    if let CombatUiState::Active {
-        current_move,
-        current_enemy,
-        enemy_timers: _,
-        move_scroll_offset,
-    } = &mut app.combat
-    {
-        // Move selection (Up/Down) - with scrolling support
+    if let CombatUiState::Active { .. } = &app.combat {
+        // Extract combat state values to avoid borrow conflicts
+        let (mut current_move, mut current_enemy, mut move_scroll_offset) = match &app.combat {
+            CombatUiState::Active {
+                current_move,
+                current_enemy,
+                move_scroll_offset,
+                ..
+            } => (*current_move, *current_enemy, *move_scroll_offset),
+            _ => unreachable!(),
+        };
+
+        // Move selection (Up/Down) - with scrolling support and cursor skipping for disabled moves
         let max_moves = get_available_moves().len();
         const VISIBLE_MOVES: usize = 4; // Number of moves visible at once
 
         if app.ui.keybinds.matches("movement", "MOVE_NORTH", &key)
             || app.ui.keybinds.matches("movement", "MOVE_UP", &key)
         {
-            if *current_move == 0 {
-                *current_move = max_moves - 1;
-                // Scroll to show the last move
-                *move_scroll_offset = max_moves.saturating_sub(VISIBLE_MOVES);
-            } else {
-                *current_move -= 1;
-                // Scroll up if needed
-                if *current_move < *move_scroll_offset {
-                    *move_scroll_offset = *current_move;
-                }
+            let new_move = find_previous_usable_move(app, current_move, max_moves);
+            current_move = new_move;
+            // Scroll up if needed
+            if current_move < move_scroll_offset {
+                move_scroll_offset = current_move;
+            }
+            // Scroll to show the last move if we wrapped around
+            if new_move == max_moves - 1 && current_move == 0 {
+                move_scroll_offset = max_moves.saturating_sub(VISIBLE_MOVES);
+            }
+
+            // Update combat state
+            if let CombatUiState::Active {
+                current_move: ref mut state_move,
+                move_scroll_offset: ref mut state_offset,
+                ..
+            } = app.combat
+            {
+                *state_move = current_move;
+                *state_offset = move_scroll_offset;
             }
             return Ok(());
         }
         if app.ui.keybinds.matches("movement", "MOVE_SOUTH", &key)
             || app.ui.keybinds.matches("movement", "MOVE_DOWN", &key)
         {
-            *current_move = (*current_move + 1) % max_moves;
+            let new_move = find_next_usable_move(app, current_move, max_moves);
+            current_move = new_move;
             // Scroll down if needed
-            if *current_move >= *move_scroll_offset + VISIBLE_MOVES {
-                *move_scroll_offset = (*current_move + 1).saturating_sub(VISIBLE_MOVES);
+            if current_move >= move_scroll_offset + VISIBLE_MOVES {
+                move_scroll_offset = (current_move + 1).saturating_sub(VISIBLE_MOVES);
             }
             // Handle wrap-around to beginning
-            if *current_move == 0 {
-                *move_scroll_offset = 0;
+            if new_move == 0 && current_move == max_moves - 1 {
+                move_scroll_offset = 0;
+            }
+
+            // Update combat state
+            if let CombatUiState::Active {
+                current_move: ref mut state_move,
+                move_scroll_offset: ref mut state_offset,
+                ..
+            } = app.combat
+            {
+                *state_move = current_move;
+                *state_offset = move_scroll_offset;
             }
             return Ok(());
         }
@@ -1125,15 +1152,33 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
         let enemy_count = get_combat_enemy_count(&mut app.core.game);
         if enemy_count > 0 {
             if app.ui.keybinds.matches("movement", "MOVE_WEST", &key) {
-                *current_enemy = if *current_enemy == 0 {
+                current_enemy = if current_enemy == 0 {
                     enemy_count - 1
                 } else {
-                    *current_enemy - 1
+                    current_enemy - 1
                 };
+
+                // Update combat state
+                if let CombatUiState::Active {
+                    current_enemy: ref mut state_enemy,
+                    ..
+                } = app.combat
+                {
+                    *state_enemy = current_enemy;
+                }
                 return Ok(());
             }
             if app.ui.keybinds.matches("movement", "MOVE_EAST", &key) {
-                *current_enemy = (*current_enemy + 1) % enemy_count;
+                current_enemy = (current_enemy + 1) % enemy_count;
+
+                // Update combat state
+                if let CombatUiState::Active {
+                    current_enemy: ref mut state_enemy,
+                    ..
+                } = app.combat
+                {
+                    *state_enemy = current_enemy;
+                }
                 return Ok(());
             }
         }
@@ -1153,7 +1198,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
             if let Some(player_entity) = app.core.game.get_player_entity() {
                 // Get available moves and selected move
                 let available_moves = lithicrivers_core::moves::get_available_moves();
-                if let Some(selected_move) = available_moves.get(*current_move) {
+                if let Some(selected_move) = available_moves.get(current_move) {
                     // Check if player can use this move (only energy, timing handled by action queue)
                     let can_use = if let Ok(energy) =
                         app.core
@@ -1172,7 +1217,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
                     }
 
                     // Find target entity if needed
-                    let target_entity = if *current_move != 3 {
+                    let target_entity = if selected_move.move_type != lithicrivers_core::moves::MoveType::Escape {
                         // Not escape move - need a target
                         // Find the actual entity for the selected enemy
                         let mut enemy_count = 0;
@@ -1201,7 +1246,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
                             {
                                 continue;
                             }
-                            if enemy_count == *current_enemy {
+                            if enemy_count == current_enemy {
                                 target = Some(entity);
                                 break;
                             }
@@ -1285,6 +1330,22 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
                     if tick_result.contains(GameTickResult::NoAction) {
                         break;
                     }
+                }
+            }
+            return Ok(());
+        }
+
+        // Clear move queue (C key)
+        if app.ui.keybinds.matches("combat", "CLEAR_MOVE_QUEUE", &key) {
+            if let Some(player_entity) = app.core.game.get_player_entity() {
+                if let Ok(mut queue) = app
+                    .core
+                    .game
+                    .world
+                    .get::<&mut lithicrivers_core::moves::ActionQueue>(player_entity)
+                {
+                    queue.clear();
+                    app.core.game.res.log("Cleared move queue");
                 }
             }
             return Ok(());
@@ -1996,6 +2057,68 @@ fn remove_item_from_inventory(
             }
         }
     }
+}
+
+/// Check if a move is usable based on player's current energy
+fn is_move_usable(app: &App, move_index: usize) -> bool {
+    // Get the player's current energy
+    if let Some(player_entity) = app.core.game.get_player_entity() {
+        if let Ok(energy) = app
+            .core
+            .game
+            .world
+            .get::<&lithicrivers_core::components::Energy>(player_entity)
+        {
+            // Get the available moves
+            let available_moves = lithicrivers_core::moves::get_available_moves();
+            if let Some(selected_move) = available_moves.get(move_index) {
+                return energy.current >= selected_move.energy_cost;
+            }
+        }
+    }
+    false
+}
+
+/// Find the next usable move when navigating down
+fn find_next_usable_move(app: &App, current_move: usize, max_moves: usize) -> usize {
+    let start_move = (current_move + 1) % max_moves;
+    let mut check_move = start_move;
+
+    // Try to find a usable move within max_moves attempts
+    for _ in 0..max_moves {
+        if is_move_usable(app, check_move) {
+            return check_move;
+        }
+        check_move = (check_move + 1) % max_moves;
+    }
+
+    // If no usable move found, return the next move anyway (fallback)
+    start_move
+}
+
+/// Find the previous usable move when navigating up
+fn find_previous_usable_move(app: &App, current_move: usize, max_moves: usize) -> usize {
+    let start_move = if current_move == 0 {
+        max_moves - 1
+    } else {
+        current_move - 1
+    };
+    let mut check_move = start_move;
+
+    // Try to find a usable move within max_moves attempts
+    for _ in 0..max_moves {
+        if is_move_usable(app, check_move) {
+            return check_move;
+        }
+        check_move = if check_move == 0 {
+            max_moves - 1
+        } else {
+            check_move - 1
+        };
+    }
+
+    // If no usable move found, return the previous move anyway (fallback)
+    start_move
 }
 
 /// Check if a position is valid for placing a block

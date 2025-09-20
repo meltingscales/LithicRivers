@@ -23,6 +23,9 @@ pub fn default_config() -> ConfigRoot {
             "PICKUP_ITEMS": ["r"],  // Quick grab
             "LOOK_TOGGLE": ["v"],   // Look around
         },
+        "combat": {
+            "CLEAR_MOVE_QUEUE": ["c"], // Clear queued moves in combat
+        },
         "build": {
             "TOGGLE_BREAK_PLACE_MODE": ["`"], // Cycle break/place mode
             "BREAK_NORTHWEST": ["q"],

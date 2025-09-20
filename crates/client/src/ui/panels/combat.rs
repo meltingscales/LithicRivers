@@ -103,7 +103,7 @@ pub fn render_combat_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     f.render_widget(message_para, chunks[3]);
 
     // Controls
-    let controls = Paragraph::new("[←→] Target | [↑↓] Move | [1-4] Quick | [SPACE] Use")
+    let controls = Paragraph::new("[←→] Target | [↑↓] Move | [C] Clear Queue | [SPACE] Use")
         .style(Style::default().fg(Color::Gray))
         .alignment(Alignment::Center);
     f.render_widget(controls, chunks[4]);
