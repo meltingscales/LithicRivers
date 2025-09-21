@@ -691,7 +691,7 @@ fn ui(f: &mut Frame, app: &mut App) {
         app.panels.body_repair,
         crate::app_state::BodyRepairState::SelectingRepairAndPart { .. }
     ) {
-        let modal_area = centered_rect(80, 70, f.size());
+        let modal_area = centered_rect(75, 65, f.size());
         render_repair_modal(f, app, modal_area);
     }
 
