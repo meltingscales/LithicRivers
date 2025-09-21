@@ -500,6 +500,79 @@ fn apply_damage(
             res.events.combat_event(message, res.time.tick);
             // Additional death handling is done by ComponentAccess
         }
+        Ok(DamageResult::BodyPartDamaged {
+            part_name,
+            old_integrity,
+            new_integrity,
+            damage_applied,
+            part_state,
+            ..
+        }) => {
+            let state_desc = match part_state {
+                crate::model::body::BodyPartState::Damaged => "damaged",
+                crate::model::body::BodyPartState::Functional => "functional",
+                crate::model::body::BodyPartState::Enhanced => "enhanced",
+                crate::model::body::BodyPartState::Missing => "destroyed",
+            };
+            let message = if is_player {
+                format!(
+                    "{} take {} damage to {} from {} ({}/{} integrity, {})",
+                    target_name,
+                    damage_applied,
+                    part_name,
+                    source,
+                    new_integrity,
+                    old_integrity,
+                    state_desc
+                )
+            } else {
+                format!(
+                    "{} takes {} damage to {} from {} ({}/{} integrity, {})",
+                    target_name,
+                    damage_applied,
+                    part_name,
+                    source,
+                    new_integrity,
+                    old_integrity,
+                    state_desc
+                )
+            };
+            res.events.combat_event(message, res.time.tick);
+        }
+        Ok(DamageResult::BodyPartDestroyed {
+            part_name,
+            damage_applied,
+            robot_died,
+            ..
+        }) => {
+            let message = if robot_died {
+                if is_player {
+                    format!(
+                        "{} take {} damage to {} from {} - {} destroyed! You shut down!",
+                        target_name, damage_applied, part_name, source, part_name
+                    )
+                } else {
+                    format!(
+                        "{} takes {} damage to {} from {} - {} destroyed! Robot shuts down!",
+                        target_name, damage_applied, part_name, source, part_name
+                    )
+                }
+            } else {
+                if is_player {
+                    format!(
+                        "{} take {} damage to {} from {} - {} destroyed!",
+                        target_name, damage_applied, part_name, source, part_name
+                    )
+                } else {
+                    format!(
+                        "{} takes {} damage to {} from {} - {} destroyed!",
+                        target_name, damage_applied, part_name, source, part_name
+                    )
+                }
+            };
+            res.events.combat_event(message, res.time.tick);
+            // Additional death handling is done by ComponentAccess
+        }
         Ok(DamageResult::AlreadyDead) => {
             tracing::debug!(target: "combat", "Attempted to damage already dead entity {:?}", target_entity);
         }
