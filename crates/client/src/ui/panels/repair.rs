@@ -17,9 +17,10 @@ pub fn render_repair_modal(f: &mut Frame, app: &mut crate::App, area: Rect) {
     // Create modal background
     let modal_block = Block::default()
         .borders(Borders::ALL)
+        .border_set(ratatui::symbols::border::THICK)
         .title(" Body Repair ")
         .title_alignment(Alignment::Center)
-        .style(Style::default().fg(Color::Yellow));
+        .style(Style::default().fg(Color::Yellow).bg(Color::Black));
 
     let inner = modal_block.inner(area);
     f.render_widget(modal_block, area);
@@ -228,13 +229,17 @@ fn render_body_parts_list(
         for part_type in part_order {
             if let Some(part) = body.parts.get(&part_type) {
                 let is_selected = selected_part == Some(part_type);
-                let can_repair = part.state != BodyPartState::Missing;
+                let can_repair = part.state != BodyPartState::Missing && part.integrity < 100;
 
-                let (label, color) = match part.state {
-                    BodyPartState::Missing => ("Missing", Color::DarkGray),
-                    BodyPartState::Damaged => ("Damaged", Color::Yellow),
-                    BodyPartState::Functional => ("Functional", Color::Green),
-                    BodyPartState::Enhanced => ("Enhanced", Color::Cyan),
+                let (label, color) = if part.integrity >= 100 {
+                    ("Max Integrity", Color::Cyan)
+                } else {
+                    match part.state {
+                        BodyPartState::Missing => ("Missing", Color::DarkGray),
+                        BodyPartState::Damaged => ("Damaged", Color::Yellow),
+                        BodyPartState::Functional => ("Functional", Color::Green),
+                        BodyPartState::Enhanced => ("Enhanced", Color::Cyan),
+                    }
                 };
 
                 let mut style = Style::default().fg(color);

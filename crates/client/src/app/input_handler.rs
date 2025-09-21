@@ -617,7 +617,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
                         BodyPartType::RightLeg,
                     ];
 
-                    // Find first non-missing part
+                    // Find first repairable part (not missing and not at max integrity)
                     part_order
                         .iter()
                         .find(|&&part_type| {
@@ -626,6 +626,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
                                 .map(|part| {
                                     part.state
                                         != lithicrivers_core::model::body::BodyPartState::Missing
+                                        && part.integrity < 100
                                 })
                                 .unwrap_or(false)
                         })
@@ -738,7 +739,12 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
                                     .get::<&mut lithicrivers_core::model::body::Body>(player_entity)
                             {
                                 if let Some(part) = body.parts.get_mut(&body_part) {
-                                    if app
+                                    if part.integrity >= 100 {
+                                        app.core
+                                            .game
+                                            .res
+                                            .log("Body part is already at maximum integrity");
+                                    } else if app
                                         .core
                                         .repair_handler
                                         .can_repair_part(repair_idx, body_part, part.state)
@@ -778,8 +784,6 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
                                                 app.core.repair_handler.get_recipes()[repair_idx]
                                                     .durability_restored
                                             ));
-                                            app.panels.body_repair =
-                                                crate::app_state::BodyRepairState::None;
                                         } else {
                                             app.core
                                                 .game

@@ -52,6 +52,7 @@ impl Game {
         starting_inv.add(ItemKind::Log, 3);
         starting_inv.add(ItemKind::Stick, 2);
         starting_inv.add(ItemKind::String, 2);
+        starting_inv.add(ItemKind::ScrapElectronics, 3);
 
         // Spawn a player entity with a Position and starting inventory
         let _player = world.spawn((
