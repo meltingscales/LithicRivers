@@ -364,10 +364,20 @@ pub enum InteractionType {
 }
 
 impl InteractionType {
-    pub fn display_name(&self) -> String {
+    pub fn display_name_with_context(&self, world: &hecs::World) -> String {
         match self {
             InteractionType::PickupItem { item_name, .. } => format!("Pick up {}", item_name),
-            InteractionType::LootCorpse { .. } => "Loot corpse".to_string(),
+            InteractionType::LootCorpse { entity, .. } => {
+                // Try to get inventory to count items
+                if let Ok(inventory) =
+                    world.get::<&lithicrivers_core::components::Inventory>(*entity)
+                {
+                    let item_count = inventory.slots.len();
+                    format!("Loot corpse ({} items)", item_count)
+                } else {
+                    "Loot corpse".to_string()
+                }
+            }
             InteractionType::TalkToNPC { npc_name, .. } => format!("Talk to {}", npc_name),
             InteractionType::OpenCloseDoor { is_open, .. } => {
                 if *is_open {

@@ -1467,7 +1467,7 @@ fn render_multi_action_selection_modal(f: &mut Frame, app: &mut App) {
 /// Render the action selection modal
 fn render_action_selection_modal(
     f: &mut Frame,
-    _app: &mut App,
+    app: &mut App,
     available_actions: &[crate::app_state::InteractionType],
     selected_action: usize,
 ) {
@@ -1506,7 +1506,11 @@ fn render_action_selection_modal(
                 Style::default()
             };
 
-            let display_text = format!("{} {}", action.icon(), action.display_name());
+            let display_text = format!(
+                "{} {}",
+                action.icon(),
+                action.display_name_with_context(&app.core.game.world)
+            );
             ListItem::new(display_text).style(style)
         })
         .collect();
