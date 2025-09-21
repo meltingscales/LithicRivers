@@ -847,9 +847,9 @@ mod tests {
                 .pending_structures
                 .push(crate::resources::PendingStructure {
                     name: structure_name.to_string(),
-                    x: 25 + (i),
-                    y: 25 + (i),
-                    z: -1 + (i), // Include negative Z structures
+                    x: 25 + (i as i64),
+                    y: 25 + (i as i64),
+                    z: -1 + (i as i64), // Include negative Z structures
                     bury_structure: true,
                 });
         }

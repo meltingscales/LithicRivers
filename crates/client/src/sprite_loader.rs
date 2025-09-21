@@ -20,6 +20,7 @@ pub enum Scale {
 }
 
 impl Scale {
+    #[allow(dead_code)]
     pub fn as_i64(self) -> i64 {
         match self {
             Scale::Small => 1,
