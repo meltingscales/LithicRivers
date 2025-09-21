@@ -9,11 +9,20 @@ use ratatui::{
 };
 
 pub fn render_body_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
-    // Split area: left ASCII overview, right list
+    // Split area: left ASCII overview, right list, bottom controls
+    let vertical_chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Min(0), Constraint::Length(3)])
+        .split(area);
+
+    let main_area = vertical_chunks[0];
+    let controls_area = vertical_chunks[1];
+
+    // Split main area: left ASCII overview, right list
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([Constraint::Length(28), Constraint::Min(20)])
-        .split(area);
+        .split(main_area);
 
     // Build from ECS
     let mut list_lines: Vec<Line> = Vec::new();
@@ -56,4 +65,11 @@ pub fn render_body_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
         .alignment(Alignment::Left)
         .block(Block::default().borders(Borders::ALL).title("Parts"));
     f.render_widget(list_para, chunks[1]);
+
+    // Bottom: controls
+    let controls_text = "[R] Repair";
+    let controls_para = Paragraph::new(controls_text)
+        .alignment(Alignment::Center)
+        .block(Block::default().borders(Borders::ALL).title("Controls"));
+    f.render_widget(controls_para, controls_area);
 }
