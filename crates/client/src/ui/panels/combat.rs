@@ -784,16 +784,7 @@ fn render_player_info(
     energy: lithicrivers_core::components::Energy,
     app: &mut crate::App,
 ) {
-    use lithicrivers_core::moves::{calculate_body_integrity, get_body_status_description};
-
-    // Calculate body integrity (replaces health for robots)
-    let (integrity_ratio, integrity_label) = if let Some(ref body) = body {
-        let integrity = calculate_body_integrity(body);
-        let status = get_body_status_description(body);
-        (integrity as f64, status)
-    } else {
-        (1.0, "No Body Data".to_string())
-    };
+    use lithicrivers_core::model::body::{BodyPartState, BodyPartType};
 
     let energy_ratio = energy.percentage() as f64;
     let pending_energy = calculate_pending_energy_consumption(app);
@@ -802,15 +793,56 @@ fn render_player_info(
     let energy_after_pending = energy.current.saturating_sub(pending_energy);
     let available_energy_ratio = energy_after_pending as f64 / energy.max as f64;
 
-    let integrity_bar = Gauge::default()
-        .block(
-            Block::default()
-                .title("Body Integrity")
-                .borders(Borders::ALL),
-        )
-        .gauge_style(Style::default().fg(Color::Cyan).bg(Color::DarkGray))
-        .ratio(integrity_ratio)
-        .label(format!(" {} ", integrity_label));
+    // Create individual body part bars
+    let body_part_bars = if let Some(ref body) = body {
+        // Get body parts in a consistent order
+        let part_order = [
+            BodyPartType::Head,
+            BodyPartType::Torso,
+            BodyPartType::PowerSource,
+            BodyPartType::LeftArm,
+            BodyPartType::RightArm,
+            BodyPartType::LeftLeg,
+            BodyPartType::RightLeg,
+        ];
+
+        part_order
+            .iter()
+            .filter_map(|part_type| {
+                body.parts.get(part_type).map(|part| {
+                    let abbreviation = match part_type {
+                        BodyPartType::Head => "HED",
+                        BodyPartType::Torso => "TOR",
+                        BodyPartType::PowerSource => "PWR",
+                        BodyPartType::LeftArm => "LAM",
+                        BodyPartType::RightArm => "RAM",
+                        BodyPartType::LeftLeg => "LLG",
+                        BodyPartType::RightLeg => "RLG",
+                    };
+
+                    let (ratio, color) = match part.state {
+                        BodyPartState::Missing => (0.0, Color::Red),
+                        BodyPartState::Damaged => (part.integrity as f64 / 100.0, Color::Yellow),
+                        BodyPartState::Functional => (part.integrity as f64 / 100.0, Color::Green),
+                        BodyPartState::Enhanced => (part.integrity as f64 / 100.0, Color::Cyan),
+                    };
+
+                    Gauge::default()
+                        .block(Block::default().title(abbreviation).borders(Borders::ALL))
+                        .gauge_style(Style::default().fg(color).bg(Color::DarkGray))
+                        .ratio(ratio.min(1.0))
+                        .label(format!(" {} ", part.integrity))
+                })
+            })
+            .collect::<Vec<_>>()
+    } else {
+        // No body data - show placeholder
+        vec![Gauge::default()
+            .block(Block::default().title("No Body").borders(Borders::ALL))
+            .gauge_style(Style::default().fg(Color::Red).bg(Color::DarkGray))
+            .ratio(0.0)
+            .label(" N/A ".to_string())]
+    };
 
     // Create energy bar with pending consumption visualization
     let energy_bar = if pending_energy > 0 {
@@ -851,8 +883,24 @@ fn render_player_info(
             .label(format!(" {}/{} ", energy.current, energy.max))
     };
 
-    let bars = Layout::horizontal([Constraint::Ratio(1, 2), Constraint::Ratio(1, 2)]).split(area);
+    // Split area: top for body parts, bottom for energy
+    let main_layout = Layout::vertical([Constraint::Length(3), Constraint::Min(0)]).split(area);
 
-    f.render_widget(integrity_bar, bars[0]);
-    f.render_widget(energy_bar, bars[1]);
+    // Create a horizontal layout for body part bars on the top
+    let num_parts = body_part_bars.len();
+    if num_parts > 0 {
+        // Each body part gets equal horizontal space
+        let constraints = vec![Constraint::Ratio(1, num_parts as u32); num_parts];
+        let body_layout = Layout::horizontal(constraints).split(main_layout[0]);
+
+        // Render each body part bar horizontally
+        for (i, bar) in body_part_bars.into_iter().enumerate() {
+            if i < body_layout.len() {
+                f.render_widget(bar, body_layout[i]);
+            }
+        }
+    }
+
+    // Render energy bar on the bottom
+    f.render_widget(energy_bar, main_layout[1]);
 }
