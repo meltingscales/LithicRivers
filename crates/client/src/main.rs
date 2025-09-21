@@ -46,7 +46,7 @@ use crate::{
             render_body_panel, render_combat_panel, render_crafting_panel, render_credits_panel,
             render_game_view, render_help_panel, render_hotbar_panel, render_inventory_list_only,
             render_inventory_panel, render_look_panel, render_menu_panel, render_modes_panel,
-            render_quit_panel,
+            render_quit_panel, render_repair_modal,
         },
     },
 };
@@ -685,6 +685,15 @@ fn ui(f: &mut Frame, app: &mut App) {
 
     // Render multi-action selection modal if active
     render_multi_action_selection_modal(f, app);
+
+    // Render repair modal if active
+    if matches!(
+        app.panels.body_repair,
+        crate::app_state::BodyRepairState::SelectingRepairAndPart { .. }
+    ) {
+        let modal_area = centered_rect(80, 70, f.size());
+        render_repair_modal(f, app, modal_area);
+    }
 
     // Render hotbar if in place mode
     if show_hotbar {
