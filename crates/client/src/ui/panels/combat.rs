@@ -820,18 +820,36 @@ fn render_player_info(
                         BodyPartType::RightLeg => "RLG",
                     };
 
-                    let (ratio, color) = match part.state {
-                        BodyPartState::Missing => (0.0, Color::Red),
-                        BodyPartState::Damaged => (part.integrity as f64 / 100.0, Color::Yellow),
-                        BodyPartState::Functional => (part.integrity as f64 / 100.0, Color::Green),
-                        BodyPartState::Enhanced => (part.integrity as f64 / 100.0, Color::Cyan),
+                    let (ratio, color, label) = match part.state {
+                        BodyPartState::Missing => (0.0, Color::Gray, " GONE ".to_string()),
+                        BodyPartState::Damaged => {
+                            if part.integrity == 0 {
+                                (0.0, Color::Red, " 0 ".to_string())
+                            } else {
+                                (
+                                    part.integrity as f64 / 100.0,
+                                    Color::Yellow,
+                                    format!(" {} ", part.integrity),
+                                )
+                            }
+                        }
+                        BodyPartState::Functional => (
+                            part.integrity as f64 / 100.0,
+                            Color::Green,
+                            format!(" {} ", part.integrity),
+                        ),
+                        BodyPartState::Enhanced => (
+                            part.integrity as f64 / 100.0,
+                            Color::Cyan,
+                            format!(" {} ", part.integrity),
+                        ),
                     };
 
                     Gauge::default()
                         .block(Block::default().title(abbreviation).borders(Borders::ALL))
                         .gauge_style(Style::default().fg(color).bg(Color::DarkGray))
                         .ratio(ratio.min(1.0))
-                        .label(format!(" {} ", part.integrity))
+                        .label(label)
                 })
             })
             .collect::<Vec<_>>()
