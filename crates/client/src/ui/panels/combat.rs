@@ -66,7 +66,6 @@ pub fn render_combat_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
             Constraint::Length(3),  // Player health/mana bars
             Constraint::Min(8),     // Enemies area
             Constraint::Length(15), // Moves area (increased to fit player timer + 4 moves)
-            Constraint::Length(3),  // Message/status area
             Constraint::Length(1),  // Controls
         ])
         .split(inner);
@@ -95,18 +94,11 @@ pub fn render_combat_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
         app,
     );
 
-    // Message area (placeholder for now)
-    let message_para = Paragraph::new("Combat active - Select your move!")
-        .style(Style::default().fg(Color::Yellow))
-        .alignment(Alignment::Center)
-        .block(Block::default().borders(Borders::ALL));
-    f.render_widget(message_para, chunks[3]);
-
     // Controls
     let controls = Paragraph::new("[←→] Target | [↑↓] Move | [C] Clear | [5] Wait | [SPACE] Use")
         .style(Style::default().fg(Color::Gray))
         .alignment(Alignment::Center);
-    f.render_widget(controls, chunks[4]);
+    f.render_widget(controls, chunks[3]);
 }
 
 // Old render_player_info function removed - using new one with Body and Energy
