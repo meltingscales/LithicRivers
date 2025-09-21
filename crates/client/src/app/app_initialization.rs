@@ -5,7 +5,7 @@ use chrono::prelude::Local;
 use lithicrivers_core::components::Position;
 use lithicrivers_core::config::ConfigManager;
 use lithicrivers_core::game::Game;
-use lithicrivers_core::recipe_handler::RecipeHandler;
+use lithicrivers_core::recipe_handler::{RecipeHandler, RepairRecipeHandler};
 use std::time::Instant;
 
 impl App {
@@ -103,12 +103,14 @@ impl App {
         }
 
         let recipe_handler = RecipeHandler::new();
+        let repair_handler = RepairRecipeHandler::new();
 
         App {
             core: CoreState {
                 game,
                 config_manager,
                 sprite_loader,
+                repair_handler,
                 should_quit: false,
             },
             ui: UiState {
@@ -145,6 +147,7 @@ impl App {
                 npc_interaction: NPCInteractionState::default(),
                 multi_action_select: MultiActionSelectState::default(),
                 dialogue_engine: DialogueEngine::new(),
+                body_repair: BodyRepairState::default(),
             },
             splash: SplashScreenState {
                 state: SplashState::Logo,

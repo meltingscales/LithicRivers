@@ -1,4 +1,5 @@
 use crate::components::ItemKind;
+use crate::model::body::{BodyPartState, BodyPartType};
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -99,6 +100,94 @@ impl RecipeHandler {
             true
         } else {
             false
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct RepairRecipe {
+    pub name: &'static str,
+    pub ingredients: &'static [(ItemKind, u32)],
+    pub durability_restored: i64,
+    pub compatible_parts: &'static [BodyPartType], // Empty slice means all parts
+}
+
+pub struct RepairRecipeHandler {
+    recipes: Vec<RepairRecipe>,
+}
+
+impl RepairRecipeHandler {
+    pub fn new() -> Self {
+        let recipes = vec![RepairRecipe {
+            name: "Basic Electronics Repair",
+            ingredients: &[(ItemKind::ScrapElectronics, 1)],
+            durability_restored: 25,
+            compatible_parts: &[], // Works on all parts
+        }];
+
+        Self { recipes }
+    }
+
+    pub fn get_recipes(&self) -> &[RepairRecipe] {
+        &self.recipes
+    }
+
+    pub fn can_repair(&self, recipe_index: usize, inventory: &HashMap<ItemKind, u32>) -> bool {
+        if let Some(recipe) = self.recipes.get(recipe_index) {
+            recipe
+                .ingredients
+                .iter()
+                .all(|&(item, required)| inventory.get(&item).copied().unwrap_or(0) >= required)
+        } else {
+            false
+        }
+    }
+
+    pub fn can_repair_part(
+        &self,
+        recipe_index: usize,
+        part_type: BodyPartType,
+        part_state: BodyPartState,
+    ) -> bool {
+        if let Some(recipe) = self.recipes.get(recipe_index) {
+            // Can't repair missing parts
+            if part_state == BodyPartState::Missing {
+                return false;
+            }
+
+            // Check if recipe is compatible with this part type
+            recipe.compatible_parts.is_empty() || recipe.compatible_parts.contains(&part_type)
+        } else {
+            false
+        }
+    }
+
+    pub fn apply_repair(
+        &self,
+        recipe_index: usize,
+        inventory: &mut HashMap<ItemKind, u32>,
+        current_integrity: i64,
+    ) -> Option<i64> {
+        if let Some(recipe) = self.recipes.get(recipe_index) {
+            // Check if we can use this recipe
+            if !self.can_repair(recipe_index, inventory) {
+                return None;
+            }
+
+            // Consume ingredients
+            for &(item, required) in recipe.ingredients {
+                if let Some(count) = inventory.get_mut(&item) {
+                    *count = count.saturating_sub(required);
+                    if *count == 0 {
+                        inventory.remove(&item);
+                    }
+                }
+            }
+
+            // Apply repair (cap at 100)
+            Some((current_integrity + recipe.durability_restored).min(100))
+        } else {
+            None
         }
     }
 }

@@ -3,7 +3,7 @@ use crate::{audio, MenuTab, Scale, SplashState, SpriteLoader};
 use crossterm::event::KeyCode;
 use lithicrivers_core::components::{ItemKind, Position};
 use lithicrivers_core::config::ConfigManager;
-use lithicrivers_core::recipe_handler::RecipeHandler;
+use lithicrivers_core::recipe_handler::{RecipeHandler, RepairRecipeHandler};
 use lithicrivers_core::Game;
 use ratatui::layout::Rect;
 use std::collections::HashMap;
@@ -67,6 +67,8 @@ pub struct CoreState {
     pub game: Game,
     pub config_manager: ConfigManager,
     pub sprite_loader: SpriteLoader,
+    #[allow(dead_code)]
+    pub repair_handler: RepairRecipeHandler,
     pub should_quit: bool,
 }
 
@@ -130,6 +132,8 @@ pub struct PanelStates {
     pub npc_interaction: NPCInteractionState,
     pub multi_action_select: MultiActionSelectState,
     pub dialogue_engine: DialogueEngine,
+    #[allow(dead_code)]
+    pub body_repair: BodyRepairState,
 }
 
 /// Inventory panel state
@@ -244,6 +248,24 @@ pub enum HotbarAssignmentState {
 impl Default for HotbarAssignmentState {
     fn default() -> Self {
         HotbarAssignmentState::None
+    }
+}
+
+/// Body repair modal state
+#[derive(Debug, Clone, PartialEq)]
+#[allow(dead_code)]
+pub enum BodyRepairState {
+    None,
+    SelectingRepairAndPart {
+        available_repairs: Vec<usize>, // Indices into repair recipe handler
+        selected_repair: usize,
+        selected_body_part: Option<lithicrivers_core::model::body::BodyPartType>,
+    },
+}
+
+impl Default for BodyRepairState {
+    fn default() -> Self {
+        BodyRepairState::None
     }
 }
 
