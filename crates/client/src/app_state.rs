@@ -364,7 +364,11 @@ pub enum InteractionType {
 }
 
 impl InteractionType {
-    pub fn display_name_with_context(&self, world: &hecs::World) -> String {
+    pub fn display_name_with_context(
+        &self,
+        world: &hecs::World,
+        player_pos: Option<Position>,
+    ) -> String {
         match self {
             InteractionType::PickupItem { item_name, .. } => format!("Pick up {}", item_name),
             InteractionType::LootCorpse { entity, .. } => {
@@ -379,11 +383,36 @@ impl InteractionType {
                 }
             }
             InteractionType::TalkToNPC { npc_name, .. } => format!("Talk to {}", npc_name),
-            InteractionType::OpenCloseDoor { is_open, .. } => {
-                if *is_open {
-                    "Close door".to_string()
+            InteractionType::OpenCloseDoor { position, is_open } => {
+                let direction_text = if let Some(player_position) = player_pos {
+                    let dx = position.x - player_position.x;
+                    let dy = position.y - player_position.y;
+
+                    let direction = match (dx.signum(), dy.signum()) {
+                        (0, -1) => "N",   // North
+                        (1, -1) => "NE",  // Northeast
+                        (1, 0) => "E",    // East
+                        (1, 1) => "SE",   // Southeast
+                        (0, 1) => "S",    // South
+                        (-1, 1) => "SW",  // Southwest
+                        (-1, 0) => "W",   // West
+                        (-1, -1) => "NW", // Northwest
+                        _ => "",          // Same position (shouldn't happen)
+                    };
+
+                    if direction.is_empty() {
+                        String::new()
+                    } else {
+                        format!(" ({})", direction)
+                    }
                 } else {
-                    "Open door".to_string()
+                    String::new()
+                };
+
+                if *is_open {
+                    format!("Close door{}", direction_text)
+                } else {
+                    format!("Open door{}", direction_text)
                 }
             }
         }

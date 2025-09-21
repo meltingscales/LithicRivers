@@ -1790,27 +1790,48 @@ fn handle_interaction(app: &mut App) {
         }
     }
 
-    // Find nearby doors (check adjacent tiles in the world map)
+    // Find nearby doors (check adjacent tiles in all 8 directions)
     use lithicrivers_core::tile_registry::TileKind;
     let adjacent_positions = [
+        // Cardinal directions
         Position {
-            x: player_pos.x - 1,
-            y: player_pos.y,
+            x: player_pos.x,
+            y: player_pos.y - 1, // North
             z: player_pos.z,
         },
         Position {
             x: player_pos.x + 1,
-            y: player_pos.y,
+            y: player_pos.y - 1, // Northeast
+            z: player_pos.z,
+        },
+        Position {
+            x: player_pos.x + 1,
+            y: player_pos.y, // East
+            z: player_pos.z,
+        },
+        Position {
+            x: player_pos.x + 1,
+            y: player_pos.y + 1, // Southeast
             z: player_pos.z,
         },
         Position {
             x: player_pos.x,
-            y: player_pos.y - 1,
+            y: player_pos.y + 1, // South
             z: player_pos.z,
         },
         Position {
-            x: player_pos.x,
-            y: player_pos.y + 1,
+            x: player_pos.x - 1,
+            y: player_pos.y + 1, // Southwest
+            z: player_pos.z,
+        },
+        Position {
+            x: player_pos.x - 1,
+            y: player_pos.y, // West
+            z: player_pos.z,
+        },
+        Position {
+            x: player_pos.x - 1,
+            y: player_pos.y - 1, // Northwest
             z: player_pos.z,
         },
     ];

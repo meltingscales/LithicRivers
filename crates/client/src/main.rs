@@ -1492,6 +1492,20 @@ fn render_action_selection_modal(
     let inner = block.inner(area);
     f.render_widget(block, area);
 
+    // Get player position for directional information
+    let player_pos = app
+        .core
+        .game
+        .get_player_entity()
+        .and_then(|e| {
+            app.core
+                .game
+                .world
+                .get::<&lithicrivers_core::components::Position>(e)
+                .ok()
+        })
+        .map(|pos| *pos);
+
     // Create list of available actions
     let action_items: Vec<ListItem> = available_actions
         .iter()
@@ -1509,7 +1523,7 @@ fn render_action_selection_modal(
             let display_text = format!(
                 "{} {}",
                 action.icon(),
-                action.display_name_with_context(&app.core.game.world)
+                action.display_name_with_context(&app.core.game.world, player_pos)
             );
             ListItem::new(display_text).style(style)
         })
