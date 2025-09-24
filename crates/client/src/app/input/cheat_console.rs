@@ -7,8 +7,8 @@ use std::error::Error;
 pub fn handle_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Error>> {
     match &app.panels.cheat_console {
         CheatConsoleState::None => {
-            // Check if we should open the console with "/"
-            if key == KeyCode::Char('/') {
+            // Check if we should open the console with OPEN_COMMAND_MENU keybind
+            if app.ui.keybinds.matches("ui", "OPEN_COMMAND_MENU", &key) {
                 app.panels.cheat_console = CheatConsoleState::Open {
                     input: String::new(),
                     cursor_position: 0,

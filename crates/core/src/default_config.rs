@@ -77,7 +77,6 @@ pub fn default_config() -> ConfigRoot {
             "DROP_ITEM": ["g"], // Drop item
             "DESTROY_ITEM": ["x"], // Destroy item, remove later
             "CHEAT_DUPLICATE_ITEM": ["."], // Duplicate item, remove later
-            "CHEAT_NOCLIP_TOGGLE": ["/"], // Toggle noclip mode
             "TOGGLE_ITEM_AUTO_PICKUP_KEY": ["p"] // Toggle item auto pickup
         }
     });
