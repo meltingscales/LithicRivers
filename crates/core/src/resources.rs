@@ -27,6 +27,24 @@ pub struct PendingStructure {
     pub bury_structure: bool,
 }
 
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct QuestMarker {
+    pub name: String,
+    pub description: String,
+    pub x: i64,
+    pub y: i64,
+    pub z: i64,
+    pub marker_type: QuestMarkerType,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub enum QuestMarkerType {
+    MainQuest,
+    SideQuest,
+    Location,
+    Treasure,
+}
+
 pub struct Resources {
     pub time: GameTime,
     pub world_state: WorldState,
@@ -37,6 +55,8 @@ pub struct Resources {
     pub pending_structures: Vec<PendingStructure>,
     pub chunk_generation_states: HashMap<(i64, i64, i64), ChunkGenerationState>,
     pub structure_generation_states: HashMap<String, StructureGenerationState>,
+    pub quest_markers: Vec<QuestMarker>,
+    pub explored_chunks: HashMap<(i64, i64, i64), bool>,
 }
 
 impl Resources {
@@ -51,6 +71,8 @@ impl Resources {
             pending_structures: Vec::new(),
             chunk_generation_states: HashMap::new(),
             structure_generation_states: HashMap::new(),
+            quest_markers: Vec::new(),
+            explored_chunks: HashMap::new(),
         }
     }
 
@@ -81,5 +103,24 @@ impl Resources {
     /// Log a green message (for success/positive events)
     pub fn log_green<S: Into<String>>(&mut self, msg: S) {
         self.log_colored(msg, crate::message_log::MessageColor::Green);
+    }
+
+    /// Add a quest marker to the world
+    pub fn add_quest_marker(&mut self, marker: QuestMarker) {
+        self.quest_markers.push(marker);
+    }
+
+    /// Mark a chunk as explored
+    pub fn mark_chunk_explored(&mut self, chunk_x: i64, chunk_y: i64, chunk_z: i64) {
+        self.explored_chunks
+            .insert((chunk_x, chunk_y, chunk_z), true);
+    }
+
+    /// Check if a chunk has been explored
+    pub fn is_chunk_explored(&self, chunk_x: i64, chunk_y: i64, chunk_z: i64) -> bool {
+        self.explored_chunks
+            .get(&(chunk_x, chunk_y, chunk_z))
+            .unwrap_or(&false)
+            .clone()
     }
 }

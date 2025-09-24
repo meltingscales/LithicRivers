@@ -355,6 +355,9 @@ impl Game {
             tracing::info!(target: "game", "Player at world pos ({}, {}, {}) -> chunk ({}, {}, {})",
                 player_pos.x, player_pos.y, player_pos.z, chunk_x, chunk_y, chunk_z);
 
+            // Mark the player's current chunk as explored
+            self.res.mark_chunk_explored(chunk_x, chunk_y, chunk_z);
+
             // Check a small radius around the player's chunk
             for dx in -1..=1 {
                 for dy in -1..=1 {
@@ -369,6 +372,15 @@ impl Game {
                             target_chunk_y,
                             target_chunk_z,
                         );
+
+                        // Mark nearby chunks as explored if they're close enough
+                        if dx.abs() <= 1 && dy.abs() <= 1 && dz.abs() <= 1 {
+                            self.res.mark_chunk_explored(
+                                target_chunk_x,
+                                target_chunk_y,
+                                target_chunk_z,
+                            );
+                        }
                     }
                 }
             }
@@ -730,6 +742,22 @@ impl Game {
                 structure.z,
                 structure.bury_structure,
             );
+
+            // Add quest marker for this structure
+            if structure
+                .name
+                .contains("first-quest-sapiencorp.lrstructure")
+            {
+                self.res.add_quest_marker(crate::resources::QuestMarker {
+                    name: "SapienCorp Factory".to_string(),
+                    description: "Mysterious corporate facility buried underground".to_string(),
+                    x: structure.x,
+                    y: structure.y,
+                    z: structure.z,
+                    marker_type: crate::resources::QuestMarkerType::MainQuest,
+                });
+                self.res.log_green("Quest marker added: SapienCorp Factory");
+            }
 
             // Mark this structure as generated
             self.mark_structure_generated(&structure.name, structure.x, structure.y, structure.z);
