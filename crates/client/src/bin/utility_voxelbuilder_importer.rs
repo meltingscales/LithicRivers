@@ -20,16 +20,16 @@ fn create_hex_color_block_mapping(hex_color: &str) -> char {
 
     match (r, g, b) {
         // Map specific colors to blocks based on RGB values
-        (145, 19, 245) => 'E',  // Purple (9113F5) -> Enemy spawns
-        (144, 160, 179) => '#', // Gray-blue (90A0B3) -> stone
-        (255, 255, 0) => 't',   // Yellow (FFFF00) -> treasure_common
-        (131, 50, 0) => 's',    // Brown (833200) -> scrap_common
-        (255, 155, 94) => 'S',  // lighter Brown (FF9B5E) -> scrap_rare
+        (145, 19, 245) => 'E',  // Purple (#9113F5) -> Enemy spawns
+        (144, 160, 179) => '#', // Gray-blue (#90A0B3) -> stone
+        (255, 255, 0) => 't',   // Yellow (#FFFF00) -> treasure_common
+        (131, 50, 0) => 's',    // Brown (#833200) -> scrap_common
+        (255, 155, 94) => 'S',  // lighter Brown (#FF9B5E) -> scrap_rare
         //TODO treasure_rare
         //TODO treasure_quest_1
-        (0, 255, 0) => 'D',   // Green (00FF00) -> door
-        (255, 128, 0) => '>', // Orange (FF8000) -> stairs
-        (0, 0, 0) => ' ',     // Black (000000) -> air
+        (0, 255, 0) => 'D',   // Green (#00FF00) -> door
+        (255, 128, 0) => '>', // Orange (#FF8000) -> stairs
+        (0, 0, 0) => ' ',     // Black (#000000) -> air
         _ => panic!("{}", format!("Unknown color {}", hex_color)), // Default will panic
     }
 }
@@ -62,10 +62,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=============================================");
 
     // Define input -> output mappings
-    let input_output_map: Vec<(&str, &str)> = vec![(
-        "crates/client/assets/voxelbuilder/first-quest-sapiencorp.voxelbuilder.json",
-        "crates/client/assets/structures/first-quest-sapiencorp.lrstructure",
-    )];
+    let input_output_map: Vec<(&str, &str)> = vec![
+        (
+            // 1st quest, escape the bunker
+            "crates/client/assets/voxelbuilder/sapiencorp-bunker.voxelbuilder.json",
+            "crates/client/assets/structures/sapiencorp-bunker.lrstructure",
+        ),
+        (
+            // 2nd quest, get your arm back
+            "crates/client/assets/voxelbuilder/sapiencorp-factory.voxelbuilder.json",
+            "crates/client/assets/structures/sapiencorp-factory.lrstructure",
+        ),
+    ];
 
     if input_output_map.is_empty() {
         println!("📋 No Voxel Builder files configured for import.");
