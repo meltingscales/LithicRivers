@@ -237,21 +237,56 @@ impl Game {
                 z: 1,
                 bury_structure: true,
             });
+
+        //force load the 1st quest structure
         new_game.ensure_chunk_with_pending_structures_worldcoords(10, 10, 1);
 
+        //add a quest marker for the 1st quest structure
+        new_game
+            .res
+            .add_quest_marker(crate::resources::QuestMarker {
+                name: "SapienCorp Bunker".to_string(),
+                description: "Escape the dark bunker.".to_string(),
+                x: 10,
+                y: 10,
+                z: 1,
+                marker_type: crate::resources::QuestMarkerType::MainQuest,
+            });
+        new_game
+            .res
+            .log_green("Quest marker added: SapienCorp Bunker");
+
         // Queue the 2nd quest structure for lazy loading
+        let q2x = 10;
+        let q2y = 1609; //exactly 1 mile in meters
+        let q2z = 1;
         new_game
             .res
             .pending_structures
             .push(crate::resources::PendingStructure {
                 name: "sapiencorp-factory.lrstructure".to_string(),
-                x: 10,
-                y: 1609, //exactly 1 mile in meters
-                z: 1,
+                x: q2x,
+                y: q2y,
+                z: q2z,
                 bury_structure: true,
             });
         // Force-load the chunk that the 2nd quest structure is in so the quest marker appears immediately
-        new_game.ensure_chunk_with_pending_structures_worldcoords(10, 1609, 1);
+        new_game.ensure_chunk_with_pending_structures_worldcoords(q2x, q2y, q2z);
+
+        // Add quest marker for 2nd quest structure
+        new_game
+            .res
+            .add_quest_marker(crate::resources::QuestMarker {
+                name: "SapienCorp Factory".to_string(),
+                description: "Get a new arm!".to_string(),
+                x: q2x,
+                y: q2y,
+                z: q2z,
+                marker_type: crate::resources::QuestMarkerType::MainQuest,
+            });
+        new_game
+            .res
+            .log_green("Quest marker added: SapienCorp Factory");
 
         // Run one tick to generate structures around the player spawn
         new_game.tick();
@@ -769,19 +804,6 @@ impl Game {
                 structure.z,
                 structure.bury_structure,
             );
-
-            // Add quest marker for this structure
-            if structure.name.contains("sapiencorp-factory.lrstructure") {
-                self.res.add_quest_marker(crate::resources::QuestMarker {
-                    name: "SapienCorp Factory".to_string(),
-                    description: "Mysterious corporate facility buried underground".to_string(),
-                    x: structure.x,
-                    y: structure.y,
-                    z: structure.z,
-                    marker_type: crate::resources::QuestMarkerType::MainQuest,
-                });
-                self.res.log_green("Quest marker added: SapienCorp Factory");
-            }
 
             // Mark this structure as generated
             self.mark_structure_generated(&structure.name, structure.x, structure.y, structure.z);
