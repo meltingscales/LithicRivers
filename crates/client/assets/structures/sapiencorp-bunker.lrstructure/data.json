@@ -1,0 +1,21 @@
+{
+  "blocks": {
+    " ": "air",
+    "#": "rock",
+    ".": "existing_worldgen",
+    "1": "treasure_quest_1",
+    ">": "stairs",
+    "D": "door",
+    "E": "enemy_spawn",
+    "S": "scrap_rare",
+    "T": "treasure_rare",
+    "s": "scrap_common",
+    "t": "treasure_common"
+  },
+  "gen_biomes": "QUEST_ONLY",
+  "gen_chance": 0.0,
+  "y_layer_gen_range": [
+    0,
+    20
+  ]
+}
