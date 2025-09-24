@@ -2,6 +2,7 @@ pub mod body;
 pub mod combat;
 pub mod corpse_looting;
 pub mod crafting;
+pub mod global_ui;
 pub mod hotbar_assignment;
 pub mod inventory;
 pub mod look_mode;
