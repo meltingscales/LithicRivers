@@ -8,7 +8,6 @@ mod app_state;
 mod boot_message;
 mod dialogue_engine;
 mod dialogue_presenter;
-mod input;
 mod ui;
 
 use ratatui::{
