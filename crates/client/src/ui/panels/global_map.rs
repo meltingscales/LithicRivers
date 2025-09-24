@@ -62,6 +62,24 @@ fn render_map_panel(f: &mut Frame, app: &mut App, area: Rect) {
     let min_chunk_y = player_chunk_y - half_height;
     let max_chunk_y = player_chunk_y + half_height;
 
+    // Get selected marker for arrow drawing
+    // Index 0 is the "unselect" option, so actual markers start at index 1
+    let selected_marker = if app.panels.global_map.selected_marker_index > 0
+        && app.core.game.res.quest_markers.len() >= app.panels.global_map.selected_marker_index
+    {
+        let marker_index = app.panels.global_map.selected_marker_index - 1; // Convert to 0-based marker index
+        app.core.game.res.quest_markers.get(marker_index)
+    } else {
+        None
+    };
+
+    let selected_marker_chunk = selected_marker.map(|marker| {
+        (
+            marker.x.div_euclid(CHUNK_SIZE),
+            marker.y.div_euclid(CHUNK_SIZE),
+        )
+    });
+
     // Build the map display
     let mut map_lines = Vec::new();
 
@@ -71,6 +89,18 @@ fn render_map_panel(f: &mut Frame, app: &mut App, area: Rect) {
         for chunk_x in min_chunk_x..=max_chunk_x {
             let char_to_display;
             let style;
+
+            // Check if this is part of the arrow path to selected marker
+            let is_arrow_path = selected_marker_chunk.map_or(false, |(target_x, target_y)| {
+                is_on_arrow_path(
+                    player_chunk_x,
+                    player_chunk_y,
+                    target_x,
+                    target_y,
+                    chunk_x,
+                    chunk_y,
+                )
+            });
 
             // Check if this is the player's current chunk
             if chunk_x == player_chunk_x && chunk_y == player_chunk_y {
@@ -92,6 +122,23 @@ fn render_map_panel(f: &mut Frame, app: &mut App, area: Rect) {
                     QuestMarkerType::Treasure => '$',
                 };
                 style = Style::default().fg(Color::Red);
+            }
+            // Check if this is part of an arrow path
+            else if is_arrow_path {
+                if let Some((target_x, target_y)) = selected_marker_chunk {
+                    char_to_display = get_arrow_char(
+                        player_chunk_x,
+                        player_chunk_y,
+                        target_x,
+                        target_y,
+                        chunk_x,
+                        chunk_y,
+                    );
+                    style = Style::default().fg(Color::Cyan);
+                } else {
+                    char_to_display = ' ';
+                    style = Style::default().fg(Color::DarkGray);
+                }
             }
             // Check if this chunk has been explored
             else if app
@@ -230,10 +277,51 @@ fn render_markers_panel(f: &mut Frame, app: &mut App, area: Rect) {
         // Sort by distance (closest first)
         marker_distances.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
 
-        // Create list items
-        let marker_items: Vec<ListItem> = marker_distances
+        // Create list items - start with "unselect" option
+        let mut marker_items: Vec<ListItem> = Vec::new();
+
+        // Add "unselect quest marker" option at index 0
+        let is_unselect_selected = app.panels.global_map.selected_marker_index == 0;
+        let unselect_style = if is_unselect_selected {
+            Style::default()
+                .fg(Color::White)
+                .add_modifier(Modifier::BOLD)
+                .bg(Color::DarkGray)
+        } else {
+            Style::default().fg(Color::Gray)
+        };
+        let unselect_indicator = if is_unselect_selected { "► " } else { "  " };
+
+        let unselect_content = vec![
+            Line::from(vec![
+                Span::styled(unselect_indicator, Style::default().fg(Color::Cyan)),
+                Span::styled("✗ ", Style::default().fg(Color::Gray)),
+                Span::styled("(unselect quest marker)", unselect_style),
+            ]),
+            Line::from(vec![
+                Span::styled("   ", Style::default()),
+                Span::styled(
+                    "Hide arrow",
+                    if is_unselect_selected {
+                        Style::default()
+                            .fg(Color::Gray)
+                            .add_modifier(Modifier::BOLD)
+                            .bg(Color::DarkGray)
+                    } else {
+                        Style::default().fg(Color::DarkGray)
+                    },
+                ),
+            ]),
+        ];
+        marker_items.push(ListItem::new(unselect_content));
+
+        // Add actual quest markers (their indices will be offset by 1)
+        let quest_marker_items: Vec<ListItem> = marker_distances
             .iter()
-            .map(|(marker, distance)| {
+            .enumerate()
+            .map(|(marker_index, (marker, distance))| {
+                let list_index = marker_index + 1; // Offset by 1 due to unselect option
+                let is_selected = list_index == app.panels.global_map.selected_marker_index;
                 let marker_symbol = match marker.marker_type {
                     QuestMarkerType::MainQuest => "!",
                     QuestMarkerType::SideQuest => "?",
@@ -254,29 +342,60 @@ fn render_markers_panel(f: &mut Frame, app: &mut App, area: Rect) {
                     format!("{:.1}k blocks", distance / 1000.0)
                 };
 
+                let (name_style, distance_style, coords_style) = if is_selected {
+                    (
+                        Style::default()
+                            .fg(Color::White)
+                            .add_modifier(Modifier::BOLD)
+                            .bg(Color::DarkGray),
+                        Style::default()
+                            .fg(Color::Gray)
+                            .add_modifier(Modifier::BOLD)
+                            .bg(Color::DarkGray),
+                        Style::default()
+                            .fg(Color::DarkGray)
+                            .add_modifier(Modifier::BOLD)
+                            .bg(Color::DarkGray),
+                    )
+                } else {
+                    (
+                        Style::default().fg(Color::White),
+                        Style::default().fg(Color::Gray),
+                        Style::default().fg(Color::DarkGray),
+                    )
+                };
+
+                let selection_indicator = if is_selected { "► " } else { "  " };
+
                 let content = vec![
                     Line::from(vec![
+                        Span::styled(selection_indicator, Style::default().fg(Color::Cyan)),
                         Span::styled(
                             format!("{} ", marker_symbol),
                             Style::default()
                                 .fg(marker_color)
                                 .add_modifier(Modifier::BOLD),
                         ),
-                        Span::styled(&marker.name, Style::default().fg(Color::White)),
+                        Span::styled(&marker.name, name_style),
                     ]),
-                    Line::from(vec![Span::styled(
-                        format!("  {}", distance_text),
-                        Style::default().fg(Color::Gray),
-                    )]),
-                    Line::from(vec![Span::styled(
-                        format!("  ({}, {}, {})", marker.x, marker.y, marker.z),
-                        Style::default().fg(Color::DarkGray),
-                    )]),
+                    Line::from(vec![
+                        Span::styled("   ", Style::default()),
+                        Span::styled(distance_text, distance_style),
+                    ]),
+                    Line::from(vec![
+                        Span::styled("   ", Style::default()),
+                        Span::styled(
+                            format!("({}, {}, {})", marker.x, marker.y, marker.z),
+                            coords_style,
+                        ),
+                    ]),
                 ];
 
                 ListItem::new(content)
             })
             .collect();
+
+        marker_items.extend(quest_marker_items);
 
         if !marker_items.is_empty() {
             let markers_list = List::new(marker_items)
@@ -299,5 +418,136 @@ fn render_markers_panel(f: &mut Frame, app: &mut App, area: Rect) {
             .alignment(Alignment::Center);
 
         f.render_widget(error_text, inner_area);
+    }
+}
+
+/// Check if a point (chunk_x, chunk_y) is on the arrow path from start to end
+fn is_on_arrow_path(
+    start_x: i64,
+    start_y: i64,
+    end_x: i64,
+    end_y: i64,
+    chunk_x: i64,
+    chunk_y: i64,
+) -> bool {
+    // Don't draw arrows for the start and end points (they have their own symbols)
+    if (chunk_x == start_x && chunk_y == start_y) || (chunk_x == end_x && chunk_y == end_y) {
+        return false;
+    }
+
+    // Use Bresenham-like line algorithm to determine if this point is on the path
+    let dx = (end_x - start_x).abs();
+    let dy = (end_y - start_y).abs();
+
+    if dx == 0 && dy == 0 {
+        return false; // Start and end are the same
+    }
+
+    // For vertical line
+    if dx == 0 {
+        return chunk_x == start_x
+            && ((chunk_y > start_y.min(end_y) && chunk_y < start_y.max(end_y))
+                || chunk_y == start_y.min(end_y)
+                || chunk_y == start_y.max(end_y));
+    }
+
+    // For horizontal line
+    if dy == 0 {
+        return chunk_y == start_y
+            && ((chunk_x > start_x.min(end_x) && chunk_x < start_x.max(end_x))
+                || chunk_x == start_x.min(end_x)
+                || chunk_x == start_x.max(end_x));
+    }
+
+    // For diagonal lines, check if the point lies on the line
+    // Using cross product to check if points are collinear
+    let cross_product =
+        (chunk_y - start_y) * (end_x - start_x) - (chunk_x - start_x) * (end_y - start_y);
+
+    // If cross product is 0, points are collinear
+    if cross_product != 0 {
+        return false;
+    }
+
+    // Check if the point is within the bounding box
+    let min_x = start_x.min(end_x);
+    let max_x = start_x.max(end_x);
+    let min_y = start_y.min(end_y);
+    let max_y = start_y.max(end_y);
+
+    chunk_x >= min_x && chunk_x <= max_x && chunk_y >= min_y && chunk_y <= max_y
+}
+
+/// Get the appropriate arrow character for a position on the line
+fn get_arrow_char(
+    start_x: i64,
+    start_y: i64,
+    end_x: i64,
+    end_y: i64,
+    chunk_x: i64,
+    chunk_y: i64,
+) -> char {
+    let dx = end_x - start_x;
+    let dy = end_y - start_y;
+
+    // Determine the direction of the arrow
+    if dx == 0 && dy > 0 {
+        // Vertical down
+        if chunk_y == end_y {
+            '▼'
+        } else {
+            '│'
+        }
+    } else if dx == 0 && dy < 0 {
+        // Vertical up
+        if chunk_y == end_y {
+            '▲'
+        } else {
+            '│'
+        }
+    } else if dy == 0 && dx > 0 {
+        // Horizontal right
+        if chunk_x == end_x {
+            '►'
+        } else {
+            '─'
+        }
+    } else if dy == 0 && dx < 0 {
+        // Horizontal left
+        if chunk_x == end_x {
+            '◄'
+        } else {
+            '─'
+        }
+    } else if dx > 0 && dy > 0 {
+        // Diagonal down-right
+        if chunk_x == end_x && chunk_y == end_y {
+            '◣'
+        } else {
+            '╲'
+        }
+    } else if dx < 0 && dy > 0 {
+        // Diagonal down-left
+        if chunk_x == end_x && chunk_y == end_y {
+            '◤'
+        } else {
+            '╱'
+        }
+    } else if dx > 0 && dy < 0 {
+        // Diagonal up-right
+        if chunk_x == end_x && chunk_y == end_y {
+            '◥'
+        } else {
+            '╱'
+        }
+    } else if dx < 0 && dy < 0 {
+        // Diagonal up-left
+        if chunk_x == end_x && chunk_y == end_y {
+            '◢'
+        } else {
+            '╲'
+        }
+    } else {
+        '·' // Fallback
     }
 }

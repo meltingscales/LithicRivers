@@ -149,6 +149,7 @@ impl App {
                 dialogue_engine: DialogueEngine::new(),
                 body_repair: BodyRepairState::default(),
                 cheat_console: CheatConsoleState::default(),
+                global_map: GlobalMapPanelState::default(),
             },
             splash: SplashScreenState {
                 state: SplashState::Logo,
