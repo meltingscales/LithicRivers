@@ -1398,40 +1398,55 @@ fn render_block_picker_modal(
     let inner = block.inner(area);
     f.render_widget(block, area);
 
-    // Create list of available blocks
-    let block_items: Vec<ListItem> = available_blocks
-        .iter()
-        .enumerate()
-        .map(|(i, &block_kind)| {
-            let is_selected = selected_block == i;
-            let style = if is_selected {
-                Style::default()
-                    .fg(Color::Yellow)
-                    .add_modifier(Modifier::BOLD)
-            } else {
-                Style::default()
-            };
+    // Create list of available blocks with "Clear slot" as first option
+    let mut block_items: Vec<ListItem> = Vec::new();
 
-            // Show block icon and name using actual sprite
-            let sprite_name = lithicrivers_core::components::itemkind_sprite_name(block_kind);
-            let icon = if let Some(slash_pos) = sprite_name.find('/') {
-                let (category, name) = sprite_name.split_at(slash_pos);
-                let name = &name[1..]; // Remove the '/'
-                let sprite_data = app.core.sprite_loader.load_sprite(name, category);
-                // Get the first character from the 1x1 sprite (sprites[0])
-                sprite_data
-                    .sprites
-                    .get(0)
-                    .and_then(|s| s.chars().next())
-                    .unwrap_or('?')
-            } else {
-                '?'
-            };
-            let text = format!("{} {}", icon, itemkind_name(block_kind));
+    // Add "Clear slot" as the first option (index 0)
+    let clear_slot_selected = selected_block == 0;
+    let clear_slot_style = if clear_slot_selected {
+        Style::default()
+            .fg(Color::Yellow)
+            .add_modifier(Modifier::BOLD)
+    } else {
+        Style::default()
+    };
+    let clear_slot_text = "✗ Clear slot";
+    block_items.push(ListItem::new(Line::from(Span::styled(
+        clear_slot_text,
+        clear_slot_style,
+    ))));
 
-            ListItem::new(Line::from(Span::styled(text, style)))
-        })
-        .collect();
+    // Add actual blocks (indices 1+)
+    for (i, &block_kind) in available_blocks.iter().enumerate() {
+        let list_index = i + 1; // Offset by 1 because index 0 is "Clear slot"
+        let is_selected = selected_block == list_index;
+        let style = if is_selected {
+            Style::default()
+                .fg(Color::Yellow)
+                .add_modifier(Modifier::BOLD)
+        } else {
+            Style::default()
+        };
+
+        // Show block icon and name using actual sprite
+        let sprite_name = lithicrivers_core::components::itemkind_sprite_name(block_kind);
+        let icon = if let Some(slash_pos) = sprite_name.find('/') {
+            let (category, name) = sprite_name.split_at(slash_pos);
+            let name = &name[1..]; // Remove the '/'
+            let sprite_data = app.core.sprite_loader.load_sprite(name, category);
+            // Get the first character from the 1x1 sprite (sprites[0])
+            sprite_data
+                .sprites
+                .get(0)
+                .and_then(|s| s.chars().next())
+                .unwrap_or('?')
+        } else {
+            '?'
+        };
+        let text = format!("{} {}", icon, itemkind_name(block_kind));
+
+        block_items.push(ListItem::new(Line::from(Span::styled(text, style))));
+    }
 
     let list =
         List::new(block_items).highlight_style(Style::default().add_modifier(Modifier::BOLD));
