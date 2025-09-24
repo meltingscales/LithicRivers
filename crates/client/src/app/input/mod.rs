@@ -7,3 +7,4 @@ pub mod inventory;
 pub mod multi_action;
 pub mod npc_interaction;
 pub mod splash;
+pub mod world_build;
