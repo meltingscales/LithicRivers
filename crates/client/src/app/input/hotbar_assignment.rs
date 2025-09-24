@@ -20,27 +20,27 @@ pub fn handle_hotbar_assignment_input(app: &mut App, key: KeyCode) -> Result<boo
             app.core.game.res.log("Cancelled block assignment");
             return Ok(true);
         }
-        
-        // NEW: Clear hotbar slot functionality - press 'c' to clear
-        if app.ui.keybinds.matches("combat", "CLEAR_MOVE_QUEUE", &key) {
-            // Clear the hotbar slot
-            app.panels.build.hotbar_assignments[slot] = None;
-            app.panels.hotbar_assignment = HotbarAssignmentState::None;
-            app.core.game.res.log(format!("Cleared slot F{}", slot + 1));
-            return Ok(true);
-        }
-        
+
         if app.ui.keybinds.matches("movement", "MOVE_NORTH", &key) {
             selected = selected.saturating_sub(1);
         }
         if app.ui.keybinds.matches("movement", "MOVE_SOUTH", &key) {
-            if selected < blocks.len().saturating_sub(1) {
+            // Total options = blocks.len() + 1 (for "Clear slot")
+            let total_options = blocks.len() + 1;
+            if selected < total_options.saturating_sub(1) {
                 selected += 1;
             }
         }
         if app.ui.keybinds.matches("ui", "MENU_ACTIVATE", &key) || key == KeyCode::Enter {
-            if selected < blocks.len() {
-                let chosen_block = blocks[selected];
+            if selected == 0 {
+                // Index 0 = "Clear slot" option
+                app.panels.build.hotbar_assignments[slot] = None;
+                app.panels.hotbar_assignment = HotbarAssignmentState::None;
+                app.core.game.res.log(format!("Cleared slot F{}", slot + 1));
+            } else if selected <= blocks.len() {
+                // Index 1+ = actual blocks (offset by 1)
+                let block_index = selected - 1;
+                let chosen_block = blocks[block_index];
                 app.panels.build.hotbar_assignments[slot] = Some(chosen_block);
                 app.panels.hotbar_assignment = HotbarAssignmentState::None;
                 app.core.game.res.log(format!(
