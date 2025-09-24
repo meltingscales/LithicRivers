@@ -226,20 +226,32 @@ impl Game {
             scheduler: SystemScheduler::new(),
         };
 
-        // Queue the starting dungeon for lazy loading
+        // Queue the 1st quest structure for lazy loading
         new_game
             .res
             .pending_structures
             .push(crate::resources::PendingStructure {
-                name: "first-quest-sapiencorp.lrstructure".to_string(),
+                name: "sapiencorp-bunker.lrstructure".to_string(),
                 x: 10,
-                y: 16093,
+                y: 10,
                 z: 1,
                 bury_structure: true,
             });
+        new_game.ensure_chunk_with_pending_structures_worldcoords(10, 10, 1);
 
-        // Force-load the chunk that the starting dungeon is in so the quest marker appears immediately
-        new_game.ensure_chunk_with_pending_structures_worldcoords(10, 16093, 1);
+        // Queue the 2nd quest structure for lazy loading
+        new_game
+            .res
+            .pending_structures
+            .push(crate::resources::PendingStructure {
+                name: "sapiencorp-factory.lrstructure".to_string(),
+                x: 10,
+                y: 1609, //exactly 1 mile in meters
+                z: 1,
+                bury_structure: true,
+            });
+        // Force-load the chunk that the 2nd quest structure is in so the quest marker appears immediately
+        new_game.ensure_chunk_with_pending_structures_worldcoords(10, 1609, 1);
 
         // Run one tick to generate structures around the player spawn
         new_game.tick();
@@ -761,7 +773,7 @@ impl Game {
             // Add quest marker for this structure
             if structure
                 .name
-                .contains("first-quest-sapiencorp.lrstructure")
+                .contains("sapiencorp-factory.lrstructure")
             {
                 self.res.add_quest_marker(crate::resources::QuestMarker {
                     name: "SapienCorp Factory".to_string(),

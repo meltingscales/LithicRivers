@@ -1,6 +1,26 @@
 # Steam MVP Release Plan (Target: December 2026)
 
-## NEXT TODO: VoxelBuilder Quest Location Design - Abandoned SapienCorp Factory
+## NEXT TODO: Underground Bunker Tutorial & First Quest Design
+**Priority**: HIGHEST - First quest and tutorial implementation
+
+**Quest 1: Underground Bunker Escape (z=-20 to surface)**
+- Robot protagonist starts in a dark, unpowered bunker after falling and sustaining severe mechanical damage
+- Low-light/no-light scenario with fog of war mechanics:
+  - Structures/blocks are remembered and rendered normally once seen
+  - Entity last positions are remembered and rendered in grayscale
+  - Creates atmospheric tension and teaches core navigation mechanics
+- Tutorial integration for movement, inventory, damage assessment, and basic interaction
+- Environmental storytelling about how/why robot fell and bunker's purpose
+- Escape to surface serves as clear objective and completion milestone
+
+**Quest 2: SapienCorp Facility - New Arm Acquisition (1 mile from bunker)**
+- Much more manageable 1-mile travel distance from bunker exit
+- Maintains the abandoned factory quest structure detailed below
+- Robot seeks prosthetic arm replacement after bunker damage
+
+**Why This Change**: Eliminates the 10-mile walking simulator problem while creating immediate engagement through atmospheric underground escape sequence. The vertical progression teaches z-level mechanics naturally.
+
+## VoxelBuilder Quest Location Design - Abandoned SapienCorp Factory
 **Priority**: HIGH - First quest location implementation
 
 first quest and associated dungeons

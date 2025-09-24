@@ -109,7 +109,7 @@ impl App {
             "small_temple.lrstructure",
             "giant_corpse.lrstructure",
             "starter_ship.lrstructure",
-            "first-quest-sapiencorp.lrstructure",
+            "sapiencorp-factory.lrstructure",
         ];
 
         let mut structures = Vec::new();

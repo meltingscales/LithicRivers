@@ -30,7 +30,7 @@ pub fn structures_list() -> Vec<String> {
         "small_temple.lrstructure".to_string(),
         "giant_corpse.lrstructure".to_string(),
         "starter_ship.lrstructure".to_string(),
-        "first-quest-sapiencorp.lrstructure".to_string(),
+        "sapiencorp-factory.lrstructure".to_string(),
     ];
 
     existing_structures.to_vec()
