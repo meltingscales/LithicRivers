@@ -260,8 +260,10 @@ impl Game {
             .log_green("Quest marker added: SapienCorp Bunker");
 
         //move the player to deep within the 1st quest structure
-        // //TODO helper method to (x,y,z)=find_player_spawn_block()
+        // //TODO helper method to get (psx,psy,psz)=find_player_spawn_block().
+        // //   NOTE The block was spawned within sapiencorp-bunker.lrstructure
         // //   NOTE spawn block type is TileKind::SpecialPlayerSpawn
+        // // TODO then, move the player's position to (psx,psy,psz) and set the block to air.
 
         // Queue the 2nd quest structure for lazy loading
         let q2x = 200;
