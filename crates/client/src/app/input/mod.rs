@@ -1,0 +1,1 @@
+pub mod hotbar_assignment;
