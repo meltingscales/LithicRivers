@@ -177,19 +177,19 @@ fn render_map_panel(f: &mut Frame, app: &mut App, area: Rect) {
     // Render legend
     let legend_text = vec![
         Line::from(vec![
-            Span::styled("@ ", Style::default().fg(Color::Yellow)),
+            Span::styled("[@] ", Style::default().fg(Color::Yellow)),
             Span::raw("Player  "),
-            Span::styled("! ", Style::default().fg(Color::Red)),
+            Span::styled("[!] ", Style::default().fg(Color::Red)),
             Span::raw("Main Quest  "),
-            Span::styled("? ", Style::default().fg(Color::Red)),
+            Span::styled("[?] ", Style::default().fg(Color::Red)),
             Span::raw("Side Quest"),
         ]),
         Line::from(vec![
-            Span::styled("· ", Style::default().fg(Color::Gray)),
+            Span::styled("[·] ", Style::default().fg(Color::Gray)),
             Span::raw("Explored  "),
-            Span::styled("  ", Style::default().fg(Color::DarkGray)),
+            Span::styled("[ ] ", Style::default().fg(Color::DarkGray)),
             Span::raw("Unexplored  "),
-            Span::styled("$ ", Style::default().fg(Color::Red)),
+            Span::styled("[$] ", Style::default().fg(Color::Red)),
             Span::raw("Treasure"),
         ]),
     ];
@@ -353,7 +353,7 @@ fn render_markers_panel(f: &mut Frame, app: &mut App, area: Rect) {
                             .add_modifier(Modifier::BOLD)
                             .bg(Color::DarkGray),
                         Style::default()
-                            .fg(Color::DarkGray)
+                            .fg(Color::Cyan)
                             .add_modifier(Modifier::BOLD)
                             .bg(Color::DarkGray),
                     )
