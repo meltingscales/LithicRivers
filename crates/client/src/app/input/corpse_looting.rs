@@ -1,7 +1,67 @@
-use crate::app::input_handler::take_item_from_corpse;
 use crate::App;
 use crossterm::event::KeyCode;
 use std::error::Error;
+
+/// Take an item from a corpse and add it to the player's inventory
+pub fn take_item_from_corpse(app: &mut App, corpse_entity: hecs::Entity, item_idx: usize) {
+    use lithicrivers_core::components::{itemkind_name, Inventory as InvComp, ItemStack};
+
+    // First, get the item info we need before mutable borrows
+    let item_info = if let Ok(inv) = app.core.game.world.get::<&InvComp>(corpse_entity) {
+        if let Some(stack) = inv.slots.get(item_idx) {
+            if stack.qty > 0 {
+                Some((stack.kind, itemkind_name(stack.kind).to_string()))
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    } else {
+        None
+    };
+
+    if let Some((item_kind, item_name)) = item_info {
+        // Take one item from corpse
+        if let Ok(mut corpse_inv) = app.core.game.world.get::<&mut InvComp>(corpse_entity) {
+            if let Some(stack) = corpse_inv.slots.get_mut(item_idx) {
+                if stack.qty > 0 {
+                    stack.qty -= 1;
+
+                    // Remove empty stacks
+                    if stack.qty == 0 {
+                        corpse_inv.slots.remove(item_idx);
+                    }
+                }
+            }
+        }
+
+        // Add to player inventory
+        if let Some(player_entity) = app.core.game.get_player_entity() {
+            if let Ok(mut player_inv) = app.core.game.world.get::<&mut InvComp>(player_entity) {
+                // Try to stack with existing item
+                let mut added = false;
+                for stack in player_inv.slots.iter_mut() {
+                    if stack.kind == item_kind && stack.qty < 1000 {
+                        stack.qty += 1;
+                        added = true;
+                        break;
+                    }
+                }
+
+                // Create new stack if couldn't add to existing
+                if !added {
+                    player_inv.slots.push(ItemStack {
+                        kind: item_kind,
+                        qty: 1,
+                    });
+                }
+
+                app.core.game.res.log(format!("Took {}", item_name));
+            }
+        }
+    }
+}
 
 /// Handle corpse looting input when active - returns true if input was handled
 pub fn handle_corpse_looting_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Error>> {
