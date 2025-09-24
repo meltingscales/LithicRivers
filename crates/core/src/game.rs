@@ -239,19 +239,24 @@ impl Game {
             });
 
         // Force-load the chunk that the starting dungeon is in so the quest marker appears immediately
-        let dungeon_chunk_x = 10_i64.div_euclid(crate::world::CHUNK_SIZE);
-        let dungeon_chunk_y = 16093_i64.div_euclid(crate::world::CHUNK_SIZE);
-        let dungeon_chunk_z = 1_i64.div_euclid(crate::world::CHUNK_SIZE_Z);
-        new_game.ensure_chunk_with_pending_structures(
-            dungeon_chunk_x,
-            dungeon_chunk_y,
-            dungeon_chunk_z,
-        );
+        new_game.ensure_chunk_with_pending_structures_worldcoords(10, 16093, 1);
 
         // Run one tick to generate structures around the player spawn
         new_game.tick();
 
         return new_game;
+    }
+
+    pub fn ensure_chunk_with_pending_structures_worldcoords(
+        &mut self,
+        player_x: i64,
+        player_y: i64,
+        player_z: i64,
+    ) {
+        let chunk_x = player_x.div_euclid(crate::world::CHUNK_SIZE);
+        let chunk_y = player_y.div_euclid(crate::world::CHUNK_SIZE);
+        let chunk_z = player_z.div_euclid(crate::world::CHUNK_SIZE_Z);
+        self.ensure_chunk_with_pending_structures(chunk_x, chunk_y, chunk_z);
     }
 
     /// Ensure a chunk exists and check for any pending structures in that chunk
