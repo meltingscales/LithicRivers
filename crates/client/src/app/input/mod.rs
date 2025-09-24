@@ -1,0 +1,14 @@
+pub mod body;
+pub mod combat;
+pub mod corpse_looting;
+pub mod crafting;
+pub mod global_ui;
+pub mod hotbar_assignment;
+pub mod inventory;
+pub mod look_mode;
+pub mod multi_action;
+pub mod npc_interaction;
+pub mod splash;
+pub mod world_action;
+pub mod world_build;
+pub mod world_movement;
