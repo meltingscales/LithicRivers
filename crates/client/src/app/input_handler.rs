@@ -461,44 +461,8 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
         return Ok(());
     }
 
-    // Handle multi-action selection input when active
-    if let crate::app_state::MultiActionSelectState::SelectingAction {
-        available_actions,
-        selected_action,
-    } = &app.panels.multi_action_select
-    {
-        let actions = available_actions.clone();
-        let mut selected = *selected_action;
-
-        if app.ui.keybinds.matches("ui", "CLOSE_HELP_MENU", &key) {
-            app.panels.multi_action_select = crate::app_state::MultiActionSelectState::None;
-            app.core.game.res.log("Cancelled interaction");
-            return Ok(());
-        }
-        if app.ui.keybinds.matches("movement", "MOVE_NORTH", &key) {
-            selected = selected.saturating_sub(1);
-        }
-        if app.ui.keybinds.matches("movement", "MOVE_SOUTH", &key) {
-            if selected < actions.len().saturating_sub(1) {
-                selected += 1;
-            }
-        }
-        if app.ui.keybinds.matches("ui", "MENU_ACTIVATE", &key) || key == KeyCode::Enter {
-            if selected < actions.len() {
-                let chosen_action = &actions[selected];
-                app.panels.multi_action_select = crate::app_state::MultiActionSelectState::None;
-
-                // Execute the chosen interaction
-                execute_interaction_action(app, chosen_action);
-            }
-            return Ok(());
-        }
-
-        app.panels.multi_action_select =
-            crate::app_state::MultiActionSelectState::SelectingAction {
-                available_actions: actions,
-                selected_action: selected,
-            };
+    // Handle multi-action selection input when active - delegated to input module
+    if crate::app::input::multi_action::handle_multi_action_input(app, key)? {
         return Ok(());
     }
 
@@ -1558,7 +1522,7 @@ fn handle_interaction(app: &mut App) {
 }
 
 /// Execute a specific interaction action
-fn execute_interaction_action(app: &mut App, action: &crate::app_state::InteractionType) {
+pub fn execute_interaction_action(app: &mut App, action: &crate::app_state::InteractionType) {
     use crate::app_state::{CorpseLootingState, InteractionType, NPCInteractionState};
 
     match action {
