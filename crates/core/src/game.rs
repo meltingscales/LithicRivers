@@ -34,8 +34,10 @@ impl Game {
     pub fn new(seed: u64) -> Self {
         let mut world = World::new();
         let mut res = Resources::new(seed);
+
         // Determine starting position from cached config
         let [sx, sy, sz] = res.config.default_player_position;
+
         // Note: viewport is now managed by client UI, not core game
         // Core game no longer sets generation Z - let client manage viewport
         // Read auto-pickup default from cached config
@@ -224,14 +226,14 @@ impl Game {
             scheduler: SystemScheduler::new(),
         };
 
-        // Queue the starting dungeon at 30, 30, -1 for lazy loading
+        // Queue the starting dungeon for lazy loading
         new_game
             .res
             .pending_structures
             .push(crate::resources::PendingStructure {
                 name: "first-quest-sapiencorp.lrstructure".to_string(),
                 x: 10,
-                y: 10,
+                y: 16093,
                 z: 1,
                 bury_structure: true,
             });
