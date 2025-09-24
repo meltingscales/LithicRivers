@@ -1,10 +1,10 @@
 use crossterm::event::KeyCode;
-use std::{error::Error, time::Instant};
+use std::error::Error;
 
 use lithicrivers_core::{game::GameTickResult, moves::get_available_moves};
 
 use crate::app_state::HotbarAssignmentState;
-use crate::{App, CombatUiState, MenuTab, Scale, SplashState};
+use crate::{App, CombatUiState, MenuTab, Scale};
 
 /// Calculate the maximum scroll value for the credits panel
 fn get_max_credits_scroll(app: &App) -> u16 {
@@ -29,41 +29,9 @@ fn get_max_help_scroll(_app: &App) -> u16 {
 }
 
 pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
-    // Handle splash screen skipping first
-    if let Some(_start_time) = app.splash.start_time {
-        match app.splash.state {
-            SplashState::Logo => {
-                // Any key skips to next screen
-                app.splash.state = SplashState::GameTitle;
-                app.splash.start_time = Some(Instant::now());
-                return Ok(());
-            }
-            SplashState::GameTitle => {
-                // Any key skips to boot message
-                app.splash.state = SplashState::BootMessage;
-                app.splash.start_time = Some(Instant::now());
-                app.splash.boot_display_text.clear();
-                app.splash.boot_line_index = 0;
-                app.splash.last_line_time = Instant::now();
-                app.splash.boot_complete = false;
-                return Ok(());
-            }
-            SplashState::BootMessage => {
-                if !app.splash.boot_complete {
-                    // Skip to end of text
-                    let full_text = app.splash.boot_message_lines.join("\n");
-                    app.splash.boot_display_text = full_text.clone();
-                    app.splash.boot_line_index = full_text.len();
-                    app.splash.boot_complete = true;
-                    app.splash.start_time = Some(Instant::now());
-                } else {
-                    // Move to main UI if already complete
-                    app.splash.state = SplashState::MainUI;
-                }
-                return Ok(());
-            }
-            _ => {}
-        }
+    // Handle splash screen input when active - delegated to input module
+    if crate::app::input::splash::handle_splash_input(app, key)? {
+        return Ok(());
     }
 
     // log key to log
