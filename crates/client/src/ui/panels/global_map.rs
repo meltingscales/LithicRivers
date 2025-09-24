@@ -421,6 +421,43 @@ fn render_markers_panel(f: &mut Frame, app: &mut App, area: Rect) {
     }
 }
 
+/// Generate all points on a line using Bresenham's algorithm
+fn get_line_points(start_x: i64, start_y: i64, end_x: i64, end_y: i64) -> Vec<(i64, i64)> {
+    let mut points = Vec::new();
+
+    let dx = (end_x - start_x).abs();
+    let dy = (end_y - start_y).abs();
+
+    let sx = if start_x < end_x { 1 } else { -1 };
+    let sy = if start_y < end_y { 1 } else { -1 };
+
+    let mut err = dx - dy;
+    let mut x = start_x;
+    let mut y = start_y;
+
+    loop {
+        points.push((x, y));
+
+        if x == end_x && y == end_y {
+            break;
+        }
+
+        let e2 = 2 * err;
+
+        if e2 > -dy {
+            err -= dy;
+            x += sx;
+        }
+
+        if e2 < dx {
+            err += dx;
+            y += sy;
+        }
+    }
+
+    points
+}
+
 /// Check if a point (chunk_x, chunk_y) is on the arrow path from start to end
 fn is_on_arrow_path(
     start_x: i64,
@@ -435,42 +472,19 @@ fn is_on_arrow_path(
         return false;
     }
 
-    let dx = end_x - start_x;
-    let dy = end_y - start_y;
-
-    if dx == 0 && dy == 0 {
+    if start_x == end_x && start_y == end_y {
         return false; // Start and end are the same
     }
 
-    // Check if the point is within the bounding box (with no expansion needed)
-    let min_x = start_x.min(end_x);
-    let max_x = start_x.max(end_x);
-    let min_y = start_y.min(end_y);
-    let max_y = start_y.max(end_y);
+    // Generate the line points using Bresenham's algorithm
+    let line_points = get_line_points(start_x, start_y, end_x, end_y);
 
-    if chunk_x < min_x || chunk_x > max_x || chunk_y < min_y || chunk_y > max_y {
-        return false;
-    }
-
-    // For vertical line
-    if dx == 0 {
-        return chunk_x == start_x;
-    }
-
-    // For horizontal line
-    if dy == 0 {
-        return chunk_y == start_y;
-    }
-
-    // For diagonal lines, use a more generous approach
-    // Calculate the expected y position on the line at this x coordinate
-    let expected_y = start_y + ((chunk_x - start_x) * dy) / dx;
-
-    // Allow some tolerance for chunked movement (±1 chunk)
-    let tolerance = 1;
-
-    // Check if the actual y is within tolerance of the expected y
-    (chunk_y - expected_y).abs() <= tolerance
+    // Check if our point is in the line (excluding start and end)
+    line_points
+        .iter()
+        .skip(1) // Skip start point
+        .take(line_points.len().saturating_sub(2)) // Skip end point
+        .any(|&(px, py)| px == chunk_x && py == chunk_y)
 }
 
 /// Get the appropriate arrow character for a position on the line
@@ -482,80 +496,66 @@ fn get_arrow_char(
     chunk_x: i64,
     chunk_y: i64,
 ) -> char {
-    let dx = end_x - start_x;
-    let dy = end_y - start_y;
+    // Generate the line points to find our position and get local direction
+    let line_points = get_line_points(start_x, start_y, end_x, end_y);
 
-    // Check if we're at the end point (within tolerance)
-    let is_end_point = (chunk_x - end_x).abs() <= 1 && (chunk_y - end_y).abs() <= 1;
+    // Find our current position in the line
+    let current_pos = line_points
+        .iter()
+        .position(|&(x, y)| x == chunk_x && y == chunk_y);
 
-    // Determine the direction based on the overall vector
-    let abs_dx = dx.abs();
-    let abs_dy = dy.abs();
+    if let Some(pos) = current_pos {
+        // Check if we're at the last point (arrowhead)
+        if pos == line_points.len() - 1 {
+            // This is the end point - draw arrowhead based on overall direction
+            let dx = end_x - start_x;
+            let dy = end_y - start_y;
 
-    if abs_dx == 0 {
-        // Pure vertical movement
-        if is_end_point {
-            if dy > 0 {
-                '▼'
+            if dx == 0 {
+                if dy > 0 {
+                    '▼'
+                } else {
+                    '▲'
+                }
+            } else if dy == 0 {
+                if dx > 0 {
+                    '►'
+                } else {
+                    '◄'
+                }
             } else {
-                '▲'
+                // Diagonal arrowhead
+                if dx > 0 && dy > 0 {
+                    '◣' // Down-right
+                } else if dx < 0 && dy > 0 {
+                    '◤' // Down-left
+                } else if dx > 0 && dy < 0 {
+                    '◥' // Up-right
+                } else {
+                    '◢' // Up-left
+                }
+            }
+        } else if pos > 0 && pos < line_points.len() - 1 {
+            // Middle of line - determine character based on local direction
+            let prev_point = line_points[pos - 1];
+            let next_point = line_points[pos + 1];
+
+            let local_dx = next_point.0 - prev_point.0;
+            let local_dy = next_point.1 - prev_point.1;
+
+            if local_dx == 0 {
+                '│' // Vertical
+            } else if local_dy == 0 {
+                '─' // Horizontal
+            } else if (local_dx > 0 && local_dy > 0) || (local_dx < 0 && local_dy < 0) {
+                '╲' // Backslash-like diagonal
+            } else {
+                '╱' // Slash-like diagonal
             }
         } else {
-            '│'
-        }
-    } else if abs_dy == 0 {
-        // Pure horizontal movement
-        if is_end_point {
-            if dx > 0 {
-                '►'
-            } else {
-                '◄'
-            }
-        } else {
-            '─'
-        }
-    } else if abs_dx > abs_dy * 2 {
-        // Mostly horizontal (more than 2:1 ratio)
-        if is_end_point {
-            if dx > 0 {
-                '►'
-            } else {
-                '◄'
-            }
-        } else {
-            '─'
-        }
-    } else if abs_dy > abs_dx * 2 {
-        // Mostly vertical (more than 2:1 ratio)
-        if is_end_point {
-            if dy > 0 {
-                '▼'
-            } else {
-                '▲'
-            }
-        } else {
-            '│'
+            '·' // Fallback
         }
     } else {
-        // Diagonal movement
-        if is_end_point {
-            // Choose arrowhead based on quadrant
-            if dx > 0 && dy > 0 {
-                '◣' // Down-right
-            } else if dx < 0 && dy > 0 {
-                '◤' // Down-left
-            } else if dx > 0 && dy < 0 {
-                '◥' // Up-right
-            } else {
-                '◢' // Up-left
-            }
-        } else {
-            // Choose diagonal line character
-            if (dx > 0 && dy > 0) || (dx < 0 && dy < 0) {
-                '╲' // Backslash-like
-            } else {
-                '╱' // Slash-like
-            }
-        }
+        '·' // Point not on line
     }
 }
