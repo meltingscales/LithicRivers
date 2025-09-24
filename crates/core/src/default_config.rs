@@ -90,7 +90,8 @@ pub fn default_config() -> ConfigRoot {
             "DEVELOPER_MODE": true,
             "DEFAULT_SEED": 4669201609u64,
             "DEFAULT_PLAYER_NAME": "melty",
-            "COMBAT_MS_PER_TICK": 1000u64
+            "COMBAT_MS_PER_TICK": 1000u64,
+            "METERS_PER_BLOCK": 1u64,
         },
         "inventory": {
             "TOGGLE_ITEM_AUTO_PICKUP_DEFAULT_ENABLED": true
