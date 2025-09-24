@@ -1,4 +1,5 @@
 pub mod body;
+pub mod combat;
 pub mod corpse_looting;
 pub mod crafting;
 pub mod hotbar_assignment;
