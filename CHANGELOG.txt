@@ -1,3 +1,7 @@
+# v0.8.4.3
+
+- big refactor for `input_handler.rs`, make it a lot easier to read and maintain
+
 # v0.8.4.2
 
 - first quest structure spawns successfully with dummy enemies and dummy loot
