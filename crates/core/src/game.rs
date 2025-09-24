@@ -771,10 +771,7 @@ impl Game {
             );
 
             // Add quest marker for this structure
-            if structure
-                .name
-                .contains("sapiencorp-factory.lrstructure")
-            {
+            if structure.name.contains("sapiencorp-factory.lrstructure") {
                 self.res.add_quest_marker(crate::resources::QuestMarker {
                     name: "SapienCorp Factory".to_string(),
                     description: "Mysterious corporate facility buried underground".to_string(),
