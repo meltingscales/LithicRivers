@@ -1,6 +1,7 @@
 {
   "blocks": {
     " ": "air",
+    "!": "special_player_spawn",
     "#": "rock",
     ".": "existing_worldgen",
     "1": "treasure_quest_1",

@@ -1,6 +1,7 @@
 {
   "blocks": {
     " ": "air",
+    "!": "special_player_spawn",
     "#": "rock",
     ".": "existing_worldgen",
     "1": "treasure_quest_1",
@@ -16,6 +17,6 @@
   "gen_chance": 0.0,
   "y_layer_gen_range": [
     0,
-    11
+    10
   ]
 }

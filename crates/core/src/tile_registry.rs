@@ -77,6 +77,7 @@ define_tiles! {
     Stairs, "stairs", true,
     ExistingWorldgen, "existing_worldgen", false,
     EnemySpawn, "enemy_spawn", false,
+    SpecialPlayerSpawn, "special_player_spawn", false,
 }
 
 impl TileKind {

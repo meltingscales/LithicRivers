@@ -227,19 +227,22 @@ impl Game {
         };
 
         // Queue the 1st quest structure for lazy loading
+        let q1x = 10;
+        let q1y = 10;
+        let q1z = 1;
         new_game
             .res
             .pending_structures
             .push(crate::resources::PendingStructure {
                 name: "sapiencorp-bunker.lrstructure".to_string(),
-                x: 10,
-                y: 10,
-                z: 1,
+                x: q1x,
+                y: q1y,
+                z: q1z,
                 bury_structure: true,
             });
 
         //force load the 1st quest structure
-        new_game.ensure_chunk_with_pending_structures_worldcoords(10, 10, 1);
+        new_game.ensure_chunk_with_pending_structures_worldcoords(q1x, q1y, q1z);
 
         //add a quest marker for the 1st quest structure
         new_game
@@ -247,17 +250,21 @@ impl Game {
             .add_quest_marker(crate::resources::QuestMarker {
                 name: "SapienCorp Bunker".to_string(),
                 description: "Escape the dark bunker.".to_string(),
-                x: 10,
-                y: 10,
-                z: 1,
+                x: q1x,
+                y: q1y,
+                z: q1z,
                 marker_type: crate::resources::QuestMarkerType::MainQuest,
             });
         new_game
             .res
             .log_green("Quest marker added: SapienCorp Bunker");
 
+        //move the player to deep within the 1st quest structure
+        // //TODO helper method to (x,y,z)=find_player_spawn_block()
+        // //   NOTE spawn block type is TileKind::SpecialPlayerSpawn
+
         // Queue the 2nd quest structure for lazy loading
-        let q2x = 10;
+        let q2x = 200;
         let q2y = 1609; //exactly 1 mile in meters
         let q2z = 1;
         new_game
