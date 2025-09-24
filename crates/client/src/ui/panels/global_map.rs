@@ -2,16 +2,31 @@ use crate::App;
 use lithicrivers_core::resources::QuestMarkerType;
 use lithicrivers_core::world::{CHUNK_SIZE, CHUNK_SIZE_Z};
 use ratatui::{
-    layout::{Alignment, Rect},
-    style::{Color, Style},
+    layout::{Alignment, Constraint, Direction, Layout, Rect},
+    style::{Color, Modifier, Style},
     symbols::border,
     text::{Line, Span},
-    widgets::{Block, Borders, Paragraph},
+    widgets::{Block, Borders, List, ListItem, Paragraph},
     Frame,
 };
 
 /// Render the global map panel
 pub fn render_global_map_panel(f: &mut Frame, app: &mut App, area: Rect) {
+    // Split the area horizontally: 70% for map, 30% for markers panel
+    let main_chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Percentage(70), Constraint::Percentage(30)])
+        .split(area);
+
+    // Render the map panel
+    render_map_panel(f, app, main_chunks[0]);
+
+    // Render the markers panel
+    render_markers_panel(f, app, main_chunks[1]);
+}
+
+/// Render the map portion of the global map
+fn render_map_panel(f: &mut Frame, app: &mut App, area: Rect) {
     let block = Block::default()
         .borders(Borders::ALL)
         .border_set(border::THICK)
@@ -178,4 +193,111 @@ pub fn render_global_map_panel(f: &mut Frame, app: &mut App, area: Rect) {
     };
 
     f.render_widget(position_paragraph, position_area);
+}
+
+/// Render the markers panel on the right side
+fn render_markers_panel(f: &mut Frame, app: &mut App, area: Rect) {
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .border_set(border::THICK)
+        .title(" Quest Markers ")
+        .title_alignment(Alignment::Center)
+        .style(Style::default().fg(Color::Magenta));
+
+    let inner_area = block.inner(area);
+    f.render_widget(block, area);
+
+    // Get player position for distance calculations
+    let player_pos = app.core.game.get_player_position();
+
+    if let Some(player_position) = player_pos {
+        // Get all quest markers and calculate distances
+        let mut marker_distances: Vec<_> = app
+            .core
+            .game
+            .res
+            .quest_markers
+            .iter()
+            .map(|marker| {
+                let dx = marker.x - player_position.x;
+                let dy = marker.y - player_position.y;
+                let dz = marker.z - player_position.z;
+                let distance = ((dx * dx + dy * dy + dz * dz) as f64).sqrt();
+                (marker, distance)
+            })
+            .collect();
+
+        // Sort by distance (closest first)
+        marker_distances.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
+
+        // Create list items
+        let marker_items: Vec<ListItem> = marker_distances
+            .iter()
+            .map(|(marker, distance)| {
+                let marker_symbol = match marker.marker_type {
+                    QuestMarkerType::MainQuest => "!",
+                    QuestMarkerType::SideQuest => "?",
+                    QuestMarkerType::Location => "L",
+                    QuestMarkerType::Treasure => "$",
+                };
+
+                let marker_color = match marker.marker_type {
+                    QuestMarkerType::MainQuest => Color::Red,
+                    QuestMarkerType::SideQuest => Color::Yellow,
+                    QuestMarkerType::Location => Color::Blue,
+                    QuestMarkerType::Treasure => Color::Green,
+                };
+
+                let distance_text = if *distance < 1000.0 {
+                    format!("{:.0} blocks", distance)
+                } else {
+                    format!("{:.1}k blocks", distance / 1000.0)
+                };
+
+                let content = vec![
+                    Line::from(vec![
+                        Span::styled(
+                            format!("{} ", marker_symbol),
+                            Style::default()
+                                .fg(marker_color)
+                                .add_modifier(Modifier::BOLD),
+                        ),
+                        Span::styled(&marker.name, Style::default().fg(Color::White)),
+                    ]),
+                    Line::from(vec![Span::styled(
+                        format!("  {}", distance_text),
+                        Style::default().fg(Color::Gray),
+                    )]),
+                    Line::from(vec![Span::styled(
+                        format!("  ({}, {}, {})", marker.x, marker.y, marker.z),
+                        Style::default().fg(Color::DarkGray),
+                    )]),
+                ];
+
+                ListItem::new(content)
+            })
+            .collect();
+
+        if !marker_items.is_empty() {
+            let markers_list = List::new(marker_items)
+                .block(Block::default())
+                .style(Style::default().fg(Color::White));
+
+            f.render_widget(markers_list, inner_area);
+        } else {
+            // No markers found
+            let no_markers_text = Paragraph::new("No quest markers found.")
+                .style(Style::default().fg(Color::Gray))
+                .alignment(Alignment::Center);
+
+            f.render_widget(no_markers_text, inner_area);
+        }
+    } else {
+        // Player position not found
+        let error_text = Paragraph::new("Player position unknown.")
+            .style(Style::default().fg(Color::Red))
+            .alignment(Alignment::Center);
+
+        f.render_widget(error_text, inner_area);
+    }
 }

@@ -238,6 +238,16 @@ impl Game {
                 bury_structure: true,
             });
 
+        // Force-load the chunk that the starting dungeon is in so the quest marker appears immediately
+        let dungeon_chunk_x = 10_i64.div_euclid(crate::world::CHUNK_SIZE);
+        let dungeon_chunk_y = 16093_i64.div_euclid(crate::world::CHUNK_SIZE);
+        let dungeon_chunk_z = 1_i64.div_euclid(crate::world::CHUNK_SIZE_Z);
+        new_game.ensure_chunk_with_pending_structures(
+            dungeon_chunk_x,
+            dungeon_chunk_y,
+            dungeon_chunk_z,
+        );
+
         // Run one tick to generate structures around the player spawn
         new_game.tick();
 
