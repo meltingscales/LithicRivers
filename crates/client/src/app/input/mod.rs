@@ -3,6 +3,7 @@ pub mod cheat_console;
 pub mod combat;
 pub mod corpse_looting;
 pub mod crafting;
+pub mod global_map;
 pub mod global_ui;
 pub mod hotbar_assignment;
 pub mod inventory;

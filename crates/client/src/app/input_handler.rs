@@ -14,6 +14,11 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
         return Ok(());
     }
 
+    // Handle global map input when on Global Map tab - delegated to input module
+    if crate::app::input::global_map::handle_input(app, key)? {
+        return Ok(());
+    }
+
     // log key to log
     tracing::info!(target: "game", "key pressed: {:?}", key);
 

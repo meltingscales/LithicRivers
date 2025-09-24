@@ -135,6 +135,7 @@ pub struct PanelStates {
     #[allow(dead_code)]
     pub body_repair: BodyRepairState,
     pub cheat_console: CheatConsoleState,
+    pub global_map: GlobalMapPanelState,
 }
 
 /// Inventory panel state
@@ -507,5 +508,18 @@ pub enum CheatConsoleState {
 impl Default for CheatConsoleState {
     fn default() -> Self {
         CheatConsoleState::None
+    }
+}
+
+/// Global Map panel state - handles marker selection and arrow display
+pub struct GlobalMapPanelState {
+    pub selected_marker_index: usize, // Index of currently selected marker (for arrow display)
+}
+
+impl Default for GlobalMapPanelState {
+    fn default() -> Self {
+        GlobalMapPanelState {
+            selected_marker_index: 0,
+        }
     }
 }
