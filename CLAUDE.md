@@ -5,6 +5,7 @@ You are allowed to run `just build` and `just install`, and also `just run-*`. T
 If you're running NixOS, make sure to run `nix-shell` to get the right environment.
 
 `./docs/*.md` contains lots of useful documentation.
+`.ai/*.md` contains some prompts I reuse from time to time.
 
 You should use `rustup` to run `cargo` and other tools.
 

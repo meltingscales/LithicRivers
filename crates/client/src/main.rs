@@ -43,9 +43,9 @@ use crate::{
         centered_rect,
         panels::{
             render_body_panel, render_combat_panel, render_crafting_panel, render_credits_panel,
-            render_game_view, render_help_panel, render_hotbar_panel, render_inventory_list_only,
-            render_inventory_panel, render_look_panel, render_menu_panel, render_modes_panel,
-            render_quit_panel, render_repair_modal,
+            render_game_view, render_global_map_panel, render_help_panel, render_hotbar_panel,
+            render_inventory_list_only, render_inventory_panel, render_look_panel,
+            render_menu_panel, render_modes_panel, render_quit_panel, render_repair_modal,
         },
     },
 };
@@ -61,6 +61,7 @@ enum SplashState {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum MenuTab {
     World,
+    GlobalMap,
     Body,
     Inventory,
     Crafting,
@@ -74,11 +75,12 @@ const BOOT_MESSAGE_TYPEWRITER_MS: u64 = 100;
 
 impl MenuTab {
     #[allow(dead_code)]
-    const COUNT: usize = 8;
+    const COUNT: usize = 9;
 
     fn next(self) -> Self {
         match self {
-            MenuTab::World => MenuTab::Body,
+            MenuTab::World => MenuTab::GlobalMap,
+            MenuTab::GlobalMap => MenuTab::Body,
             MenuTab::Body => MenuTab::Inventory,
             MenuTab::Inventory => MenuTab::Crafting,
             MenuTab::Crafting => MenuTab::Menu,
@@ -92,7 +94,8 @@ impl MenuTab {
     fn prev(self) -> Self {
         match self {
             MenuTab::World => MenuTab::Quit,
-            MenuTab::Body => MenuTab::World,
+            MenuTab::GlobalMap => MenuTab::World,
+            MenuTab::Body => MenuTab::GlobalMap,
             MenuTab::Inventory => MenuTab::Body,
             MenuTab::Crafting => MenuTab::Inventory,
             MenuTab::Menu => MenuTab::Crafting,
@@ -103,7 +106,17 @@ impl MenuTab {
     }
 
     fn as_index(&self) -> usize {
-        *self as usize
+        match self {
+            MenuTab::World => 0,
+            MenuTab::GlobalMap => 1,
+            MenuTab::Body => 2,
+            MenuTab::Inventory => 3,
+            MenuTab::Crafting => 4,
+            MenuTab::Menu => 5,
+            MenuTab::Help => 6,
+            MenuTab::Credits => 7,
+            MenuTab::Quit => 8,
+        }
     }
 }
 
@@ -208,6 +221,10 @@ impl App {
             MenuTab::World => {
                 // World (already active view)
                 self.core.game.res.log("World map active");
+            }
+            MenuTab::GlobalMap => {
+                // Global Map
+                self.core.game.res.log("Global Map panel active");
             }
             MenuTab::Body => {
                 // Body
@@ -640,6 +657,10 @@ fn ui(f: &mut Frame, app: &mut App) {
                 render_inventory_list_only(f, app, right_chunks[1]);
             }
         }
+        MenuTab::GlobalMap => {
+            // Global Map panel
+            render_global_map_panel(f, app, root_chunks[1]);
+        }
         MenuTab::Crafting => {
             // Crafting panel
             render_crafting_panel(f, app, root_chunks[1]);
@@ -755,6 +776,7 @@ fn render_bottom_menu(f: &mut Frame, app: &mut App, area: Rect) {
     // All tabs white; selected tab green
     let titles = vec![
         Span::raw("World"),
+        Span::raw("Global Map"),
         Span::raw("Body"),
         Span::raw("Inventory"),
         Span::raw("Crafting"),
@@ -1083,7 +1105,8 @@ fn calculate_game_viewport_area(f: &Frame, app: &App) -> Rect {
                 main_chunks[0]
             }
         }
-        MenuTab::Crafting
+        MenuTab::GlobalMap
+        | MenuTab::Crafting
         | MenuTab::Body
         | MenuTab::Help
         | MenuTab::Inventory
