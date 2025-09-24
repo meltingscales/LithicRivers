@@ -148,6 +148,7 @@ impl App {
                 multi_action_select: MultiActionSelectState::default(),
                 dialogue_engine: DialogueEngine::new(),
                 body_repair: BodyRepairState::default(),
+                cheat_console: CheatConsoleState::default(),
             },
             splash: SplashScreenState {
                 state: SplashState::Logo,

@@ -134,6 +134,7 @@ pub struct PanelStates {
     pub dialogue_engine: DialogueEngine,
     #[allow(dead_code)]
     pub body_repair: BodyRepairState,
+    pub cheat_console: CheatConsoleState,
 }
 
 /// Inventory panel state
@@ -490,5 +491,21 @@ pub enum NPCInteractionState {
 impl Default for NPCInteractionState {
     fn default() -> Self {
         NPCInteractionState::None
+    }
+}
+
+/// Cheat console state - handles cheat command input
+#[derive(Debug, Clone, PartialEq)]
+pub enum CheatConsoleState {
+    None,
+    Open {
+        input: String,
+        cursor_position: usize,
+    },
+}
+
+impl Default for CheatConsoleState {
+    fn default() -> Self {
+        CheatConsoleState::None
     }
 }

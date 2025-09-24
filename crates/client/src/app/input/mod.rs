@@ -1,4 +1,5 @@
 pub mod body;
+pub mod cheat_console;
 pub mod combat;
 pub mod corpse_looting;
 pub mod crafting;

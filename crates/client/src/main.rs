@@ -707,6 +707,9 @@ fn ui(f: &mut Frame, app: &mut App) {
         // Bottom menu bar
         render_bottom_menu(f, app, root_chunks[3]);
     }
+
+    // Render cheat console if active (on top of everything else)
+    render_cheat_console_modal(f, app);
 }
 
 fn render_message_log(f: &mut Frame, app: &mut App, area: Rect) {
@@ -1584,6 +1587,79 @@ fn render_action_selection_modal(
             height: 1,
         };
         f.render_widget(controls, controls_area);
+    }
+}
+
+/// Render cheat console modal when active
+fn render_cheat_console_modal(f: &mut Frame, app: &mut App) {
+    if let CheatConsoleState::Open {
+        input,
+        cursor_position,
+    } = &app.panels.cheat_console
+    {
+        // Create modal area (centered, 60% width, small height for input)
+        let area = centered_rect(60, 15, f.size());
+
+        // Clear the background
+        f.render_widget(Clear, area);
+
+        // Main modal block
+        let block = Block::default()
+            .borders(Borders::ALL)
+            .title(" Cheat Console ")
+            .title_alignment(Alignment::Center)
+            .style(Style::default().fg(Color::Cyan));
+
+        let inner = block.inner(area);
+        f.render_widget(block, area);
+
+        // Create input text with cursor
+        let mut display_text = input.clone();
+        if *cursor_position <= input.len() {
+            display_text.insert(*cursor_position, '|');
+        }
+
+        // Input field
+        let input_paragraph = Paragraph::new(format!("> {}", display_text))
+            .style(Style::default().fg(Color::White))
+            .alignment(Alignment::Left);
+
+        let input_area = Rect {
+            x: inner.x,
+            y: inner.y + 1,
+            width: inner.width,
+            height: 1,
+        };
+        f.render_widget(input_paragraph, input_area);
+
+        // Help text
+        let help_text = "Available commands: /tp x y z, /noclip_toggle";
+        let help_paragraph = Paragraph::new(help_text)
+            .style(Style::default().fg(Color::Gray))
+            .alignment(Alignment::Center);
+
+        let help_area = Rect {
+            x: inner.x,
+            y: inner.y + 3,
+            width: inner.width,
+            height: 1,
+        };
+        f.render_widget(help_paragraph, help_area);
+
+        // Controls
+        let controls = Paragraph::new("Enter: Execute | Esc: Cancel")
+            .alignment(Alignment::Center)
+            .style(Style::default().fg(Color::Gray));
+
+        if inner.height > 4 {
+            let controls_area = Rect {
+                x: inner.x,
+                y: inner.y + inner.height - 1,
+                width: inner.width,
+                height: 1,
+            };
+            f.render_widget(controls, controls_area);
+        }
     }
 }
 
