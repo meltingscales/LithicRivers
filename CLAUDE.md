@@ -1,6 +1,6 @@
 # AI Instructions
 
-You are allowed to run `just build` and `just install`, and also `just run-*`. This game was going to use a GUI (bevy), but I decided that `ratatui` would be faster, so we're back to using a TUI.
+You are allowed to run `just build` and `just install`, and also `just run-*`. This game uses ratatui for the UI.
 
 If you're running NixOS, make sure to run `nix-shell` to get the right environment.
 
@@ -26,19 +26,15 @@ Tests help ensure systems work correctly and prevent regressions during developm
 
 - All randomly-generated choices, actions, damage, loot, worldgen, etc - should be fully deterministic and based on world seed and world tick. This means that this game should be fully TAS-able for any specific initial seed (and version of game code). Always use the seed and any permutation (when appropriate) of XYZ coordinate, biome, or other seeded randomness to generate anything "random".
 
-- This is supposed to be a mix between Caves of Qud, Factorio, and Minecraft. 
-  - Cataclysm Dark Days Ahead is another fantastic game.
-  - Gnomoria was cool.
+- See `docs/INSPIRATION.md` for inspiration.
 
 - This game renders using ASCII text.
 
 - docs/TODO.md contains a big, unedited list of my long-term goals with this game. By no means do we need to implement all of them. I will likely cut or edit parts of the TODO. I just want to focus on the section called "MVP for steam release (2026)".
 
-- We're currently in the process of migrating from Python to Rust. Please see the migration plan for more information, called "docs/migration-plan.md" and "docs/TODO-RUST-MIGRATION.md".
-
 Periodic tasks:
 
-- Prune our various docs/ documents and make sure tasks are marked as completed.
+- Prune our various docs/ documents and make sure tasks are marked as completed, specifically `docs/STEAM-MVP.md`.
 
 - Make sure rust warnings get handled.
 
