@@ -1,3 +1,11 @@
+# v0.9.0.0
+
+- added world map
+- added 2nd dungeon
+- player now spawns at bottom of a bunker
+  - ...to teach them the tutorial!
+  - and to avoid them having to walk 2,000 blocks to do the first quest.
+
 # v0.8.4.3
 
 - big refactor for `input_handler.rs`, make it a lot easier to read and maintain
