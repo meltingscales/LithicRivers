@@ -260,10 +260,13 @@ impl Game {
             .log_green("Quest marker added: SapienCorp Bunker");
 
         //move the player to deep within the 1st quest structure
-        // //TODO helper method to get (psx,psy,psz)=find_player_spawn_block().
-        // //   NOTE The block was spawned within sapiencorp-bunker.lrstructure
-        // //   NOTE spawn block type is TileKind::SpecialPlayerSpawn
-        // // TODO then, move the player's position to (psx,psy,psz) and set the block to air.
+        if let Some((psx, psy, psz)) = new_game.find_player_spawn_block() {
+            new_game.move_player_to_spawn(psx, psy, psz);
+            new_game.res.log_green(&format!(
+                "Player moved to bunker spawn at ({}, {}, {})",
+                psx, psy, psz
+            ));
+        }
 
         // Queue the 2nd quest structure for lazy loading
         let q2x = 200;
@@ -828,6 +831,62 @@ impl Game {
 
         tracing::info!(target: "game", "Completed structure processing for chunk ({}, {}, {}) - loaded {} structures",
             chunk_x, chunk_y, chunk_z, num_structures_to_load);
+    }
+
+    /// Find the special player spawn block in the world
+    /// Returns the coordinates (x, y, z) of the first SpecialPlayerSpawn block found, or None
+    pub fn find_player_spawn_block(&mut self) -> Option<(i64, i64, i64)> {
+        use crate::tile_registry::TileKind;
+
+        // Search through all loaded chunks for a SpecialPlayerSpawn block
+        let chunks_snapshot = self.res.world_state.world.chunks_to_vec();
+        for (chunk_coords, chunk) in chunks_snapshot {
+            let (chunk_x, chunk_y, chunk_z) = chunk_coords;
+
+            // Calculate world coordinate base for this chunk
+            let base_x = chunk_x * crate::world::CHUNK_SIZE;
+            let base_y = chunk_y * crate::world::CHUNK_SIZE;
+            let base_z = chunk_z * crate::world::CHUNK_SIZE_Z;
+
+            // Search through all tiles in the chunk (z-slices are 1-tile thick)
+            for y in 0..crate::world::CHUNK_SIZE {
+                for x in 0..crate::world::CHUNK_SIZE {
+                    let tile = chunk.get(x, y);
+                    if tile == TileKind::SpecialPlayerSpawn {
+                        let world_x = base_x + x;
+                        let world_y = base_y + y;
+                        let world_z = base_z; // Z is the chunk's base Z since chunks are 1-tile thick
+                        tracing::info!(target: "game", "Found SpecialPlayerSpawn at ({}, {}, {})", world_x, world_y, world_z);
+                        return Some((world_x, world_y, world_z));
+                    }
+                }
+            }
+        }
+
+        tracing::warn!(target: "game", "No SpecialPlayerSpawn block found in loaded chunks");
+        None
+    }
+
+    /// Move the player to the spawn position and replace the spawn block with air
+    pub fn move_player_to_spawn(&mut self, x: i64, y: i64, z: i64) {
+        use crate::tile_registry::TileKind;
+
+        // Find the player entity and update their position
+        if let Some(player_entity) = self.get_player_entity() {
+            if let Ok(mut position) = self.world.get::<&mut Position>(player_entity) {
+                position.x = x;
+                position.y = y;
+                position.z = z;
+                tracing::info!(target: "game", "Player position updated to ({}, {}, {})", x, y, z);
+            }
+        }
+
+        // Replace the spawn block with air
+        self.res
+            .world_state
+            .world
+            .set_tile_cached(x, y, z, TileKind::Air);
+        tracing::info!(target: "game", "SpecialPlayerSpawn block at ({}, {}, {}) replaced with air", x, y, z);
     }
 }
 
