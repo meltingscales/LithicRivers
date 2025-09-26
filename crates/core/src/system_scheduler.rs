@@ -22,6 +22,7 @@ pub enum SystemPhase {
 pub enum SystemId {
     MiningSystem,
     MovePlayerSystem,
+    FogOfWarSystem,
     PickupSystem,
     FeralDogSystem,
     StumblingSheepSystem,
@@ -93,6 +94,16 @@ impl SystemScheduler {
                 name: "move_player_system",
             },
             move_player_system_wrapper,
+        );
+
+        self.register_system(
+            SystemDesc {
+                id: SystemId::FogOfWarSystem,
+                phase: SystemPhase::PlayerInput,
+                depends_on: vec![SystemId::MovePlayerSystem], // Update after player moves
+                name: "fog_of_war_system",
+            },
+            fog_of_war_system_wrapper,
         );
 
         // Entity AI systems
@@ -322,5 +333,10 @@ fn action_queue_system_wrapper(world: &mut World, res: &mut Resources) -> Option
 
 fn enemy_combat_ai_system_wrapper(world: &mut World, res: &mut Resources) -> Option<SystemResults> {
     crate::systems::enemy_combat_ai_system(world, res);
+    None
+}
+
+fn fog_of_war_system_wrapper(world: &mut World, _res: &mut Resources) -> Option<SystemResults> {
+    crate::systems::update_fog_of_war(world);
     None
 }

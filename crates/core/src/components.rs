@@ -326,3 +326,58 @@ impl SpriteRef {
         }
     }
 }
+
+/// Fog of war component tracking which tiles the player has visited and what's currently illuminated
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FogOfWar {
+    /// Set of (x, y, z) positions that have been visited by the player
+    pub visited_tiles: std::collections::HashSet<(i64, i64, i64)>,
+}
+
+impl Default for FogOfWar {
+    fn default() -> Self {
+        Self {
+            visited_tiles: std::collections::HashSet::new(),
+        }
+    }
+}
+
+impl FogOfWar {
+    pub fn mark_visited(&mut self, x: i64, y: i64, z: i64) {
+        self.visited_tiles.insert((x, y, z));
+    }
+
+    pub fn is_visited(&self, x: i64, y: i64, z: i64) -> bool {
+        self.visited_tiles.contains(&(x, y, z))
+    }
+}
+
+/// Light source component for entities that emit light
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct LightSource {
+    pub radius: u32,
+    pub torch_equipped: bool,
+}
+
+impl Default for LightSource {
+    fn default() -> Self {
+        Self {
+            radius: 2, // Default player light radius
+            torch_equipped: false,
+        }
+    }
+}
+
+impl LightSource {
+    pub fn new(radius: u32) -> Self {
+        Self {
+            radius,
+            torch_equipped: false,
+        }
+    }
+
+    pub fn set_torch_equipped(&mut self, equipped: bool) {
+        self.torch_equipped = equipped;
+        self.radius = if equipped { 8 } else { 2 };
+    }
+}

@@ -4,12 +4,47 @@ use crate::{
 };
 use ratatui::{
     layout::Rect,
-    style::Style,
+    style::{Color, Style},
     text::{Line, Span},
     widgets::{Block, Paragraph, Wrap},
     Frame,
 };
 use std::collections::HashMap;
+
+/// Convert a color to grayscale for fog of war rendering
+fn to_grayscale(color: Color) -> Color {
+    match color {
+        Color::Rgb(r, g, b) => {
+            // Standard grayscale conversion formula
+            let gray = ((r as f32 * 0.299) + (g as f32 * 0.587) + (b as f32 * 0.114)) as u8;
+            Color::Rgb(gray, gray, gray)
+        }
+        Color::Indexed(i) => {
+            // For indexed colors, map to grayscale approximations
+            match i {
+                0 => Color::Black,         // Black -> Black
+                1..=15 => Color::DarkGray, // Standard colors -> Dark Gray
+                16..=231 => Color::Gray,   // 216-color cube -> Gray
+                232..=255 => Color::White, // Grayscale ramp -> White
+            }
+        }
+        // Named colors to grayscale
+        Color::Black => Color::Black,
+        Color::Red | Color::Green | Color::Yellow | Color::Blue | Color::Magenta | Color::Cyan => {
+            Color::DarkGray
+        }
+        Color::Gray => Color::Gray,
+        Color::DarkGray => Color::DarkGray,
+        Color::LightRed
+        | Color::LightGreen
+        | Color::LightYellow
+        | Color::LightBlue
+        | Color::LightMagenta
+        | Color::LightCyan => Color::Gray,
+        Color::White => Color::White,
+        Color::Reset => Color::Reset,
+    }
+}
 
 pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
     // Get the game view from the core
@@ -89,6 +124,19 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
                 .world
                 .get_tile_at_z(world_x, world_y, world_z);
 
+            // Check fog of war state for this tile
+            use lithicrivers_core::systems::fog_of_war::{get_fog_state, FogState};
+            let fog_state = get_fog_state(&app.core.game.world, world_x, world_y, world_z);
+
+            // If unvisited, render as black '?'
+            if fog_state == FogState::Unvisited {
+                spans.push(Span::styled(
+                    "?".to_string(),
+                    Style::default().fg(ratatui::style::Color::Black),
+                ));
+                continue;
+            }
+
             // render look mode cursor first
             if app.panels.look.mode
                 && world_x == app.panels.look.cursor.x
@@ -120,19 +168,25 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
                     category: cat.clone(),
                     name: name.clone(),
                 };
-                let (block, color) =
+                let (block, mut color) =
                     sprite_block_for_spriteref(&mut app.core.sprite_loader, &sr, app.ui.scale);
                 let sprite_char = block
                     .lines()
                     .nth(sprite_y as usize)
                     .and_then(|line| line.chars().nth(sprite_x as usize))
                     .unwrap_or(' ');
+
+                // Apply grayscale for visited but not illuminated tiles
+                if fog_state == FogState::Visited {
+                    color = to_grayscale(color);
+                }
+
                 spans.push(Span::styled(
                     sprite_char.to_string(),
                     Style::default().fg(color),
                 ));
             } else {
-                let (block, color) =
+                let (block, mut color) =
                     sprite_block_for_tile(&mut app.core.sprite_loader, tile_kind, app.ui.scale)
                         .unwrap_or_else(|| {
                             panic!("Could not find sprite for tile kind: {:?}", tile_kind)
@@ -142,6 +196,12 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
                     .nth(sprite_y as usize)
                     .and_then(|line| line.chars().nth(sprite_x as usize))
                     .unwrap_or(' ');
+
+                // Apply grayscale for visited but not illuminated tiles
+                if fog_state == FogState::Visited {
+                    color = to_grayscale(color);
+                }
+
                 spans.push(Span::styled(
                     sprite_char.to_string(),
                     Style::default().fg(color),
