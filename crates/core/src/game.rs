@@ -137,9 +137,9 @@ impl Game {
         // Spawn single QuestTesty NPC for dialogue testing
         world.spawn((
             Position {
-                x: sx - 8,
-                y: sy - 3,
-                z: sz,
+                x: 14,
+                y: 15,
+                z: -19,
             },
             GameEntity,
             EntityKind::QuestTesty,
@@ -158,6 +158,7 @@ impl Game {
 
         // Deterministically spawn a few Logs near the player (~5 tiles away)
         // Use a local RNG derived from the seed so we don't perturb the global RNG sequence
+        // TODO: Move this to a function inside of World class
         let mut spawn_rng = ChaCha20Rng::seed_from_u64(seed.wrapping_add(0x5eed_cafe_f00d_dead));
         let dir8: &[(i64, i64)] = &[
             (1, 0),
@@ -271,6 +272,10 @@ impl Game {
                 psx, psy, psz
             ));
         }
+
+        //move QuestTesty to 1 square right of the player
+        // TODO how do I do this?
+        // new_game.move_entity_offset_to_entity(?, ?, ox, oy, oz)
 
         // Queue the 2nd quest structure for lazy loading
         let q2x = 200;
