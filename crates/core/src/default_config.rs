@@ -22,6 +22,7 @@ pub fn default_config() -> ConfigRoot {
             "INTERACT": ["f"],      // Interact/use
             "PICKUP_ITEMS": ["r"],  // Quick grab
             "LOOK_TOGGLE": ["v"],   // Look around
+            "TOGGLE_TORCH": ["t"],  // Toggle torch light source
         },
         "combat": {
             "CLEAR_MOVE_QUEUE": ["c"], // Clear queued moves in combat

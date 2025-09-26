@@ -213,12 +213,6 @@ first quest and associated dungeons
 7. **Main menu with new game/load game**
 8. **More biome variety and structure generation**
 9. **Basic sound effects** (beyond just music)
-10. **Ratatui upgrade to 0.30.0** (Medium effort, significant UI benefits)
-    - Enhanced canvas rendering for better ASCII art and dungeon maps
-    - Improved layout system for complex UI panels (inventory, combat, crafting)
-    - Better performance and future-proofing
-    - Breaking changes require updating ~26 files with `Block::title()` usage
-    - Estimated effort: 1-2 days of migration work
 
 ## Timeline
 - [ ] September: Core gameplay implementation (**Body mechanics, Day/night, NPCs**)

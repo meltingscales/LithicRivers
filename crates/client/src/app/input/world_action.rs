@@ -38,6 +38,12 @@ pub fn handle_world_action_input(app: &mut App, key: KeyCode) -> Result<bool, Bo
         return Ok(true);
     }
 
+    // Torch toggle
+    if app.ui.keybinds.matches("action", "TOGGLE_TORCH", &key) {
+        handle_torch_toggle(app);
+        return Ok(true);
+    }
+
     // Scale controls
     if app.ui.keybinds.matches("scale", "SCALE_UP", &key) {
         app.ui.scale = match app.ui.scale {
@@ -324,5 +330,55 @@ pub fn execute_interaction_action(app: &mut App, action: &crate::app_state::Inte
                 .res
                 .log(format!("You {} the door", action_name));
         }
+    }
+}
+
+/// Handle torch toggle - check for torch in inventory and toggle light source
+fn handle_torch_toggle(app: &mut App) {
+    use lithicrivers_core::components::{Inventory, ItemKind, LightSource};
+
+    // Get player entity
+    let player_entity = if let Some(entity) = app.core.game.get_player_entity() {
+        entity
+    } else {
+        app.core.game.res.log("Cannot find player entity");
+        return;
+    };
+
+    // Check if player has torch in inventory
+    let has_torch = if let Ok(inventory) = app.core.game.world.get::<&Inventory>(player_entity) {
+        inventory
+            .slots
+            .iter()
+            .any(|stack| stack.kind == ItemKind::Torch && stack.qty > 0)
+    } else {
+        false
+    };
+
+    // Toggle torch if available
+    if let Ok(mut light_source) = app.core.game.world.get::<&mut LightSource>(player_entity) {
+        if has_torch {
+            let was_equipped = light_source.torch_equipped;
+            light_source.set_torch_equipped(!was_equipped);
+
+            if light_source.torch_equipped {
+                app.core
+                    .game
+                    .res
+                    .log("Torch lit! Light radius increased to 8.");
+            } else {
+                app.core
+                    .game
+                    .res
+                    .log("Torch extinguished. Light radius reduced to 2.");
+            }
+        } else {
+            app.core.game.res.log("No torch available in inventory.");
+        }
+    } else {
+        app.core
+            .game
+            .res
+            .log("Cannot access light source component");
     }
 }

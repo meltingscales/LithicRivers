@@ -1,6 +1,7 @@
 use crate::components::{
-    BlocksMovement, Combat, Dialogue, DroppedItem, Energy, EntityKind, FeralDog, GameEntity, Glyph,
-    Health, Inventory, ItemKind, NPCMood, Player, Position, QuestTesty, Sheep, SpriteRef,
+    BlocksMovement, Combat, Dialogue, DroppedItem, Energy, EntityKind, FeralDog, FogOfWar,
+    GameEntity, Glyph, Health, Inventory, ItemKind, LightSource, NPCMood, Player, Position,
+    QuestTesty, Sheep, SpriteRef,
 };
 use crate::model::body::Body;
 use crate::resources::Resources;
@@ -53,6 +54,7 @@ impl Game {
         starting_inv.add(ItemKind::Acorn, 1);
         starting_inv.add(ItemKind::Log, 3);
         starting_inv.add(ItemKind::Stick, 2);
+        starting_inv.add(ItemKind::Torch, 3);
         starting_inv.add(ItemKind::String, 2);
         starting_inv.add(ItemKind::ScrapElectronics, 3);
 
@@ -72,6 +74,8 @@ impl Game {
             SpriteRef::new("entities", "player"),
             BlocksMovement,
             starting_inv,
+            FogOfWar::default(),
+            LightSource::default(),
         ));
         // Note: player_entity field will be removed - use ECS queries instead
         // Spawn several StumblingSheep near the player for visibility
