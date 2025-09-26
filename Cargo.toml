@@ -22,14 +22,14 @@ rand_chacha = "0.3"
 thiserror = "1"
 anyhow = "1"
 tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
 
 # CLI
 clap = { version = "4", features = ["derive"] }
 
 # TUI
 crossterm = "0.27.0"
-ratatui = "0.26.0"
+ratatui = "0.26.3"
 
 # Speed up debug builds for Bevy/ECS-heavy workloads while keeping incremental builds fast
 [profile.dev]
