@@ -8,11 +8,15 @@ The game features a fog of war system that creates atmospheric exploration:
 - **Torch Toggle**: Press 't' to toggle torch on/off (requires torch in inventory)
 
 ### Fog of War States
-- **Unvisited Areas**: Rendered as black '?' - completely unknown terrain
+- **Unvisited Areas**: Rendered as very dark grey '?' - completely unknown terrain
 - **Visited but Dark**: Areas you've been to but aren't currently illuminated show in grayscale
 - **Illuminated Areas**: Currently lit areas render in full color with normal visibility
 
-This system encourages careful exploration and resource management, as torches provide significant tactical advantage in dark environments while consuming inventory space.
+### Surface vs Underground
+- **Surface Level (Z >= 0)**: Fog of war is disabled - all areas are fully visible
+- **Underground (Z < 0)**: Full fog of war mechanics apply for atmospheric exploration
+
+This system encourages careful exploration and resource management in underground areas, as torches provide significant tactical advantage in dark environments while consuming inventory space. Surface exploration remains unobstructed for easier navigation.
 
 ## Map
 
