@@ -128,11 +128,11 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
             use lithicrivers_core::systems::fog_of_war::{get_fog_state, FogState};
             let fog_state = get_fog_state(&app.core.game.world, world_x, world_y, world_z);
 
-            // If unvisited, render as black '?'
+            // If unvisited, render as very dark grey '?'
             if fog_state == FogState::Unvisited {
                 spans.push(Span::styled(
                     "?".to_string(),
-                    Style::default().fg(ratatui::style::Color::Black),
+                    Style::default().fg(ratatui::style::Color::Rgb(16, 16, 16)), // Very dark grey instead of pure black
                 ));
                 continue;
             }
