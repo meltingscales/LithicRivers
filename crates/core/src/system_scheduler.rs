@@ -336,7 +336,7 @@ fn enemy_combat_ai_system_wrapper(world: &mut World, res: &mut Resources) -> Opt
     None
 }
 
-fn fog_of_war_system_wrapper(world: &mut World, _res: &mut Resources) -> Option<SystemResults> {
-    crate::systems::update_fog_of_war(world);
+fn fog_of_war_system_wrapper(world: &mut World, res: &mut Resources) -> Option<SystemResults> {
+    crate::systems::fog_of_war::update_fog_of_war(world, res);
     None
 }

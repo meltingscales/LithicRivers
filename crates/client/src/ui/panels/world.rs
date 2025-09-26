@@ -126,7 +126,13 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
 
             // Check fog of war state for this tile
             use lithicrivers_core::systems::fog_of_war::{get_fog_state, FogState};
-            let fog_state = get_fog_state(&app.core.game.world, world_x, world_y, world_z);
+            let fog_state = get_fog_state(
+                &app.core.game.world,
+                &app.core.game.res,
+                world_x,
+                world_y,
+                world_z,
+            );
 
             // If unvisited, render as very dark grey '?'
             if fog_state == FogState::Unvisited {
