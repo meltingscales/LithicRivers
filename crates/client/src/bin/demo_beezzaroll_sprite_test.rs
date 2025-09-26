@@ -14,6 +14,7 @@ use ratatui::{
     backend::{Backend, CrosstermBackend},
     layout::{Alignment, Constraint, Layout},
     style::{Color, Style, Stylize},
+    text::Line,
     widgets::{Block, Borders, Paragraph},
     Frame, Terminal,
 };
@@ -267,7 +268,7 @@ fn ui(f: &mut Frame, app: &App) {
     // Main border
     let block = Block::default()
         .borders(Borders::ALL)
-        .title(" ASCII Character Set Viewer ")
+        .title(Line::from(" ASCII Character Set Viewer "))
         .title_alignment(Alignment::Center);
 
     let inner = block.inner(size);

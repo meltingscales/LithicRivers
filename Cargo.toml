@@ -29,7 +29,7 @@ clap = { version = "4", features = ["derive"] }
 
 # TUI
 crossterm = "0.27.0"
-ratatui = "0.26.3"
+ratatui = "0.30.0"
 
 # Speed up debug builds for Bevy/ECS-heavy workloads while keeping incremental builds fast
 [profile.dev]

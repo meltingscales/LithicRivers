@@ -1167,7 +1167,7 @@ fn render_npc_selection_screen(f: &mut Frame, app: &App, area: Rect) {
 
         let mut block = Block::default()
             .borders(Borders::ALL)
-            .title(format!(" {} ", i + 1));
+            .title(Line::from(format!(" {} ", i + 1)));
 
         if npc.met_before {
             block = block.border_style(Style::default().fg(Color::Green));
@@ -1194,7 +1194,7 @@ fn render_npc_selection_screen(f: &mut Frame, app: &App, area: Rect) {
 
     let player_block = Block::default()
         .borders(Borders::ALL)
-        .title(" Player Info ");
+        .title(Line::from(" Player Info "));
 
     let player_widget = Paragraph::new(full_player_text)
         .block(player_block)
@@ -1204,7 +1204,9 @@ fn render_npc_selection_screen(f: &mut Frame, app: &App, area: Rect) {
 
     // Message log
     let messages = app.message_log.join("\n");
-    let log_block = Block::default().borders(Borders::ALL).title(" Messages ");
+    let log_block = Block::default()
+        .borders(Borders::ALL)
+        .title(Line::from(" Messages "));
 
     let log_widget = Paragraph::new(messages)
         .block(log_block)
@@ -1258,7 +1260,7 @@ fn render_dialogue_screen(f: &mut Frame, app: &App, area: Rect) {
 
         let player_block = Block::default()
             .borders(Borders::ALL)
-            .title(format!(" {} ", app.player.name))
+            .title(Line::from(format!(" {} ", app.player.name)))
             .border_style(Style::default().fg(Color::Cyan));
 
         let player_widget = Paragraph::new(player_portrait)
@@ -1277,7 +1279,7 @@ fn render_dialogue_screen(f: &mut Frame, app: &App, area: Rect) {
 
         let scene_block = Block::default()
             .borders(Borders::ALL)
-            .title(" Scene ")
+            .title(Line::from(" Scene "))
             .border_style(Style::default().fg(Color::White));
 
         let scene_widget = Paragraph::new(scene_info)
@@ -1293,7 +1295,7 @@ fn render_dialogue_screen(f: &mut Frame, app: &App, area: Rect) {
 
         let npc_block = Block::default()
             .borders(Borders::ALL)
-            .title(format!(" {} ", npc.name))
+            .title(Line::from(format!(" {} ", npc.name)))
             .border_style(Style::default().fg(mood_color));
 
         let npc_widget = Paragraph::new(npc_portrait)
@@ -1328,7 +1330,7 @@ fn render_dialogue_screen(f: &mut Frame, app: &App, area: Rect) {
         let dialogue_block = Block::default()
             .borders(Borders::ALL)
             .border_set(symbols::border::ROUNDED)
-            .title(" Dialogue ")
+            .title(Line::from(" Dialogue "))
             .title_style(
                 Style::default()
                     .fg(Color::Yellow)
@@ -1368,7 +1370,7 @@ fn render_dialogue_screen(f: &mut Frame, app: &App, area: Rect) {
             let choice_block = Block::default()
                 .borders(Borders::ALL)
                 .border_set(symbols::border::ROUNDED)
-                .title(" Choose ")
+                .title(Line::from(" Choose "))
                 .border_style(Style::default().fg(Color::Green));
 
             let choice_widget = Paragraph::new(choice_text)

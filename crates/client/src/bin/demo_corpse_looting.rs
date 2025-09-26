@@ -541,7 +541,9 @@ fn ui(f: &mut Frame, app: &App) {
 }
 
 fn render_world_map(f: &mut Frame, app: &App, area: Rect) {
-    let block = Block::default().borders(Borders::ALL).title(" World Map ");
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .title(Line::from(" World Map "));
 
     let inner = block.inner(area);
     f.render_widget(block, area);
@@ -603,7 +605,7 @@ fn render_world_map(f: &mut Frame, app: &App, area: Rect) {
 fn render_player_inventory(f: &mut Frame, app: &App, area: Rect) {
     let block = Block::default()
         .borders(Borders::ALL)
-        .title(" Player Inventory ");
+        .title(Line::from(" Player Inventory "));
 
     let items_list: Vec<ListItem> = app
         .player_inventory
@@ -635,7 +637,9 @@ fn render_player_inventory(f: &mut Frame, app: &App, area: Rect) {
 }
 
 fn render_instructions(f: &mut Frame, app: &App, area: Rect) {
-    let block = Block::default().borders(Borders::ALL).title(" Controls ");
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .title(Line::from(" Controls "));
 
     let instructions = match app.ui_mode {
         UiMode::WorldMap => vec![
@@ -693,7 +697,7 @@ fn render_corpse_selection_modal(f: &mut Frame, app: &App, adjacent_corpses: &[u
     // Main modal block
     let block = Block::default()
         .borders(Borders::ALL)
-        .title(" Choose Corpse to Loot ")
+        .title(Line::from(" Choose Corpse to Loot "))
         .title_alignment(Alignment::Center)
         .style(Style::default().bg(Color::Black));
 
@@ -755,7 +759,7 @@ fn render_loot_modal(f: &mut Frame, app: &App, corpse_idx: usize) {
     // Main modal block
     let block = Block::default()
         .borders(Borders::ALL)
-        .title(format!(" Looting {} ", corpse.name))
+        .title(Line::from(format!(" Looting {} ", corpse.name)))
         .title_alignment(Alignment::Center)
         .style(Style::default().bg(Color::Black));
 
@@ -771,7 +775,7 @@ fn render_loot_modal(f: &mut Frame, app: &App, corpse_idx: usize) {
     // Left side: Corpse inventory
     let corpse_block = Block::default()
         .borders(Borders::ALL)
-        .title(" Corpse Items ")
+        .title(Line::from(" Corpse Items "))
         .border_style(if app.loot_panel_focus {
             Style::default().fg(Color::Yellow)
         } else {
@@ -805,7 +809,7 @@ fn render_loot_modal(f: &mut Frame, app: &App, corpse_idx: usize) {
     // Right side: Player inventory
     let player_block = Block::default()
         .borders(Borders::ALL)
-        .title(" Your Items ")
+        .title(Line::from(" Your Items "))
         .border_style(if !app.loot_panel_focus {
             Style::default().fg(Color::Yellow)
         } else {

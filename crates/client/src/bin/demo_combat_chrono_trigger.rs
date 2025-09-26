@@ -595,13 +595,21 @@ fn render_player_info(f: &mut Frame, area: Rect, app: &App) {
     let mana_ratio = player.mana as f64 / player.max_mana as f64;
 
     let health_bar = Gauge::default()
-        .block(Block::default().title("HP").borders(Borders::ALL))
+        .block(
+            Block::default()
+                .title(Line::from("HP"))
+                .borders(Borders::ALL),
+        )
         .gauge_style(Style::default().fg(Color::Red).bg(Color::DarkGray))
         .ratio(health_ratio)
         .label(format!(" {}/{} ", player.health, player.max_health));
 
     let mana_bar = Gauge::default()
-        .block(Block::default().title("MP").borders(Borders::ALL))
+        .block(
+            Block::default()
+                .title(Line::from("MP"))
+                .borders(Borders::ALL),
+        )
         .gauge_style(Style::default().fg(Color::Blue).bg(Color::DarkGray))
         .ratio(mana_ratio)
         .label(format!(" {}/{} ", player.mana, player.max_mana));
@@ -716,7 +724,9 @@ fn render_move_queue(f: &mut Frame, area: Rect, app: &App) {
         }
     }
 
-    let block = Block::default().borders(Borders::ALL).title("Action Queue");
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .title(Line::from("Action Queue"));
 
     let paragraph = Paragraph::new(lines).block(block).wrap(Wrap { trim: true });
 
@@ -761,7 +771,7 @@ fn render_enemy_info(f: &mut Frame, enemy: &Enemy, area: Rect, is_selected: bool
     let health_bar = Gauge::default()
         .block(
             Block::default()
-                .title(enemy.name.clone())
+                .title(Line::from(enemy.name.clone()))
                 .borders(Borders::ALL),
         )
         .gauge_style(Style::default().fg(Color::Red).bg(Color::DarkGray))
@@ -796,7 +806,7 @@ fn ui(f: &mut Frame, app: &mut App) {
     // Outer frame
     let block = Block::default()
         .borders(Borders::ALL)
-        .title(" Chrono Trigger-Style Combat ")
+        .title(Line::from(" Chrono Trigger-Style Combat "))
         .title_alignment(Alignment::Center);
     let _inner = block.inner(size);
     f.render_widget(block, size);

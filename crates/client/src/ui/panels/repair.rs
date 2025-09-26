@@ -18,7 +18,7 @@ pub fn render_repair_modal(f: &mut Frame, app: &mut crate::App, area: Rect) {
     let modal_block = Block::default()
         .borders(Borders::ALL)
         .border_set(ratatui::symbols::border::THICK)
-        .title(" Body Repair ")
+        .title(Line::from(" Body Repair "))
         .title_alignment(Alignment::Center)
         .style(Style::default().fg(Color::Yellow).bg(Color::Black));
 
@@ -88,7 +88,11 @@ pub fn render_repair_modal(f: &mut Frame, app: &mut crate::App, area: Rect) {
         "[↑↓] Navigate Recipes | [←→] Cycle Body Parts | [Enter] Repair Selected Part | [Esc] Cancel";
     let controls_para = Paragraph::new(controls_text)
         .alignment(Alignment::Center)
-        .block(Block::default().borders(Borders::ALL).title("Controls"));
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title(Line::from("Controls")),
+        );
     f.render_widget(controls_para, controls_area);
 }
 
@@ -122,7 +126,7 @@ fn render_repair_recipes_list(f: &mut Frame, area: Rect, app: &crate::App, selec
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .title("Repair Recipes"),
+                .title(Line::from("Repair Recipes")),
         )
         .highlight_style(Style::default().add_modifier(Modifier::BOLD));
 
@@ -199,7 +203,7 @@ fn render_repair_recipe_details(
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .title("Recipe Details"),
+                .title(Line::from("Recipe Details")),
         )
         .wrap(Wrap { trim: true });
 
@@ -263,7 +267,11 @@ fn render_body_parts_list(
     }
 
     let paragraph = Paragraph::new(lines)
-        .block(Block::default().borders(Borders::ALL).title("Body Parts"))
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title(Line::from("Body Parts")),
+        )
         .alignment(Alignment::Left);
 
     f.render_widget(paragraph, area);
