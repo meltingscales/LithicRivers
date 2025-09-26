@@ -275,7 +275,7 @@ impl Game {
 
         //move QuestTesty to 1 square right of the player
         // TODO how do I do this?
-        // new_game.move_entity_offset_to_entity(?, ?, ox, oy, oz)
+        // TODO make a class method like new_game.move_entity_offset_to_entity(?, ?, ox, oy, oz)
 
         // Queue the 2nd quest structure for lazy loading
         let q2x = 200;
