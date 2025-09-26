@@ -1629,8 +1629,8 @@ fn render_cheat_console_modal(f: &mut Frame, app: &mut App) {
         autocomplete_index: _,
     } = &app.panels.cheat_console
     {
-        // Create modal area (centered, 60% width, small height for input)
-        let area = centered_rect(60, 15, f.size());
+        // Create modal area (centered, 60% width, taller height for multiline help)
+        let area = centered_rect(60, 25, f.size());
 
         // Clear the background
         f.render_widget(Clear, area);
@@ -1665,22 +1665,34 @@ fn render_cheat_console_modal(f: &mut Frame, app: &mut App) {
         f.render_widget(input_paragraph, input_area);
 
         // Help text - show autocomplete suggestions if available, otherwise show all commands
-        let help_text = if !autocomplete_suggestions.is_empty() {
-            format!("Suggestions: {}", autocomplete_suggestions.join(", "))
+        let help_lines = if !autocomplete_suggestions.is_empty() {
+            vec![Line::from(format!(
+                "Suggestions: {}",
+                autocomplete_suggestions.join(", ")
+            ))]
         } else {
             let registry = app::input::cheat_console::get_command_registry();
             let commands = registry.get_command_descriptions();
-            format!("Available commands: {}", commands.join(", "))
+            let mut lines = vec![Line::from("Available commands:")];
+            for command in commands {
+                lines.push(Line::from(format!("  {}", command)));
+            }
+            lines
         };
-        let help_paragraph = Paragraph::new(help_text)
+        let help_paragraph = Paragraph::new(help_lines)
             .style(Style::default().fg(Color::Gray))
             .alignment(Alignment::Center);
 
+        let help_height = if !autocomplete_suggestions.is_empty() {
+            1
+        } else {
+            4
+        }; // 1 line for title + 3 commands
         let help_area = Rect {
             x: inner.x,
             y: inner.y + 3,
             width: inner.width,
-            height: 1,
+            height: help_height,
         };
         f.render_widget(help_paragraph, help_area);
 
@@ -1689,7 +1701,8 @@ fn render_cheat_console_modal(f: &mut Frame, app: &mut App) {
             .alignment(Alignment::Center)
             .style(Style::default().fg(Color::Gray));
 
-        if inner.height > 4 {
+        if inner.height > 7 {
+            // Need more height for multiline help + controls
             let controls_area = Rect {
                 x: inner.x,
                 y: inner.y + inner.height - 1,
