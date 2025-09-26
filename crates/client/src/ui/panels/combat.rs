@@ -1,6 +1,7 @@
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Style, Stylize},
+    text::Line,
     widgets::{Block, Borders, Gauge, Paragraph},
     Frame,
 };
@@ -8,7 +9,7 @@ use ratatui::{
 pub fn render_combat_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     let outer_block = Block::default()
         .borders(Borders::ALL)
-        .title(" Combat ")
+        .title(Line::from(" Combat "))
         .title_alignment(Alignment::Center)
         .style(Style::default().fg(Color::Red));
 
@@ -196,7 +197,7 @@ fn render_single_enemy(
     let health_bar = Gauge::default()
         .block(
             Block::default()
-                .title(enemy.name.as_str())
+                .title(Line::from(enemy.name.as_str()))
                 .borders(Borders::ALL),
         )
         .gauge_style(Style::default().fg(Color::Red).bg(Color::DarkGray))
@@ -392,7 +393,9 @@ fn render_action_queue(f: &mut Frame, area: Rect, app: &mut crate::App) {
         }
     }
 
-    let block = Block::default().borders(Borders::ALL).title("Action Queue");
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .title(Line::from("Action Queue"));
     let paragraph = Paragraph::new(lines).block(block).wrap(Wrap { trim: true });
 
     f.render_widget(paragraph, area);
@@ -487,7 +490,7 @@ fn render_moves(
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .title("Player Action"),
+                .title(Line::from("Player Action")),
         );
     f.render_widget(timer_para, layout[0]);
 
@@ -838,7 +841,11 @@ fn render_player_info(
                     };
 
                     Gauge::default()
-                        .block(Block::default().title(abbreviation).borders(Borders::ALL))
+                        .block(
+                            Block::default()
+                                .title(Line::from(abbreviation))
+                                .borders(Borders::ALL),
+                        )
                         .gauge_style(Style::default().fg(color).bg(Color::DarkGray))
                         .ratio(ratio.min(1.0))
                         .label(label)
@@ -848,7 +855,11 @@ fn render_player_info(
     } else {
         // No body data - show placeholder
         vec![Gauge::default()
-            .block(Block::default().title("No Body").borders(Borders::ALL))
+            .block(
+                Block::default()
+                    .title(Line::from("No Body"))
+                    .borders(Borders::ALL),
+            )
             .gauge_style(Style::default().fg(Color::Red).bg(Color::DarkGray))
             .ratio(0.0)
             .label(" N/A ".to_string())]
@@ -862,7 +873,7 @@ fn render_player_info(
             Gauge::default()
                 .block(
                     Block::default()
-                        .title("Energy (Depleted)")
+                        .title(Line::from("Energy (Depleted)"))
                         .borders(Borders::ALL),
                 )
                 .gauge_style(Style::default().fg(Color::Red).bg(Color::DarkGray))
@@ -875,7 +886,7 @@ fn render_player_info(
             Gauge::default()
                 .block(
                     Block::default()
-                        .title("Energy (Pending)")
+                        .title(Line::from("Energy (Pending)"))
                         .borders(Borders::ALL),
                 )
                 .gauge_style(Style::default().fg(Color::Yellow).bg(Color::DarkGray))
@@ -887,7 +898,11 @@ fn render_player_info(
         }
     } else {
         Gauge::default()
-            .block(Block::default().title("Energy").borders(Borders::ALL))
+            .block(
+                Block::default()
+                    .title(Line::from("Energy"))
+                    .borders(Borders::ALL),
+            )
             .gauge_style(Style::default().fg(Color::Yellow).bg(Color::DarkGray))
             .ratio(energy_ratio)
             .label(format!(" {}/{} ", energy.current, energy.max))

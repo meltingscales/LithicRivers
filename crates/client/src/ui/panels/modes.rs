@@ -56,7 +56,7 @@ pub fn render_modes_panel(f: &mut Frame, app: &mut App, area: Rect) {
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .title("MODES")
+                .title(Line::from("MODES"))
                 .style(Style::default().fg(Color::White)),
         );
     f.render_widget(content, area);

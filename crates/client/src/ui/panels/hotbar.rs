@@ -74,7 +74,7 @@ pub fn render_hotbar_panel(f: &mut Frame, app: &mut App, area: Rect) {
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .title(format!(
+                .title(Line::from(format!(
                     "Hotbar ({}-{})",
                     app.core
                         .config_manager
@@ -82,7 +82,7 @@ pub fn render_hotbar_panel(f: &mut Frame, app: &mut App, area: Rect) {
                     app.core
                         .config_manager
                         .get_keybind_str("hotbar", "HOTBAR_SLOT_12")
-                ))
+                )))
                 .style(Style::default().fg(Color::White)),
         );
     f.render_widget(content, area);

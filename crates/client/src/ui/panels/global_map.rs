@@ -30,7 +30,7 @@ fn render_map_panel(f: &mut Frame, app: &mut App, area: Rect) {
     let block = Block::default()
         .borders(Borders::ALL)
         .border_set(border::THICK)
-        .title(" Global Map ")
+        .title(Line::from(" Global Map "))
         .title_alignment(Alignment::Center)
         .style(Style::default().fg(Color::Cyan));
 
@@ -247,7 +247,7 @@ fn render_markers_panel(f: &mut Frame, app: &mut App, area: Rect) {
     let block = Block::default()
         .borders(Borders::ALL)
         .border_set(border::THICK)
-        .title(" Quest Markers ")
+        .title(Line::from(" Quest Markers "))
         .title_alignment(Alignment::Center)
         .style(Style::default().fg(Color::Magenta));
 
