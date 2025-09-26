@@ -7,7 +7,9 @@ use ratatui::{
 };
 
 pub fn render_quit_panel(f: &mut Frame, _app: &mut crate::App, area: Rect) {
-    let block = Block::default().borders(Borders::ALL).title("Quit");
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .title(Line::from("Quit"));
     let inner = block.inner(area);
     let mut lines: Vec<Line<'static>> = Vec::new();
     let width = inner.width as usize;

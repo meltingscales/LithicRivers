@@ -101,7 +101,7 @@ fn ui(f: &mut Frame, app: &App) {
     // Outer frame
     let block = Block::default()
         .borders(Borders::ALL)
-        .title(" Portrait Sprite Size Test ")
+        .title(Line::from(" Portrait Sprite Size Test "))
         .title_alignment(Alignment::Center);
     let inner = block.inner(size);
     f.render_widget(block, size);
@@ -114,7 +114,10 @@ fn ui(f: &mut Frame, app: &App) {
 
     let portrait_block = Block::default()
         .borders(Borders::ALL)
-        .title(format!(" {} | lines:{} cols:{} ", label, ph, pw))
+        .title(Line::from(format!(
+            " {} | lines:{} cols:{} ",
+            label, ph, pw
+        )))
         .title_alignment(Alignment::Center);
     let pb_inner = portrait_block.inner(chunks[0]);
     f.render_widget(portrait_block, chunks[0]);

@@ -131,7 +131,7 @@ fn ui(f: &mut Frame, app: &App) {
     let block = Block::default()
         .borders(Borders::ALL)
         .border_set(border::THICK)
-        .title(" Inventory ")
+        .title(Line::from(" Inventory "))
         .title_alignment(Alignment::Center)
         .border_style(Style::default().fg(Color::LightBlue));
 
@@ -208,7 +208,7 @@ fn ui(f: &mut Frame, app: &App) {
             }
 
             let cell_block = block
-                .title(format!(" {} ", idx + 1))
+                .title(Line::from(format!(" {} ", idx + 1)))
                 .title_alignment(Alignment::Right)
                 .padding(Padding::new(1, 1, 1, 1));
 

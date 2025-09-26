@@ -129,7 +129,7 @@ pub fn render_look_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .title("Look at")
+                .title(Line::from("Look at"))
                 .style(Style::default().fg(Color::White)),
         );
     f.render_widget(content, area);

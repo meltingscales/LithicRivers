@@ -177,7 +177,9 @@ pub fn render_help_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
             lines.push(Line::from(""));
         }
     }
-    let block = Block::default().borders(Borders::ALL).title("Help");
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .title(Line::from("Help"));
     let inner = block.inner(area);
     let p = Paragraph::new(lines)
         .alignment(Alignment::Left)
