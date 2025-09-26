@@ -53,7 +53,9 @@ pub fn render_body_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     }
 
     // Left: ASCII overview
-    let ascii_block = Block::default().borders(Borders::ALL).title("Body");
+    let ascii_block = Block::default()
+        .borders(Borders::ALL)
+        .title(Line::from("Body"));
     let ascii_inner = ascii_block.inner(chunks[0]);
     let ascii_lines = ascii_lines_opt.unwrap_or_else(|| vec![Line::from(Span::raw("(No Body)"))]);
     let ascii_para = Paragraph::new(ascii_lines).alignment(Alignment::Left);
@@ -61,15 +63,21 @@ pub fn render_body_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     f.render_widget(ascii_block, chunks[0]);
 
     // Right: textual list
-    let list_para = Paragraph::new(list_lines)
-        .alignment(Alignment::Left)
-        .block(Block::default().borders(Borders::ALL).title("Parts"));
+    let list_para = Paragraph::new(list_lines).alignment(Alignment::Left).block(
+        Block::default()
+            .borders(Borders::ALL)
+            .title(Line::from("Parts")),
+    );
     f.render_widget(list_para, chunks[1]);
 
     // Bottom: controls
     let controls_text = "[R] Repair";
     let controls_para = Paragraph::new(controls_text)
         .alignment(Alignment::Center)
-        .block(Block::default().borders(Borders::ALL).title("Controls"));
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title(Line::from("Controls")),
+        );
     f.render_widget(controls_para, controls_area);
 }

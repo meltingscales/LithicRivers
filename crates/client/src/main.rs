@@ -485,7 +485,7 @@ fn ui(f: &mut Frame, app: &mut App) {
             let block = Block::default()
                 .borders(Borders::ALL)
                 .border_set(border::THICK)
-                .title(" System Boot ")
+                .title(Line::from(" System Boot "))
                 .title_alignment(Alignment::Center)
                 .border_style(Style::default().fg(Color::LightBlue));
 
@@ -764,7 +764,7 @@ fn render_message_log(f: &mut Frame, app: &mut App, area: Rect) {
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .title("Messages")
+                .title(Line::from("Messages"))
                 .style(Style::default().fg(Color::White)),
         );
     f.render_widget(paragraph, area);
@@ -786,7 +786,11 @@ fn render_bottom_menu(f: &mut Frame, app: &mut App, area: Rect) {
         Span::raw("Quit"),
     ];
     let tabs = Tabs::new(titles)
-        .block(Block::default().borders(Borders::ALL).title("Menu"))
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title(Line::from("Menu")),
+        )
         .select(app.ui.current_tab.as_index())
         .style(Style::default().fg(Color::White))
         .highlight_style(Style::default().fg(Color::Green));
@@ -847,7 +851,7 @@ fn render_corpse_selection_modal(
     // Main modal block
     let block = Block::default()
         .borders(Borders::ALL)
-        .title(" Choose Corpse to Loot ")
+        .title(Line::from(" Choose Corpse to Loot "))
         .title_alignment(Alignment::Center)
         .style(Style::default());
 
@@ -949,7 +953,7 @@ fn render_corpse_loot_modal(
     // Main modal block
     let block = Block::default()
         .borders(Borders::ALL)
-        .title(" Looting Corpse ")
+        .title(Line::from(" Looting Corpse "))
         .title_alignment(Alignment::Center)
         .style(Style::default());
 
@@ -965,7 +969,7 @@ fn render_corpse_loot_modal(
     // Left side: Corpse inventory
     let corpse_block = Block::default()
         .borders(Borders::ALL)
-        .title(" Corpse Items ")
+        .title(Line::from(" Corpse Items "))
         .border_style(if loot_panel_focus {
             Style::default().fg(Color::Yellow)
         } else {
@@ -999,7 +1003,7 @@ fn render_corpse_loot_modal(
     // Right side: Player inventory
     let player_block = Block::default()
         .borders(Borders::ALL)
-        .title(" Your Items ")
+        .title(Line::from(" Your Items "))
         .border_style(if !loot_panel_focus {
             Style::default().fg(Color::Yellow)
         } else {
@@ -1161,7 +1165,7 @@ fn render_npc_selection_modal(
     let block = Block::default()
         .borders(Borders::ALL)
         .border_set(border::ROUNDED)
-        .title(" Choose NPC to Talk To ")
+        .title(Line::from(" Choose NPC to Talk To "))
         .title_style(
             Style::default()
                 .fg(Color::Green)
@@ -1254,7 +1258,7 @@ fn render_npc_dialogue_modal(
     let block = Block::default()
         .borders(Borders::ALL)
         .border_set(border::ROUNDED)
-        .title(format!(" Talking to {} ", npc_name))
+        .title(Line::from(format!(" Talking to {} ", npc_name)))
         .title_style(
             Style::default()
                 .fg(Color::Yellow)
@@ -1416,7 +1420,10 @@ fn render_block_picker_modal(
     // Main modal block
     let block = Block::default()
         .borders(Borders::ALL)
-        .title(format!(" Choose Block for F{} ", hotbar_slot + 1))
+        .title(Line::from(format!(
+            " Choose Block for F{} ",
+            hotbar_slot + 1
+        )))
         .title_alignment(Alignment::Center)
         .style(Style::default());
 
@@ -1534,7 +1541,7 @@ fn render_action_selection_modal(
     // Main modal block
     let block = Block::default()
         .borders(Borders::ALL)
-        .title(" Choose Interaction ")
+        .title(Line::from(" Choose Interaction "))
         .title_alignment(Alignment::Center)
         .style(Style::default());
 
@@ -1629,7 +1636,7 @@ fn render_cheat_console_modal(f: &mut Frame, app: &mut App) {
         // Main modal block
         let block = Block::default()
             .borders(Borders::ALL)
-            .title(" Cheat Console ")
+            .title(Line::from(" Cheat Console "))
             .title_alignment(Alignment::Center)
             .style(Style::default().fg(Color::Cyan));
 

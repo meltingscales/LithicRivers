@@ -116,7 +116,7 @@ fn ui(f: &mut Frame, app: &App) {
     let block = Block::default()
         .borders(Borders::ALL)
         .border_set(border::THICK)
-        .title(" Intro ")
+        .title(Line::from(" Intro "))
         .title_alignment(Alignment::Center)
         .border_style(Style::default().fg(Color::LightBlue));
 

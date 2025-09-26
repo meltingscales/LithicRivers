@@ -20,6 +20,7 @@ use ratatui::{
     backend::{Backend, CrosstermBackend},
     layout::{Alignment, Constraint, Layout, Rect},
     style::{Color, Style},
+    text::Line,
     widgets::{Block, Borders, Paragraph},
     Frame, Terminal,
 };
@@ -556,7 +557,9 @@ fn ui(f: &mut Frame, app: &mut App) {
     // Main border
     let block = Block::default()
         .borders(Borders::ALL)
-        .title(" LithicRivers Sprite Demo - All Tiles, Items, Entities & Structures ")
+        .title(Line::from(
+            " LithicRivers Sprite Demo - All Tiles, Items, Entities & Structures ",
+        ))
         .title_alignment(Alignment::Center);
     let inner = block.inner(size);
     f.render_widget(block, size);
@@ -600,7 +603,7 @@ fn ui(f: &mut Frame, app: &mut App) {
         // Sprite display
         let sprite_block = Block::default()
             .borders(Borders::ALL)
-            .title(format!(" {} ", name));
+            .title(Line::from(format!(" {} ", name)));
         let sprite_inner = sprite_block.inner(content_chunks[0]);
         f.render_widget(sprite_block, content_chunks[0]);
 
@@ -622,7 +625,11 @@ fn ui(f: &mut Frame, app: &mut App) {
 
         // Item details
         let details_para = Paragraph::new(info)
-            .block(Block::default().borders(Borders::ALL).title(" Details "))
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title(Line::from(" Details ")),
+            )
             .wrap(ratatui::widgets::Wrap { trim: true });
         f.render_widget(details_para, art_chunks[0]);
 
@@ -630,13 +637,21 @@ fn ui(f: &mut Frame, app: &mut App) {
         if !art12x8.is_empty() && art12x8 != "No art" && art12x8 != "No mood art" {
             let art_para = Paragraph::new(art12x8)
                 .style(Style::default().fg(color))
-                .block(Block::default().borders(Borders::ALL).title(" 12x8 Art "))
+                .block(
+                    Block::default()
+                        .borders(Borders::ALL)
+                        .title(Line::from(" 12x8 Art ")),
+                )
                 .alignment(Alignment::Center);
             f.render_widget(art_para, art_chunks[1]);
         } else {
             let no_art_para = Paragraph::new("No artwork available")
                 .style(Style::default().fg(Color::DarkGray))
-                .block(Block::default().borders(Borders::ALL).title(" 12x8 Art "))
+                .block(
+                    Block::default()
+                        .borders(Borders::ALL)
+                        .title(Line::from(" 12x8 Art ")),
+                )
                 .alignment(Alignment::Center);
             f.render_widget(no_art_para, art_chunks[1]);
         }

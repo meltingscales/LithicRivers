@@ -204,7 +204,7 @@ fn ui(f: &mut Frame, app: &App) {
     // Create a block for the entire app
     let block = Block::default()
         .borders(Borders::ALL)
-        .title(" Crafting Demo ")
+        .title(Line::from(" Crafting Demo "))
         .title_alignment(Alignment::Center);
 
     // Create two columns
@@ -253,7 +253,9 @@ fn render_inventory(f: &mut Frame, app: &App, area: Rect) {
         },
     );
 
-    let block = Block::default().borders(Borders::ALL).title(" Inventory ");
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .title(Line::from(" Inventory "));
 
     let items_list: Vec<ListItem> = items
         .iter()
@@ -298,7 +300,7 @@ fn render_inventory(f: &mut Frame, app: &App, area: Rect) {
 fn render_recipes(f: &mut Frame, app: &App, area: Rect) {
     let block = Block::default()
         .borders(Borders::ALL)
-        .title(" Crafting Recipes ");
+        .title(Line::from(" Crafting Recipes "));
 
     let inner_area = block.inner(area);
     f.render_widget(block, area);

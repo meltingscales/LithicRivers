@@ -42,9 +42,11 @@ pub fn render_inventory_list_only(f: &mut Frame, app: &mut crate::App, area: Rec
         list_lines.push(Line::from(Span::raw("(No player)")));
     }
 
-    let list_para = Paragraph::new(list_lines)
-        .alignment(Alignment::Left)
-        .block(Block::default().borders(Borders::ALL).title("Inventory"));
+    let list_para = Paragraph::new(list_lines).alignment(Alignment::Left).block(
+        Block::default()
+            .borders(Borders::ALL)
+            .title(Line::from("Inventory")),
+    );
     f.render_widget(list_para, area);
 }
 
@@ -90,7 +92,9 @@ pub fn render_inventory_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     }
 
     // Left: art + description if any selection
-    let left_block = Block::default().borders(Borders::ALL).title("Item");
+    let left_block = Block::default()
+        .borders(Borders::ALL)
+        .title(Line::from("Item"));
     let left_inner = left_block.inner(chunks[0]);
     let mut left_lines: Vec<Line<'static>> = Vec::new();
     if let Some(kind) = selected_kind {
@@ -143,9 +147,11 @@ pub fn render_inventory_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     f.render_widget(left_block, chunks[0]);
 
     // Right: list panel
-    let list_para = Paragraph::new(list_lines)
-        .alignment(Alignment::Left)
-        .block(Block::default().borders(Borders::ALL).title("Inventory"));
+    let list_para = Paragraph::new(list_lines).alignment(Alignment::Left).block(
+        Block::default()
+            .borders(Borders::ALL)
+            .title(Line::from("Inventory")),
+    );
     f.render_widget(list_para, chunks[1]);
 }
 
