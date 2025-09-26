@@ -1,5 +1,6 @@
 use crate::app_state::BuildMode;
 use crate::App;
+use lithicrivers_core::components::{LightSource, Player};
 use ratatui::{
     layout::{Alignment, Rect},
     style::{Color, Style},
@@ -39,6 +40,34 @@ pub fn render_modes_panel(f: &mut Frame, app: &mut App, area: Rect) {
         Span::styled("--", Style::default().fg(Color::DarkGray))
     };
 
+    // Torch mode status
+    let torch_status = {
+        let mut torch_equipped = false;
+        for (_entity, (light_source, _player)) in app
+            .core
+            .game
+            .world
+            .query::<(&LightSource, &Player)>()
+            .iter()
+        {
+            torch_equipped = light_source.torch_equipped;
+            break; // Only one player
+        }
+
+        if torch_equipped {
+            Span::styled("T", Style::default().fg(Color::LightYellow))
+        } else {
+            Span::styled("-", Style::default().fg(Color::DarkGray))
+        }
+    };
+
+    // Fog of war mode status
+    let fog_status = if app.core.game.res.player_state.fog_of_war_enabled {
+        Span::styled("FOG", Style::default().fg(Color::Blue))
+    } else {
+        Span::styled("---", Style::default().fg(Color::DarkGray))
+    };
+
     // Create a single line with all modes
     lines.push(Line::from(vec![
         battle_status,
@@ -48,6 +77,10 @@ pub fn render_modes_panel(f: &mut Frame, app: &mut App, area: Rect) {
         build_status,
         Span::raw(" "),
         noclip_status,
+        Span::raw(" "),
+        torch_status,
+        Span::raw(" "),
+        fog_status,
     ]));
 
     let content = Paragraph::new(lines)
