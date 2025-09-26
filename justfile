@@ -38,11 +38,14 @@ install:
     rustup default {{toolchain}}
     @echo "Installing cargo-tarpaulin..."
     {{cargo_base}} install cargo-tarpaulin --locked
+    @echo "Installing cargo-audit..."
+    {{cargo_base}} install cargo-audit --locked
 
 
-# Run security audit
+# Run security audit on dependencies
 code-security:
-    {{cargoz_env}} audit
+    @echo "Running cargo-audit to check for security vulnerabilities..."
+    {{cargo_base}} audit
 
 test: build
     {{cargoz_env}} test
