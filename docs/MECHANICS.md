@@ -36,11 +36,21 @@ The game features a fog of war system that creates atmospheric exploration:
 - **Visited but Dark**: Areas you've been to but aren't currently illuminated show in grayscale
 - **Illuminated Areas**: Currently lit areas render in full color with normal visibility
 
+### Realistic Light Mechanics
+- **Raycasting**: Light rays are traced using Bresenham line algorithm for realistic shadows
+- **Wall Occlusion**: Light does not pass through walls - creates realistic shadows
+- **Line-of-Sight**: You can see walls that block your view, but not areas behind them
+- **Circular Falloff**: Light has natural circular distance-based illumination
+
 ### Surface vs Underground
 - **Surface Level (Z >= 0)**: Fog of war is disabled - all areas are fully visible
 - **Underground (Z < 0)**: Full fog of war mechanics apply for atmospheric exploration
 
-This system encourages careful exploration and resource management in underground areas, as torches provide significant tactical advantage in dark environments while consuming inventory space. Surface exploration remains unobstructed for easier navigation.
+### Debug Features
+- **Toggle Fog of War**: Use `/fogofwar_toggle` command to disable '?' rendering for debugging
+- **Mode Indicators**: UI shows current torch status (T) and fog of war status (FOG)
+
+This system encourages careful exploration and resource management in underground areas, as torches provide significant tactical advantage in dark environments while consuming inventory space. The realistic light physics add strategic depth to underground exploration.
 
 ## Map
 
