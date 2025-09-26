@@ -134,8 +134,9 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
                 world_z,
             );
 
-            // If unvisited, render as very dark grey '?'
-            if fog_state == FogState::Unvisited {
+            // If unvisited and fog of war is enabled, render as very dark grey '?'
+            if fog_state == FogState::Unvisited && app.core.game.res.player_state.fog_of_war_enabled
+            {
                 spans.push(Span::styled(
                     "?".to_string(),
                     Style::default().fg(ratatui::style::Color::Rgb(16, 16, 16)), // Very dark grey instead of pure black

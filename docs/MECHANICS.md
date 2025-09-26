@@ -1,3 +1,27 @@
+# Mechanics
+
+Brief descriptions of game mechanics. To guide future development and tutorials.
+
+## Cheat Console
+
+The game features a comprehensive command system for debugging and testing:
+
+### Command System
+- **Access**: Press `/` to open the command console
+- **Autocomplete**: Type partial commands and press Tab to autocomplete or cycle through suggestions
+- **Dynamic Help**: Real-time suggestion display shows matching commands as you type
+
+### Available Commands
+- **`tp x y z`**: Teleport to specified coordinates (e.g., `/tp 10 5 -1`)
+- **`noclip_toggle`**: Toggle noclip mode for walking through walls
+- **`fogofwar_toggle`**: Toggle fog of war rendering (shows/hides '?' markers)
+
+### Features
+- **Programmatic Registration**: Commands are automatically registered and displayed
+- **Tab Completion**: Press Tab to complete commands or cycle through options
+- **Live Suggestions**: Shows matching commands as you type
+- **Error-Safe**: Unknown commands are silently ignored
+
 ## Fog of War and Light Sources
 
 The game features a fog of war system that creates atmospheric exploration:

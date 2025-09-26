@@ -1625,6 +1625,8 @@ fn render_cheat_console_modal(f: &mut Frame, app: &mut App) {
     if let CheatConsoleState::Open {
         input,
         cursor_position,
+        autocomplete_suggestions,
+        autocomplete_index: _,
     } = &app.panels.cheat_console
     {
         // Create modal area (centered, 60% width, small height for input)
@@ -1662,8 +1664,14 @@ fn render_cheat_console_modal(f: &mut Frame, app: &mut App) {
         };
         f.render_widget(input_paragraph, input_area);
 
-        // Help text
-        let help_text = "Available commands: /tp x y z, /noclip_toggle";
+        // Help text - show autocomplete suggestions if available, otherwise show all commands
+        let help_text = if !autocomplete_suggestions.is_empty() {
+            format!("Suggestions: {}", autocomplete_suggestions.join(", "))
+        } else {
+            let registry = app::input::cheat_console::get_command_registry();
+            let commands = registry.get_command_descriptions();
+            format!("Available commands: {}", commands.join(", "))
+        };
         let help_paragraph = Paragraph::new(help_text)
             .style(Style::default().fg(Color::Gray))
             .alignment(Alignment::Center);
@@ -1677,7 +1685,7 @@ fn render_cheat_console_modal(f: &mut Frame, app: &mut App) {
         f.render_widget(help_paragraph, help_area);
 
         // Controls
-        let controls = Paragraph::new("Enter: Execute | Esc: Cancel")
+        let controls = Paragraph::new("Enter: Execute | Tab: Autocomplete | Esc: Cancel")
             .alignment(Alignment::Center)
             .style(Style::default().fg(Color::Gray));
 

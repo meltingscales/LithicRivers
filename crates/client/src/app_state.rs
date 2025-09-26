@@ -502,6 +502,8 @@ pub enum CheatConsoleState {
     Open {
         input: String,
         cursor_position: usize,
+        autocomplete_suggestions: Vec<String>,
+        autocomplete_index: Option<usize>,
     },
 }
 

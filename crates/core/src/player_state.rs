@@ -8,6 +8,7 @@ pub struct PlayerState {
     pub last_combat_end_tick: u64,
     pub combat_active: bool,
     pub noclip_enabled: bool,
+    pub fog_of_war_enabled: bool,
 }
 
 impl PlayerState {
@@ -19,6 +20,7 @@ impl PlayerState {
             last_combat_end_tick: 0,
             combat_active: false,
             noclip_enabled: false,
+            fog_of_war_enabled: true,
         }
     }
 }
