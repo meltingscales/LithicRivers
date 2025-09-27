@@ -47,6 +47,7 @@ impl DialoguePresenter {
     ) -> (String, Option<String>, Option<String>) {
         if let Some(node) = conversation
             .current_node_id
+            .as_ref()
             .and_then(|id| dialogue_tree.get_node(id))
         {
             // Convert core NPCMood to client NPCMood for display
@@ -96,6 +97,7 @@ impl DialoguePresenter {
     ) -> String {
         if let Some(node) = conversation
             .current_node_id
+            .as_ref()
             .and_then(|id| dialogue_tree.get_node(id))
         {
             // Convert core NPCMood to client NPCMood for display

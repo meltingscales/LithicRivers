@@ -317,7 +317,7 @@ pub enum NPCMood {
 pub struct Dialogue {
     pub current_mood: NPCMood,
     pub met_before: bool,
-    pub current_dialogue_id: Option<usize>,
+    pub current_dialogue_id: Option<String>,
     pub name: String,
 }
 
