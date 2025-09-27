@@ -197,7 +197,7 @@ impl DialogueDatabase {
         tree.add_node(DialogueNode {
             id: "where-are-we".to_string(),
             speaker: "Broken Android".to_string(),
-            text: "(Obviously wrong) We're in the <1>SapienCorp Factory floor in the welding section</1> <2>(notes visual sensor failure)</2> <3>(notes network connectivity failure)</3>. <4>(notes GPS sensor unable to connect to satellite.)</4> <5>(notes greatly degraded fusion core output.)</5> I've been in need of repairs for <6>999 days</6>.".to_string(),
+            text: "<1>Location... SapienCorp Factory</1>... <2>...welding section</2>. Dark because... <3>...power grid failure</3>... I think? <4>Sensors... malfunctioning</4>... cannot confirm... <5>...been here so long</5>... <6>999 days</6>? Or... was it... 9 days?".to_string(),
             text_effects: vec![TextEffect::Glitch, TextEffect::Static, TextEffect::Buzz, TextEffect::Crackle, TextEffect::PopHiss, TextEffect::Corrupt],
             mood: NPCMood::Weird,
             choices: vec![
