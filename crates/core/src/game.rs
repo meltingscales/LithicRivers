@@ -10,8 +10,6 @@ use crate::system_scheduler::SystemScheduler;
 use crate::view::{build_render_view, RenderView};
 
 use hecs::World;
-use rand::{Rng, SeedableRng};
-use rand_chacha::ChaCha20Rng;
 
 use bitflags::bitflags;
 
@@ -157,74 +155,18 @@ impl Game {
         ));
 
         // Deterministically spawn a few Logs near the player (~5 tiles away)
-        // Use a local RNG derived from the seed so we don't perturb the global RNG sequence
-        // TODO: Move this to a function inside of World class,
-        // TODO: Maybe a general one called "world.sprinkle_items_random(x,y,z,clusters,items)"
-        let mut spawn_rng = ChaCha20Rng::seed_from_u64(seed.wrapping_add(0x5eed_cafe_f00d_dead));
-        let dir8: &[(i64, i64)] = &[
-            (1, 0),
-            (0, 1),
-            (-1, 0),
-            (0, -1),
-            (1, 1),
-            (-1, 1),
-            (-1, -1),
-            (1, -1),
-        ];
-        let num_logs = 4usize;
-        for _ in 0..num_logs {
-            // Choose direction and radius ~5 +/- 1
-            let (dx, dy) = dir8[spawn_rng.gen_range(0..dir8.len())];
-            let r: i64 = 5 + spawn_rng.gen_range(-1..=1);
-            let mut tx = sx + dx * r;
-            let mut ty = sy + dy * r;
-            let tz = sz;
-
-            // If blocked or impassable, search a small neighborhood for a valid tile
-            let mut placed = false;
-            'search: for rad in 0..=2 {
-                for ox in -rad..=rad {
-                    for oy in -rad..=rad {
-                        let px = tx + ox;
-                        let py = ty + oy;
-                        let t = res.world_state.world.get_tile_cached(px, py, tz);
-                        if !t.is_passable() {
-                            continue;
-                        }
-                        // Avoid spawning on an occupied blocking entity
-                        let mut occupied = false;
-                        for (_, (_, epos)) in world.query::<(&BlocksMovement, &Position)>().iter() {
-                            if epos.x == px && epos.y == py && epos.z == tz {
-                                occupied = true;
-                                break;
-                            }
-                        }
-                        if occupied {
-                            continue;
-                        }
-                        tx = px;
-                        ty = py;
-                        placed = true;
-                        break 'search;
-                    }
-                }
-            }
-
-            if placed {
-                let _ = world.spawn((
-                    Position {
-                        x: tx,
-                        y: ty,
-                        z: tz,
-                    },
-                    DroppedItem {
-                        kind: ItemKind::Log,
-                        qty: 1,
-                    },
-                    SpriteRef::new("items", "log"),
-                ));
-            }
-        }
+        Self::sprinkle_items_random(
+            &mut world,
+            &mut res,
+            sx,
+            sy,
+            sz,
+            8, // num_logs
+            5, // radius
+            ItemKind::Log,
+            SpriteRef::new("items", "log"),
+            seed.wrapping_add(0x5eed_cafe_f00d_dead),
+        );
 
         let mut new_game = Self {
             world,
@@ -444,6 +386,90 @@ impl Game {
                 pos.z = target_z;
                 tracing::info!(target: "game", "Moved entity {:?} to ({}, {}, {})", entity, target_x, target_y, target_z);
                 break; // Only move the first entity found with this component type
+            }
+        }
+    }
+
+    /// Sprinkle items randomly around a center position
+    /// Uses deterministic seeded RNG to maintain reproducibility
+    fn sprinkle_items_random(
+        world: &mut hecs::World,
+        res: &mut Resources,
+        center_x: i64,
+        center_y: i64,
+        center_z: i64,
+        count: usize,
+        radius: i64,
+        item_kind: ItemKind,
+        sprite_ref: SpriteRef,
+        seed: u64,
+    ) {
+        use rand::{Rng, SeedableRng};
+        use rand_chacha::ChaCha20Rng;
+
+        let mut spawn_rng = ChaCha20Rng::seed_from_u64(seed);
+        let dir8: &[(i64, i64)] = &[
+            (1, 0),
+            (0, 1),
+            (-1, 0),
+            (0, -1),
+            (1, 1),
+            (-1, 1),
+            (-1, -1),
+            (1, -1),
+        ];
+
+        for _ in 0..count {
+            // Choose direction and radius with small variation
+            let (dx, dy) = dir8[spawn_rng.gen_range(0..dir8.len())];
+            let r: i64 = radius + spawn_rng.gen_range(-1..=1);
+            let mut tx = center_x + dx * r;
+            let mut ty = center_y + dy * r;
+            let tz = center_z;
+
+            // If blocked or impassable, search a small neighborhood for a valid tile
+            let mut placed = false;
+            'search: for rad in 0..=2 {
+                for ox in -rad..=rad {
+                    for oy in -rad..=rad {
+                        let px = tx + ox;
+                        let py = ty + oy;
+                        let t = res.world_state.world.get_tile_cached(px, py, tz);
+                        if !t.is_passable() {
+                            continue;
+                        }
+                        // Avoid spawning on an occupied blocking entity
+                        let mut occupied = false;
+                        for (_, (_, epos)) in world.query::<(&BlocksMovement, &Position)>().iter() {
+                            if epos.x == px && epos.y == py && epos.z == tz {
+                                occupied = true;
+                                break;
+                            }
+                        }
+                        if occupied {
+                            continue;
+                        }
+                        tx = px;
+                        ty = py;
+                        placed = true;
+                        break 'search;
+                    }
+                }
+            }
+
+            if placed {
+                let _ = world.spawn((
+                    Position {
+                        x: tx,
+                        y: ty,
+                        z: tz,
+                    },
+                    DroppedItem {
+                        kind: item_kind,
+                        qty: 1,
+                    },
+                    sprite_ref.clone(),
+                ));
             }
         }
     }
