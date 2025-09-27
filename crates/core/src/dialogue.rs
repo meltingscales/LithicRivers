@@ -47,7 +47,7 @@ impl DialogueTree {
         tree.add_node(DialogueNode {
             id: "start".to_string(),
             speaker: "Broken Android".to_string(),
-            text: "*static* Hello... *bzzt* ...user detected. I am... *crackle* ...SapienCorp maintenance unit.".to_string(),
+            text: "*static* Hello... *bzzt* ...user detected. I am... *crackle* ...SapienCorp maintenance unit. How *bzzt* can I assist you... ... ... today? \n\n (You gaze at the rusty, flickering lump of metal on the floor. You wonder how it's still running. These models were released only a few months ago. How is this one so messed up?)".to_string(),
             mood: NPCMood::Weird,
             choices: vec![
                 DialogueChoice {
