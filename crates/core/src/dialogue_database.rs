@@ -8,6 +8,8 @@ pub struct DialogueDatabase {
     trees: HashMap<String, DialogueTree>,
 }
 
+// TODO: ask ai - let's also add a TextEffect system where <Bracketed text> will have effects put into it, like random corruption. How hard would that be to do? I want to do that instead of adding random asterisk texts to our dialogue trees.
+
 impl DialogueDatabase {
     /// Create a new dialogue database and load all dialogue trees
     pub fn new() -> Self {
