@@ -2,7 +2,7 @@ use lithicrivers_core::dialogue::DialogueTree;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ConversationState {
-    pub current_node_id: Option<usize>,
+    pub current_node_id: Option<String>,
 }
 use crate::{audio, MenuTab, Scale, SplashState, SpriteLoader};
 use crossterm::event::KeyCode;
@@ -37,32 +37,12 @@ pub enum NPCMood {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct DialogueChoice {
-    pub text: String,
-    pub leads_to: Option<usize>, // Index of next dialogue node, None = end conversation
-    pub requires_item: Option<String>,
-    pub mood_change: Option<NPCMood>,
-    pub unlocks_quest: bool,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DialogueNode {
-    pub id: usize,
-    pub speaker: String,
-    pub text: String,
-    pub mood: NPCMood,
-    pub choices: Vec<DialogueChoice>,
-    pub auto_continue: bool, // If true, automatically continues without player input
-    pub shop_item: Option<String>, // If set, this node offers to sell/trade this item
-}
-
-#[derive(Debug, Clone, PartialEq)]
 pub struct NPCData {
     pub name: String,
     pub portrait: String, // ASCII art portrait
     pub dialogue_type: DialogueType,
     pub current_mood: NPCMood,
-    pub initial_dialogue: usize, // Starting dialogue node ID
+    pub initial_dialogue: String, // Starting dialogue node ID
     pub met_before: bool,
     pub has_quest: bool,
     pub shop_inventory: Vec<String>,

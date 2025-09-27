@@ -238,7 +238,7 @@ fn start_npc_dialogue(
             res.log(format!("First time meeting {}!", npc_name));
         }
 
-        dialogue.current_dialogue_id = Some(0); // Start with greeting
+        dialogue.current_dialogue_id = Some("start".to_string()); // Start with greeting
         true
     } else {
         res.log(format!("Warning: {} has no dialogue component.", npc_name));
@@ -265,12 +265,15 @@ fn simulate_dialogue_interaction(
 
     // Get current dialogue state
     let current_dialogue_id = if let Ok(dialogue) = world.get::<&Dialogue>(npc_entity) {
-        dialogue.current_dialogue_id.unwrap_or(0)
+        dialogue
+            .current_dialogue_id
+            .clone()
+            .unwrap_or("start".to_string())
     } else {
-        0
+        "start".to_string()
     };
 
-    if let Some(dialogue_node) = dialogue_tree.get_node(current_dialogue_id) {
+    if let Some(dialogue_node) = dialogue_tree.get_node(&current_dialogue_id) {
         res.log(format!(
             "{}: \"{}\"",
             dialogue_node.speaker, dialogue_node.text
@@ -351,7 +354,7 @@ fn execute_dialogue_choice(
     }
 
     // Handle shop items (trading rewards)
-    if let Some(next_dialogue_id) = choice.leads_to {
+    if let Some(ref next_dialogue_id) = choice.leads_to {
         if let Some(next_node) = dialogue_tree.get_node(next_dialogue_id) {
             if let Some(shop_item) = &next_node.shop_item {
                 // Give player the traded item
@@ -382,9 +385,9 @@ fn execute_dialogue_choice(
     }
 
     // Move to next dialogue or end conversation
-    if let Some(next_dialogue_id) = choice.leads_to {
+    if let Some(ref next_dialogue_id) = choice.leads_to {
         if let Ok(mut dialogue) = world.get::<&mut Dialogue>(npc_entity) {
-            dialogue.current_dialogue_id = Some(next_dialogue_id);
+            dialogue.current_dialogue_id = Some(next_dialogue_id.clone());
         }
         res.log("Conversation continues...".to_string());
     } else {

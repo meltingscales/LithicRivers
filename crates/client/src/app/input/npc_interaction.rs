@@ -40,9 +40,9 @@ pub fn handle_npc_interaction_input(app: &mut App, key: KeyCode) -> Result<bool,
                 let (npc_entity, npc_name) = npcs_clone[selected].clone();
                 // Start conversation using the new dialogue engine
 
-                // Start conversation at node 0 (beginning of the dialogue tree)
+                // Start conversation at the beginning of the dialogue tree
                 let conversation = crate::app_state::ConversationState {
-                    current_node_id: Some(0),
+                    current_node_id: Some("start".to_string()),
                 };
                 app.panels.npc_interaction = crate::app_state::NPCInteractionState::InDialogue {
                     npc_entity,
@@ -82,7 +82,7 @@ pub fn handle_npc_interaction_input(app: &mut App, key: KeyCode) -> Result<bool,
 
         if app.ui.keybinds.matches("movement", "MOVE_SOUTH", &key) {
             // Get the current dialogue node to check how many choices are available
-            if let Some(current_node_id) = conversation.current_node_id {
+            if let Some(ref current_node_id) = conversation.current_node_id {
                 if let Some(node) = app.panels.dialogue_tree.get_node(current_node_id) {
                     choice = (choice + 1).min(node.choices.len().saturating_sub(1));
                 }
@@ -91,15 +91,15 @@ pub fn handle_npc_interaction_input(app: &mut App, key: KeyCode) -> Result<bool,
 
         if app.ui.keybinds.matches("ui", "MENU_ACTIVATE", &key) || key == KeyCode::Enter {
             // Process the choice using the core dialogue tree
-            if let Some(current_node_id) = conversation.current_node_id {
+            if let Some(ref current_node_id) = conversation.current_node_id {
                 if let Some(node) = app.panels.dialogue_tree.get_node(current_node_id) {
                     if choice < node.choices.len() {
                         let selected_choice = &node.choices[choice];
 
-                        if let Some(next_node_id) = selected_choice.leads_to {
+                        if let Some(ref next_node_id) = selected_choice.leads_to {
                             // Continue conversation with next node
                             let new_conversation = crate::app_state::ConversationState {
-                                current_node_id: Some(next_node_id),
+                                current_node_id: Some(next_node_id.clone()),
                             };
 
                             app.panels.npc_interaction =

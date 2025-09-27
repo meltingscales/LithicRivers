@@ -149,7 +149,7 @@ impl Game {
             Dialogue {
                 current_mood: NPCMood::Happy,
                 met_before: false,
-                current_dialogue_id: Some(20), // Start with QuestTesty's dialogue tree
+                current_dialogue_id: Some("start".to_string()), // Start with tutorial broken android dialogue tree
                 name: "Broken SapienCorp Android".to_string(),
             },
         ));
