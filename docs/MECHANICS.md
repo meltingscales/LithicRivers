@@ -59,3 +59,11 @@ TODO: Populate with map description
 ## Combat
 
 TODO: Populate with combat description
+
+## Building/Breaking
+
+TODO
+
+## Crafting
+
+TODO

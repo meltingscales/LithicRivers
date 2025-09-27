@@ -11,6 +11,7 @@ pub mod menu;
 pub mod modes;
 pub mod quit;
 pub mod repair;
+pub mod tutorial;
 pub mod world;
 
 pub use body::render_body_panel;
@@ -26,4 +27,5 @@ pub use menu::render_menu_panel;
 pub use modes::render_modes_panel;
 pub use quit::render_quit_panel;
 pub use repair::render_repair_modal;
+pub use tutorial::render_tutorial_panel;
 pub use world::render_game_view;

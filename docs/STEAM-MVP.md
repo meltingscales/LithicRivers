@@ -105,6 +105,8 @@ first quest and associated dungeons
   - abandoned factory
   - abandoned research station
 
+- make it so "LOOK" mode is affected by fog of war/brightness!
+
 ## Core Gameplay Loop (Must Have)
 - [ ] Basic world generation with multiple biomes
   - [ ] At least 3 distinct biome bands with tile/feature differences
@@ -166,7 +168,9 @@ first quest and associated dungeons
 ## Polish & UX
 - [x] intro sequence
   - [x] **Boot message and intro screens (v0.7.6.2)**
-- [ ] tutorial sequence that can be accessed anytime
+- [x] tutorial sequence that can be accessed anytime
+  - [x] **Interactive Tutorial System with modal overlays, popup GUI and keybind detection**
+  - [x] **TutorialSystem class with toggleable panel (F1) and Menu integration**
 - [ ] Basic sound effects, not just music
 - [ ] Main menu with new game/load game
 - [x] Basic UI feedback for player actions
@@ -206,7 +210,10 @@ first quest and associated dungeons
    - Important for user customization
 
 6. **Tutorial sequence**
-   - Accessible anytime for new players
+   - ✅ **Interactive Tutorial System with modal overlays, popup GUI and keybind detection**
+   - ✅ **TutorialSystem class structure with folder organization in crates/client/src/tutorialsystem/**
+   - ✅ **Toggleable panel (F1 key) with Menu integration and auto-hide functionality**
+   - Accessible anytime for new players, defaults to enabled
    - Critical for Steam release onboarding
 
 ### LOWER PRIORITY (Nice to Have)
