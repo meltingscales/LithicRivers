@@ -1269,7 +1269,7 @@ fn render_npc_dialogue_modal(
     f.render_widget(block, inner);
 
     // Get current dialogue and both portraits using the new DialoguePresenter with Summon Night style
-    let (dialogue_text, npc_portrait, player_portrait) = if let NPCInteractionState::InDialogue {
+    let (dialogue_lines, npc_portrait, player_portrait) = if let NPCInteractionState::InDialogue {
         conversation,
         npc_entity,
         ..
@@ -1284,7 +1284,15 @@ fn render_npc_dialogue_modal(
             selected_choice,
         )
     } else {
-        (format!("{}: \"Hello, traveler!\"", npc_name), None, None)
+        use ratatui::text::{Line, Span};
+        (
+            vec![Line::from(Span::styled(
+                format!("{}: \"Hello, traveler!\"", npc_name),
+                Style::default().fg(Color::White),
+            ))],
+            None,
+            None,
+        )
     };
 
     // Create Summon Night-style layout: portrait on left, dialogue on right
@@ -1391,10 +1399,9 @@ fn render_npc_dialogue_modal(
             height: content_area.height,
         };
 
-        let dialogue_paragraph = Paragraph::new(dialogue_text)
+        let dialogue_paragraph = Paragraph::new(dialogue_lines)
             .alignment(Alignment::Left)
-            .wrap(Wrap { trim: true })
-            .style(Style::default().fg(Color::White));
+            .wrap(Wrap { trim: true });
         f.render_widget(dialogue_paragraph, text_area);
     }
 
