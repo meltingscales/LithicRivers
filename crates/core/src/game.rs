@@ -273,9 +273,8 @@ impl Game {
             ));
         }
 
-        //move QuestTesty to 1 square right of the player
-        // TODO how do I do this?
-        // TODO make a class method like new_game.move_entity_offset_to_entity(?, ?, ox, oy, oz)
+        //move QuestTesty relative to the player
+        new_game.move_entity_relative_to_player::<QuestTesty>(2, 0, 0);
 
         // Queue the 2nd quest structure for lazy loading
         let q2x = 200;
@@ -413,6 +412,39 @@ impl Game {
             bury_structure,
         );
         info!(target: "game", "Quest structure '{}' loaded successfully", structure_name);
+    }
+
+    /// Move an entity with a specific component type to a position relative to the player
+    pub fn move_entity_relative_to_player<T: hecs::Component>(
+        &mut self,
+        offset_x: i64,
+        offset_y: i64,
+        offset_z: i64,
+    ) {
+        // Find the player's position
+        let player_pos = self
+            .world
+            .query::<&Position>()
+            .with::<&Player>()
+            .iter()
+            .next()
+            .map(|(_, pos)| *pos);
+
+        if let Some(player_position) = player_pos {
+            // Calculate target position
+            let target_x = player_position.x + offset_x;
+            let target_y = player_position.y + offset_y;
+            let target_z = player_position.z + offset_z;
+
+            // Find and move the entity with the specified component type
+            for (entity, pos) in self.world.query::<&mut Position>().with::<&T>().iter() {
+                pos.x = target_x;
+                pos.y = target_y;
+                pos.z = target_z;
+                tracing::info!(target: "game", "Moved entity {:?} to ({}, {}, {})", entity, target_x, target_y, target_z);
+                break; // Only move the first entity found with this component type
+            }
+        }
     }
 
     pub fn queue_player_move(&mut self, dx: i64, dy: i64) {
