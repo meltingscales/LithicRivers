@@ -13,10 +13,14 @@ Please avoid running `cargo clean`. It takes a long time to rebuild rust modules
 
 Also never run `just client` or any other TUI because you might be in a terminal that cannot display properly as you're an AI agent. Instead, ask me to run `just client` or use unit testing to test code.
 
+## Demos
+
+All code prefixed with `demo_*.rs` is not meant to be part of the main codebase. These are self-contained demos that should not be impacted by main codebase changes or refactors.
+
 ## Testing
 
 Run tests with `make test` to validate game systems. Write simple unit tests for:
-- Combat mechanics (damage, death, action queues)  
+- Combat mechanics (damage, death, action queues)
 - Game logic (movement, energy, cooldowns)
 - Edge cases and bug fixes
 

@@ -371,12 +371,19 @@ fn execute_dialogue_choice(
         }
     }
 
-    // Handle mood changes
-    if let Some(new_mood) = choice.mood_change {
+    // Handle NPC mood changes
+    if let Some(new_mood) = choice.npc_mood_change {
         if let Ok(mut dialogue) = world.get::<&mut Dialogue>(npc_entity) {
             dialogue.current_mood = new_mood;
             res.log(format!("NPC mood changed to {:?}.", new_mood));
         }
+    }
+
+    // Handle player mood changes
+    if let Some(player_mood) = choice.player_mood_change {
+        // For now, just log the player mood change
+        // In the future, this could affect player portrait or dialogue options
+        res.log(format!("You feel {:?}.", player_mood));
     }
 
     // Handle quest unlocking
