@@ -1,9 +1,8 @@
-use crate::app_state::NPCMood;
-use crate::dialogue_engine::ConversationState;
-use crate::dialogue_engine::DialogueEngine;
+use crate::app_state::{ConversationState, NPCMood};
 use crate::sprite_loader::SpriteLoader;
 use hecs::{Entity, World};
 use lithicrivers_core::components::{NPCMood as CoreNPCMood, SpriteRef};
+use lithicrivers_core::dialogue::DialogueTree;
 
 /// UI presentation layer for dialogue system - handles only formatting and display
 pub struct DialoguePresenter;
@@ -42,15 +41,26 @@ impl DialoguePresenter {
         sprite_loader: &mut SpriteLoader,
         world: &World,
         npc_entity: Entity,
-        engine: &DialogueEngine,
+        dialogue_tree: &DialogueTree,
         conversation: &ConversationState,
         selected_choice: usize,
     ) -> (String, Option<String>, Option<String>) {
-        if let Some(node) = engine.get_current_node(conversation) {
+        if let Some(node) = conversation
+            .current_node_id
+            .and_then(|id| dialogue_tree.get_node(id))
+        {
+            // Convert core NPCMood to client NPCMood for display
+            let display_mood = match node.mood {
+                CoreNPCMood::Happy => NPCMood::Friendly,
+                CoreNPCMood::Sad => NPCMood::Sad,
+                CoreNPCMood::Neutral => NPCMood::Neutral,
+                CoreNPCMood::Weird => NPCMood::Mysterious,
+            };
             let npc_portrait =
-                Self::get_character_portrait(sprite_loader, world, npc_entity, node.mood);
+                Self::get_character_portrait(sprite_loader, world, npc_entity, display_mood);
             let player_portrait = Self::get_player_portrait(sprite_loader, selected_choice);
-            let dialogue_text = Self::format_dialogue_text(engine, conversation, selected_choice);
+            let dialogue_text =
+                Self::format_dialogue_text(dialogue_tree, conversation, selected_choice);
             (dialogue_text, npc_portrait, player_portrait)
         } else {
             ("No dialogue available".to_string(), None, None)
@@ -80,12 +90,22 @@ impl DialoguePresenter {
     }
     /// Format dialogue text for display in UI
     pub fn format_dialogue_text(
-        engine: &DialogueEngine,
+        dialogue_tree: &DialogueTree,
         conversation: &ConversationState,
         selected_choice: usize,
     ) -> String {
-        if let Some(node) = engine.get_current_node(conversation) {
-            let mood_prefix = Self::get_mood_prefix(node.mood);
+        if let Some(node) = conversation
+            .current_node_id
+            .and_then(|id| dialogue_tree.get_node(id))
+        {
+            // Convert core NPCMood to client NPCMood for display
+            let display_mood = match node.mood {
+                CoreNPCMood::Happy => NPCMood::Friendly,
+                CoreNPCMood::Sad => NPCMood::Sad,
+                CoreNPCMood::Neutral => NPCMood::Neutral,
+                CoreNPCMood::Weird => NPCMood::Mysterious,
+            };
+            let mood_prefix = Self::get_mood_prefix(display_mood);
             let speaker_text = format!("{}{}: \"{}\"", mood_prefix, node.speaker, node.text);
 
             let mut full_text = format!("{}\n\n", speaker_text);

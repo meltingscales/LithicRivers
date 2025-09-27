@@ -6,7 +6,6 @@ use crossterm::{
 mod app;
 mod app_state;
 mod boot_message;
-mod dialogue_engine;
 mod dialogue_presenter;
 mod ui;
 
@@ -1280,7 +1279,7 @@ fn render_npc_dialogue_modal(
             &mut app.core.sprite_loader,
             &app.core.game.world,
             *npc_entity,
-            &app.panels.dialogue_engine,
+            &app.panels.dialogue_tree,
             conversation,
             selected_choice,
         )

@@ -40,19 +40,15 @@ pub fn handle_npc_interaction_input(app: &mut App, key: KeyCode) -> Result<bool,
                 let (npc_entity, npc_name) = npcs_clone[selected].clone();
                 // Start conversation using the new dialogue engine
 
-                if let Some(conversation) = app.panels.dialogue_engine.start_conversation(0) {
-                    app.panels.npc_interaction =
-                        crate::app_state::NPCInteractionState::InDialogue {
-                            npc_entity,
-                            conversation,
-                            selected_choice: 0,
-                        };
-                } else {
-                    app.core
-                        .game
-                        .res
-                        .log("Failed to start conversation - no NPC available");
-                }
+                // Start conversation at node 0 (beginning of the dialogue tree)
+                let conversation = crate::app_state::ConversationState {
+                    current_node_id: Some(0),
+                };
+                app.panels.npc_interaction = crate::app_state::NPCInteractionState::InDialogue {
+                    npc_entity,
+                    conversation,
+                    selected_choice: 0,
+                };
                 app.core
                     .game
                     .res
@@ -86,39 +82,38 @@ pub fn handle_npc_interaction_input(app: &mut App, key: KeyCode) -> Result<bool,
 
         if app.ui.keybinds.matches("movement", "MOVE_SOUTH", &key) {
             // Get the current dialogue node to check how many choices are available
-            if let Some(node) = app.panels.dialogue_engine.get_current_node(conversation) {
-                choice = (choice + 1).min(node.choices.len().saturating_sub(1));
+            if let Some(current_node_id) = conversation.current_node_id {
+                if let Some(node) = app.panels.dialogue_tree.get_node(current_node_id) {
+                    choice = (choice + 1).min(node.choices.len().saturating_sub(1));
+                }
             }
         }
 
         if app.ui.keybinds.matches("ui", "MENU_ACTIVATE", &key) || key == KeyCode::Enter {
-            // Process the choice using the dialogue engine
-            if let Some(result) = app
-                .panels
-                .dialogue_engine
-                .process_choice(conversation, choice)
-            {
-                if result.conversation_ended {
-                    app.panels.npc_interaction = crate::app_state::NPCInteractionState::None;
-                    app.core.game.res.log("Conversation ended");
-                } else if let Some(next_node_id) = result.next_node_id {
-                    // Continue conversation with next node
-                    let mut new_conversation = conversation.clone();
-                    new_conversation.current_node_id = Some(next_node_id);
-                    new_conversation.selected_choice = 0; // Reset choice selection
+            // Process the choice using the core dialogue tree
+            if let Some(current_node_id) = conversation.current_node_id {
+                if let Some(node) = app.panels.dialogue_tree.get_node(current_node_id) {
+                    if choice < node.choices.len() {
+                        let selected_choice = &node.choices[choice];
 
-                    app.panels.npc_interaction =
-                        crate::app_state::NPCInteractionState::InDialogue {
-                            npc_entity: entity,
-                            conversation: new_conversation,
-                            selected_choice: 0,
-                        };
+                        if let Some(next_node_id) = selected_choice.leads_to {
+                            // Continue conversation with next node
+                            let new_conversation = crate::app_state::ConversationState {
+                                current_node_id: Some(next_node_id),
+                            };
 
-                    if result.unlocked_quest {
-                        app.core.game.res.log("New quest unlocked!");
-                    }
-                    if let Some(_shop_item) = result.shop_transaction {
-                        app.core.game.res.log("Shop transaction available");
+                            app.panels.npc_interaction =
+                                crate::app_state::NPCInteractionState::InDialogue {
+                                    npc_entity: entity,
+                                    conversation: new_conversation,
+                                    selected_choice: 0,
+                                };
+                        } else {
+                            // Conversation ended
+                            app.panels.npc_interaction =
+                                crate::app_state::NPCInteractionState::None;
+                            app.core.game.res.log("Conversation ended");
+                        }
                     }
                 }
             }
