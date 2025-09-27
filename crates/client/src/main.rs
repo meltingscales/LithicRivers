@@ -1327,10 +1327,27 @@ fn render_npc_dialogue_modal(
                 height: content_area.height,
             };
 
+            // Create a properly sized bordered area for the 12x8 portrait
+            // Add 2 to width and height for borders
+            let portrait_bordered_width = 14; // 12 + 2 for borders
+            let portrait_bordered_height = 10; // 8 + 2 for borders
+
+            let portrait_area = Rect {
+                x: npc_area.x + (npc_area.width.saturating_sub(portrait_bordered_width)) / 2,
+                y: npc_area.y + (npc_area.height.saturating_sub(portrait_bordered_height)) / 2,
+                width: portrait_bordered_width.min(npc_area.width),
+                height: portrait_bordered_height.min(npc_area.height),
+            };
+
             let npc_paragraph = Paragraph::new(npc_port)
-                .alignment(Alignment::Left)
-                .style(Style::default().fg(Color::Cyan));
-            f.render_widget(npc_paragraph, npc_area);
+                .alignment(Alignment::Center)
+                .style(Style::default().fg(Color::Cyan))
+                .block(
+                    Block::default()
+                        .borders(Borders::ALL)
+                        .border_style(Style::default().fg(Color::Gray)),
+                );
+            f.render_widget(npc_paragraph, portrait_area);
         }
 
         // Player portrait area (right side)
@@ -1342,10 +1359,28 @@ fn render_npc_dialogue_modal(
                 height: content_area.height,
             };
 
+            // Create a properly sized bordered area for the 12x8 portrait
+            // Add 2 to width and height for borders
+            let portrait_bordered_width = 14; // 12 + 2 for borders
+            let portrait_bordered_height = 10; // 8 + 2 for borders
+
+            let portrait_area = Rect {
+                x: player_area.x + (player_area.width.saturating_sub(portrait_bordered_width)) / 2,
+                y: player_area.y
+                    + (player_area.height.saturating_sub(portrait_bordered_height)) / 2,
+                width: portrait_bordered_width.min(player_area.width),
+                height: portrait_bordered_height.min(player_area.height),
+            };
+
             let player_paragraph = Paragraph::new(player_port)
-                .alignment(Alignment::Left)
-                .style(Style::default().fg(Color::Yellow));
-            f.render_widget(player_paragraph, player_area);
+                .alignment(Alignment::Center)
+                .style(Style::default().fg(Color::Yellow))
+                .block(
+                    Block::default()
+                        .borders(Borders::ALL)
+                        .border_style(Style::default().fg(Color::Gray)),
+                );
+            f.render_widget(player_paragraph, portrait_area);
         }
 
         // Dialogue text area (center)
