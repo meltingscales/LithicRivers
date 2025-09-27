@@ -71,6 +71,21 @@ impl DialogueTree {
                     mood_change: Some(NPCMood::Happy),
                     unlocks_quest: true,
                 },
+                DialogueChoice {
+                    text: "Where are we right now? Why is it so dark?".to_string(),
+                    leads_to: Some("where-are-we".to_string()),
+                    requires_item: None,
+                    mood_change: Some(NPCMood::Happy),
+                    unlocks_quest: true,
+                },
+                DialogueChoice {
+                    text: "Override Alpha-7: Emergency diagnostic mode. State model number and diagnostic info.".to_string(),
+                    leads_to: Some("override-model-number".to_string()),
+                    requires_item: None,
+                    mood_change: Some(NPCMood::Weird),
+                    unlocks_quest: false,
+                },
+
             ],
             auto_continue: false,
             shop_item: None,
