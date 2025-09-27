@@ -26,47 +26,68 @@ impl DialoguePresenter {
             .unwrap_or_default()
             .as_millis() as u64;
 
-        // Simple approach: parse segments one by one
-        let mut result = Vec::new();
-        let mut remaining_text = text.to_string();
+        // Find all effect segments first (without modifying the original text)
+        let mut effect_segments = Vec::new();
 
-        // Process each effect in order
         for (effect_idx, effect) in effects.iter().enumerate() {
             let open_tag = format!("<{}>", effect_idx + 1);
             let close_tag = format!("</{}>", effect_idx + 1);
 
-            if let Some(start) = remaining_text.find(&open_tag) {
-                if let Some(end_pos) = remaining_text.find(&close_tag) {
-                    // Add text before the tag
-                    if start > 0 {
-                        let before_text = remaining_text[..start].to_string();
-                        if !before_text.is_empty() {
-                            result
-                                .push(Span::styled(before_text, Style::default().fg(Color::White)));
-                        }
-                    }
+            let mut search_pos = 0;
+            while let Some(start) = text[search_pos..].find(&open_tag) {
+                let actual_start = search_pos + start;
+                if let Some(end_pos) = text[actual_start..].find(&close_tag) {
+                    let actual_end = actual_start + end_pos;
+                    let content_start = actual_start + open_tag.len();
+                    let content = text[content_start..actual_end].to_string();
 
-                    // Extract and style the effect content
-                    let content_start = start + open_tag.len();
-                    let content = remaining_text[content_start..end_pos].to_string();
-                    if !content.is_empty() {
-                        let animated_style = Self::get_animated_text_effect_style(effect, now);
-                        result.push(Span::styled(content, animated_style));
-                    }
-
-                    // Update remaining text
-                    let after_close_tag = end_pos + close_tag.len();
-                    remaining_text = remaining_text[after_close_tag..].to_string();
+                    effect_segments.push((
+                        actual_start,
+                        actual_end + close_tag.len(),
+                        content,
+                        effect.clone(),
+                    ));
+                    search_pos = actual_end + close_tag.len();
+                } else {
+                    break;
                 }
             }
         }
 
-        // Add any remaining text
-        if !remaining_text.is_empty() {
-            result.push(Span::styled(
-                remaining_text,
-                Style::default().fg(Color::White),
-            ));
+        // Sort segments by position
+        effect_segments.sort_by_key(|&(start, _, _, _)| start);
+
+        // Build spans
+        let mut result = Vec::new();
+        let mut current_pos = 0;
+
+        for (start, end, content, effect) in effect_segments {
+            // Add text before this effect
+            if current_pos < start {
+                let before_text = text[current_pos..start].to_string();
+                if !before_text.is_empty() {
+                    result.push(Span::styled(before_text, Style::default().fg(Color::White)));
+                }
+            }
+
+            // Add effect text with animation
+            if !content.is_empty() {
+                let animated_style = Self::get_animated_text_effect_style(&effect, now);
+                result.push(Span::styled(content, animated_style));
+            }
+
+            current_pos = end;
+        }
+
+        // Add remaining text
+        if current_pos < text.len() {
+            let remaining_text = text[current_pos..].to_string();
+            if !remaining_text.is_empty() {
+                result.push(Span::styled(
+                    remaining_text,
+                    Style::default().fg(Color::White),
+                ));
+            }
         }
 
         if result.is_empty() {
