@@ -3,7 +3,7 @@ use crate::{audio, boot_message, App, EmbeddedAssets, MenuTab, Scale, SplashStat
 use chrono::prelude::Local;
 use lithicrivers_core::components::Position;
 use lithicrivers_core::config::ConfigManager;
-use lithicrivers_core::dialogue::DialogueTree;
+use lithicrivers_core::dialogue_database::DialogueDatabase;
 use lithicrivers_core::game::Game;
 use lithicrivers_core::recipe_handler::{RecipeHandler, RepairRecipeHandler};
 use std::time::Instant;
@@ -146,7 +146,13 @@ impl App {
                 hotbar_assignment: HotbarAssignmentState::default(),
                 npc_interaction: NPCInteractionState::default(),
                 multi_action_select: MultiActionSelectState::default(),
-                dialogue_tree: DialogueTree::create_quest_tutorial_broken_android_tree(),
+                dialogue_tree: {
+                    let database = DialogueDatabase::new();
+                    database
+                        .get_tree("broken_android_tutorial")
+                        .expect("broken_android_tutorial dialogue tree should exist")
+                        .clone()
+                },
                 body_repair: BodyRepairState::default(),
                 cheat_console: CheatConsoleState::default(),
                 global_map: GlobalMapPanelState::default(),

@@ -258,9 +258,12 @@ fn simulate_dialogue_interaction(
     npc_entity: hecs::Entity,
     _npc_name: &str,
 ) {
-    use crate::dialogue::DialogueTree;
+    use crate::dialogue_database::DialogueDatabase;
 
-    let dialogue_tree = DialogueTree::create_quest_tutorial_broken_android_tree();
+    let database = DialogueDatabase::new();
+    let dialogue_tree = database
+        .get_tree("broken_android_tutorial")
+        .expect("broken_android_tutorial dialogue tree should exist");
     let player_entity = world.query::<&Player>().iter().next().unwrap().0;
 
     // Get current dialogue state
