@@ -7,6 +7,7 @@ mod app;
 mod app_state;
 mod boot_message;
 mod dialogue_presenter;
+mod tutorialsystem;
 mod ui;
 
 use ratatui::{
@@ -45,6 +46,7 @@ use crate::{
             render_game_view, render_global_map_panel, render_help_panel, render_hotbar_panel,
             render_inventory_list_only, render_inventory_panel, render_look_panel,
             render_menu_panel, render_modes_panel, render_quit_panel, render_repair_modal,
+            render_tutorial_panel,
         },
     },
 };
@@ -60,6 +62,7 @@ enum SplashState {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum MenuTab {
     World,
+    Tutorial,
     GlobalMap,
     Body,
     Inventory,
@@ -74,11 +77,12 @@ const BOOT_MESSAGE_TYPEWRITER_MS: u64 = 100;
 
 impl MenuTab {
     #[allow(dead_code)]
-    const COUNT: usize = 9;
+    const COUNT: usize = 10;
 
     fn next(self) -> Self {
         match self {
-            MenuTab::World => MenuTab::GlobalMap,
+            MenuTab::World => MenuTab::Tutorial,
+            MenuTab::Tutorial => MenuTab::GlobalMap,
             MenuTab::GlobalMap => MenuTab::Body,
             MenuTab::Body => MenuTab::Inventory,
             MenuTab::Inventory => MenuTab::Crafting,
@@ -93,7 +97,8 @@ impl MenuTab {
     fn prev(self) -> Self {
         match self {
             MenuTab::World => MenuTab::Quit,
-            MenuTab::GlobalMap => MenuTab::World,
+            MenuTab::Tutorial => MenuTab::World,
+            MenuTab::GlobalMap => MenuTab::Tutorial,
             MenuTab::Body => MenuTab::GlobalMap,
             MenuTab::Inventory => MenuTab::Body,
             MenuTab::Crafting => MenuTab::Inventory,
@@ -107,14 +112,15 @@ impl MenuTab {
     fn as_index(&self) -> usize {
         match self {
             MenuTab::World => 0,
-            MenuTab::GlobalMap => 1,
-            MenuTab::Body => 2,
-            MenuTab::Inventory => 3,
-            MenuTab::Crafting => 4,
-            MenuTab::Menu => 5,
-            MenuTab::Help => 6,
-            MenuTab::Credits => 7,
-            MenuTab::Quit => 8,
+            MenuTab::Tutorial => 1,
+            MenuTab::GlobalMap => 2,
+            MenuTab::Body => 3,
+            MenuTab::Inventory => 4,
+            MenuTab::Crafting => 5,
+            MenuTab::Menu => 6,
+            MenuTab::Help => 7,
+            MenuTab::Credits => 8,
+            MenuTab::Quit => 9,
         }
     }
 }
@@ -220,6 +226,13 @@ impl App {
             MenuTab::World => {
                 // World (already active view)
                 self.core.game.res.log("World map active");
+            }
+            MenuTab::Tutorial => {
+                // Tutorial
+                self.core
+                    .game
+                    .res
+                    .log("Tutorial panel active (F1 to toggle)");
             }
             MenuTab::GlobalMap => {
                 // Global Map
@@ -656,6 +669,15 @@ fn ui(f: &mut Frame, app: &mut App) {
                 render_inventory_list_only(f, app, right_chunks[1]);
             }
         }
+        MenuTab::Tutorial => {
+            // Tutorial panel on left side (30%), game view on right (70%)
+            let main_chunks = Layout::default()
+                .direction(Direction::Horizontal)
+                .constraints([Constraint::Percentage(30), Constraint::Percentage(70)])
+                .split(root_chunks[1]);
+            render_tutorial_panel(f, app, main_chunks[0]);
+            render_game_view(f, app, main_chunks[1]);
+        }
         MenuTab::GlobalMap => {
             // Global Map panel
             render_global_map_panel(f, app, root_chunks[1]);
@@ -775,6 +797,7 @@ fn render_bottom_menu(f: &mut Frame, app: &mut App, area: Rect) {
     // All tabs white; selected tab green
     let titles = vec![
         Span::raw("World"),
+        Span::raw("Tutorial"),
         Span::raw("Global Map"),
         Span::raw("Body"),
         Span::raw("Inventory"),
@@ -1107,6 +1130,14 @@ fn calculate_game_viewport_area(f: &Frame, app: &App) -> Rect {
                     .split(root_chunks[1]);
                 main_chunks[0]
             }
+        }
+        MenuTab::Tutorial => {
+            // Tutorial mode: game view is right 70%
+            let main_chunks = Layout::default()
+                .direction(Direction::Horizontal)
+                .constraints([Constraint::Percentage(30), Constraint::Percentage(70)])
+                .split(root_chunks[1]);
+            main_chunks[1]
         }
         MenuTab::GlobalMap
         | MenuTab::Crafting

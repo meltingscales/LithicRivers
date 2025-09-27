@@ -1,4 +1,5 @@
 use crate::app_state::*;
+use crate::tutorialsystem::TutorialSystem;
 use crate::{audio, boot_message, App, EmbeddedAssets, MenuTab, Scale, SplashState, SpriteLoader};
 use chrono::prelude::Local;
 use lithicrivers_core::components::Position;
@@ -118,6 +119,7 @@ impl App {
                 scale: Scale::Small,
                 bottom_menu_rect: None,
                 keybinds,
+                tutorial_system: TutorialSystem::new(),
                 view_x: initial_view_x,
                 view_y: initial_view_y,
                 view_z: initial_view_z,

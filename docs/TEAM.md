@@ -1,3 +1,3 @@
 - kaya: 15% cut, music
-- beezzaroll: 10% cut, art
 - meltingscales: 75% cut, programming
+- ???artist???: 10% cut, art

@@ -5,6 +5,7 @@ pub struct ConversationState {
     pub current_node_id: Option<String>,
     pub player_mood: NPCMood, // Track player's current mood during conversation
 }
+use crate::tutorialsystem::TutorialSystem;
 use crate::{audio, MenuTab, Scale, SplashState, SpriteLoader};
 use crossterm::event::KeyCode;
 use lithicrivers_core::components::{ItemKind, Position};
@@ -65,6 +66,8 @@ pub struct UiState {
     pub scale: Scale,
     pub bottom_menu_rect: Option<Rect>, // Remember for click handling
     pub keybinds: Keybinds,
+    #[allow(dead_code)]
+    pub tutorial_system: TutorialSystem,
     // UI-owned viewport state - what the player is currently viewing
     pub view_x: i64,
     pub view_y: i64,
