@@ -243,7 +243,7 @@ pub enum EntityKind {
     Sheep,
     FeralDog,
     Corpse,
-    QuestTesty,
+    QuestTutorialBrokenAndroid,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -299,6 +299,9 @@ pub struct Dead;
 /// Quest-giving NPC marker
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct QuestTesty;
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct QuestTutorialBrokenAndroid;
 
 /// NPC mood states for dialogue system
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

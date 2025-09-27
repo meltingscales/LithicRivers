@@ -121,7 +121,10 @@ impl SpriteLoader {
             EntityKind::Sheep => ("entities".to_string(), "sheep".to_string()),
             EntityKind::FeralDog => ("entities".to_string(), "feral_dog".to_string()),
             EntityKind::Corpse => ("entities".to_string(), "corpse".to_string()),
-            EntityKind::QuestTesty => ("entities".to_string(), "quest_testy".to_string()),
+            EntityKind::QuestTutorialBrokenAndroid => (
+                "entities".to_string(),
+                "quest_tutorial_broken_android".to_string(),
+            ),
         }
     }
     pub fn new(data_path: Option<&Path>) -> Self {

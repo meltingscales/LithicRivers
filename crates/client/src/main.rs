@@ -1270,17 +1270,23 @@ fn render_npc_dialogue_modal(
     f.render_widget(block, inner);
 
     // Get current dialogue and both portraits using the new DialoguePresenter with Summon Night style
-    let (dialogue_text, npc_portrait, player_portrait) =
-        if let NPCInteractionState::InDialogue { conversation, .. } = &app.panels.npc_interaction {
-            DialoguePresenter::format_dialogue_with_portraits(
-                &mut app.core.sprite_loader,
-                &app.panels.dialogue_engine,
-                conversation,
-                selected_choice,
-            )
-        } else {
-            (format!("{}: \"Hello, traveler!\"", npc_name), None, None)
-        };
+    let (dialogue_text, npc_portrait, player_portrait) = if let NPCInteractionState::InDialogue {
+        conversation,
+        npc_entity,
+        ..
+    } = &app.panels.npc_interaction
+    {
+        DialoguePresenter::format_dialogue_with_portraits(
+            &mut app.core.sprite_loader,
+            &app.core.game.world,
+            *npc_entity,
+            &app.panels.dialogue_engine,
+            conversation,
+            selected_choice,
+        )
+    } else {
+        (format!("{}: \"Hello, traveler!\"", npc_name), None, None)
+    };
 
     // Create Summon Night-style layout: portrait on left, dialogue on right
     if inner.height > 2 {

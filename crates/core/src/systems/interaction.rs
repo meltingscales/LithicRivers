@@ -260,7 +260,7 @@ fn simulate_dialogue_interaction(
 ) {
     use crate::dialogue::DialogueTree;
 
-    let dialogue_tree = DialogueTree::create_quest_testy_tree();
+    let dialogue_tree = DialogueTree::create_quest_tutorial_broken_android_tree();
     let player_entity = world.query::<&Player>().iter().next().unwrap().0;
 
     // Get current dialogue state
