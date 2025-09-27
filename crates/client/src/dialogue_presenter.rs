@@ -3,6 +3,8 @@ use crate::sprite_loader::SpriteLoader;
 use hecs::{Entity, World};
 use lithicrivers_core::components::{NPCMood as CoreNPCMood, SpriteRef};
 use lithicrivers_core::dialogue::DialogueTree;
+use ratatui::style::{Color, Style};
+use ratatui::text::{Line, Span};
 
 /// UI presentation layer for dialogue system - handles only formatting and display
 pub struct DialoguePresenter;
@@ -44,7 +46,7 @@ impl DialoguePresenter {
         dialogue_tree: &DialogueTree,
         conversation: &ConversationState,
         selected_choice: usize,
-    ) -> (String, Option<String>, Option<String>) {
+    ) -> (Vec<Line<'static>>, Option<String>, Option<String>) {
         if let Some(node) = conversation
             .current_node_id
             .as_ref()
@@ -60,11 +62,18 @@ impl DialoguePresenter {
             let npc_portrait =
                 Self::get_character_portrait(sprite_loader, world, npc_entity, display_mood);
             let player_portrait = Self::get_player_portrait(sprite_loader, selected_choice);
-            let dialogue_text =
-                Self::format_dialogue_text(dialogue_tree, conversation, selected_choice);
-            (dialogue_text, npc_portrait, player_portrait)
+            let dialogue_lines =
+                Self::format_dialogue_lines(dialogue_tree, conversation, selected_choice);
+            (dialogue_lines, npc_portrait, player_portrait)
         } else {
-            ("No dialogue available".to_string(), None, None)
+            (
+                vec![Line::from(Span::styled(
+                    "No dialogue available",
+                    Style::default().fg(Color::Red),
+                ))],
+                None,
+                None,
+            )
         }
     }
 
@@ -89,17 +98,20 @@ impl DialoguePresenter {
 
         sprite_loader.get_mood_portrait(&sprite_ref, player_mood)
     }
-    /// Format dialogue text for display in UI
-    pub fn format_dialogue_text(
+
+    /// Format dialogue with styled lines for colored choices
+    pub fn format_dialogue_lines(
         dialogue_tree: &DialogueTree,
         conversation: &ConversationState,
         selected_choice: usize,
-    ) -> String {
+    ) -> Vec<Line<'static>> {
         if let Some(node) = conversation
             .current_node_id
             .as_ref()
             .and_then(|id| dialogue_tree.get_node(id))
         {
+            let mut lines = Vec::new();
+
             // Convert core NPCMood to client NPCMood for display
             let display_mood = match node.mood {
                 CoreNPCMood::Happy => NPCMood::Friendly,
@@ -108,16 +120,40 @@ impl DialoguePresenter {
                 CoreNPCMood::Weird => NPCMood::Mysterious,
             };
             let mood_prefix = Self::get_mood_prefix(display_mood);
-            let speaker_text = format!("{}{}: \"{}\"", mood_prefix, node.speaker, node.text);
 
-            let mut full_text = format!("{}\n\n", speaker_text);
+            // Add speaker line with normal white color
+            let speaker_text = format!("{}{}: \"{}\"", mood_prefix, node.speaker, node.text);
+            lines.push(Line::from(Span::styled(
+                speaker_text,
+                Style::default().fg(Color::White),
+            )));
+
+            // Add empty line for spacing
+            lines.push(Line::from(""));
+
+            // Add choice lines with different colors
             for (i, choice) in node.choices.iter().enumerate() {
                 let prefix = if i == selected_choice { ">" } else { " " };
-                full_text.push_str(&format!("{} {}. {}\n", prefix, i + 1, choice.text));
+                let choice_text = format!("{} {}. {}", prefix, i + 1, choice.text);
+
+                let choice_color = if i == selected_choice {
+                    Color::Yellow // Highlighted choice
+                } else {
+                    Color::Cyan // Available choices
+                };
+
+                lines.push(Line::from(Span::styled(
+                    choice_text,
+                    Style::default().fg(choice_color),
+                )));
             }
-            full_text
+
+            lines
         } else {
-            "No dialogue available".to_string()
+            vec![Line::from(Span::styled(
+                "No dialogue available",
+                Style::default().fg(Color::Red),
+            ))]
         }
     }
 
