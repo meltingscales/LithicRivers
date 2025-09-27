@@ -288,18 +288,14 @@ pub fn execute_interaction_action(app: &mut App, action: &crate::app_state::Inte
             entity, npc_name, ..
         } => {
             // Start NPC dialogue directly
-            if let Some(conversation) = app.panels.dialogue_engine.start_conversation(0) {
-                app.panels.npc_interaction = NPCInteractionState::InDialogue {
-                    npc_entity: *entity,
-                    conversation,
-                    selected_choice: 0,
-                };
-            } else {
-                app.core
-                    .game
-                    .res
-                    .log("Failed to start conversation - no NPC available");
-            }
+            let conversation = crate::app_state::ConversationState {
+                current_node_id: Some(0),
+            };
+            app.panels.npc_interaction = NPCInteractionState::InDialogue {
+                npc_entity: *entity,
+                conversation,
+                selected_choice: 0,
+            };
             app.core
                 .game
                 .res

@@ -1,4 +1,9 @@
-use crate::dialogue_engine::{ConversationState, DialogueEngine};
+use lithicrivers_core::dialogue::DialogueTree;
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ConversationState {
+    pub current_node_id: Option<usize>,
+}
 use crate::{audio, MenuTab, Scale, SplashState, SpriteLoader};
 use crossterm::event::KeyCode;
 use lithicrivers_core::components::{ItemKind, Position};
@@ -21,6 +26,7 @@ pub enum DialogueType {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[allow(dead_code)]
 pub enum NPCMood {
     Friendly,
     Neutral,
@@ -131,7 +137,7 @@ pub struct PanelStates {
     pub hotbar_assignment: HotbarAssignmentState,
     pub npc_interaction: NPCInteractionState,
     pub multi_action_select: MultiActionSelectState,
-    pub dialogue_engine: DialogueEngine,
+    pub dialogue_tree: DialogueTree,
     #[allow(dead_code)]
     pub body_repair: BodyRepairState,
     pub cheat_console: CheatConsoleState,
