@@ -1,5 +1,5 @@
 use crate::components::NPCMood;
-use crate::dialogue::{DialogueChoice, DialogueNode, DialogueTree};
+use crate::dialogue::{DialogueChoice, DialogueNode, DialogueTree, TextEffect};
 use std::collections::HashMap;
 
 /// Central database for all dialogue trees in the game
@@ -7,8 +7,6 @@ use std::collections::HashMap;
 pub struct DialogueDatabase {
     trees: HashMap<String, DialogueTree>,
 }
-
-// TODO: ask ai - let's also add a TextEffect system where <Bracketed text> will have effects put into it, like random corruption. How hard would that be to do? I want to do that instead of adding random asterisk texts to our dialogue trees.
 
 impl DialogueDatabase {
     /// Create a new dialogue database and load all dialogue trees
@@ -54,7 +52,8 @@ impl DialogueDatabase {
         tree.add_node(DialogueNode {
             id: "start".to_string(),
             speaker: "Broken Android".to_string(),
-            text: "*static* Hello... *bzzt* ...user detected. I am... *crackle* ...SapienCorp maintenance unit. My work task *pop-hiss* is ... welding ... today. How *bzzt* can I assist you... ... ... today? \n\n (You gaze at the rusty, flickering lump of metal on the floor. You wonder how it's still running. These construction and maintenance models were released only a few months ago. How is this one so messed up?)".to_string(),
+            text: "<1>Hello</1>... <2>...user detected</2>. I am... <3>...SapienCorp maintenance unit</3>. My work task <4>is ... welding ... today</4>. How <2>can I assist you</2>... ... ... today? \n\n (You gaze at the rusty, flickering lump of metal on the floor. You wonder how it's still running. These construction and maintenance models were released only a few months ago. How is this one so messed up?)".to_string(),
+            text_effects: vec![TextEffect::Static, TextEffect::Buzz, TextEffect::Crackle, TextEffect::PopHiss],
             mood: NPCMood::Weird,
             choices: vec![
                 DialogueChoice {
@@ -106,7 +105,8 @@ impl DialogueDatabase {
         tree.add_node(DialogueNode {
             id: "are-you-alright".to_string(),
             speaker: "Broken Android".to_string(),
-            text: "*static* Systems... failing. Memory core... *bzzt* ...damaged. Cannot return to... *crackle* ...base.".to_string(),
+            text: "<1>Systems... failing</1>. Memory core... <2>...damaged</2>. Cannot return to... <3>...base</3>.".to_string(),
+            text_effects: vec![TextEffect::Static, TextEffect::Buzz, TextEffect::Crackle],
             mood: NPCMood::Sad,
             choices: vec![
                 DialogueChoice {
@@ -134,7 +134,8 @@ impl DialogueDatabase {
         tree.add_node(DialogueNode {
             id: "what-happened".to_string(),
             speaker: "Broken Android".to_string(),
-            text: "*bzzt* Facility... explosion. Lost contact with... *static* ...SapienCorp. Been here... days? Weeks? *crackle*".to_string(),
+            text: "<1>Facility... explosion</1>. Lost contact with... <2>...SapienCorp</2>. Been here... days? Weeks? <3>*transmission degrades*</3>".to_string(),
+            text_effects: vec![TextEffect::Buzz, TextEffect::Static, TextEffect::Crackle],
             mood: NPCMood::Sad,
             choices: vec![
                 DialogueChoice {
@@ -154,7 +155,8 @@ impl DialogueDatabase {
         tree.add_node(DialogueNode {
             id: "can-i-help".to_string(),
             speaker: "Broken Android".to_string(),
-            text: "*static* You would... help? Need spare parts... *bzzt* ...to repair primary systems. Basic components scattered around facility.".to_string(),
+            text: "<1>You would... help?</1> Need spare parts... <2>...to repair primary systems</2>. Basic components scattered around facility.".to_string(),
+            text_effects: vec![TextEffect::Static, TextEffect::Buzz],
             mood: NPCMood::Happy,
             choices: vec![
                 DialogueChoice {
@@ -174,7 +176,8 @@ impl DialogueDatabase {
         tree.add_node(DialogueNode {
             id: "what-do-you-need".to_string(),
             speaker: "Broken Android".to_string(),
-            text: "*crackle* Simple components... *bzzt* ...wood for structural repair. Find some... wood pieces. Will... try to... *static* ...stay online.".to_string(),
+            text: "<1>Simple components</1>... <2>...wood for structural repair</2>. Find some... wood pieces. Will... try to... <3>...stay online</3>.".to_string(),
+            text_effects: vec![TextEffect::Crackle, TextEffect::Buzz, TextEffect::Static],
             mood: NPCMood::Neutral,
             choices: vec![
                 DialogueChoice {
@@ -194,7 +197,8 @@ impl DialogueDatabase {
         tree.add_node(DialogueNode {
             id: "where-are-we".to_string(),
             speaker: "Broken Android".to_string(),
-            text: "(Obviously wrong) We're in the SapienCorp Factory floor in the welding section (notes visual sensor failure) (notes network connectivity failure). (notes GPS sensor unable to connect to satellite.) (notes greatly degraded fusion core output.) I've been in need of repairs for 999 days.".to_string(),
+            text: "(Obviously wrong) We're in the <1>SapienCorp Factory floor in the welding section</1> <2>(notes visual sensor failure)</2> <3>(notes network connectivity failure)</3>. <4>(notes GPS sensor unable to connect to satellite.)</4> <5>(notes greatly degraded fusion core output.)</5> I've been in need of repairs for <6>999 days</6>.".to_string(),
+            text_effects: vec![TextEffect::Glitch, TextEffect::Static, TextEffect::Buzz, TextEffect::Crackle, TextEffect::PopHiss, TextEffect::Corrupt],
             mood: NPCMood::Weird,
             choices: vec![
                 DialogueChoice {
@@ -214,35 +218,8 @@ impl DialogueDatabase {
         tree.add_node(DialogueNode {
             id: "override-model-number".to_string(),
             speaker: "Broken Android".to_string(),
-            text: "*bzzt* Override accepted... *static* ...Model SC-M4X7... Maintenance unit... *crackle* ...Primary systems: 15% operational... Secondary systems: offline... *pop* ...Critical errors in navigation, visual processing, memory core... *bzzt*".to_string(),
-            mood: NPCMood::Weird,
-            choices: vec![
-                DialogueChoice {
-                    text: "Understood. Can you be repaired?".to_string(),
-                    leads_to: Some("can-i-help".to_string()),
-                    requires_item: None,
-                    npc_mood_change: Some(NPCMood::Neutral),
-                    player_mood_change: Some(NPCMood::Neutral),
-                    unlocks_quest: true,
-                },
-                DialogueChoice {
-                    text: "Thank you for the diagnostic. Return to standard mode.".to_string(),
-                    leads_to: Some("start".to_string()),
-                    requires_item: None,
-                    npc_mood_change: Some(NPCMood::Neutral),
-                    player_mood_change: Some(NPCMood::Neutral),
-                    unlocks_quest: false,
-                },
-            ],
-            auto_continue: false,
-            shop_item: None,
-        });
-
-        // Response to override command
-        tree.add_node(DialogueNode {
-            id: "override-model-number".to_string(),
-            speaker: "Broken Android".to_string(),
-            text: "*bzzt* Override accepted... *static* ...Model SC-M4X7... Maintenance unit... *crackle* ...Primary systems: 15% operational... Secondary systems: offline... *pop* ...Critical errors in navigation, visual processing, memory core... *bzzt*".to_string(),
+            text: "<1>Override accepted</1>... <2>...Model SC-M4X7</2>... Maintenance unit... <3>...Primary systems: 15% operational</3>... Secondary systems: offline... <4>...Critical errors in navigation, visual processing, memory core</4>...".to_string(),
+            text_effects: vec![TextEffect::Buzz, TextEffect::Static, TextEffect::Crackle, TextEffect::Buzz],
             mood: NPCMood::Weird,
             choices: vec![
                 DialogueChoice {

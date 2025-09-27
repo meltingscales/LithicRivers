@@ -2,14 +2,150 @@ use crate::app_state::{ConversationState, NPCMood};
 use crate::sprite_loader::SpriteLoader;
 use hecs::{Entity, World};
 use lithicrivers_core::components::{NPCMood as CoreNPCMood, SpriteRef};
-use lithicrivers_core::dialogue::DialogueTree;
+use lithicrivers_core::dialogue::{DialogueTree, TextEffect};
 use ratatui::style::{Color, Style};
 use ratatui::text::{Line, Span};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 /// UI presentation layer for dialogue system - handles only formatting and display
 pub struct DialoguePresenter;
 
 impl DialoguePresenter {
+    /// Render text with TextEffect visual styling and animations
+    fn render_text_with_effects(text: &str, effects: &[TextEffect]) -> Vec<Span<'static>> {
+        if effects.is_empty() {
+            return vec![Span::styled(
+                text.to_string(),
+                Style::default().fg(Color::White),
+            )];
+        }
+
+        // Get current time for animations
+        let now = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_millis() as u64;
+
+        // Simple approach: parse segments one by one
+        let mut result = Vec::new();
+        let mut remaining_text = text.to_string();
+
+        // Process each effect in order
+        for (effect_idx, effect) in effects.iter().enumerate() {
+            let open_tag = format!("<{}>", effect_idx + 1);
+            let close_tag = format!("</{}>", effect_idx + 1);
+
+            if let Some(start) = remaining_text.find(&open_tag) {
+                if let Some(end_pos) = remaining_text.find(&close_tag) {
+                    // Add text before the tag
+                    if start > 0 {
+                        let before_text = remaining_text[..start].to_string();
+                        if !before_text.is_empty() {
+                            result
+                                .push(Span::styled(before_text, Style::default().fg(Color::White)));
+                        }
+                    }
+
+                    // Extract and style the effect content
+                    let content_start = start + open_tag.len();
+                    let content = remaining_text[content_start..end_pos].to_string();
+                    if !content.is_empty() {
+                        let animated_style = Self::get_animated_text_effect_style(effect, now);
+                        result.push(Span::styled(content, animated_style));
+                    }
+
+                    // Update remaining text
+                    let after_close_tag = end_pos + close_tag.len();
+                    remaining_text = remaining_text[after_close_tag..].to_string();
+                }
+            }
+        }
+
+        // Add any remaining text
+        if !remaining_text.is_empty() {
+            result.push(Span::styled(
+                remaining_text,
+                Style::default().fg(Color::White),
+            ));
+        }
+
+        if result.is_empty() {
+            vec![Span::styled(
+                text.to_string(),
+                Style::default().fg(Color::White),
+            )]
+        } else {
+            result
+        }
+    }
+
+    /// Get animated visual style for a specific TextEffect
+    fn get_animated_text_effect_style(effect: &TextEffect, time_ms: u64) -> Style {
+        match effect {
+            TextEffect::Static => {
+                // Flicker between light blue and blue
+                let cycle = (time_ms / 200) % 2;
+                if cycle == 0 {
+                    Style::default().fg(Color::LightBlue)
+                } else {
+                    Style::default().fg(Color::Blue)
+                }
+            }
+            TextEffect::Glitch => {
+                // Rapid color cycling
+                let colors = [Color::Magenta, Color::Red, Color::Cyan, Color::Yellow];
+                let index = (time_ms / 100) % 4;
+                Style::default().fg(colors[index as usize])
+            }
+            TextEffect::Corrupt => {
+                // Pulsing red intensity
+                let cycle = (time_ms / 300) % 3;
+                match cycle {
+                    0 => Style::default().fg(Color::Red),
+                    1 => Style::default().fg(Color::LightRed),
+                    _ => Style::default().fg(Color::DarkGray),
+                }
+            }
+            TextEffect::Fade => {
+                // Fade in and out
+                let cycle = (time_ms / 500) % 2;
+                if cycle == 0 {
+                    Style::default().fg(Color::DarkGray)
+                } else {
+                    Style::default().fg(Color::Gray)
+                }
+            }
+            TextEffect::Buzz => {
+                // Fast yellow flicker
+                let cycle = (time_ms / 150) % 2;
+                if cycle == 0 {
+                    Style::default().fg(Color::Yellow)
+                } else {
+                    Style::default().fg(Color::LightYellow)
+                }
+            }
+            TextEffect::Crackle => {
+                // Cyan with occasional white flashes
+                let cycle = (time_ms / 250) % 5;
+                if cycle == 4 {
+                    Style::default().fg(Color::White)
+                } else {
+                    Style::default().fg(Color::Cyan)
+                }
+            }
+            TextEffect::PopHiss => {
+                // Quick red flashes
+                let cycle = (time_ms / 100) % 4;
+                match cycle {
+                    0 => Style::default().fg(Color::LightRed),
+                    1 => Style::default().fg(Color::Red),
+                    2 => Style::default().fg(Color::LightRed),
+                    _ => Style::default().fg(Color::White),
+                }
+            }
+        }
+    }
+
     /// Convert dialogue mood to core NPC mood for sprite loader
     fn dialogue_mood_to_core_mood(mood: NPCMood) -> CoreNPCMood {
         match mood {
@@ -114,12 +250,24 @@ impl DialoguePresenter {
             };
             let mood_prefix = Self::get_mood_prefix(display_mood);
 
-            // Add speaker line with normal white color
-            let speaker_text = format!("{}{}: \"{}\"", mood_prefix, node.speaker, node.text);
-            lines.push(Line::from(Span::styled(
-                speaker_text,
+            // Add speaker line with text effects
+            let speaker_prefix = format!("{}{}: \"", mood_prefix, node.speaker);
+            let quote_suffix = "\"";
+
+            let mut speaker_spans = vec![Span::styled(
+                speaker_prefix,
                 Style::default().fg(Color::White),
-            )));
+            )];
+            speaker_spans.extend(Self::render_text_with_effects(
+                &node.text,
+                &node.text_effects,
+            ));
+            speaker_spans.push(Span::styled(
+                quote_suffix,
+                Style::default().fg(Color::White),
+            ));
+
+            lines.push(Line::from(speaker_spans));
 
             // Add empty line for spacing
             lines.push(Line::from(""));
