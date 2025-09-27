@@ -48,7 +48,7 @@ impl DialogueTree {
         tree.add_node(DialogueNode {
             id: "start".to_string(),
             speaker: "Broken Android".to_string(),
-            text: "*static* Hello... *bzzt* ...user detected. I am... *crackle* ...SapienCorp maintenance unit. How *bzzt* can I assist you... ... ... today? \n\n (You gaze at the rusty, flickering lump of metal on the floor. You wonder how it's still running. These construction and maintenance models were released only a few months ago. How is this one so messed up?)".to_string(),
+            text: "*static* Hello... *bzzt* ...user detected. I am... *crackle* ...SapienCorp maintenance unit. My work task *pop-hiss* is ... welding ... today. How *bzzt* can I assist you... ... ... today? \n\n (You gaze at the rusty, flickering lump of metal on the floor. You wonder how it's still running. These construction and maintenance models were released only a few months ago. How is this one so messed up?)".to_string(),
             mood: NPCMood::Weird,
             choices: vec![
                 DialogueChoice {
@@ -185,7 +185,27 @@ impl DialogueTree {
             shop_item: None,
         });
 
-        tree
+        // response to "Where are we?"
+        tree.add_node(DialogueNode{
+            id: "where-are-we".to_string(),
+            speaker: "Broken Android".to_string(),
+            text: "(Obviously wrong) We're in the SapienCorp Factory floor in the welding section (notes visual sensor failure) (notes network connectivity failure). (notes GPS sensor unable to connect to satellite.) (notes greatly degraded fusion core output.) I've been in need of repairs for 999 days. ".to_string(),
+            mood: NPCMood::Weird,
+            choices: vec![
+                DialogueChoice{
+                text: "... [say nothing] (This guy's clearly got a few screws loose...)".to_string(),
+                leads_to: Some("start".to_string()),
+                requires_item:None,
+                npc_mood_change: Some(NPCMood::Neutral),
+                player_mood_change: Some(NPCMood::Neutral),
+                unlocks_quest:false,
+                }
+            ],
+            auto_continue: false,
+            shop_item: None,
+        });
+
+        return tree;
     }
 }
 
