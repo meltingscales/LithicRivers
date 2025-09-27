@@ -70,10 +70,11 @@ impl DialoguePresenter {
                 }
             }
 
-            // Add effect text with animation
+            // Add effect text with animation and corruption
             if !content.is_empty() {
+                let corrupted_text = Self::apply_text_corruption(&content, &effect, now);
                 let animated_style = Self::get_animated_text_effect_style(&effect, now);
-                result.push(Span::styled(content, animated_style));
+                result.push(Span::styled(corrupted_text, animated_style));
             }
 
             current_pos = end;
@@ -164,6 +165,70 @@ impl DialoguePresenter {
                     _ => Style::default().fg(Color::White),
                 }
             }
+        }
+    }
+
+    /// Apply text corruption effects for Glitch and Corrupt
+    fn apply_text_corruption(text: &str, effect: &TextEffect, time_ms: u64) -> String {
+        match effect {
+            TextEffect::Glitch => {
+                // Minecraft-style mystical glyphs
+                let glitch_chars = [
+                    'ᚴ', 'ᛖ', 'ᚱ', 'ᛈ', 'ᚲ', 'ᛚ', 'ᚢ', 'ᛏ', 'ᛒ', 'ᚦ', 'ᚠ', 'ᚨ', 'ᚱ', 'ᚲ', 'ᚷ', 'ᚹ',
+                    'ᚺ', 'ᚾ', 'ᛁ', 'ᛃ', 'ᛇ', 'ᛈ', 'ᛉ', 'ᛊ', 'ᛏ', 'ᛒ', 'ᛖ', 'ᛗ', 'ᛚ', 'ᛜ', 'ᛟ', 'ᛞ',
+                ];
+                let mut result = String::new();
+                let corruption_rate = 0.4; // 40% of characters get corrupted
+
+                for (i, ch) in text.char_indices() {
+                    // Use position and time for deterministic randomness
+                    let seed = (time_ms / 200) + (i as u64) * 17;
+                    let random_val = (seed * 1103515245 + 12345) % 100;
+
+                    if ch.is_whitespace() || ch.is_ascii_punctuation() {
+                        result.push(ch); // Keep spaces and punctuation
+                    } else if (random_val as f64 / 100.0) < corruption_rate {
+                        let glyph_index = (seed * 7) % (glitch_chars.len() as u64);
+                        result.push(glitch_chars[glyph_index as usize]);
+                    } else {
+                        result.push(ch);
+                    }
+                }
+                result
+            }
+            TextEffect::Corrupt => {
+                // Random static/noise characters
+                let static_chars = [
+                    '█', '▓', '▒', '░', '▄', '▀', '■', '□', '▪', '▫', '●', '○', '◆', '◇', '★', '☆',
+                    '#', '@', '%', '&', '*', '+', '=', '~', '^',
+                ];
+                let noise_chars = ['a', 'e', 'i', 'o', 'u', 'x', 'z', '0', '1', '2', '7', '9'];
+                let mut result = String::new();
+                let corruption_rate = 0.6; // 60% of characters get corrupted (more aggressive)
+
+                for (i, ch) in text.char_indices() {
+                    let seed = (time_ms / 150) + (i as u64) * 23;
+                    let random_val = (seed * 1103515245 + 12345) % 100;
+
+                    if ch.is_whitespace() || ch.is_ascii_punctuation() {
+                        result.push(ch); // Keep spaces and punctuation
+                    } else if (random_val as f64 / 100.0) < corruption_rate {
+                        // Mix of static blocks and noise characters
+                        let use_static = (seed * 3) % 2 == 0;
+                        if use_static {
+                            let static_index = (seed * 11) % (static_chars.len() as u64);
+                            result.push(static_chars[static_index as usize]);
+                        } else {
+                            let noise_index = (seed * 13) % (noise_chars.len() as u64);
+                            result.push(noise_chars[noise_index as usize]);
+                        }
+                    } else {
+                        result.push(ch);
+                    }
+                }
+                result
+            }
+            _ => text.to_string(), // No corruption for other effects
         }
     }
 
