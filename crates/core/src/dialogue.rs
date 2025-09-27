@@ -6,7 +6,8 @@ pub struct DialogueChoice {
     pub text: String,
     pub leads_to: Option<String>, // ID of next dialogue node, None = end conversation
     pub requires_item: Option<String>,
-    pub mood_change: Option<NPCMood>,
+    pub npc_mood_change: Option<NPCMood>, //Does this choice change NPC mood?
+    pub player_mood_change: Option<NPCMood>, //Does this choice change player mood?
     pub unlocks_quest: bool,
 }
 
@@ -47,42 +48,47 @@ impl DialogueTree {
         tree.add_node(DialogueNode {
             id: "start".to_string(),
             speaker: "Broken Android".to_string(),
-            text: "*static* Hello... *bzzt* ...user detected. I am... *crackle* ...SapienCorp maintenance unit. How *bzzt* can I assist you... ... ... today? \n\n (You gaze at the rusty, flickering lump of metal on the floor. You wonder how it's still running. These models were released only a few months ago. How is this one so messed up?)".to_string(),
+            text: "*static* Hello... *bzzt* ...user detected. I am... *crackle* ...SapienCorp maintenance unit. How *bzzt* can I assist you... ... ... today? \n\n (You gaze at the rusty, flickering lump of metal on the floor. You wonder how it's still running. These construction and maintenance models were released only a few months ago. How is this one so messed up?)".to_string(),
             mood: NPCMood::Weird,
             choices: vec![
                 DialogueChoice {
                     text: "Are you alright?".to_string(),
                     leads_to: Some("are-you-alright".to_string()),
                     requires_item: None,
-                    mood_change: None,
+                    npc_mood_change: None,
+                    player_mood_change: Some(NPCMood::Neutral), // Player shows concern
                     unlocks_quest: false,
                 },
                 DialogueChoice {
                     text: "What happened to you?".to_string(),
                     leads_to: Some("what-happened".to_string()),
                     requires_item: None,
-                    mood_change: None,
+                    npc_mood_change: None,
+                    player_mood_change: Some(NPCMood::Weird), // Player is curious
                     unlocks_quest: false,
                 },
                 DialogueChoice {
                     text: "Can I help?".to_string(),
                     leads_to: Some("can-i-help".to_string()),
                     requires_item: None,
-                    mood_change: Some(NPCMood::Happy),
+                    npc_mood_change: Some(NPCMood::Happy),
+                    player_mood_change: Some(NPCMood::Happy), // Player feels helpful/compassionate
                     unlocks_quest: true,
                 },
                 DialogueChoice {
                     text: "Where are we right now? Why is it so dark?".to_string(),
                     leads_to: Some("where-are-we".to_string()),
                     requires_item: None,
-                    mood_change: Some(NPCMood::Happy),
-                    unlocks_quest: true,
+                    npc_mood_change: Some(NPCMood::Happy),
+                    player_mood_change: Some(NPCMood::Neutral), // Player is confused/seeking info
+                    unlocks_quest: false,
                 },
                 DialogueChoice {
                     text: "Override Alpha-7: Emergency diagnostic mode. State model number and diagnostic info.".to_string(),
                     leads_to: Some("override-model-number".to_string()),
                     requires_item: None,
-                    mood_change: Some(NPCMood::Weird),
+                    npc_mood_change: Some(NPCMood::Weird),
+                    player_mood_change: Some(NPCMood::Weird), // Player is being technical/commanding
                     unlocks_quest: false,
                 },
 
@@ -102,14 +108,16 @@ impl DialogueTree {
                     text: "Maybe I can help repair you.".to_string(),
                     leads_to: Some("can-i-help".to_string()),
                     requires_item: None,
-                    mood_change: Some(NPCMood::Happy),
+                    npc_mood_change: Some(NPCMood::Happy),
+                    player_mood_change: Some(NPCMood::Happy),
                     unlocks_quest: true,
                 },
                 DialogueChoice {
                     text: "I'm sorry, I have to go.".to_string(),
                     leads_to: None,
                     requires_item: None,
-                    mood_change: Some(NPCMood::Sad),
+                    npc_mood_change: Some(NPCMood::Sad),
+                    player_mood_change: Some(NPCMood::Sad),
                     unlocks_quest: false,
                 },
             ],
@@ -128,7 +136,8 @@ impl DialogueTree {
                     text: "I'll help you get back online.".to_string(),
                     leads_to: Some("can-i-help".to_string()),
                     requires_item: None,
-                    mood_change: Some(NPCMood::Happy),
+                    npc_mood_change: Some(NPCMood::Happy),
+                    player_mood_change: Some(NPCMood::Happy),
                     unlocks_quest: true,
                 },
             ],
@@ -147,7 +156,8 @@ impl DialogueTree {
                     text: "What do you need?".to_string(),
                     leads_to: Some("what-do-you-need".to_string()),
                     requires_item: None,
-                    mood_change: None,
+                    npc_mood_change: None,
+                    player_mood_change: None,
                     unlocks_quest: true,
                 },
             ],
@@ -166,7 +176,8 @@ impl DialogueTree {
                     text: "I'll find some wood for you.".to_string(),
                     leads_to: None,
                     requires_item: None,
-                    mood_change: Some(NPCMood::Happy),
+                    npc_mood_change: Some(NPCMood::Happy),
+                    player_mood_change: Some(NPCMood::Happy),
                     unlocks_quest: true,
                 },
             ],

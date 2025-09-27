@@ -43,6 +43,7 @@ pub fn handle_npc_interaction_input(app: &mut App, key: KeyCode) -> Result<bool,
                 // Start conversation at the beginning of the dialogue tree
                 let conversation = crate::app_state::ConversationState {
                     current_node_id: Some("start".to_string()),
+                    player_mood: crate::app_state::NPCMood::Neutral,
                 };
                 app.panels.npc_interaction = crate::app_state::NPCInteractionState::InDialogue {
                     npc_entity,
@@ -96,10 +97,33 @@ pub fn handle_npc_interaction_input(app: &mut App, key: KeyCode) -> Result<bool,
                     if choice < node.choices.len() {
                         let selected_choice = &node.choices[choice];
 
+                        // Handle player mood change from dialogue choice
+                        let new_player_mood =
+                            if let Some(choice_mood_change) = selected_choice.player_mood_change {
+                                // Convert core NPCMood to client NPCMood
+                                match choice_mood_change {
+                                    lithicrivers_core::components::NPCMood::Happy => {
+                                        crate::app_state::NPCMood::Friendly
+                                    }
+                                    lithicrivers_core::components::NPCMood::Sad => {
+                                        crate::app_state::NPCMood::Sad
+                                    }
+                                    lithicrivers_core::components::NPCMood::Neutral => {
+                                        crate::app_state::NPCMood::Neutral
+                                    }
+                                    lithicrivers_core::components::NPCMood::Weird => {
+                                        crate::app_state::NPCMood::Mysterious
+                                    }
+                                }
+                            } else {
+                                conversation.player_mood // Keep current mood if no change
+                            };
+
                         if let Some(ref next_node_id) = selected_choice.leads_to {
                             // Continue conversation with next node
                             let new_conversation = crate::app_state::ConversationState {
                                 current_node_id: Some(next_node_id.clone()),
+                                player_mood: new_player_mood,
                             };
 
                             app.panels.npc_interaction =
@@ -109,7 +133,14 @@ pub fn handle_npc_interaction_input(app: &mut App, key: KeyCode) -> Result<bool,
                                     selected_choice: 0,
                                 };
                         } else {
-                            // Conversation ended
+                            // Conversation ended - log the player's final mood if it changed
+                            if let Some(_) = selected_choice.player_mood_change {
+                                app.core
+                                    .game
+                                    .res
+                                    .log(format!("You feel {:?}.", new_player_mood));
+                            }
+
                             app.panels.npc_interaction =
                                 crate::app_state::NPCInteractionState::None;
                             app.core.game.res.log("Conversation ended");

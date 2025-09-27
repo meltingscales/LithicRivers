@@ -61,7 +61,7 @@ impl DialoguePresenter {
             };
             let npc_portrait =
                 Self::get_character_portrait(sprite_loader, world, npc_entity, display_mood);
-            let player_portrait = Self::get_player_portrait(sprite_loader, selected_choice);
+            let player_portrait = Self::get_player_portrait(sprite_loader, conversation);
             let dialogue_lines =
                 Self::format_dialogue_lines(dialogue_tree, conversation, selected_choice);
             (dialogue_lines, npc_portrait, player_portrait)
@@ -80,23 +80,16 @@ impl DialoguePresenter {
     /// Get player portrait based on current dialogue context (player mood/response)
     pub fn get_player_portrait(
         sprite_loader: &mut SpriteLoader,
-        selected_choice: usize,
+        conversation: &ConversationState,
     ) -> Option<String> {
         let sprite_ref = SpriteRef {
             category: "entities".to_string(),
             name: "player".to_string(),
         };
 
-        // Map player choice index to mood - this simulates player emotional response
-        let player_mood = match selected_choice % 4 {
-            0 => CoreNPCMood::Happy,   // First choice - confident/positive
-            1 => CoreNPCMood::Neutral, // Second choice - neutral/thoughtful
-            2 => CoreNPCMood::Sad,     // Third choice - cautious/worried
-            3 => CoreNPCMood::Weird,   // Fourth choice - suspicious/confused
-            _ => CoreNPCMood::Neutral,
-        };
-
-        sprite_loader.get_mood_portrait(&sprite_ref, player_mood)
+        // Use the player's current mood from conversation state
+        let core_mood = Self::dialogue_mood_to_core_mood(conversation.player_mood);
+        sprite_loader.get_mood_portrait(&sprite_ref, core_mood)
     }
 
     /// Format dialogue with styled lines for colored choices

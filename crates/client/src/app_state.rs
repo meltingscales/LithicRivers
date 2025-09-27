@@ -3,6 +3,7 @@ use lithicrivers_core::dialogue::DialogueTree;
 #[derive(Debug, Clone, PartialEq)]
 pub struct ConversationState {
     pub current_node_id: Option<String>,
+    pub player_mood: NPCMood, // Track player's current mood during conversation
 }
 use crate::{audio, MenuTab, Scale, SplashState, SpriteLoader};
 use crossterm::event::KeyCode;
