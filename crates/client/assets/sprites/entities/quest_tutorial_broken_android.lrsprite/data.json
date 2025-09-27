@@ -1,0 +1,6 @@
+{
+  "name": "Quest Testy",
+  "color": "#00FFFF",
+  "description": "A broken SapienCorp android. It's covered in rust.",
+  "has_emotion_states": true
+}

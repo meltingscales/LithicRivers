@@ -1,7 +1,7 @@
 use crate::components::{
     BlocksMovement, Combat, Dialogue, DroppedItem, Energy, EntityKind, FeralDog, FogOfWar,
     GameEntity, Glyph, Health, Inventory, ItemKind, LightSource, NPCMood, Player, Position,
-    QuestTesty, Sheep, SpriteRef,
+    QuestTutorialBrokenAndroid, Sheep, SpriteRef,
 };
 use crate::model::body::Body;
 use crate::resources::Resources;
@@ -140,17 +140,17 @@ impl Game {
                 z: -19,
             },
             GameEntity,
-            EntityKind::QuestTesty,
-            QuestTesty,
+            EntityKind::QuestTutorialBrokenAndroid,
+            QuestTutorialBrokenAndroid,
             Health::new(100),
             Glyph('Q'),
-            SpriteRef::new("entities", "quest_testy"),
+            SpriteRef::new("entities", "quest_tutorial_broken_android"),
             BlocksMovement,
             Dialogue {
                 current_mood: NPCMood::Happy,
                 met_before: false,
                 current_dialogue_id: Some(20), // Start with QuestTesty's dialogue tree
-                name: "QuestTesty".to_string(),
+                name: "Broken SapienCorp Android".to_string(),
             },
         ));
 
@@ -217,7 +217,7 @@ impl Game {
         }
 
         //move QuestTesty relative to the player
-        new_game.move_entity_relative_to_player::<QuestTesty>(2, 0, 0);
+        new_game.move_entity_relative_to_player::<QuestTutorialBrokenAndroid>(2, 0, 0);
 
         // Queue the 2nd quest structure for lazy loading
         let q2x = 200;
