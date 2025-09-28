@@ -176,12 +176,12 @@ impl DialogueDatabase {
         tree.add_node(DialogueNode {
             id: "what-do-you-need".to_string(),
             speaker: "Broken Android".to_string(),
-            text: "<1>Simple components</1>... <2>...wood for structural repair</2>. Find some... wood pieces. Will... try to... <3>...stay online</3>.".to_string(),
+            text: "<1>Simple components</1>... <2>...a lab-grown diamond for my fusion reactor...and scrap electronics...</2>. Will... try to... <3>...stay online</3>.".to_string(),
             text_effects: vec![TextEffect::Crackle, TextEffect::Buzz, TextEffect::Static],
             mood: NPCMood::Neutral,
             choices: vec![
                 DialogueChoice {
-                    text: "I'll find some wood for you.".to_string(),
+                    text: "I'll find a diamond and scrap electronics for you.".to_string(),
                     leads_to: None,
                     requires_item: None,
                     npc_mood_change: Some(NPCMood::Happy),
