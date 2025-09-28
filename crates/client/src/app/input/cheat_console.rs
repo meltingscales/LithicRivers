@@ -167,16 +167,19 @@ fn handle_fogofwar_toggle_command(app: &mut App, _parts: &[&str]) -> Result<(), 
 fn handle_toggle_tutorial_command(app: &mut App, _parts: &[&str]) -> Result<(), Box<dyn Error>> {
     use crate::MenuTab;
 
-    // Toggle between Tutorial and World tabs
-    match app.ui.current_tab {
-        MenuTab::Tutorial => {
+    // Toggle tutorial visibility
+    app.ui.tutorial_visible = !app.ui.tutorial_visible;
+
+    if app.ui.tutorial_visible {
+        // Tutorial is now visible - switch to Tutorial tab
+        app.ui.current_tab = MenuTab::Tutorial;
+        app.core.game.res.log("Tutorial system enabled");
+    } else {
+        // Tutorial is now hidden - switch away from Tutorial tab if currently on it
+        if app.ui.current_tab == MenuTab::Tutorial {
             app.ui.current_tab = MenuTab::World;
-            app.core.game.res.log("Tutorial panel hidden");
         }
-        _ => {
-            app.ui.current_tab = MenuTab::Tutorial;
-            app.core.game.res.log("Tutorial panel visible");
-        }
+        app.core.game.res.log("Tutorial system disabled");
     }
     Ok(())
 }

@@ -68,6 +68,7 @@ pub struct UiState {
     pub keybinds: Keybinds,
     #[allow(dead_code)]
     pub tutorial_system: TutorialSystem,
+    pub tutorial_visible: bool, // Controls if tutorial tab is shown in bottom menu
     // UI-owned viewport state - what the player is currently viewing
     pub view_x: i64,
     pub view_y: i64,

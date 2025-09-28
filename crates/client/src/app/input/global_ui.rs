@@ -20,11 +20,11 @@ pub fn handle_global_ui_input(app: &mut App, key: KeyCode) -> Result<bool, Box<d
     // Block menu navigation during combat
     if !app.combat.is_active() {
         if app.ui.keybinds.matches("ui", "MENU_PREV", &key) {
-            app.ui.current_tab = app.ui.current_tab.prev();
+            app.ui.current_tab = app.ui.current_tab.prev(app.ui.tutorial_visible);
             return Ok(true);
         }
         if app.ui.keybinds.matches("ui", "MENU_NEXT", &key) {
-            app.ui.current_tab = app.ui.current_tab.next();
+            app.ui.current_tab = app.ui.current_tab.next(app.ui.tutorial_visible);
             return Ok(true);
         }
     }

@@ -120,6 +120,7 @@ impl App {
                 bottom_menu_rect: None,
                 keybinds,
                 tutorial_system: TutorialDatabase::create_tutorial_system_with_basics(),
+                tutorial_visible: true, // Tutorial tab is visible by default
                 view_x: initial_view_x,
                 view_y: initial_view_y,
                 view_z: initial_view_z,
