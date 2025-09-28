@@ -38,18 +38,6 @@ pub enum NPCMood {
     Mysterious,
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct NPCData {
-    pub name: String,
-    pub portrait: String, // ASCII art portrait
-    pub dialogue_type: DialogueType,
-    pub current_mood: NPCMood,
-    pub initial_dialogue: String, // Starting dialogue node ID
-    pub met_before: bool,
-    pub has_quest: bool,
-    pub shop_inventory: Vec<String>,
-}
-
 /// Core game engine state - the fundamental game systems
 pub struct CoreState {
     pub game: Game,
@@ -509,6 +497,7 @@ pub enum CheatConsoleState {
         cursor_position: usize,
         autocomplete_suggestions: Vec<String>,
         autocomplete_index: Option<usize>,
+        scroll_offset: usize, // For scrolling through command list
     },
 }
 
