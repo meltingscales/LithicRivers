@@ -468,6 +468,9 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<(), 
 }
 
 fn ui(f: &mut Frame, app: &mut App) {
+    // Update tutorial highlights (remove expired ones)
+    app.ui.tutorial_system.update_highlights();
+
     // Show splash screens if needed
     match app.splash.state {
         SplashState::Logo => {

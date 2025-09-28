@@ -20,6 +20,8 @@ pub enum TutorialAction {
     KeyPress(KeyCode),
     /// Wait for any key press
     AnyKey,
+    /// Wait for a specific keybind to be pressed
+    Keybind { category: String, action: String },
     /// Wait for menu to be opened
     OpenMenu,
     /// Wait for inventory to be opened  
@@ -59,10 +61,15 @@ impl TutorialStep {
         self
     }
 
-    pub fn is_action_satisfied(&self, key: &KeyCode) -> bool {
+    pub fn is_action_satisfied(
+        &self,
+        key: &KeyCode,
+        keybinds: &crate::app_state::Keybinds,
+    ) -> bool {
         match &self.action {
             TutorialAction::KeyPress(expected_key) => key == expected_key,
             TutorialAction::AnyKey => true,
+            TutorialAction::Keybind { category, action } => keybinds.matches(category, action, key),
             _ => false,
         }
     }

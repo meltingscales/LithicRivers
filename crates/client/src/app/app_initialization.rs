@@ -1,5 +1,5 @@
 use crate::app_state::*;
-use crate::tutorialsystem::TutorialSystem;
+use crate::tutorialsystem::{TutorialAction, TutorialStep, TutorialSystem};
 use crate::{audio, boot_message, App, EmbeddedAssets, MenuTab, Scale, SplashState, SpriteLoader};
 use chrono::prelude::Local;
 use lithicrivers_core::components::Position;
@@ -115,11 +115,39 @@ impl App {
                 should_quit: false,
             },
             ui: UiState {
-                current_tab: MenuTab::World,
+                current_tab: MenuTab::Tutorial,
                 scale: Scale::Small,
                 bottom_menu_rect: None,
                 keybinds,
-                tutorial_system: TutorialSystem::new(),
+                tutorial_system: {
+                    let mut tutorial_system = TutorialSystem::new();
+
+                    // Create the first two tutorial steps
+                    let torch_tutorial = TutorialStep::new(
+                        "light_it_up",
+                        "Light it up!",
+                        "Toggle your torch on and off. This will help you see in dark areas!",
+                        TutorialAction::Keybind {
+                            category: "action".to_string(),
+                            action: "TOGGLE_TORCH".to_string(),
+                        },
+                    );
+
+                    let look_tutorial = TutorialStep::new(
+                        "look_at_this",
+                        "Look at this!",
+                        "Toggle look mode. This lets you examine the world around you without moving!",
+                        TutorialAction::Keybind {
+                            category: "action".to_string(),
+                            action: "LOOK_TOGGLE".to_string(),
+                        }
+                    );
+
+                    // Start with the introductory tutorial sequence
+                    tutorial_system.start_tutorial("basics", vec![torch_tutorial, look_tutorial]);
+
+                    tutorial_system
+                },
                 view_x: initial_view_x,
                 view_y: initial_view_y,
                 view_z: initial_view_z,
