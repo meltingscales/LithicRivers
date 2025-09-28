@@ -74,6 +74,8 @@ pub fn default_config() -> ConfigRoot {
             "LOAD_JSON": ["L"],
             "TUTORIAL_SELECT": ["T"],
             "TUTORIAL_SKIP": ["Y"],
+            "CHEAT_CONSOLE_SCROLL_UP": ["UP"],
+            "CHEAT_CONSOLE_SCROLL_DOWN": ["DOWN"],
             "QUIT": []
         },
         "inventory": {

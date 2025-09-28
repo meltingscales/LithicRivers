@@ -1783,6 +1783,7 @@ fn render_cheat_console_modal(f: &mut Frame, app: &mut App) {
         cursor_position,
         autocomplete_suggestions,
         autocomplete_index: _,
+        scroll_offset,
     } = &app.panels.cheat_console
     {
         // Create modal area (centered, 60% width, taller height for multiline help)
@@ -1830,9 +1831,45 @@ fn render_cheat_console_modal(f: &mut Frame, app: &mut App) {
             let registry = app::input::cheat_console::get_command_registry();
             let commands = registry.get_command_descriptions();
             let mut lines = vec![Line::from("Available commands:")];
-            for command in commands {
+
+            // Show 5 commands at a time (expanded visual size)
+            let max_visible_commands = 5;
+            let total_commands = commands.len();
+            let start_index = *scroll_offset;
+            let end_index = (start_index + max_visible_commands).min(total_commands);
+
+            // Show scroll up indicator if we're not at the top
+            if start_index > 0 {
+                lines.push(Line::from("  ▲ (more commands above)"));
+            }
+
+            // Show visible commands
+            for command in &commands[start_index..end_index] {
                 lines.push(Line::from(format!("  {}", command)));
             }
+
+            // Show scroll down indicator if there are more commands below
+            if end_index < total_commands {
+                lines.push(Line::from("  ▼ (more commands below)"));
+            }
+
+            // Add scroll instructions if there are more commands
+            if total_commands > max_visible_commands {
+                lines.push(Line::from(""));
+                let up_key = app
+                    .core
+                    .config_manager
+                    .get_printable_key_for_keybind("ui", "CHEAT_CONSOLE_SCROLL_UP");
+                let down_key = app
+                    .core
+                    .config_manager
+                    .get_printable_key_for_keybind("ui", "CHEAT_CONSOLE_SCROLL_DOWN");
+                lines.push(Line::from(format!(
+                    "Use {}/{} to scroll through commands",
+                    up_key, down_key
+                )));
+            }
+
             lines
         };
         let help_paragraph = Paragraph::new(help_lines)
@@ -1842,8 +1879,8 @@ fn render_cheat_console_modal(f: &mut Frame, app: &mut App) {
         let help_height = if !autocomplete_suggestions.is_empty() {
             1
         } else {
-            4
-        }; // 1 line for title + 3 commands
+            6
+        }; // 1 line for title + 5 commands
         let help_area = Rect {
             x: inner.x,
             y: inner.y + 3,

@@ -194,6 +194,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Error>>
                     cursor_position: 0,
                     autocomplete_suggestions: Vec::new(),
                     autocomplete_index: None,
+                    scroll_offset: 0,
                 };
                 return Ok(true);
             }
@@ -203,6 +204,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Error>>
             cursor_position,
             autocomplete_suggestions,
             autocomplete_index,
+            scroll_offset,
         } => {
             match key {
                 // Close console with Escape
@@ -228,6 +230,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Error>>
                         cursor_position: new_cursor,
                         autocomplete_suggestions: suggestions,
                         autocomplete_index: index,
+                        scroll_offset: *scroll_offset,
                     };
                     return Ok(true);
                 }
@@ -243,6 +246,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Error>>
                             cursor_position: new_cursor,
                             autocomplete_suggestions: suggestions,
                             autocomplete_index: index,
+                            scroll_offset: *scroll_offset,
                         };
                     }
                     return Ok(true);
@@ -255,6 +259,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Error>>
                             cursor_position: cursor_position - 1,
                             autocomplete_suggestions: autocomplete_suggestions.clone(),
                             autocomplete_index: *autocomplete_index,
+                            scroll_offset: *scroll_offset,
                         };
                     }
                     return Ok(true);
@@ -266,6 +271,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Error>>
                             cursor_position: cursor_position + 1,
                             autocomplete_suggestions: autocomplete_suggestions.clone(),
                             autocomplete_index: *autocomplete_index,
+                            scroll_offset: *scroll_offset,
                         };
                     }
                     return Ok(true);
@@ -277,6 +283,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Error>>
                         cursor_position: 0,
                         autocomplete_suggestions: autocomplete_suggestions.clone(),
                         autocomplete_index: *autocomplete_index,
+                        scroll_offset: *scroll_offset,
                     };
                     return Ok(true);
                 }
@@ -286,6 +293,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Error>>
                         cursor_position: input.len(),
                         autocomplete_suggestions: autocomplete_suggestions.clone(),
                         autocomplete_index: *autocomplete_index,
+                        scroll_offset: *scroll_offset,
                     };
                     return Ok(true);
                 }
@@ -300,6 +308,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Error>>
                             cursor_position: *cursor_position,
                             autocomplete_suggestions: suggestions,
                             autocomplete_index: index,
+                            scroll_offset: *scroll_offset,
                         };
                     }
                     return Ok(true);
@@ -316,6 +325,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Error>>
                                 cursor_position: completed.len(),
                                 autocomplete_suggestions: new_suggestions,
                                 autocomplete_index: new_index,
+                                scroll_offset: *scroll_offset,
                             };
                         } else {
                             // Cycle through suggestions
@@ -328,8 +338,49 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Error>>
                                 cursor_position: *cursor_position,
                                 autocomplete_suggestions: autocomplete_suggestions.clone(),
                                 autocomplete_index: new_index,
+                                scroll_offset: *scroll_offset,
                             };
                         }
+                    }
+                    return Ok(true);
+                }
+                // Handle scrolling through command list
+                key if app
+                    .ui
+                    .keybinds
+                    .matches("ui", "CHEAT_CONSOLE_SCROLL_UP", &key) =>
+                {
+                    if input.is_empty() && autocomplete_suggestions.is_empty() {
+                        // Only scroll when showing all commands (no input/autocomplete)
+                        let new_scroll_offset = scroll_offset.saturating_sub(1);
+                        app.panels.cheat_console = CheatConsoleState::Open {
+                            input: input.clone(),
+                            cursor_position: *cursor_position,
+                            autocomplete_suggestions: autocomplete_suggestions.clone(),
+                            autocomplete_index: *autocomplete_index,
+                            scroll_offset: new_scroll_offset,
+                        };
+                    }
+                    return Ok(true);
+                }
+                key if app
+                    .ui
+                    .keybinds
+                    .matches("ui", "CHEAT_CONSOLE_SCROLL_DOWN", &key) =>
+                {
+                    if input.is_empty() && autocomplete_suggestions.is_empty() {
+                        // Only scroll when showing all commands (no input/autocomplete)
+                        let registry = get_command_registry();
+                        let commands = registry.get_command_descriptions();
+                        let max_scroll = commands.len().saturating_sub(5); // Show max 5 commands at a time
+                        let new_scroll_offset = (*scroll_offset + 1).min(max_scroll);
+                        app.panels.cheat_console = CheatConsoleState::Open {
+                            input: input.clone(),
+                            cursor_position: *cursor_position,
+                            autocomplete_suggestions: autocomplete_suggestions.clone(),
+                            autocomplete_index: *autocomplete_index,
+                            scroll_offset: new_scroll_offset,
+                        };
                     }
                     return Ok(true);
                 }
