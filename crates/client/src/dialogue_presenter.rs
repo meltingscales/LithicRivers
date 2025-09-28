@@ -204,10 +204,10 @@ impl DialoguePresenter {
                 ];
                 let noise_chars = ['a', 'e', 'i', 'o', 'u', 'x', 'z', '0', '1', '2', '7', '9'];
                 let mut result = String::new();
-                let corruption_rate = 0.6; // 60% of characters get corrupted (more aggressive)
+                let corruption_rate = 0.2; // what % of characters get corrupted
 
                 for (i, ch) in text.char_indices() {
-                    let seed = (time_ms / 150) + (i as u64) * 23;
+                    let seed = (time_ms / 1000) + (i as u64) * 23;
                     let random_val = (seed * 1103515245 + 12345) % 100;
 
                     if ch.is_whitespace() || ch.is_ascii_punctuation() {
