@@ -141,29 +141,12 @@ pub fn render_tutorial_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
                         remaining
                             .iter()
                             .map(|(category, action)| {
-                                // Try to get a human-readable description
-                                match (category.as_str(), action.as_str()) {
-                                    ("movement", "MOVE_NORTHWEST") => {
-                                        "[Move Northwest]".to_string()
-                                    }
-                                    ("movement", "MOVE_NORTH") => "[Move North]".to_string(),
-                                    ("movement", "MOVE_NORTHEAST") => {
-                                        "[Move Northeast]".to_string()
-                                    }
-                                    ("movement", "MOVE_WEST") => "[Move West]".to_string(),
-                                    ("movement", "WAIT") => "[Wait/Center]".to_string(),
-                                    ("movement", "MOVE_EAST") => "[Move East]".to_string(),
-                                    ("movement", "MOVE_SOUTHWEST") => {
-                                        "[Move Southwest]".to_string()
-                                    }
-                                    ("movement", "MOVE_SOUTH") => "[Move South]".to_string(),
-                                    ("movement", "MOVE_SOUTHEAST") => {
-                                        "[Move Southeast]".to_string()
-                                    }
-                                    ("ui", "MENU_PREV") => "[LEFT ARROW]".to_string(),
-                                    ("ui", "MENU_NEXT") => "[RIGHT ARROW]".to_string(),
-                                    _ => format!("{}", action),
-                                }
+                                // Get the actual configured key for this keybind
+                                let key_name = app
+                                    .core
+                                    .config_manager
+                                    .get_printable_key_for_keybind(category, action);
+                                format!("[{}]", key_name)
                             })
                             .collect::<Vec<_>>()
                             .join(", ")
