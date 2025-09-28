@@ -285,6 +285,9 @@ pub fn render_tutorial_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     )));
     lines.push(Line::from("SHIFT-T - Open tutorial modal"));
     lines.push(Line::from("SHIFT-Y - Skip current tutorial step"));
+    lines.push(Line::from(
+        "/toggle_tutorial - Disable entire tutorial system",
+    ));
 
     // Create the paragraph widget
     let paragraph = Paragraph::new(lines)

@@ -79,9 +79,15 @@ impl MenuTab {
     #[allow(dead_code)]
     const COUNT: usize = 10;
 
-    fn next(self) -> Self {
+    fn next(self, tutorial_visible: bool) -> Self {
         match self {
-            MenuTab::World => MenuTab::Tutorial,
+            MenuTab::World => {
+                if tutorial_visible {
+                    MenuTab::Tutorial
+                } else {
+                    MenuTab::GlobalMap
+                }
+            }
             MenuTab::Tutorial => MenuTab::GlobalMap,
             MenuTab::GlobalMap => MenuTab::Body,
             MenuTab::Body => MenuTab::Inventory,
@@ -94,11 +100,17 @@ impl MenuTab {
         }
     }
 
-    fn prev(self) -> Self {
+    fn prev(self, tutorial_visible: bool) -> Self {
         match self {
             MenuTab::World => MenuTab::Quit,
             MenuTab::Tutorial => MenuTab::World,
-            MenuTab::GlobalMap => MenuTab::Tutorial,
+            MenuTab::GlobalMap => {
+                if tutorial_visible {
+                    MenuTab::Tutorial
+                } else {
+                    MenuTab::World
+                }
+            }
             MenuTab::Body => MenuTab::GlobalMap,
             MenuTab::Inventory => MenuTab::Body,
             MenuTab::Crafting => MenuTab::Inventory,
@@ -109,18 +121,72 @@ impl MenuTab {
         }
     }
 
-    fn as_index(&self) -> usize {
+    fn as_index(&self, tutorial_visible: bool) -> usize {
         match self {
             MenuTab::World => 0,
-            MenuTab::Tutorial => 1,
-            MenuTab::GlobalMap => 2,
-            MenuTab::Body => 3,
-            MenuTab::Inventory => 4,
-            MenuTab::Crafting => 5,
-            MenuTab::Menu => 6,
-            MenuTab::Help => 7,
-            MenuTab::Credits => 8,
-            MenuTab::Quit => 9,
+            MenuTab::Tutorial => {
+                if tutorial_visible {
+                    1
+                } else {
+                    0
+                }
+            } // Should not be selected if not visible
+            MenuTab::GlobalMap => {
+                if tutorial_visible {
+                    2
+                } else {
+                    1
+                }
+            }
+            MenuTab::Body => {
+                if tutorial_visible {
+                    3
+                } else {
+                    2
+                }
+            }
+            MenuTab::Inventory => {
+                if tutorial_visible {
+                    4
+                } else {
+                    3
+                }
+            }
+            MenuTab::Crafting => {
+                if tutorial_visible {
+                    5
+                } else {
+                    4
+                }
+            }
+            MenuTab::Menu => {
+                if tutorial_visible {
+                    6
+                } else {
+                    5
+                }
+            }
+            MenuTab::Help => {
+                if tutorial_visible {
+                    7
+                } else {
+                    6
+                }
+            }
+            MenuTab::Credits => {
+                if tutorial_visible {
+                    8
+                } else {
+                    7
+                }
+            }
+            MenuTab::Quit => {
+                if tutorial_visible {
+                    9
+                } else {
+                    8
+                }
+            }
         }
     }
 }
@@ -801,9 +867,14 @@ fn render_bottom_menu(f: &mut Frame, app: &mut App, area: Rect) {
     // Remember for click handling
     app.ui.bottom_menu_rect = Some(area);
     // All tabs white; selected tab green
-    let titles = vec![
-        Span::raw("World"),
-        Span::raw("Tutorial"),
+    let mut titles = vec![Span::raw("World")];
+
+    // Conditionally add Tutorial tab if visible
+    if app.ui.tutorial_visible {
+        titles.push(Span::raw("Tutorial"));
+    }
+
+    titles.extend(vec![
         Span::raw("Global Map"),
         Span::raw("Body"),
         Span::raw("Inventory"),
@@ -812,14 +883,15 @@ fn render_bottom_menu(f: &mut Frame, app: &mut App, area: Rect) {
         Span::raw("Help"),
         Span::raw("Credits"),
         Span::raw("Quit"),
-    ];
+    ]);
+
     let tabs = Tabs::new(titles)
         .block(
             Block::default()
                 .borders(Borders::ALL)
                 .title(Line::from("Menu")),
         )
-        .select(app.ui.current_tab.as_index())
+        .select(app.ui.current_tab.as_index(app.ui.tutorial_visible))
         .style(Style::default().fg(Color::White))
         .highlight_style(Style::default().fg(Color::Green));
     f.render_widget(tabs, area);
