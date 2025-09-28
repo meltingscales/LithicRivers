@@ -35,9 +35,9 @@ impl CommandRegistry {
                 handler: handle_noclip_toggle_command,
             },
             Command {
-                name: "fogofwar_toggle",
-                description: "fogofwar_toggle - Toggle fog of war rendering",
-                handler: handle_fogofwar_toggle_command,
+                name: "toggle_fogofwar",
+                description: "toggle_fogofwar - Toggle fog of war rendering",
+                handler: handle_toggle_fogofwar_command,
             },
             Command {
                 name: "toggle_tutorial",
@@ -152,7 +152,7 @@ fn handle_noclip_toggle_command(app: &mut App, _parts: &[&str]) -> Result<(), Bo
     Ok(())
 }
 
-fn handle_fogofwar_toggle_command(app: &mut App, _parts: &[&str]) -> Result<(), Box<dyn Error>> {
+fn handle_toggle_fogofwar_command(app: &mut App, _parts: &[&str]) -> Result<(), Box<dyn Error>> {
     app.core.game.res.player_state.fog_of_war_enabled =
         !app.core.game.res.player_state.fog_of_war_enabled;
     let state = if app.core.game.res.player_state.fog_of_war_enabled {
