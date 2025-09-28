@@ -54,10 +54,32 @@ pub fn render_modes_panel(f: &mut Frame, app: &mut App, area: Rect) {
             break; // Only one player
         }
 
-        if torch_equipped {
-            Span::styled("T", Style::default().fg(Color::LightYellow))
+        // Check if torch indicator should be highlighted
+        let mut style = if torch_equipped {
+            Style::default().fg(Color::LightYellow)
         } else {
-            Span::styled("-", Style::default().fg(Color::DarkGray))
+            Style::default().fg(Color::DarkGray)
+        };
+
+        // Apply tutorial highlight if active
+        if let Some(intensity) = app
+            .ui
+            .tutorial_system
+            .is_element_highlighted("mode_indicator_torch")
+        {
+            // Flash between bright yellow and red
+            let flash_color = if intensity > 0.6 {
+                Color::Yellow
+            } else {
+                Color::Red
+            };
+            style = style.fg(flash_color);
+        }
+
+        if torch_equipped {
+            Span::styled("T", style)
+        } else {
+            Span::styled("-", style)
         }
     };
 

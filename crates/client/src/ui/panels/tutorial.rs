@@ -38,6 +38,53 @@ pub fn render_tutorial_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
         lines.push(Line::from(current_step.instruction.clone()));
         lines.push(Line::from(""));
 
+        // Show what key to press
+        match &current_step.action {
+            crate::tutorialsystem::TutorialAction::KeyPress(key) => {
+                let key_hint = match key {
+                    crossterm::event::KeyCode::Char(c) => {
+                        format!("Press '{}' to continue", c.to_uppercase())
+                    }
+                    _ => format!("Press {:?} to continue", key),
+                };
+                lines.push(Line::from(Span::styled(
+                    key_hint,
+                    Style::default()
+                        .fg(Color::Yellow)
+                        .add_modifier(Modifier::BOLD),
+                )));
+            }
+            crate::tutorialsystem::TutorialAction::Keybind { category, action } => {
+                // Get the configured key for this keybind
+                let key_name = app
+                    .core
+                    .config_manager
+                    .get_printable_key_for_keybind(category, action);
+                let key_hint = format!("Press {} to continue", key_name);
+                lines.push(Line::from(Span::styled(
+                    key_hint,
+                    Style::default()
+                        .fg(Color::Yellow)
+                        .add_modifier(Modifier::BOLD),
+                )));
+            }
+            crate::tutorialsystem::TutorialAction::AnyKey => {
+                lines.push(Line::from(Span::styled(
+                    "Press any key to continue",
+                    Style::default()
+                        .fg(Color::Yellow)
+                        .add_modifier(Modifier::BOLD),
+                )));
+            }
+            _ => {
+                lines.push(Line::from(Span::styled(
+                    "Follow the instructions above",
+                    Style::default().fg(Color::Yellow),
+                )));
+            }
+        }
+        lines.push(Line::from(""));
+
         // Show progress
         let progress = format!(
             "Progress: {} / {}",

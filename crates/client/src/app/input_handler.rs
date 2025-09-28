@@ -14,6 +14,12 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
         return Ok(());
     }
 
+    // Handle tutorial input when tutorial system is active
+    // Note: Tutorial system detects keys but doesn't consume them
+    app.ui
+        .tutorial_system
+        .handle_key_input(key, &app.ui.keybinds);
+
     // Handle global map input when on Global Map tab - delegated to input module
     if crate::app::input::global_map::handle_input(app, key)? {
         return Ok(());

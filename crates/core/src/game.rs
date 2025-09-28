@@ -220,7 +220,7 @@ impl Game {
         new_game.move_entity_relative_to_player::<QuestTutorialBrokenAndroid>(2, 0, 0);
 
         // Queue the 2nd quest structure for lazy loading
-        let q2x = 200;
+        let q2x = 200; // a little offset so it's not straight
         let q2y = 1609; //exactly 1 mile in meters
         let q2z = 1;
         new_game
