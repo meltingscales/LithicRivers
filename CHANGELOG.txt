@@ -1,3 +1,8 @@
+# v0.9.0.3
+
+- allow disabling of tutorial
+- retry for cicd
+
 # v0.9.0.2
 
 - make tutorial system usable
