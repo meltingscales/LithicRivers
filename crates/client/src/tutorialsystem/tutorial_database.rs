@@ -38,20 +38,24 @@ impl TutorialDatabase {
 
     /// Create the movement tutorial step
     fn create_movement_tutorial() -> TutorialStep {
-        use crossterm::event::KeyCode;
-
         TutorialStep::new(
             "learn_to_move",
             "Learn to Move",
-            "Try moving in all 9 directions using the NUMPAD keys (7,8,9,4,5,6,1,2,3). Press each key at least once. Then press LEFT ARROW to complete this tutorial. NUMPAD controls both UI navigation and player movement. ARROW KEYS control page movement - LEFT ARROW closes this tutorial screen, and RIGHT ARROW revisits it later.",
-            TutorialAction::MovementKeys {
-                required_keys: vec![
-                    KeyCode::Char('7'), KeyCode::Char('8'), KeyCode::Char('9'),
-                    KeyCode::Char('4'), KeyCode::Char('5'), KeyCode::Char('6'),
-                    KeyCode::Char('1'), KeyCode::Char('2'), KeyCode::Char('3'),
-                    KeyCode::Left,
+            "Try moving in all 9 directions using the NUMPAD keys. Press each movement key at least once. Then press LEFT ARROW to complete this tutorial. NUMPAD controls both UI navigation and player movement. ARROW KEYS control page movement - LEFT ARROW closes this tutorial screen, and RIGHT ARROW revisits it later.",
+            TutorialAction::MultipleKeybinds {
+                required_keybinds: vec![
+                    ("movement".to_string(), "MOVE_NORTHWEST".to_string()),
+                    ("movement".to_string(), "MOVE_NORTH".to_string()),
+                    ("movement".to_string(), "MOVE_NORTHEAST".to_string()),
+                    ("movement".to_string(), "MOVE_WEST".to_string()),
+                    ("movement".to_string(), "WAIT".to_string()),
+                    ("movement".to_string(), "MOVE_EAST".to_string()),
+                    ("movement".to_string(), "MOVE_SOUTHWEST".to_string()),
+                    ("movement".to_string(), "MOVE_SOUTH".to_string()),
+                    ("movement".to_string(), "MOVE_SOUTHEAST".to_string()),
+                    ("ui".to_string(), "MENU_PREV".to_string()),
                 ],
-                pressed_keys: vec![],
+                pressed_keybinds: vec![],
             },
         )
     }
