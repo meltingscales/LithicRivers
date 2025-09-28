@@ -126,6 +126,7 @@ pub struct PanelStates {
     pub body_repair: BodyRepairState,
     pub cheat_console: CheatConsoleState,
     pub global_map: GlobalMapPanelState,
+    pub tutorial_selection: TutorialSelectionState,
 }
 
 /// Inventory panel state
@@ -240,6 +241,19 @@ pub enum HotbarAssignmentState {
 impl Default for HotbarAssignmentState {
     fn default() -> Self {
         HotbarAssignmentState::None
+    }
+}
+
+/// Tutorial selection modal state
+#[derive(Debug, Clone)]
+pub enum TutorialSelectionState {
+    None,
+    SelectingTutorial { selected_tutorial: usize },
+}
+
+impl Default for TutorialSelectionState {
+    fn default() -> Self {
+        TutorialSelectionState::None
     }
 }
 

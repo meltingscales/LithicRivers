@@ -46,7 +46,7 @@ use crate::{
             render_game_view, render_global_map_panel, render_help_panel, render_hotbar_panel,
             render_inventory_list_only, render_inventory_panel, render_look_panel,
             render_menu_panel, render_modes_panel, render_quit_panel, render_repair_modal,
-            render_tutorial_panel,
+            render_tutorial_panel, render_tutorial_selection_modal,
         },
     },
 };
@@ -752,6 +752,9 @@ fn ui(f: &mut Frame, app: &mut App) {
         // Bottom menu bar
         render_bottom_menu(f, app, root_chunks[3]);
     }
+
+    // Render tutorial selection modal if active
+    render_tutorial_selection_modal(f, app);
 
     // Render cheat console if active (on top of everything else)
     render_cheat_console_modal(f, app);
