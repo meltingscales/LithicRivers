@@ -12,6 +12,7 @@ pub mod multi_action;
 pub mod npc_interaction;
 pub mod splash;
 pub mod tutorial_selection;
+pub mod tutorial_skip;
 pub mod world_action;
 pub mod world_build;
 pub mod world_movement;

@@ -73,6 +73,7 @@ pub fn default_config() -> ConfigRoot {
             "SAVE_JSON": ["S"],
             "LOAD_JSON": ["L"],
             "TUTORIAL_SELECT": ["T"],
+            "TUTORIAL_SKIP": ["Y"],
             "QUIT": []
         },
         "inventory": {
