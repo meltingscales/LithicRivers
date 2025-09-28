@@ -105,6 +105,10 @@ pub fn render_tutorial_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
                             .iter()
                             .map(|k| match k {
                                 crossterm::event::KeyCode::Char(c) => c.to_string(),
+                                crossterm::event::KeyCode::Left => "LEFT ARROW".to_string(),
+                                crossterm::event::KeyCode::Right => "RIGHT ARROW".to_string(),
+                                crossterm::event::KeyCode::Up => "UP ARROW".to_string(),
+                                crossterm::event::KeyCode::Down => "DOWN ARROW".to_string(),
                                 _ => format!("{:?}", k),
                             })
                             .collect::<Vec<_>>()

@@ -43,12 +43,13 @@ impl TutorialDatabase {
         TutorialStep::new(
             "learn_to_move",
             "Learn to Move",
-            "Try moving in all 9 directions using the NUMPAD keys (7,8,9,4,5,6,1,2,3). Press each key at least once. NUMPAD controls both UI navigation and player movement. ARROW KEYS control page movement - press LEFT ARROW to close this tutorial screen, and RIGHT ARROW to revisit it later.",
+            "Try moving in all 9 directions using the NUMPAD keys (7,8,9,4,5,6,1,2,3). Press each key at least once. Then press LEFT ARROW to complete this tutorial. NUMPAD controls both UI navigation and player movement. ARROW KEYS control page movement - LEFT ARROW closes this tutorial screen, and RIGHT ARROW revisits it later.",
             TutorialAction::MovementKeys {
                 required_keys: vec![
                     KeyCode::Char('7'), KeyCode::Char('8'), KeyCode::Char('9'),
                     KeyCode::Char('4'), KeyCode::Char('5'), KeyCode::Char('6'),
                     KeyCode::Char('1'), KeyCode::Char('2'), KeyCode::Char('3'),
+                    KeyCode::Left,
                 ],
                 pressed_keys: vec![],
             },
@@ -60,7 +61,7 @@ impl TutorialDatabase {
         TutorialStep::new(
             "look_at_this",
             "Look at this!",
-            "Toggle look mode. This lets you examine the world around you without moving!",
+            "Toggle look mode. This lets you examine the world around you without moving! You can press it ONCE to turn it on, and a SECOND time to turn it back off.",
             TutorialAction::Keybind {
                 category: "action".to_string(),
                 action: "LOOK_TOGGLE".to_string(),
