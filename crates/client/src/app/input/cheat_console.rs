@@ -39,6 +39,11 @@ impl CommandRegistry {
                 description: "fogofwar_toggle - Toggle fog of war rendering",
                 handler: handle_fogofwar_toggle_command,
             },
+            Command {
+                name: "toggle_tutorial",
+                description: "toggle_tutorial - Toggle tutorial panel visibility",
+                handler: handle_toggle_tutorial_command,
+            },
         ];
 
         for cmd in cmd_list.iter() {
@@ -156,6 +161,23 @@ fn handle_fogofwar_toggle_command(app: &mut App, _parts: &[&str]) -> Result<(), 
         "disabled"
     };
     app.core.game.res.log(format!("Fog of war: {}", state));
+    Ok(())
+}
+
+fn handle_toggle_tutorial_command(app: &mut App, _parts: &[&str]) -> Result<(), Box<dyn Error>> {
+    use crate::MenuTab;
+
+    // Toggle between Tutorial and World tabs
+    match app.ui.current_tab {
+        MenuTab::Tutorial => {
+            app.ui.current_tab = MenuTab::World;
+            app.core.game.res.log("Tutorial panel hidden");
+        }
+        _ => {
+            app.ui.current_tab = MenuTab::Tutorial;
+            app.core.game.res.log("Tutorial panel visible");
+        }
+    }
     Ok(())
 }
 
