@@ -284,6 +284,7 @@ pub fn render_tutorial_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
         Style::default().fg(Color::Cyan),
     )));
     lines.push(Line::from("SHIFT-T - Open tutorial modal"));
+    lines.push(Line::from("SHIFT-Y - Skip current tutorial step"));
 
     // Create the paragraph widget
     let paragraph = Paragraph::new(lines)
