@@ -27,6 +27,11 @@ pub enum TutorialAction {
         required_keys: Vec<KeyCode>,
         pressed_keys: Vec<KeyCode>,
     },
+    /// Wait for multiple keybinds to be pressed (tracks which ones have been pressed)
+    MultipleKeybinds {
+        required_keybinds: Vec<(String, String)>, // (category, action) pairs
+        pressed_keybinds: Vec<(String, String)>,
+    },
     /// Wait for menu to be opened
     OpenMenu,
     /// Wait for inventory to be opened  
@@ -85,6 +90,23 @@ impl TutorialStep {
                 }
                 // Return true if all required keys have been pressed
                 pressed_keys.len() >= required_keys.len()
+            }
+            TutorialAction::MultipleKeybinds {
+                required_keybinds,
+                pressed_keybinds,
+            } => {
+                // Check if this key matches any of the required keybinds
+                for (category, action) in required_keybinds.iter() {
+                    if keybinds.matches(category, action, key) {
+                        let keybind_pair = (category.clone(), action.clone());
+                        if !pressed_keybinds.contains(&keybind_pair) {
+                            pressed_keybinds.push(keybind_pair);
+                        }
+                        break;
+                    }
+                }
+                // Return true if all required keybinds have been pressed
+                pressed_keybinds.len() >= required_keybinds.len()
             }
             _ => false,
         }
