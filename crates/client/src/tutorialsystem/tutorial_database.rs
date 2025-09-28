@@ -89,6 +89,7 @@ impl TutorialDatabase {
     /// Get the basics tutorial sequence
     pub fn get_basics_tutorial() -> Vec<TutorialStep> {
         vec![
+            Self::create_tutorial_tutorial(),
             Self::create_movement_tutorial(),
             Self::create_torch_tutorial(),
             Self::create_look_tutorial(),
@@ -109,11 +110,27 @@ impl TutorialDatabase {
     }
 
     /// Create the movement tutorial step
+    fn create_tutorial_tutorial() -> TutorialStep {
+        TutorialStep::new(
+            "tutorial_tutorial",
+            "Tutorial Tutorial",
+            "Welcome to LithicRivers! This is an entirely ASCII-based and keyboard-focused game. This is the tutorial system. Below are some keybinds that control it. If you really don't like it, you can disable it (see below). For this first tutorial, just press the next/previous buttons that control the menu pages.",
+            TutorialAction::MultipleKeybinds {
+                required_keybinds: vec![
+                    ("ui".to_string(), "MENU_PREV".to_string()),
+                    ("ui".to_string(), "MENU_NEXT".to_string()),
+                ],
+                pressed_keybinds: vec![],
+            },
+        )
+    }
+
+    /// Create the movement tutorial step
     fn create_movement_tutorial() -> TutorialStep {
         TutorialStep::new(
             "learn_to_move",
             "Learn to Move",
-            "Try moving in all 9 directions using the NUMPAD keys. Press each movement key at least once. Then press LEFT ARROW to complete this tutorial. NUMPAD controls both UI navigation and player movement. ARROW KEYS control page movement - LEFT ARROW closes this tutorial screen, and RIGHT ARROW revisits it later.",
+            "Make sure NUMLOCK is on! Try moving in all 9 directions using the NUMPAD keys. Press each movement key at least once. Then press LEFT ARROW to complete this tutorial. NUMPAD controls both UI navigation and player movement. ARROW KEYS control page movement - LEFT ARROW closes this tutorial screen, and RIGHT ARROW revisits it later.",
             TutorialAction::MultipleKeybinds {
                 required_keybinds: vec![
                     ("movement".to_string(), "MOVE_NORTHWEST".to_string()),
@@ -137,7 +154,7 @@ impl TutorialDatabase {
         TutorialStep::new(
             "look_at_this",
             "Look at this!",
-            "Toggle look mode. This lets you examine the world around you without moving! You can press it ONCE to turn it on, and a SECOND time to turn it back off.",
+            "Toggle LOOK mode. This lets you examine the world around you without moving! You can press it ONCE to turn it on, and a SECOND time to turn it back off. Note that you must close the tutorial panel to view the LOOK mode interface.",
             TutorialAction::Keybind {
                 category: "action".to_string(),
                 action: "LOOK_TOGGLE".to_string(),

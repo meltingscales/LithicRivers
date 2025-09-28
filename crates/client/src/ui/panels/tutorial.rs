@@ -9,19 +9,12 @@ use ratatui::{
 pub fn render_tutorial_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     let mut lines: Vec<Line> = Vec::new();
 
-    // Header
-    lines.push(Line::from(Span::styled(
-        "📚 Tutorial System",
-        Style::default()
-            .fg(Color::Yellow)
-            .add_modifier(Modifier::BOLD),
-    )));
-    lines.push(Line::from(""));
+    // no header needed as our panel has a title
 
     // Check if there's an active tutorial
     if let Some(current_step) = app.ui.tutorial_system.current_step() {
         // Active tutorial - show current step
-        let current_title = format!("Current: {}", current_step.title);
+        let current_title = format!("Current Lesson: [{}]", current_step.title);
         lines.push(Line::from(Span::styled(
             current_title,
             Style::default()
@@ -43,9 +36,9 @@ pub fn render_tutorial_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
             crate::tutorialsystem::TutorialAction::KeyPress(key) => {
                 let key_hint = match key {
                     crossterm::event::KeyCode::Char(c) => {
-                        format!("Press '{}' to continue", c.to_uppercase())
+                        format!("Press [{}] to continue", c.to_uppercase())
                     }
-                    _ => format!("Press {:?} to continue", key),
+                    _ => format!("Press [{:?}] to continue", key),
                 };
                 lines.push(Line::from(Span::styled(
                     key_hint,
@@ -60,7 +53,7 @@ pub fn render_tutorial_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
                     .core
                     .config_manager
                     .get_printable_key_for_keybind(category, action);
-                let key_hint = format!("Press {} to continue", key_name);
+                let key_hint = format!("Press [{}] to continue", key_name);
                 lines.push(Line::from(Span::styled(
                     key_hint,
                     Style::default()
@@ -125,7 +118,7 @@ pub fn render_tutorial_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
                 pressed_keybinds,
             } => {
                 let progress_text = format!(
-                    "Progress: {} / {} actions completed",
+                    "Lesson Progress: {} / {} actions completed",
                     pressed_keybinds.len(),
                     required_keybinds.len()
                 );
@@ -150,16 +143,25 @@ pub fn render_tutorial_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
                             .map(|(category, action)| {
                                 // Try to get a human-readable description
                                 match (category.as_str(), action.as_str()) {
-                                    ("movement", "MOVE_NORTHWEST") => "Move Northwest".to_string(),
-                                    ("movement", "MOVE_NORTH") => "Move North".to_string(),
-                                    ("movement", "MOVE_NORTHEAST") => "Move Northeast".to_string(),
-                                    ("movement", "MOVE_WEST") => "Move West".to_string(),
-                                    ("movement", "WAIT") => "Wait/Center".to_string(),
-                                    ("movement", "MOVE_EAST") => "Move East".to_string(),
-                                    ("movement", "MOVE_SOUTHWEST") => "Move Southwest".to_string(),
-                                    ("movement", "MOVE_SOUTH") => "Move South".to_string(),
-                                    ("movement", "MOVE_SOUTHEAST") => "Move Southeast".to_string(),
-                                    ("ui", "MENU_PREV") => "LEFT ARROW".to_string(),
+                                    ("movement", "MOVE_NORTHWEST") => {
+                                        "[Move Northwest]".to_string()
+                                    }
+                                    ("movement", "MOVE_NORTH") => "[Move North]".to_string(),
+                                    ("movement", "MOVE_NORTHEAST") => {
+                                        "[Move Northeast]".to_string()
+                                    }
+                                    ("movement", "MOVE_WEST") => "[Move West]".to_string(),
+                                    ("movement", "WAIT") => "[Wait/Center]".to_string(),
+                                    ("movement", "MOVE_EAST") => "[Move East]".to_string(),
+                                    ("movement", "MOVE_SOUTHWEST") => {
+                                        "[Move Southwest]".to_string()
+                                    }
+                                    ("movement", "MOVE_SOUTH") => "[Move South]".to_string(),
+                                    ("movement", "MOVE_SOUTHEAST") => {
+                                        "[Move Southeast]".to_string()
+                                    }
+                                    ("ui", "MENU_PREV") => "[LEFT ARROW]".to_string(),
+                                    ("ui", "MENU_NEXT") => "[RIGHT ARROW]".to_string(),
                                     _ => format!("{}", action),
                                 }
                             })
@@ -181,14 +183,14 @@ pub fn render_tutorial_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
         }
         lines.push(Line::from(""));
 
-        // Show progress
-        let progress = format!(
-            "Progress: {} / {}",
+        // Show category progress
+        let category_progress = format!(
+            "Category Progress: {} / {}",
             app.ui.tutorial_system.current_step_index + 1,
             app.ui.tutorial_system.steps.len()
         );
         lines.push(Line::from(Span::styled(
-            progress,
+            category_progress,
             Style::default().fg(Color::Blue),
         )));
         lines.push(Line::from(""));
@@ -283,10 +285,12 @@ pub fn render_tutorial_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
         "Controls:",
         Style::default().fg(Color::Cyan),
     )));
-    lines.push(Line::from("SHIFT-T - Open tutorial modal"));
-    lines.push(Line::from("SHIFT-Y - Skip current tutorial step"));
     lines.push(Line::from(
-        "/toggle_tutorial - Disable entire tutorial system",
+        "SHIFT-T - Open tutorial modal: pick a new or old tutorial to run through.",
+    ));
+    lines.push(Line::from("SHIFT-Y - Skip current tutorial step."));
+    lines.push(Line::from(
+        "/toggle_tutorial - Disable entire tutorial system.",
     ));
 
     // Create the paragraph widget
