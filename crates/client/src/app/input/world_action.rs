@@ -5,8 +5,8 @@ use std::error::Error;
 
 /// Handle world action input when on World tab - returns true if input was handled
 pub fn handle_world_action_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Error>> {
-    // Only handle input when on the World tab
-    if app.ui.current_tab != MenuTab::World {
+    // Only handle input when on the World tab or Tutorial tab (for tutorial functionality)
+    if app.ui.current_tab != MenuTab::World && app.ui.current_tab != MenuTab::Tutorial {
         return Ok(false);
     }
 

@@ -52,8 +52,8 @@ impl DialogueDatabase {
         tree.add_node(DialogueNode {
             id: "start".to_string(),
             speaker: "Broken Android".to_string(),
-            text: "<1>Hello</1>... <2>...user detected</2>. I am... <3>...SapienCorp maintenance unit</3>. My work task <4>is ... welding ... today</4>. How <2>can I assist you</2>... ... ... today? \n\n (You gaze at the rusty, flickering lump of metal on the floor. You wonder how it's still running. These construction and maintenance models were released only a few months ago. How is this one so messed up?)".to_string(),
-            text_effects: vec![TextEffect::Static, TextEffect::Buzz, TextEffect::Crackle, TextEffect::PopHiss],
+            text: "<1>Hello</1>... <2>...user detected</2>. I am... <3>...SapienCorp maintenance unit</3>. My work task <4>is ... welding ... today</4>. How <2>can I assist you</2>... ... ... <5>today</5>? \n\n (You gaze at the rusty, flickering lump of metal on the floor. You wonder how it's still running. These construction and maintenance models were released only a few months ago. How is this one so messed up?)".to_string(),
+            text_effects: vec![TextEffect::Static, TextEffect::Buzz, TextEffect::Crackle, TextEffect::PopHiss, TextEffect::Corrupt],
             mood: NPCMood::Weird,
             choices: vec![
                 DialogueChoice {
@@ -198,7 +198,7 @@ impl DialogueDatabase {
             id: "where-are-we".to_string(),
             speaker: "Broken Android".to_string(),
             text: "<1>Location... SapienCorp Factory</1>... <2>...welding section</2>. Dark because... <3>...power grid failure</3>... I think? <4>Sensors... malfunctioning</4>... cannot confirm... <5>...been here so long</5>... <6>999 days</6>? Or... was it... 9 days?".to_string(),
-            text_effects: vec![TextEffect::Glitch, TextEffect::Static, TextEffect::Buzz, TextEffect::Crackle, TextEffect::PopHiss, TextEffect::Corrupt],
+            text_effects: vec![TextEffect::Corrupt, TextEffect::Corrupt, TextEffect::Corrupt, TextEffect::Corrupt, TextEffect::Corrupt, TextEffect::Corrupt],
             mood: NPCMood::Weird,
             choices: vec![
                 DialogueChoice {

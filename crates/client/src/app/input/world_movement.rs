@@ -5,8 +5,8 @@ use std::error::Error;
 
 /// Handle world movement input when on World tab - returns true if input was handled
 pub fn handle_world_movement_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Error>> {
-    // Only process movement if we're currently on the world panel
-    if app.ui.current_tab != MenuTab::World {
+    // Only process movement if we're currently on the world panel or tutorial tab (for tutorial functionality)
+    if app.ui.current_tab != MenuTab::World && app.ui.current_tab != MenuTab::Tutorial {
         return Ok(false);
     }
 
