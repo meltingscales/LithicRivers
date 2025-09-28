@@ -1,9 +1,81 @@
 use super::{TutorialAction, TutorialStep, TutorialSystem};
 
+/// Metadata about an available tutorial
+#[derive(Debug, Clone)]
+pub struct TutorialInfo {
+    pub id: String,
+    pub title: String,
+    pub description: String,
+    pub category: String,
+}
+
 /// Tutorial database containing all tutorial sequences and steps
 pub struct TutorialDatabase;
 
 impl TutorialDatabase {
+    /// Get tutorials grouped by category in display order
+    pub fn get_tutorials_by_category() -> Vec<(String, Vec<TutorialInfo>)> {
+        let tutorials = Self::get_available_tutorials();
+        let mut categories: std::collections::HashMap<String, Vec<TutorialInfo>> =
+            std::collections::HashMap::new();
+
+        for tutorial in tutorials {
+            categories
+                .entry(tutorial.category.clone())
+                .or_default()
+                .push(tutorial);
+        }
+
+        let category_order = vec!["Essential", "Gameplay", "Advanced"];
+        let mut result = Vec::new();
+
+        for category in category_order {
+            if let Some(tutorials) = categories.remove(category) {
+                if !tutorials.is_empty() {
+                    result.push((category.to_string(), tutorials));
+                }
+            }
+        }
+
+        result
+    }
+
+    /// Get a list of all available tutorials
+    pub fn get_available_tutorials() -> Vec<TutorialInfo> {
+        vec![
+            TutorialInfo {
+                id: "basics".to_string(),
+                title: "Movement and Navigation".to_string(),
+                description: "Learn basic movement controls and UI navigation".to_string(),
+                category: "Essential".to_string(),
+            },
+            TutorialInfo {
+                id: "inventory".to_string(),
+                title: "Inventory Management".to_string(),
+                description: "Learn how to manage your items and equipment".to_string(),
+                category: "Gameplay".to_string(),
+            },
+            TutorialInfo {
+                id: "crafting".to_string(),
+                title: "Crafting System".to_string(),
+                description: "Learn how to craft items and tools".to_string(),
+                category: "Gameplay".to_string(),
+            },
+            TutorialInfo {
+                id: "combat".to_string(),
+                title: "Combat Basics".to_string(),
+                description: "Learn combat mechanics and strategies".to_string(),
+                category: "Advanced".to_string(),
+            },
+            TutorialInfo {
+                id: "building".to_string(),
+                title: "Building and Mining".to_string(),
+                description: "Learn how to build structures and mine resources".to_string(),
+                category: "Advanced".to_string(),
+            },
+        ]
+    }
+
     /// Create and initialize a tutorial system with the basics tutorial sequence
     pub fn create_tutorial_system_with_basics() -> TutorialSystem {
         let mut tutorial_system = TutorialSystem::new();

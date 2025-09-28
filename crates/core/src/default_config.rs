@@ -72,6 +72,7 @@ pub fn default_config() -> ConfigRoot {
             "CREDITS_SCROLL_DOWN": ["DOWN"],
             "SAVE_JSON": ["S"],
             "LOAD_JSON": ["L"],
+            "TUTORIAL_SELECT": ["T"],
             "QUIT": []
         },
         "inventory": {

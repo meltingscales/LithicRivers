@@ -212,11 +212,52 @@ pub fn render_tutorial_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
         lines.push(Line::from(""));
 
         lines.push(Line::from("Available tutorials:"));
-        lines.push(Line::from("• Movement and Navigation"));
-        lines.push(Line::from("• Inventory Management"));
-        lines.push(Line::from("• Crafting System"));
-        lines.push(Line::from("• Combat Basics"));
-        lines.push(Line::from("• Building and Mining"));
+
+        // Get tutorials grouped by category from the database
+        let categories = crate::tutorialsystem::TutorialDatabase::get_tutorials_by_category();
+
+        // Display tutorials grouped by category
+        for (category, tutorials) in &categories {
+            lines.push(Line::from(Span::styled(
+                format!("  {}:", category),
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD),
+            )));
+            for tutorial in tutorials {
+                // Check if this tutorial is completed
+                let is_completed = app
+                    .ui
+                    .tutorial_system
+                    .completed_tutorials
+                    .contains(&tutorial.id);
+                let status_icon = if is_completed { "✓" } else { "•" };
+                let style = if is_completed {
+                    Style::default().fg(Color::Green)
+                } else {
+                    Style::default().fg(Color::White)
+                };
+
+                lines.push(Line::from(Span::styled(
+                    format!("    {} {}", status_icon, tutorial.title),
+                    style,
+                )));
+
+                // Show description for non-completed tutorials
+                if !is_completed {
+                    lines.push(Line::from(Span::styled(
+                        format!("      {}", tutorial.description),
+                        Style::default().fg(Color::DarkGray),
+                    )));
+                }
+            }
+            lines.push(Line::from(""));
+        }
+
+        // Remove the extra empty line if we added any categories
+        if !categories.is_empty() {
+            lines.pop(); // Remove last empty line
+        }
         lines.push(Line::from(""));
 
         // Show completed tutorials if any
@@ -232,7 +273,7 @@ pub fn render_tutorial_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
         }
 
         lines.push(Line::from(Span::styled(
-            "Press F1 to start a tutorial",
+            "Press SHIFT+T to select and start any tutorial",
             Style::default().fg(Color::Yellow),
         )));
     }
@@ -242,8 +283,7 @@ pub fn render_tutorial_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
         "Controls:",
         Style::default().fg(Color::Cyan),
     )));
-    lines.push(Line::from("ESC - Skip current tutorial"));
-    lines.push(Line::from("F1 - Toggle tutorial panel"));
+    lines.push(Line::from("SHIFT-T - Open tutorial modal"));
 
     // Create the paragraph widget
     let paragraph = Paragraph::new(lines)

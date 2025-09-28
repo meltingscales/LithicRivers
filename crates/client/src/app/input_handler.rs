@@ -68,6 +68,11 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
         return Ok(());
     }
 
+    // Handle tutorial selection input when active - delegated to input module
+    if crate::app::input::tutorial_selection::handle_tutorial_selection_input(app, key)? {
+        return Ok(());
+    }
+
     // Handle corpse looting input when active - delegated to input module
     if crate::app::input::corpse_looting::handle_corpse_looting_input(app, key)? {
         return Ok(());
