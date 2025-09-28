@@ -76,6 +76,46 @@ pub fn render_tutorial_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
                         .add_modifier(Modifier::BOLD),
                 )));
             }
+            crate::tutorialsystem::TutorialAction::MovementKeys {
+                required_keys,
+                pressed_keys,
+            } => {
+                let progress_text = format!(
+                    "Movement Progress: {} / {} keys pressed",
+                    pressed_keys.len(),
+                    required_keys.len()
+                );
+                lines.push(Line::from(Span::styled(
+                    progress_text,
+                    Style::default()
+                        .fg(Color::Cyan)
+                        .add_modifier(Modifier::BOLD),
+                )));
+
+                // Show which keys are still needed
+                let remaining: Vec<_> = required_keys
+                    .iter()
+                    .filter(|key| !pressed_keys.contains(key))
+                    .collect();
+
+                if !remaining.is_empty() {
+                    let remaining_text = format!(
+                        "Still need: {}",
+                        remaining
+                            .iter()
+                            .map(|k| match k {
+                                crossterm::event::KeyCode::Char(c) => c.to_string(),
+                                _ => format!("{:?}", k),
+                            })
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    );
+                    lines.push(Line::from(Span::styled(
+                        remaining_text,
+                        Style::default().fg(Color::Yellow),
+                    )));
+                }
+            }
             _ => {
                 lines.push(Line::from(Span::styled(
                     "Follow the instructions above",

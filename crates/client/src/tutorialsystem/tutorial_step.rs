@@ -22,6 +22,11 @@ pub enum TutorialAction {
     AnyKey,
     /// Wait for a specific keybind to be pressed
     Keybind { category: String, action: String },
+    /// Wait for multiple movement keys to be pressed (tracks which ones have been pressed)
+    MovementKeys {
+        required_keys: Vec<KeyCode>,
+        pressed_keys: Vec<KeyCode>,
+    },
     /// Wait for menu to be opened
     OpenMenu,
     /// Wait for inventory to be opened  
@@ -62,14 +67,25 @@ impl TutorialStep {
     }
 
     pub fn is_action_satisfied(
-        &self,
+        &mut self,
         key: &KeyCode,
         keybinds: &crate::app_state::Keybinds,
     ) -> bool {
-        match &self.action {
+        match &mut self.action {
             TutorialAction::KeyPress(expected_key) => key == expected_key,
             TutorialAction::AnyKey => true,
             TutorialAction::Keybind { category, action } => keybinds.matches(category, action, key),
+            TutorialAction::MovementKeys {
+                required_keys,
+                pressed_keys,
+            } => {
+                // Check if this key is one of the required movement keys
+                if required_keys.contains(key) && !pressed_keys.contains(key) {
+                    pressed_keys.push(*key);
+                }
+                // Return true if all required keys have been pressed
+                pressed_keys.len() >= required_keys.len()
+            }
             _ => false,
         }
     }
