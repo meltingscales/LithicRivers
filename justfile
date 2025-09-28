@@ -31,6 +31,7 @@ build_flags := "-j " + cpu_count
 default:
     @just --list
 
+# Release a version to Steam and GitHub Releases
 util-publish-release version: test-release
   #!/usr/bin/env bash
   set -euo pipefail
