@@ -73,13 +73,6 @@ first quest and associated dungeons
   - remove "z" char
   - rework it with Kaya
 
-## rust warnings
-
-- let's fix all the rust warnings.
-  - fix all the warnings in the codebase
-  - ensure all warnings are addressed before merging any PRs
-    - add a cargo check to fail CI if warnings are present
-
 ## launching
 
 - find out how x-terminal-emulator works on Ubuntu
@@ -104,8 +97,6 @@ first quest and associated dungeons
   - crashed ship
   - abandoned factory
   - abandoned research station
-
-- make it so "LOOK" mode is affected by fog of war/brightness!
 
 ## Core Gameplay Loop (Must Have)
 - [ ] Basic world generation with multiple biomes
@@ -220,10 +211,3 @@ first quest and associated dungeons
 7. **Main menu with new game/load game**
 8. **More biome variety and structure generation**
 9. **Basic sound effects** (beyond just music)
-
-## Timeline
-- [ ] September: Core gameplay implementation (**Body mechanics, Day/night, NPCs**)
-- [ ] October: Steam integration and performance (**Optimization, Tutorial**)
-- [ ] November: Polish and bug fixing (**UI/UX refinements**)
-- [ ] Early December: Beta testing
-- [ ] Mid-December: Release
