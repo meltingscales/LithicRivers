@@ -220,6 +220,33 @@ pub fn itemkind_sprite_name(kind: ItemKind) -> &'static str {
     }
 }
 
+pub fn parse_itemkind_from_sprite_name(sprite_name: &str) -> Option<ItemKind> {
+    // Parse ItemKind from sprite name (case-insensitive)
+    match sprite_name.to_lowercase().as_str() {
+        "log" => Some(ItemKind::Log),
+        "wooden_plank" => Some(ItemKind::WoodenPlank),
+        "scrap_electronics" => Some(ItemKind::ScrapElectronics),
+        "diamond" => Some(ItemKind::Diamond),
+        "acorn" => Some(ItemKind::Acorn),
+        "stick" => Some(ItemKind::Stick),
+        "nail" => Some(ItemKind::Nail),
+        "stone" => Some(ItemKind::Stone),
+        "string" => Some(ItemKind::String),
+        "torch" => Some(ItemKind::Torch),
+        "wooden_shavings" => Some(ItemKind::WoodenShavings),
+        "leather" => Some(ItemKind::Leather),
+        "meat" => Some(ItemKind::Meat),
+        "plank_block" => Some(ItemKind::PlankBlock),
+        _ => None,
+    }
+}
+
+pub fn get_all_item_sprite_names() -> Vec<&'static str> {
+    // Get all available item sprite names for help text
+    use strum::IntoEnumIterator;
+    ItemKind::iter().map(itemkind_sprite_name).collect()
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ItemStack {
     pub kind: ItemKind,
