@@ -42,7 +42,7 @@ pub fn handle_npc_interaction_input(app: &mut App, key: KeyCode) -> Result<bool,
 
                 // Start conversation at the beginning of the dialogue tree
                 let conversation = crate::app_state::ConversationState {
-                    current_node_id: Some("start".to_string()),
+                    current_node_id: Some(lithicrivers_core::dialogue::DialogueNodeID::Start),
                     player_mood: crate::app_state::NPCMood::Neutral,
                 };
                 app.panels.npc_interaction = crate::app_state::NPCInteractionState::InDialogue {
@@ -153,7 +153,7 @@ pub fn handle_npc_interaction_input(app: &mut App, key: KeyCode) -> Result<bool,
                         if let Some(ref next_node_id) = selected_choice.leads_to {
                             // Continue conversation with next node
                             let new_conversation = crate::app_state::ConversationState {
-                                current_node_id: Some(next_node_id.clone()),
+                                current_node_id: Some(*next_node_id),
                                 player_mood: new_player_mood,
                             };
 

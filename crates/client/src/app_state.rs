@@ -1,8 +1,8 @@
-use lithicrivers_core::dialogue::DialogueTree;
+use lithicrivers_core::dialogue::{DialogueNodeID, DialogueTree};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ConversationState {
-    pub current_node_id: Option<String>,
+    pub current_node_id: Option<DialogueNodeID>,
     pub player_mood: NPCMood, // Track player's current mood during conversation
 }
 use crate::tutorialsystem::TutorialSystem;

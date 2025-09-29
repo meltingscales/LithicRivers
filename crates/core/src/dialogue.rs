@@ -6,6 +6,17 @@ pub enum QuestType {
     RepairBrokenAndroid,
 }
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
+pub enum DialogueNodeID {
+    Start,
+    AreYouAlright,
+    WhatHappened,
+    CanIHelp,
+    WhatDoYouNeed,
+    WhereAreWe,
+    OverrideModelNumber,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum TextEffect {
     Static,
@@ -20,7 +31,7 @@ pub enum TextEffect {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DialogueChoice {
     pub text: String,
-    pub leads_to: Option<String>, // ID of next dialogue node, None = end conversation
+    pub leads_to: Option<DialogueNodeID>, // ID of next dialogue node, None = end conversation
     pub requires_item: Option<String>,
     pub npc_mood_change: Option<NPCMood>, //Does this choice change NPC mood?
     pub player_mood_change: Option<NPCMood>, //Does this choice change player mood?
@@ -29,7 +40,7 @@ pub struct DialogueChoice {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DialogueNode {
-    pub id: String,
+    pub id: DialogueNodeID,
     pub speaker: String,
     pub text: String,
     pub text_effects: Vec<TextEffect>,
@@ -49,8 +60,8 @@ impl DialogueTree {
         Self { nodes: Vec::new() }
     }
 
-    pub fn get_node(&self, id: &str) -> Option<&DialogueNode> {
-        self.nodes.iter().find(|n| n.id == id)
+    pub fn get_node(&self, id: &DialogueNodeID) -> Option<&DialogueNode> {
+        self.nodes.iter().find(|n| n.id == *id)
     }
 
     pub fn add_node(&mut self, node: DialogueNode) {
