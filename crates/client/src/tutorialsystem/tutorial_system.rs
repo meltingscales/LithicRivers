@@ -122,6 +122,26 @@ impl TutorialSystem {
         false
     }
 
+    /// Check inventory changes for tutorial progression
+    /// Returns true if the tutorial was advanced
+    pub fn handle_inventory_change(
+        &mut self,
+        inventory: &lithicrivers_core::components::Inventory,
+    ) -> bool {
+        if !self.enabled || self.steps.is_empty() {
+            return false;
+        }
+
+        if let Some(current_step) = self.steps.get_mut(self.current_step_index) {
+            if current_step.is_action_satisfied_by_inventory(inventory) {
+                current_step.completed = true;
+                self.advance_step();
+                return true;
+            }
+        }
+        false
+    }
+
     /// Advance to the next tutorial step
     pub fn advance_step(&mut self) {
         // Check if we just completed the torch tutorial

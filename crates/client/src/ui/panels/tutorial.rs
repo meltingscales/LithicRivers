@@ -91,6 +91,63 @@ pub fn render_tutorial_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
                         .add_modifier(Modifier::BOLD),
                 )));
             }
+            crate::tutorialsystem::TutorialAction::PickupItem { item, quantity } => {
+                let required_qty = quantity.unwrap_or(1);
+                let item_name = lithicrivers_core::components::itemkind_name(*item);
+
+                let pickup_hint = if required_qty == 1 {
+                    format!("Pick up a {}", item_name.to_lowercase())
+                } else {
+                    format!("Pick up {} {}", required_qty, item_name.to_lowercase())
+                };
+
+                lines.push(Line::from(Span::styled(
+                    pickup_hint,
+                    Style::default()
+                        .fg(Color::Yellow)
+                        .add_modifier(Modifier::BOLD),
+                )));
+
+                // Show current progress if player has some of the item
+                if let Some((player_entity, _)) = app
+                    .core
+                    .game
+                    .world
+                    .query::<(
+                        &lithicrivers_core::components::Player,
+                        &lithicrivers_core::components::Inventory,
+                    )>()
+                    .iter()
+                    .next()
+                {
+                    if let Ok(inventory) =
+                        app.core
+                            .game
+                            .world
+                            .get::<&lithicrivers_core::components::Inventory>(player_entity)
+                    {
+                        let current_qty: u32 = inventory
+                            .slots
+                            .iter()
+                            .filter(|stack| stack.kind == *item)
+                            .map(|stack| stack.qty)
+                            .sum();
+
+                        if current_qty > 0 {
+                            let progress_text = format!(
+                                "Progress: {} / {} {}",
+                                current_qty,
+                                required_qty,
+                                item_name.to_lowercase()
+                            );
+                            lines.push(Line::from(Span::styled(
+                                progress_text,
+                                Style::default().fg(Color::Cyan),
+                            )));
+                        }
+                    }
+                }
+            }
             crate::tutorialsystem::TutorialAction::MovementKeys {
                 required_keys,
                 pressed_keys,
