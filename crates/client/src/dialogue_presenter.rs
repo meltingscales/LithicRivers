@@ -364,11 +364,11 @@ impl DialoguePresenter {
 
                 // Add quest marker for choices that unlock quests
                 let quest_marker = if choice.unlocks_quest.is_some() {
-                    " [QUEST]"
+                    " [ACCEPT QUEST]"
                 } else {
                     ""
                 };
-                let choice_text = format!("{} {}. {}{}", prefix, i + 1, choice.text, quest_marker);
+                let choice_text = format!("{} {}. {} {}", prefix, i + 1, quest_marker, choice.text);
 
                 let choice_color = if choice.unlocks_quest.is_some() && i == selected_choice {
                     Color::LightYellow // Highlighted quest choice
