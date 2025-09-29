@@ -136,14 +136,67 @@ fn update_autocomplete(input: &str) -> (Vec<String>, Option<usize>) {
         return (Vec::new(), None);
     }
 
-    let registry = get_command_registry();
-    let matches: Vec<String> = registry
-        .get_matching_commands(input)
-        .into_iter()
-        .map(|s| s.to_string())
-        .collect();
+    let parts: Vec<&str> = input.trim().split_whitespace().collect();
 
-    (matches, None)
+    if parts.is_empty() {
+        return (Vec::new(), None);
+    }
+
+    // If we're still typing the command name (no spaces or just started)
+    if parts.len() == 1 && !input.ends_with(' ') {
+        let registry = get_command_registry();
+        let matches: Vec<String> = registry
+            .get_matching_commands(input)
+            .into_iter()
+            .map(|s| s.to_string())
+            .collect();
+        return (matches, None);
+    }
+
+    // Handle sub-command autocomplete
+    let command_name = parts[0];
+    match command_name {
+        "giveitem" => {
+            if parts.len() == 1 || (parts.len() == 2 && !input.ends_with(' ')) {
+                // Autocomplete item names for first argument
+                let prefix = if parts.len() == 2 { parts[1] } else { "" };
+                let item_names = lithicrivers_core::components::get_all_item_sprite_names();
+                let matches: Vec<String> = item_names
+                    .into_iter()
+                    .filter(|name| name.starts_with(prefix))
+                    .map(|name| format!("giveitem {}", name))
+                    .collect();
+                return (matches, None);
+            } else if parts.len() == 2 || (parts.len() == 3 && !input.ends_with(' ')) {
+                // Show quantity suggestions for second argument
+                let base = format!("giveitem {}", parts[1]);
+                let quantity_suggestions = vec!["1", "5", "10", "50", "100"];
+                let prefix = if parts.len() == 3 { parts[2] } else { "" };
+                let matches: Vec<String> = quantity_suggestions
+                    .into_iter()
+                    .filter(|qty| qty.starts_with(prefix))
+                    .map(|qty| format!("{} {}", base, qty))
+                    .collect();
+                return (matches, None);
+            }
+        }
+        "tp" => {
+            if parts.len() < 4 {
+                // For tp command, we could suggest coordinate patterns
+                let coord_suggestions = vec!["0 0 0", "10 10 0", "100 100 0"];
+                let matches: Vec<String> = coord_suggestions
+                    .into_iter()
+                    .map(|coords| format!("tp {}", coords))
+                    .collect();
+                return (matches, None);
+            }
+        }
+        _ => {
+            // No sub-command autocomplete for other commands
+        }
+    }
+
+    (Vec::new(), None)
 }
 
 // Individual command handlers
