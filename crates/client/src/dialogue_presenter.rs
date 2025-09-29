@@ -361,12 +361,19 @@ impl DialoguePresenter {
             // Add choice lines with different colors
             for (i, choice) in node.choices.iter().enumerate() {
                 let prefix = if i == selected_choice { ">" } else { " " };
-                let choice_text = format!("{} {}. {}", prefix, i + 1, choice.text);
 
-                let choice_color = if i == selected_choice {
-                    Color::Yellow // Highlighted choice
+                // Add quest marker for choices that unlock quests
+                let quest_marker = if choice.unlocks_quest { " [QUEST]" } else { "" };
+                let choice_text = format!("{} {}. {}{}", prefix, i + 1, choice.text, quest_marker);
+
+                let choice_color = if choice.unlocks_quest && i == selected_choice {
+                    Color::LightYellow // Highlighted quest choice
+                } else if choice.unlocks_quest {
+                    Color::Green // Available quest choice
+                } else if i == selected_choice {
+                    Color::Yellow // Highlighted regular choice
                 } else {
-                    Color::Cyan // Available choices
+                    Color::Cyan // Available regular choices
                 };
 
                 lines.push(Line::from(Span::styled(
