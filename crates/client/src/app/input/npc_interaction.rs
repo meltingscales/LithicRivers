@@ -119,6 +119,42 @@ pub fn handle_npc_interaction_input(app: &mut App, key: KeyCode) -> Result<bool,
                                 conversation.player_mood // Keep current mood if no change
                             };
 
+                        // Handle quest unlocking
+                        if selected_choice.unlocks_quest {
+                            app.core.game.res.log("New quest unlocked!".to_string());
+
+                            // Check if this is the broken android quest by examining the NPC
+                            if let Ok(dialogue) =
+                                app.core
+                                    .game
+                                    .world
+                                    .get::<&lithicrivers_core::components::Dialogue>(entity)
+                            {
+                                if dialogue.name == "Broken SapienCorp Android" {
+                                    // Get the android's position for the quest marker
+                                    if let Ok(android_pos) =
+                                        app.core
+                                            .game
+                                            .world
+                                            .get::<&lithicrivers_core::components::Position>(entity)
+                                    {
+                                        // Create a fetch quest marker at the android's location
+                                        app.core.game.res.add_quest_marker(lithicrivers_core::resources::QuestMarker {
+                                            name: "Repair the Broken Android".to_string(),
+                                            description: "Find a lab-grown diamond and scrap electronics to repair the broken SapienCorp android".to_string(),
+                                            x: android_pos.x,
+                                            y: android_pos.y,
+                                            z: android_pos.z,
+                                            marker_type: lithicrivers_core::resources::QuestMarkerType::FetchQuest,
+                                        });
+                                        app.core.game.res.log_green(
+                                            "Quest marker added: Repair the Broken Android",
+                                        );
+                                    }
+                                }
+                            }
+                        }
+
                         if let Some(ref next_node_id) = selected_choice.leads_to {
                             // Continue conversation with next node
                             let new_conversation = crate::app_state::ConversationState {

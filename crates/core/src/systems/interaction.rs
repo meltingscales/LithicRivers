@@ -392,25 +392,8 @@ fn execute_dialogue_choice(
     // Handle quest unlocking
     if choice.unlocks_quest {
         res.log("New quest unlocked!".to_string());
-
-        // Check if this is the broken android quest by examining the NPC
-        if let Ok(dialogue) = world.get::<&Dialogue>(npc_entity) {
-            if dialogue.name == "Broken SapienCorp Android" {
-                // Get the android's position for the quest marker
-                if let Ok(android_pos) = world.get::<&Position>(npc_entity) {
-                    // Create a fetch quest marker at the android's location
-                    res.add_quest_marker(crate::resources::QuestMarker {
-                        name: "Repair the Broken Android".to_string(),
-                        description: "Find a lab-grown diamond and scrap electronics to repair the broken SapienCorp android".to_string(),
-                        x: android_pos.x,
-                        y: android_pos.y,
-                        z: android_pos.z,
-                        marker_type: crate::resources::QuestMarkerType::FetchQuest,
-                    });
-                    res.log_green("Quest marker added: Repair the Broken Android");
-                }
-            }
-        }
+        // Note: Quest marker creation is handled by the client dialogue system
+        // This core system is only used for testing/simulation
     }
 
     // Move to next dialogue or end conversation
