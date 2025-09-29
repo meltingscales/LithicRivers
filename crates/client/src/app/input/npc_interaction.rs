@@ -231,6 +231,108 @@ pub fn handle_npc_interaction_input(app: &mut App, key: KeyCode) -> Result<bool,
                             }
                         }
 
+                        // Handle item consumption for dialogue choices
+                        if let Some(required_item) = &selected_choice.requires_item {
+                            // Special case for quest completion choices - consume all required items
+                            if selected_choice.leads_to
+                                == Some(lithicrivers_core::dialogue::DialogueNodeID::CompleteQuest)
+                            {
+                                if let Some(required_quest) = &selected_choice.requires_quest_active
+                                {
+                                    // Consume all items needed for this quest
+                                    if let Some((player_entity, _)) = app
+                                        .core
+                                        .game
+                                        .world
+                                        .query::<&lithicrivers_core::components::Player>()
+                                        .iter()
+                                        .next()
+                                    {
+                                        if let Ok(mut inventory) = app.core.game.world.get::<&mut lithicrivers_core::components::Inventory>(player_entity) {
+                                            match required_quest {
+                                                lithicrivers_core::dialogue::QuestType::RepairBrokenAndroid => {
+                                                    let mut consumed_diamond = false;
+                                                    let mut consumed_electronics = false;
+
+                                                    // Consume Diamond
+                                                    for stack in inventory.slots.iter_mut() {
+                                                        if lithicrivers_core::components::itemkind_name(stack.kind) == "Diamond" && stack.qty > 0 {
+                                                            stack.qty -= 1;
+                                                            app.core.game.res.log("Used 1 Diamond.".to_string());
+                                                            consumed_diamond = true;
+                                                            break;
+                                                        }
+                                                    }
+
+                                                    // Consume Scrap Electronics
+                                                    for stack in inventory.slots.iter_mut() {
+                                                        if lithicrivers_core::components::itemkind_name(stack.kind) == "Scrap Electronics" && stack.qty > 0 {
+                                                            stack.qty -= 1;
+                                                            app.core.game.res.log("Used 1 Scrap Electronics.".to_string());
+                                                            consumed_electronics = true;
+                                                            break;
+                                                        }
+                                                    }
+
+                                                    if !(consumed_diamond && consumed_electronics) {
+                                                        app.core.game.res.log("Error: Could not consume all required quest items!".to_string());
+                                                        return Ok(true);
+                                                    }
+                                                }
+                                            }
+                                            // Remove empty stacks
+                                            inventory.slots.retain(|stack| stack.qty > 0);
+                                        }
+                                    }
+                                }
+                            } else {
+                                // Standard single item requirement check and consumption
+                                if let Some((player_entity, _)) = app
+                                    .core
+                                    .game
+                                    .world
+                                    .query::<&lithicrivers_core::components::Player>()
+                                    .iter()
+                                    .next()
+                                {
+                                    if let Ok(mut inventory) =
+                                        app.core
+                                            .game
+                                            .world
+                                            .get::<&mut lithicrivers_core::components::Inventory>(
+                                            player_entity,
+                                        )
+                                    {
+                                        let mut consumed = false;
+                                        for stack in inventory.slots.iter_mut() {
+                                            if lithicrivers_core::components::itemkind_name(
+                                                stack.kind,
+                                            ) == required_item
+                                                && stack.qty > 0
+                                            {
+                                                stack.qty -= 1;
+                                                app.core
+                                                    .game
+                                                    .res
+                                                    .log(format!("Used 1 {}.", required_item));
+                                                consumed = true;
+                                                break;
+                                            }
+                                        }
+                                        if !consumed {
+                                            app.core.game.res.log(format!(
+                                                "You don't have any {} to trade!",
+                                                required_item
+                                            ));
+                                            return Ok(true);
+                                        }
+                                        // Remove empty stacks
+                                        inventory.slots.retain(|stack| stack.qty > 0);
+                                    }
+                                }
+                            }
+                        }
+
                         // Handle quest completion
                         if let Some(ref next_node_id) = selected_choice.leads_to {
                             if *next_node_id

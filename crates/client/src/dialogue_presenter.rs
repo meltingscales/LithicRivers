@@ -290,6 +290,7 @@ impl DialoguePresenter {
                 conversation,
                 selected_choice,
                 resources,
+                world,
             );
             (dialogue_lines, npc_portrait, player_portrait)
         } else {
@@ -325,6 +326,7 @@ impl DialoguePresenter {
         conversation: &ConversationState,
         selected_choice: usize,
         resources: &lithicrivers_core::resources::Resources,
+        world: &World,
     ) -> Vec<Line<'static>> {
         if let Some(node) = conversation
             .current_node_id
@@ -364,7 +366,14 @@ impl DialoguePresenter {
             // Add empty line for spacing
             lines.push(Line::from(""));
 
-            // Filter choices based on quest requirements
+            // Get player entity for item checks
+            let player_entity = world
+                .query::<&lithicrivers_core::components::Player>()
+                .iter()
+                .next()
+                .map(|(entity, _)| entity);
+
+            // Filter choices based on quest and item requirements
             let filtered_choices: Vec<(usize, &lithicrivers_core::dialogue::DialogueChoice)> = node
                 .choices
                 .iter()
@@ -381,6 +390,54 @@ impl DialoguePresenter {
                             return false;
                         }
                     }
+
+                    // Check item requirements
+                    if let Some(required_item) = &choice.requires_item {
+                        if let Some(player_entity) = player_entity {
+                            // Special case for quest completion choices - check if all quest objectives are met
+                            if choice.leads_to == Some(lithicrivers_core::dialogue::DialogueNodeID::CompleteQuest) {
+                                // For quest completion, check if the active quest has all items needed
+                                if let Some(required_quest) = &choice.requires_quest_active {
+                                    let quest_items_ready = if let Ok(inventory) = world.get::<&lithicrivers_core::components::Inventory>(player_entity) {
+                                        // Check if player has all items needed for this quest
+                                        match required_quest {
+                                            lithicrivers_core::dialogue::QuestType::RepairBrokenAndroid => {
+                                                let has_diamond = inventory.slots.iter().any(|stack| {
+                                                    lithicrivers_core::components::itemkind_name(stack.kind) == "Diamond" && stack.qty > 0
+                                                });
+                                                let has_electronics = inventory.slots.iter().any(|stack| {
+                                                    lithicrivers_core::components::itemkind_name(stack.kind) == "Scrap Electronics" && stack.qty > 0
+                                                });
+                                                has_diamond && has_electronics
+                                            }
+                                        }
+                                    } else {
+                                        false
+                                    };
+                                    if !quest_items_ready {
+                                        return false;
+                                    }
+                                }
+                            } else {
+                                // Standard single item requirement check
+                                let has_item = if let Ok(inventory) = world.get::<&lithicrivers_core::components::Inventory>(player_entity) {
+                                    inventory.slots.iter().any(|stack| {
+                                        lithicrivers_core::components::itemkind_name(stack.kind) == required_item
+                                            && stack.qty > 0
+                                    })
+                                } else {
+                                    false
+                                };
+                                if !has_item {
+                                    return false;
+                                }
+                            }
+                        } else {
+                            // No player entity found, can't check items
+                            return false;
+                        }
+                    }
+
                     true
                 })
                 .collect();

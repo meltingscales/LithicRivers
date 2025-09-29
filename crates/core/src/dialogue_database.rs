@@ -109,7 +109,7 @@ impl DialogueDatabase {
                     requires_quest_complete: None,
                 },
                 DialogueChoice {
-                    text: "I have the diamond and scrap electronics you need.".to_string(),
+                    text: "[Give items] I have the diamond and scrap electronics you need.".to_string(),
                     leads_to: Some(DialogueNodeID::CompleteQuest),
                     requires_item: Some("Diamond".to_string()),
                     npc_mood_change: Some(NPCMood::Happy),
