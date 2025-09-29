@@ -295,7 +295,7 @@ fn simulate_dialogue_interaction(
             dialogue_node.speaker, dialogue_node.text
         ));
 
-        // Filter and show available choices based on quest requirements
+        // Filter and show available choices based on quest and item requirements
         let filtered_choices: Vec<(usize, &crate::dialogue::DialogueChoice)> = dialogue_node
             .choices
             .iter()
@@ -312,6 +312,56 @@ fn simulate_dialogue_interaction(
                         return false;
                     }
                 }
+
+                // Check item requirements
+                if let Some(required_item) = &choice.requires_item {
+                    // Special case for quest completion choices - check if all quest objectives are met
+                    if choice.leads_to == Some(crate::dialogue::DialogueNodeID::CompleteQuest) {
+                        // For quest completion, check if the active quest has all items needed
+                        if let Some(required_quest) = &choice.requires_quest_active {
+                            let quest_items_ready = if let Ok(inventory) =
+                                world.get::<&Inventory>(player_entity)
+                            {
+                                // Check if player has all items needed for this quest
+                                match required_quest {
+                                    crate::dialogue::QuestType::RepairBrokenAndroid => {
+                                        let has_diamond = inventory.slots.iter().any(|stack| {
+                                            crate::components::itemkind_name(stack.kind)
+                                                == "Diamond"
+                                                && stack.qty > 0
+                                        });
+                                        let has_electronics = inventory.slots.iter().any(|stack| {
+                                            crate::components::itemkind_name(stack.kind)
+                                                == "Scrap Electronics"
+                                                && stack.qty > 0
+                                        });
+                                        has_diamond && has_electronics
+                                    }
+                                }
+                            } else {
+                                false
+                            };
+                            if !quest_items_ready {
+                                return false;
+                            }
+                        }
+                    } else {
+                        // Standard single item requirement check
+                        let has_item = if let Ok(inventory) = world.get::<&Inventory>(player_entity)
+                        {
+                            inventory.slots.iter().any(|stack| {
+                                crate::components::itemkind_name(stack.kind) == required_item
+                                    && stack.qty > 0
+                            })
+                        } else {
+                            false
+                        };
+                        if !has_item {
+                            return false;
+                        }
+                    }
+                }
+
                 true
             })
             .collect();
@@ -369,22 +419,75 @@ fn execute_dialogue_choice(
     if let Some(required_item) = &choice.requires_item {
         let mut can_trade = false;
 
-        // Check if player has the required item and remove it
-        if let Ok(mut inventory) = world.get::<&mut Inventory>(player_entity) {
-            for stack in inventory.slots.iter_mut() {
-                if crate::components::itemkind_name(stack.kind) == required_item && stack.qty > 0 {
-                    stack.qty -= 1;
-                    res.log(format!("Used 1 {}.", required_item));
-                    can_trade = true;
-                    break;
+        // Special case for quest completion choices - consume all required items
+        if choice.leads_to == Some(crate::dialogue::DialogueNodeID::CompleteQuest) {
+            if let Some(required_quest) = &choice.requires_quest_active {
+                // Consume all items needed for this quest
+                if let Ok(mut inventory) = world.get::<&mut Inventory>(player_entity) {
+                    match required_quest {
+                        crate::dialogue::QuestType::RepairBrokenAndroid => {
+                            let mut consumed_diamond = false;
+                            let mut consumed_electronics = false;
+
+                            // Consume Diamond
+                            for stack in inventory.slots.iter_mut() {
+                                if crate::components::itemkind_name(stack.kind) == "Diamond"
+                                    && stack.qty > 0
+                                {
+                                    stack.qty -= 1;
+                                    res.log(format!("Used 1 Diamond."));
+                                    consumed_diamond = true;
+                                    break;
+                                }
+                            }
+
+                            // Consume Scrap Electronics
+                            for stack in inventory.slots.iter_mut() {
+                                if crate::components::itemkind_name(stack.kind)
+                                    == "Scrap Electronics"
+                                    && stack.qty > 0
+                                {
+                                    stack.qty -= 1;
+                                    res.log(format!("Used 1 Scrap Electronics."));
+                                    consumed_electronics = true;
+                                    break;
+                                }
+                            }
+
+                            can_trade = consumed_diamond && consumed_electronics;
+                            if !can_trade {
+                                res.log(
+                                    "Error: Could not consume all required quest items!"
+                                        .to_string(),
+                                );
+                                return;
+                            }
+                        }
+                    }
+                    // Remove empty stacks
+                    inventory.slots.retain(|stack| stack.qty > 0);
                 }
             }
-            // Remove empty stacks
-            inventory.slots.retain(|stack| stack.qty > 0);
+        } else {
+            // Standard single item requirement check and consumption
+            if let Ok(mut inventory) = world.get::<&mut Inventory>(player_entity) {
+                for stack in inventory.slots.iter_mut() {
+                    if crate::components::itemkind_name(stack.kind) == required_item
+                        && stack.qty > 0
+                    {
+                        stack.qty -= 1;
+                        res.log(format!("Used 1 {}.", required_item));
+                        can_trade = true;
+                        break;
+                    }
+                }
+                // Remove empty stacks
+                inventory.slots.retain(|stack| stack.qty > 0);
+            }
         }
 
         if !can_trade {
-            res.log(format!("You don't have any {} to trade!", required_item));
+            res.log(format!("You don't have the required items to trade!"));
             return;
         }
     }
