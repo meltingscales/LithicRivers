@@ -54,7 +54,7 @@ impl DialogueDatabase {
         tree.add_node(DialogueNode {
             id: DialogueNodeID::Start,
             speaker: "Broken Android".to_string(),
-            text: "<1>Hello</1>... <2>...user detected</2>. I am... <3>...SapienCorp maintenance unit</3>. My work task <4>is ... welding ... today</4>. How <2>can I assist you</2>... ... ... <5>today</5>? \n\n (You gaze at the rusty, flickering lump of metal on the floor. You wonder how it's still running. These construction and maintenance models were released only a few months ago. How is this one so messed up?)".to_string(),
+            text: "<1>Hello</1>... <2>...company android detected</2>. I am... <3>...SapienCorp maintenance unit</3>. My work task <4>is ... welding ... today</4>. How <2>can I assist you</2>... ... ... <5>today</5>? \n\n (You gaze at the rusty, flickering lump of metal on the floor. You wonder how it's still running. These construction and maintenance models were released only a few months ago. How is this one so messed up?)".to_string(),
             text_effects: vec![TextEffect::Static, TextEffect::Buzz, TextEffect::Crackle, TextEffect::PopHiss, TextEffect::Corrupt],
             mood: NPCMood::Weird,
             choices: vec![

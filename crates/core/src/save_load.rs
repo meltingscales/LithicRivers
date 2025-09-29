@@ -8,20 +8,22 @@ use hecs::World;
 use serde::{Deserialize, Serialize};
 
 use crate::components::{
-    BlocksMovement, DogAI, DroppedItem, FeralDog, Glyph, Health, Inventory, ItemKind, Player,
-    Position, Sheep, SpriteRef,
+    BlocksMovement, DogAI, DroppedItem, FeralDog, FogOfWar, Glyph, Health, Inventory, ItemKind,
+    LightSource, Player, Position, Sheep, SpriteRef,
 };
 use crate::model::body::Body; // currently not persisted (MVP)
 use crate::resources::Resources;
 use crate::world::Chunk as TileChunk;
 use crate::world::GameWorld as TileWorld;
 
-pub const SAVE_VERSION: u32 = 3;
+pub const SAVE_VERSION: u32 = 4;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PlayerSave {
     pub pos: Position,
     pub inventory: Inventory,
+    pub light_source: Option<LightSource>,
+    pub fog_of_war: Option<FogOfWar>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -66,6 +68,9 @@ pub struct SaveData {
     pub structure_generation_states:
         std::collections::HashMap<String, crate::resources::StructureGenerationState>,
     pub pending_structures: Vec<crate::resources::PendingStructure>,
+    pub quest_markers: Vec<crate::resources::QuestMarker>,
+    pub active_quests: Vec<crate::dialogue::ActiveQuest>,
+    pub explored_chunks: std::collections::HashMap<(i64, i64, i64), bool>,
 }
 
 impl SaveData {
@@ -96,6 +101,8 @@ impl SaveData {
                 maybe_health,
                 maybe_dog_ai,
                 maybe_drop,
+                maybe_light_source,
+                maybe_fog_of_war,
             ),
         ) in game
             .world
@@ -108,6 +115,8 @@ impl SaveData {
                 Option<&Health>,
                 Option<&DogAI>,
                 Option<&DroppedItem>,
+                Option<&LightSource>,
+                Option<&FogOfWar>,
             )>()
             .iter()
         {
@@ -116,6 +125,8 @@ impl SaveData {
                 player_save = Some(PlayerSave {
                     pos: *pos,
                     inventory: inv,
+                    light_source: maybe_light_source.cloned(),
+                    fog_of_war: maybe_fog_of_war.cloned(),
                 });
             } else if maybe_sheep.is_some() {
                 sheep.push(SheepSave { pos: *pos });
@@ -149,6 +160,9 @@ impl SaveData {
             chunk_generation_states: game.res.chunk_generation_states.clone(),
             structure_generation_states: game.res.structure_generation_states.clone(),
             pending_structures: game.res.pending_structures.clone(),
+            quest_markers: game.res.quest_markers.clone(),
+            active_quests: game.res.active_quests.clone(),
+            explored_chunks: game.res.explored_chunks.clone(),
         })
     }
 
@@ -162,19 +176,30 @@ impl SaveData {
         game.res.chunk_generation_states = self.chunk_generation_states;
         game.res.structure_generation_states = self.structure_generation_states;
         game.res.pending_structures = self.pending_structures;
+        game.res.quest_markers = self.quest_markers;
+        game.res.active_quests = self.active_quests;
+        game.res.explored_chunks = self.explored_chunks;
 
         // Rebuild entity world
         game.world = World::new();
         // Player
-        let _player_e = game.world.spawn((
-            self.player.pos,
-            Glyph('@'),
-            Player,
-            BlocksMovement,
-            Body::default(),
-            SpriteRef::new("entities", "player"),
-            self.player.inventory,
-        ));
+        let mut player_builder = hecs::EntityBuilder::new();
+        player_builder.add(self.player.pos);
+        player_builder.add(Glyph('@'));
+        player_builder.add(Player);
+        player_builder.add(BlocksMovement);
+        player_builder.add(Body::default());
+        player_builder.add(SpriteRef::new("entities", "player"));
+        player_builder.add(self.player.inventory);
+
+        if let Some(light_source) = self.player.light_source {
+            player_builder.add(light_source);
+        }
+        if let Some(fog_of_war) = self.player.fog_of_war {
+            player_builder.add(fog_of_war);
+        }
+
+        let _player_e = game.world.spawn(player_builder.build());
         // Note: player_entity no longer needed - use ECS queries
         // Sheep
         for s in self.sheep.into_iter() {
@@ -236,6 +261,9 @@ struct SaveDataJson {
     pub feral_dogs: Vec<FeralDogSave>,
     pub dropped_items: Vec<DroppedItemSave>,
     pub viewport: ViewportSave,
+    pub quest_markers: Vec<crate::resources::QuestMarker>,
+    pub active_quests: Vec<crate::dialogue::ActiveQuest>,
+    pub explored_chunks: Vec<((i64, i64, i64), bool)>,
 }
 
 impl From<TileWorld> for WorldJson {
@@ -269,6 +297,9 @@ impl From<SaveData> for SaveDataJson {
             feral_dogs: s.feral_dogs,
             dropped_items: s.dropped_items,
             viewport: s.viewport,
+            quest_markers: s.quest_markers,
+            active_quests: s.active_quests,
+            explored_chunks: s.explored_chunks.into_iter().collect(),
         }
     }
 }
@@ -288,6 +319,9 @@ impl From<SaveDataJson> for SaveData {
             chunk_generation_states: std::collections::HashMap::new(),
             structure_generation_states: std::collections::HashMap::new(),
             pending_structures: Vec::new(),
+            quest_markers: j.quest_markers,
+            active_quests: j.active_quests,
+            explored_chunks: j.explored_chunks.into_iter().collect(),
         }
     }
 }
