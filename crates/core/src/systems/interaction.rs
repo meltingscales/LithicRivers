@@ -171,11 +171,62 @@ pub fn pickup_item(
         false
     };
 
+    // Check for quest objective completion
+    if pickup_successful {
+        check_fetch_quest_completion(res, item.kind, item.qty);
+    }
+
     // Remove the dropped item from world (separate borrow)
     if pickup_successful {
         if let Err(e) = world.despawn(item_entity) {
             res.log(format!("Warning: Failed to despawn item: {:?}", e));
         }
+    }
+}
+
+/// Check if picking up an item completes any fetch quest objectives
+pub fn check_fetch_quest_completion(res: &mut Resources, item_kind: ItemKind, _qty: u32) {
+    let item_name = crate::components::itemkind_name(item_kind);
+    let mut completed_objectives = Vec::new();
+    let mut completed_quests = Vec::new();
+
+    // First pass: check for completed objectives and collect info
+    for quest in res.active_quests.iter_mut() {
+        if quest.state != crate::dialogue::QuestState::Active {
+            continue;
+        }
+
+        for (_objective_index, objective) in quest.objectives.iter_mut().enumerate() {
+            if !objective.completed {
+                if let crate::dialogue::QuestObjectiveType::FetchItem {
+                    item_name: required_item,
+                    quantity: _required_qty,
+                } = &objective.objective_type
+                {
+                    if item_name == *required_item {
+                        // Mark objective as completed
+                        objective.completed = true;
+                        completed_objectives.push(objective.description.clone());
+
+                        // Check if all objectives are completed
+                        if quest.is_completed() {
+                            quest.state = crate::dialogue::QuestState::Completed;
+                            completed_quests.push(quest.name.clone());
+                        }
+
+                        break; // Only complete one objective per item pickup
+                    }
+                }
+            }
+        }
+    }
+
+    // Second pass: log messages
+    for objective_desc in completed_objectives {
+        res.log_green(format!("Quest objective completed: {}", objective_desc));
+    }
+    for quest_name in completed_quests {
+        res.log_green(format!("Quest completed: {}", quest_name));
     }
 }
 
@@ -210,6 +261,9 @@ pub fn start_corpse_looting(world: &mut World, res: &mut Resources, corpse_entit
                     qty,
                     crate::components::itemkind_name(item_kind)
                 ));
+
+                // Check for quest objective completion
+                check_fetch_quest_completion(res, item_kind, qty);
             }
         }
     }

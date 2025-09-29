@@ -1,3 +1,4 @@
+use crate::dialogue::{ActiveQuest, QuestType};
 use crate::game_config::GameConfig;
 use crate::game_events::GameEvents;
 use crate::game_time::GameTime;
@@ -37,7 +38,7 @@ pub struct QuestMarker {
     pub marker_type: QuestMarkerType,
 }
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum QuestMarkerType {
     MainQuest,
     SideQuest,
@@ -57,6 +58,7 @@ pub struct Resources {
     pub chunk_generation_states: HashMap<(i64, i64, i64), ChunkGenerationState>,
     pub structure_generation_states: HashMap<String, StructureGenerationState>,
     pub quest_markers: Vec<QuestMarker>,
+    pub active_quests: Vec<ActiveQuest>,
     pub explored_chunks: HashMap<(i64, i64, i64), bool>,
 }
 
@@ -73,6 +75,7 @@ impl Resources {
             chunk_generation_states: HashMap::new(),
             structure_generation_states: HashMap::new(),
             quest_markers: Vec::new(),
+            active_quests: Vec::new(),
             explored_chunks: HashMap::new(),
         }
     }
@@ -109,6 +112,71 @@ impl Resources {
     /// Add a quest marker to the world
     pub fn add_quest_marker(&mut self, marker: QuestMarker) {
         self.quest_markers.push(marker);
+    }
+
+    /// Start a new quest
+    pub fn start_quest(&mut self, quest: ActiveQuest) {
+        // Check if quest is already active to prevent duplicates
+        if !self
+            .active_quests
+            .iter()
+            .any(|q| q.quest_type == quest.quest_type)
+        {
+            self.active_quests.push(quest);
+            self.log(format!(
+                "Quest started: {}",
+                self.active_quests.last().unwrap().name
+            ));
+        }
+    }
+
+    /// Get active quest by type
+    pub fn get_active_quest(&self, quest_type: QuestType) -> Option<&ActiveQuest> {
+        self.active_quests
+            .iter()
+            .find(|q| q.quest_type == quest_type)
+    }
+
+    /// Get mutable active quest by type
+    pub fn get_active_quest_mut(&mut self, quest_type: QuestType) -> Option<&mut ActiveQuest> {
+        self.active_quests
+            .iter_mut()
+            .find(|q| q.quest_type == quest_type)
+    }
+
+    /// Complete a quest and remove its marker
+    pub fn complete_quest(&mut self, quest_type: QuestType) {
+        let quest_name = if let Some(quest) = self.get_active_quest_mut(quest_type) {
+            quest.state = crate::dialogue::QuestState::Completed;
+            quest.name.clone()
+        } else {
+            return;
+        };
+
+        self.log(format!("Quest completed: {}", quest_name));
+
+        // Remove associated quest markers
+        self.quest_markers.retain(|marker| {
+            // Remove markers associated with this quest type
+            // For now, we'll remove FetchQuest markers when RepairBrokenAndroid completes
+            match quest_type {
+                QuestType::RepairBrokenAndroid => marker.marker_type != QuestMarkerType::FetchQuest,
+            }
+        });
+    }
+
+    /// Check if a quest is active
+    pub fn is_quest_active(&self, quest_type: QuestType) -> bool {
+        self.active_quests
+            .iter()
+            .any(|q| q.quest_type == quest_type && q.state == crate::dialogue::QuestState::Active)
+    }
+
+    /// Check if a quest is completed
+    pub fn is_quest_completed(&self, quest_type: QuestType) -> bool {
+        self.active_quests.iter().any(|q| {
+            q.quest_type == quest_type && q.state == crate::dialogue::QuestState::Completed
+        })
     }
 
     /// Mark a chunk as explored
