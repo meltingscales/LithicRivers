@@ -269,7 +269,11 @@ pub fn execute_interaction_action(app: &mut App, action: &crate::app_state::Inte
                     .world
                     .get::<&lithicrivers_core::components::Inventory>(player_entity)
                 {
-                    app.ui.tutorial_system.handle_inventory_change(&inventory);
+                    tracing::info!(target: "tutorial", "Item picked up, calling tutorial system with inventory containing {} stacks",
+                        inventory.slots.len());
+                    let tutorial_advanced =
+                        app.ui.tutorial_system.handle_inventory_change(&inventory);
+                    tracing::info!(target: "tutorial", "Tutorial system returned: {}", tutorial_advanced);
                 }
             }
 
