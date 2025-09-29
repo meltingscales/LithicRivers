@@ -116,6 +116,7 @@ pub struct PanelStates {
     pub cheat_console: CheatConsoleState,
     pub global_map: GlobalMapPanelState,
     pub tutorial_selection: TutorialSelectionState,
+    pub quests: QuestPanelState,
 }
 
 /// Inventory panel state
@@ -516,6 +517,27 @@ impl Default for GlobalMapPanelState {
     fn default() -> Self {
         GlobalMapPanelState {
             selected_marker_index: 0,
+        }
+    }
+}
+
+/// Quest panel state
+pub struct QuestPanelState {
+    pub selected_quest_index: usize, // Index of currently selected quest
+    pub selected_section: QuestSection, // Whether viewing active or completed quests
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum QuestSection {
+    Active,
+    Completed,
+}
+
+impl Default for QuestPanelState {
+    fn default() -> Self {
+        QuestPanelState {
+            selected_quest_index: 0,
+            selected_section: QuestSection::Active,
         }
     }
 }

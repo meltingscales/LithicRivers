@@ -268,6 +268,7 @@ impl DialoguePresenter {
         dialogue_tree: &DialogueTree,
         conversation: &ConversationState,
         selected_choice: usize,
+        resources: &lithicrivers_core::resources::Resources,
     ) -> (Vec<Line<'static>>, Option<String>, Option<String>) {
         if let Some(node) = conversation
             .current_node_id
@@ -284,8 +285,12 @@ impl DialoguePresenter {
             let npc_portrait =
                 Self::get_character_portrait(sprite_loader, world, npc_entity, display_mood);
             let player_portrait = Self::get_player_portrait(sprite_loader, conversation);
-            let dialogue_lines =
-                Self::format_dialogue_lines(dialogue_tree, conversation, selected_choice);
+            let dialogue_lines = Self::format_dialogue_lines(
+                dialogue_tree,
+                conversation,
+                selected_choice,
+                resources,
+            );
             (dialogue_lines, npc_portrait, player_portrait)
         } else {
             (
@@ -319,6 +324,7 @@ impl DialoguePresenter {
         dialogue_tree: &DialogueTree,
         conversation: &ConversationState,
         selected_choice: usize,
+        resources: &lithicrivers_core::resources::Resources,
     ) -> Vec<Line<'static>> {
         if let Some(node) = conversation
             .current_node_id
@@ -358,9 +364,34 @@ impl DialoguePresenter {
             // Add empty line for spacing
             lines.push(Line::from(""));
 
+            // Filter choices based on quest requirements
+            let filtered_choices: Vec<(usize, &lithicrivers_core::dialogue::DialogueChoice)> = node
+                .choices
+                .iter()
+                .enumerate()
+                .filter(|(_, choice)| {
+                    // Check quest requirements
+                    if let Some(required_quest) = &choice.requires_quest_active {
+                        if !resources.is_quest_active(*required_quest) {
+                            return false;
+                        }
+                    }
+                    if let Some(required_quest) = &choice.requires_quest_complete {
+                        if !resources.is_quest_completed(*required_quest) {
+                            return false;
+                        }
+                    }
+                    true
+                })
+                .collect();
+
             // Add choice lines with different colors
-            for (i, choice) in node.choices.iter().enumerate() {
-                let prefix = if i == selected_choice { ">" } else { " " };
+            for (display_index, (_original_index, choice)) in filtered_choices.iter().enumerate() {
+                let prefix = if display_index == selected_choice {
+                    ">"
+                } else {
+                    " "
+                };
 
                 // Add quest marker for choices that unlock quests
                 let quest_marker = if choice.unlocks_quest.is_some() {
@@ -368,17 +399,24 @@ impl DialoguePresenter {
                 } else {
                     ""
                 };
-                let choice_text = format!("{} {}. {} {}", prefix, i + 1, quest_marker, choice.text);
+                let choice_text = format!(
+                    "{} {}. {} {}",
+                    prefix,
+                    display_index + 1,
+                    quest_marker,
+                    choice.text
+                );
 
-                let choice_color = if choice.unlocks_quest.is_some() && i == selected_choice {
-                    Color::LightYellow // Highlighted quest choice
-                } else if choice.unlocks_quest.is_some() {
-                    Color::Green // Available quest choice
-                } else if i == selected_choice {
-                    Color::Yellow // Highlighted regular choice
-                } else {
-                    Color::Cyan // Available regular choices
-                };
+                let choice_color =
+                    if choice.unlocks_quest.is_some() && display_index == selected_choice {
+                        Color::LightYellow // Highlighted quest choice
+                    } else if choice.unlocks_quest.is_some() {
+                        Color::Green // Available quest choice
+                    } else if display_index == selected_choice {
+                        Color::Yellow // Highlighted regular choice
+                    } else {
+                        Color::Cyan // Available regular choices
+                    };
 
                 lines.push(Line::from(Span::styled(
                     choice_text,

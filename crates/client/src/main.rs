@@ -1411,6 +1411,7 @@ fn render_npc_dialogue_modal(
             &app.panels.dialogue_tree,
             conversation,
             selected_choice,
+            &app.core.game.res,
         )
     } else {
         use ratatui::text::{Line, Span};

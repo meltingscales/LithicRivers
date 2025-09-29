@@ -160,6 +160,7 @@ impl App {
                 cheat_console: CheatConsoleState::default(),
                 global_map: GlobalMapPanelState::default(),
                 tutorial_selection: TutorialSelectionState::default(),
+                quests: QuestPanelState::default(),
             },
             splash: SplashScreenState {
                 state: SplashState::Logo,

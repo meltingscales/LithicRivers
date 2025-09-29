@@ -2,6 +2,31 @@ use crate::App;
 use crossterm::event::KeyCode;
 use std::error::Error;
 
+/// Filter dialogue choices based on quest requirements
+fn filter_choices_by_quest_requirements<'a>(
+    choices: &'a [lithicrivers_core::dialogue::DialogueChoice],
+    resources: &lithicrivers_core::resources::Resources,
+) -> Vec<(usize, &'a lithicrivers_core::dialogue::DialogueChoice)> {
+    choices
+        .iter()
+        .enumerate()
+        .filter(|(_, choice)| {
+            // Check quest requirements
+            if let Some(required_quest) = &choice.requires_quest_active {
+                if !resources.is_quest_active(*required_quest) {
+                    return false;
+                }
+            }
+            if let Some(required_quest) = &choice.requires_quest_complete {
+                if !resources.is_quest_completed(*required_quest) {
+                    return false;
+                }
+            }
+            true
+        })
+        .collect()
+}
+
 /// Handle NPC interaction input when active - returns true if input was handled
 pub fn handle_npc_interaction_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Error>> {
     // Handle NPC selection phase
@@ -82,10 +107,12 @@ pub fn handle_npc_interaction_input(app: &mut App, key: KeyCode) -> Result<bool,
         }
 
         if app.ui.keybinds.matches("movement", "MOVE_SOUTH", &key) {
-            // Get the current dialogue node to check how many choices are available
+            // Get the current dialogue node to check how many filtered choices are available
             if let Some(ref current_node_id) = conversation.current_node_id {
                 if let Some(node) = app.panels.dialogue_tree.get_node(current_node_id) {
-                    choice = (choice + 1).min(node.choices.len().saturating_sub(1));
+                    let filtered_choices =
+                        filter_choices_by_quest_requirements(&node.choices, &app.core.game.res);
+                    choice = (choice + 1).min(filtered_choices.len().saturating_sub(1));
                 }
             }
         }
@@ -94,8 +121,10 @@ pub fn handle_npc_interaction_input(app: &mut App, key: KeyCode) -> Result<bool,
             // Process the choice using the core dialogue tree
             if let Some(ref current_node_id) = conversation.current_node_id {
                 if let Some(node) = app.panels.dialogue_tree.get_node(current_node_id) {
-                    if choice < node.choices.len() {
-                        let selected_choice = &node.choices[choice];
+                    let filtered_choices =
+                        filter_choices_by_quest_requirements(&node.choices, &app.core.game.res);
+                    if choice < filtered_choices.len() {
+                        let (_original_index, selected_choice) = filtered_choices[choice];
 
                         // Handle player mood change from dialogue choice
                         let new_player_mood =
@@ -141,7 +170,7 @@ pub fn handle_npc_interaction_input(app: &mut App, key: KeyCode) -> Result<bool,
                                                     description: "Find a lab-grown diamond".to_string(),
                                                     completed: false,
                                                     objective_type: lithicrivers_core::dialogue::QuestObjectiveType::FetchItem {
-                                                        item_name: "lab-grown diamond".to_string(),
+                                                        item_name: "Diamond".to_string(),
                                                         quantity: 1,
                                                     },
                                                 },
@@ -149,7 +178,7 @@ pub fn handle_npc_interaction_input(app: &mut App, key: KeyCode) -> Result<bool,
                                                     description: "Find scrap electronics".to_string(),
                                                     completed: false,
                                                     objective_type: lithicrivers_core::dialogue::QuestObjectiveType::FetchItem {
-                                                        item_name: "scrap electronics".to_string(),
+                                                        item_name: "Scrap Electronics".to_string(),
                                                         quantity: 1,
                                                     },
                                                 },
@@ -171,8 +200,19 @@ pub fn handle_npc_interaction_input(app: &mut App, key: KeyCode) -> Result<bool,
                                                 Some(entity),
                                             );
 
-                                            // Start the quest
-                                            app.core.game.res.start_quest(active_quest);
+                                            // Get player inventory to check for existing items
+                                            if let Some((player_entity, _)) = app.core.game.world.query::<&lithicrivers_core::components::Player>().iter().next() {
+                                                if let Ok(player_inventory) = app.core.game.world.get::<&lithicrivers_core::components::Inventory>(player_entity) {
+                                                    // Start the quest with inventory check
+                                                    app.core.game.res.start_quest_with_inventory_check(active_quest, &player_inventory);
+                                                } else {
+                                                    // Fallback to normal quest start if no inventory
+                                                    app.core.game.res.start_quest(active_quest);
+                                                }
+                                            } else {
+                                                // Fallback to normal quest start if no player found
+                                                app.core.game.res.start_quest(active_quest);
+                                            }
 
                                             // Create a fetch quest marker at the NPC's location
                                             app.core.game.res.add_quest_marker(lithicrivers_core::resources::QuestMarker {
