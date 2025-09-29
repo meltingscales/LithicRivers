@@ -44,6 +44,12 @@ impl CommandRegistry {
                 description: "toggle_tutorial - Toggle tutorial panel visibility",
                 handler: handle_toggle_tutorial_command,
             },
+            Command {
+                name: "giveitem",
+                description:
+                    "giveitem <item_sprite_name> <quantity> - Give items to player inventory",
+                handler: handle_giveitem_command,
+            },
         ];
 
         for cmd in cmd_list.iter() {
@@ -205,6 +211,98 @@ fn handle_toggle_tutorial_command(app: &mut App, _parts: &[&str]) -> Result<(), 
         }
         app.core.game.res.log("Tutorial system disabled");
     }
+    Ok(())
+}
+
+fn handle_giveitem_command(app: &mut App, parts: &[&str]) -> Result<(), Box<dyn Error>> {
+    if parts.len() < 3 {
+        app.core
+            .game
+            .res
+            .log("Usage: giveitem <item_sprite_name> <quantity>".to_string());
+        let available_items = lithicrivers_core::components::get_all_item_sprite_names().join(", ");
+        app.core
+            .game
+            .res
+            .log(format!("Available items: {}", available_items));
+        return Ok(());
+    }
+
+    // Parse quantity
+    let quantity = match parts[2].parse::<u32>() {
+        Ok(q) if q > 0 => q,
+        _ => {
+            app.core
+                .game
+                .res
+                .log("Error: Quantity must be a positive number".to_string());
+            return Ok(());
+        }
+    };
+
+    // Parse item using sprite name
+    let item_kind = match lithicrivers_core::components::parse_itemkind_from_sprite_name(parts[1]) {
+        Some(kind) => kind,
+        None => {
+            app.core
+                .game
+                .res
+                .log(format!("Error: Unknown item '{}'", parts[1]));
+            let available_items =
+                lithicrivers_core::components::get_all_item_sprite_names().join(", ");
+            app.core
+                .game
+                .res
+                .log(format!("Available items: {}", available_items));
+            return Ok(());
+        }
+    };
+
+    // Get player entity and add item to inventory
+    if let Some(player_entity) = app.core.game.get_player_entity() {
+        // First, add the item to inventory
+        let add_success = if let Ok(mut inventory) =
+            app.core
+                .game
+                .world
+                .get::<&mut lithicrivers_core::components::Inventory>(player_entity)
+        {
+            inventory.add(item_kind, quantity);
+            let item_display_name = lithicrivers_core::components::itemkind_name(item_kind);
+            app.core.game.res.log(format!(
+                "Added {} {} to inventory",
+                quantity, item_display_name
+            ));
+            true
+        } else {
+            app.core
+                .game
+                .res
+                .log("Error: Player has no inventory!".to_string());
+            false
+        };
+
+        // Then, if successful, update quest objectives (separate borrow)
+        if add_success {
+            if let Ok(player_inventory) =
+                app.core
+                    .game
+                    .world
+                    .get::<&lithicrivers_core::components::Inventory>(player_entity)
+            {
+                app.core
+                    .game
+                    .res
+                    .update_quest_objectives_from_inventory(&player_inventory);
+            }
+        }
+    } else {
+        app.core
+            .game
+            .res
+            .log("Error: Player not found!".to_string());
+    }
+
     Ok(())
 }
 
