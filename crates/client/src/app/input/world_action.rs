@@ -261,6 +261,18 @@ pub fn execute_interaction_action(app: &mut App, action: &crate::app_state::Inte
                 lithicrivers_core::intent::PlayerIntent::interact(100);
             let tick_result = app.core.game.tick();
 
+            // Check tutorial progression for inventory changes after pickup
+            if let Some(player_entity) = app.core.game.get_player_entity() {
+                if let Ok(inventory) = app
+                    .core
+                    .game
+                    .world
+                    .get::<&lithicrivers_core::components::Inventory>(player_entity)
+                {
+                    app.ui.tutorial_system.handle_inventory_change(&inventory);
+                }
+            }
+
             // Handle combat state changes
             if tick_result.contains(lithicrivers_core::game::GameTickResult::CombatTriggered) {
                 app.combat = CombatUiState::Active {

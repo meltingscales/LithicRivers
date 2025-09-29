@@ -1,5 +1,5 @@
 use crossterm::event::KeyCode;
-use lithicrivers_core::TileKind;
+use lithicrivers_core::{components::ItemKind, TileKind};
 
 /// Represents a single tutorial step with instruction and required action
 #[derive(Debug, Clone)]
@@ -38,6 +38,11 @@ pub enum TutorialAction {
     MultipleKeybinds {
         required_keybinds: Vec<(String, String)>, // (category, action) pairs
         pressed_keybinds: Vec<(String, String)>,
+    },
+    /// Wait for a specific item to be picked up
+    PickupItem {
+        item: ItemKind,
+        quantity: Option<u32>,
     },
     /// Wait for menu to be opened
     OpenMenu,
@@ -153,7 +158,42 @@ impl TutorialStep {
                 // Return true if all required keybinds have been pressed
                 pressed_keybinds.len() >= required_keybinds.len()
             }
-            _ => false,
+            TutorialAction::PickupItem {
+                item: _,
+                quantity: _,
+            } => {
+                // PickupItem actions don't respond to key presses
+                // They are checked separately via inventory changes
+                false
+            }
+            TutorialAction::OpenMenu
+            | TutorialAction::OpenInventory
+            | TutorialAction::StateChange(_)
+            | TutorialAction::Display { auto_advance_ms: _ } => {
+                // These actions don't respond to key presses in this method
+                false
+            }
+        }
+    }
+
+    /// Check if tutorial action is satisfied by inventory changes
+    pub fn is_action_satisfied_by_inventory(
+        &self,
+        inventory: &lithicrivers_core::components::Inventory,
+    ) -> bool {
+        match &self.action {
+            TutorialAction::PickupItem { item, quantity } => {
+                let required_qty = quantity.unwrap_or(1);
+                let current_qty: u32 = inventory
+                    .slots
+                    .iter()
+                    .filter(|stack| stack.kind == *item)
+                    .map(|stack| stack.qty)
+                    .sum();
+
+                current_qty >= required_qty
+            }
+            _ => false, // Other actions don't use inventory checking
         }
     }
 }

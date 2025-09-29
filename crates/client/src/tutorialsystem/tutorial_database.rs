@@ -1,4 +1,4 @@
-use lithicrivers_core::TileKind;
+use lithicrivers_core::{components::ItemKind, TileKind};
 
 use super::{TutorialAction, TutorialStep, TutorialSystem};
 
@@ -96,6 +96,7 @@ impl TutorialDatabase {
             Self::create_zoom_tutorial(),
             Self::create_torch_tutorial(),
             Self::create_door_tutorial(),
+            Self::create_pickup_diamond_first_quest_tutorial(),
             Self::create_look_tutorial(),
         ]
     }
@@ -109,6 +110,18 @@ impl TutorialDatabase {
                 category: "action".to_string(),
                 action: "INTERACT".to_string(),
                 tile: TileKind::Door,
+            },
+        )
+    }
+
+    fn create_pickup_diamond_first_quest_tutorial() -> TutorialStep {
+        TutorialStep::new(
+            "pickup_diamond_first_quest",
+            "Find a diamond!",
+            "Look around in one of the adjacent rooms in the starting area for a diamond. You'll need it to complete the first quest. There's an android that you can talk to who needs it. Once you have the diamond, you can return to the android and complete the quest.",
+            TutorialAction::PickupItem {
+                item: ItemKind::Diamond,
+                quantity: Some(1),
             },
         )
     }
