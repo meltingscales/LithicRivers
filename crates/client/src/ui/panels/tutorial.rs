@@ -61,10 +61,10 @@ pub fn render_tutorial_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
                         .add_modifier(Modifier::BOLD),
                 )));
             }
-            crate::tutorialsystem::TutorialAction::KeybindAdjacentToBlock {
+            crate::tutorialsystem::TutorialAction::KeybindAdjacentToTile {
                 category,
                 action,
-                block,
+                tile,
             } => {
                 // Get the configured key for this keybind
                 let key_name = app
@@ -73,9 +73,9 @@ pub fn render_tutorial_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
                     .get_printable_key_for_keybind(category, action);
 
                 // Get tile display name from tile registry
-                let block_name = block.display_name();
+                let tile_name = tile.display_name();
 
-                let key_hint = format!("Stand next to a {} and press [{}]", block_name, key_name);
+                let key_hint = format!("Stand next to a {} and press [{}]", tile_name, key_name);
                 lines.push(Line::from(Span::styled(
                     key_hint,
                     Style::default()

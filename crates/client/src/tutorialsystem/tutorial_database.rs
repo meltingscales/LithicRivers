@@ -105,10 +105,10 @@ impl TutorialDatabase {
             "open_door",
             "Open the door!",
             "Press the key below to open/close doors. This key also is used to loot corpses and interact with other objects. You can also use it to talk to NPCs. By default, it starts an interaction, and only opens a menu if there are multiple options.",
-            TutorialAction::KeybindAdjacentToBlock {
+            TutorialAction::KeybindAdjacentToTile {
                 category: "action".to_string(),
                 action: "INTERACT".to_string(),
-                block: TileKind::Door,
+                tile: TileKind::Door,
             },
         )
     }
