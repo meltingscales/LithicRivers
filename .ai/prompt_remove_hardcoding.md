@@ -1,0 +1,1 @@
+See `git show 8a59745` for an example of hardcoded item consumption logic for quests that was successfully made more modular. Scan the codebase for similar patterns in general - items, blocks, tiles, rendering, quests, map markers, dialogue, entity interactions, combat - anything! and give me a summary of how we could refactor them to use a more modular approach.
