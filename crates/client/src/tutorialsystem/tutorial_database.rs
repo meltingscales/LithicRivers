@@ -143,7 +143,7 @@ impl TutorialDatabase {
     fn create_tutorial_tutorial() -> TutorialStep {
         TutorialStep::new(
             "tutorial_tutorial",
-            "Tutorial Tutorial",
+            "Meta-Tutorial",
             "Welcome to LithicRivers! This is an entirely ASCII-based and keyboard-focused game. This is the tutorial system. Below are some keybinds that control it. If you really don't like it, you can disable it (see below). For this first tutorial, just press the next/previous buttons that control the menu pages.",
             TutorialAction::MultipleKeybinds {
                 required_keybinds: vec![
