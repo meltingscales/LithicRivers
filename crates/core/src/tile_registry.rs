@@ -1,7 +1,7 @@
 /// Single source of truth for all tile definitions
-/// Format: (VariantName, "string_key", passable)
+/// Format: (VariantName, "string_key", "display_name", passable)
 macro_rules! define_tiles {
-    ($($variant:ident, $key:literal, $passable:expr),* $(,)?) => {
+    ($($variant:ident, $key:literal, $name:literal, $passable:expr),* $(,)?) => {
         use crate::palettekey::PaletteKey;
         use serde::{Deserialize, Serialize};
 
@@ -43,6 +43,12 @@ macro_rules! define_tiles {
             pub fn all_keys() -> &'static [&'static str] {
                 &[$($key,)*]
             }
+
+            pub fn display_name(self) -> &'static str {
+                match self {
+                    $(TileKind::$variant => $name,)*
+                }
+            }
         }
 
         // Generate sprite mapping for client code
@@ -56,28 +62,28 @@ macro_rules! define_tiles {
 
 // Single source of truth - add/remove/modify tiles here
 define_tiles! {
-    Rock, "rock", false,
-    Dirt, "dirt", true,
-    Grass, "grass", true,
-    Tree, "tree", true,
-    Air, "air", true,
-    BoneBlock, "bone_block", false,
-    IronScrap, "iron_scrap", true,
-    Door, "door", false,
-    DoorOpen, "door_open", true,
-    Bedrock, "bedrock", false,
-    ScrapElectronics, "scrap_electronics", false,
-    PlasteelScrap, "plasteel_scrap", true,
-    TreasureCommon, "treasure_common", false,
-    TreasureRare, "treasure_rare", false,
-    ScrapCommon, "scrap_common", true,
-    ScrapRare, "scrap_rare", true,
-    TreasureQuest1, "treasure_quest_1", false,
-    PlankBlock, "plank_block", false,
-    Stairs, "stairs", true,
-    ExistingWorldgen, "existing_worldgen", false,
-    EnemySpawn, "enemy_spawn", false,
-    SpecialPlayerSpawn, "special_player_spawn", false,
+    Rock, "rock", "rock", false,
+    Dirt, "dirt", "dirt", true,
+    Grass, "grass", "grass", true,
+    Tree, "tree", "tree", true,
+    Air, "air", "air", true,
+    BoneBlock, "bone_block", "bone block", false,
+    IronScrap, "iron_scrap", "iron scrap", true,
+    Door, "door", "door", false,
+    DoorOpen, "door_open", "open door", true,
+    Bedrock, "bedrock", "bedrock", false,
+    ScrapElectronics, "scrap_electronics", "scrap electronics", false,
+    PlasteelScrap, "plasteel_scrap", "plasteel scrap", true,
+    TreasureCommon, "treasure_common", "common treasure", false,
+    TreasureRare, "treasure_rare", "rare treasure", false,
+    ScrapCommon, "scrap_common", "common scrap", true,
+    ScrapRare, "scrap_rare", "rare scrap", true,
+    TreasureQuest1, "treasure_quest_1", "quest treasure", false,
+    PlankBlock, "plank_block", "plank block", false,
+    Stairs, "stairs", "stairs", true,
+    ExistingWorldgen, "existing_worldgen", "existing worldgen", false,
+    EnemySpawn, "enemy_spawn", "enemy spawn", false,
+    SpecialPlayerSpawn, "special_player_spawn", "player spawn", false,
 }
 
 impl TileKind {

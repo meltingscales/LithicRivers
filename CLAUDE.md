@@ -30,8 +30,6 @@ Tests help ensure systems work correctly and prevent regressions during developm
 
 TODO: Update `define_tiles!` in tile_registry.rs to add a tile name.
 
-TODO2: Refactor this system entirely to use a more efficient data structure.
-
 ## Keybind handling
 
 Avoid hardcoding keys (i.e. `KeyCode::Char('v')`). Make sure to populate `default_config.rs` as well as use the `keybinds.matches` method i.e. `app.ui.keybinds.matches("ui", "CLOSE_HELP_MENU", &key)` if you want to check for a keypress. This makes our game actually key-mappable.

@@ -72,14 +72,8 @@ pub fn render_tutorial_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
                     .config_manager
                     .get_printable_key_for_keybind(category, action);
 
-                // Convert TileKind to readable name
-                let block_name = match block {
-                    lithicrivers_core::TileKind::Door => "door",
-                    lithicrivers_core::TileKind::DoorOpen => "open door",
-                    lithicrivers_core::TileKind::Tree => "tree",
-                    lithicrivers_core::TileKind::Rock => "rock",
-                    _ => "target block",
-                };
+                // Get tile display name from tile registry
+                let block_name = block.display_name();
 
                 let key_hint = format!("Stand next to a {} and press [{}]", block_name, key_name);
                 lines.push(Line::from(Span::styled(
