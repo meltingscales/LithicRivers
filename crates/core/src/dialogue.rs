@@ -1,6 +1,11 @@
 use crate::components::NPCMood;
 use serde::{Deserialize, Serialize};
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum QuestType {
+    RepairBrokenAndroid,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum TextEffect {
     Static,
@@ -19,7 +24,7 @@ pub struct DialogueChoice {
     pub requires_item: Option<String>,
     pub npc_mood_change: Option<NPCMood>, //Does this choice change NPC mood?
     pub player_mood_change: Option<NPCMood>, //Does this choice change player mood?
-    pub unlocks_quest: bool,
+    pub unlocks_quest: Option<QuestType>, // Quest to unlock, None = no quest
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

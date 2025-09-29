@@ -390,8 +390,8 @@ fn execute_dialogue_choice(
     }
 
     // Handle quest unlocking
-    if choice.unlocks_quest {
-        res.log("New quest unlocked!".to_string());
+    if let Some(quest_type) = &choice.unlocks_quest {
+        res.log(format!("New quest unlocked: {:?}", quest_type));
         // Note: Quest marker creation is handled by the client dialogue system
         // This core system is only used for testing/simulation
     }

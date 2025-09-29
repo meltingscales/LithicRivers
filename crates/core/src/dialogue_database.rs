@@ -1,5 +1,5 @@
 use crate::components::NPCMood;
-use crate::dialogue::{DialogueChoice, DialogueNode, DialogueTree, TextEffect};
+use crate::dialogue::{DialogueChoice, DialogueNode, DialogueTree, QuestType, TextEffect};
 use std::collections::HashMap;
 
 /// Central database for all dialogue trees in the game
@@ -62,7 +62,7 @@ impl DialogueDatabase {
                     requires_item: None,
                     npc_mood_change: None,
                     player_mood_change: Some(NPCMood::Neutral), // Player shows concern
-                    unlocks_quest: false,
+                    unlocks_quest: None,
                 },
                 DialogueChoice {
                     text: "What happened to you?".to_string(),
@@ -70,7 +70,7 @@ impl DialogueDatabase {
                     requires_item: None,
                     npc_mood_change: None,
                     player_mood_change: Some(NPCMood::Weird), // Player is curious
-                    unlocks_quest: false,
+                    unlocks_quest: None,
                 },
                 DialogueChoice {
                     text: "Can I help?".to_string(),
@@ -78,7 +78,7 @@ impl DialogueDatabase {
                     requires_item: None,
                     npc_mood_change: Some(NPCMood::Happy),
                     player_mood_change: Some(NPCMood::Happy), // Player feels helpful/compassionate
-                    unlocks_quest: true,
+                    unlocks_quest: None,
                 },
                 DialogueChoice {
                     text: "Where are we right now? Why is it so dark?".to_string(),
@@ -86,7 +86,7 @@ impl DialogueDatabase {
                     requires_item: None,
                     npc_mood_change: Some(NPCMood::Happy),
                     player_mood_change: Some(NPCMood::Neutral), // Player is confused/seeking info
-                    unlocks_quest: false,
+                    unlocks_quest: None,
                 },
                 DialogueChoice {
                     text: "Override Alpha-7: Emergency diagnostic mode. State model number and diagnostic info.".to_string(),
@@ -94,7 +94,7 @@ impl DialogueDatabase {
                     requires_item: None,
                     npc_mood_change: Some(NPCMood::Weird),
                     player_mood_change: Some(NPCMood::Weird), // Player is being technical/commanding
-                    unlocks_quest: false,
+                    unlocks_quest: None,
                 },
             ],
             auto_continue: false,
@@ -115,7 +115,7 @@ impl DialogueDatabase {
                     requires_item: None,
                     npc_mood_change: Some(NPCMood::Happy),
                     player_mood_change: Some(NPCMood::Happy),
-                    unlocks_quest: true,
+                    unlocks_quest: None,
                 },
                 DialogueChoice {
                     text: "I'm sorry, I have to go.".to_string(),
@@ -123,7 +123,7 @@ impl DialogueDatabase {
                     requires_item: None,
                     npc_mood_change: Some(NPCMood::Sad),
                     player_mood_change: Some(NPCMood::Sad),
-                    unlocks_quest: false,
+                    unlocks_quest: None,
                 },
             ],
             auto_continue: false,
@@ -144,7 +144,7 @@ impl DialogueDatabase {
                     requires_item: None,
                     npc_mood_change: Some(NPCMood::Happy),
                     player_mood_change: Some(NPCMood::Happy),
-                    unlocks_quest: true,
+                    unlocks_quest: None,
                 },
             ],
             auto_continue: false,
@@ -165,7 +165,7 @@ impl DialogueDatabase {
                     requires_item: None,
                     npc_mood_change: None,
                     player_mood_change: None,
-                    unlocks_quest: true,
+                    unlocks_quest: None,
                 },
             ],
             auto_continue: false,
@@ -186,7 +186,7 @@ impl DialogueDatabase {
                     requires_item: None,
                     npc_mood_change: Some(NPCMood::Happy),
                     player_mood_change: Some(NPCMood::Happy),
-                    unlocks_quest: true,
+                    unlocks_quest: Some(QuestType::RepairBrokenAndroid),
                 },
             ],
             auto_continue: false,
@@ -207,7 +207,7 @@ impl DialogueDatabase {
                     requires_item: None,
                     npc_mood_change: Some(NPCMood::Neutral),
                     player_mood_change: Some(NPCMood::Neutral),
-                    unlocks_quest: false,
+                    unlocks_quest: None,
                 },
             ],
             auto_continue: false,
@@ -228,7 +228,7 @@ impl DialogueDatabase {
                     requires_item: None,
                     npc_mood_change: Some(NPCMood::Neutral),
                     player_mood_change: Some(NPCMood::Neutral),
-                    unlocks_quest: true,
+                    unlocks_quest: None,
                 },
                 DialogueChoice {
                     text: "Thank you for the diagnostic. Return to standard mode.".to_string(),
@@ -236,7 +236,7 @@ impl DialogueDatabase {
                     requires_item: None,
                     npc_mood_change: Some(NPCMood::Neutral),
                     player_mood_change: Some(NPCMood::Neutral),
-                    unlocks_quest: false,
+                    unlocks_quest: None,
                 },
             ],
             auto_continue: false,
