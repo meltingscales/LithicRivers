@@ -1,3 +1,5 @@
+use lithicrivers_core::TileKind;
+
 use super::{TutorialAction, TutorialStep, TutorialSystem};
 
 /// Metadata about an available tutorial
@@ -93,8 +95,22 @@ impl TutorialDatabase {
             Self::create_movement_tutorial(),
             Self::create_zoom_tutorial(),
             Self::create_torch_tutorial(),
+            Self::create_door_tutorial(),
             Self::create_look_tutorial(),
         ]
+    }
+
+    fn create_door_tutorial() -> TutorialStep {
+        TutorialStep::new(
+            "open_door",
+            "Open the door!",
+            "Press the key below to open/close doors. This key also is used to loot corpses and interact with other objects. You can also use it to talk to NPCs. By default, it starts an interaction, and only opens a menu if there are multiple options.",
+            TutorialAction::KeybindAdjacentToBlock {
+                category: "action".to_string(),
+                action: "INTERACT".to_string(),
+                block: TileKind::Door,
+            },
+        )
     }
 
     /// Create the torch tutorial step

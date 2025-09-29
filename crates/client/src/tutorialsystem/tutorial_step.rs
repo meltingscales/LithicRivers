@@ -1,4 +1,5 @@
 use crossterm::event::KeyCode;
+use lithicrivers_core::TileKind;
 
 /// Represents a single tutorial step with instruction and required action
 #[derive(Debug, Clone)]
@@ -22,6 +23,12 @@ pub enum TutorialAction {
     AnyKey,
     /// Wait for a specific keybind to be pressed
     Keybind { category: String, action: String },
+    /// Wait for a specific keybind to be pressed while the player is adjacent to a specific block
+    KeybindAdjacentToBlock {
+        category: String,
+        action: String,
+        block: TileKind,
+    },
     /// Wait for multiple movement keys to be pressed (tracks which ones have been pressed)
     MovementKeys {
         required_keys: Vec<KeyCode>,
@@ -75,11 +82,49 @@ impl TutorialStep {
         &mut self,
         key: &KeyCode,
         keybinds: &crate::app_state::Keybinds,
+        world: Option<&lithicrivers_core::world_state::WorldState>,
+        player_pos: Option<lithicrivers_core::components::Position>,
     ) -> bool {
         match &mut self.action {
             TutorialAction::KeyPress(expected_key) => key == expected_key,
             TutorialAction::AnyKey => true,
             TutorialAction::Keybind { category, action } => keybinds.matches(category, action, key),
+            TutorialAction::KeybindAdjacentToBlock {
+                category,
+                action,
+                block,
+            } => {
+                // First check if the keybind matches
+                if !keybinds.matches(category, action, key) {
+                    return false;
+                }
+
+                // Then check if player is adjacent to the specified block type
+                if let (Some(world_state), Some(pos)) = (world, player_pos) {
+                    // Check all 8 adjacent positions (N, S, E, W, NE, NW, SE, SW)
+                    let adjacent_positions = [
+                        (pos.x, pos.y - 1, pos.z),     // North
+                        (pos.x, pos.y + 1, pos.z),     // South
+                        (pos.x + 1, pos.y, pos.z),     // East
+                        (pos.x - 1, pos.y, pos.z),     // West
+                        (pos.x + 1, pos.y - 1, pos.z), // Northeast
+                        (pos.x - 1, pos.y - 1, pos.z), // Northwest
+                        (pos.x + 1, pos.y + 1, pos.z), // Southeast
+                        (pos.x - 1, pos.y + 1, pos.z), // Southwest
+                    ];
+
+                    for (x, y, z) in adjacent_positions {
+                        let tile = world_state.world.get_tile(x, y, z);
+                        if tile == *block {
+                            return true;
+                        }
+                    }
+                    false
+                } else {
+                    // If we don't have world data, can't check adjacency
+                    false
+                }
+            }
             TutorialAction::MovementKeys {
                 required_keys,
                 pressed_keys,

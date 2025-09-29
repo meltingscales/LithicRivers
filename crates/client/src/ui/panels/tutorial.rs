@@ -61,6 +61,34 @@ pub fn render_tutorial_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
                         .add_modifier(Modifier::BOLD),
                 )));
             }
+            crate::tutorialsystem::TutorialAction::KeybindAdjacentToBlock {
+                category,
+                action,
+                block,
+            } => {
+                // Get the configured key for this keybind
+                let key_name = app
+                    .core
+                    .config_manager
+                    .get_printable_key_for_keybind(category, action);
+
+                // Convert TileKind to readable name
+                let block_name = match block {
+                    lithicrivers_core::TileKind::Door => "door",
+                    lithicrivers_core::TileKind::DoorOpen => "open door",
+                    lithicrivers_core::TileKind::Tree => "tree",
+                    lithicrivers_core::TileKind::Rock => "rock",
+                    _ => "target block",
+                };
+
+                let key_hint = format!("Stand next to a {} and press [{}]", block_name, key_name);
+                lines.push(Line::from(Span::styled(
+                    key_hint,
+                    Style::default()
+                        .fg(Color::Yellow)
+                        .add_modifier(Modifier::BOLD),
+                )));
+            }
             crate::tutorialsystem::TutorialAction::AnyKey => {
                 lines.push(Line::from(Span::styled(
                     "Press any key to continue",
@@ -93,7 +121,7 @@ pub fn render_tutorial_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
 
                 if !remaining.is_empty() {
                     let remaining_text = format!(
-                        "Still need: {}",
+                        "Please press: {}",
                         remaining
                             .iter()
                             .map(|k| match k {
@@ -137,7 +165,7 @@ pub fn render_tutorial_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
 
                 if !remaining.is_empty() {
                     let remaining_text = format!(
-                        "Still need: {}",
+                        "Please press: {}",
                         remaining
                             .iter()
                             .map(|(category, action)| {

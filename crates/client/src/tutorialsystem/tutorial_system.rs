@@ -105,13 +105,15 @@ impl TutorialSystem {
         &mut self,
         key: KeyCode,
         keybinds: &crate::app_state::Keybinds,
+        world: Option<&lithicrivers_core::world_state::WorldState>,
+        player_pos: Option<lithicrivers_core::components::Position>,
     ) -> bool {
         if !self.enabled || self.steps.is_empty() {
             return false;
         }
 
         if let Some(current_step) = self.steps.get_mut(self.current_step_index) {
-            if current_step.is_action_satisfied(&key, keybinds) {
+            if current_step.is_action_satisfied(&key, keybinds, world, player_pos) {
                 current_step.completed = true;
                 self.advance_step();
                 return true;
