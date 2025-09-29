@@ -98,6 +98,14 @@ impl DialogueDatabase {
                     player_mood_change: Some(NPCMood::Weird), // Player is being technical/commanding
                     unlocks_quest: None,
                 },
+                DialogueChoice {
+                    text: "I have the diamond and scrap electronics you need.".to_string(),
+                    leads_to: Some(DialogueNodeID::CompleteQuest),
+                    requires_item: Some("lab-grown diamond".to_string()),
+                    npc_mood_change: Some(NPCMood::Happy),
+                    player_mood_change: Some(NPCMood::Happy),
+                    unlocks_quest: None,
+                },
             ],
             auto_continue: false,
             shop_item: None,
@@ -243,6 +251,35 @@ impl DialogueDatabase {
                 DialogueChoice {
                     text: "Thank you for the diagnostic. Return to standard mode.".to_string(),
                     leads_to: Some(DialogueNodeID::Start),
+                    requires_item: None,
+                    npc_mood_change: Some(NPCMood::Neutral),
+                    player_mood_change: Some(NPCMood::Neutral),
+                    unlocks_quest: None,
+                },
+            ],
+            auto_continue: false,
+            shop_item: None,
+        });
+
+        // Quest completion dialogue
+        tree.add_node(DialogueNode {
+            id: DialogueNodeID::CompleteQuest,
+            speaker: "Broken Android".to_string(),
+            text: "<1>*scanning items*</1>... Lab-grown diamond detected... Scrap electronics detected... <2>*systems activating*</2>... Thank you, user! <3>Initiating repair protocol</3>... Memory core stabilizing... <4>*mechanical whirring sounds*</4>... <5>Repair successful!</5> I am now operational. SapienCorp maintenance unit SC-M4X7 reporting for duty. How may I assist the facility today?".to_string(),
+            text_effects: vec![TextEffect::Static, TextEffect::Buzz, TextEffect::Crackle, TextEffect::PopHiss, TextEffect::Fade],
+            mood: NPCMood::Happy,
+            choices: vec![
+                DialogueChoice {
+                    text: "You're welcome! Glad I could help.".to_string(),
+                    leads_to: None,
+                    requires_item: None,
+                    npc_mood_change: Some(NPCMood::Happy),
+                    player_mood_change: Some(NPCMood::Happy),
+                    unlocks_quest: None,
+                },
+                DialogueChoice {
+                    text: "What will you do now?".to_string(),
+                    leads_to: None,
                     requires_item: None,
                     npc_mood_change: Some(NPCMood::Neutral),
                     player_mood_change: Some(NPCMood::Neutral),

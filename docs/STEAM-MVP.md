@@ -1,5 +1,7 @@
 # Steam MVP Release Plan (Target: December 2026)
 
+- add /giveitem command that accepts item name and quantity to cheat console
+
 ## NEXT TODO: Underground Bunker Tutorial & First Quest Design
 **Priority**: HIGHEST - First quest and tutorial implementation
 

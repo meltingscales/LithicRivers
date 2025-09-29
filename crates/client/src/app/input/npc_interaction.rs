@@ -121,32 +121,85 @@ pub fn handle_npc_interaction_input(app: &mut App, key: KeyCode) -> Result<bool,
 
                         // Handle quest unlocking
                         if let Some(quest_type) = &selected_choice.unlocks_quest {
-                            app.core.game.res.log("New quest unlocked!".to_string());
+                            // Check if quest is already active to prevent duplicates
+                            if !app.core.game.res.is_quest_active(*quest_type) {
+                                app.core.game.res.log("New quest unlocked!".to_string());
 
-                            // Handle quest unlocking based on quest type
-                            match quest_type {
-                                lithicrivers_core::dialogue::QuestType::RepairBrokenAndroid => {
-                                    // Get the NPC's position for the quest marker
-                                    if let Ok(npc_pos) =
-                                        app.core
-                                            .game
-                                            .world
-                                            .get::<&lithicrivers_core::components::Position>(entity)
-                                    {
-                                        // Create a fetch quest marker at the NPC's location
-                                        app.core.game.res.add_quest_marker(lithicrivers_core::resources::QuestMarker {
-                                            name: "Repair the Broken Android".to_string(),
-                                            description: "Find a lab-grown diamond and scrap electronics to repair the broken SapienCorp android".to_string(),
-                                            x: npc_pos.x,
-                                            y: npc_pos.y,
-                                            z: npc_pos.z,
-                                            marker_type: lithicrivers_core::resources::QuestMarkerType::FetchQuest,
-                                        });
-                                        app.core.game.res.log_green(
-                                            "Quest marker added: Repair the Broken Android",
-                                        );
+                                // Handle quest unlocking based on quest type
+                                match quest_type {
+                                    lithicrivers_core::dialogue::QuestType::RepairBrokenAndroid => {
+                                        // Get the NPC's position for the quest marker
+                                        if let Ok(npc_pos) =
+                                            app.core
+                                                .game
+                                                .world
+                                                .get::<&lithicrivers_core::components::Position>(entity)
+                                        {
+                                            // Create quest objectives
+                                            let objectives = vec![
+                                                lithicrivers_core::dialogue::QuestObjective {
+                                                    description: "Find a lab-grown diamond".to_string(),
+                                                    completed: false,
+                                                    objective_type: lithicrivers_core::dialogue::QuestObjectiveType::FetchItem {
+                                                        item_name: "lab-grown diamond".to_string(),
+                                                        quantity: 1,
+                                                    },
+                                                },
+                                                lithicrivers_core::dialogue::QuestObjective {
+                                                    description: "Find scrap electronics".to_string(),
+                                                    completed: false,
+                                                    objective_type: lithicrivers_core::dialogue::QuestObjectiveType::FetchItem {
+                                                        item_name: "scrap electronics".to_string(),
+                                                        quantity: 1,
+                                                    },
+                                                },
+                                                lithicrivers_core::dialogue::QuestObjective {
+                                                    description: "Return to the broken android".to_string(),
+                                                    completed: false,
+                                                    objective_type: lithicrivers_core::dialogue::QuestObjectiveType::TalkToNPC {
+                                                        npc_name: "Broken Android".to_string(),
+                                                    },
+                                                },
+                                            ];
+
+                                            // Create the active quest
+                                            let active_quest = lithicrivers_core::dialogue::ActiveQuest::new(
+                                                *quest_type,
+                                                "Repair the Broken Android".to_string(),
+                                                "Find a lab-grown diamond and scrap electronics to repair the broken SapienCorp android".to_string(),
+                                                objectives,
+                                                Some(entity),
+                                            );
+
+                                            // Start the quest
+                                            app.core.game.res.start_quest(active_quest);
+
+                                            // Create a fetch quest marker at the NPC's location
+                                            app.core.game.res.add_quest_marker(lithicrivers_core::resources::QuestMarker {
+                                                name: "Repair the Broken Android".to_string(),
+                                                description: "Find a lab-grown diamond and scrap electronics to repair the broken SapienCorp android".to_string(),
+                                                x: npc_pos.x,
+                                                y: npc_pos.y,
+                                                z: npc_pos.z,
+                                                marker_type: lithicrivers_core::resources::QuestMarkerType::FetchQuest,
+                                            });
+                                        }
                                     }
                                 }
+                            } else {
+                                app.core.game.res.log_yellow("Quest already active");
+                            }
+                        }
+
+                        // Handle quest completion
+                        if let Some(ref next_node_id) = selected_choice.leads_to {
+                            if *next_node_id
+                                == lithicrivers_core::dialogue::DialogueNodeID::CompleteQuest
+                            {
+                                // Complete the RepairBrokenAndroid quest
+                                app.core.game.res.complete_quest(
+                                    lithicrivers_core::dialogue::QuestType::RepairBrokenAndroid,
+                                );
                             }
                         }
 

@@ -1,9 +1,78 @@
 use crate::components::NPCMood;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
 pub enum QuestType {
     RepairBrokenAndroid,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum QuestState {
+    NotStarted,
+    Active,
+    Completed,
+    Failed,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ActiveQuest {
+    pub quest_type: QuestType,
+    pub state: QuestState,
+    pub name: String,
+    pub description: String,
+    pub objectives: Vec<QuestObjective>,
+    pub rewards: Vec<String>, // Item names for now
+    #[serde(skip)]
+    pub npc_entity: Option<hecs::Entity>, // Entity that gave the quest
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct QuestObjective {
+    pub description: String,
+    pub completed: bool,
+    pub objective_type: QuestObjectiveType,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum QuestObjectiveType {
+    FetchItem { item_name: String, quantity: u32 },
+    TalkToNPC { npc_name: String },
+    GoToLocation { x: i64, y: i64, z: i64 },
+}
+
+impl ActiveQuest {
+    pub fn new(
+        quest_type: QuestType,
+        name: String,
+        description: String,
+        objectives: Vec<QuestObjective>,
+        npc_entity: Option<hecs::Entity>,
+    ) -> Self {
+        Self {
+            quest_type,
+            state: QuestState::Active,
+            name,
+            description,
+            objectives,
+            rewards: Vec::new(),
+            npc_entity,
+        }
+    }
+
+    pub fn is_completed(&self) -> bool {
+        self.objectives.iter().all(|obj| obj.completed)
+    }
+
+    pub fn complete_objective(&mut self, index: usize) {
+        if let Some(objective) = self.objectives.get_mut(index) {
+            objective.completed = true;
+        }
+
+        // Auto-complete quest if all objectives are done
+        if self.is_completed() && self.state == QuestState::Active {
+            self.state = QuestState::Completed;
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
@@ -15,6 +84,7 @@ pub enum DialogueNodeID {
     WhatDoYouNeed,
     WhereAreWe,
     OverrideModelNumber,
+    CompleteQuest,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
