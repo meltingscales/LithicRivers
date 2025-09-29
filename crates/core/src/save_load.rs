@@ -8,8 +8,9 @@ use hecs::World;
 use serde::{Deserialize, Serialize};
 
 use crate::components::{
-    BlocksMovement, DogAI, DroppedItem, FeralDog, FogOfWar, Glyph, Health, Inventory, ItemKind,
-    LightSource, Player, Position, Sheep, SpriteRef,
+    BlocksMovement, Dialogue, DogAI, DroppedItem, EntityKind, FeralDog, FogOfWar, GameEntity,
+    Glyph, Health, Inventory, ItemKind, LightSource, Player, Position, QuestTutorialBrokenAndroid,
+    Sheep, SpriteRef,
 };
 use crate::model::body::Body; // currently not persisted (MVP)
 use crate::resources::Resources;
@@ -46,6 +47,13 @@ pub struct DroppedItemSave {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NPCSave {
+    pub pos: Position,
+    pub health: Health,
+    pub dialogue: Dialogue,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ViewportSave {
     pub view_x: i64,
     pub view_y: i64,
@@ -62,6 +70,7 @@ pub struct SaveData {
     pub sheep: Vec<SheepSave>,
     pub feral_dogs: Vec<FeralDogSave>,
     pub dropped_items: Vec<DroppedItemSave>,
+    pub npcs: Vec<NPCSave>,
     pub viewport: ViewportSave,
     pub chunk_generation_states:
         std::collections::HashMap<(i64, i64, i64), crate::resources::ChunkGenerationState>,
@@ -90,6 +99,7 @@ impl SaveData {
         let mut sheep: Vec<SheepSave> = Vec::new();
         let mut feral_dogs: Vec<FeralDogSave> = Vec::new();
         let mut dropped_items: Vec<DroppedItemSave> = Vec::new();
+        let mut npcs: Vec<NPCSave> = Vec::new();
         for (
             _e,
             (
@@ -103,6 +113,8 @@ impl SaveData {
                 maybe_drop,
                 maybe_light_source,
                 maybe_fog_of_war,
+                maybe_npc,
+                maybe_dialogue,
             ),
         ) in game
             .world
@@ -117,6 +129,8 @@ impl SaveData {
                 Option<&DroppedItem>,
                 Option<&LightSource>,
                 Option<&FogOfWar>,
+                Option<&QuestTutorialBrokenAndroid>,
+                Option<&Dialogue>,
             )>()
             .iter()
         {
@@ -144,6 +158,14 @@ impl SaveData {
                     kind: di.kind,
                     qty: di.qty,
                 });
+            } else if maybe_npc.is_some() {
+                let health = maybe_health.cloned().expect("NPC missing health");
+                let dialogue = maybe_dialogue.cloned().expect("NPC missing dialogue");
+                npcs.push(NPCSave {
+                    pos: *pos,
+                    health,
+                    dialogue,
+                });
             }
         }
         let player = player_save.context("Player entity missing during save")?;
@@ -156,6 +178,7 @@ impl SaveData {
             sheep,
             feral_dogs,
             dropped_items,
+            npcs,
             viewport,
             chunk_generation_states: game.res.chunk_generation_states.clone(),
             structure_generation_states: game.res.structure_generation_states.clone(),
@@ -239,6 +262,22 @@ impl SaveData {
                 SpriteRef::new("items", sprite_name),
             ));
         }
+
+        // NPCs
+        for npc in self.npcs.into_iter() {
+            game.world.spawn((
+                npc.pos,
+                GameEntity,
+                EntityKind::QuestTutorialBrokenAndroid,
+                QuestTutorialBrokenAndroid,
+                npc.health,
+                Glyph('Q'),
+                SpriteRef::new("entities", "quest_tutorial_broken_android"),
+                BlocksMovement,
+                npc.dialogue,
+            ));
+        }
+
         Ok(())
     }
 }
@@ -260,6 +299,7 @@ struct SaveDataJson {
     pub sheep: Vec<SheepSave>,
     pub feral_dogs: Vec<FeralDogSave>,
     pub dropped_items: Vec<DroppedItemSave>,
+    pub npcs: Vec<NPCSave>,
     pub viewport: ViewportSave,
     pub quest_markers: Vec<crate::resources::QuestMarker>,
     pub active_quests: Vec<crate::dialogue::ActiveQuest>,
@@ -296,6 +336,7 @@ impl From<SaveData> for SaveDataJson {
             sheep: s.sheep,
             feral_dogs: s.feral_dogs,
             dropped_items: s.dropped_items,
+            npcs: s.npcs,
             viewport: s.viewport,
             quest_markers: s.quest_markers,
             active_quests: s.active_quests,
@@ -315,6 +356,7 @@ impl From<SaveDataJson> for SaveData {
             sheep: j.sheep,
             feral_dogs: j.feral_dogs,
             dropped_items: j.dropped_items,
+            npcs: j.npcs,
             viewport: j.viewport,
             chunk_generation_states: std::collections::HashMap::new(),
             structure_generation_states: std::collections::HashMap::new(),
