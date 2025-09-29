@@ -45,8 +45,8 @@ use crate::{
             render_body_panel, render_combat_panel, render_crafting_panel, render_credits_panel,
             render_game_view, render_global_map_panel, render_help_panel, render_hotbar_panel,
             render_inventory_list_only, render_inventory_panel, render_look_panel,
-            render_menu_panel, render_modes_panel, render_quit_panel, render_repair_modal,
-            render_tutorial_panel, render_tutorial_selection_modal,
+            render_menu_panel, render_modes_panel, render_quests_panel, render_quit_panel,
+            render_repair_modal, render_tutorial_panel, render_tutorial_selection_modal,
         },
     },
 };
@@ -64,6 +64,7 @@ enum MenuTab {
     World,
     Tutorial,
     GlobalMap,
+    Quests,
     Body,
     Inventory,
     Crafting,
@@ -89,7 +90,8 @@ impl MenuTab {
                 }
             }
             MenuTab::Tutorial => MenuTab::GlobalMap,
-            MenuTab::GlobalMap => MenuTab::Body,
+            MenuTab::GlobalMap => MenuTab::Quests,
+            MenuTab::Quests => MenuTab::Body,
             MenuTab::Body => MenuTab::Inventory,
             MenuTab::Inventory => MenuTab::Crafting,
             MenuTab::Crafting => MenuTab::Menu,
@@ -111,7 +113,8 @@ impl MenuTab {
                     MenuTab::World
                 }
             }
-            MenuTab::Body => MenuTab::GlobalMap,
+            MenuTab::Body => MenuTab::Quests,
+            MenuTab::Quests => MenuTab::GlobalMap,
             MenuTab::Inventory => MenuTab::Body,
             MenuTab::Crafting => MenuTab::Inventory,
             MenuTab::Menu => MenuTab::Crafting,
@@ -138,53 +141,60 @@ impl MenuTab {
                     1
                 }
             }
-            MenuTab::Body => {
+            MenuTab::Quests => {
                 if tutorial_visible {
                     3
                 } else {
                     2
                 }
             }
-            MenuTab::Inventory => {
+            MenuTab::Body => {
                 if tutorial_visible {
                     4
                 } else {
                     3
                 }
             }
-            MenuTab::Crafting => {
+            MenuTab::Inventory => {
                 if tutorial_visible {
                     5
                 } else {
                     4
                 }
             }
-            MenuTab::Menu => {
+            MenuTab::Crafting => {
                 if tutorial_visible {
                     6
                 } else {
                     5
                 }
             }
-            MenuTab::Help => {
+            MenuTab::Menu => {
                 if tutorial_visible {
                     7
                 } else {
                     6
                 }
             }
-            MenuTab::Credits => {
+            MenuTab::Help => {
                 if tutorial_visible {
                     8
                 } else {
                     7
                 }
             }
-            MenuTab::Quit => {
+            MenuTab::Credits => {
                 if tutorial_visible {
                     9
                 } else {
                     8
+                }
+            }
+            MenuTab::Quit => {
+                if tutorial_visible {
+                    10
+                } else {
+                    9
                 }
             }
         }
@@ -303,6 +313,10 @@ impl App {
             MenuTab::GlobalMap => {
                 // Global Map
                 self.core.game.res.log("Global Map panel active");
+            }
+            MenuTab::Quests => {
+                // Quests
+                self.core.game.res.log("Quests panel active");
             }
             MenuTab::Body => {
                 // Body
@@ -751,6 +765,10 @@ fn ui(f: &mut Frame, app: &mut App) {
             // Global Map panel
             render_global_map_panel(f, app, root_chunks[1]);
         }
+        MenuTab::Quests => {
+            // Quests panel
+            render_quests_panel(f, app, root_chunks[1]);
+        }
         MenuTab::Crafting => {
             // Crafting panel
             render_crafting_panel(f, app, root_chunks[1]);
@@ -876,6 +894,7 @@ fn render_bottom_menu(f: &mut Frame, app: &mut App, area: Rect) {
 
     titles.extend(vec![
         Span::raw("Global Map"),
+        Span::raw("Quests"),
         Span::raw("Body"),
         Span::raw("Inventory"),
         Span::raw("Crafting"),
@@ -1218,6 +1237,7 @@ fn calculate_game_viewport_area(f: &Frame, app: &App) -> Rect {
             main_chunks[1]
         }
         MenuTab::GlobalMap
+        | MenuTab::Quests
         | MenuTab::Crafting
         | MenuTab::Body
         | MenuTab::Help
