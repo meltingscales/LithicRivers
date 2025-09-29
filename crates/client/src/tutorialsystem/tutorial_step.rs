@@ -23,11 +23,11 @@ pub enum TutorialAction {
     AnyKey,
     /// Wait for a specific keybind to be pressed
     Keybind { category: String, action: String },
-    /// Wait for a specific keybind to be pressed while the player is adjacent to a specific block
-    KeybindAdjacentToBlock {
+    /// Wait for a specific keybind to be pressed while the player is adjacent to a specific tile
+    KeybindAdjacentToTile {
         category: String,
         action: String,
-        block: TileKind,
+        tile: TileKind,
     },
     /// Wait for multiple movement keys to be pressed (tracks which ones have been pressed)
     MovementKeys {
@@ -89,10 +89,10 @@ impl TutorialStep {
             TutorialAction::KeyPress(expected_key) => key == expected_key,
             TutorialAction::AnyKey => true,
             TutorialAction::Keybind { category, action } => keybinds.matches(category, action, key),
-            TutorialAction::KeybindAdjacentToBlock {
+            TutorialAction::KeybindAdjacentToTile {
                 category,
                 action,
-                block,
+                tile,
             } => {
                 // First check if the keybind matches
                 if !keybinds.matches(category, action, key) {
@@ -114,8 +114,8 @@ impl TutorialStep {
                     ];
 
                     for (x, y, z) in adjacent_positions {
-                        let tile = world_state.world.get_tile(x, y, z);
-                        if tile == *block {
+                        let world_tile = world_state.world.get_tile(x, y, z);
+                        if world_tile == *tile {
                             return true;
                         }
                     }
