@@ -16,9 +16,25 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
 
     // Handle tutorial input when tutorial system is active
     // Note: Tutorial system detects keys but doesn't consume them
-    app.ui
-        .tutorial_system
-        .handle_key_input(key, &app.ui.keybinds);
+    // Get player position for tutorial system
+    let player_pos = app
+        .core
+        .game
+        .world
+        .query::<(
+            &lithicrivers_core::components::Player,
+            &lithicrivers_core::components::Position,
+        )>()
+        .iter()
+        .next()
+        .map(|(_, (_, pos))| *pos);
+
+    app.ui.tutorial_system.handle_key_input(
+        key,
+        &app.ui.keybinds,
+        Some(&app.core.game.res.world_state),
+        player_pos,
+    );
 
     // Handle global map input when on Global Map tab - delegated to input module
     if crate::app::input::global_map::handle_input(app, key)? {
