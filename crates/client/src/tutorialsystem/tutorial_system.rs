@@ -129,15 +129,24 @@ impl TutorialSystem {
         inventory: &lithicrivers_core::components::Inventory,
     ) -> bool {
         if !self.enabled || self.steps.is_empty() {
+            tracing::info!(target: "tutorial", "handle_inventory_change: tutorial system disabled or no steps");
             return false;
         }
 
         if let Some(current_step) = self.steps.get_mut(self.current_step_index) {
+            tracing::info!(target: "tutorial", "handle_inventory_change: checking step '{}' action type: {:?}",
+                current_step.id, std::mem::discriminant(&current_step.action));
+
             if current_step.is_action_satisfied_by_inventory(inventory) {
+                tracing::info!(target: "tutorial", "handle_inventory_change: step '{}' satisfied! Completing.", current_step.id);
                 current_step.completed = true;
                 self.advance_step();
                 return true;
+            } else {
+                tracing::info!(target: "tutorial", "handle_inventory_change: step '{}' not yet satisfied", current_step.id);
             }
+        } else {
+            tracing::info!(target: "tutorial", "handle_inventory_change: no current step found at index {}", self.current_step_index);
         }
         false
     }

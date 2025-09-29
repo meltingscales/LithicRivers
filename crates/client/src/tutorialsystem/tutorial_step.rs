@@ -191,7 +191,14 @@ impl TutorialStep {
                     .map(|stack| stack.qty)
                     .sum();
 
-                current_qty >= required_qty
+                let item_name = lithicrivers_core::components::itemkind_name(*item);
+                let is_satisfied = current_qty >= required_qty;
+
+                tracing::info!(target: "tutorial",
+                    "PickupItem check: {} - required: {}, current: {}, satisfied: {}",
+                    item_name, required_qty, current_qty, is_satisfied);
+
+                is_satisfied
             }
             _ => false, // Other actions don't use inventory checking
         }
