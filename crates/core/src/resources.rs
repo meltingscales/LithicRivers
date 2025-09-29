@@ -234,6 +234,7 @@ impl Resources {
                     if let crate::dialogue::QuestObjectiveType::FetchItem {
                         item_name: required_item,
                         quantity: required_qty,
+                        consumed: _,
                     } = &objective.objective_type
                     {
                         // Check if player has the required item
@@ -264,5 +265,30 @@ impl Resources {
         for quest_name in completed_quests {
             self.log_green(format!("Quest completed: {}", quest_name));
         }
+    }
+
+    /// Get all consumable items required for a quest
+    pub fn get_quest_consumable_items(&self, quest_type: QuestType) -> Vec<(String, u32)> {
+        let mut consumable_items = Vec::new();
+
+        // Find the active quest
+        for quest in &self.active_quests {
+            if quest.quest_type == quest_type {
+                // Get all FetchItem objectives that should be consumed
+                for objective in &quest.objectives {
+                    if let crate::dialogue::QuestObjectiveType::FetchItem {
+                        item_name,
+                        quantity,
+                        consumed: true,
+                    } = &objective.objective_type
+                    {
+                        consumable_items.push((item_name.clone(), *quantity));
+                    }
+                }
+                break;
+            }
+        }
+
+        consumable_items
     }
 }

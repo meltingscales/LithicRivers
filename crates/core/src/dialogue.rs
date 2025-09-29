@@ -35,9 +35,19 @@ pub struct QuestObjective {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum QuestObjectiveType {
-    FetchItem { item_name: String, quantity: u32 },
-    TalkToNPC { npc_name: String },
-    GoToLocation { x: i64, y: i64, z: i64 },
+    FetchItem {
+        item_name: String,
+        quantity: u32,
+        consumed: bool,
+    },
+    TalkToNPC {
+        npc_name: String,
+    },
+    GoToLocation {
+        x: i64,
+        y: i64,
+        z: i64,
+    },
 }
 
 impl ActiveQuest {

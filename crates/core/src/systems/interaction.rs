@@ -422,50 +422,56 @@ fn execute_dialogue_choice(
         // Special case for quest completion choices - consume all required items
         if choice.leads_to == Some(crate::dialogue::DialogueNodeID::CompleteQuest) {
             if let Some(required_quest) = &choice.requires_quest_active {
-                // Consume all items needed for this quest
-                if let Ok(mut inventory) = world.get::<&mut Inventory>(player_entity) {
-                    match required_quest {
-                        crate::dialogue::QuestType::RepairBrokenAndroid => {
-                            let mut consumed_diamond = false;
-                            let mut consumed_electronics = false;
+                // Get consumable items from the quest dynamically
+                let consumable_items = res.get_quest_consumable_items(*required_quest);
 
-                            // Consume Diamond
+                if !consumable_items.is_empty() {
+                    if let Ok(mut inventory) = world.get::<&mut Inventory>(player_entity) {
+                        let mut all_consumed = true;
+
+                        // Try to consume all required items
+                        for (item_name, required_qty) in &consumable_items {
+                            let mut consumed_qty = 0u32;
+
+                            // Find and consume the required quantity of this item
                             for stack in inventory.slots.iter_mut() {
-                                if crate::components::itemkind_name(stack.kind) == "Diamond"
-                                    && stack.qty > 0
-                                {
-                                    stack.qty -= 1;
-                                    res.log(format!("Used 1 Diamond."));
-                                    consumed_diamond = true;
-                                    break;
+                                if crate::components::itemkind_name(stack.kind) == *item_name {
+                                    let to_consume =
+                                        std::cmp::min(stack.qty, required_qty - consumed_qty);
+                                    stack.qty -= to_consume;
+                                    consumed_qty += to_consume;
+
+                                    if consumed_qty >= *required_qty {
+                                        break;
+                                    }
                                 }
                             }
 
-                            // Consume Scrap Electronics
-                            for stack in inventory.slots.iter_mut() {
-                                if crate::components::itemkind_name(stack.kind)
-                                    == "Scrap Electronics"
-                                    && stack.qty > 0
-                                {
-                                    stack.qty -= 1;
-                                    res.log(format!("Used 1 Scrap Electronics."));
-                                    consumed_electronics = true;
-                                    break;
-                                }
-                            }
-
-                            can_trade = consumed_diamond && consumed_electronics;
-                            if !can_trade {
-                                res.log(
-                                    "Error: Could not consume all required quest items!"
-                                        .to_string(),
-                                );
-                                return;
+                            if consumed_qty >= *required_qty {
+                                res.log(format!("Used {} {}.", consumed_qty, item_name));
+                            } else {
+                                all_consumed = false;
+                                res.log(format!(
+                                    "Error: Could not consume {} {} (only had {})!",
+                                    required_qty, item_name, consumed_qty
+                                ));
                             }
                         }
+
+                        can_trade = all_consumed;
+                        if !can_trade {
+                            res.log(
+                                "Error: Could not consume all required quest items!".to_string(),
+                            );
+                            return;
+                        }
+
+                        // Remove empty stacks
+                        inventory.slots.retain(|stack| stack.qty > 0);
                     }
-                    // Remove empty stacks
-                    inventory.slots.retain(|stack| stack.qty > 0);
+                } else {
+                    // No consumable items required for this quest
+                    can_trade = true;
                 }
             }
         } else {
