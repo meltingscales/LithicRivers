@@ -3,6 +3,7 @@ use crate::components::{
     GameEntity, Glyph, Health, Inventory, ItemKind, LightSource, NPCMood, Player, Position,
     QuestTutorialBrokenAndroid, Sheep, SpriteRef,
 };
+use crate::dialogue::DialogueNodeID;
 use crate::model::body::Body;
 use crate::resources::Resources;
 use crate::spawn_utils;
@@ -149,7 +150,7 @@ impl Game {
             Dialogue {
                 current_mood: NPCMood::Happy,
                 met_before: false,
-                current_dialogue_id: Some("start".to_string()), // Start with tutorial broken android dialogue tree
+                current_dialogue_id: Some(DialogueNodeID::Start), // Start with tutorial broken android dialogue tree
                 name: "Broken SapienCorp Android".to_string(),
             },
         ));

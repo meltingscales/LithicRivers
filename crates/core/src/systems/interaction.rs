@@ -1,4 +1,5 @@
 use crate::components::{Dialogue, DroppedItem, EntityKind, Inventory, ItemKind, Player, Position};
+use crate::dialogue::DialogueNodeID;
 use crate::resources::Resources;
 use hecs::World;
 
@@ -238,7 +239,7 @@ fn start_npc_dialogue(
             res.log(format!("First time meeting {}!", npc_name));
         }
 
-        dialogue.current_dialogue_id = Some("start".to_string()); // Start with greeting
+        dialogue.current_dialogue_id = Some(DialogueNodeID::Start); // Start with greeting
         true
     } else {
         res.log(format!("Warning: {} has no dialogue component.", npc_name));
@@ -270,10 +271,9 @@ fn simulate_dialogue_interaction(
     let current_dialogue_id = if let Ok(dialogue) = world.get::<&Dialogue>(npc_entity) {
         dialogue
             .current_dialogue_id
-            .clone()
-            .unwrap_or("start".to_string())
+            .unwrap_or(DialogueNodeID::Start)
     } else {
-        "start".to_string()
+        DialogueNodeID::Start
     };
 
     if let Some(dialogue_node) = dialogue_tree.get_node(&current_dialogue_id) {
@@ -399,7 +399,7 @@ fn execute_dialogue_choice(
     // Move to next dialogue or end conversation
     if let Some(ref next_dialogue_id) = choice.leads_to {
         if let Ok(mut dialogue) = world.get::<&mut Dialogue>(npc_entity) {
-            dialogue.current_dialogue_id = Some(next_dialogue_id.clone());
+            dialogue.current_dialogue_id = Some(*next_dialogue_id);
         }
         res.log("Conversation continues...".to_string());
     } else {

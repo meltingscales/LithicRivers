@@ -1,3 +1,4 @@
+use crate::dialogue::DialogueNodeID;
 use serde::{Deserialize, Serialize};
 use strum::EnumIter;
 
@@ -317,7 +318,7 @@ pub enum NPCMood {
 pub struct Dialogue {
     pub current_mood: NPCMood,
     pub met_before: bool,
-    pub current_dialogue_id: Option<String>,
+    pub current_dialogue_id: Option<DialogueNodeID>,
     pub name: String,
 }
 

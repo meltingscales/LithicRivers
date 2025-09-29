@@ -289,7 +289,7 @@ pub fn execute_interaction_action(app: &mut App, action: &crate::app_state::Inte
         } => {
             // Start NPC dialogue directly
             let conversation = crate::app_state::ConversationState {
-                current_node_id: Some("start".to_string()),
+                current_node_id: Some(lithicrivers_core::dialogue::DialogueNodeID::Start),
                 player_mood: crate::app_state::NPCMood::Neutral,
             };
             app.panels.npc_interaction = NPCInteractionState::InDialogue {
