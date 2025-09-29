@@ -363,12 +363,16 @@ impl DialoguePresenter {
                 let prefix = if i == selected_choice { ">" } else { " " };
 
                 // Add quest marker for choices that unlock quests
-                let quest_marker = if choice.unlocks_quest { " [QUEST]" } else { "" };
+                let quest_marker = if choice.unlocks_quest.is_some() {
+                    " [QUEST]"
+                } else {
+                    ""
+                };
                 let choice_text = format!("{} {}. {}{}", prefix, i + 1, choice.text, quest_marker);
 
-                let choice_color = if choice.unlocks_quest && i == selected_choice {
+                let choice_color = if choice.unlocks_quest.is_some() && i == selected_choice {
                     Color::LightYellow // Highlighted quest choice
-                } else if choice.unlocks_quest {
+                } else if choice.unlocks_quest.is_some() {
                     Color::Green // Available quest choice
                 } else if i == selected_choice {
                     Color::Yellow // Highlighted regular choice
