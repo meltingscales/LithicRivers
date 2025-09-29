@@ -9,6 +9,7 @@ pub mod inventory;
 pub mod look;
 pub mod menu;
 pub mod modes;
+pub mod quests;
 pub mod quit;
 pub mod repair;
 pub mod tutorial;
@@ -26,6 +27,7 @@ pub use inventory::{get_player_inventory, render_inventory_list_only, render_inv
 pub use look::render_look_panel;
 pub use menu::render_menu_panel;
 pub use modes::render_modes_panel;
+pub use quests::render_quests_panel;
 pub use quit::render_quit_panel;
 pub use repair::render_repair_modal;
 pub use tutorial::render_tutorial_panel;

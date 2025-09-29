@@ -53,6 +53,35 @@ first quest and associated dungeons
 
 **Why This Matters**: Creates the first major quest destination and establishes the asset pipeline for structured locations. The abandoned factory serves as the game's first major narrative and gameplay milestone.
 
+## TODO: Active Quest System Implementation
+**Priority**: HIGHEST - Critical for tutorial quest and Steam MVP first impression
+
+**Current Issues**:
+- Quest can be started multiple times (dialogue doesn't track quest state)
+- No way to deliver items to quest giver (fetch quest cannot be completed)
+- Quest markers persist forever (no completion detection)
+- No active quest tracking UI for players
+
+**Implementation Plan**:
+1. **Quest State Enum**: `NotStarted`, `Active`, `Completed`, `Failed`
+2. **Active Quest System**: Track current quest objectives, required items, completion state
+3. **Quests Tab**: New UI tab next to Global Map showing active/completed quests
+4. **Quest Completion Detection**: Check player inventory for required items when talking to NPCs
+5. **Item Delivery System**: Allow giving items to NPCs through dialogue interactions
+6. **Quest State Integration**: Update dialogue system to prevent duplicate quest starts
+7. **Marker Management**: Clear quest markers when quests are completed
+
+**Quest Data Structure**:
+- Quest ID (tied to QuestType enum)
+- Current state (NotStarted/Active/Completed/Failed)
+- Objective description
+- Required items (for fetch quests)
+- Reward items
+- Associated NPC entity
+- Quest marker position
+
+**Why This Matters**: The tutorial quest is the first thing new players experience. It must work flawlessly - players should be able to accept it, track progress, deliver items, and see completion. Without this, the Steam MVP fails at the first hurdle.
+
 ## TODO: Survival Mechanics Implementation
 **Priority**: HIGH - Essential for core survival gameplay loop
 
