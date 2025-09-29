@@ -134,14 +134,17 @@ impl TutorialSystem {
         }
 
         if let Some(current_step) = self.steps.get_mut(self.current_step_index) {
-            tracing::info!(target: "tutorial", "handle_inventory_change: checking step '{}' action type: {:?}",
-                current_step.id, std::mem::discriminant(&current_step.action));
+            tracing::info!(target: "tutorial", "handle_inventory_change: checking step '{}' action type: {:?}, completed: {}",
+                current_step.id, std::mem::discriminant(&current_step.action), current_step.completed);
 
-            if current_step.is_action_satisfied_by_inventory(inventory) {
+            // Only check steps that aren't already completed
+            if !current_step.completed && current_step.is_action_satisfied_by_inventory(inventory) {
                 tracing::info!(target: "tutorial", "handle_inventory_change: step '{}' satisfied! Completing.", current_step.id);
                 current_step.completed = true;
                 self.advance_step();
                 return true;
+            } else if current_step.completed {
+                tracing::info!(target: "tutorial", "handle_inventory_change: step '{}' already completed", current_step.id);
             } else {
                 tracing::info!(target: "tutorial", "handle_inventory_change: step '{}' not yet satisfied", current_step.id);
             }
@@ -153,8 +156,11 @@ impl TutorialSystem {
 
     /// Advance to the next tutorial step
     pub fn advance_step(&mut self) {
+        let old_index = self.current_step_index;
+
         // Check if we just completed the torch tutorial
         if let Some(completed_step) = self.steps.get(self.current_step_index) {
+            tracing::info!(target: "tutorial", "advance_step: completed step '{}' at index {}", completed_step.id, self.current_step_index);
             if completed_step.id == "light_it_up" {
                 // Add highlight for the torch mode indicator
                 self.add_highlight("mode_indicator_torch".to_string(), 10);
@@ -163,8 +169,14 @@ impl TutorialSystem {
 
         if self.current_step_index + 1 < self.steps.len() {
             self.current_step_index += 1;
+            tracing::info!(target: "tutorial", "advance_step: advanced from step {} to step {}", old_index, self.current_step_index);
+
+            if let Some(new_step) = self.steps.get(self.current_step_index) {
+                tracing::info!(target: "tutorial", "advance_step: new current step is '{}'", new_step.id);
+            }
         } else {
             // Tutorial completed
+            tracing::info!(target: "tutorial", "advance_step: tutorial completed, calling complete_current_tutorial()");
             self.complete_current_tutorial();
         }
     }

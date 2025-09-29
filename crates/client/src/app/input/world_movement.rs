@@ -46,6 +46,21 @@ pub fn handle_world_movement_input(app: &mut App, key: KeyCode) -> Result<bool, 
         }
 
         let tick_result = app.core.game.tick();
+
+        // Check tutorial progression for any inventory changes after movement/pickup
+        if let Some(player_entity) = app.core.game.get_player_entity() {
+            if let Ok(inventory) = app
+                .core
+                .game
+                .world
+                .get::<&lithicrivers_core::components::Inventory>(player_entity)
+            {
+                tracing::info!(target: "tutorial", "Movement tick completed, checking tutorial with {} inventory stacks", inventory.slots.len());
+                let tutorial_advanced = app.ui.tutorial_system.handle_inventory_change(&inventory);
+                tracing::info!(target: "tutorial", "Tutorial check after movement returned: {}", tutorial_advanced);
+            }
+        }
+
         if tick_result.contains(GameTickResult::CombatTriggered) {
             app.combat = CombatUiState::Active {
                 current_move: 0,

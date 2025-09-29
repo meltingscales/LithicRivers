@@ -256,10 +256,12 @@ pub fn execute_interaction_action(app: &mut App, action: &crate::app_state::Inte
 
     match action {
         InteractionType::PickupItem { .. } => {
+            tracing::info!(target: "tutorial", "=== PICKUP ITEM ACTION TRIGGERED ===");
             // Use core system for item pickup
             app.core.game.res.player_state.intent =
                 lithicrivers_core::intent::PlayerIntent::interact(100);
             let tick_result = app.core.game.tick();
+            tracing::info!(target: "tutorial", "Item pickup completed");
 
             // Check tutorial progression for inventory changes after pickup
             if let Some(player_entity) = app.core.game.get_player_entity() {
