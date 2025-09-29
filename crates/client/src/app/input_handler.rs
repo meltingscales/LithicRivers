@@ -25,6 +25,11 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
         return Ok(());
     }
 
+    // Handle quest input when on Quests tab - delegated to input module
+    if crate::app::input::quests::handle_input(app, key)? {
+        return Ok(());
+    }
+
     // log key to log
     tracing::info!(target: "game", "key pressed: {:?}", key);
 

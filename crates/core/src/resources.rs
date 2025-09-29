@@ -130,6 +130,29 @@ impl Resources {
         }
     }
 
+    /// Start a new quest and check existing inventory for completion
+    pub fn start_quest_with_inventory_check(
+        &mut self,
+        quest: ActiveQuest,
+        player_inventory: &crate::components::Inventory,
+    ) {
+        // Check if quest is already active to prevent duplicates
+        if !self
+            .active_quests
+            .iter()
+            .any(|q| q.quest_type == quest.quest_type)
+        {
+            self.active_quests.push(quest);
+            self.log(format!(
+                "Quest started: {}",
+                self.active_quests.last().unwrap().name
+            ));
+
+            // Check existing inventory for quest objective completion
+            self.update_quest_objectives_from_inventory(player_inventory);
+        }
+    }
+
     /// Get active quest by type
     pub fn get_active_quest(&self, quest_type: QuestType) -> Option<&ActiveQuest> {
         self.active_quests
@@ -191,5 +214,55 @@ impl Resources {
             .get(&(chunk_x, chunk_y, chunk_z))
             .unwrap_or(&false)
             .clone()
+    }
+
+    /// Update quest objectives based on current player inventory
+    pub fn update_quest_objectives_from_inventory(
+        &mut self,
+        player_inventory: &crate::components::Inventory,
+    ) {
+        let mut completed_objectives = Vec::new();
+        let mut completed_quests = Vec::new();
+
+        for quest in self.active_quests.iter_mut() {
+            if quest.state != crate::dialogue::QuestState::Active {
+                continue;
+            }
+
+            for objective in quest.objectives.iter_mut() {
+                if !objective.completed {
+                    if let crate::dialogue::QuestObjectiveType::FetchItem {
+                        item_name: required_item,
+                        quantity: required_qty,
+                    } = &objective.objective_type
+                    {
+                        // Check if player has the required item
+                        let has_item = player_inventory.slots.iter().any(|stack| {
+                            crate::components::itemkind_name(stack.kind) == *required_item
+                                && stack.qty >= *required_qty
+                        });
+
+                        if has_item {
+                            objective.completed = true;
+                            completed_objectives.push(objective.description.clone());
+                        }
+                    }
+                }
+            }
+
+            // Check if all objectives are completed
+            if quest.is_completed() && quest.state == crate::dialogue::QuestState::Active {
+                quest.state = crate::dialogue::QuestState::Completed;
+                completed_quests.push(quest.name.clone());
+            }
+        }
+
+        // Log messages for completed objectives and quests
+        for objective_desc in completed_objectives {
+            self.log_green(format!("Quest objective completed: {}", objective_desc));
+        }
+        for quest_name in completed_quests {
+            self.log_green(format!("Quest completed: {}", quest_name));
+        }
     }
 }

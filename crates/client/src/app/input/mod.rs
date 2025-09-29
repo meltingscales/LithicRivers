@@ -10,6 +10,7 @@ pub mod inventory;
 pub mod look_mode;
 pub mod multi_action;
 pub mod npc_interaction;
+pub mod quests;
 pub mod splash;
 pub mod tutorial_selection;
 pub mod tutorial_skip;

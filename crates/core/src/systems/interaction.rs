@@ -171,9 +171,11 @@ pub fn pickup_item(
         false
     };
 
-    // Check for quest objective completion
+    // Check for quest objective completion by scanning inventory
     if pickup_successful {
-        check_fetch_quest_completion(res, item.kind, item.qty);
+        if let Ok(player_inventory) = world.get::<&crate::components::Inventory>(player_entity) {
+            res.update_quest_objectives_from_inventory(&player_inventory);
+        }
     }
 
     // Remove the dropped item from world (separate borrow)
@@ -181,52 +183,6 @@ pub fn pickup_item(
         if let Err(e) = world.despawn(item_entity) {
             res.log(format!("Warning: Failed to despawn item: {:?}", e));
         }
-    }
-}
-
-/// Check if picking up an item completes any fetch quest objectives
-pub fn check_fetch_quest_completion(res: &mut Resources, item_kind: ItemKind, _qty: u32) {
-    let item_name = crate::components::itemkind_name(item_kind);
-    let mut completed_objectives = Vec::new();
-    let mut completed_quests = Vec::new();
-
-    // First pass: check for completed objectives and collect info
-    for quest in res.active_quests.iter_mut() {
-        if quest.state != crate::dialogue::QuestState::Active {
-            continue;
-        }
-
-        for (_objective_index, objective) in quest.objectives.iter_mut().enumerate() {
-            if !objective.completed {
-                if let crate::dialogue::QuestObjectiveType::FetchItem {
-                    item_name: required_item,
-                    quantity: _required_qty,
-                } = &objective.objective_type
-                {
-                    if item_name == *required_item {
-                        // Mark objective as completed
-                        objective.completed = true;
-                        completed_objectives.push(objective.description.clone());
-
-                        // Check if all objectives are completed
-                        if quest.is_completed() {
-                            quest.state = crate::dialogue::QuestState::Completed;
-                            completed_quests.push(quest.name.clone());
-                        }
-
-                        break; // Only complete one objective per item pickup
-                    }
-                }
-            }
-        }
-    }
-
-    // Second pass: log messages
-    for objective_desc in completed_objectives {
-        res.log_green(format!("Quest objective completed: {}", objective_desc));
-    }
-    for quest_name in completed_quests {
-        res.log_green(format!("Quest completed: {}", quest_name));
     }
 }
 
@@ -261,9 +217,12 @@ pub fn start_corpse_looting(world: &mut World, res: &mut Resources, corpse_entit
                     qty,
                     crate::components::itemkind_name(item_kind)
                 ));
+            }
 
-                // Check for quest objective completion
-                check_fetch_quest_completion(res, item_kind, qty);
+            // Check for quest objective completion after all items are added
+            if let Ok(player_inventory) = world.get::<&crate::components::Inventory>(player_entity)
+            {
+                res.update_quest_objectives_from_inventory(&player_inventory);
             }
         }
     }
@@ -336,9 +295,29 @@ fn simulate_dialogue_interaction(
             dialogue_node.speaker, dialogue_node.text
         ));
 
-        // Show available choices
-        for (i, choice) in dialogue_node.choices.iter().enumerate() {
-            let mut choice_text = format!("{}. {}", i + 1, choice.text);
+        // Filter and show available choices based on quest requirements
+        let filtered_choices: Vec<(usize, &crate::dialogue::DialogueChoice)> = dialogue_node
+            .choices
+            .iter()
+            .enumerate()
+            .filter(|(_, choice)| {
+                // Check quest requirements
+                if let Some(required_quest) = &choice.requires_quest_active {
+                    if !res.is_quest_active(*required_quest) {
+                        return false;
+                    }
+                }
+                if let Some(required_quest) = &choice.requires_quest_complete {
+                    if !res.is_quest_completed(*required_quest) {
+                        return false;
+                    }
+                }
+                true
+            })
+            .collect();
+
+        for (original_index, choice) in &filtered_choices {
+            let mut choice_text = format!("{}. {}", original_index + 1, choice.text);
 
             // Check if player has required items
             if let Some(required_item) = &choice.requires_item {
@@ -362,7 +341,7 @@ fn simulate_dialogue_interaction(
         }
 
         // Auto-select first valid choice for testing
-        if let Some(choice) = dialogue_node.choices.first() {
+        if let Some((_, choice)) = filtered_choices.first() {
             execute_dialogue_choice(
                 world,
                 res,

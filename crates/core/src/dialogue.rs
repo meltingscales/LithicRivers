@@ -106,6 +106,8 @@ pub struct DialogueChoice {
     pub npc_mood_change: Option<NPCMood>, //Does this choice change NPC mood?
     pub player_mood_change: Option<NPCMood>, //Does this choice change player mood?
     pub unlocks_quest: Option<QuestType>, // Quest to unlock, None = no quest
+    pub requires_quest_active: Option<QuestType>, // Only show if this quest is active
+    pub requires_quest_complete: Option<QuestType>, // Only show if this quest is completed
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
