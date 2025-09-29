@@ -100,6 +100,30 @@ pub fn get_command_registry() -> CommandRegistry {
     CommandRegistry::new()
 }
 
+/// Find the longest common prefix among a list of strings
+fn find_common_prefix(strings: &[String]) -> String {
+    if strings.is_empty() {
+        return String::new();
+    }
+
+    if strings.len() == 1 {
+        return strings[0].clone();
+    }
+
+    let first = &strings[0];
+    let mut common_len = 0;
+
+    for (i, ch) in first.chars().enumerate() {
+        if strings.iter().all(|s| s.chars().nth(i) == Some(ch)) {
+            common_len = i + 1;
+        } else {
+            break;
+        }
+    }
+
+    first.chars().take(common_len).collect()
+}
+
 /// Update autocomplete suggestions based on current input
 fn update_autocomplete(input: &str) -> (Vec<String>, Option<usize>) {
     if input.is_empty() {
@@ -313,11 +337,11 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Error>>
                     }
                     return Ok(true);
                 }
-                // Tab for autocomplete
+                // Tab for autocomplete - bash-like completion
                 KeyCode::Tab => {
                     if !autocomplete_suggestions.is_empty() {
-                        // If there's only one suggestion, complete it
                         if autocomplete_suggestions.len() == 1 {
+                            // Single match - complete it fully
                             let completed = autocomplete_suggestions[0].clone();
                             let (new_suggestions, new_index) = update_autocomplete(&completed);
                             app.panels.cheat_console = CheatConsoleState::Open {
@@ -328,18 +352,34 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Error>>
                                 scroll_offset: *scroll_offset,
                             };
                         } else {
-                            // Cycle through suggestions
-                            let new_index = match autocomplete_index {
-                                Some(idx) => Some((idx + 1) % autocomplete_suggestions.len()),
-                                None => Some(0),
-                            };
-                            app.panels.cheat_console = CheatConsoleState::Open {
-                                input: input.clone(),
-                                cursor_position: *cursor_position,
-                                autocomplete_suggestions: autocomplete_suggestions.clone(),
-                                autocomplete_index: new_index,
-                                scroll_offset: *scroll_offset,
-                            };
+                            // Multiple matches - bash-like behavior
+                            let common_prefix = find_common_prefix(autocomplete_suggestions);
+
+                            // If we can extend the input with the common prefix, do that first
+                            if common_prefix.len() > input.len() {
+                                let (new_suggestions, new_index) =
+                                    update_autocomplete(&common_prefix);
+                                app.panels.cheat_console = CheatConsoleState::Open {
+                                    input: common_prefix.clone(),
+                                    cursor_position: common_prefix.len(),
+                                    autocomplete_suggestions: new_suggestions,
+                                    autocomplete_index: new_index,
+                                    scroll_offset: *scroll_offset,
+                                };
+                            } else {
+                                // No more common prefix to complete - cycle through suggestions
+                                let new_index = match autocomplete_index {
+                                    Some(idx) => Some((idx + 1) % autocomplete_suggestions.len()),
+                                    None => Some(0),
+                                };
+                                app.panels.cheat_console = CheatConsoleState::Open {
+                                    input: input.clone(),
+                                    cursor_position: *cursor_position,
+                                    autocomplete_suggestions: autocomplete_suggestions.clone(),
+                                    autocomplete_index: new_index,
+                                    scroll_offset: *scroll_offset,
+                                };
+                            }
                         }
                     }
                     return Ok(true);
@@ -395,4 +435,30 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Error>>
 fn execute_command(app: &mut App, command: &str) -> Result<(), Box<dyn Error>> {
     let registry = get_command_registry();
     registry.execute(app, command)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_find_common_prefix() {
+        // Test empty list
+        assert_eq!(find_common_prefix(&[]), "");
+
+        // Test single item
+        assert_eq!(find_common_prefix(&["test".to_string()]), "test");
+
+        // Test multiple items with common prefix
+        let items = vec!["toggle_fogofwar".to_string(), "toggle_tutorial".to_string()];
+        assert_eq!(find_common_prefix(&items), "toggle_");
+
+        // Test multiple items with no common prefix
+        let items = vec!["tp".to_string(), "noclip_toggle".to_string()];
+        assert_eq!(find_common_prefix(&items), "");
+
+        // Test items where one is a prefix of another
+        let items = vec!["test".to_string(), "testing".to_string()];
+        assert_eq!(find_common_prefix(&items), "test");
+    }
 }
