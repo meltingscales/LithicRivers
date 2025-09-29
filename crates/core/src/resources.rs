@@ -41,6 +41,7 @@ pub struct QuestMarker {
 pub enum QuestMarkerType {
     MainQuest,
     SideQuest,
+    FetchQuest,
     Location,
     Treasure,
 }

@@ -118,6 +118,7 @@ fn render_map_panel(f: &mut Frame, app: &mut App, area: Rect) {
                 char_to_display = match quest_marker.marker_type {
                     QuestMarkerType::MainQuest => '!',
                     QuestMarkerType::SideQuest => '?',
+                    QuestMarkerType::FetchQuest => 'F',
                     QuestMarkerType::Location => 'L',
                     QuestMarkerType::Treasure => '$',
                 };
@@ -325,6 +326,7 @@ fn render_markers_panel(f: &mut Frame, app: &mut App, area: Rect) {
                 let marker_symbol = match marker.marker_type {
                     QuestMarkerType::MainQuest => "!",
                     QuestMarkerType::SideQuest => "?",
+                    QuestMarkerType::FetchQuest => "F",
                     QuestMarkerType::Location => "L",
                     QuestMarkerType::Treasure => "$",
                 };
@@ -332,6 +334,7 @@ fn render_markers_panel(f: &mut Frame, app: &mut App, area: Rect) {
                 let marker_color = match marker.marker_type {
                     QuestMarkerType::MainQuest => Color::Red,
                     QuestMarkerType::SideQuest => Color::Yellow,
+                    QuestMarkerType::FetchQuest => Color::Cyan,
                     QuestMarkerType::Location => Color::Blue,
                     QuestMarkerType::Treasure => Color::Green,
                 };
