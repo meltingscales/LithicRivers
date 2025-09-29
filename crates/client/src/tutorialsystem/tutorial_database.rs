@@ -91,6 +91,7 @@ impl TutorialDatabase {
         vec![
             Self::create_tutorial_tutorial(),
             Self::create_movement_tutorial(),
+            Self::create_zoom_tutorial(),
             Self::create_torch_tutorial(),
             Self::create_look_tutorial(),
         ]
@@ -143,6 +144,22 @@ impl TutorialDatabase {
                     ("movement".to_string(), "MOVE_SOUTH".to_string()),
                     ("movement".to_string(), "MOVE_SOUTHEAST".to_string()),
                     ("ui".to_string(), "MENU_PREV".to_string()),
+                ],
+                pressed_keybinds: vec![],
+            },
+        )
+    }
+
+    /// create a zoom tutorial step
+    fn create_zoom_tutorial() -> TutorialStep {
+        TutorialStep::new(
+            "zoom_in_out",
+            "Zoom In/Out",
+            "Zoom in and out to get a smaller or larger view of the world! This game has 3 scale modes: 1x1, 2x2, and 3x3.",
+            TutorialAction::MultipleKeybinds {
+                required_keybinds: vec![
+                    ("scale".to_string(), "SCALE_UP".to_string()),
+                    ("scale".to_string(), "SCALE_DOWN".to_string()),
                 ],
                 pressed_keybinds: vec![],
             },
