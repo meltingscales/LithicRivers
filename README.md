@@ -1,4 +1,4 @@
-# LithicRivers
+# LithicRivers (DEVELOPMENT PAUSED, SOON TO BE OPEN DOMAIN? [contact me])
 
 An ASCII game I want to finish.
 
