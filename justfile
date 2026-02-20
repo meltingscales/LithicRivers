@@ -84,7 +84,7 @@ clean:
     rm -rf coverage/
 
 git-data:
-    git describe --tags --abbrev=0 > VERSION
+    git describe --tags --always --abbrev=0 > VERSION
     git rev-parse HEAD > GIT_SHA
     git rev-parse --abbrev-ref HEAD > GIT_BRANCH
 
