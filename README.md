@@ -43,20 +43,13 @@ Currently we support:
 
 ## Running
 
-    just run
+    just client-windows
+    just client-linux
 
 ## Building
 
-### Linux
-
     just build
     ls ./dist/
-
-### Windows
-
-    just --justfile justfile.windows install
-    just --justfile justfile.windows build
-    just --justfile justfile.windows run
 
 ## Notes
 
