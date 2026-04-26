@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Util: Publish Release
+
 set -euo pipefail
 
 version=$1

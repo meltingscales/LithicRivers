@@ -1,3 +1,6 @@
+#!/usr/bin/env bash
+# Stage Artifacts Legal
+
 mkdir -p artifacts/
 cp -f CHANGELOG.txt artifacts/
 cp -f LICENSE artifacts/

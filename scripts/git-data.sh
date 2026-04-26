@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # Git Data
 
 git describe --tags --abbrev=0 > VERSION
