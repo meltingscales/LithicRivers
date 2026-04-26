@@ -24,7 +24,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # need tags for versioning
+          fetch-depth: 0 # need tags for versioning
 
       - name: Set up Rust toolchain (nightly)
         uses: dtolnay/rust-toolchain@nightly
@@ -62,14 +62,14 @@ jobs:
           cache-on-failure: true
           key: ${{ runner.os }}-nightly-${{ hashFiles('**/Cargo.lock') }}
           shared-key: ${{ runner.os }}-nightly-${{ hashFiles('**/Cargo.lock') }}
-      
+
       - name: Build and test on Windows
         if: matrix.os == 'windows-latest'
         run: |
           choco install just
-          just --justfile justfile.windows build-release
-          just --justfile justfile.windows test-release
-          just --justfile justfile.windows stage-artifacts-release
+          just build-release-windows
+          just test-release-windows
+          just stage-artifacts-release-windows
 
       - name: Zip artifacts (Windows)
         if: matrix.os == 'windows-latest'
@@ -82,9 +82,9 @@ jobs:
         run: |
           sudo apt install just
           sudo bash scripts/install_dev_deps.sh
-          just build-release
-          just test-release
-          just stage-artifacts-release
+          just build-release-linux
+          just test-release-linux
+          just stage-artifacts-release-linux
 
       - name: Zip artifacts (Linux)
         if: matrix.os == 'ubuntu-latest'
@@ -97,9 +97,9 @@ jobs:
         run: |
           brew update
           brew install just
-          just build-release
-          just test-release
-          just stage-artifacts-release
+          just build-release-linux
+          just test-release-linux
+          just stage-artifacts-release-linux
 
       - name: Zip artifacts (macOS)
         if: matrix.os == 'macos-latest'
@@ -146,13 +146,13 @@ jobs:
         with:
           name: lithicrivers-${{ github.ref_name }}-${{ github.sha }}-ubuntu-latest
           path: artifacts-zip
-      
+
       - name: Download artifacts for Windows
         uses: actions/download-artifact@v4
         with:
           name: lithicrivers-${{ github.ref_name }}-${{ github.sha }}-windows-latest
           path: artifacts-zip
-      
+
       - name: Download artifacts for macOS
         uses: actions/download-artifact@v4
         with:
@@ -210,7 +210,7 @@ jobs:
       - name: Upload to Steam for all platforms (SteamPipe)
         run: |
           APPVDF="$(realpath app_build_unified.vdf)"
-          
+
           # this uploads the app
           steamcmd +login "$STEAM_USERNAME" +run_app_build_http $APPVDF +quit
 
