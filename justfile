@@ -129,7 +129,7 @@ stage-artifacts-linux: clean-artifacts-linux build-linux build-demos stage-artif
     bash scripts/stage-artifacts.sh
 
 stage-artifacts-windows: clean-artifacts-windows build-windows build-demos stage-artifacts-legal-windows
-    bash scripts/stage-artifacts.sh
+    powershell.exe scripts/stage-artifacts.ps1
 
 # Stage release artifacts
 stage-artifacts-release-linux: clean-artifacts-linux build-release-linux build-demos-release stage-artifacts-legal-linux
@@ -137,7 +137,7 @@ stage-artifacts-release-linux: clean-artifacts-linux build-release-linux build-d
 
 # Stage release artifacts
 stage-artifacts-release-windows: clean-artifacts-windows build-release-windows build-demos-release stage-artifacts-legal-windows
-    bash scripts/stage-artifacts-release.sh
+    powershell.exe scripts/stage-artifacts-release.ps1
 
 ## Optional: build demo binaries (may require ratatui API updates)
 build-demos: code-fmt util-voxelbuilder-import
