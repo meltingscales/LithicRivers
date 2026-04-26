@@ -1,6 +1,6 @@
 #Requires -Version 5.1
-$ErrorActionPreference = "Stop"
 
+[CmdletBinding()]
 param(
     [Parameter(Mandatory=$true, Position=0)]
     [string]$Version
@@ -87,7 +87,7 @@ git push origin --tags
 Write-Host "✅ Successfully published release $Version" -ForegroundColor Green
 
 # Extract GitHub repo from remote URL
- $remoteUrl = git remote get-url origin
- $repoPath = $remoteUrl -replace '.*github.com[\/:]', '' -replace '\.git$','
-Write-Host "🔗 GitHub Actions will now build and deploy the release"
-Write-Host "🎯 Monitor the release at: https://github.com/$repoPath/releases"
+$remoteUrl = git remote get-url origin
+$repoPath = $remoteUrl -replace '.*github.com[\/:]', '' -replace '\.git$',''
+Write-Host "  GitHub Actions will now build and deploy the release"
+Write-Host "  Monitor the release at: https://github.com/$repoPath/releases"
