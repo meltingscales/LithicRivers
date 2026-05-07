@@ -4,7 +4,6 @@ use ratatui::prelude::Color;
 use serde::Deserialize;
 use std::borrow::Cow;
 use std::collections::HashMap;
-use std::fmt;
 use std::path::{Path, PathBuf};
 
 use rust_embed::RustEmbed;
@@ -21,7 +20,8 @@ pub enum Scale {
 }
 
 impl Scale {
-    pub fn as_u32(self) -> u32 {
+    #[allow(dead_code)]
+    pub fn as_i64(self) -> i64 {
         match self {
             Scale::Small => 1,
             Scale::Medium => 2,
@@ -30,8 +30,8 @@ impl Scale {
     }
 }
 
-impl From<u32> for Scale {
-    fn from(value: u32) -> Self {
+impl From<i64> for Scale {
+    fn from(value: i64) -> Self {
         match value {
             1 => Scale::Small,
             2 => Scale::Medium,
@@ -42,6 +42,7 @@ impl From<u32> for Scale {
 }
 
 // Multi-scale: return the full sprite block string (may be multi-line) and color for a SpriteRef
+#[allow(dead_code)]
 pub fn sprite_block_for_spriteref(
     loader: &mut SpriteLoader,
     sr: &lithicrivers_core::components::SpriteRef,
@@ -63,6 +64,7 @@ pub struct SpriteMetadata {
     pub name: String,
     pub color: String,
     pub description: String,
+    #[allow(dead_code)]
     pub scales: Option<Vec<u32>>, // Not strictly needed for loading, but present in JSON
     #[serde(default)]
     pub has_emotion_states: bool, // For NPCs that need mood-specific portraits
@@ -77,25 +79,7 @@ pub fn sprite_block_for_tile(
 ) -> Option<(String, Color)> {
     let (category, name) = (
         "tiles",
-        match kind {
-            TileKind::Rock => "rock",
-            TileKind::Dirt => "dirt",
-            TileKind::Grass => "grass",
-            TileKind::Tree => "tree",
-            TileKind::Air => "air",
-            TileKind::BoneBlock => "bone_block",
-            TileKind::IronScrap => "iron_scrap",
-            TileKind::Door => "door",
-            TileKind::Bedrock => "bedrock",
-            TileKind::ScrapElectronics => "scrap_electronics",
-            TileKind::PlasteelScrap => "plasteel_scrap",
-            TileKind::Treasure => "treasure",
-            TileKind::PlankBlock => "plank_block",
-            _ => panic!(
-                "Unknown tile kind: {:?}. Without this enum->name mapping, we cannot render.",
-                kind
-            ),
-        },
+        lithicrivers_core::tiles::sprite_name_for_tile(kind),
     );
     let sd = loader.load_sprite(name, category);
     let block = sprite_block_for_scale(sd, scale).to_string();
@@ -122,6 +106,7 @@ pub struct SpriteData {
 }
 
 pub struct SpriteLoader {
+    #[allow(dead_code)]
     pub data_path: PathBuf,
     sprite_cache: HashMap<String, SpriteData>,
 }
@@ -136,8 +121,10 @@ impl SpriteLoader {
             EntityKind::Sheep => ("entities".to_string(), "sheep".to_string()),
             EntityKind::FeralDog => ("entities".to_string(), "feral_dog".to_string()),
             EntityKind::Corpse => ("entities".to_string(), "corpse".to_string()),
-            EntityKind::QuestTesty => ("entities".to_string(), "quest_testy".to_string()),
-            _ => panic!("Unknown entity kind: {:?}", kind),
+            EntityKind::QuestTutorialBrokenAndroid => (
+                "entities".to_string(),
+                "quest_tutorial_broken_android".to_string(),
+            ),
         }
     }
     pub fn new(data_path: Option<&Path>) -> Self {
@@ -416,7 +403,7 @@ fn sprite_block_for_scale(sd: &SpriteData, scale: Scale) -> &str {
     }
 }
 
-fn parse_color_string(s: &str) -> Option<Color> {
+pub fn parse_color_string(s: &str) -> Option<Color> {
     // Support #RRGGBB
     let s = s.trim();
     if let Some(hex) = s.strip_prefix('#') {

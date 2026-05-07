@@ -24,6 +24,7 @@ tracing-subscriber = { workspace = true }
 tracing-appender = "0.2"
 chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
 heck = "0.5.0"
+strum = { version = "0.25", features = ["derive"] }
 
 [target.'cfg(windows)'.dependencies]
 winapi = { version = "0.3", features = ["winuser"] }

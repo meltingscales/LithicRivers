@@ -1,0 +1,5 @@
+Header Capsule: 920px wide x 430px tall
+Small Capsule: 462px wide x 174px tall
+Main Capsule: 1232px wide x 706px tall
+vertical capsule: 748px wide x 896px tall
+Page Background: 1438px wide x 810px tall

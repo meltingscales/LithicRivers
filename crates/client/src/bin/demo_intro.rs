@@ -116,7 +116,7 @@ fn ui(f: &mut Frame, app: &App) {
     let block = Block::default()
         .borders(Borders::ALL)
         .border_set(border::THICK)
-        .title(" Intro ")
+        .title(Line::from(" Intro "))
         .title_alignment(Alignment::Center)
         .border_style(Style::default().fg(Color::LightBlue));
 
@@ -171,8 +171,8 @@ fn build_intro_images(size: Rect) -> Vec<String> {
     let lines = read_boot_lines();
 
     // Margins akin to Python version
-    let top_margin = max(1, size.height as i32 / 6) as u16;
-    let left_margin = max(2, size.width as i32 / 12) as u16;
+    let top_margin = max(1, size.height as i64 / 6) as u16;
+    let left_margin = max(2, size.width as i64 / 12) as u16;
     let viewport_height = size
         .height
         .saturating_sub(top_margin)

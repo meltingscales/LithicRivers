@@ -1,4 +1,3 @@
-use crate::input::format_keycode;
 use crossterm::event::KeyCode;
 use ratatui::{
     layout::{Alignment, Rect},
@@ -8,6 +7,19 @@ use ratatui::{
     Frame,
 };
 use std::collections::HashMap;
+
+/// Format a KeyCode as a human-readable string
+pub fn format_keycode(kc: &KeyCode) -> String {
+    match kc {
+        KeyCode::Char(c) => c.to_string(),
+        KeyCode::BackTab => "Shift+Tab".to_string(),
+        KeyCode::Backspace => "Backspace".to_string(),
+        KeyCode::Tab => "Tab".to_string(),
+        KeyCode::Enter => "Enter".to_string(),
+        KeyCode::Esc => "Esc".to_string(),
+        _ => format!("{:?}", kc),
+    }
+}
 
 pub fn render_help_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     let mut lines: Vec<Line> = Vec::new();
@@ -165,7 +177,9 @@ pub fn render_help_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
             lines.push(Line::from(""));
         }
     }
-    let block = Block::default().borders(Borders::ALL).title("Help");
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .title(Line::from("Help"));
     let inner = block.inner(area);
     let p = Paragraph::new(lines)
         .alignment(Alignment::Left)

@@ -61,7 +61,6 @@ enum EffectType {
 struct ActiveEffect {
     effect: Effect,
     remaining_ticks: u32,
-    target_index: usize,
 }
 
 #[derive(Debug, Clone)]
@@ -136,21 +135,6 @@ impl Player {
         }
     }
 
-    fn use_move(&mut self, move_index: usize) -> Option<Move> {
-        // Check if we can use the move first
-        if !self.can_use_move(move_index) {
-            return None;
-        }
-
-        // Now we can safely get mutable access since we've done all immutable checks
-        if let Some(mv) = self.moves.get_mut(move_index) {
-            self.mana = self.mana.saturating_sub(mv.mana_cost);
-            mv.current_cooldown = mv.cooldown;
-            return Some(mv.clone());
-        }
-        None
-    }
-
     fn regen(&mut self) {
         self.mana = (self.mana + MANA_REGEN).min(self.max_mana);
         self.health = self.health.min(self.max_health);
@@ -179,16 +163,11 @@ struct Enemy {
 }
 
 impl Enemy {
-    fn is_stunned(&self) -> bool {
-        self.is_stunned
-    }
-
-    fn add_effect(&mut self, effect: Effect, target_index: usize) {
+    fn add_effect(&mut self, effect: Effect) {
         let is_stun = effect.effect_type == EffectType::Stun;
         self.effects.push(ActiveEffect {
             effect,
             remaining_ticks: self.effects.last().map_or(0, |e| e.effect.duration),
-            target_index,
         });
 
         if is_stun {
@@ -236,10 +215,6 @@ impl Enemy {
     fn render_portrait(&self, width: usize, height: usize) -> String {
         let (cx, cy, scale) = self.seed;
         render_mandelbrot(width, height, cx, cy, scale)
-    }
-
-    fn health_percentage(&self) -> u16 {
-        ((self.health as f32 / self.max_health as f32) * 100.0) as u16
     }
 }
 
@@ -444,7 +419,7 @@ impl App {
                                     if let Some(enemy) = self.enemies.get_mut(enemy_idx) {
                                         enemy.health = enemy.health.saturating_sub(mv.damage);
                                         if let Some(effect) = &mv.effect {
-                                            enemy.add_effect(effect.clone(), enemy_idx);
+                                            enemy.add_effect(effect.clone());
                                         }
                                         Some(format!(
                                             "Tackle hits {} for {} damage and stuns!",
@@ -620,13 +595,21 @@ fn render_player_info(f: &mut Frame, area: Rect, app: &App) {
     let mana_ratio = player.mana as f64 / player.max_mana as f64;
 
     let health_bar = Gauge::default()
-        .block(Block::default().title("HP").borders(Borders::ALL))
+        .block(
+            Block::default()
+                .title(Line::from("HP"))
+                .borders(Borders::ALL),
+        )
         .gauge_style(Style::default().fg(Color::Red).bg(Color::DarkGray))
         .ratio(health_ratio)
         .label(format!(" {}/{} ", player.health, player.max_health));
 
     let mana_bar = Gauge::default()
-        .block(Block::default().title("MP").borders(Borders::ALL))
+        .block(
+            Block::default()
+                .title(Line::from("MP"))
+                .borders(Borders::ALL),
+        )
         .gauge_style(Style::default().fg(Color::Blue).bg(Color::DarkGray))
         .ratio(mana_ratio)
         .label(format!(" {}/{} ", player.mana, player.max_mana));
@@ -741,7 +724,9 @@ fn render_move_queue(f: &mut Frame, area: Rect, app: &App) {
         }
     }
 
-    let block = Block::default().borders(Borders::ALL).title("Action Queue");
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .title(Line::from("Action Queue"));
 
     let paragraph = Paragraph::new(lines).block(block).wrap(Wrap { trim: true });
 
@@ -786,7 +771,7 @@ fn render_enemy_info(f: &mut Frame, enemy: &Enemy, area: Rect, is_selected: bool
     let health_bar = Gauge::default()
         .block(
             Block::default()
-                .title(enemy.name.clone())
+                .title(Line::from(enemy.name.clone()))
                 .borders(Borders::ALL),
         )
         .gauge_style(Style::default().fg(Color::Red).bg(Color::DarkGray))
@@ -821,7 +806,7 @@ fn ui(f: &mut Frame, app: &mut App) {
     // Outer frame
     let block = Block::default()
         .borders(Borders::ALL)
-        .title(" Chrono Trigger-Style Combat ")
+        .title(Line::from(" Chrono Trigger-Style Combat "))
         .title_alignment(Alignment::Center);
     let _inner = block.inner(size);
     f.render_widget(block, size);

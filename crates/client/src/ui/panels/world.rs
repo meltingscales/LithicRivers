@@ -4,12 +4,47 @@ use crate::{
 };
 use ratatui::{
     layout::Rect,
-    style::Style,
+    style::{Color, Style},
     text::{Line, Span},
     widgets::{Block, Paragraph, Wrap},
     Frame,
 };
 use std::collections::HashMap;
+
+/// Convert a color to grayscale for fog of war rendering
+fn to_grayscale(color: Color) -> Color {
+    match color {
+        Color::Rgb(r, g, b) => {
+            // Standard grayscale conversion formula
+            let gray = ((r as f32 * 0.299) + (g as f32 * 0.587) + (b as f32 * 0.114)) as u8;
+            Color::Rgb(gray, gray, gray)
+        }
+        Color::Indexed(i) => {
+            // For indexed colors, map to grayscale approximations
+            match i {
+                0 => Color::Black,         // Black -> Black
+                1..=15 => Color::DarkGray, // Standard colors -> Dark Gray
+                16..=231 => Color::Gray,   // 216-color cube -> Gray
+                232..=255 => Color::White, // Grayscale ramp -> White
+            }
+        }
+        // Named colors to grayscale
+        Color::Black => Color::Black,
+        Color::Red | Color::Green | Color::Yellow | Color::Blue | Color::Magenta | Color::Cyan => {
+            Color::DarkGray
+        }
+        Color::Gray => Color::Gray,
+        Color::DarkGray => Color::DarkGray,
+        Color::LightRed
+        | Color::LightGreen
+        | Color::LightYellow
+        | Color::LightBlue
+        | Color::LightMagenta
+        | Color::LightCyan => Color::Gray,
+        Color::White => Color::White,
+        Color::Reset => Color::Reset,
+    }
+}
 
 pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
     // Get the game view from the core
@@ -24,14 +59,14 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
 
     // Note: No longer need to sync generation Z - using viewport-safe methods
 
-    let scale = app.ui.scale.as_u32() as i32;
+    let scale = app.ui.scale.as_i64() as i64;
 
     // Compute world-space bounds for current UI viewport and prefetch chunks
     let center_x = app.ui.view_x;
     let center_y = app.ui.view_y;
 
-    let world_cols = (target_cols as f32 / scale as f32).ceil() as i32;
-    let world_rows = (target_rows as f32 / scale as f32).ceil() as i32;
+    let world_cols = (target_cols as i64 / scale) as i64;
+    let world_rows = (target_rows as i64 / scale) as i64;
 
     let left = center_x - world_cols / 2;
     let top = center_y - world_rows / 2;
@@ -46,7 +81,7 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
         .prefetch_rect_at_z(left, top, right, bottom, app.ui.view_z);
 
     // Build an entity overlay map for current bounds and Z slice using SpriteRef
-    let mut ent_overlay: HashMap<(i32, i32), (String, String)> = HashMap::new();
+    let mut ent_overlay: HashMap<(i64, i64), (String, String)> = HashMap::new();
     let z = app.ui.view_z;
     for (_e, (pos, sr_opt)) in app
         .core
@@ -71,14 +106,14 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
     for row in 0..target_rows {
         let mut spans = Vec::with_capacity(target_cols);
         for col in 0..target_cols {
-            let offset_x = col as i32 - target_cols as i32 / 2;
-            let offset_y = row as i32 - target_rows as i32 / 2;
+            let offset_x = col as i64 - target_cols as i64 / 2;
+            let offset_y = row as i64 - target_rows as i64 / 2;
             let world_x = center_x + offset_x.div_euclid(scale);
             let world_y = center_y + offset_y.div_euclid(scale);
             let world_z = app.ui.view_z;
 
-            let sprite_x = (col as i32 - target_cols as i32 / 2).rem_euclid(scale);
-            let sprite_y = (row as i32 - target_rows as i32 / 2).rem_euclid(scale);
+            let sprite_x = (col as i64 - target_cols as i64 / 2).rem_euclid(scale);
+            let sprite_y = (row as i64 - target_rows as i64 / 2).rem_euclid(scale);
 
             // Base tile color/glyph
             let tile_kind = app
@@ -89,6 +124,26 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
                 .world
                 .get_tile_at_z(world_x, world_y, world_z);
 
+            // Check fog of war state for this tile
+            use lithicrivers_core::systems::fog_of_war::{get_fog_state, FogState};
+            let fog_state = get_fog_state(
+                &app.core.game.world,
+                &app.core.game.res,
+                world_x,
+                world_y,
+                world_z,
+            );
+
+            // If unvisited and fog of war is enabled, render as very dark grey '?'
+            if fog_state == FogState::Unvisited && app.core.game.res.player_state.fog_of_war_enabled
+            {
+                spans.push(Span::styled(
+                    "?".to_string(),
+                    Style::default().fg(ratatui::style::Color::Rgb(16, 16, 16)), // Very dark grey instead of pure black
+                ));
+                continue;
+            }
+
             // render look mode cursor first
             if app.panels.look.mode
                 && world_x == app.panels.look.cursor.x
@@ -96,7 +151,7 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
                 && app.ui.view_z == app.panels.look.cursor.z
             {
                 let reticle_sprites = sprite_for_view_reticle();
-                let scale_index = (app.ui.scale.as_u32() - 1) as usize;
+                let scale_index = (app.ui.scale.as_i64() - 1) as usize;
                 let reticle_block = reticle_sprites
                     .get(scale_index)
                     .unwrap_or(&reticle_sprites[0]);
@@ -120,19 +175,25 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
                     category: cat.clone(),
                     name: name.clone(),
                 };
-                let (block, color) =
+                let (block, mut color) =
                     sprite_block_for_spriteref(&mut app.core.sprite_loader, &sr, app.ui.scale);
                 let sprite_char = block
                     .lines()
                     .nth(sprite_y as usize)
                     .and_then(|line| line.chars().nth(sprite_x as usize))
                     .unwrap_or(' ');
+
+                // Apply grayscale for visited but not illuminated tiles
+                if fog_state == FogState::Visited {
+                    color = to_grayscale(color);
+                }
+
                 spans.push(Span::styled(
                     sprite_char.to_string(),
                     Style::default().fg(color),
                 ));
             } else {
-                let (block, color) =
+                let (block, mut color) =
                     sprite_block_for_tile(&mut app.core.sprite_loader, tile_kind, app.ui.scale)
                         .unwrap_or_else(|| {
                             panic!("Could not find sprite for tile kind: {:?}", tile_kind)
@@ -142,6 +203,12 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
                     .nth(sprite_y as usize)
                     .and_then(|line| line.chars().nth(sprite_x as usize))
                     .unwrap_or(' ');
+
+                // Apply grayscale for visited but not illuminated tiles
+                if fog_state == FogState::Visited {
+                    color = to_grayscale(color);
+                }
+
                 spans.push(Span::styled(
                     sprite_char.to_string(),
                     Style::default().fg(color),

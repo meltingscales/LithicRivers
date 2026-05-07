@@ -88,11 +88,116 @@ impl<'w> ComponentAccess<'w> {
             }
         }
 
-        // Try Body component for robots
-        if let Ok(_body) = self.world.get::<&crate::model::body::Body>(entity) {
-            // Body damage logic would go here
-            // For now, return that we couldn't apply damage
-            return Ok(DamageResult::NoDamageSystem);
+        // Try Body component for robots - first check if it exists
+        if self.world.get::<&crate::model::body::Body>(entity).is_ok() {
+            use crate::model::body::{BodyPartState, BodyPartType};
+            use rand::seq::SliceRandom;
+
+            // Get damage result by scoping the borrow carefully
+            let damage_result = {
+                let mut body = self
+                    .world
+                    .get::<&mut crate::model::body::Body>(entity)
+                    .unwrap();
+
+                // Get all body parts that can be damaged (not already missing)
+                let targetable_parts: Vec<BodyPartType> = body
+                    .parts
+                    .iter()
+                    .filter(|(_, part)| part.state != BodyPartState::Missing)
+                    .map(|(part_type, _)| *part_type)
+                    .collect();
+
+                if targetable_parts.is_empty() {
+                    // All parts are missing - this shouldn't happen but handle gracefully
+                    return Ok(DamageResult::AlreadyDead);
+                }
+
+                // Randomly select a body part to damage
+                let mut rng = rand::thread_rng();
+                let target_part_type = *targetable_parts.choose(&mut rng).unwrap();
+
+                // Apply damage to the selected part and collect result info
+                if let Some(part) = body.parts.get_mut(&target_part_type) {
+                    let old_integrity = part.integrity;
+                    let old_state = part.state;
+                    let part_name = part.name.clone();
+
+                    // Apply damage (convert u32 to i64)
+                    part.receive_damage(damage as i64, true);
+
+                    let new_integrity = part.integrity;
+                    let new_state = part.state;
+
+                    // Check if this damage caused robot death
+                    let robot_died = matches!(
+                        target_part_type,
+                        BodyPartType::PowerSource | BodyPartType::Torso
+                    ) && new_state == BodyPartState::Missing;
+
+                    Some((
+                        old_integrity,
+                        new_integrity,
+                        old_state,
+                        new_state,
+                        part_name,
+                        robot_died,
+                        target_part_type,
+                    ))
+                } else {
+                    None
+                }
+            }; // body borrow ends here
+
+            if let Some((
+                old_integrity,
+                new_integrity,
+                old_state,
+                new_state,
+                part_name,
+                robot_died,
+                target_part_type,
+            )) = damage_result
+            {
+                if robot_died {
+                    // Mark robot as dead
+                    self.world.insert_one(entity, Dead).ok();
+
+                    // Use optimized cleanup function
+                    crate::systems::cleanup_actions_targeting_dead_entity(
+                        self.world, self.res, entity,
+                    );
+
+                    // Remove combat capability
+                    self.world.remove_one::<Combat>(entity).ok();
+
+                    return Ok(DamageResult::BodyPartDestroyed {
+                        part_name,
+                        part_type: target_part_type,
+                        damage_applied: damage,
+                        robot_died: true,
+                    });
+                } else if new_state == BodyPartState::Missing && old_state != BodyPartState::Missing
+                {
+                    // Part was destroyed but robot survives
+                    return Ok(DamageResult::BodyPartDestroyed {
+                        part_name,
+                        part_type: target_part_type,
+                        damage_applied: damage,
+                        robot_died: false,
+                    });
+                } else {
+                    // Part was damaged but not destroyed
+                    return Ok(DamageResult::BodyPartDamaged {
+                        part_name,
+                        part_type: target_part_type,
+                        old_integrity,
+                        new_integrity,
+                        damage_applied: damage,
+                        part_state: new_state,
+                    });
+                }
+            }
         }
 
         Err(ComponentError::ComponentMissing(entity, "Health or Body"))
@@ -184,6 +289,20 @@ pub enum DamageResult {
     Killed {
         old_health: u32,
         damage_applied: u32,
+    },
+    BodyPartDamaged {
+        part_name: String,
+        part_type: crate::model::body::BodyPartType,
+        old_integrity: i64,
+        new_integrity: i64,
+        damage_applied: u32,
+        part_state: crate::model::body::BodyPartState,
+    },
+    BodyPartDestroyed {
+        part_name: String,
+        part_type: crate::model::body::BodyPartType,
+        damage_applied: u32,
+        robot_died: bool,
     },
     AlreadyDead,
     NoDamageSystem,

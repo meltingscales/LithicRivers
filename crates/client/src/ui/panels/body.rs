@@ -9,11 +9,20 @@ use ratatui::{
 };
 
 pub fn render_body_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
-    // Split area: left ASCII overview, right list
+    // Split area: left ASCII overview, right list, bottom controls
+    let vertical_chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Min(0), Constraint::Length(3)])
+        .split(area);
+
+    let main_area = vertical_chunks[0];
+    let controls_area = vertical_chunks[1];
+
+    // Split main area: left ASCII overview, right list
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([Constraint::Length(28), Constraint::Min(20)])
-        .split(area);
+        .split(main_area);
 
     // Build from ECS
     let mut list_lines: Vec<Line> = Vec::new();
@@ -22,7 +31,7 @@ pub fn render_body_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
         if let Ok(body) = app.core.game.world.get::<&Body>(e) {
             // Build list
             let mut parts: Vec<&BodyPart> = body.parts.values().collect();
-            parts.sort_by_key(|p| p.part_type as i32);
+            parts.sort_by_key(|p| p.part_type as i64);
             for p in parts {
                 let (label, color) = match p.state {
                     BodyPartState::Missing => ("Missing", Color::DarkGray),
@@ -44,7 +53,9 @@ pub fn render_body_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     }
 
     // Left: ASCII overview
-    let ascii_block = Block::default().borders(Borders::ALL).title("Body");
+    let ascii_block = Block::default()
+        .borders(Borders::ALL)
+        .title(Line::from("Body"));
     let ascii_inner = ascii_block.inner(chunks[0]);
     let ascii_lines = ascii_lines_opt.unwrap_or_else(|| vec![Line::from(Span::raw("(No Body)"))]);
     let ascii_para = Paragraph::new(ascii_lines).alignment(Alignment::Left);
@@ -52,8 +63,21 @@ pub fn render_body_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     f.render_widget(ascii_block, chunks[0]);
 
     // Right: textual list
-    let list_para = Paragraph::new(list_lines)
-        .alignment(Alignment::Left)
-        .block(Block::default().borders(Borders::ALL).title("Parts"));
+    let list_para = Paragraph::new(list_lines).alignment(Alignment::Left).block(
+        Block::default()
+            .borders(Borders::ALL)
+            .title(Line::from("Parts")),
+    );
     f.render_widget(list_para, chunks[1]);
+
+    // Bottom: controls
+    let controls_text = "[R] Repair";
+    let controls_para = Paragraph::new(controls_text)
+        .alignment(Alignment::Center)
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title(Line::from("Controls")),
+        );
+    f.render_widget(controls_para, controls_area);
 }

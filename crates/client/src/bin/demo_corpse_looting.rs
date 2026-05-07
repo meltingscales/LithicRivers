@@ -28,17 +28,6 @@ impl Item {
             Item::Torch => "Torch",
         }
     }
-
-    fn symbol(&self) -> char {
-        match self {
-            Item::Leather => 'L',
-            Item::Meat => 'M',
-            Item::Wood => 'W',
-            Item::Stone => 'S',
-            Item::String => 's',
-            Item::Torch => 'T',
-        }
-    }
 }
 
 #[derive(Debug, Clone)]
@@ -50,13 +39,13 @@ struct ItemStack {
 #[derive(Debug, Clone)]
 struct Corpse {
     name: String,
-    x: i32,
-    y: i32,
+    x: i64,
+    y: i64,
     inventory: Vec<ItemStack>,
 }
 
 impl Corpse {
-    fn new(name: &str, x: i32, y: i32, inventory: Vec<ItemStack>) -> Self {
+    fn new(name: &str, x: i64, y: i64, inventory: Vec<ItemStack>) -> Self {
         Self {
             name: name.to_string(),
             x,
@@ -74,8 +63,8 @@ enum UiMode {
 }
 
 struct App {
-    player_x: i32,
-    player_y: i32,
+    player_x: i64,
+    player_y: i64,
     player_inventory: Vec<ItemStack>,
     corpses: Vec<Corpse>,
     ui_mode: UiMode,
@@ -261,7 +250,7 @@ impl App {
         }
     }
 
-    fn move_player(&mut self, dx: i32, dy: i32) {
+    fn move_player(&mut self, dx: i64, dy: i64) {
         if matches!(self.ui_mode, UiMode::WorldMap) {
             self.player_x += dx;
             self.player_y += dy;
@@ -552,7 +541,9 @@ fn ui(f: &mut Frame, app: &App) {
 }
 
 fn render_world_map(f: &mut Frame, app: &App, area: Rect) {
-    let block = Block::default().borders(Borders::ALL).title(" World Map ");
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .title(Line::from(" World Map "));
 
     let inner = block.inner(area);
     f.render_widget(block, area);
@@ -565,8 +556,8 @@ fn render_world_map(f: &mut Frame, app: &App, area: Rect) {
 
     for y in 0..map_height {
         for x in 0..map_width {
-            let world_x = x as i32;
-            let world_y = y as i32;
+            let world_x = x as i64;
+            let world_y = y as i64;
 
             // Check what's at this position
             if world_x == app.player_x && world_y == app.player_y {
@@ -614,7 +605,7 @@ fn render_world_map(f: &mut Frame, app: &App, area: Rect) {
 fn render_player_inventory(f: &mut Frame, app: &App, area: Rect) {
     let block = Block::default()
         .borders(Borders::ALL)
-        .title(" Player Inventory ");
+        .title(Line::from(" Player Inventory "));
 
     let items_list: Vec<ListItem> = app
         .player_inventory
@@ -646,7 +637,9 @@ fn render_player_inventory(f: &mut Frame, app: &App, area: Rect) {
 }
 
 fn render_instructions(f: &mut Frame, app: &App, area: Rect) {
-    let block = Block::default().borders(Borders::ALL).title(" Controls ");
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .title(Line::from(" Controls "));
 
     let instructions = match app.ui_mode {
         UiMode::WorldMap => vec![
@@ -704,7 +697,7 @@ fn render_corpse_selection_modal(f: &mut Frame, app: &App, adjacent_corpses: &[u
     // Main modal block
     let block = Block::default()
         .borders(Borders::ALL)
-        .title(" Choose Corpse to Loot ")
+        .title(Line::from(" Choose Corpse to Loot "))
         .title_alignment(Alignment::Center)
         .style(Style::default().bg(Color::Black));
 
@@ -766,7 +759,7 @@ fn render_loot_modal(f: &mut Frame, app: &App, corpse_idx: usize) {
     // Main modal block
     let block = Block::default()
         .borders(Borders::ALL)
-        .title(format!(" Looting {} ", corpse.name))
+        .title(Line::from(format!(" Looting {} ", corpse.name)))
         .title_alignment(Alignment::Center)
         .style(Style::default().bg(Color::Black));
 
@@ -782,7 +775,7 @@ fn render_loot_modal(f: &mut Frame, app: &App, corpse_idx: usize) {
     // Left side: Corpse inventory
     let corpse_block = Block::default()
         .borders(Borders::ALL)
-        .title(" Corpse Items ")
+        .title(Line::from(" Corpse Items "))
         .border_style(if app.loot_panel_focus {
             Style::default().fg(Color::Yellow)
         } else {
@@ -816,7 +809,7 @@ fn render_loot_modal(f: &mut Frame, app: &App, corpse_idx: usize) {
     // Right side: Player inventory
     let player_block = Block::default()
         .borders(Borders::ALL)
-        .title(" Your Items ")
+        .title(Line::from(" Your Items "))
         .border_style(if !app.loot_panel_focus {
             Style::default().fg(Color::Yellow)
         } else {

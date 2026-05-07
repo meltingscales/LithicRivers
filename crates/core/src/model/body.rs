@@ -24,18 +24,18 @@ pub enum BodyPartState {
 pub struct BodyPart {
     pub part_type: BodyPartType,
     pub state: BodyPartState,
-    pub integrity: i32,
+    pub integrity: i64,
     pub name: String,
     pub description: String,
     // Stat modifiers when this part is in different states
-    pub walk_speed_modifier: f32,
-    pub break_speed_modifier: f32,
-    pub health_modifier: i32,
-    pub stamina_modifier: i32,
+    pub walk_speed_modifier: f64,
+    pub break_speed_modifier: f64,
+    pub health_modifier: i64,
+    pub stamina_modifier: i64,
 }
 
 impl BodyPart {
-    pub fn receive_damage(&mut self, damage: i32, can_sever: bool) {
+    pub fn receive_damage(&mut self, damage: i64, can_sever: bool) {
         self.integrity -= damage;
 
         if can_sever && self.integrity <= 0 {
@@ -57,7 +57,7 @@ impl BodyPart {
         };
     }
 
-    pub fn get_walk_speed_modifier(&self) -> f32 {
+    pub fn get_walk_speed_modifier(&self) -> f64 {
         match self.state {
             BodyPartState::Missing => 0.0,
             BodyPartState::Damaged => self.walk_speed_modifier * 0.5,
@@ -73,7 +73,7 @@ pub struct Body {
 }
 
 impl Body {
-    pub fn walk_speed_modifier(&self) -> f32 {
+    pub fn walk_speed_modifier(&self) -> f64 {
         // Focus on legs primarily; take the minimum of left/right leg modifiers to represent weakest link.
         let left = self
             .parts
@@ -90,8 +90,8 @@ impl Body {
             legs
         } else {
             // If legs unusable, fall back to average of all positive modifiers (still may be 0)
-            let mut sum = 0.0f32;
-            let mut count = 0u32;
+            let mut sum = 0.0f64;
+            let mut count = 0u64;
             for p in self.parts.values() {
                 let m = p.get_walk_speed_modifier();
                 if m > 0.0 {
@@ -100,7 +100,7 @@ impl Body {
                 }
             }
             if count > 0 {
-                sum / count as f32
+                sum / count as f64
             } else {
                 0.0
             }
@@ -116,7 +116,7 @@ impl Default for Body {
         let mut parts = HashMap::new();
         let mut insert = |part_type: BodyPartType,
                           state: BodyPartState,
-                          integrity: i32,
+                          integrity: i64,
                           name: &str,
                           desc: &str| {
             parts.insert(

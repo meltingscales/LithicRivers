@@ -29,6 +29,13 @@ Currently we support:
 - OSX 11
 - Debian (built on Ubuntu)
 
+## Releasing versions
+
+See <https://github.com/meltingscales/LithicRivers/releases> for existing `v1.2.3` tags...
+
+    just util-publish-release-windows v1.2.3
+    just util-publish-release-linux   v1.2.3
+
 ## Badges
 
 [![Coverage Status](https://coveralls.io/repos/github/HenryFBP/LithicRivers/badge.svg?branch=release)](https://coveralls.io/github/HenryFBP/LithicRivers?branch=release)
@@ -43,20 +50,13 @@ Currently we support:
 
 ## Running
 
-    just run
+    just client-windows
+    just client-linux
 
 ## Building
 
-### Linux
-
     just build
     ls ./dist/
-
-### Windows
-
-    just --justfile justfile.windows install
-    just --justfile justfile.windows build
-    just --justfile justfile.windows run
 
 ## Notes
 

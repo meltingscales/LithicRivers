@@ -9,7 +9,9 @@ use ratatui::{
 };
 
 pub fn render_crafting_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
-    let block = Block::default().borders(Borders::ALL).title("Crafting");
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .title(Line::from("Crafting"));
     let inner = block.inner(area);
 
     // Get player's inventory
@@ -83,7 +85,11 @@ pub fn render_crafting_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     let list = ratatui::widgets::List::new(recipes)
         .highlight_style(Style::default().add_modifier(ratatui::style::Modifier::BOLD))
         .highlight_symbol("> ")
-        .block(Block::default().borders(Borders::ALL).title("Recipes"));
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title(Line::from("Recipes")),
+        );
 
     f.render_stateful_widget(
         list,
@@ -146,7 +152,7 @@ pub fn render_crafting_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
 
         let details_block = Block::default()
             .borders(Borders::ALL)
-            .title("Recipe Details");
+            .title(Line::from("Recipe Details"));
 
         let details_paragraph = Paragraph::new(details)
             .block(details_block)
@@ -156,7 +162,9 @@ pub fn render_crafting_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     }
 
     // Render inventory
-    let inventory_block = Block::default().borders(Borders::ALL).title("Inventory");
+    let inventory_block = Block::default()
+        .borders(Borders::ALL)
+        .title(Line::from("Inventory"));
 
     let mut inventory_items: Vec<(ItemKind, u32)> = inventory.into_iter().collect();
     inventory_items.sort_by_key(|&(kind, _)| itemkind_name(kind).to_string());

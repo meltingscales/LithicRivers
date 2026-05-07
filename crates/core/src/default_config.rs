@@ -22,6 +22,10 @@ pub fn default_config() -> ConfigRoot {
             "INTERACT": ["f"],      // Interact/use
             "PICKUP_ITEMS": ["r"],  // Quick grab
             "LOOK_TOGGLE": ["v"],   // Look around
+            "TOGGLE_TORCH": ["t"],  // Toggle torch light source
+        },
+        "combat": {
+            "CLEAR_MOVE_QUEUE": ["c"], // Clear queued moves in combat
         },
         "build": {
             "TOGGLE_BREAK_PLACE_MODE": ["`"], // Cycle break/place mode
@@ -68,6 +72,10 @@ pub fn default_config() -> ConfigRoot {
             "CREDITS_SCROLL_DOWN": ["DOWN"],
             "SAVE_JSON": ["S"],
             "LOAD_JSON": ["L"],
+            "TUTORIAL_SELECT": ["T"],
+            "TUTORIAL_SKIP": ["Y"],
+            "CHEAT_CONSOLE_SCROLL_UP": ["UP"],
+            "CHEAT_CONSOLE_SCROLL_DOWN": ["DOWN"],
             "QUIT": []
         },
         "inventory": {
@@ -87,13 +95,13 @@ pub fn default_config() -> ConfigRoot {
             "DEVELOPER_MODE": true,
             "DEFAULT_SEED": 4669201609u64,
             "DEFAULT_PLAYER_NAME": "melty",
-            "COMBAT_MS_PER_TICK": 1000u64
+            "COMBAT_MS_PER_TICK": 1000u64,
+            "METERS_PER_BLOCK": 1u64,
         },
         "inventory": {
             "TOGGLE_ITEM_AUTO_PICKUP_DEFAULT_ENABLED": true
         },
         "world": {
-            "DEFAULT_SIZE_RADIUS": {"production": [50, 50, 3], "testing": [3, 3, 1]},
             "DEFAULT_PLAYER_POSITION": {"production": [25, 25, 0], "testing": [0, 0, 0]}
         },
         "performance": {"MAX_CPU_THREADS": 64}

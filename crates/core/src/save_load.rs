@@ -8,20 +8,23 @@ use hecs::World;
 use serde::{Deserialize, Serialize};
 
 use crate::components::{
-    BlocksMovement, DogAI, DroppedItem, FeralDog, Glyph, Health, Inventory, ItemKind, Player,
-    Position, Sheep, SpriteRef,
+    BlocksMovement, Dialogue, DogAI, DroppedItem, EntityKind, FeralDog, FogOfWar, GameEntity,
+    Glyph, Health, Inventory, ItemKind, LightSource, Player, Position, QuestTutorialBrokenAndroid,
+    Sheep, SpriteRef,
 };
 use crate::model::body::Body; // currently not persisted (MVP)
 use crate::resources::Resources;
 use crate::world::Chunk as TileChunk;
-use crate::world::World as TileWorld;
+use crate::world::GameWorld as TileWorld;
 
-pub const SAVE_VERSION: u32 = 3;
+pub const SAVE_VERSION: u32 = 4;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PlayerSave {
     pub pos: Position,
     pub inventory: Inventory,
+    pub light_source: Option<LightSource>,
+    pub fog_of_war: Option<FogOfWar>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -44,10 +47,17 @@ pub struct DroppedItemSave {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NPCSave {
+    pub pos: Position,
+    pub health: Health,
+    pub dialogue: Dialogue,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ViewportSave {
-    pub view_x: i32,
-    pub view_y: i32,
-    pub view_z: i32,
+    pub view_x: i64,
+    pub view_y: i64,
+    pub view_z: i64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -60,7 +70,16 @@ pub struct SaveData {
     pub sheep: Vec<SheepSave>,
     pub feral_dogs: Vec<FeralDogSave>,
     pub dropped_items: Vec<DroppedItemSave>,
+    pub npcs: Vec<NPCSave>,
     pub viewport: ViewportSave,
+    pub chunk_generation_states:
+        std::collections::HashMap<(i64, i64, i64), crate::resources::ChunkGenerationState>,
+    pub structure_generation_states:
+        std::collections::HashMap<String, crate::resources::StructureGenerationState>,
+    pub pending_structures: Vec<crate::resources::PendingStructure>,
+    pub quest_markers: Vec<crate::resources::QuestMarker>,
+    pub active_quests: Vec<crate::dialogue::ActiveQuest>,
+    pub explored_chunks: std::collections::HashMap<(i64, i64, i64), bool>,
 }
 
 impl SaveData {
@@ -80,6 +99,7 @@ impl SaveData {
         let mut sheep: Vec<SheepSave> = Vec::new();
         let mut feral_dogs: Vec<FeralDogSave> = Vec::new();
         let mut dropped_items: Vec<DroppedItemSave> = Vec::new();
+        let mut npcs: Vec<NPCSave> = Vec::new();
         for (
             _e,
             (
@@ -91,6 +111,10 @@ impl SaveData {
                 maybe_health,
                 maybe_dog_ai,
                 maybe_drop,
+                maybe_light_source,
+                maybe_fog_of_war,
+                maybe_npc,
+                maybe_dialogue,
             ),
         ) in game
             .world
@@ -103,6 +127,10 @@ impl SaveData {
                 Option<&Health>,
                 Option<&DogAI>,
                 Option<&DroppedItem>,
+                Option<&LightSource>,
+                Option<&FogOfWar>,
+                Option<&QuestTutorialBrokenAndroid>,
+                Option<&Dialogue>,
             )>()
             .iter()
         {
@@ -111,6 +139,8 @@ impl SaveData {
                 player_save = Some(PlayerSave {
                     pos: *pos,
                     inventory: inv,
+                    light_source: maybe_light_source.cloned(),
+                    fog_of_war: maybe_fog_of_war.cloned(),
                 });
             } else if maybe_sheep.is_some() {
                 sheep.push(SheepSave { pos: *pos });
@@ -128,6 +158,14 @@ impl SaveData {
                     kind: di.kind,
                     qty: di.qty,
                 });
+            } else if maybe_npc.is_some() {
+                let health = maybe_health.cloned().expect("NPC missing health");
+                let dialogue = maybe_dialogue.cloned().expect("NPC missing dialogue");
+                npcs.push(NPCSave {
+                    pos: *pos,
+                    health,
+                    dialogue,
+                });
             }
         }
         let player = player_save.context("Player entity missing during save")?;
@@ -140,7 +178,14 @@ impl SaveData {
             sheep,
             feral_dogs,
             dropped_items,
+            npcs,
             viewport,
+            chunk_generation_states: game.res.chunk_generation_states.clone(),
+            structure_generation_states: game.res.structure_generation_states.clone(),
+            pending_structures: game.res.pending_structures.clone(),
+            quest_markers: game.res.quest_markers.clone(),
+            active_quests: game.res.active_quests.clone(),
+            explored_chunks: game.res.explored_chunks.clone(),
         })
     }
 
@@ -150,18 +195,34 @@ impl SaveData {
         game.res.time.tick = self.gametick;
         game.res.world_state.world = self.world;
 
+        // Restore state tracking data
+        game.res.chunk_generation_states = self.chunk_generation_states;
+        game.res.structure_generation_states = self.structure_generation_states;
+        game.res.pending_structures = self.pending_structures;
+        game.res.quest_markers = self.quest_markers;
+        game.res.active_quests = self.active_quests;
+        game.res.explored_chunks = self.explored_chunks;
+
         // Rebuild entity world
         game.world = World::new();
         // Player
-        let _player_e = game.world.spawn((
-            self.player.pos,
-            Glyph('@'),
-            Player,
-            BlocksMovement,
-            Body::default(),
-            SpriteRef::new("entities", "player"),
-            self.player.inventory,
-        ));
+        let mut player_builder = hecs::EntityBuilder::new();
+        player_builder.add(self.player.pos);
+        player_builder.add(Glyph('@'));
+        player_builder.add(Player);
+        player_builder.add(BlocksMovement);
+        player_builder.add(Body::default());
+        player_builder.add(SpriteRef::new("entities", "player"));
+        player_builder.add(self.player.inventory);
+
+        if let Some(light_source) = self.player.light_source {
+            player_builder.add(light_source);
+        }
+        if let Some(fog_of_war) = self.player.fog_of_war {
+            player_builder.add(fog_of_war);
+        }
+
+        let _player_e = game.world.spawn(player_builder.build());
         // Note: player_entity no longer needed - use ECS queries
         // Sheep
         for s in self.sheep.into_iter() {
@@ -201,6 +262,22 @@ impl SaveData {
                 SpriteRef::new("items", sprite_name),
             ));
         }
+
+        // NPCs
+        for npc in self.npcs.into_iter() {
+            game.world.spawn((
+                npc.pos,
+                GameEntity,
+                EntityKind::QuestTutorialBrokenAndroid,
+                QuestTutorialBrokenAndroid,
+                npc.health,
+                Glyph('Q'),
+                SpriteRef::new("entities", "quest_tutorial_broken_android"),
+                BlocksMovement,
+                npc.dialogue,
+            ));
+        }
+
         Ok(())
     }
 }
@@ -209,7 +286,6 @@ impl SaveData {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct WorldJson {
     pub seed: u64,
-    pub gen_z: i32,
     pub chunks: Vec<((i64, i64, i64), TileChunk)>,
 }
 
@@ -223,7 +299,11 @@ struct SaveDataJson {
     pub sheep: Vec<SheepSave>,
     pub feral_dogs: Vec<FeralDogSave>,
     pub dropped_items: Vec<DroppedItemSave>,
+    pub npcs: Vec<NPCSave>,
     pub viewport: ViewportSave,
+    pub quest_markers: Vec<crate::resources::QuestMarker>,
+    pub active_quests: Vec<crate::dialogue::ActiveQuest>,
+    pub explored_chunks: Vec<((i64, i64, i64), bool)>,
 }
 
 impl From<TileWorld> for WorldJson {
@@ -232,7 +312,6 @@ impl From<TileWorld> for WorldJson {
         let chunks = w.chunks_to_vec();
         WorldJson {
             seed: w.seed,
-            gen_z: w.gen_z,
             chunks,
         }
     }
@@ -241,8 +320,6 @@ impl From<TileWorld> for WorldJson {
 impl From<WorldJson> for TileWorld {
     fn from(j: WorldJson) -> Self {
         let mut w = TileWorld::new(0, 0, j.seed);
-        // Set gen_z directly to avoid clearing inserted chunks
-        w.gen_z = j.gen_z;
         w.set_chunks_from_vec(j.chunks);
         w
     }
@@ -259,7 +336,11 @@ impl From<SaveData> for SaveDataJson {
             sheep: s.sheep,
             feral_dogs: s.feral_dogs,
             dropped_items: s.dropped_items,
+            npcs: s.npcs,
             viewport: s.viewport,
+            quest_markers: s.quest_markers,
+            active_quests: s.active_quests,
+            explored_chunks: s.explored_chunks.into_iter().collect(),
         }
     }
 }
@@ -275,7 +356,14 @@ impl From<SaveDataJson> for SaveData {
             sheep: j.sheep,
             feral_dogs: j.feral_dogs,
             dropped_items: j.dropped_items,
+            npcs: j.npcs,
             viewport: j.viewport,
+            chunk_generation_states: std::collections::HashMap::new(),
+            structure_generation_states: std::collections::HashMap::new(),
+            pending_structures: Vec::new(),
+            quest_markers: j.quest_markers,
+            active_quests: j.active_quests,
+            explored_chunks: j.explored_chunks.into_iter().collect(),
         }
     }
 }
@@ -307,7 +395,6 @@ pub fn load_game_msgpack<P: AsRef<Path>>(game: &mut crate::Game, path: P) -> Res
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tiles::TileKind;
 
     fn simulate_full_actions(game: &mut crate::Game) {
         // Move player to a non-origin chunk to avoid structure asset dependency in tests

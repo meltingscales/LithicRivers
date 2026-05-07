@@ -225,7 +225,7 @@ fn title_block(title: String) -> Block<'static> {
         .title_alignment(Alignment::Center)
         .border_style(Style::new().dark_gray())
         .title_style(Style::new().reset())
-        .title(title)
+        .title(Line::from(title))
 }
 
 fn render_indexed_grayscale(frame: &mut Frame, area: Rect) {

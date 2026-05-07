@@ -1,9 +1,16 @@
-use crate::dialogue_engine::{ConversationState, DialogueEngine};
+use lithicrivers_core::dialogue::{DialogueNodeID, DialogueTree};
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ConversationState {
+    pub current_node_id: Option<DialogueNodeID>,
+    pub player_mood: NPCMood, // Track player's current mood during conversation
+}
+use crate::tutorialsystem::TutorialSystem;
 use crate::{audio, MenuTab, Scale, SplashState, SpriteLoader};
 use crossterm::event::KeyCode;
 use lithicrivers_core::components::{ItemKind, Position};
 use lithicrivers_core::config::ConfigManager;
-use lithicrivers_core::recipe_handler::RecipeHandler;
+use lithicrivers_core::recipe_handler::{RecipeHandler, RepairRecipeHandler};
 use lithicrivers_core::Game;
 use ratatui::layout::Rect;
 use std::collections::HashMap;
@@ -11,6 +18,7 @@ use std::time::Instant;
 
 /// Comprehensive dialogue system types from demo integration
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[allow(dead_code)]
 pub enum DialogueType {
     Linear,    // Simple linear conversation
     Branching, // Player choices affect dialogue
@@ -20,6 +28,7 @@ pub enum DialogueType {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[allow(dead_code)]
 pub enum NPCMood {
     Friendly,
     Neutral,
@@ -29,43 +38,13 @@ pub enum NPCMood {
     Mysterious,
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct DialogueChoice {
-    pub text: String,
-    pub leads_to: Option<usize>, // Index of next dialogue node, None = end conversation
-    pub requires_item: Option<String>,
-    pub mood_change: Option<NPCMood>,
-    pub unlocks_quest: bool,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct DialogueNode {
-    pub id: usize,
-    pub speaker: String,
-    pub text: String,
-    pub mood: NPCMood,
-    pub choices: Vec<DialogueChoice>,
-    pub auto_continue: bool, // If true, automatically continues without player input
-    pub shop_item: Option<String>, // If set, this node offers to sell/trade this item
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct NPCData {
-    pub name: String,
-    pub portrait: String, // ASCII art portrait
-    pub dialogue_type: DialogueType,
-    pub current_mood: NPCMood,
-    pub initial_dialogue: usize, // Starting dialogue node ID
-    pub met_before: bool,
-    pub has_quest: bool,
-    pub shop_inventory: Vec<String>,
-}
-
 /// Core game engine state - the fundamental game systems
 pub struct CoreState {
     pub game: Game,
     pub config_manager: ConfigManager,
     pub sprite_loader: SpriteLoader,
+    #[allow(dead_code)]
+    pub repair_handler: RepairRecipeHandler,
     pub should_quit: bool,
 }
 
@@ -75,10 +54,13 @@ pub struct UiState {
     pub scale: Scale,
     pub bottom_menu_rect: Option<Rect>, // Remember for click handling
     pub keybinds: Keybinds,
+    #[allow(dead_code)]
+    pub tutorial_system: TutorialSystem,
+    pub tutorial_visible: bool, // Controls if tutorial tab is shown in bottom menu
     // UI-owned viewport state - what the player is currently viewing
-    pub view_x: i32,
-    pub view_y: i32,
-    pub view_z: i32,
+    pub view_x: i64,
+    pub view_y: i64,
+    pub view_z: i64,
 }
 
 /// Audio system state
@@ -128,7 +110,13 @@ pub struct PanelStates {
     pub hotbar_assignment: HotbarAssignmentState,
     pub npc_interaction: NPCInteractionState,
     pub multi_action_select: MultiActionSelectState,
-    pub dialogue_engine: DialogueEngine,
+    pub dialogue_tree: DialogueTree,
+    #[allow(dead_code)]
+    pub body_repair: BodyRepairState,
+    pub cheat_console: CheatConsoleState,
+    pub global_map: GlobalMapPanelState,
+    pub tutorial_selection: TutorialSelectionState,
+    pub quests: QuestPanelState,
 }
 
 /// Inventory panel state
@@ -246,6 +234,37 @@ impl Default for HotbarAssignmentState {
     }
 }
 
+/// Tutorial selection modal state
+#[derive(Debug, Clone)]
+pub enum TutorialSelectionState {
+    None,
+    SelectingTutorial { selected_tutorial: usize },
+}
+
+impl Default for TutorialSelectionState {
+    fn default() -> Self {
+        TutorialSelectionState::None
+    }
+}
+
+/// Body repair modal state
+#[derive(Debug, Clone, PartialEq)]
+#[allow(dead_code)]
+pub enum BodyRepairState {
+    None,
+    SelectingRepairAndPart {
+        available_repairs: Vec<usize>, // Indices into repair recipe handler
+        selected_repair: usize,
+        selected_body_part: Option<lithicrivers_core::model::body::BodyPartType>,
+    },
+}
+
+impl Default for BodyRepairState {
+    fn default() -> Self {
+        BodyRepairState::None
+    }
+}
+
 /// Splash screen system state - handles startup sequence
 pub struct SplashScreenState {
     pub state: SplashState,
@@ -356,14 +375,64 @@ pub enum InteractionType {
         npc_name: String,
         position: Position,
     },
+    OpenCloseDoor {
+        position: Position,
+        is_open: bool,
+    },
 }
 
 impl InteractionType {
-    pub fn display_name(&self) -> String {
+    pub fn display_name_with_context(
+        &self,
+        world: &hecs::World,
+        player_pos: Option<Position>,
+    ) -> String {
         match self {
             InteractionType::PickupItem { item_name, .. } => format!("Pick up {}", item_name),
-            InteractionType::LootCorpse { .. } => "Loot corpse".to_string(),
+            InteractionType::LootCorpse { entity, .. } => {
+                // Try to get inventory to count items
+                if let Ok(inventory) =
+                    world.get::<&lithicrivers_core::components::Inventory>(*entity)
+                {
+                    let item_count = inventory.slots.len();
+                    format!("Loot corpse ({} items)", item_count)
+                } else {
+                    "Loot corpse".to_string()
+                }
+            }
             InteractionType::TalkToNPC { npc_name, .. } => format!("Talk to {}", npc_name),
+            InteractionType::OpenCloseDoor { position, is_open } => {
+                let direction_text = if let Some(player_position) = player_pos {
+                    let dx = position.x - player_position.x;
+                    let dy = position.y - player_position.y;
+
+                    let direction = match (dx.signum(), dy.signum()) {
+                        (0, -1) => "N",   // North
+                        (1, -1) => "NE",  // Northeast
+                        (1, 0) => "E",    // East
+                        (1, 1) => "SE",   // Southeast
+                        (0, 1) => "S",    // South
+                        (-1, 1) => "SW",  // Southwest
+                        (-1, 0) => "W",   // West
+                        (-1, -1) => "NW", // Northwest
+                        _ => "",          // Same position (shouldn't happen)
+                    };
+
+                    if direction.is_empty() {
+                        String::new()
+                    } else {
+                        format!(" ({})", direction)
+                    }
+                } else {
+                    String::new()
+                };
+
+                if *is_open {
+                    format!("Close door{}", direction_text)
+                } else {
+                    format!("Open door{}", direction_text)
+                }
+            }
         }
     }
 
@@ -372,6 +441,13 @@ impl InteractionType {
             InteractionType::PickupItem { .. } => "^", // Up arrow for pickup
             InteractionType::LootCorpse { .. } => "x", // x for corpse looting
             InteractionType::TalkToNPC { .. } => "t",  // t for talking
+            InteractionType::OpenCloseDoor { is_open, .. } => {
+                if *is_open {
+                    "o"
+                } else {
+                    "#"
+                }
+            }
         }
     }
 }
@@ -410,5 +486,58 @@ pub enum NPCInteractionState {
 impl Default for NPCInteractionState {
     fn default() -> Self {
         NPCInteractionState::None
+    }
+}
+
+/// Cheat console state - handles cheat command input
+#[derive(Debug, Clone, PartialEq)]
+pub enum CheatConsoleState {
+    None,
+    Open {
+        input: String,
+        cursor_position: usize,
+        autocomplete_suggestions: Vec<String>,
+        autocomplete_index: Option<usize>,
+        scroll_offset: usize, // For scrolling through command list
+    },
+}
+
+impl Default for CheatConsoleState {
+    fn default() -> Self {
+        CheatConsoleState::None
+    }
+}
+
+/// Global Map panel state - handles marker selection and arrow display
+pub struct GlobalMapPanelState {
+    pub selected_marker_index: usize, // Index of currently selected marker (for arrow display)
+}
+
+impl Default for GlobalMapPanelState {
+    fn default() -> Self {
+        GlobalMapPanelState {
+            selected_marker_index: 0,
+        }
+    }
+}
+
+/// Quest panel state
+pub struct QuestPanelState {
+    pub selected_quest_index: usize, // Index of currently selected quest
+    pub selected_section: QuestSection, // Whether viewing active or completed quests
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum QuestSection {
+    Active,
+    Completed,
+}
+
+impl Default for QuestPanelState {
+    fn default() -> Self {
+        QuestPanelState {
+            selected_quest_index: 0,
+            selected_section: QuestSection::Active,
+        }
     }
 }

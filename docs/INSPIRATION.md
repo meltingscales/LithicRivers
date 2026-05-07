@@ -23,3 +23,4 @@ how can we vibe like:
 - Metroid Zero Mission
 - Summon Night: Swordcraft Story
 - Terraria
+- That GBA kingdom hearts game with the cards

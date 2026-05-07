@@ -1,11 +1,13 @@
+use crate::world::GameWorld;
+use hecs::World as ECSWorld;
+use rust_embed::RustEmbed;
 use serde::Deserialize;
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 
-use rust_embed::RustEmbed;
-
+use crate::spawn_utils;
 use crate::tiles::TileKind;
 
 #[derive(Debug, Clone, Deserialize)]
@@ -15,12 +17,80 @@ pub struct StructureDefinition {
     pub layers: Vec<String>,
     pub gen_biomes: String,
     pub gen_chance: f32,
-    pub y_layer_gen_range: Vec<i32>,
+    pub y_layer_gen_range: Vec<i64>,
 }
 
 #[derive(RustEmbed)]
 #[folder = "../client/assets/"]
 struct EmbeddedAssets;
+
+pub fn structures_list() -> Vec<String> {
+    let existing_structures = [
+        "small_ship.lrstructure".to_string(),
+        "small_temple.lrstructure".to_string(),
+        "giant_corpse.lrstructure".to_string(),
+        "starter_ship.lrstructure".to_string(),
+        "sapiencorp-factory.lrstructure".to_string(),
+    ];
+
+    existing_structures.to_vec()
+}
+
+/// Should this block spawn an entity?
+pub fn block_will_spawn_entity(tile_kind: TileKind) -> bool {
+    match tile_kind {
+        TileKind::ExistingWorldgen => false,
+        TileKind::TreasureCommon => true,
+        TileKind::TreasureRare => true,
+        TileKind::EnemySpawn => true,
+        TileKind::ScrapCommon => true,
+        TileKind::ScrapRare => true,
+        _ => false,
+    }
+}
+
+/// Spawn an entity for a block in a structure.
+/// For example, a rare treasure block will turn into a rare item.
+pub fn spawn_entity_for_block(
+    game_world: &mut GameWorld,
+    ecs_world: &mut ECSWorld,
+    _structure_name: &str,
+    tile_kind: TileKind,
+    block_x: i64,
+    block_y: i64,
+    block_z: i64,
+) {
+    if !block_will_spawn_entity(tile_kind) {
+        return;
+    }
+
+    game_world.set_tile_cached(block_x, block_y, block_z, TileKind::Air);
+
+    match tile_kind {
+        TileKind::EnemySpawn => {
+            //by default, enemyspawn just spawns a feral dog.
+            //in the future, we can add more options here
+            spawn_utils::world_spawn_feraldog(ecs_world, block_x, block_y, block_z, game_world);
+        }
+        TileKind::TreasureCommon => {
+            spawn_utils::world_spawn_treasurecommon(
+                ecs_world, block_x, block_y, block_z, game_world,
+            );
+        }
+        TileKind::TreasureRare => {
+            spawn_utils::world_spawn_treasurerare(ecs_world, block_x, block_y, block_z, game_world);
+        }
+        TileKind::ScrapCommon => {
+            spawn_utils::world_spawn_scrapcommon(ecs_world, block_x, block_y, block_z, game_world);
+        }
+        TileKind::ScrapRare => {
+            spawn_utils::world_spawn_scraprare(ecs_world, block_x, block_y, block_z, game_world);
+        }
+        _ => {
+            panic!("Unknown tile kind for entity spawning {:?}", tile_kind);
+        }
+    }
+}
 
 impl StructureDefinition {
     /// Load from embedded assets (panics on failure). `structure_name` is the
@@ -77,7 +147,7 @@ impl StructureDefinition {
                 .as_array()
                 .unwrap_or(&vec![])
                 .iter()
-                .map(|v| v.as_i64().unwrap_or(0) as i32)
+                .map(|v| v.as_i64().unwrap_or(0))
                 .collect(),
         }
     }
@@ -143,7 +213,7 @@ impl StructureDefinition {
                 .as_array()
                 .unwrap_or(&vec![])
                 .iter()
-                .map(|v| v.as_i64().unwrap_or(0) as i32)
+                .map(|v| v.as_i64().unwrap_or(0))
                 .collect(),
         }
     }

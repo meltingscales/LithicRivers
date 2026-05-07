@@ -1,14 +1,15 @@
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Style, Stylize},
-    widgets::{Block, Borders, Gauge, Paragraph, Wrap},
+    text::Line,
+    widgets::{Block, Borders, Gauge, Paragraph},
     Frame,
 };
 
 pub fn render_combat_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     let outer_block = Block::default()
         .borders(Borders::ALL)
-        .title(" Combat ")
+        .title(Line::from(" Combat "))
         .title_alignment(Alignment::Center)
         .style(Style::default().fg(Color::Red));
 
@@ -66,16 +67,22 @@ pub fn render_combat_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
             Constraint::Length(3),  // Player health/mana bars
             Constraint::Min(8),     // Enemies area
             Constraint::Length(15), // Moves area (increased to fit player timer + 4 moves)
-            Constraint::Length(3),  // Message/status area
             Constraint::Length(1),  // Controls
         ])
         .split(inner);
 
     // Render player info
-    render_player_info(f, chunks[0], player_health, player_energy);
+    render_player_info(f, chunks[0], player_health, player_energy, app);
 
     // Render enemies with real timers
-    render_enemies(f, chunks[1], &combat_enemies, current_enemy, &enemy_timers);
+    render_enemies(
+        f,
+        chunks[1],
+        &combat_enemies,
+        current_enemy,
+        &enemy_timers,
+        app,
+    );
 
     // Render moves
     render_moves(
@@ -88,20 +95,11 @@ pub fn render_combat_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
         app,
     );
 
-    // Message area (placeholder for now)
-    let message_para = Paragraph::new("Combat active - Select your move!")
-        .style(Style::default().fg(Color::Yellow))
-        .alignment(Alignment::Center)
-        .block(Block::default().borders(Borders::ALL));
-    f.render_widget(message_para, chunks[3]);
-
     // Controls
-    let controls = Paragraph::new(
-        "[←→] Select Target | [↑↓] Select Move | [1-4] Quick Select | [SPACE] Use Move",
-    )
-    .style(Style::default().fg(Color::Gray))
-    .alignment(Alignment::Center);
-    f.render_widget(controls, chunks[4]);
+    let controls = Paragraph::new("[←→] Target | [↑↓] Move | [C] Clear | [5] Wait | [SPACE] Use")
+        .style(Style::default().fg(Color::Gray))
+        .alignment(Alignment::Center);
+    f.render_widget(controls, chunks[3]);
 }
 
 // Old render_player_info function removed - using new one with Body and Energy
@@ -112,6 +110,7 @@ fn render_enemies(
     enemies: &[CombatEnemy],
     current_enemy: usize,
     enemy_timers: &[u32],
+    app: &mut crate::App,
 ) {
     if enemies.is_empty() {
         return;
@@ -126,7 +125,7 @@ fn render_enemies(
     for (i, (enemy, chunk)) in enemies.iter().zip(enemy_chunks.iter()).enumerate() {
         let is_selected = i == current_enemy;
         let timer = enemy_timers.get(i).copied().unwrap_or(0);
-        render_single_enemy(f, *chunk, enemy, is_selected, timer);
+        render_single_enemy(f, *chunk, enemy, is_selected, timer, app);
     }
 }
 
@@ -136,6 +135,7 @@ fn render_single_enemy(
     enemy: &CombatEnemy,
     is_selected: bool,
     timer_ms: u32,
+    app: &mut crate::App,
 ) {
     let block = Block::default()
         .borders(Borders::ALL)
@@ -148,12 +148,39 @@ fn render_single_enemy(
     let inner = block.inner(area);
     f.render_widget(block, area);
 
-    // Simple ASCII art placeholder (later this will use sprite system)
-    let portrait_lines = vec!["  /\\_/\\  ", " ( o.o ) ", "  > ^ <  "];
+    // Use sprite system for enemy portraits - get the actual 12x8 art
+    let portrait = if let Some(sprite_ref) = &enemy.sprite_ref {
+        let sprite_data = app.core.sprite_loader.load_by_spriteref(sprite_ref);
 
-    let portrait = Paragraph::new(portrait_lines.join("\n"))
-        .style(Style::default().fg(Color::Green))
-        .alignment(Alignment::Center);
+        // Get the first 12x8 art sprite (main portrait)
+        let sprite_block = sprite_data
+            .art12x8_sprites
+            .get(0)
+            .cloned()
+            .unwrap_or_else(|| {
+                panic!(
+                    "Missing 12x8 art for sprite '{}::{}'",
+                    sprite_ref.category, sprite_ref.name
+                )
+            });
+
+        let sprite_color = crate::sprite_loader::parse_color_string(&sprite_data.color)
+            .unwrap_or_else(|| {
+                panic!(
+                    "Invalid color for sprite '{}::{}'",
+                    sprite_ref.category, sprite_ref.name
+                )
+            });
+
+        Paragraph::new(sprite_block)
+            .style(Style::default().fg(sprite_color))
+            .alignment(Alignment::Center)
+    } else {
+        // No fallback - entities without sprites show empty space
+        Paragraph::new("")
+            .style(Style::default())
+            .alignment(Alignment::Center)
+    };
 
     // Layout: portrait at top, health bar at bottom
     let enemy_layout = Layout::vertical([
@@ -170,7 +197,7 @@ fn render_single_enemy(
     let health_bar = Gauge::default()
         .block(
             Block::default()
-                .title(enemy.name.as_str())
+                .title(Line::from(enemy.name.as_str()))
                 .borders(Borders::ALL),
         )
         .gauge_style(Style::default().fg(Color::Red).bg(Color::DarkGray))
@@ -182,9 +209,9 @@ fn render_single_enemy(
     // Attack timer using real combat timing - only show whole seconds to prevent constant re-renders
     let attack_timer = if timer_ms > 0 {
         let seconds = timer_ms / 1000;
-        format!("⏳ {}s", seconds)
+        format!("{}s", seconds)
     } else {
-        "⚡ ATTACKING!".to_string()
+        "".to_string()
     };
 
     let timer = Paragraph::new(attack_timer)
@@ -366,7 +393,9 @@ fn render_action_queue(f: &mut Frame, area: Rect, app: &mut crate::App) {
         }
     }
 
-    let block = Block::default().borders(Borders::ALL).title("Action Queue");
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .title(Line::from("Action Queue"));
     let paragraph = Paragraph::new(lines).block(block).wrap(Wrap { trim: true });
 
     f.render_widget(paragraph, area);
@@ -429,15 +458,15 @@ fn render_moves(
                     }
                     _ => "Action".to_string(),
                 };
-                format!("[z] {} ({}t)", action_text, ticks)
+                format!("{} ({}t)", action_text, ticks)
             } else {
-                "[z] Ready".to_string()
+                "Ready".to_string()
             }
         } else {
-            "[z] Ready".to_string()
+            "Ready".to_string()
         }
     } else {
-        "[z] No Player".to_string()
+        "No Player".to_string()
     };
 
     let has_action = if let Some(player_entity) = app.core.game.get_player_entity() {
@@ -461,7 +490,7 @@ fn render_moves(
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .title("Player Action"),
+                .title(Line::from("Player Action")),
         );
     f.render_widget(timer_para, layout[0]);
 
@@ -486,7 +515,11 @@ fn render_moves(
         .map(|(visible_i, mv)| {
             let actual_i = scroll_offset + visible_i;
             let is_selected = actual_i == current_move;
-            let can_use_energy = energy.current >= mv.energy_cost;
+
+            // Check if player can use this move considering pending energy consumption
+            let pending_energy = calculate_pending_energy_consumption(app);
+            let available_energy = energy.current.saturating_sub(pending_energy);
+            let can_use_energy = available_energy >= mv.energy_cost;
             let can_use = can_use_energy; // Only check energy, action queue handles timing
 
             // Always use the same basic format to ensure consistent rendering
@@ -519,7 +552,7 @@ fn render_moves(
                 Style::default().fg(Color::White)
             };
 
-            let border_style = if !can_use {
+            let _border_style = if !can_use {
                 Style::default().fg(Color::DarkGray)
             } else if is_selected {
                 Style::default().fg(Color::Green)
@@ -628,10 +661,11 @@ struct CombatEnemy {
     name: String,
     health: u32,
     max_health: u32,
+    sprite_ref: Option<lithicrivers_core::components::SpriteRef>,
 }
 
 fn get_enemy_combat_data(app: &mut crate::App) -> Vec<CombatEnemy> {
-    use lithicrivers_core::components::{Combat, GameEntity, Health, Position};
+    use lithicrivers_core::components::{Combat, GameEntity, Health, Position, SpriteRef};
 
     let mut enemies = Vec::new();
 
@@ -641,11 +675,11 @@ fn get_enemy_combat_data(app: &mut crate::App) -> Vec<CombatEnemy> {
             let player_pos = *player_pos;
 
             // Look for nearby combat entities that are actually in combat
-            for (entity, (pos, combat, _)) in app
+            for (entity, (pos, combat, _, sprite_ref)) in app
                 .core
                 .game
                 .world
-                .query::<(&Position, &Combat, &GameEntity)>()
+                .query::<(&Position, &Combat, &GameEntity, Option<&SpriteRef>)>()
                 .iter()
             {
                 if entity == player_entity {
@@ -694,6 +728,7 @@ fn get_enemy_combat_data(app: &mut crate::App) -> Vec<CombatEnemy> {
                         name: format!("Enemy {}", entity.id()), // Use entity ID for now
                         health: health.current,
                         max_health: health.max,
+                        sprite_ref: sprite_ref.cloned(),
                     });
                 }
             }
@@ -703,43 +738,194 @@ fn get_enemy_combat_data(app: &mut crate::App) -> Vec<CombatEnemy> {
     enemies
 }
 
+/// Calculate total pending energy consumption from queued moves
+fn calculate_pending_energy_consumption(app: &crate::App) -> u32 {
+    let mut total_pending = 0;
+
+    if let Some(player_entity) = app.core.game.get_player_entity() {
+        if let Ok(queue) = app
+            .core
+            .game
+            .world
+            .get::<&lithicrivers_core::moves::ActionQueue>(player_entity)
+        {
+            // Check current action
+            if let Some(current_action) = &queue.current_action {
+                if let lithicrivers_core::moves::CombatAction::PlayerMove { move_data, .. } =
+                    &current_action.action
+                {
+                    total_pending += move_data.energy_cost;
+                }
+            }
+
+            // Check queued actions
+            for action in queue.get_queued_actions() {
+                if let lithicrivers_core::moves::CombatAction::PlayerMove { move_data, .. } =
+                    &action.action
+                {
+                    total_pending += move_data.energy_cost;
+                }
+            }
+        }
+    }
+
+    total_pending
+}
+
 fn render_player_info(
     f: &mut Frame,
     area: Rect,
     body: Option<lithicrivers_core::model::body::Body>,
     energy: lithicrivers_core::components::Energy,
+    app: &mut crate::App,
 ) {
-    use lithicrivers_core::moves::{calculate_body_integrity, get_body_status_description};
-
-    // Calculate body integrity (replaces health for robots)
-    let (integrity_ratio, integrity_label) = if let Some(ref body) = body {
-        let integrity = calculate_body_integrity(body);
-        let status = get_body_status_description(body);
-        (integrity as f64, status)
-    } else {
-        (1.0, "No Body Data".to_string())
-    };
+    use lithicrivers_core::model::body::{BodyPartState, BodyPartType};
 
     let energy_ratio = energy.percentage() as f64;
+    let pending_energy = calculate_pending_energy_consumption(app);
 
-    let integrity_bar = Gauge::default()
-        .block(
-            Block::default()
-                .title("Body Integrity")
-                .borders(Borders::ALL),
-        )
-        .gauge_style(Style::default().fg(Color::Cyan).bg(Color::DarkGray))
-        .ratio(integrity_ratio)
-        .label(format!(" {} ", integrity_label));
+    // Calculate energy after pending consumption
+    let energy_after_pending = energy.current.saturating_sub(pending_energy);
+    let available_energy_ratio = energy_after_pending as f64 / energy.max as f64;
 
-    let energy_bar = Gauge::default()
-        .block(Block::default().title("Energy").borders(Borders::ALL))
-        .gauge_style(Style::default().fg(Color::Yellow).bg(Color::DarkGray))
-        .ratio(energy_ratio)
-        .label(format!(" {}/{} ", energy.current, energy.max));
+    // Create individual body part bars
+    let body_part_bars = if let Some(ref body) = body {
+        // Get body parts in a consistent order
+        let part_order = [
+            BodyPartType::Head,
+            BodyPartType::Torso,
+            BodyPartType::PowerSource,
+            BodyPartType::LeftArm,
+            BodyPartType::RightArm,
+            BodyPartType::LeftLeg,
+            BodyPartType::RightLeg,
+        ];
 
-    let bars = Layout::horizontal([Constraint::Ratio(1, 2), Constraint::Ratio(1, 2)]).split(area);
+        part_order
+            .iter()
+            .filter_map(|part_type| {
+                body.parts.get(part_type).map(|part| {
+                    let abbreviation = match part_type {
+                        BodyPartType::Head => "HED",
+                        BodyPartType::Torso => "TOR",
+                        BodyPartType::PowerSource => "PWR",
+                        BodyPartType::LeftArm => "LAM",
+                        BodyPartType::RightArm => "RAM",
+                        BodyPartType::LeftLeg => "LLG",
+                        BodyPartType::RightLeg => "RLG",
+                    };
 
-    f.render_widget(integrity_bar, bars[0]);
-    f.render_widget(energy_bar, bars[1]);
+                    let (ratio, color, label) = match part.state {
+                        BodyPartState::Missing => (0.0, Color::Gray, " GONE ".to_string()),
+                        BodyPartState::Damaged => {
+                            if part.integrity == 0 {
+                                (0.0, Color::Red, " 0 ".to_string())
+                            } else {
+                                (
+                                    part.integrity as f64 / 100.0,
+                                    Color::Yellow,
+                                    format!(" {} ", part.integrity),
+                                )
+                            }
+                        }
+                        BodyPartState::Functional => (
+                            part.integrity as f64 / 100.0,
+                            Color::Green,
+                            format!(" {} ", part.integrity),
+                        ),
+                        BodyPartState::Enhanced => (
+                            part.integrity as f64 / 100.0,
+                            Color::Cyan,
+                            format!(" {} ", part.integrity),
+                        ),
+                    };
+
+                    Gauge::default()
+                        .block(
+                            Block::default()
+                                .title(Line::from(abbreviation))
+                                .borders(Borders::ALL),
+                        )
+                        .gauge_style(Style::default().fg(color).bg(Color::DarkGray))
+                        .ratio(ratio.min(1.0))
+                        .label(label)
+                })
+            })
+            .collect::<Vec<_>>()
+    } else {
+        // No body data - show placeholder
+        vec![Gauge::default()
+            .block(
+                Block::default()
+                    .title(Line::from("No Body"))
+                    .borders(Borders::ALL),
+            )
+            .gauge_style(Style::default().fg(Color::Red).bg(Color::DarkGray))
+            .ratio(0.0)
+            .label(" N/A ".to_string())]
+    };
+
+    // Create energy bar with pending consumption visualization
+    let energy_bar = if pending_energy > 0 {
+        // Show available energy (what's left after pending consumption)
+        // Use a dual-color approach: available in yellow, pending in red
+        if energy_after_pending == 0 {
+            Gauge::default()
+                .block(
+                    Block::default()
+                        .title(Line::from("Energy (Depleted)"))
+                        .borders(Borders::ALL),
+                )
+                .gauge_style(Style::default().fg(Color::Red).bg(Color::DarkGray))
+                .ratio(available_energy_ratio)
+                .label(format!(
+                    " {}/{} (-{}) ",
+                    energy.current, energy.max, pending_energy
+                ))
+        } else {
+            Gauge::default()
+                .block(
+                    Block::default()
+                        .title(Line::from("Energy (Pending)"))
+                        .borders(Borders::ALL),
+                )
+                .gauge_style(Style::default().fg(Color::Yellow).bg(Color::DarkGray))
+                .ratio(available_energy_ratio)
+                .label(format!(
+                    " {}/{} (-{}) ",
+                    energy.current, energy.max, pending_energy
+                ))
+        }
+    } else {
+        Gauge::default()
+            .block(
+                Block::default()
+                    .title(Line::from("Energy"))
+                    .borders(Borders::ALL),
+            )
+            .gauge_style(Style::default().fg(Color::Yellow).bg(Color::DarkGray))
+            .ratio(energy_ratio)
+            .label(format!(" {}/{} ", energy.current, energy.max))
+    };
+
+    // Split area: top for body parts, bottom for energy
+    let main_layout = Layout::vertical([Constraint::Length(3), Constraint::Min(0)]).split(area);
+
+    // Create a horizontal layout for body part bars on the top
+    let num_parts = body_part_bars.len();
+    if num_parts > 0 {
+        // Each body part gets equal horizontal space
+        let constraints = vec![Constraint::Ratio(1, num_parts as u32); num_parts];
+        let body_layout = Layout::horizontal(constraints).split(main_layout[0]);
+
+        // Render each body part bar horizontally
+        for (i, bar) in body_part_bars.into_iter().enumerate() {
+            if i < body_layout.len() {
+                f.render_widget(bar, body_layout[i]);
+            }
+        }
+    }
+
+    // Render energy bar on the bottom
+    f.render_widget(energy_bar, main_layout[1]);
 }

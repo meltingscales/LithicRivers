@@ -166,7 +166,7 @@ impl ConfigManager {
         keycode_mapping::keycode_to_printable_name(keycode)
     }
 
-    pub fn get_vector_setting(&self, category: &str, key: &str, environment: &str) -> [i32; 3] {
+    pub fn get_vector_setting(&self, category: &str, key: &str, environment: &str) -> [i64; 3] {
         let v = self.data.settings.get(category).and_then(|c| c.get(key));
         if let Some(obj) = v.and_then(|v| v.as_object()) {
             if let Some(arr) = obj.get(environment).and_then(|x| x.as_array()) {
@@ -181,11 +181,11 @@ impl ConfigManager {
         );
     }
 
-    fn vec3_from_json(arr: &[serde_json::Value]) -> [i32; 3] {
-        let mut out = [0i32; 3];
+    fn vec3_from_json(arr: &[serde_json::Value]) -> [i64; 3] {
+        let mut out = [0i64; 3];
         for (i, v) in arr.iter().take(3).enumerate() {
             if let Some(n) = v.as_i64() {
-                out[i] = n as i32;
+                out[i] = n;
             }
         }
         out

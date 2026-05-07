@@ -1,26 +1,90 @@
 # Steam MVP Release Plan (Target: December 2026)
 
-## NEXT TODO: Goxel Quest Location Design - Abandoned SapienCorp Factory
+## quick list
+
+.
+
+## NEXT TODO: Underground Bunker Tutorial & First Quest Design
+**Priority**: HIGHEST - First quest and tutorial implementation
+
+**Quest 1: Underground Bunker Escape (z=-20 to surface)**
+- Robot protagonist starts in a dark, unpowered bunker after falling and sustaining severe mechanical damage
+- Low-light/no-light scenario with fog of war mechanics:
+  - Structures/blocks are remembered and rendered normally once seen
+  - Entity last positions are remembered and rendered in grayscale
+  - Creates atmospheric tension and teaches core navigation mechanics
+- Tutorial integration for movement, inventory, damage assessment, and basic interaction
+- Environmental storytelling about how/why robot fell and bunker's purpose
+- Escape to surface serves as clear objective and completion milestone
+
+**Quest 2: SapienCorp Facility - New Arm Acquisition (1 mile from bunker)**
+- Much more manageable 1-mile travel distance from bunker exit
+- Maintains the abandoned factory quest structure detailed below
+- Robot seeks prosthetic arm replacement after bunker damage
+
+**Why This Change**: Eliminates the 10-mile walking simulator problem while creating immediate engagement through atmospheric underground escape sequence. The vertical progression teaches z-level mechanics naturally.
+
+## VoxelBuilder Quest Location Design - Abandoned SapienCorp Factory
 **Priority**: HIGH - First quest location implementation
 
 first quest and associated dungeons
 
-- use goxel (see `crates/client/assets/goxel/test.gox`) to design a multi-level dungeon that is the first quest
-- have a build step that exports .gox files to our weird custom .txt format
-  - store it in `src/bin/utility_goxel_exporter.rs` or something, next to our demos
-  - for now, just hardcode input/output paths in `utility_goxel_exporter.rs`...
+- use VoxelBuilder (https://nimadez.github.io/voxel-builder/) to design a multi-level dungeon that is the first quest
+- use the existing `utility_voxelbuilder_importer.rs` to convert VoxelBuilder JSON exports to .lrstructure format
 - add a Stairs block that you must use to traverse up/down in the world
 - add randomly generated loot that you can use to replace your Arm that's guaranteed to spawn in a specific chest near the assembly line
 
+**SapienCorp Facility Design - 3-Level Structure**:
+- **Ground Level (Entry)**: ~20x15 tiles
+  - Light combat encounters (1-2 enemies)
+  - Basic repair station tutorial area
+  - Environmental storytelling about the facility's purpose
+- **Lower Level (Assembly Line)**: ~25x20 tiles
+  - Main combat area with 3-4 enemies guarding the assembly line
+  - Guaranteed arm replacement loot chest
+  - Damaged machinery requiring repair skill demonstration
+- **Sub-Level (Storage/Labs)**: ~15x12 tiles
+  - Optional exploration area with additional loot and lore
+  - 1-2 tougher enemies for advanced players
+- **Total**: ~60x47 tiles across 3 levels with stairs connecting each level
 
 **Implementation Plan**:
-1. **Goxel File Investigation**: Create feature branch to import `crates/client/assets/goxel/test.gox` and analyze data structure
-2. **Factory Layout Design**: Design the abandoned SapienCorp factory structure in Goxel where player seeks replacement arm
+1. **VoxelBuilder Design**: Create the 3-level SapienCorp factory structure in VoxelBuilder
+2. (DONE) **Import Pipeline**: Use existing `utility_voxelbuilder_importer.rs` to convert to .lrstructure format
 3. **Quest Integration**: Connect the location to first major quest narrative
-4. **Asset Pipeline**: Establish workflow for importing Goxel structures into game world
+4. (DONE) **Stairs Implementation**: Add Stairs block for vertical traversal between levels
 5. **Environmental Storytelling**: Place lore elements and visual clues about SapienCorp's downfall
 
 **Why This Matters**: Creates the first major quest destination and establishes the asset pipeline for structured locations. The abandoned factory serves as the game's first major narrative and gameplay milestone.
+
+## TODO: Active Quest System Implementation
+**Priority**: HIGHEST - Critical for tutorial quest and Steam MVP first impression
+
+**Current Issues**:
+- Quest can be started multiple times (dialogue doesn't track quest state)
+- No way to deliver items to quest giver (fetch quest cannot be completed)
+- Quest markers persist forever (no completion detection)
+- No active quest tracking UI for players
+
+**Implementation Plan**:
+1. **Quest State Enum**: `NotStarted`, `Active`, `Completed`, `Failed`
+2. **Active Quest System**: Track current quest objectives, required items, completion state
+3. **Quests Tab**: New UI tab next to Global Map showing active/completed quests
+4. **Quest Completion Detection**: Check player inventory for required items when talking to NPCs
+5. **Item Delivery System**: Allow giving items to NPCs through dialogue interactions
+6. **Quest State Integration**: Update dialogue system to prevent duplicate quest starts
+7. **Marker Management**: Clear quest markers when quests are completed
+
+**Quest Data Structure**:
+- Quest ID (tied to QuestType enum)
+- Current state (NotStarted/Active/Completed/Failed)
+- Objective description
+- Required items (for fetch quests)
+- Reward items
+- Associated NPC entity
+- Quest marker position
+
+**Why This Matters**: The tutorial quest is the first thing new players experience. It must work flawlessly - players should be able to accept it, track progress, deliver items, and see completion. Without this, the Steam MVP fails at the first hurdle.
 
 ## TODO: Survival Mechanics Implementation
 **Priority**: HIGH - Essential for core survival gameplay loop
@@ -28,11 +92,19 @@ first quest and associated dungeons
 **Implementation Plan**:
 1. **Damage System**: Combat affects specific body parts with varying damage types (physical/mechanical)
 2. **Body Panel Integration**: Visual indicators showing part condition in existing UI
-3. **Repair Mechanics**: Use crafted items or rest to restore damaged parts 
+3. **Repair Mechanics**: Use crafted items or rest to restore damaged parts
 4. **Resource Management**: Create meaningful trade-offs between combat risk and repair costs
 5. **Gameplay Impact**: At least one damage type with clear mechanical consequences
 
 **Why This Matters**: Completes the survival loop - explore → combat → damage → repair → explore. Currently combat has no lasting consequences, making it feel disconnected from the crafting/resource systems.
+
+## ugly combat UI
+
+- the combat UI is kind of ugly
+  - way too much spacing, remove margins on buttons
+  - remove emojis
+  - remove "z" char
+  - rework it with Kaya
 
 ## launching
 
@@ -120,7 +192,9 @@ first quest and associated dungeons
 ## Polish & UX
 - [x] intro sequence
   - [x] **Boot message and intro screens (v0.7.6.2)**
-- [ ] tutorial sequence that can be accessed anytime
+- [x] tutorial sequence that can be accessed anytime
+  - [x] **Interactive Tutorial System with modal overlays, popup GUI and keybind detection**
+  - [x] **TutorialSystem class with toggleable panel (F1) and Menu integration**
 - [ ] Basic sound effects, not just music
 - [ ] Main menu with new game/load game
 - [x] Basic UI feedback for player actions
@@ -141,7 +215,7 @@ first quest and associated dungeons
 1. **Basic survival mechanics (damage, repair, body parts)**
    - Body panel shows part states; player can incur and repair at least 1 damage type
    - This is essential for the core survival loop
-   
+
 2. **Day/night cycle**
    - Full cycle length ~10–20 minutes with visual cue
    - Affects gameplay rhythm and difficulty
@@ -160,17 +234,13 @@ first quest and associated dungeons
    - Important for user customization
 
 6. **Tutorial sequence**
-   - Accessible anytime for new players
+   - ✅ **Interactive Tutorial System with modal overlays, popup GUI and keybind detection**
+   - ✅ **TutorialSystem class structure with folder organization in crates/client/src/tutorialsystem/**
+   - ✅ **Toggleable panel (F1 key) with Menu integration and auto-hide functionality**
+   - Accessible anytime for new players, defaults to enabled
    - Critical for Steam release onboarding
 
 ### LOWER PRIORITY (Nice to Have)
 7. **Main menu with new game/load game**
 8. **More biome variety and structure generation**
 9. **Basic sound effects** (beyond just music)
-
-## Timeline
-- [ ] September: Core gameplay implementation (**Body mechanics, Day/night, NPCs**)
-- [ ] October: Steam integration and performance (**Optimization, Tutorial**)
-- [ ] November: Polish and bug fixing (**UI/UX refinements**)
-- [ ] Early December: Beta testing
-- [ ] Mid-December: Release

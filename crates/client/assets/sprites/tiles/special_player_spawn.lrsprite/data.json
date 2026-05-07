@@ -1,0 +1,5 @@
+{
+  "name": "(Special) Player Spawn",
+  "color": "#FFFF00",
+  "description": "Special block that is meant to be used to mark the player's spawn point in the world."
+}

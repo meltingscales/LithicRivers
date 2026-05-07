@@ -1,12 +1,14 @@
+use crate::dialogue::DialogueNodeID;
 use serde::{Deserialize, Serialize};
+use strum::EnumIter;
 
 use std::fmt;
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, Eq, Hash, PartialEq)]
 pub struct Position {
-    pub x: i32,
-    pub y: i32,
-    pub z: i32,
+    pub x: i64,
+    pub y: i64,
+    pub z: i64,
 }
 
 impl fmt::Display for Position {
@@ -160,7 +162,7 @@ pub struct BlocksMovement;
 // Items & Inventory Components
 // -----------------------------
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, Eq, PartialEq, Hash, EnumIter)]
 pub enum ItemKind {
     Log,
     WoodenPlank,
@@ -168,14 +170,11 @@ pub enum ItemKind {
     Stick,
     Nail,
     Stone,
-    IronOre,
     String,
-    StoneAxe,
-    StonePickaxe,
     Torch,
-    Rope,
-    IronBar,
     WoodenShavings,
+    ScrapElectronics,
+    Diamond,
     Leather,
     Meat,
     PlankBlock,
@@ -190,14 +189,11 @@ pub fn itemkind_name(kind: ItemKind) -> &'static str {
         ItemKind::Stick => "Stick",
         ItemKind::Nail => "Nail",
         ItemKind::Stone => "Stone",
-        ItemKind::IronOre => "Iron Ore",
         ItemKind::String => "String",
-        ItemKind::StoneAxe => "Stone Axe",
-        ItemKind::StonePickaxe => "Stone Pickaxe",
         ItemKind::Torch => "Torch",
-        ItemKind::Rope => "Rope",
-        ItemKind::IronBar => "Iron Bar",
         ItemKind::WoodenShavings => "Wooden Shavings",
+        ItemKind::ScrapElectronics => "Scrap Electronics",
+        ItemKind::Diamond => "Diamond",
         ItemKind::Leather => "Leather",
         ItemKind::Meat => "Meat",
         ItemKind::PlankBlock => "Plank Block",
@@ -209,22 +205,46 @@ pub fn itemkind_sprite_name(kind: ItemKind) -> &'static str {
     match kind {
         ItemKind::Log => "log",
         ItemKind::WoodenPlank => "wooden_plank",
+        ItemKind::ScrapElectronics => "scrap_electronics",
+        ItemKind::Diamond => "diamond",
         ItemKind::Acorn => "acorn",
         ItemKind::Stick => "stick",
         ItemKind::Nail => "nail",
         ItemKind::Stone => "stone",
-        ItemKind::IronOre => "ironore",
         ItemKind::String => "string",
-        ItemKind::StoneAxe => "stoneaxe",
-        ItemKind::StonePickaxe => "stonepickaxe",
         ItemKind::Torch => "torch",
-        ItemKind::Rope => "rope",
-        ItemKind::IronBar => "ironbar",
         ItemKind::WoodenShavings => "wooden_shavings",
         ItemKind::Leather => "leather",
         ItemKind::Meat => "meat",
         ItemKind::PlankBlock => "plank_block",
     }
+}
+
+pub fn parse_itemkind_from_sprite_name(sprite_name: &str) -> Option<ItemKind> {
+    // Parse ItemKind from sprite name (case-insensitive)
+    match sprite_name.to_lowercase().as_str() {
+        "log" => Some(ItemKind::Log),
+        "wooden_plank" => Some(ItemKind::WoodenPlank),
+        "scrap_electronics" => Some(ItemKind::ScrapElectronics),
+        "diamond" => Some(ItemKind::Diamond),
+        "acorn" => Some(ItemKind::Acorn),
+        "stick" => Some(ItemKind::Stick),
+        "nail" => Some(ItemKind::Nail),
+        "stone" => Some(ItemKind::Stone),
+        "string" => Some(ItemKind::String),
+        "torch" => Some(ItemKind::Torch),
+        "wooden_shavings" => Some(ItemKind::WoodenShavings),
+        "leather" => Some(ItemKind::Leather),
+        "meat" => Some(ItemKind::Meat),
+        "plank_block" => Some(ItemKind::PlankBlock),
+        _ => None,
+    }
+}
+
+pub fn get_all_item_sprite_names() -> Vec<&'static str> {
+    // Get all available item sprite names for help text
+    use strum::IntoEnumIterator;
+    ItemKind::iter().map(itemkind_sprite_name).collect()
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -245,17 +265,13 @@ impl ItemStack {
 
 /// High-level kind for an entity. Prefer ECS composition for behavior; `EntityKind`
 /// is a convenient category for rendering defaults and simple logic tables.
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, Eq, PartialEq, Hash, EnumIter)]
 pub enum EntityKind {
     Player,
     Sheep,
     FeralDog,
-    Bot,
-    Turret,
-    Chest,
-    Rock,
     Corpse,
-    QuestTesty,
+    QuestTutorialBrokenAndroid,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -312,6 +328,9 @@ pub struct Dead;
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct QuestTesty;
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct QuestTutorialBrokenAndroid;
+
 /// NPC mood states for dialogue system
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum NPCMood {
@@ -326,7 +345,7 @@ pub enum NPCMood {
 pub struct Dialogue {
     pub current_mood: NPCMood,
     pub met_before: bool,
-    pub current_dialogue_id: Option<usize>,
+    pub current_dialogue_id: Option<DialogueNodeID>,
     pub name: String,
 }
 
@@ -336,5 +355,60 @@ impl SpriteRef {
             category: category.to_string(),
             name: name.to_string(),
         }
+    }
+}
+
+/// Fog of war component tracking which tiles the player has visited and what's currently illuminated
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FogOfWar {
+    /// Set of (x, y, z) positions that have been visited by the player
+    pub visited_tiles: std::collections::HashSet<(i64, i64, i64)>,
+}
+
+impl Default for FogOfWar {
+    fn default() -> Self {
+        Self {
+            visited_tiles: std::collections::HashSet::new(),
+        }
+    }
+}
+
+impl FogOfWar {
+    pub fn mark_visited(&mut self, x: i64, y: i64, z: i64) {
+        self.visited_tiles.insert((x, y, z));
+    }
+
+    pub fn is_visited(&self, x: i64, y: i64, z: i64) -> bool {
+        self.visited_tiles.contains(&(x, y, z))
+    }
+}
+
+/// Light source component for entities that emit light
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct LightSource {
+    pub radius: u32,
+    pub torch_equipped: bool,
+}
+
+impl Default for LightSource {
+    fn default() -> Self {
+        Self {
+            radius: 2, // Default player light radius
+            torch_equipped: false,
+        }
+    }
+}
+
+impl LightSource {
+    pub fn new(radius: u32) -> Self {
+        Self {
+            radius,
+            torch_equipped: false,
+        }
+    }
+
+    pub fn set_torch_equipped(&mut self, equipped: bool) {
+        self.torch_equipped = equipped;
+        self.radius = if equipped { 8 } else { 2 };
     }
 }

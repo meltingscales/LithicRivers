@@ -1,0 +1,401 @@
+use crate::App;
+use crossterm::event::KeyCode;
+use std::error::Error;
+
+/// Filter dialogue choices based on quest requirements
+fn filter_choices_by_quest_requirements<'a>(
+    choices: &'a [lithicrivers_core::dialogue::DialogueChoice],
+    resources: &lithicrivers_core::resources::Resources,
+) -> Vec<(usize, &'a lithicrivers_core::dialogue::DialogueChoice)> {
+    choices
+        .iter()
+        .enumerate()
+        .filter(|(_, choice)| {
+            // Check quest requirements
+            if let Some(required_quest) = &choice.requires_quest_active {
+                if !resources.is_quest_active(*required_quest) {
+                    return false;
+                }
+            }
+            if let Some(required_quest) = &choice.requires_quest_complete {
+                if !resources.is_quest_completed(*required_quest) {
+                    return false;
+                }
+            }
+            true
+        })
+        .collect()
+}
+
+/// Handle NPC interaction input when active - returns true if input was handled
+pub fn handle_npc_interaction_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Error>> {
+    // Handle NPC selection phase
+    if let crate::app_state::NPCInteractionState::SelectingNPC {
+        adjacent_npcs,
+        selected_npc,
+    } = &app.panels.npc_interaction
+    {
+        let npcs_clone = adjacent_npcs.clone();
+        let selected = *selected_npc;
+
+        if app.ui.keybinds.matches("ui", "CLOSE_HELP_MENU", &key) {
+            app.panels.npc_interaction = crate::app_state::NPCInteractionState::None;
+            app.core.game.res.log("Cancelled NPC interaction");
+            return Ok(true);
+        }
+
+        if app.ui.keybinds.matches("movement", "MOVE_NORTH", &key) {
+            app.panels.npc_interaction = crate::app_state::NPCInteractionState::SelectingNPC {
+                adjacent_npcs: npcs_clone.clone(),
+                selected_npc: selected.saturating_sub(1),
+            };
+            return Ok(true);
+        }
+
+        if app.ui.keybinds.matches("movement", "MOVE_SOUTH", &key) {
+            app.panels.npc_interaction = crate::app_state::NPCInteractionState::SelectingNPC {
+                adjacent_npcs: npcs_clone.clone(),
+                selected_npc: (selected + 1).min(npcs_clone.len().saturating_sub(1)),
+            };
+            return Ok(true);
+        }
+
+        if app.ui.keybinds.matches("ui", "MENU_ACTIVATE", &key) || key == KeyCode::Enter {
+            if selected < npcs_clone.len() {
+                let (npc_entity, npc_name) = npcs_clone[selected].clone();
+                // Start conversation using the new dialogue engine
+
+                // Start conversation at the beginning of the dialogue tree
+                let conversation = crate::app_state::ConversationState {
+                    current_node_id: Some(lithicrivers_core::dialogue::DialogueNodeID::Start),
+                    player_mood: crate::app_state::NPCMood::Neutral,
+                };
+                app.panels.npc_interaction = crate::app_state::NPCInteractionState::InDialogue {
+                    npc_entity,
+                    conversation,
+                    selected_choice: 0,
+                };
+                app.core
+                    .game
+                    .res
+                    .log(format!("Started conversation with {}", npc_name));
+            }
+            return Ok(true);
+        }
+        return Ok(true);
+    }
+
+    // Handle dialogue phase
+    if let crate::app_state::NPCInteractionState::InDialogue {
+        npc_entity,
+        conversation,
+        selected_choice,
+    } = &app.panels.npc_interaction
+    {
+        let entity = *npc_entity;
+        let mut choice = *selected_choice;
+
+        if app.ui.keybinds.matches("ui", "CLOSE_HELP_MENU", &key) {
+            app.panels.npc_interaction = crate::app_state::NPCInteractionState::None;
+            app.core.game.res.log("Ended conversation");
+            return Ok(true);
+        }
+
+        // Handle dialogue navigation using the new engine
+        if app.ui.keybinds.matches("movement", "MOVE_NORTH", &key) {
+            choice = choice.saturating_sub(1);
+        }
+
+        if app.ui.keybinds.matches("movement", "MOVE_SOUTH", &key) {
+            // Get the current dialogue node to check how many filtered choices are available
+            if let Some(ref current_node_id) = conversation.current_node_id {
+                if let Some(node) = app.panels.dialogue_tree.get_node(current_node_id) {
+                    let filtered_choices =
+                        filter_choices_by_quest_requirements(&node.choices, &app.core.game.res);
+                    choice = (choice + 1).min(filtered_choices.len().saturating_sub(1));
+                }
+            }
+        }
+
+        if app.ui.keybinds.matches("ui", "MENU_ACTIVATE", &key) || key == KeyCode::Enter {
+            // Process the choice using the core dialogue tree
+            if let Some(ref current_node_id) = conversation.current_node_id {
+                if let Some(node) = app.panels.dialogue_tree.get_node(current_node_id) {
+                    let filtered_choices =
+                        filter_choices_by_quest_requirements(&node.choices, &app.core.game.res);
+                    if choice < filtered_choices.len() {
+                        let (_original_index, selected_choice) = filtered_choices[choice];
+
+                        // Handle player mood change from dialogue choice
+                        let new_player_mood =
+                            if let Some(choice_mood_change) = selected_choice.player_mood_change {
+                                // Convert core NPCMood to client NPCMood
+                                match choice_mood_change {
+                                    lithicrivers_core::components::NPCMood::Happy => {
+                                        crate::app_state::NPCMood::Friendly
+                                    }
+                                    lithicrivers_core::components::NPCMood::Sad => {
+                                        crate::app_state::NPCMood::Sad
+                                    }
+                                    lithicrivers_core::components::NPCMood::Neutral => {
+                                        crate::app_state::NPCMood::Neutral
+                                    }
+                                    lithicrivers_core::components::NPCMood::Weird => {
+                                        crate::app_state::NPCMood::Mysterious
+                                    }
+                                }
+                            } else {
+                                conversation.player_mood // Keep current mood if no change
+                            };
+
+                        // Handle quest unlocking
+                        if let Some(quest_type) = &selected_choice.unlocks_quest {
+                            // Check if quest is already active to prevent duplicates
+                            if !app.core.game.res.is_quest_active(*quest_type) {
+                                app.core.game.res.log("New quest unlocked!".to_string());
+
+                                // Handle quest unlocking based on quest type
+                                match quest_type {
+                                    lithicrivers_core::dialogue::QuestType::RepairBrokenAndroid => {
+                                        // Get the NPC's position for the quest marker
+                                        if let Ok(npc_pos) =
+                                            app.core
+                                                .game
+                                                .world
+                                                .get::<&lithicrivers_core::components::Position>(entity)
+                                        {
+                                            // Create quest objectives
+                                            let objectives = vec![
+                                                lithicrivers_core::dialogue::QuestObjective {
+                                                    description: "Find a lab-grown diamond".to_string(),
+                                                    completed: false,
+                                                    objective_type: lithicrivers_core::dialogue::QuestObjectiveType::FetchItem {
+                                                        item_name: "Diamond".to_string(),
+                                                        quantity: 1,
+                                                        consumed: true, // This item should be consumed when quest completes
+                                                    },
+                                                },
+                                                lithicrivers_core::dialogue::QuestObjective {
+                                                    description: "Find scrap electronics".to_string(),
+                                                    completed: false,
+                                                    objective_type: lithicrivers_core::dialogue::QuestObjectiveType::FetchItem {
+                                                        item_name: "Scrap Electronics".to_string(),
+                                                        quantity: 1,
+                                                        consumed: true, // This item should be consumed when quest completes
+                                                    },
+                                                },
+                                                lithicrivers_core::dialogue::QuestObjective {
+                                                    description: "Return to the broken android".to_string(),
+                                                    completed: false,
+                                                    objective_type: lithicrivers_core::dialogue::QuestObjectiveType::TalkToNPC {
+                                                        npc_name: "Broken Android".to_string(),
+                                                    },
+                                                },
+                                            ];
+
+                                            // Create the active quest
+                                            let active_quest = lithicrivers_core::dialogue::ActiveQuest::new(
+                                                *quest_type,
+                                                "Repair the Broken Android".to_string(),
+                                                "Find a lab-grown diamond and scrap electronics to repair the broken SapienCorp android".to_string(),
+                                                objectives,
+                                                Some(entity),
+                                            );
+
+                                            // Get player inventory to check for existing items
+                                            if let Some((player_entity, _)) = app.core.game.world.query::<&lithicrivers_core::components::Player>().iter().next() {
+                                                if let Ok(player_inventory) = app.core.game.world.get::<&lithicrivers_core::components::Inventory>(player_entity) {
+                                                    // Start the quest with inventory check
+                                                    app.core.game.res.start_quest_with_inventory_check(active_quest, &player_inventory);
+                                                } else {
+                                                    // Fallback to normal quest start if no inventory
+                                                    app.core.game.res.start_quest(active_quest);
+                                                }
+                                            } else {
+                                                // Fallback to normal quest start if no player found
+                                                app.core.game.res.start_quest(active_quest);
+                                            }
+
+                                            // Create a fetch quest marker at the NPC's location
+                                            app.core.game.res.add_quest_marker(lithicrivers_core::resources::QuestMarker {
+                                                name: "Repair the Broken Android".to_string(),
+                                                description: "Find a lab-grown diamond and scrap electronics to repair the broken SapienCorp android".to_string(),
+                                                x: npc_pos.x,
+                                                y: npc_pos.y,
+                                                z: npc_pos.z,
+                                                marker_type: lithicrivers_core::resources::QuestMarkerType::FetchQuest,
+                                            });
+                                        }
+                                    }
+                                }
+                            } else {
+                                app.core.game.res.log_yellow("Quest already active");
+                            }
+                        }
+
+                        // Handle item consumption for dialogue choices
+                        if let Some(required_item) = &selected_choice.requires_item {
+                            // Special case for quest completion choices - consume all required items
+                            if selected_choice.leads_to
+                                == Some(lithicrivers_core::dialogue::DialogueNodeID::CompleteQuest)
+                            {
+                                if let Some(required_quest) = &selected_choice.requires_quest_active
+                                {
+                                    // Get consumable items from the quest dynamically
+                                    let consumable_items = app
+                                        .core
+                                        .game
+                                        .res
+                                        .get_quest_consumable_items(*required_quest);
+
+                                    if !consumable_items.is_empty() {
+                                        if let Some((player_entity, _)) = app
+                                            .core
+                                            .game
+                                            .world
+                                            .query::<&lithicrivers_core::components::Player>()
+                                            .iter()
+                                            .next()
+                                        {
+                                            if let Ok(mut inventory) = app.core.game.world.get::<&mut lithicrivers_core::components::Inventory>(player_entity) {
+                                                let mut all_consumed = true;
+
+                                                // Try to consume all required items
+                                                for (item_name, required_qty) in &consumable_items {
+                                                    let mut consumed_qty = 0u32;
+
+                                                    // Find and consume the required quantity of this item
+                                                    for stack in inventory.slots.iter_mut() {
+                                                        if lithicrivers_core::components::itemkind_name(stack.kind) == *item_name {
+                                                            let to_consume = std::cmp::min(stack.qty, required_qty - consumed_qty);
+                                                            stack.qty -= to_consume;
+                                                            consumed_qty += to_consume;
+
+                                                            if consumed_qty >= *required_qty {
+                                                                break;
+                                                            }
+                                                        }
+                                                    }
+
+                                                    if consumed_qty >= *required_qty {
+                                                        app.core.game.res.log(format!("Used {} {}.", consumed_qty, item_name));
+                                                    } else {
+                                                        all_consumed = false;
+                                                        app.core.game.res.log(format!("Error: Could not consume {} {} (only had {})!", required_qty, item_name, consumed_qty));
+                                                    }
+                                                }
+
+                                                if !all_consumed {
+                                                    app.core.game.res.log("Error: Could not consume all required quest items!".to_string());
+                                                    return Ok(true);
+                                                }
+
+                                                // Remove empty stacks
+                                                inventory.slots.retain(|stack| stack.qty > 0);
+                                            }
+                                        }
+                                    }
+                                }
+                            } else {
+                                // Standard single item requirement check and consumption
+                                if let Some((player_entity, _)) = app
+                                    .core
+                                    .game
+                                    .world
+                                    .query::<&lithicrivers_core::components::Player>()
+                                    .iter()
+                                    .next()
+                                {
+                                    if let Ok(mut inventory) =
+                                        app.core
+                                            .game
+                                            .world
+                                            .get::<&mut lithicrivers_core::components::Inventory>(
+                                            player_entity,
+                                        )
+                                    {
+                                        let mut consumed = false;
+                                        for stack in inventory.slots.iter_mut() {
+                                            if lithicrivers_core::components::itemkind_name(
+                                                stack.kind,
+                                            ) == required_item
+                                                && stack.qty > 0
+                                            {
+                                                stack.qty -= 1;
+                                                app.core
+                                                    .game
+                                                    .res
+                                                    .log(format!("Used 1 {}.", required_item));
+                                                consumed = true;
+                                                break;
+                                            }
+                                        }
+                                        if !consumed {
+                                            app.core.game.res.log(format!(
+                                                "You don't have any {} to trade!",
+                                                required_item
+                                            ));
+                                            return Ok(true);
+                                        }
+                                        // Remove empty stacks
+                                        inventory.slots.retain(|stack| stack.qty > 0);
+                                    }
+                                }
+                            }
+                        }
+
+                        // Handle quest completion
+                        if let Some(ref next_node_id) = selected_choice.leads_to {
+                            if *next_node_id
+                                == lithicrivers_core::dialogue::DialogueNodeID::CompleteQuest
+                            {
+                                // Complete the RepairBrokenAndroid quest
+                                app.core.game.res.complete_quest(
+                                    lithicrivers_core::dialogue::QuestType::RepairBrokenAndroid,
+                                );
+                            }
+                        }
+
+                        if let Some(ref next_node_id) = selected_choice.leads_to {
+                            // Continue conversation with next node
+                            let new_conversation = crate::app_state::ConversationState {
+                                current_node_id: Some(*next_node_id),
+                                player_mood: new_player_mood,
+                            };
+
+                            app.panels.npc_interaction =
+                                crate::app_state::NPCInteractionState::InDialogue {
+                                    npc_entity: entity,
+                                    conversation: new_conversation,
+                                    selected_choice: 0,
+                                };
+                        } else {
+                            // Conversation ended - log the player's final mood if it changed
+                            if let Some(_) = selected_choice.player_mood_change {
+                                app.core
+                                    .game
+                                    .res
+                                    .log(format!("You feel {:?}.", new_player_mood));
+                            }
+
+                            app.panels.npc_interaction =
+                                crate::app_state::NPCInteractionState::None;
+                            app.core.game.res.log("Conversation ended");
+                        }
+                    }
+                }
+            }
+            return Ok(true);
+        }
+
+        // Update the selected choice
+        app.panels.npc_interaction = crate::app_state::NPCInteractionState::InDialogue {
+            npc_entity: entity,
+            conversation: conversation.clone(),
+            selected_choice: choice,
+        };
+        return Ok(true);
+    }
+
+    Ok(false)
+}

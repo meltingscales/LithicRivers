@@ -1,14 +1,13 @@
 use crossterm::{
-    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEventKind},
+    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyEventKind},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
 mod app;
 mod app_state;
 mod boot_message;
-mod dialogue_engine;
 mod dialogue_presenter;
-mod input;
+mod tutorialsystem;
 mod ui;
 
 use ratatui::{
@@ -33,10 +32,6 @@ struct EmbeddedAssets;
 
 use crate::app_state::*;
 use crate::dialogue_presenter::DialoguePresenter;
-use lithicrivers_core::{
-    components::{BattleDelay, Combat, GameEntity, Position},
-    config::ConfigManager,
-};
 mod audio;
 mod rendering_helpers;
 mod sprite_constants;
@@ -48,9 +43,10 @@ use crate::{
         centered_rect,
         panels::{
             render_body_panel, render_combat_panel, render_crafting_panel, render_credits_panel,
-            render_game_view, render_help_panel, render_hotbar_panel, render_inventory_list_only,
-            render_inventory_panel, render_look_panel, render_menu_panel, render_modes_panel,
-            render_quit_panel,
+            render_game_view, render_global_map_panel, render_help_panel, render_hotbar_panel,
+            render_inventory_list_only, render_inventory_panel, render_look_panel,
+            render_menu_panel, render_modes_panel, render_quests_panel, render_quit_panel,
+            render_repair_modal, render_tutorial_panel, render_tutorial_selection_modal,
         },
     },
 };
@@ -66,6 +62,9 @@ enum SplashState {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum MenuTab {
     World,
+    Tutorial,
+    GlobalMap,
+    Quests,
     Body,
     Inventory,
     Crafting,
@@ -79,11 +78,20 @@ const BOOT_MESSAGE_TYPEWRITER_MS: u64 = 100;
 
 impl MenuTab {
     #[allow(dead_code)]
-    const COUNT: usize = 8;
+    const COUNT: usize = 10;
 
-    fn next(self) -> Self {
+    fn next(self, tutorial_visible: bool) -> Self {
         match self {
-            MenuTab::World => MenuTab::Body,
+            MenuTab::World => {
+                if tutorial_visible {
+                    MenuTab::Tutorial
+                } else {
+                    MenuTab::GlobalMap
+                }
+            }
+            MenuTab::Tutorial => MenuTab::GlobalMap,
+            MenuTab::GlobalMap => MenuTab::Quests,
+            MenuTab::Quests => MenuTab::Body,
             MenuTab::Body => MenuTab::Inventory,
             MenuTab::Inventory => MenuTab::Crafting,
             MenuTab::Crafting => MenuTab::Menu,
@@ -94,10 +102,19 @@ impl MenuTab {
         }
     }
 
-    fn prev(self) -> Self {
+    fn prev(self, tutorial_visible: bool) -> Self {
         match self {
             MenuTab::World => MenuTab::Quit,
-            MenuTab::Body => MenuTab::World,
+            MenuTab::Tutorial => MenuTab::World,
+            MenuTab::GlobalMap => {
+                if tutorial_visible {
+                    MenuTab::Tutorial
+                } else {
+                    MenuTab::World
+                }
+            }
+            MenuTab::Body => MenuTab::Quests,
+            MenuTab::Quests => MenuTab::GlobalMap,
             MenuTab::Inventory => MenuTab::Body,
             MenuTab::Crafting => MenuTab::Inventory,
             MenuTab::Menu => MenuTab::Crafting,
@@ -107,8 +124,80 @@ impl MenuTab {
         }
     }
 
-    fn as_index(&self) -> usize {
-        *self as usize
+    fn as_index(&self, tutorial_visible: bool) -> usize {
+        match self {
+            MenuTab::World => 0,
+            MenuTab::Tutorial => {
+                if tutorial_visible {
+                    1
+                } else {
+                    0
+                }
+            } // Should not be selected if not visible
+            MenuTab::GlobalMap => {
+                if tutorial_visible {
+                    2
+                } else {
+                    1
+                }
+            }
+            MenuTab::Quests => {
+                if tutorial_visible {
+                    3
+                } else {
+                    2
+                }
+            }
+            MenuTab::Body => {
+                if tutorial_visible {
+                    4
+                } else {
+                    3
+                }
+            }
+            MenuTab::Inventory => {
+                if tutorial_visible {
+                    5
+                } else {
+                    4
+                }
+            }
+            MenuTab::Crafting => {
+                if tutorial_visible {
+                    6
+                } else {
+                    5
+                }
+            }
+            MenuTab::Menu => {
+                if tutorial_visible {
+                    7
+                } else {
+                    6
+                }
+            }
+            MenuTab::Help => {
+                if tutorial_visible {
+                    8
+                } else {
+                    7
+                }
+            }
+            MenuTab::Credits => {
+                if tutorial_visible {
+                    9
+                } else {
+                    8
+                }
+            }
+            MenuTab::Quit => {
+                if tutorial_visible {
+                    10
+                } else {
+                    9
+                }
+            }
+        }
     }
 }
 
@@ -116,9 +205,10 @@ impl MenuTab {
 struct App {
     /// Core game engine systems
     pub core: CoreState,
-    /// UI framework state  
+    /// UI framework state
     pub ui: UiState,
     /// Audio system
+    #[allow(dead_code)]
     pub audio: AudioState,
     /// Logging configuration
     pub logging: LoggingState,
@@ -138,13 +228,13 @@ impl App {
         if let Some(start_time) = self.splash.start_time {
             match self.splash.state {
                 SplashState::Logo => {
-                    if start_time.elapsed() >= Duration::from_secs(1) {
+                    if start_time.elapsed() >= Duration::from_secs(3) {
                         self.splash.state = SplashState::GameTitle;
                         self.splash.start_time = Some(Instant::now());
                     }
                 }
                 SplashState::GameTitle => {
-                    if start_time.elapsed() >= Duration::from_secs(1) {
+                    if start_time.elapsed() >= Duration::from_secs(3) {
                         self.splash.state = SplashState::BootMessage;
                         self.splash.start_time = Some(Instant::now());
                         self.splash.boot_display_text.clear();
@@ -212,6 +302,21 @@ impl App {
             MenuTab::World => {
                 // World (already active view)
                 self.core.game.res.log("World map active");
+            }
+            MenuTab::Tutorial => {
+                // Tutorial
+                self.core
+                    .game
+                    .res
+                    .log("Tutorial panel active (F1 to toggle)");
+            }
+            MenuTab::GlobalMap => {
+                // Global Map
+                self.core.game.res.log("Global Map panel active");
+            }
+            MenuTab::Quests => {
+                // Quests
+                self.core.game.res.log("Quests panel active");
             }
             MenuTab::Body => {
                 // Body
@@ -344,7 +449,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<(), 
 
         // Auto-advance ticks when combat is active (1 tick per second)
         if app.combat.is_active() {
-            let TICK_INTERVAL: std::time::Duration = std::time::Duration::from_millis(
+            let tick_interval: std::time::Duration = std::time::Duration::from_millis(
                 app.core
                     .game
                     .res
@@ -370,7 +475,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<(), 
                     false
                 }
                 Some(last_time) => {
-                    if current_time.duration_since(last_time) >= TICK_INTERVAL {
+                    if current_time.duration_since(last_time) >= tick_interval {
                         app.last_combat_tick = Some(current_time);
                         true
                     } else {
@@ -380,7 +485,11 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<(), 
             };
 
             if should_tick {
-                app.core.game.tick();
+                let tick_result = app.core.game.tick();
+                // Check if combat ended during auto-tick
+                if tick_result.contains(lithicrivers_core::game::GameTickResult::CombatEnded) {
+                    app.combat = CombatUiState::None;
+                }
             }
         } else {
             // Reset tick timer when not in combat
@@ -439,6 +548,9 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<(), 
 }
 
 fn ui(f: &mut Frame, app: &mut App) {
+    // Update tutorial highlights (remove expired ones)
+    app.ui.tutorial_system.update_highlights();
+
     // Show splash screens if needed
     match app.splash.state {
         SplashState::Logo => {
@@ -468,7 +580,7 @@ fn ui(f: &mut Frame, app: &mut App) {
             let block = Block::default()
                 .borders(Borders::ALL)
                 .border_set(border::THICK)
-                .title(" System Boot ")
+                .title(Line::from(" System Boot "))
                 .title_alignment(Alignment::Center)
                 .border_style(Style::default().fg(Color::LightBlue));
 
@@ -592,7 +704,7 @@ fn ui(f: &mut Frame, app: &mut App) {
     };
 
     // Title
-    let title = Paragraph::new("LithicRivers (Ratatui Client)")
+    let title = Paragraph::new("LithicRivers")
         .style(Style::default().fg(Color::Cyan))
         .alignment(Alignment::Center);
     f.render_widget(title, root_chunks[0]);
@@ -640,6 +752,23 @@ fn ui(f: &mut Frame, app: &mut App) {
                 render_inventory_list_only(f, app, right_chunks[1]);
             }
         }
+        MenuTab::Tutorial => {
+            // Tutorial panel on left side (30%), game view on right (70%)
+            let main_chunks = Layout::default()
+                .direction(Direction::Horizontal)
+                .constraints([Constraint::Percentage(30), Constraint::Percentage(70)])
+                .split(root_chunks[1]);
+            render_tutorial_panel(f, app, main_chunks[0]);
+            render_game_view(f, app, main_chunks[1]);
+        }
+        MenuTab::GlobalMap => {
+            // Global Map panel
+            render_global_map_panel(f, app, root_chunks[1]);
+        }
+        MenuTab::Quests => {
+            // Quests panel
+            render_quests_panel(f, app, root_chunks[1]);
+        }
         MenuTab::Crafting => {
             // Crafting panel
             render_crafting_panel(f, app, root_chunks[1]);
@@ -685,6 +814,15 @@ fn ui(f: &mut Frame, app: &mut App) {
     // Render multi-action selection modal if active
     render_multi_action_selection_modal(f, app);
 
+    // Render repair modal if active
+    if matches!(
+        app.panels.body_repair,
+        crate::app_state::BodyRepairState::SelectingRepairAndPart { .. }
+    ) {
+        let modal_area = centered_rect(75, 65, f.size());
+        render_repair_modal(f, app, modal_area);
+    }
+
     // Render hotbar if in place mode
     if show_hotbar {
         render_hotbar_panel(f, app, root_chunks[2]);
@@ -698,6 +836,12 @@ fn ui(f: &mut Frame, app: &mut App) {
         // Bottom menu bar
         render_bottom_menu(f, app, root_chunks[3]);
     }
+
+    // Render tutorial selection modal if active
+    render_tutorial_selection_modal(f, app);
+
+    // Render cheat console if active (on top of everything else)
+    render_cheat_console_modal(f, app);
 }
 
 fn render_message_log(f: &mut Frame, app: &mut App, area: Rect) {
@@ -731,7 +875,7 @@ fn render_message_log(f: &mut Frame, app: &mut App, area: Rect) {
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .title("Messages")
+                .title(Line::from("Messages"))
                 .style(Style::default().fg(Color::White)),
         );
     f.render_widget(paragraph, area);
@@ -741,8 +885,16 @@ fn render_bottom_menu(f: &mut Frame, app: &mut App, area: Rect) {
     // Remember for click handling
     app.ui.bottom_menu_rect = Some(area);
     // All tabs white; selected tab green
-    let titles = vec![
-        Span::raw("World"),
+    let mut titles = vec![Span::raw("World")];
+
+    // Conditionally add Tutorial tab if visible
+    if app.ui.tutorial_visible {
+        titles.push(Span::raw("Tutorial"));
+    }
+
+    titles.extend(vec![
+        Span::raw("Global Map"),
+        Span::raw("Quests"),
         Span::raw("Body"),
         Span::raw("Inventory"),
         Span::raw("Crafting"),
@@ -750,10 +902,15 @@ fn render_bottom_menu(f: &mut Frame, app: &mut App, area: Rect) {
         Span::raw("Help"),
         Span::raw("Credits"),
         Span::raw("Quit"),
-    ];
+    ]);
+
     let tabs = Tabs::new(titles)
-        .block(Block::default().borders(Borders::ALL).title("Menu"))
-        .select(app.ui.current_tab.as_index())
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title(Line::from("Menu")),
+        )
+        .select(app.ui.current_tab.as_index(app.ui.tutorial_visible))
         .style(Style::default().fg(Color::White))
         .highlight_style(Style::default().fg(Color::Green));
     f.render_widget(tabs, area);
@@ -813,7 +970,7 @@ fn render_corpse_selection_modal(
     // Main modal block
     let block = Block::default()
         .borders(Borders::ALL)
-        .title(" Choose Corpse to Loot ")
+        .title(Line::from(" Choose Corpse to Loot "))
         .title_alignment(Alignment::Center)
         .style(Style::default());
 
@@ -915,7 +1072,7 @@ fn render_corpse_loot_modal(
     // Main modal block
     let block = Block::default()
         .borders(Borders::ALL)
-        .title(" Looting Corpse ")
+        .title(Line::from(" Looting Corpse "))
         .title_alignment(Alignment::Center)
         .style(Style::default());
 
@@ -931,7 +1088,7 @@ fn render_corpse_loot_modal(
     // Left side: Corpse inventory
     let corpse_block = Block::default()
         .borders(Borders::ALL)
-        .title(" Corpse Items ")
+        .title(Line::from(" Corpse Items "))
         .border_style(if loot_panel_focus {
             Style::default().fg(Color::Yellow)
         } else {
@@ -965,7 +1122,7 @@ fn render_corpse_loot_modal(
     // Right side: Player inventory
     let player_block = Block::default()
         .borders(Borders::ALL)
-        .title(" Your Items ")
+        .title(Line::from(" Your Items "))
         .border_style(if !loot_panel_focus {
             Style::default().fg(Color::Yellow)
         } else {
@@ -1071,7 +1228,17 @@ fn calculate_game_viewport_area(f: &Frame, app: &App) -> Rect {
                 main_chunks[0]
             }
         }
-        MenuTab::Crafting
+        MenuTab::Tutorial => {
+            // Tutorial mode: game view is right 70%
+            let main_chunks = Layout::default()
+                .direction(Direction::Horizontal)
+                .constraints([Constraint::Percentage(30), Constraint::Percentage(70)])
+                .split(root_chunks[1]);
+            main_chunks[1]
+        }
+        MenuTab::GlobalMap
+        | MenuTab::Quests
+        | MenuTab::Crafting
         | MenuTab::Body
         | MenuTab::Help
         | MenuTab::Inventory
@@ -1097,7 +1264,7 @@ fn render_npc_interaction_modals(f: &mut Frame, app: &mut App, viewport_area: Re
         }
         NPCInteractionState::InDialogue {
             npc_entity,
-            conversation,
+            conversation: _,
             selected_choice,
         } => {
             render_npc_dialogue_modal(f, app, npc_entity, selected_choice, viewport_area);
@@ -1126,7 +1293,7 @@ fn render_npc_selection_modal(
     let block = Block::default()
         .borders(Borders::ALL)
         .border_set(border::ROUNDED)
-        .title(" Choose NPC to Talk To ")
+        .title(Line::from(" Choose NPC to Talk To "))
         .title_style(
             Style::default()
                 .fg(Color::Green)
@@ -1219,7 +1386,7 @@ fn render_npc_dialogue_modal(
     let block = Block::default()
         .borders(Borders::ALL)
         .border_set(border::ROUNDED)
-        .title(format!(" Talking to {} ", npc_name))
+        .title(Line::from(format!(" Talking to {} ", npc_name)))
         .title_style(
             Style::default()
                 .fg(Color::Yellow)
@@ -1231,17 +1398,32 @@ fn render_npc_dialogue_modal(
     f.render_widget(block, inner);
 
     // Get current dialogue and both portraits using the new DialoguePresenter with Summon Night style
-    let (dialogue_text, npc_portrait, player_portrait) =
-        if let NPCInteractionState::InDialogue { conversation, .. } = &app.panels.npc_interaction {
-            DialoguePresenter::format_dialogue_with_portraits(
-                &mut app.core.sprite_loader,
-                &app.panels.dialogue_engine,
-                conversation,
-                selected_choice,
-            )
-        } else {
-            (format!("{}: \"Hello, traveler!\"", npc_name), None, None)
-        };
+    let (dialogue_lines, npc_portrait, player_portrait) = if let NPCInteractionState::InDialogue {
+        conversation,
+        npc_entity,
+        ..
+    } = &app.panels.npc_interaction
+    {
+        DialoguePresenter::format_dialogue_with_portraits(
+            &mut app.core.sprite_loader,
+            &app.core.game.world,
+            *npc_entity,
+            &app.panels.dialogue_tree,
+            conversation,
+            selected_choice,
+            &app.core.game.res,
+        )
+    } else {
+        use ratatui::text::{Line, Span};
+        (
+            vec![Line::from(Span::styled(
+                format!("{}: \"Hello, traveler!\"", npc_name),
+                Style::default().fg(Color::White),
+            ))],
+            None,
+            None,
+        )
+    };
 
     // Create Summon Night-style layout: portrait on left, dialogue on right
     if inner.height > 2 {
@@ -1283,10 +1465,27 @@ fn render_npc_dialogue_modal(
                 height: content_area.height,
             };
 
+            // Create a properly sized bordered area for the 12x8 portrait
+            // Add 2 to width and height for borders
+            let portrait_bordered_width = 14; // 12 + 2 for borders
+            let portrait_bordered_height = 10; // 8 + 2 for borders
+
+            let portrait_area = Rect {
+                x: npc_area.x + (npc_area.width.saturating_sub(portrait_bordered_width)) / 2,
+                y: npc_area.y + (npc_area.height.saturating_sub(portrait_bordered_height)) / 2,
+                width: portrait_bordered_width.min(npc_area.width),
+                height: portrait_bordered_height.min(npc_area.height),
+            };
+
             let npc_paragraph = Paragraph::new(npc_port)
-                .alignment(Alignment::Left)
-                .style(Style::default().fg(Color::Cyan));
-            f.render_widget(npc_paragraph, npc_area);
+                .alignment(Alignment::Center)
+                .style(Style::default().fg(Color::Cyan))
+                .block(
+                    Block::default()
+                        .borders(Borders::ALL)
+                        .border_style(Style::default().fg(Color::Gray)),
+                );
+            f.render_widget(npc_paragraph, portrait_area);
         }
 
         // Player portrait area (right side)
@@ -1298,10 +1497,28 @@ fn render_npc_dialogue_modal(
                 height: content_area.height,
             };
 
+            // Create a properly sized bordered area for the 12x8 portrait
+            // Add 2 to width and height for borders
+            let portrait_bordered_width = 14; // 12 + 2 for borders
+            let portrait_bordered_height = 10; // 8 + 2 for borders
+
+            let portrait_area = Rect {
+                x: player_area.x + (player_area.width.saturating_sub(portrait_bordered_width)) / 2,
+                y: player_area.y
+                    + (player_area.height.saturating_sub(portrait_bordered_height)) / 2,
+                width: portrait_bordered_width.min(player_area.width),
+                height: portrait_bordered_height.min(player_area.height),
+            };
+
             let player_paragraph = Paragraph::new(player_port)
-                .alignment(Alignment::Left)
-                .style(Style::default().fg(Color::Yellow));
-            f.render_widget(player_paragraph, player_area);
+                .alignment(Alignment::Center)
+                .style(Style::default().fg(Color::Yellow))
+                .block(
+                    Block::default()
+                        .borders(Borders::ALL)
+                        .border_style(Style::default().fg(Color::Gray)),
+                );
+            f.render_widget(player_paragraph, portrait_area);
         }
 
         // Dialogue text area (center)
@@ -1312,10 +1529,9 @@ fn render_npc_dialogue_modal(
             height: content_area.height,
         };
 
-        let dialogue_paragraph = Paragraph::new(dialogue_text)
+        let dialogue_paragraph = Paragraph::new(dialogue_lines)
             .alignment(Alignment::Left)
-            .wrap(Wrap { trim: true })
-            .style(Style::default().fg(Color::White));
+            .wrap(Wrap { trim: true });
         f.render_widget(dialogue_paragraph, text_area);
     }
 
@@ -1381,47 +1597,65 @@ fn render_block_picker_modal(
     // Main modal block
     let block = Block::default()
         .borders(Borders::ALL)
-        .title(format!(" Choose Block for F{} ", hotbar_slot + 1))
+        .title(Line::from(format!(
+            " Choose Block for F{} ",
+            hotbar_slot + 1
+        )))
         .title_alignment(Alignment::Center)
         .style(Style::default());
 
     let inner = block.inner(area);
     f.render_widget(block, area);
 
-    // Create list of available blocks
-    let block_items: Vec<ListItem> = available_blocks
-        .iter()
-        .enumerate()
-        .map(|(i, &block_kind)| {
-            let is_selected = selected_block == i;
-            let style = if is_selected {
-                Style::default()
-                    .fg(Color::Yellow)
-                    .add_modifier(Modifier::BOLD)
-            } else {
-                Style::default()
-            };
+    // Create list of available blocks with "Clear slot" as first option
+    let mut block_items: Vec<ListItem> = Vec::new();
 
-            // Show block icon and name using actual sprite
-            let sprite_name = lithicrivers_core::components::itemkind_sprite_name(block_kind);
-            let icon = if let Some(slash_pos) = sprite_name.find('/') {
-                let (category, name) = sprite_name.split_at(slash_pos);
-                let name = &name[1..]; // Remove the '/'
-                let sprite_data = app.core.sprite_loader.load_sprite(name, category);
-                // Get the first character from the 1x1 sprite (sprites[0])
-                sprite_data
-                    .sprites
-                    .get(0)
-                    .and_then(|s| s.chars().next())
-                    .unwrap_or('?')
-            } else {
-                '?'
-            };
-            let text = format!("{} {}", icon, itemkind_name(block_kind));
+    // Add "Clear slot" as the first option (index 0)
+    let clear_slot_selected = selected_block == 0;
+    let clear_slot_style = if clear_slot_selected {
+        Style::default()
+            .fg(Color::Yellow)
+            .add_modifier(Modifier::BOLD)
+    } else {
+        Style::default()
+    };
+    let clear_slot_text = "✗ Clear slot";
+    block_items.push(ListItem::new(Line::from(Span::styled(
+        clear_slot_text,
+        clear_slot_style,
+    ))));
 
-            ListItem::new(Line::from(Span::styled(text, style)))
-        })
-        .collect();
+    // Add actual blocks (indices 1+)
+    for (i, &block_kind) in available_blocks.iter().enumerate() {
+        let list_index = i + 1; // Offset by 1 because index 0 is "Clear slot"
+        let is_selected = selected_block == list_index;
+        let style = if is_selected {
+            Style::default()
+                .fg(Color::Yellow)
+                .add_modifier(Modifier::BOLD)
+        } else {
+            Style::default()
+        };
+
+        // Show block icon and name using actual sprite
+        let sprite_name = lithicrivers_core::components::itemkind_sprite_name(block_kind);
+        let icon = if let Some(slash_pos) = sprite_name.find('/') {
+            let (category, name) = sprite_name.split_at(slash_pos);
+            let name = &name[1..]; // Remove the '/'
+            let sprite_data = app.core.sprite_loader.load_sprite(name, category);
+            // Get the first character from the 1x1 sprite (sprites[0])
+            sprite_data
+                .sprites
+                .get(0)
+                .and_then(|s| s.chars().next())
+                .unwrap_or('?')
+        } else {
+            '?'
+        };
+        let text = format!("{} {}", icon, itemkind_name(block_kind));
+
+        block_items.push(ListItem::new(Line::from(Span::styled(text, style))));
+    }
 
     let list =
         List::new(block_items).highlight_style(Style::default().add_modifier(Modifier::BOLD));
@@ -1472,7 +1706,6 @@ fn render_action_selection_modal(
 ) {
     use ratatui::{
         style::Modifier,
-        text::{Line, Span},
         widgets::{Clear, List, ListItem},
     };
 
@@ -1485,12 +1718,26 @@ fn render_action_selection_modal(
     // Main modal block
     let block = Block::default()
         .borders(Borders::ALL)
-        .title(" Choose Interaction ")
+        .title(Line::from(" Choose Interaction "))
         .title_alignment(Alignment::Center)
         .style(Style::default());
 
     let inner = block.inner(area);
     f.render_widget(block, area);
+
+    // Get player position for directional information
+    let player_pos = app
+        .core
+        .game
+        .get_player_entity()
+        .and_then(|e| {
+            app.core
+                .game
+                .world
+                .get::<&lithicrivers_core::components::Position>(e)
+                .ok()
+        })
+        .map(|pos| *pos);
 
     // Create list of available actions
     let action_items: Vec<ListItem> = available_actions
@@ -1506,7 +1753,11 @@ fn render_action_selection_modal(
                 Style::default()
             };
 
-            let display_text = format!("{} {}", action.icon(), action.display_name());
+            let display_text = format!(
+                "{} {}",
+                action.icon(),
+                action.display_name_with_context(&app.core.game.world, player_pos)
+            );
             ListItem::new(display_text).style(style)
         })
         .collect();
@@ -1543,6 +1794,137 @@ fn render_action_selection_modal(
             height: 1,
         };
         f.render_widget(controls, controls_area);
+    }
+}
+
+/// Render cheat console modal when active
+fn render_cheat_console_modal(f: &mut Frame, app: &mut App) {
+    if let CheatConsoleState::Open {
+        input,
+        cursor_position,
+        autocomplete_suggestions,
+        autocomplete_index: _,
+        scroll_offset,
+    } = &app.panels.cheat_console
+    {
+        // Create modal area (centered, 60% width, taller height for multiline help)
+        let area = centered_rect(60, 25, f.size());
+
+        // Clear the background
+        f.render_widget(Clear, area);
+
+        // Main modal block
+        let block = Block::default()
+            .borders(Borders::ALL)
+            .title(Line::from(" Cheat Console "))
+            .title_alignment(Alignment::Center)
+            .style(Style::default().fg(Color::Cyan));
+
+        let inner = block.inner(area);
+        f.render_widget(block, area);
+
+        // Create input text with cursor
+        let mut display_text = input.clone();
+        if *cursor_position <= input.len() {
+            display_text.insert(*cursor_position, '|');
+        }
+
+        // Input field
+        let input_paragraph = Paragraph::new(format!("> {}", display_text))
+            .style(Style::default().fg(Color::White))
+            .alignment(Alignment::Left);
+
+        let input_area = Rect {
+            x: inner.x,
+            y: inner.y + 1,
+            width: inner.width,
+            height: 1,
+        };
+        f.render_widget(input_paragraph, input_area);
+
+        // Help text - show autocomplete suggestions if available, otherwise show all commands
+        let help_lines = if !autocomplete_suggestions.is_empty() {
+            vec![Line::from(format!(
+                "Suggestions: {}",
+                autocomplete_suggestions.join(", ")
+            ))]
+        } else {
+            let registry = app::input::cheat_console::get_command_registry();
+            let commands = registry.get_command_descriptions();
+            let mut lines = vec![Line::from("Available commands:")];
+
+            // Show 5 commands at a time (expanded visual size)
+            let max_visible_commands = 5;
+            let total_commands = commands.len();
+            let start_index = *scroll_offset;
+            let end_index = (start_index + max_visible_commands).min(total_commands);
+
+            // Show scroll up indicator if we're not at the top
+            if start_index > 0 {
+                lines.push(Line::from("  ▲ (more commands above)"));
+            }
+
+            // Show visible commands
+            for command in &commands[start_index..end_index] {
+                lines.push(Line::from(format!("  {}", command)));
+            }
+
+            // Show scroll down indicator if there are more commands below
+            if end_index < total_commands {
+                lines.push(Line::from("  ▼ (more commands below)"));
+            }
+
+            // Add scroll instructions if there are more commands
+            if total_commands > max_visible_commands {
+                lines.push(Line::from(""));
+                let up_key = app
+                    .core
+                    .config_manager
+                    .get_printable_key_for_keybind("ui", "CHEAT_CONSOLE_SCROLL_UP");
+                let down_key = app
+                    .core
+                    .config_manager
+                    .get_printable_key_for_keybind("ui", "CHEAT_CONSOLE_SCROLL_DOWN");
+                lines.push(Line::from(format!(
+                    "Use {}/{} to scroll through commands",
+                    up_key, down_key
+                )));
+            }
+
+            lines
+        };
+        let help_paragraph = Paragraph::new(help_lines)
+            .style(Style::default().fg(Color::Gray))
+            .alignment(Alignment::Center);
+
+        let help_height = if !autocomplete_suggestions.is_empty() {
+            1
+        } else {
+            6
+        }; // 1 line for title + 5 commands
+        let help_area = Rect {
+            x: inner.x,
+            y: inner.y + 3,
+            width: inner.width,
+            height: help_height,
+        };
+        f.render_widget(help_paragraph, help_area);
+
+        // Controls
+        let controls = Paragraph::new("Enter: Execute | Tab: Autocomplete | Esc: Cancel")
+            .alignment(Alignment::Center)
+            .style(Style::default().fg(Color::Gray));
+
+        if inner.height > 7 {
+            // Need more height for multiline help + controls
+            let controls_area = Rect {
+                x: inner.x,
+                y: inner.y + inner.height - 1,
+                width: inner.width,
+                height: 1,
+            };
+            f.render_widget(controls, controls_area);
+        }
     }
 }
 

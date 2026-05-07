@@ -1,3 +1,60 @@
+# v0.9.0.7
+
+- unify justfile. no content
+
+# v0.9.0.6
+
+- improve tutorials greatly
+- first quest is more functional
+- add quests tab that properly tracks quest progress
+
+# v0.9.0.5
+
+- fix NPCData dead code issue breaking cicd
+
+# v0.9.0.4
+
+- choco pls fix ur infra
+
+# v0.9.0.3
+
+- allow disabling of tutorial
+- retry for cicd
+
+# v0.9.0.2
+
+- make tutorial system usable
+
+# v0.9.0.1
+
+- add stub tutorial
+- make text effects actually look good
+
+# v0.9.0.0
+
+- added world map
+- added 2nd dungeon
+- player now spawns at bottom of a bunker
+  - ...to teach them the tutorial!
+  - and to avoid them having to walk 2,000 blocks to do the first quest.
+
+# v0.8.4.3
+
+- big refactor for `input_handler.rs`, make it a lot easier to read and maintain
+
+# v0.8.4.2
+
+- first quest structure spawns successfully with dummy enemies and dummy loot
+
+# v0.8.4.1
+
+- ci crash fixed
+
+# v0.8.4.0
+
+- added utility to view sprites for structures, items, entities, and their moods
+- started work on first quest
+
 # v0.8.3.0
 
 - dialogue beta is functional

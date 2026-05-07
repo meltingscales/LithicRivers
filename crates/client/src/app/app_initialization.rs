@@ -1,17 +1,18 @@
 use crate::app_state::*;
-use crate::dialogue_engine::DialogueEngine;
+use crate::tutorialsystem::TutorialDatabase;
 use crate::{audio, boot_message, App, EmbeddedAssets, MenuTab, Scale, SplashState, SpriteLoader};
 use chrono::prelude::Local;
 use lithicrivers_core::components::Position;
 use lithicrivers_core::config::ConfigManager;
+use lithicrivers_core::dialogue_database::DialogueDatabase;
 use lithicrivers_core::game::Game;
-use lithicrivers_core::recipe_handler::RecipeHandler;
+use lithicrivers_core::recipe_handler::{RecipeHandler, RepairRecipeHandler};
 use std::time::Instant;
 
 impl App {
     pub fn new_with_seed(seed: u64) -> App {
         // Initialize game and sprite loader
-        let mut game = Game::new(seed);
+        let game = Game::new(seed);
         let mut sprite_loader = SpriteLoader::new(None);
         // Preload all assets to eliminate runtime I/O during rendering
         sprite_loader.preload_all();
@@ -103,19 +104,23 @@ impl App {
         }
 
         let recipe_handler = RecipeHandler::new();
+        let repair_handler = RepairRecipeHandler::new();
 
         App {
             core: CoreState {
                 game,
                 config_manager,
                 sprite_loader,
+                repair_handler,
                 should_quit: false,
             },
             ui: UiState {
-                current_tab: MenuTab::World,
+                current_tab: MenuTab::Tutorial,
                 scale: Scale::Small,
                 bottom_menu_rect: None,
                 keybinds,
+                tutorial_system: TutorialDatabase::create_tutorial_system_with_basics(),
+                tutorial_visible: true, // Tutorial tab is visible by default
                 view_x: initial_view_x,
                 view_y: initial_view_y,
                 view_z: initial_view_z,
@@ -144,7 +149,18 @@ impl App {
                 hotbar_assignment: HotbarAssignmentState::default(),
                 npc_interaction: NPCInteractionState::default(),
                 multi_action_select: MultiActionSelectState::default(),
-                dialogue_engine: DialogueEngine::new(),
+                dialogue_tree: {
+                    let database = DialogueDatabase::new();
+                    database
+                        .get_tree("broken_android_tutorial")
+                        .expect("broken_android_tutorial dialogue tree should exist")
+                        .clone()
+                },
+                body_repair: BodyRepairState::default(),
+                cheat_console: CheatConsoleState::default(),
+                global_map: GlobalMapPanelState::default(),
+                tutorial_selection: TutorialSelectionState::default(),
+                quests: QuestPanelState::default(),
             },
             splash: SplashScreenState {
                 state: SplashState::Logo,

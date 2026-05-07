@@ -10,23 +10,38 @@ pub enum PaletteKey {
     Air,
     BoneBlock,
     IronScrap,
-    Door,
     Bedrock,
     ScrapElectronics,
     PlasteelScrap,
-    Treasure,
     PlankBlock,
+
+    // Doors/stairs
+    Door,
+    DoorOpen,
     Stairs,
+
     // Fluids
     Water,
     Oil,
     Blood,
     Acid,
     Lava,
+
     // Entities
     Player,
     EntityGeneric,
     Sheep,
     // special tile that gets replaced by existing worldgen
     ExistingWorldgen,
+    // special tile that spawns enemies
+    EnemySpawn,
+    // special tiles that spawn treasure
+    ScrapCommon,
+    ScrapRare,
+    TreasureCommon,
+    TreasureRare,
+    TreasureQuest1,
+
+    //other special tiles
+    SpecialPlayerSpawn,
 }

@@ -11,14 +11,9 @@ use std::{collections::HashMap, io, time::Duration};
 enum Item {
     Wood,
     Stone,
-    IronOre,
     String,
     Stick,
-    StoneAxe,
-    StonePickaxe,
     Torch,
-    Rope,
-    IronBar,
 }
 
 impl Item {
@@ -26,14 +21,9 @@ impl Item {
         match self {
             Item::Wood => "Wood",
             Item::Stone => "Stone",
-            Item::IronOre => "Iron Ore",
             Item::String => "String",
             Item::Stick => "Stick",
-            Item::StoneAxe => "Stone Axe",
-            Item::StonePickaxe => "Stone Pickaxe",
             Item::Torch => "Torch",
-            Item::Rope => "Rope",
-            Item::IronBar => "Iron Bar",
         }
     }
 
@@ -62,14 +52,9 @@ impl App {
         let items = [
             Item::Wood,
             Item::Stone,
-            Item::IronOre,
             Item::String,
             Item::Stick,
-            Item::StoneAxe,
-            Item::StonePickaxe,
             Item::Torch,
-            Item::Rope,
-            Item::IronBar,
         ];
 
         for &item in &items {
@@ -78,20 +63,8 @@ impl App {
 
         // Define crafting recipes
         let recipes = vec![
-            // Stone Axe: 2x Stone + 1x Stick
-            (vec![(Item::Stone, 2), (Item::Stick, 1)], Item::StoneAxe, 1),
-            // Stone Pickaxe: 3x Stone + 2x Stick
-            (
-                vec![(Item::Stone, 3), (Item::Stick, 2)],
-                Item::StonePickaxe,
-                1,
-            ),
             // Torch: 1x Stick + 1x String
             (vec![(Item::Stick, 1), (Item::String, 1)], Item::Torch, 4),
-            // Rope: 3x String
-            (vec![(Item::String, 3)], Item::Rope, 1),
-            // Iron Bar: 2x Iron Ore
-            (vec![(Item::IronOre, 2)], Item::IronBar, 1),
         ];
 
         Self {
@@ -231,7 +204,7 @@ fn ui(f: &mut Frame, app: &App) {
     // Create a block for the entire app
     let block = Block::default()
         .borders(Borders::ALL)
-        .title(" Crafting Demo ")
+        .title(Line::from(" Crafting Demo "))
         .title_alignment(Alignment::Center);
 
     // Create two columns
@@ -280,7 +253,9 @@ fn render_inventory(f: &mut Frame, app: &App, area: Rect) {
         },
     );
 
-    let block = Block::default().borders(Borders::ALL).title(" Inventory ");
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .title(Line::from(" Inventory "));
 
     let items_list: Vec<ListItem> = items
         .iter()
@@ -325,7 +300,7 @@ fn render_inventory(f: &mut Frame, app: &App, area: Rect) {
 fn render_recipes(f: &mut Frame, app: &App, area: Rect) {
     let block = Block::default()
         .borders(Borders::ALL)
-        .title(" Crafting Recipes ");
+        .title(Line::from(" Crafting Recipes "));
 
     let inner_area = block.inner(area);
     f.render_widget(block, area);
