@@ -9,20 +9,15 @@ use hecs::World;
 
 /// Centralized combat state management to ensure consistency
 /// across all systems and prevent state desynchronization
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum CombatState {
     /// Not in combat, no enemies nearby
+    #[default]
     Idle,
     /// Combat is active, enemies are nearby
     Active,
     /// Combat just ended this tick (transitional state)
     JustEnded,
-}
-
-impl Default for CombatState {
-    fn default() -> Self {
-        Self::Idle
-    }
 }
 
 /// Centralized manager for all combat state transitions

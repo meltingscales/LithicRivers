@@ -117,7 +117,7 @@ pub fn handle_crafting_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dy
     }
 
     // Don't process movement keys in crafting panel
-    if app.ui.keybinds.matches("movement", "MOVE_NORTH", &key)
+    Ok(app.ui.keybinds.matches("movement", "MOVE_NORTH", &key)
         || app.ui.keybinds.matches("movement", "MOVE_SOUTH", &key)
         || app.ui.keybinds.matches("movement", "MOVE_WEST", &key)
         || app.ui.keybinds.matches("movement", "MOVE_EAST", &key)
@@ -127,10 +127,5 @@ pub fn handle_crafting_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dy
         || app.ui.keybinds.matches("movement", "MOVE_SOUTHEAST", &key)
         || app.ui.keybinds.matches("movement", "WAIT", &key)
         || app.ui.keybinds.matches("movement", "MOVE_UP", &key)
-        || app.ui.keybinds.matches("movement", "MOVE_DOWN", &key)
-    {
-        return Ok(true);
-    }
-
-    Ok(false)
+        || app.ui.keybinds.matches("movement", "MOVE_DOWN", &key))
 }

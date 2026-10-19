@@ -23,10 +23,10 @@ pub fn handle_multi_action_input(app: &mut App, key: KeyCode) -> Result<bool, Bo
             selected = selected.saturating_sub(1);
         }
 
-        if app.ui.keybinds.matches("movement", "MOVE_SOUTH", &key) {
-            if selected < actions.len().saturating_sub(1) {
-                selected += 1;
-            }
+        if app.ui.keybinds.matches("movement", "MOVE_SOUTH", &key)
+            && selected < actions.len().saturating_sub(1)
+        {
+            selected += 1;
         }
 
         if app.ui.keybinds.matches("ui", "MENU_ACTIVATE", &key) || key == KeyCode::Enter {

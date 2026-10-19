@@ -24,7 +24,7 @@ impl TargetTracker {
     pub fn add_targeting(&mut self, entity: Entity, target: Entity) {
         self.targeting_relationships
             .entry(target)
-            .or_insert_with(HashSet::new)
+            .or_default()
             .insert(entity);
     }
 

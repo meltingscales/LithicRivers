@@ -94,7 +94,6 @@ pub fn interaction_system(world: &mut World, res: &mut Resources, player_entity:
 
     if total_interactables == 0 {
         res.log("Nothing to interact with nearby.".to_string());
-        return;
     } else if total_interactables == 1 {
         // Single target - interact directly
         if !nearby_items.is_empty() {
@@ -392,14 +391,7 @@ fn simulate_dialogue_interaction(
 
         // Auto-select first valid choice for testing
         if let Some((_, choice)) = filtered_choices.first() {
-            execute_dialogue_choice(
-                world,
-                res,
-                npc_entity,
-                player_entity,
-                choice,
-                &dialogue_tree,
-            );
+            execute_dialogue_choice(world, res, npc_entity, player_entity, choice, dialogue_tree);
         }
     }
 }
@@ -493,7 +485,7 @@ fn execute_dialogue_choice(
         }
 
         if !can_trade {
-            res.log(format!("You don't have the required items to trade!"));
+            res.log("You don't have the required items to trade!".to_string());
             return;
         }
     }

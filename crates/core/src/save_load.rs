@@ -392,6 +392,65 @@ pub fn load_game_msgpack<P: AsRef<Path>>(game: &mut crate::Game, path: P) -> Res
     data.apply_to_game(game)
 }
 
+// JSON helpers for debug
+pub fn save_game_json<P: AsRef<Path>>(game: &crate::Game, path: P) -> Result<()> {
+    let data = SaveData::from_game(game)?;
+    let data_json: SaveDataJson = data.into();
+    let f = File::create(path.as_ref()).with_context(|| format!("create {:?}", path.as_ref()))?;
+    let writer = BufWriter::new(f);
+    serde_json::to_writer_pretty(writer, &data_json).context("serialize json")?;
+    Ok(())
+}
+
+pub fn load_game_json<P: AsRef<Path>>(game: &mut crate::Game, path: P) -> Result<()> {
+    let f = File::open(path.as_ref()).with_context(|| format!("open {:?}", path.as_ref()))?;
+    let reader = BufReader::new(f);
+    let data_json: SaveDataJson = serde_json::from_reader(reader).context("deserialize json")?;
+    if data_json.version != SAVE_VERSION {
+        anyhow::bail!(
+            "Unsupported save version: {} (expected {})",
+            data_json.version,
+            SAVE_VERSION
+        );
+    }
+    let data: SaveData = data_json.into();
+    data.apply_to_game(game)
+}
+
+// Viewport-aware save/load functions for client use
+pub fn save_game_json_with_viewport<P: AsRef<Path>>(
+    game: &crate::Game,
+    path: P,
+    viewport: ViewportSave,
+) -> Result<ViewportSave> {
+    let data = SaveData::from_game_with_viewport(game, viewport)?;
+    let data_json: SaveDataJson = data.into();
+    let f = File::create(path.as_ref()).with_context(|| format!("create {:?}", path.as_ref()))?;
+    let writer = BufWriter::new(f);
+    serde_json::to_writer_pretty(writer, &data_json).context("serialize json")?;
+    Ok(data_json.viewport)
+}
+
+pub fn load_game_json_with_viewport<P: AsRef<Path>>(
+    game: &mut crate::Game,
+    path: P,
+) -> Result<ViewportSave> {
+    let f = File::open(path.as_ref()).with_context(|| format!("open {:?}", path.as_ref()))?;
+    let reader = BufReader::new(f);
+    let data_json: SaveDataJson = serde_json::from_reader(reader).context("deserialize json")?;
+    if data_json.version != SAVE_VERSION {
+        anyhow::bail!(
+            "Unsupported save version: {} (expected {})",
+            data_json.version,
+            SAVE_VERSION
+        );
+    }
+    let viewport = data_json.viewport.clone();
+    let data: SaveData = data_json.into();
+    data.apply_to_game(game)?;
+    Ok(viewport)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -730,63 +789,4 @@ mod tests {
         // Clean up test file
         let _ = std::fs::remove_file("test_viewport.json");
     }
-}
-
-// JSON helpers for debug
-pub fn save_game_json<P: AsRef<Path>>(game: &crate::Game, path: P) -> Result<()> {
-    let data = SaveData::from_game(game)?;
-    let data_json: SaveDataJson = data.into();
-    let f = File::create(path.as_ref()).with_context(|| format!("create {:?}", path.as_ref()))?;
-    let writer = BufWriter::new(f);
-    serde_json::to_writer_pretty(writer, &data_json).context("serialize json")?;
-    Ok(())
-}
-
-pub fn load_game_json<P: AsRef<Path>>(game: &mut crate::Game, path: P) -> Result<()> {
-    let f = File::open(path.as_ref()).with_context(|| format!("open {:?}", path.as_ref()))?;
-    let reader = BufReader::new(f);
-    let data_json: SaveDataJson = serde_json::from_reader(reader).context("deserialize json")?;
-    if data_json.version != SAVE_VERSION {
-        anyhow::bail!(
-            "Unsupported save version: {} (expected {})",
-            data_json.version,
-            SAVE_VERSION
-        );
-    }
-    let data: SaveData = data_json.into();
-    data.apply_to_game(game)
-}
-
-// Viewport-aware save/load functions for client use
-pub fn save_game_json_with_viewport<P: AsRef<Path>>(
-    game: &crate::Game,
-    path: P,
-    viewport: ViewportSave,
-) -> Result<ViewportSave> {
-    let data = SaveData::from_game_with_viewport(game, viewport)?;
-    let data_json: SaveDataJson = data.into();
-    let f = File::create(path.as_ref()).with_context(|| format!("create {:?}", path.as_ref()))?;
-    let writer = BufWriter::new(f);
-    serde_json::to_writer_pretty(writer, &data_json).context("serialize json")?;
-    Ok(data_json.viewport)
-}
-
-pub fn load_game_json_with_viewport<P: AsRef<Path>>(
-    game: &mut crate::Game,
-    path: P,
-) -> Result<ViewportSave> {
-    let f = File::open(path.as_ref()).with_context(|| format!("open {:?}", path.as_ref()))?;
-    let reader = BufReader::new(f);
-    let data_json: SaveDataJson = serde_json::from_reader(reader).context("deserialize json")?;
-    if data_json.version != SAVE_VERSION {
-        anyhow::bail!(
-            "Unsupported save version: {} (expected {})",
-            data_json.version,
-            SAVE_VERSION
-        );
-    }
-    let viewport = data_json.viewport.clone();
-    let data: SaveData = data_json.into();
-    data.apply_to_game(game)?;
-    Ok(viewport)
 }

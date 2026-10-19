@@ -10,7 +10,7 @@ pub fn handle_tutorial_skip_input(app: &mut App, key: KeyCode) -> Result<bool, B
     }
 
     // Check for SHIFT+Y (tutorial skip)
-    if app.ui.keybinds.matches("ui", "TUTORIAL_SKIP", &key.into()) {
+    if app.ui.keybinds.matches("ui", "TUTORIAL_SKIP", &key) {
         // Mark current step as completed and advance
         app.ui.tutorial_system.advance_step();
         return Ok(true);

@@ -279,6 +279,12 @@ impl SystemScheduler {
     }
 }
 
+impl Default for SystemScheduler {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 // System wrapper functions that adapt the existing system signatures
 fn mining_system_wrapper(world: &mut World, res: &mut Resources) -> Option<SystemResults> {
     let mining_success = crate::systems::mining_system(world, res);

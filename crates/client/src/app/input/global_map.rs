@@ -21,7 +21,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Error>>
                     app.panels.global_map.selected_marker_index = total_list_items - 1;
                 }
             }
-            return Ok(true);
+            Ok(true)
         }
         // Down arrow or numpad 2 - next marker
         KeyCode::Down | KeyCode::Char('2') => {
@@ -32,8 +32,8 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Error>>
                 app.panels.global_map.selected_marker_index =
                     (app.panels.global_map.selected_marker_index + 1) % total_list_items;
             }
-            return Ok(true);
+            Ok(true)
         }
-        _ => return Ok(false),
+        _ => Ok(false),
     }
 }

@@ -48,22 +48,19 @@ pub fn world_spawn_scraprare(
     let mut rng = game_world.new_rng(block_x, block_y, block_z);
     let random_num = rng.gen::<f64>();
 
-    match random_num {
-        0.0..0.90 => {
-            let _item = ecs_world.spawn((
-                Position {
-                    x: block_x,
-                    y: block_y,
-                    z: block_z,
-                },
-                DroppedItem {
-                    kind: ItemKind::Diamond,
-                    qty: 10,
-                },
-                SpriteRef::new("items", "diamond"),
-            ));
-        }
-        _ => {}
+    if let 0.0..0.90 = random_num {
+        let _item = ecs_world.spawn((
+            Position {
+                x: block_x,
+                y: block_y,
+                z: block_z,
+            },
+            DroppedItem {
+                kind: ItemKind::Diamond,
+                qty: 10,
+            },
+            SpriteRef::new("items", "diamond"),
+        ));
     }
 }
 
@@ -77,22 +74,19 @@ pub fn world_spawn_scrapcommon(
     let mut rng = game_world.new_rng(block_x, block_y, block_z);
     let random_num = rng.gen::<f64>();
 
-    match random_num {
-        0.0..0.50 => {
-            let _item = ecs_world.spawn((
-                Position {
-                    x: block_x,
-                    y: block_y,
-                    z: block_z,
-                },
-                DroppedItem {
-                    kind: ItemKind::ScrapElectronics,
-                    qty: 10,
-                },
-                SpriteRef::new("items", "scrap_electronics"),
-            ));
-        }
-        _ => {}
+    if let 0.0..0.50 = random_num {
+        let _item = ecs_world.spawn((
+            Position {
+                x: block_x,
+                y: block_y,
+                z: block_z,
+            },
+            DroppedItem {
+                kind: ItemKind::ScrapElectronics,
+                qty: 10,
+            },
+            SpriteRef::new("items", "scrap_electronics"),
+        ));
     }
 }
 
@@ -168,7 +162,7 @@ pub fn world_spawn_feraldog(
     dog_inventory.add(ItemKind::Leather, dog_rng.gen_range(0..=2));
     dog_inventory.add(ItemKind::Meat, dog_rng.gen_range(1..=3));
 
-    let dog = ecs_world.spawn((
+    ecs_world.spawn((
         Position { x, y, z },
         GameEntity,
         EntityKind::FeralDog,
@@ -179,7 +173,5 @@ pub fn world_spawn_feraldog(
         BlocksMovement,
         Combat::default(),
         dog_inventory,
-    ));
-
-    dog
+    ))
 }

@@ -210,10 +210,10 @@ impl Resources {
 
     /// Check if a chunk has been explored
     pub fn is_chunk_explored(&self, chunk_x: i64, chunk_y: i64, chunk_z: i64) -> bool {
-        self.explored_chunks
+        *self
+            .explored_chunks
             .get(&(chunk_x, chunk_y, chunk_z))
             .unwrap_or(&false)
-            .clone()
     }
 
     /// Update quest objectives based on current player inventory

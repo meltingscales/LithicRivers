@@ -45,7 +45,7 @@ pub fn render_body_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
                 )));
             }
             // Build ASCII from borrowed body
-            ascii_lines_opt = Some(build_body_ascii(&*body));
+            ascii_lines_opt = Some(build_body_ascii(&body));
         }
     }
     if list_lines.is_empty() {

@@ -75,3 +75,9 @@ impl GameConfig {
         self.config.source_label()
     }
 }
+
+impl Default for GameConfig {
+    fn default() -> Self {
+        Self::new()
+    }
+}

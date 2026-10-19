@@ -38,7 +38,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Error>>
                     app.panels.quests.selected_quest_index = quest_count - 1;
                 }
             }
-            return Ok(true);
+            Ok(true)
         }
         // Down arrow - next quest
         KeyCode::Down => {
@@ -65,7 +65,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Error>>
                 app.panels.quests.selected_quest_index =
                     (app.panels.quests.selected_quest_index + 1) % quest_count;
             }
-            return Ok(true);
+            Ok(true)
         }
         // Tab - switch between Active and Completed sections
         KeyCode::Tab => {
@@ -75,8 +75,8 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Error>>
             };
             // Reset selection when switching sections
             app.panels.quests.selected_quest_index = 0;
-            return Ok(true);
+            Ok(true)
         }
-        _ => return Ok(false),
+        _ => Ok(false),
     }
 }

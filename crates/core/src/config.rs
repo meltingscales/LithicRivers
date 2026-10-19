@@ -191,3 +191,9 @@ impl ConfigManager {
         out
     }
 }
+
+impl Default for ConfigManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}

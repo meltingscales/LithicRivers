@@ -157,13 +157,12 @@ impl SpriteLoader {
 
         // Load metadata from embedded assets
         let metadata: SpriteMetadata = serde_json::from_str(&Self::get_embedded_text(&data_path))
-            .expect(
-                format!(
+            .unwrap_or_else(|_| {
+                panic!(
                     "Failed to parse embedded data.json at {}",
                     data_path.as_str()
                 )
-                .as_str(),
-            );
+            });
         // Load sprite lines from embedded assets
         let content = Self::get_embedded_text(&sprites_path);
         let lines: Vec<&str> = content.lines().collect();
@@ -209,13 +208,11 @@ impl SpriteLoader {
                 art12x8_sprites.push(text);
             } else {
                 // Panic if mood files are expected but missing
-                if category == "npcs" || category == "entities" {
-                    if metadata.has_emotion_states {
-                        panic!(
-                            "Missing required mood portrait '{}' for sprite '{}::{}'",
-                            mood_file, category, sprite_name
-                        );
-                    }
+                if (category == "npcs" || category == "entities") && metadata.has_emotion_states {
+                    panic!(
+                        "Missing required mood portrait '{}' for sprite '{}::{}'",
+                        mood_file, category, sprite_name
+                    );
                 }
             }
         }
@@ -269,7 +266,7 @@ impl SpriteLoader {
             Some(sprite_data.art12x8_sprites[mood_index].clone())
         } else {
             // Fallback to main portrait if mood-specific one doesn't exist
-            sprite_data.art12x8_sprites.get(0).cloned()
+            sprite_data.art12x8_sprites.first().cloned()
         }
     }
 
@@ -383,19 +380,19 @@ fn sprite_block_for_scale(sd: &SpriteData, scale: Scale) -> &str {
     match scale {
         Scale::Small => sd
             .sprites
-            .get(0)
+            .first()
             .map(|s| s.as_str())
             .unwrap_or_else(|| panic!("Missing sprite for scale Small: {}", sd.name)),
         Scale::Medium => sd.sprites.get(1).map(|s| s.as_str()).unwrap_or_else(|| {
             sd.sprites
-                .get(0)
+                .first()
                 .map(|s| s.as_str())
                 .unwrap_or_else(|| panic!("Missing sprite for scale Medium: {}", sd.name))
         }),
         Scale::Large => sd.sprites.get(2).map(|s| s.as_str()).unwrap_or_else(|| {
             sd.sprites.get(1).map(|s| s.as_str()).unwrap_or_else(|| {
                 sd.sprites
-                    .get(0)
+                    .first()
                     .map(|s| s.as_str())
                     .unwrap_or_else(|| panic!("Missing sprite for scale Large: {}", sd.name))
             })
