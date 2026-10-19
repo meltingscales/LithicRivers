@@ -1,10 +1,10 @@
-# Spec Delta
+# core-test-fixtures Specification
 
 ## Purpose
 
 Lets tests build a minimal, deterministic game scenario with only the entities they place, then drive it tick by tick and inspect the result.
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: Minimal scenario
 A fixture built from a seed SHALL contain exactly one player and no other entities unless the test adds them. The player's position SHALL be settable.
@@ -28,11 +28,15 @@ A fixture SHALL allow adding sheep, feral dogs, NPCs, and dropped items at given
 - **THEN** after building, the returned handle resolves to a feral dog at (2, 0, 0) with full health
 
 ### Requirement: Player loadout
-A fixture SHALL allow replacing the player's inventory with a given item list.
+A fixture SHALL allow replacing the player's inventory with a given item list and setting the player's auto-pickup flag, so tests do not depend on config defaults.
 
 #### Scenario: Empty inventory
 - **WHEN** a test sets the player's inventory to empty
 - **THEN** the built game's player inventory contains no items
+
+#### Scenario: Auto-pickup off
+- **WHEN** a test turns auto-pickup off and the player walks onto a dropped item
+- **THEN** the item stays on the ground and the inventory is unchanged
 
 ### Requirement: Driving the game
 A built fixture SHALL let a test queue a player action (move, mine, mine at, interact) and run one or more ticks, returning what happened on each tick.
