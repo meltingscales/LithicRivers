@@ -2,7 +2,7 @@ use anyhow::Result;
 use rodio::{Decoder, OutputStream, Sink, Source};
 use std::collections::HashMap;
 use std::io::{BufReader, Cursor};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use rust_embed::RustEmbed;
 
@@ -43,7 +43,7 @@ pub struct AudioManager {
 
 #[allow(dead_code)]
 impl AudioManager {
-    fn read_embedded_bytes(path: &PathBuf) -> Option<Vec<u8>> {
+    fn read_embedded_bytes(path: &Path) -> Option<Vec<u8>> {
         // Find the first occurrence of "assets/" in the path and use the suffix
         let path_str = path.to_string_lossy();
         if let Some(idx) = path_str.find("assets/") {

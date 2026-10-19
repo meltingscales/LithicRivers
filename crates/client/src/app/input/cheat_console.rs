@@ -5,11 +5,14 @@ use lithicrivers_core::components::Position;
 use std::collections::HashMap;
 use std::error::Error;
 
+/// Handler invoked with the app and the command's arguments
+pub type CommandHandler = fn(&mut App, &[&str]) -> Result<(), Box<dyn Error>>;
+
 /// Command descriptor with name, description, and handler
 pub struct Command {
     pub name: &'static str,
     pub description: &'static str,
-    pub handler: fn(&mut App, &[&str]) -> Result<(), Box<dyn Error>>,
+    pub handler: CommandHandler,
 }
 
 /// Registry of all available commands

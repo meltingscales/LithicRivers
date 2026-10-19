@@ -17,24 +17,20 @@ pub fn world_spawn_treasurerare(
     game_world: &GameWorld,
 ) {
     let mut rng = game_world.new_rng(block_x, block_y, block_z);
-    match rng.gen::<f64>() {
-        //high chance for an acorn stack
-        0.05..=1.00 => {
-            let _item = ecs_world.spawn((
-                Position {
-                    x: block_x,
-                    y: block_y,
-                    z: block_z,
-                },
-                DroppedItem {
-                    kind: ItemKind::Acorn,
-                    qty: 10,
-                },
-                SpriteRef::new("items", "acorn"),
-            ));
-        }
-        //low chance for nothing
-        _ => {}
+    // High chance for an acorn stack, low chance for nothing
+    if (0.05..=1.00).contains(&rng.gen::<f64>()) {
+        ecs_world.spawn((
+            Position {
+                x: block_x,
+                y: block_y,
+                z: block_z,
+            },
+            DroppedItem {
+                kind: ItemKind::Acorn,
+                qty: 10,
+            },
+            SpriteRef::new("items", "acorn"),
+        ));
     }
 }
 
