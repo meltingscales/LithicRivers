@@ -1,9 +1,11 @@
 /// Utilities for spawning items and enemies or NPCs.
 use crate::{
     components::{
-        BlocksMovement, Combat, DroppedItem, EntityKind, FeralDog, GameEntity, Glyph, Health,
-        Inventory, ItemKind, Position, SpriteRef,
+        BlocksMovement, Combat, Dialogue, DroppedItem, EntityKind, FeralDog, GameEntity, Glyph,
+        Health, Inventory, ItemKind, NPCMood, Position, QuestTutorialBrokenAndroid, Sheep,
+        SpriteRef,
     },
+    dialogue::DialogueNodeID,
     world::GameWorld,
 };
 use rand::prelude::*;
@@ -169,5 +171,44 @@ pub fn world_spawn_feraldog(
         BlocksMovement,
         Combat::default(),
         dog_inventory,
+    ))
+}
+
+/// Spawn a sheep at the specified position
+pub fn world_spawn_sheep(ecs_world: &mut hecs::World, x: i64, y: i64, z: i64) -> hecs::Entity {
+    ecs_world.spawn((
+        Position { x, y, z },
+        GameEntity,
+        EntityKind::Sheep,
+        Sheep,
+        Health::new(50), // Sheep have 50 HP
+        Glyph('s'),
+        SpriteRef::new("entities", "sheep"),
+        BlocksMovement,
+    ))
+}
+
+/// Spawn the tutorial quest NPC (Broken SapienCorp Android) at the specified position
+pub fn world_spawn_tutorial_android(
+    ecs_world: &mut hecs::World,
+    x: i64,
+    y: i64,
+    z: i64,
+) -> hecs::Entity {
+    ecs_world.spawn((
+        Position { x, y, z },
+        GameEntity,
+        EntityKind::QuestTutorialBrokenAndroid,
+        QuestTutorialBrokenAndroid,
+        Health::new(100),
+        Glyph('Q'),
+        SpriteRef::new("entities", "quest_tutorial_broken_android"),
+        BlocksMovement,
+        Dialogue {
+            current_mood: NPCMood::Happy,
+            met_before: false,
+            current_dialogue_id: Some(DialogueNodeID::Start), // Start with tutorial broken android dialogue tree
+            name: "Broken SapienCorp Android".to_string(),
+        },
     ))
 }

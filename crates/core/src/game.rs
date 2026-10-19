@@ -1,9 +1,8 @@
 use crate::components::{
-    BlocksMovement, Combat, Dialogue, DroppedItem, Energy, EntityKind, FeralDog, FogOfWar,
-    GameEntity, Glyph, Health, Inventory, ItemKind, LightSource, NPCMood, Player, Position,
-    QuestTutorialBrokenAndroid, Sheep, SpriteRef,
+    BlocksMovement, Combat, DroppedItem, Energy, EntityKind, FeralDog, FogOfWar, GameEntity, Glyph,
+    Health, Inventory, ItemKind, LightSource, Player, Position, QuestTutorialBrokenAndroid,
+    SpriteRef,
 };
-use crate::dialogue::DialogueNodeID;
 use crate::model::body::Body;
 use crate::resources::Resources;
 use crate::spawn_utils;
@@ -31,12 +30,28 @@ bitflags! {
 }
 
 impl Game {
-    pub fn new(seed: u64) -> Self {
-        let mut world = World::new();
-        let mut res = Resources::new(seed);
+    /// A game with only the player, at `player_pos`: no NPCs, animals, items or structures,
+    /// and no tick run yet. Used by `new` and by test fixtures.
+    pub fn new_empty(seed: u64, player_pos: Position) -> Self {
+        Self::with_player(seed, Some(player_pos))
+    }
 
-        // Determine starting position from cached config
-        let [sx, sy, sz] = res.config.default_player_position;
+    /// Resources plus the player with the starting inventory. `None` uses the configured
+    /// default player position.
+    fn with_player(seed: u64, player_pos: Option<Position>) -> Self {
+        let mut world = World::new();
+        let res = Resources::new(seed);
+
+        let [dx, dy, dz] = res.config.default_player_position;
+        let Position {
+            x: sx,
+            y: sy,
+            z: sz,
+        } = player_pos.unwrap_or(Position {
+            x: dx,
+            y: dy,
+            z: dz,
+        });
 
         // Note: viewport is now managed by client UI, not core game
         // Core game no longer sets generation Z - let client manage viewport
@@ -76,20 +91,27 @@ impl Game {
             FogOfWar::default(),
             LightSource::default(),
         ));
+
+        Self {
+            world,
+            res,
+            scheduler: SystemScheduler::new(),
+        }
+    }
+
+    pub fn new(seed: u64) -> Self {
+        let Self {
+            mut world, mut res, ..
+        } = Self::with_player(seed, None);
+
+        // Determine starting position from cached config
+        let [sx, sy, sz] = res.config.default_player_position;
+
         // Note: player_entity field will be removed - use ECS queries instead
         // Spawn several StumblingSheep near the player for visibility
         let sheep_positions = [(sx + 2, sy + 2, sz), (sx + 3, sy, sz), (sx, sy + 3, sz)];
         for (x, y, z) in sheep_positions {
-            world.spawn((
-                Position { x, y, z },
-                GameEntity,
-                EntityKind::Sheep,
-                Sheep,
-                Health::new(50), // Sheep have 50 HP
-                Glyph('s'),
-                SpriteRef::new("entities", "sheep"),
-                BlocksMovement,
-            ));
+            spawn_utils::world_spawn_sheep(&mut world, x, y, z);
         }
 
         //spawn 1 feral dog and immediately kill it next to an npc for testing
@@ -134,26 +156,7 @@ impl Game {
         }
 
         // Spawn single QuestTesty NPC for dialogue testing
-        world.spawn((
-            Position {
-                x: 14,
-                y: 15,
-                z: -19,
-            },
-            GameEntity,
-            EntityKind::QuestTutorialBrokenAndroid,
-            QuestTutorialBrokenAndroid,
-            Health::new(100),
-            Glyph('Q'),
-            SpriteRef::new("entities", "quest_tutorial_broken_android"),
-            BlocksMovement,
-            Dialogue {
-                current_mood: NPCMood::Happy,
-                met_before: false,
-                current_dialogue_id: Some(DialogueNodeID::Start), // Start with tutorial broken android dialogue tree
-                name: "Broken SapienCorp Android".to_string(),
-            },
-        ));
+        spawn_utils::world_spawn_tutorial_android(&mut world, 14, 15, -19);
 
         // Deterministically spawn a few Logs near the player (~5 tiles away)
         Self::sprinkle_items_random(
@@ -966,6 +969,77 @@ impl Game {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Every entity's kind, position and key state, sorted, for golden comparisons.
+    fn entity_signature(game: &Game) -> Vec<String> {
+        let mut sig: Vec<String> = Vec::new();
+        for (entity, pos) in game.world.query::<&Position>().iter() {
+            let kind = game
+                .world
+                .get::<&EntityKind>(entity)
+                .map(|k| format!("{:?}", *k))
+                .unwrap_or_default();
+            let health = game
+                .world
+                .get::<&Health>(entity)
+                .map(|h| format!(" hp={}/{}", h.current, h.max))
+                .unwrap_or_default();
+            let item = game
+                .world
+                .get::<&DroppedItem>(entity)
+                .map(|d| format!(" item={:?}x{}", d.kind, d.qty))
+                .unwrap_or_default();
+            let inv = game
+                .world
+                .get::<&Inventory>(entity)
+                .map(|i| {
+                    let items: Vec<String> = i
+                        .slots
+                        .iter()
+                        .map(|s| format!("{:?}x{}", s.kind, s.qty))
+                        .collect();
+                    format!(" inv=[{}]", items.join(","))
+                })
+                .unwrap_or_default();
+            sig.push(format!(
+                "{kind} ({},{},{}){health}{item}{inv}",
+                pos.x, pos.y, pos.z
+            ));
+        }
+        sig.sort();
+        sig
+    }
+
+    #[test]
+    fn new_empty_has_only_the_player() {
+        let game = Game::new_empty(7, Position { x: 3, y: -2, z: 0 });
+        assert_eq!(game.res.time.tick, 0);
+        assert_eq!(entity_signature(&game).len(), 1);
+        assert_eq!(
+            game.get_player_position(),
+            Some(Position { x: 3, y: -2, z: 0 })
+        );
+        assert!(game.res.pending_structures.is_empty());
+    }
+
+    /// Locks down what `Game::new` spawns (after its first tick) so refactors can't change
+    /// the starting world. If a change is intentional, regenerate the golden file from the
+    /// "actual" lines this test prints.
+    #[test]
+    fn game_new_matches_golden_entities() {
+        let game = Game::new(12345);
+        assert_eq!(game.res.time.tick, 1);
+        let actual = entity_signature(&game);
+        let expected: Vec<&str> = include_str!("testdata/game_new_seed_12345.txt")
+            .lines()
+            .collect();
+        if actual != expected {
+            panic!(
+                "Game::new(12345) entities changed. actual:\n{}",
+                actual.join("\n")
+            );
+        }
+    }
 
     #[test]
     fn test_lazy_structure_loading() {

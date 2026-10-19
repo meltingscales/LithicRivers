@@ -290,27 +290,16 @@ pub fn pickup_system(world: &mut World, res: &mut Resources) {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use crate::components::ItemKind;
+    use crate::intent::PlayerAction;
+    use crate::test_support::TestWorld;
     use crate::tiles::TileKind;
 
     fn chop_tree_drops(seed: u64) -> Vec<(ItemKind, u32)> {
-        let mut world = World::new();
-        let mut res = Resources::new(seed);
-        let (x, y, z) = (10, -4, 0);
-        res.world_state
-            .world
-            .set_tile_cached(x, y, z, TileKind::Tree);
-        res.player_state.intent.action = Some(PlayerAction::MineAt { x, y, z });
-
-        assert!(mining_system(&mut world, &mut res));
-
-        let mut drops: Vec<(ItemKind, u32)> = world
-            .query::<&DroppedItem>()
-            .iter()
-            .map(|(_, d)| (d.kind, d.qty))
-            .collect();
-        drops.sort_by_key(|(kind, _)| format!("{:?}", kind));
-        drops
+        let mut game = TestWorld::new(seed).tile(1, 0, 0, TileKind::Tree).build();
+        game.act(PlayerAction::MineAt { x: 1, y: 0, z: 0 });
+        game.tick();
+        game.items_at(1, 0, 0)
     }
 
     #[test]
@@ -320,16 +309,47 @@ mod tests {
             assert_eq!(
                 first,
                 chop_tree_drops(seed),
-                "seed {} not deterministic",
-                seed
+                "seed {seed} not deterministic"
             );
+            assert_eq!(first.len(), 2, "expected logs and acorns: {first:?}");
             for (kind, qty) in first {
                 match kind {
                     ItemKind::Log => assert!((2..=3).contains(&qty)),
                     ItemKind::Acorn => assert!((1..=3).contains(&qty)),
-                    other => panic!("unexpected drop {:?}", other),
+                    other => panic!("unexpected drop {other:?}"),
                 }
             }
         }
+    }
+
+    fn walk_onto_logs(auto_pickup: bool) -> crate::test_support::TestGame {
+        let mut world = TestWorld::new(3)
+            .fill((-3, -3, 0), (3, 3, 0), TileKind::Grass)
+            .inventory(&[])
+            .auto_pickup(auto_pickup);
+        world.item(1, 0, 0, ItemKind::Log, 4);
+        let mut game = world.build();
+        game.act(PlayerAction::Move {
+            dx: 1,
+            dy: 0,
+            dz: 0,
+        });
+        game.tick();
+        assert_eq!(game.player_pos().x, 1);
+        game
+    }
+
+    #[test]
+    fn walking_onto_an_item_picks_it_up() {
+        let game = walk_onto_logs(true);
+        assert_eq!(game.player_inventory(), vec![(ItemKind::Log, 4)]);
+        assert!(game.items_at(1, 0, 0).is_empty());
+    }
+
+    #[test]
+    fn auto_pickup_off_leaves_the_item() {
+        let game = walk_onto_logs(false);
+        assert!(game.player_inventory().is_empty());
+        assert_eq!(game.items_at(1, 0, 0), vec![(ItemKind::Log, 4)]);
     }
 }
