@@ -1,0 +1,37 @@
+---
+source: crates/client/src/snapshot_tests.rs
+expression: "String::from_utf8(out).unwrap()"
+input_file: scripts/snapshots/modal-corpse-loot.txt
+---
+=== screen corpse-loot ===
+                                            LithicRivers
+##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,,         ┌MODES─────────────────┐
+###vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#######,,       │  ------ - - -- - FOG │
+####vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#     #,,,,     └──────────────────────┘
+#####vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#     #,,,,,,,  ┌Inventory─────────────┐
+######vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#  /  Dv,,,,,,,,│Nail x10              │
+#######vvvvvvvv┌────────────────────────── Looting Corpse ──────────────────────────┐              │
+########vvvvvvv│┌ Corpse Items ──────────────────┐┌ Your Items ────────────────────┐│              │
+#########vvvvvv││ 1 x Leather                    ││10 x Nail                       ││              │
+##########vvvvv││ 2 x Meat                       ││ 1 x Acorn                      ││              │
+###########vvvv││                                ││ 3 x Log                        ││2             │
+#############vv││                                ││ 2 x Stick                      ││ectronics x3  │
+##############v││                                ││ 3 x Torch                      ││              │
+###############││                                ││ 2 x String                     ││              │
+###############││                                ││ 3 x Scrap Electronics          ││              │
+###############││                                ││                                ││              │
+###############││                                ││                                ││              │
+###############││                                ││                                ││              │
+###############││                                ││                                ││              │
+###############││                                ││                                ││──────────────┘
+┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
+│[0] Quest marker added: SapienCorp Bunker       ││                                ││              │
+│[0] Player moved to bunker spawn at (11, 11, -19)| Enter: Take Item | Esc: Close──┘│              │
+│[0] Loading structure 'sapiencorp-factory.lrstructure' at (200, 1609, 1) for chunk (3, 25, 1)     │
+│[0] Quest marker added: SapienCorp Factory                                                        │
+│[1] Started looting corpse                                                                        │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Menu │ Help │ Credits │ Qu│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===

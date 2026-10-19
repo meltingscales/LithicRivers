@@ -1,0 +1,37 @@
+---
+source: crates/client/src/snapshot_tests.rs
+expression: "String::from_utf8(out).unwrap()"
+input_file: scripts/snapshots/tab-10-credits.txt
+---
+=== screen credits ===
+                                            LithicRivers
+┌Credits───────────────────────────────────────────────────────────────────────────────────────────┐
+│Version: <build>│
+│STEAM_APP_ID: 3940720                                                                             │
+│Git Branch: <build>│
+│Git Commit: <build>│
+│                                                                                                  │
+│Thank you to Peter Brittain for making asciimatics. https://github.com/peterbrittain/asciimatics  │
+│asciimatics was originally used for the Python version of this game, but was ported to ratatui for│
+│the Rust version. Rust was used for performance reasons. Both asciimatics and ratatui are amazing │
+│projects.                                                                                         │
+│                                                                                                  │
+│Thank you to Kaya for supplying this game's music.                                                │
+│                                                                                                  │
+│Thank you to gadgetgo for the idea for the game's combat system.                                  │
+│                                                                                                  │
+│Thank you to "Acrids swag" for gameplay ideas.                                                    │
+│                                                                                                  │
+│                                                                                                  │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
+│[0] Loading structure 'sapiencorp-bunker.lrstructure' at (10, 10, 1) for chunk (0, 0, 1)          │
+│[0] Quest marker added: SapienCorp Bunker                                                         │
+│[0] Player moved to bunker spawn at (11, 11, -19)                                                 │
+│[0] Loading structure 'sapiencorp-factory.lrstructure' at (200, 1609, 1) for chunk (3, 25, 1)     │
+│[0] Quest marker added: SapienCorp Factory                                                        │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Menu │ Help │ Credits │ Qu│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===

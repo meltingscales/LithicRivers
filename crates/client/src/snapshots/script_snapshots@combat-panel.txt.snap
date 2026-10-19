@@ -1,0 +1,197 @@
+---
+source: crates/client/src/snapshot_tests.rs
+expression: "String::from_utf8(out).unwrap()"
+input_file: scripts/snapshots/combat-panel.txt
+---
+=== screen combat ===
+                                            LithicRivers
+┌──────────────────── Combat ────────────────────┐#vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+│┌HED──┐┌TOR──┐┌PWR──┐┌LAM─┐┌RAM──┐┌LLG──┐┌RLG──┐│##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+││ 100 ││ 100 ││ 21  ││ GON││ 100 ││ 100 ││ 43  ││##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+│└─────┘└─────┘└─────┘└────┘└─────┘└─────┘└─────┘│###vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+│┌──────────────────────┐┌──────────────────────┐│###vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+││     xxxxxxxxxxxx     ││     xxxxxxxxxxxx     ││###vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+││     xxxxxxxxxxxx     ││     xxxxxxxxxxxx     ││####vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+││     xxxxxxxxxxxx     ││     xxxxxxxxxxxx     ││####vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+││┌Enemy 7─────────────┐││┌Enemy 8─────────────┐││#####vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+││└────────────────────┘││└────────────────────┘││#####vvvvvvvvvvvvvvvvvvvv*vvvvvvvvvvvvvvvvvvvvvvvv
+││                      ││                      ││######vvvvvvvvvvvvvvvvvvvffvvvvvvvvvvvvvvvvvvvvvvv
+│└──────────────────────┘└──────────────────────┘│######vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+│1: Melee - 0E - 5t                ┌Action Queue┐│#######vvvvvvvvvvvvvvvvvvvvvfvvvvvvvvvvvvvvvvvvvvv
+│2: Fireball (AoE) - 40E - 12t     │Current:    ││#######vvvvvvvvvvvvvvvvvvvvvfvvvvvvvvvvvvvvvvvvvvv
+│3: Tackle - 20E - 10t             │> Ready     ││#######vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+│4: Escape - 20E - 15t             │            ││########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+│           ▼ More below           └────────────┘│########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+│[←→] Target | [↑↓] Move | [C] Clear | [5] Wait |│#########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+└────────────────────────────────────────────────┘#########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
+│[0] Loading structure 'sapiencorp-bunker.lrstructure' at (10, 10, 1) for chunk (0, 0, 1)          │
+│[0] Quest marker added: SapienCorp Bunker                                                         │
+│[0] Player moved to bunker spawn at (11, 11, -19)                                                 │
+│[0] Loading structure 'sapiencorp-factory.lrstructure' at (200, 1609, 1) for chunk (3, 25, 1)     │
+│[0] Quest marker added: SapienCorp Factory                                                        │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Menu │ Help │ Credits │ Qu│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===
+=== state 9 ===
+{
+  "version": 1,
+  "seed": 12345,
+  "tick": 401,
+  "screen": "MainUI",
+  "tab": "World",
+  "modal": null,
+  "player": {
+    "position": [
+      -16,
+      -16,
+      0
+    ],
+    "body": [
+      {
+        "part": "Head",
+        "state": "Functional",
+        "integrity": 100
+      },
+      {
+        "part": "LeftArm",
+        "state": "Missing",
+        "integrity": 0
+      },
+      {
+        "part": "LeftLeg",
+        "state": "Functional",
+        "integrity": 100
+      },
+      {
+        "part": "PowerSource",
+        "state": "Damaged",
+        "integrity": 21
+      },
+      {
+        "part": "RightArm",
+        "state": "Functional",
+        "integrity": 100
+      },
+      {
+        "part": "RightLeg",
+        "state": "Damaged",
+        "integrity": 43
+      },
+      {
+        "part": "Torso",
+        "state": "Functional",
+        "integrity": 100
+      }
+    ],
+    "inventory": [
+      {
+        "item": "Acorn",
+        "qty": 1
+      },
+      {
+        "item": "Log",
+        "qty": 3
+      },
+      {
+        "item": "Nail",
+        "qty": 10
+      },
+      {
+        "item": "ScrapElectronics",
+        "qty": 3
+      },
+      {
+        "item": "Stick",
+        "qty": 2
+      },
+      {
+        "item": "String",
+        "qty": 2
+      },
+      {
+        "item": "Torch",
+        "qty": 3
+      }
+    ]
+  },
+  "combat": {
+    "active": true,
+    "enemies": [
+      {
+        "kind": "FeralDog",
+        "position": [
+          -16,
+          -15,
+          0
+        ],
+        "distance": 1,
+        "health": 80
+      },
+      {
+        "kind": "FeralDog",
+        "position": [
+          -15,
+          -15,
+          0
+        ],
+        "distance": 1,
+        "health": 80
+      }
+    ]
+  },
+  "nearby": [
+    {
+      "kind": "FeralDog",
+      "position": [
+        -16,
+        -15,
+        0
+      ],
+      "distance": 1,
+      "health": 80
+    },
+    {
+      "kind": "FeralDog",
+      "position": [
+        -15,
+        -15,
+        0
+      ],
+      "distance": 1,
+      "health": 80
+    },
+    {
+      "kind": "FeralDog",
+      "position": [
+        -13,
+        -13,
+        0
+      ],
+      "distance": 3,
+      "health": 80
+    },
+    {
+      "kind": "FeralDog",
+      "position": [
+        -13,
+        -12,
+        0
+      ],
+      "distance": 4,
+      "health": 80
+    }
+  ],
+  "messages": [
+    "[0] A corpse remains...",
+    "[0] Enemy defeated!",
+    "[0] Loading structure 'sapiencorp-bunker.lrstructure' at (10, 10, 1) for chunk (0, 0, 1)",
+    "[0] Quest marker added: SapienCorp Bunker",
+    "[0] Player moved to bunker spawn at (11, 11, -19)",
+    "[0] Loading structure 'sapiencorp-factory.lrstructure' at (200, 1609, 1) for chunk (3, 25, 1)",
+    "[0] Quest marker added: SapienCorp Factory"
+  ]
+}
+=== end state ===

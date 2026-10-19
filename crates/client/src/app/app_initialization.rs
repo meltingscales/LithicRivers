@@ -21,7 +21,10 @@ impl App {
 
     /// App for scripted runs: no audio device and a fake clock that only moves when advanced.
     pub fn new_headless(seed: u64) -> App {
-        Self::build(seed, audio::AudioManager::disabled(), Clock::fake())
+        let mut app = Self::build(seed, audio::AudioManager::disabled(), Clock::fake());
+        // The real path contains the working directory and today's date; keep output reproducible
+        app.logging.log_full_path = "(hidden in headless runs)".to_string();
+        app
     }
 
     fn build(seed: u64, mut audio: audio::AudioManager, clock: Clock) -> App {

@@ -1,6 +1,6 @@
 ---
 name: play-headless
-description: Run, test, or inspect the LithicRivers game client without a terminal using headless scripts (just client-blind). Use when checking a change in the running game, reproducing or demonstrating a bug, looking at what a screen or panel shows, or verifying game state after actions. Never launch the interactive client.
+description: Run, test, or inspect the LithicRivers game client without a terminal using headless scripts (just client-blind), and maintain the UI snapshot tests in scripts/snapshots. Use when checking a change in the running game, reproducing or demonstrating a bug, looking at what a screen or panel shows, verifying game state after actions, or when a snapshot test fails or a UI change needs new snapshots. Never launch the interactive client.
 ---
 
 # Play the game headless
@@ -57,3 +57,12 @@ state chopped
 ```
 
 `--seed` and `--size` on the command line override the script (`cargo run -q -p lithicrivers-client --bin lithicrivers-client -- --script s.txt --seed 7`).
+
+## Snapshot tests
+
+`cargo test` runs every `scripts/snapshots/*.txt` and compares its output with `crates/client/src/snapshots/*.snap`.
+
+- New screen to guard: add a script there (`seed`, `size 100x30`, `skip-splash`, an `expect-text`, then `screen`/`state`), run `cargo test -p lithicrivers-client`, and accept the pending snapshot with `cargo insta accept` after reading it.
+- A snapshot failed: read the diff. Regression: fix the code. Intended change: `cargo insta review` / `cargo insta accept`, or `INSTA_UPDATE=always cargo test -p lithicrivers-client`. Commit the `.snap` changes with the code change and explain them in the PR.
+- Reproduced a bug: keep the script in `scripts/agent/bugs/` and add a test in `crates/client/src/headless.rs` that runs it (see the existing bug tests there).
+

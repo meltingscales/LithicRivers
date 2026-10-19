@@ -1,0 +1,8 @@
+# Cheat console open with a partly typed command
+seed 12345
+size 100x30
+skip-splash
+key ui.OPEN_COMMAND_MENU
+type "tp 1"
+expect-text "Cheat Console"
+screen cheat-console
