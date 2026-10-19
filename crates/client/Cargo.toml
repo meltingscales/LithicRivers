@@ -1,7 +1,9 @@
 [package]
 name = "lithicrivers-client"
 version = "0.1.0"
-edition = "2021"
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
 
 [dependencies]
 ratatui = "0.26"

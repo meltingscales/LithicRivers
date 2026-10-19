@@ -137,11 +137,11 @@ pub fn is_tile_illuminated(
 /// Check if a tile has been visited by the player
 pub fn is_tile_visited(world: &World, tile_x: i64, tile_y: i64, tile_z: i64) -> bool {
     // Find the player entity with fog of war
-    for (_entity, (fog_of_war, _player)) in world.query::<(&FogOfWar, &Player)>().iter() {
-        return fog_of_war.is_visited(tile_x, tile_y, tile_z);
-    }
-
-    false
+    world
+        .query::<(&FogOfWar, &Player)>()
+        .iter()
+        .next()
+        .is_some_and(|(_, (fog_of_war, _))| fog_of_war.is_visited(tile_x, tile_y, tile_z))
 }
 
 /// Get the fog of war state for a tile
