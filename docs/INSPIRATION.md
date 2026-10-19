@@ -24,3 +24,11 @@ how can we vibe like:
 - Summon Night: Swordcraft Story
 - Terraria
 - That GBA kingdom hearts game with the cards
+- ULTRAKILL
+  - style meter / rank for aggressive, varied combat
+  - rewards for staying close and aggressive (blood heals)
+  - fast, readable combat even at high speed
+- CICADAMATA
+  - arcade score attack with per-level rankings
+  - ZONE: temporary score buff you extend by keeping the combo going
+  - short campaign made replayable by chasing better scores
