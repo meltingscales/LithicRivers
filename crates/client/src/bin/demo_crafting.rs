@@ -154,9 +154,9 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
                         }
                         KeyCode::Up => {
                             if let Some(selected) = app.selected_recipe {
-                                app.selected_recipe = Some(selected.saturating_sub(1).max(0));
+                                app.selected_recipe = Some(selected.saturating_sub(1));
                             } else if let Some(selected) = app.selected_item {
-                                app.selected_item = Some(selected.saturating_sub(1).max(0));
+                                app.selected_item = Some(selected.saturating_sub(1));
                             }
                         }
                         KeyCode::Down => {
@@ -262,8 +262,8 @@ fn render_inventory(f: &mut Frame, app: &App, area: Rect) {
         .enumerate()
         .map(|(i, (item, &count))| {
             let is_selected = app.selected_item == Some(i) && app.selected_recipe.is_none();
-            let is_ingredient = recipe_ingredients.contains(&&item);
-            let is_result = recipe_result.map_or(false, |result_item| *result_item == **item);
+            let is_ingredient = recipe_ingredients.contains(item);
+            let is_result = recipe_result.is_some_and(|result_item| *result_item == **item);
 
             let style = if is_selected {
                 Style::default()

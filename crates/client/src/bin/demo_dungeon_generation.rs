@@ -272,9 +272,7 @@ impl App {
             .collect();
 
         let num_to_add = (remaining_edges.len() as f32 * 0.15) as usize;
-        for i in 0..num_to_add.min(remaining_edges.len()) {
-            mst_edges.push(remaining_edges[i].clone());
-        }
+        mst_edges.extend(remaining_edges.iter().take(num_to_add).map(|&e| e.clone()));
 
         self.edges = mst_edges;
     }
