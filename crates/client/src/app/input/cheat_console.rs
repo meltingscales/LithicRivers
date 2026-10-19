@@ -87,7 +87,7 @@ impl CommandRegistry {
 
     /// Execute a command
     pub fn execute(&self, app: &mut App, command: &str) -> Result<(), Box<dyn Error>> {
-        let parts: Vec<&str> = command.trim().split_whitespace().collect();
+        let parts: Vec<&str> = command.split_whitespace().collect();
         if parts.is_empty() {
             return Ok(());
         }
@@ -136,7 +136,7 @@ fn update_autocomplete(input: &str) -> (Vec<String>, Option<usize>) {
         return (Vec::new(), None);
     }
 
-    let parts: Vec<&str> = input.trim().split_whitespace().collect();
+    let parts: Vec<&str> = input.split_whitespace().collect();
 
     if parts.is_empty() {
         return (Vec::new(), None);
@@ -180,16 +180,14 @@ fn update_autocomplete(input: &str) -> (Vec<String>, Option<usize>) {
                 return (matches, None);
             }
         }
-        "tp" => {
-            if parts.len() < 4 {
-                // For tp command, we could suggest coordinate patterns
-                let coord_suggestions = vec!["0 0 0", "10 10 0", "100 100 0"];
-                let matches: Vec<String> = coord_suggestions
-                    .into_iter()
-                    .map(|coords| format!("tp {}", coords))
-                    .collect();
-                return (matches, None);
-            }
+        "tp" if parts.len() < 4 => {
+            // For tp command, we could suggest coordinate patterns
+            let coord_suggestions = vec!["0 0 0", "10 10 0", "100 100 0"];
+            let matches: Vec<String> = coord_suggestions
+                .into_iter()
+                .map(|coords| format!("tp {}", coords))
+                .collect();
+            return (matches, None);
         }
         _ => {
             // No sub-command autocomplete for other commands

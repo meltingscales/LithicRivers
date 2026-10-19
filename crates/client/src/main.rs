@@ -1646,7 +1646,7 @@ fn render_block_picker_modal(
             // Get the first character from the 1x1 sprite (sprites[0])
             sprite_data
                 .sprites
-                .get(0)
+                .first()
                 .and_then(|s| s.chars().next())
                 .unwrap_or('?')
         } else {

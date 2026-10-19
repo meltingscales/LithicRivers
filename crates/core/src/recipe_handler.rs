@@ -104,6 +104,12 @@ impl RecipeHandler {
     }
 }
 
+impl Default for RecipeHandler {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct RepairRecipe {
     pub name: &'static str,
@@ -189,5 +195,11 @@ impl RepairRecipeHandler {
         } else {
             None
         }
+    }
+}
+
+impl Default for RepairRecipeHandler {
+    fn default() -> Self {
+        Self::new()
     }
 }

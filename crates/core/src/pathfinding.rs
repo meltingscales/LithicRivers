@@ -444,7 +444,7 @@ mod tests {
             };
 
             if let Some(next_step) =
-                pathfinder.find_next_step(start, goal, &is_passable, world_seed, tick)
+                pathfinder.find_next_step(start, goal, is_passable, world_seed, tick)
             {
                 // Calculate the step's contribution to Manhattan distance
                 let step_dx = (goal.x - next_step.x).abs() - (goal.x - start.x).abs();
@@ -533,7 +533,7 @@ mod tests {
 
         // Should generate multiple different positions in a circular pattern
         assert!(
-            positions.len() > 0,
+            !positions.is_empty(),
             "Should generate at least some circular positions"
         );
 

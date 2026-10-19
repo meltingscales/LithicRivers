@@ -27,12 +27,11 @@ pub fn render_hotbar_panel(f: &mut Frame, app: &mut App, area: Rect) {
 
         // Create slot display (F1, F2, etc.)
         // let slot_text = format!("F{}", slot_number);
-        let slot_text = format!(
-            "{}",
-            app.core
-                .config_manager
-                .get_keybind_str("hotbar", &format!("HOTBAR_SLOT_{}", slot_number))
-        );
+        let slot_text = app
+            .core
+            .config_manager
+            .get_keybind_str("hotbar", &format!("HOTBAR_SLOT_{}", slot_number))
+            .to_string();
 
         // Get assigned block content
         let content = if let Some(block_kind) = app.panels.build.hotbar_assignments[i] {
@@ -46,7 +45,7 @@ pub fn render_hotbar_panel(f: &mut Frame, app: &mut App, area: Rect) {
                 // Get the first character from the 1x1 sprite (sprites[0])
                 let sprite_char = sprite_data
                     .sprites
-                    .get(0)
+                    .first()
                     .and_then(|s| s.chars().next())
                     .unwrap_or('?');
                 format!("[{}]", sprite_char)

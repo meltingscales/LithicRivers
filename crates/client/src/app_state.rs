@@ -75,8 +75,9 @@ pub struct LoggingState {
 }
 
 /// Client-side combat UI state
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub enum CombatUiState {
+    #[default]
     None,
     Active {
         current_move: usize,
@@ -89,12 +90,6 @@ pub enum CombatUiState {
 impl CombatUiState {
     pub fn is_active(&self) -> bool {
         matches!(self, CombatUiState::Active { .. })
-    }
-}
-
-impl Default for CombatUiState {
-    fn default() -> Self {
-        CombatUiState::None
     }
 }
 
@@ -196,8 +191,9 @@ impl Default for BuildPanelState {
 }
 
 /// Corpse looting interaction state
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub enum CorpseLootingState {
+    #[default]
     None,
     SelectingCorpse {
         adjacent_entities: Vec<hecs::Entity>, // List of adjacent corpse entities
@@ -211,15 +207,10 @@ pub enum CorpseLootingState {
     },
 }
 
-impl Default for CorpseLootingState {
-    fn default() -> Self {
-        CorpseLootingState::None
-    }
-}
-
 /// Hotbar assignment interaction state
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub enum HotbarAssignmentState {
+    #[default]
     None,
     ChoosingBlock {
         hotbar_slot: usize,              // Which F-key slot we're assigning to
@@ -228,41 +219,28 @@ pub enum HotbarAssignmentState {
     },
 }
 
-impl Default for HotbarAssignmentState {
-    fn default() -> Self {
-        HotbarAssignmentState::None
-    }
-}
-
 /// Tutorial selection modal state
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub enum TutorialSelectionState {
+    #[default]
     None,
-    SelectingTutorial { selected_tutorial: usize },
-}
-
-impl Default for TutorialSelectionState {
-    fn default() -> Self {
-        TutorialSelectionState::None
-    }
+    SelectingTutorial {
+        selected_tutorial: usize,
+    },
 }
 
 /// Body repair modal state
 #[derive(Debug, Clone, PartialEq)]
 #[allow(dead_code)]
+#[derive(Default)]
 pub enum BodyRepairState {
+    #[default]
     None,
     SelectingRepairAndPart {
         available_repairs: Vec<usize>, // Indices into repair recipe handler
         selected_repair: usize,
         selected_body_part: Option<lithicrivers_core::model::body::BodyPartType>,
     },
-}
-
-impl Default for BodyRepairState {
-    fn default() -> Self {
-        BodyRepairState::None
-    }
 }
 
 /// Splash screen system state - handles startup sequence
@@ -453,8 +431,9 @@ impl InteractionType {
 }
 
 /// Multi-action selection state - handles choosing between multiple available interactions
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub enum MultiActionSelectState {
+    #[default]
     None,
     SelectingAction {
         available_actions: Vec<InteractionType>,
@@ -462,15 +441,10 @@ pub enum MultiActionSelectState {
     },
 }
 
-impl Default for MultiActionSelectState {
-    fn default() -> Self {
-        MultiActionSelectState::None
-    }
-}
-
 /// NPC interaction state - handles NPC selection and dialogue with new architecture
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub enum NPCInteractionState {
+    #[default]
     None,
     SelectingNPC {
         adjacent_npcs: Vec<(hecs::Entity, String)>, // (entity, name) pairs
@@ -483,15 +457,10 @@ pub enum NPCInteractionState {
     },
 }
 
-impl Default for NPCInteractionState {
-    fn default() -> Self {
-        NPCInteractionState::None
-    }
-}
-
 /// Cheat console state - handles cheat command input
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub enum CheatConsoleState {
+    #[default]
     None,
     Open {
         input: String,
@@ -502,23 +471,10 @@ pub enum CheatConsoleState {
     },
 }
 
-impl Default for CheatConsoleState {
-    fn default() -> Self {
-        CheatConsoleState::None
-    }
-}
-
 /// Global Map panel state - handles marker selection and arrow display
+#[derive(Default)]
 pub struct GlobalMapPanelState {
     pub selected_marker_index: usize, // Index of currently selected marker (for arrow display)
-}
-
-impl Default for GlobalMapPanelState {
-    fn default() -> Self {
-        GlobalMapPanelState {
-            selected_marker_index: 0,
-        }
-    }
 }
 
 /// Quest panel state

@@ -78,11 +78,12 @@ fn check_combat_end_conditions(world: &mut World, res: &mut Resources) {
     // Check if all enemies are dead
     let mut has_living_enemies = false;
     for (entity, (_, combat, _)) in world.query::<(&Position, &Combat, &GameEntity)>().iter() {
-        if !is_player_entity(world, entity) && combat.triggered {
-            if world.get::<&Dead>(entity).is_err() {
-                has_living_enemies = true;
-                break;
-            }
+        if !is_player_entity(world, entity)
+            && combat.triggered
+            && world.get::<&Dead>(entity).is_err()
+        {
+            has_living_enemies = true;
+            break;
         }
     }
 

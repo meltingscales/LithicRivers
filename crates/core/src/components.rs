@@ -46,15 +46,9 @@ pub struct DogAI {
 }
 
 /// Component for entities that can engage in combat
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, Default)]
 pub struct Combat {
     pub triggered: bool,
-}
-
-impl Default for Combat {
-    fn default() -> Self {
-        Self { triggered: false }
-    }
 }
 
 /// Component for entities that have escaped combat and cannot re-engage for a while
@@ -359,18 +353,10 @@ impl SpriteRef {
 }
 
 /// Fog of war component tracking which tiles the player has visited and what's currently illuminated
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct FogOfWar {
     /// Set of (x, y, z) positions that have been visited by the player
     pub visited_tiles: std::collections::HashSet<(i64, i64, i64)>,
-}
-
-impl Default for FogOfWar {
-    fn default() -> Self {
-        Self {
-            visited_tiles: std::collections::HashSet::new(),
-        }
-    }
 }
 
 impl FogOfWar {

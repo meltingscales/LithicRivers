@@ -91,7 +91,7 @@ fn render_map_panel(f: &mut Frame, app: &mut App, area: Rect) {
             let style;
 
             // Check if this is part of the arrow path to selected marker
-            let is_arrow_path = selected_marker_chunk.map_or(false, |(target_x, target_y)| {
+            let is_arrow_path = selected_marker_chunk.is_some_and(|(target_x, target_y)| {
                 is_on_arrow_path(
                     player_chunk_x,
                     player_chunk_y,

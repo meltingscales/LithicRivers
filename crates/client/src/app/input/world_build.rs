@@ -275,10 +275,8 @@ fn get_blocks_from_inventory(app: &App) -> Vec<lithicrivers_core::components::It
                 // Only include items that are placeable blocks
                 // For now, let's include all ItemKind variants that could be blocks
                 match stack.kind {
-                    ItemKind::Stone | ItemKind::PlankBlock => {
-                        if !blocks.contains(&stack.kind) {
-                            blocks.push(stack.kind);
-                        }
+                    ItemKind::Stone | ItemKind::PlankBlock if !blocks.contains(&stack.kind) => {
+                        blocks.push(stack.kind);
                     }
                     _ => {} // Skip non-block items
                 }
@@ -313,15 +311,13 @@ fn remove_item_from_inventory(
         if let Ok(mut inv) = app.core.game.world.get::<&mut InvComp>(player_entity) {
             // Find the first stack with this item kind
             for i in 0..inv.slots.len() {
-                if inv.slots[i].kind == item_kind {
-                    if inv.slots[i].qty >= quantity {
-                        inv.slots[i].qty -= quantity;
-                        // Remove the stack if quantity reaches 0
-                        if inv.slots[i].qty == 0 {
-                            inv.slots.remove(i);
-                        }
-                        return;
+                if inv.slots[i].kind == item_kind && inv.slots[i].qty >= quantity {
+                    inv.slots[i].qty -= quantity;
+                    // Remove the stack if quantity reaches 0
+                    if inv.slots[i].qty == 0 {
+                        inv.slots.remove(i);
                     }
+                    return;
                 }
             }
         }

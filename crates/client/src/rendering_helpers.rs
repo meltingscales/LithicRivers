@@ -169,7 +169,7 @@ pub fn empty_art_12x8_lines_for_position() -> Vec<Line<'static>> {
         }
         lines.push(Line::from(line));
     }
-    return lines;
+    lines
 }
 
 /// Renders a 13x13 ASCII art schematic of the given body.

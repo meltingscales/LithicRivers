@@ -367,7 +367,7 @@ impl ActionQueue {
         if let Some(ref current) = self.current_action {
             let should_remove_current = match &current.action {
                 CombatAction::PlayerMove { target_entity, .. } => {
-                    target_entity.map_or(false, |target| target == dead_entity)
+                    target_entity.is_some_and(|target| target == dead_entity)
                 }
                 CombatAction::EnemyAttack { target_entity, .. } => *target_entity == dead_entity,
             };
@@ -383,7 +383,7 @@ impl ActionQueue {
         let original_len = self.actions.len();
         self.actions.retain(|action| match &action.action {
             CombatAction::PlayerMove { target_entity, .. } => {
-                target_entity.map_or(true, |target| target != dead_entity)
+                target_entity.is_none_or(|target| target != dead_entity)
             }
             CombatAction::EnemyAttack { target_entity, .. } => *target_entity != dead_entity,
         });

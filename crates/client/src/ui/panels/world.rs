@@ -59,14 +59,14 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
 
     // Note: No longer need to sync generation Z - using viewport-safe methods
 
-    let scale = app.ui.scale.as_i64() as i64;
+    let scale = app.ui.scale.as_i64();
 
     // Compute world-space bounds for current UI viewport and prefetch chunks
     let center_x = app.ui.view_x;
     let center_y = app.ui.view_y;
 
-    let world_cols = (target_cols as i64 / scale) as i64;
-    let world_rows = (target_rows as i64 / scale) as i64;
+    let world_cols = target_cols as i64 / scale;
+    let world_rows = target_rows as i64 / scale;
 
     let left = center_x - world_cols / 2;
     let top = center_y - world_rows / 2;

@@ -28,7 +28,7 @@ pub fn render_look_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
         pos.z
     ))));
 
-    lines.push(Line::from(Span::raw(format!(""))));
+    lines.push(Line::from(Span::raw(String::new())));
 
     // Entity and item info
     let mut any_entity = false;

@@ -117,7 +117,7 @@ fn render_repair_recipes_list(f: &mut Frame, area: Rect, app: &crate::App, selec
                 Style::default().fg(Color::Red)
             };
 
-            let text = format!("{}", recipe.name);
+            let text = recipe.name.to_string();
             ListItem::new(text).style(style)
         })
         .collect();

@@ -211,7 +211,7 @@ impl Game {
         //move the player to deep within the 1st quest structure
         if let Some((psx, psy, psz)) = new_game.find_player_spawn_block() {
             new_game.move_player_to_spawn(psx, psy, psz);
-            new_game.res.log_green(&format!(
+            new_game.res.log_green(format!(
                 "Player moved to bunker spawn at ({}, {}, {})",
                 psx, psy, psz
             ));
@@ -255,7 +255,7 @@ impl Game {
         // Run one tick to generate structures around the player spawn
         new_game.tick();
 
-        return new_game;
+        new_game
     }
 
     pub fn ensure_chunk_with_pending_structures_worldcoords(
@@ -755,9 +755,9 @@ impl Game {
         let structure = StructureDefinition::load_from_embedded(structure_name);
 
         // Calculate base chunk coordinates
-        let chunk_x = x.div_euclid(CHUNK_SIZE) as i64;
-        let chunk_y = y.div_euclid(CHUNK_SIZE) as i64;
-        let base_chunk_z = z.div_euclid(CHUNK_SIZE_Z) as i64;
+        let chunk_x = x.div_euclid(CHUNK_SIZE);
+        let chunk_y = y.div_euclid(CHUNK_SIZE);
+        let base_chunk_z = z.div_euclid(CHUNK_SIZE_Z);
 
         // Calculate the range of Z chunks this structure spans
         let structure_height = structure.layers.len() as i64;
@@ -791,12 +791,12 @@ impl Game {
         chunk_z: i64,
     ) -> ((i64, i64, i64), (i64, i64, i64)) {
         use crate::world::{CHUNK_SIZE, CHUNK_SIZE_Z};
-        let min_x = chunk_x * CHUNK_SIZE as i64;
-        let max_x = min_x + CHUNK_SIZE as i64;
-        let min_y = chunk_y * CHUNK_SIZE as i64;
-        let max_y = min_y + CHUNK_SIZE as i64;
-        let min_z = chunk_z * CHUNK_SIZE_Z as i64;
-        let max_z = min_z + CHUNK_SIZE_Z as i64;
+        let min_x = chunk_x * CHUNK_SIZE;
+        let max_x = min_x + CHUNK_SIZE;
+        let min_y = chunk_y * CHUNK_SIZE;
+        let max_y = min_y + CHUNK_SIZE;
+        let min_z = chunk_z * CHUNK_SIZE_Z;
+        let max_z = min_z + CHUNK_SIZE_Z;
         ((min_x, min_y, min_z), (max_x, max_y, max_z))
     }
 
@@ -811,12 +811,12 @@ impl Game {
     ) -> bool {
         let ((min_x, min_y, min_z), (max_x, max_y, max_z)) =
             Self::chunk_world_bounds(chunk_x, chunk_y, chunk_z);
-        (point_x as i64) >= min_x
-            && (point_x as i64) < max_x
-            && (point_y as i64) >= min_y
-            && (point_y as i64) < max_y
-            && (point_z as i64) >= min_z
-            && (point_z as i64) < max_z
+        point_x >= min_x
+            && point_x < max_x
+            && point_y >= min_y
+            && point_y < max_y
+            && point_z >= min_z
+            && point_z < max_z
     }
 
     /// Check if any pending structures should be loaded for a given chunk
@@ -838,7 +838,7 @@ impl Game {
         let mut remaining_structures = Vec::new();
 
         // Collect all pending structures first to avoid borrow checker issues
-        let pending_structures: Vec<_> = self.res.pending_structures.drain(..).collect();
+        let pending_structures: Vec<_> = std::mem::take(&mut self.res.pending_structures);
         tracing::info!(target: "game", "Found {} pending structures to evaluate for chunk ({}, {}, {})",
             pending_structures.len(), chunk_x, chunk_y, chunk_z);
 
@@ -979,9 +979,9 @@ mod tests {
         assert_eq!(game.res.pending_structures.len(), 0);
 
         // The chunk should exist due to the initial tick processing
-        let chunk_x = 30_i64.div_euclid(crate::world::CHUNK_SIZE as i64);
-        let chunk_y = 30_i64.div_euclid(crate::world::CHUNK_SIZE as i64);
-        let chunk_z = 0_i64.div_euclid(crate::world::CHUNK_SIZE_Z as i64);
+        let chunk_x = 30_i64.div_euclid(crate::world::CHUNK_SIZE);
+        let chunk_y = 30_i64.div_euclid(crate::world::CHUNK_SIZE);
+        let chunk_z = 0_i64.div_euclid(crate::world::CHUNK_SIZE_Z);
 
         // Verify the chunk now exists (this should work without infinite loops)
         game.res
@@ -1020,9 +1020,9 @@ mod tests {
         let mut game = Game::new(12345);
 
         // Get the chunk coordinates for our structure location
-        let chunk_x = 30_i64.div_euclid(crate::world::CHUNK_SIZE as i64);
-        let chunk_y = 30_i64.div_euclid(crate::world::CHUNK_SIZE as i64);
-        let chunk_z = 0_i64.div_euclid(crate::world::CHUNK_SIZE_Z as i64);
+        let chunk_x = 30_i64.div_euclid(crate::world::CHUNK_SIZE);
+        let chunk_y = 30_i64.div_euclid(crate::world::CHUNK_SIZE);
+        let chunk_z = 0_i64.div_euclid(crate::world::CHUNK_SIZE_Z);
 
         // With the initial tick, structure is already loaded and queue is empty
         assert_eq!(game.res.pending_structures.len(), 0);
@@ -1085,7 +1085,7 @@ mod tests {
                     if let Ok(mut pos) = game.world.get::<&mut Position>(player_entity) {
                         pos.x = 30 + dx;
                         pos.y = 30 + dy;
-                        pos.z = 0 + dz; // This is the critical test - going to z = -1
+                        pos.z = dz; // This is the critical test - going to z = -1
                     }
 
                     // Track chunk states before tick
@@ -1102,7 +1102,7 @@ mod tests {
                             "Excessive chunk generation at position ({}, {}, {}): {} -> {}",
                             30 + dx,
                             30 + dy,
-                            0 + dz,
+                            dz,
                             pre_tick_chunks,
                             current_chunks
                         );

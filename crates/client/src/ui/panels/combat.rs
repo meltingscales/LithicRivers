@@ -155,7 +155,7 @@ fn render_single_enemy(
         // Get the first 12x8 art sprite (main portrait)
         let sprite_block = sprite_data
             .art12x8_sprites
-            .get(0)
+            .first()
             .cloned()
             .unwrap_or_else(|| {
                 panic!(
@@ -608,14 +608,12 @@ fn render_moves(
     chunk_index += num_visible;
 
     // Render bottom scroll indicator
-    if scroll_offset + visible_moves_count < moves.len() {
-        if chunk_index < move_chunks.len() {
-            let scroll_down = Paragraph::new("▼ More below")
-                .style(Style::default().fg(Color::Gray))
-                .alignment(Alignment::Center)
-                .block(Block::default().borders(Borders::NONE));
-            f.render_widget(scroll_down, move_chunks[chunk_index]);
-        }
+    if scroll_offset + visible_moves_count < moves.len() && chunk_index < move_chunks.len() {
+        let scroll_down = Paragraph::new("▼ More below")
+            .style(Style::default().fg(Color::Gray))
+            .alignment(Alignment::Center)
+            .block(Block::default().borders(Borders::NONE));
+        f.render_widget(scroll_down, move_chunks[chunk_index]);
     }
 
     // Render the action queue on the right side

@@ -105,7 +105,7 @@ impl GameWorld {
                 for (dx, dy) in neighbors {
                     let nx = x + dx;
                     let ny = y + dy;
-                    if nx >= 0 && nx < CHUNK_SIZE && ny >= 0 && ny < CHUNK_SIZE {
+                    if (0..CHUNK_SIZE).contains(&nx) && (0..CHUNK_SIZE).contains(&ny) {
                         let key = (nx, ny);
                         if !visited.contains(&key) {
                             visited.insert(key);
@@ -375,9 +375,9 @@ impl GameWorld {
     #[inline]
     fn div_floor(a: i64, b: i64) -> i64 {
         // floor division for negatives
-        let mut q = (a as i64) / (b as i64);
-        let r = (a as i64) % (b as i64);
-        if (r != 0) && ((r > 0) != (b as i64 > 0)) {
+        let mut q = a / b;
+        let r = a % b;
+        if (r != 0) && ((r > 0) != (b > 0)) {
             q -= 1;
         }
         q
@@ -413,7 +413,7 @@ impl GameWorld {
         v = v.rotate_left(27) ^ zz(y).wrapping_mul(0xD2B74407B1CE6E93);
         v ^= zz(z).wrapping_mul(0xC0FFEE);
 
-        return v;
+        v
     }
 
     pub fn is_passable(&self, x: i64, y: i64, z: i64) -> bool {
@@ -423,7 +423,7 @@ impl GameWorld {
     pub fn get_tile(&self, x: i64, y: i64, z: i64) -> TileKind {
         let cx = Self::div_floor(x, CHUNK_SIZE);
         let cy = Self::div_floor(y, CHUNK_SIZE);
-        let cz = Self::div_floor(z, CHUNK_SIZE_Z) as i64;
+        let cz = Self::div_floor(z, CHUNK_SIZE_Z);
         let tx = Self::mod_floor(x, CHUNK_SIZE);
         let ty = Self::mod_floor(y, CHUNK_SIZE);
         let _tz = Self::mod_floor(z, CHUNK_SIZE_Z);
@@ -441,8 +441,8 @@ impl GameWorld {
     pub fn get_tile_cached(&mut self, x: i64, y: i64, z: i64) -> TileKind {
         // tracing::info!(target: "world", "get_tile_cached called for world pos ({}, {}, {})", x, y, z);
         let cx = Self::div_floor(x, CHUNK_SIZE);
-        let cy = Self::div_floor(y, CHUNK_SIZE) as i64;
-        let cz = Self::div_floor(z, CHUNK_SIZE_Z) as i64;
+        let cy = Self::div_floor(y, CHUNK_SIZE);
+        let cz = Self::div_floor(z, CHUNK_SIZE_Z);
         let tx = Self::mod_floor(x, CHUNK_SIZE);
         let ty = Self::mod_floor(y, CHUNK_SIZE);
         let _tz = Self::mod_floor(z, CHUNK_SIZE_Z);
@@ -468,7 +468,7 @@ impl GameWorld {
     pub fn get_tile_cached_no_worldgen(&self, x: i64, y: i64, z: i64) -> TileKind {
         let cx = Self::div_floor(x, CHUNK_SIZE);
         let cy = Self::div_floor(y, CHUNK_SIZE);
-        let cz = Self::div_floor(z, CHUNK_SIZE_Z) as i64;
+        let cz = Self::div_floor(z, CHUNK_SIZE_Z);
         let tx = Self::mod_floor(x, CHUNK_SIZE);
         let ty = Self::mod_floor(y, CHUNK_SIZE);
         let _tz = Self::mod_floor(z, CHUNK_SIZE_Z);
@@ -583,7 +583,7 @@ impl GameWorld {
     pub fn set_tile_cached(&mut self, x: i64, y: i64, z: i64, t: TileKind) {
         let cx = Self::div_floor(x, CHUNK_SIZE);
         let cy = Self::div_floor(y, CHUNK_SIZE);
-        let cz = Self::div_floor(z, CHUNK_SIZE_Z) as i64;
+        let cz = Self::div_floor(z, CHUNK_SIZE_Z);
         let tx = Self::mod_floor(x, CHUNK_SIZE);
         let ty = Self::mod_floor(y, CHUNK_SIZE);
         let _tz = Self::mod_floor(z, CHUNK_SIZE_Z);
@@ -623,8 +623,8 @@ impl GameWorld {
             (wz0, wz0 + structure.layers.len() as i64 - 1)
         };
 
-        let min_chunk_z = Self::div_floor(min_structure_z, CHUNK_SIZE_Z) as i64;
-        let max_chunk_z = Self::div_floor(max_structure_z, CHUNK_SIZE_Z) as i64;
+        let min_chunk_z = Self::div_floor(min_structure_z, CHUNK_SIZE_Z);
+        let max_chunk_z = Self::div_floor(max_structure_z, CHUNK_SIZE_Z);
 
         tracing::info!(target: "world", "Structure '{}' spans Z levels {} to {}, chunks {} to {}",
             structure.name, min_structure_z, max_structure_z, min_chunk_z, max_chunk_z);
@@ -716,9 +716,9 @@ impl GameWorld {
     pub fn prefetch_rect(&mut self, left: i64, top: i64, right: i64, bottom: i64, z: i64) {
         let min_cx = Self::div_floor(left, CHUNK_SIZE);
         let max_cx = Self::div_floor(right, CHUNK_SIZE);
-        let min_cy = Self::div_floor(top, CHUNK_SIZE) as i64;
-        let max_cy = Self::div_floor(bottom, CHUNK_SIZE) as i64;
-        let cz = Self::div_floor(z, CHUNK_SIZE_Z) as i64;
+        let min_cy = Self::div_floor(top, CHUNK_SIZE);
+        let max_cy = Self::div_floor(bottom, CHUNK_SIZE);
+        let cz = Self::div_floor(z, CHUNK_SIZE_Z);
         for cy in min_cy..=max_cy {
             for cx in min_cx..=max_cx {
                 self.ensure_chunk(cx, cy, cz);

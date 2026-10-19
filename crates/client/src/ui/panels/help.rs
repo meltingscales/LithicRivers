@@ -169,7 +169,7 @@ pub fn render_help_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
             for (action, keys) in binds {
                 let key_str = keys
                     .iter()
-                    .map(|k| format_keycode(k))
+                    .map(format_keycode)
                     .collect::<Vec<_>>()
                     .join(", ");
                 lines.push(Line::from(Span::raw(format!("  {}: {}", action, key_str))));

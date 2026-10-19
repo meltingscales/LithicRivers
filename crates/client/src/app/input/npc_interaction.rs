@@ -371,7 +371,7 @@ pub fn handle_npc_interaction_input(app: &mut App, key: KeyCode) -> Result<bool,
                                 };
                         } else {
                             // Conversation ended - log the player's final mood if it changed
-                            if let Some(_) = selected_choice.player_mood_change {
+                            if selected_choice.player_mood_change.is_some() {
                                 app.core
                                     .game
                                     .res
