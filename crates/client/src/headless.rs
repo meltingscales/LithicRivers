@@ -919,4 +919,12 @@ mod smoke_tests {
         assert_eq!(first, run_once());
     }
 
+    /// Bug scripts under `scripts/agent/bugs/` must keep passing once fixed.
+    #[test]
+    fn combat_started_from_tutorial_tab_shows_combat_panel() {
+        let script = include_str!("../../../scripts/agent/bugs/combat-on-tutorial-tab.txt");
+        let (mut out, mut err_out) = (Vec::new(), Vec::new());
+        let code = run_script(script, 0, Overrides::default(), &mut out, &mut err_out);
+        assert_eq!(code, EXIT_OK, "{}", String::from_utf8_lossy(&err_out));
+    }
 }
