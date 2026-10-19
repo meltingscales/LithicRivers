@@ -14,4 +14,4 @@
 ## 3. Docs and CI
 
 - [x] 3.1 Document in AGENTS.md how to add a snapshot script, review diffs (`cargo insta review` or `INSTA_UPDATE=always cargo test`), and that snapshot changes need a reason in the PR; verify the documented commands work
-- [ ] 3.2 Confirm CI (`just test-release-*` on Linux, Windows, macOS) runs the snapshot tests and they pass; verify from the CI run on the PR
+- [ ] 3.2 Add a PR check workflow (`.github/workflows/pr-checks.yml`: clippy with `-D warnings` and `cargo test --workspace` on Linux, Windows, macOS), since `ci.yml` only runs on version tags; verify the snapshot tests pass on all three in the PR run
