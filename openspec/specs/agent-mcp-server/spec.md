@@ -1,10 +1,10 @@
-# Spec Delta
+# agent-mcp-server Specification
 
 ## Purpose
 
 Lets an AI agent play and inspect a live headless game session through MCP tools, and turn that session into a reproducible headless script.
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: Local stdio server
 The client SHALL provide an MCP server mode that communicates only over stdin/stdout, opens no network sockets, requires no authentication, never touches the terminal or audio device, and writes nothing but protocol messages to stdout.
@@ -29,11 +29,15 @@ The server SHALL expose tools equivalent to the headless script steps: new game 
 - **THEN** the tool returns an error result naming the keybind and the session continues
 
 ### Requirement: Implicit session
-The server SHALL hold one game session. Calls before a new game SHALL start one with the configured default seed. Calling new game SHALL replace the current session.
+The server SHALL hold one game session. Calls before a new game SHALL start one with the configured default seed, the default screen size, and the splash screens skipped. Calling new game SHALL replace the current session and its recorded steps.
 
 #### Scenario: Screen before new game
 - **WHEN** an agent calls screen as its first tool call
-- **THEN** a session with the default seed is started and its screen is returned
+- **THEN** a session with the default seed is started and its main game screen is returned
+
+#### Scenario: Replacing the session
+- **WHEN** an agent moves the player, then calls new game with a different seed, then exports
+- **THEN** the state reports the new seed and the export contains none of the earlier moves
 
 ### Requirement: Run script fragment
 The server SHALL provide a tool that runs multi-line headless script text against the current session and returns its output and status.
@@ -41,6 +45,10 @@ The server SHALL provide a tool that runs multi-line headless script text agains
 #### Scenario: Batch steps
 - **WHEN** an agent runs a fragment with three `key` steps and a `state` step
 - **THEN** the result contains the state dump and status 0
+
+#### Scenario: Setup lines in a fragment
+- **WHEN** a fragment contains a `seed` or `size` line
+- **THEN** the tool returns an error pointing to new game, and the session is unchanged
 
 ### Requirement: Session export
 Every successful state-changing call SHALL be recorded as equivalent script lines. An export tool SHALL return the session as a headless script that reproduces the same final state.
