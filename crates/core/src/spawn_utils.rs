@@ -6,6 +6,7 @@ use crate::{
         SpriteRef,
     },
     dialogue::DialogueNodeID,
+    tiles::TileKind,
     world::GameWorld,
 };
 use rand::prelude::*;
@@ -174,6 +175,69 @@ pub fn world_spawn_feraldog(
     ))
 }
 
+/// Hostile creatures that can be spawned on demand (e.g. by the `spawn_enemy` cheat).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum EnemyKind {
+    FeralDog,
+}
+
+impl EnemyKind {
+    pub const ALL: &'static [EnemyKind] = &[EnemyKind::FeralDog];
+
+    pub fn name(self) -> &'static str {
+        match self {
+            EnemyKind::FeralDog => "feral_dog",
+        }
+    }
+
+    pub fn from_name(name: &str) -> Option<EnemyKind> {
+        Self::ALL.iter().copied().find(|kind| kind.name() == name)
+    }
+}
+
+/// Why an enemy could not be spawned.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum SpawnError {
+    /// The tile itself blocks movement (wall, rock, ...)
+    Impassable(TileKind),
+    /// A creature, NPC or the player already stands there
+    Occupied,
+}
+
+impl std::fmt::Display for SpawnError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            SpawnError::Impassable(tile) => write!(f, "the tile is not passable ({tile:?})"),
+            SpawnError::Occupied => write!(f, "the tile is occupied"),
+        }
+    }
+}
+
+/// Spawn an enemy at `pos`, using the same spawn code as the game itself, if the tile is
+/// passable and no movement-blocking entity is already there.
+pub fn spawn_enemy(
+    ecs_world: &mut hecs::World,
+    game_world: &mut GameWorld,
+    kind: EnemyKind,
+    pos: Position,
+) -> Result<hecs::Entity, SpawnError> {
+    let tile = game_world.get_tile_cached(pos.x, pos.y, pos.z);
+    if !tile.is_passable() {
+        return Err(SpawnError::Impassable(tile));
+    }
+    let occupied = ecs_world
+        .query::<&Position>()
+        .with::<&BlocksMovement>()
+        .iter()
+        .any(|(_, p)| *p == pos);
+    if occupied {
+        return Err(SpawnError::Occupied);
+    }
+    Ok(match kind {
+        EnemyKind::FeralDog => world_spawn_feraldog(ecs_world, pos.x, pos.y, pos.z, game_world),
+    })
+}
+
 /// Spawn a sheep at the specified position
 pub fn world_spawn_sheep(ecs_world: &mut hecs::World, x: i64, y: i64, z: i64) -> hecs::Entity {
     ecs_world.spawn((
@@ -211,4 +275,85 @@ pub fn world_spawn_tutorial_android(
             name: "Broken SapienCorp Android".to_string(),
         },
     ))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::test_support::TestWorld;
+
+    fn try_spawn(
+        game: &mut crate::test_support::TestGame,
+        x: i64,
+        y: i64,
+    ) -> Result<hecs::Entity, SpawnError> {
+        let g = &mut game.game;
+        spawn_enemy(
+            &mut g.world,
+            &mut g.res.world_state.world,
+            EnemyKind::FeralDog,
+            Position { x, y, z: 0 },
+        )
+    }
+
+    fn arena(seed: u64) -> crate::test_support::TestGame {
+        TestWorld::new(seed)
+            .fill((-4, -4, 0), (4, 4, 0), TileKind::Grass)
+            .tile(-3, 0, 0, TileKind::Rock)
+            .build()
+    }
+
+    #[test]
+    fn spawns_a_full_health_feral_dog() {
+        let mut game = arena(5);
+        let dog = try_spawn(&mut game, 3, 0).unwrap();
+        let w = &game.game.world;
+        assert_eq!(*w.get::<&EntityKind>(dog).unwrap(), EntityKind::FeralDog);
+        assert_eq!(
+            *w.get::<&Position>(dog).unwrap(),
+            Position { x: 3, y: 0, z: 0 }
+        );
+        assert_eq!(w.get::<&Health>(dog).unwrap().current, 80);
+    }
+
+    #[test]
+    fn refuses_occupied_and_impassable_tiles() {
+        let mut game = arena(5);
+        assert_eq!(
+            try_spawn(&mut game, 0, 0),
+            Err(SpawnError::Occupied),
+            "player's tile"
+        );
+        try_spawn(&mut game, 2, 0).unwrap();
+        assert_eq!(
+            try_spawn(&mut game, 2, 0),
+            Err(SpawnError::Occupied),
+            "dog's tile"
+        );
+        assert_eq!(
+            try_spawn(&mut game, -3, 0),
+            Err(SpawnError::Impassable(TileKind::Rock))
+        );
+    }
+
+    #[test]
+    fn same_seed_and_position_give_the_same_dog() {
+        let dog = |seed| {
+            let mut game = arena(seed);
+            let e = try_spawn(&mut game, 3, 0).unwrap();
+            let w = &game.game.world;
+            let inv = format!("{:?}", w.get::<&Inventory>(e).unwrap().slots);
+            let hp = w.get::<&Health>(e).unwrap().current;
+            (hp, inv)
+        };
+        assert_eq!(dog(9), dog(9));
+    }
+
+    #[test]
+    fn kinds_round_trip_by_name() {
+        for kind in EnemyKind::ALL {
+            assert_eq!(EnemyKind::from_name(kind.name()), Some(*kind));
+        }
+        assert_eq!(EnemyKind::from_name("dragon"), None);
+    }
 }
