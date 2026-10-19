@@ -34,7 +34,8 @@ impl AudioTrack {
 
 /// Manages audio playback with support for music and sound effects
 pub struct AudioManager {
-    _stream: OutputStream,
+    /// Output device stream; `None` when audio is disabled (headless runs)
+    stream: Option<OutputStream>,
     music_sink: Sink,
     sfx_sink: Sink,
     music_tracks: HashMap<String, AudioTrack>,
@@ -61,12 +62,23 @@ impl AudioManager {
         let sfx_sink = Sink::try_new(&stream_handle)?;
 
         Ok(Self {
-            _stream,
+            stream: Some(_stream),
             music_sink,
             sfx_sink,
             music_tracks: HashMap::new(),
             sfx_tracks: HashMap::new(),
         })
+    }
+
+    /// Create an AudioManager that never opens an output device and plays nothing
+    pub fn disabled() -> Self {
+        Self {
+            stream: None,
+            music_sink: Sink::new_idle().0,
+            sfx_sink: Sink::new_idle().0,
+            music_tracks: HashMap::new(),
+            sfx_tracks: HashMap::new(),
+        }
     }
 
     /// Register a new music track
@@ -81,6 +93,9 @@ impl AudioManager {
 
     /// Play a music track (stops any currently playing music)
     pub fn play_music(&mut self, name: &str) -> Result<()> {
+        if self.stream.is_none() {
+            return Ok(());
+        }
         if let Some(track) = self.music_tracks.get(name) {
             let bytes = Self::read_embedded_bytes(&track.path)
                 .unwrap_or_else(|| panic!("Missing embedded audio: {:?}", track.path));
@@ -95,6 +110,9 @@ impl AudioManager {
 
     /// Play a sound effect (can play simultaneously with music)
     pub fn play_sound_effect(&mut self, name: &str) -> Result<()> {
+        if self.stream.is_none() {
+            return Ok(());
+        }
         if let Some(track) = self.sfx_tracks.get(name) {
             let bytes = Self::read_embedded_bytes(&track.path)
                 .unwrap_or_else(|| panic!("Missing embedded audio: {:?}", track.path));
@@ -130,5 +148,22 @@ impl AudioManager {
     /// Set the sound effects volume (0.0 to 1.0)
     pub fn set_sfx_volume(&mut self, volume: f32) {
         self.sfx_sink.set_volume(volume.clamp(0.0, 1.0));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn disabled_audio_needs_no_device_and_plays_nothing() {
+        let mut audio = AudioManager::disabled();
+        audio.register_music(
+            "opening",
+            AudioTrack::new("crates/client/assets/sound/music/opening.mp3"),
+        );
+        audio.set_music_volume(0.5);
+        audio.play_music("opening").unwrap();
+        assert!(audio.music_sink.empty());
     }
 }

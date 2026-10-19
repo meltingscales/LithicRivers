@@ -1,0 +1,11 @@
+# Bug: starting combat from the Tutorial tab (the default tab) left the combat panel hidden.
+# Expected: the combat panel shows as soon as combat starts, whatever tab was open.
+seed 12345
+size 120x40
+skip-splash
+
+# Stand next to the feral dog at (-15, -15, 0) and walk into it, without leaving the Tutorial tab
+cheat tp -16 -16 0
+key movement.MOVE_SOUTHEAST
+state after-attack
+expect-text "Action Queue"

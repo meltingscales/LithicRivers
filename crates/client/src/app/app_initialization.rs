@@ -1,26 +1,35 @@
 use crate::app_state::*;
 use crate::tutorialsystem::TutorialDatabase;
-use crate::{audio, boot_message, App, EmbeddedAssets, MenuTab, Scale, SplashState, SpriteLoader};
+use crate::{
+    audio, boot_message, clock::Clock, App, EmbeddedAssets, MenuTab, Scale, SplashState,
+    SpriteLoader,
+};
 use chrono::prelude::Local;
 use lithicrivers_core::components::Position;
 use lithicrivers_core::config::ConfigManager;
 use lithicrivers_core::dialogue_database::DialogueDatabase;
 use lithicrivers_core::game::Game;
 use lithicrivers_core::recipe_handler::{RecipeHandler, RepairRecipeHandler};
-use std::time::Instant;
 
 impl App {
     pub fn new_with_seed(seed: u64) -> App {
+        let audio = audio::AudioManager::new().unwrap_or_else(|e| {
+            panic!("Failed to initialize audio: {}", e);
+        });
+        Self::build(seed, audio, Clock::Real)
+    }
+
+    /// App for scripted runs: no audio device and a fake clock that only moves when advanced.
+    pub fn new_headless(seed: u64) -> App {
+        Self::build(seed, audio::AudioManager::disabled(), Clock::fake())
+    }
+
+    fn build(seed: u64, mut audio: audio::AudioManager, clock: Clock) -> App {
         // Initialize game and sprite loader
         let game = Game::new(seed);
         let mut sprite_loader = SpriteLoader::new(None);
         // Preload all assets to eliminate runtime I/O during rendering
         sprite_loader.preload_all();
-
-        // Initialize audio manager
-        let mut audio = audio::AudioManager::new().unwrap_or_else(|e| {
-            panic!("Failed to initialize audio: {}", e);
-        });
 
         // Set volumes
         audio.set_music_volume(0.60);
@@ -164,7 +173,7 @@ impl App {
             },
             splash: SplashScreenState {
                 state: SplashState::Logo,
-                start_time: Some(Instant::now()),
+                start_time: Some(clock.now()),
                 logo_text,
                 game_title_text,
                 boot_message,
@@ -172,10 +181,11 @@ impl App {
                 boot_display_text: String::new(),
                 boot_line_index: 0,
                 boot_scroll: 0,
-                last_line_time: Instant::now(),
+                last_line_time: clock.now(),
                 boot_complete: false,
             },
             last_combat_tick: None,
+            clock,
         }
     }
 }

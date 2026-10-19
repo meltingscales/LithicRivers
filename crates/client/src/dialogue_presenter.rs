@@ -5,26 +5,23 @@ use lithicrivers_core::components::{NPCMood as CoreNPCMood, SpriteRef};
 use lithicrivers_core::dialogue::{DialogueTree, TextEffect};
 use ratatui::style::{Color, Style};
 use ratatui::text::{Line, Span};
-use std::time::{SystemTime, UNIX_EPOCH};
 
 /// UI presentation layer for dialogue system - handles only formatting and display
 pub struct DialoguePresenter;
 
 impl DialoguePresenter {
     /// Render text with TextEffect visual styling and animations
-    fn render_text_with_effects(text: &str, effects: &[TextEffect]) -> Vec<Span<'static>> {
+    fn render_text_with_effects(
+        text: &str,
+        effects: &[TextEffect],
+        now: u64,
+    ) -> Vec<Span<'static>> {
         if effects.is_empty() {
             return vec![Span::styled(
                 text.to_string(),
                 Style::default().fg(Color::White),
             )];
         }
-
-        // Get current time for animations
-        let now = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_millis() as u64;
 
         // Find all effect segments first (without modifying the original text)
         let mut effect_segments = Vec::new();
@@ -261,6 +258,7 @@ impl DialoguePresenter {
     }
 
     /// Format dialogue with Summon Night-style layout including both player and NPC portraits
+    #[allow(clippy::too_many_arguments)]
     pub fn format_dialogue_with_portraits(
         sprite_loader: &mut SpriteLoader,
         world: &World,
@@ -269,6 +267,7 @@ impl DialoguePresenter {
         conversation: &ConversationState,
         selected_choice: usize,
         resources: &lithicrivers_core::resources::Resources,
+        anim_ms: u64,
     ) -> (Vec<Line<'static>>, Option<String>, Option<String>) {
         if let Some(node) = conversation
             .current_node_id
@@ -291,6 +290,7 @@ impl DialoguePresenter {
                 selected_choice,
                 resources,
                 world,
+                anim_ms,
             );
             (dialogue_lines, npc_portrait, player_portrait)
         } else {
@@ -327,6 +327,7 @@ impl DialoguePresenter {
         selected_choice: usize,
         resources: &lithicrivers_core::resources::Resources,
         world: &World,
+        anim_ms: u64,
     ) -> Vec<Line<'static>> {
         if let Some(node) = conversation
             .current_node_id
@@ -355,6 +356,7 @@ impl DialoguePresenter {
             speaker_spans.extend(Self::render_text_with_effects(
                 &node.text,
                 &node.text_effects,
+                anim_ms,
             ));
             speaker_spans.push(Span::styled(
                 quote_suffix,

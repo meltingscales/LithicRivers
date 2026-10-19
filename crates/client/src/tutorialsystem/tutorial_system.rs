@@ -6,7 +6,8 @@ use std::time::{Duration, Instant};
 #[derive(Debug, Clone)]
 pub struct ActiveHighlight {
     pub element_id: String,
-    pub start_time: Instant,
+    /// Set on the first frame after creation (see `TutorialSystem::update_highlights`)
+    pub start_time: Option<Instant>,
     pub duration: Duration,
 }
 
@@ -14,17 +15,22 @@ impl ActiveHighlight {
     pub fn new(element_id: String, duration_secs: u64) -> Self {
         Self {
             element_id,
-            start_time: Instant::now(),
+            start_time: None,
             duration: Duration::from_secs(duration_secs),
         }
     }
 
-    pub fn is_active(&self) -> bool {
-        self.start_time.elapsed() < self.duration
+    fn elapsed(&self, now: Instant) -> Duration {
+        self.start_time
+            .map_or(Duration::ZERO, |start| now.saturating_duration_since(start))
     }
 
-    pub fn flash_intensity(&self) -> f32 {
-        let elapsed = self.start_time.elapsed().as_secs_f32();
+    pub fn is_active(&self, now: Instant) -> bool {
+        self.elapsed(now) < self.duration
+    }
+
+    pub fn flash_intensity(&self, now: Instant) -> f32 {
+        let elapsed = self.elapsed(now).as_secs_f32();
         let cycle_time = 0.5; // Flash every 0.5 seconds
         ((elapsed / cycle_time).sin().abs() * 0.7) + 0.3 // Oscillate between 0.3 and 1.0
     }
@@ -220,17 +226,20 @@ impl TutorialSystem {
             .push(ActiveHighlight::new(element_id, duration_secs));
     }
 
-    /// Update highlights and remove expired ones
-    pub fn update_highlights(&mut self) {
+    /// Start new highlights and remove expired ones. Called once per frame.
+    pub fn update_highlights(&mut self, now: Instant) {
+        for highlight in &mut self.active_highlights {
+            highlight.start_time.get_or_insert(now);
+        }
         self.active_highlights
-            .retain(|highlight| highlight.is_active());
+            .retain(|highlight| highlight.is_active(now));
     }
 
     /// Check if a specific UI element should be highlighted
-    pub fn is_element_highlighted(&self, element_id: &str) -> Option<f32> {
+    pub fn is_element_highlighted(&self, element_id: &str, now: Instant) -> Option<f32> {
         for highlight in &self.active_highlights {
-            if highlight.element_id == element_id && highlight.is_active() {
-                return Some(highlight.flash_intensity());
+            if highlight.element_id == element_id && highlight.is_active(now) {
+                return Some(highlight.flash_intensity(now));
             }
         }
         None

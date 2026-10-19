@@ -63,7 +63,7 @@ pub fn render_modes_panel(f: &mut Frame, app: &mut App, area: Rect) {
         if let Some(intensity) = app
             .ui
             .tutorial_system
-            .is_element_highlighted("mode_indicator_torch")
+            .is_element_highlighted("mode_indicator_torch", app.clock.now())
         {
             // Flash between bright yellow and red
             let flash_color = if intensity > 0.6 {

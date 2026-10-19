@@ -2,7 +2,7 @@ use crate::app_state::{BuildMode, HotbarAssignmentState};
 use crate::{App, MenuTab};
 use crossterm::event::KeyCode;
 use lithicrivers_core::components::{Inventory as InvComp, ItemKind};
-use std::{error::Error, time::Instant};
+use std::error::Error;
 
 /// Handle world/build mode input when on World tab - returns true if input was handled
 pub fn handle_world_build_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Error>> {
@@ -217,7 +217,7 @@ pub fn handle_world_build_input(app: &mut App, key: KeyCode) -> Result<bool, Box
     };
 
     if let Some(slot) = hotbar_slot {
-        let now = Instant::now();
+        let now = app.clock.now();
         const DOUBLE_TAP_WINDOW_MS: u128 = 500; // 500ms window for double-tap
 
         // Check for double-tap

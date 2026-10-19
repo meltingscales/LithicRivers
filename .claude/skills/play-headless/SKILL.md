@@ -1,0 +1,59 @@
+---
+name: play-headless
+description: Run, test, or inspect the LithicRivers game client without a terminal using headless scripts (just client-blind). Use when checking a change in the running game, reproducing or demonstrating a bug, looking at what a screen or panel shows, or verifying game state after actions. Never launch the interactive client.
+---
+
+# Play the game headless
+
+The interactive client (`just client-linux`) needs a real terminal; agents must not run it. Instead, write a script and run:
+
+```
+just client-blind path/to/script.txt
+```
+
+It runs the real client with no terminal, no audio, and a fake clock. Output is deterministic: the same script, seed and build always print the same bytes.
+
+## Workflow
+
+1. Write a script. Put throwaway scripts in your scratchpad; put bug reproductions and checks worth keeping in `scripts/agent/`.
+2. Start with `seed`, `size`, then `skip-splash`.
+3. Get to the situation you need with `cheat tp x y z`, `cheat giveitem <item> <qty>`, keybind presses, and `tick`/`wait`.
+4. Observe with `state` (JSON: player, body, inventory, tab/modal, combat, nearby entities, recent messages) and `screen` (text render). Prefer `state` for facts; use `screen` for layout.
+5. Assert with `expect-text "..."` so the script fails (exit 2) if the behavior regresses.
+
+## Steps
+
+| Step | Effect |
+|---|---|
+| `seed <u64>`, `size <cols>x<rows>` | Setup; only before other steps |
+| `skip-splash` | Go straight to the main UI |
+| `key <category>.<ACTION> [n]` | Press the key bound to a keybind, n times |
+| `rawkey <NAME>` | Press a key by config name: `ENTER`, `ESCAPE`, `TAB`, `LEFT`, `F1`, `q` |
+| `type "<text>"` | One key press per character |
+| `wait <ms>` | Advance fake time in 50 ms frames |
+| `tick [n]` | Advance the simulation n ticks |
+| `cheat <command>` | Cheat console: `tp`, `giveitem`, `noclip_toggle`, `toggle_fogofwar`, `toggle_tutorial` |
+| `screen [label]` / `state [label]` | Print a framed text screen / JSON state |
+| `expect-text "<text>"` | Exit 2 unless the screen contains the text |
+| `quit` | Stop successfully |
+
+Keybind names come from `crates/core/src/default_config.rs` (categories like `movement`, `action`, `build`, `ui`, `inventory`). Exit status: 0 ok, 1 script error (bad syntax, unknown keybind or cheat), 2 failed expectation.
+
+## Example
+
+`scripts/agent/smoke.txt`:
+
+```
+seed 12345
+size 120x40
+skip-splash
+key movement.MOVE_SOUTH 2
+state walked
+cheat tp 0 0 0
+key action.MINE
+key build.PLACE_EAST
+expect-text "You chop the tree"
+state chopped
+```
+
+`--seed` and `--size` on the command line override the script (`cargo run -q -p lithicrivers-client --bin lithicrivers-client -- --script s.txt --seed 7`).

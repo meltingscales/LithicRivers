@@ -62,6 +62,8 @@ pub fn handle_world_movement_input(app: &mut App, key: KeyCode) -> Result<bool, 
         }
 
         if tick_result.contains(GameTickResult::CombatTriggered) {
+            // Movement also works on the Tutorial tab, but only the World tab draws combat
+            app.ui.current_tab = MenuTab::World;
             app.combat = CombatUiState::Active {
                 current_move: 0,
                 current_enemy: 0,

@@ -1,0 +1,19 @@
+# Smoke test for the headless client: start, move, chop a tree, check the results.
+# Run with: just client-blind scripts/agent/smoke.txt
+seed 12345
+size 120x40
+
+skip-splash
+expect-text "Messages"
+screen start
+
+# Walk south from the bunker spawn
+key movement.MOVE_SOUTH 2
+state walked
+
+# Chop the tree east of the origin
+cheat tp 0 0 0
+key action.MINE
+key build.PLACE_EAST
+expect-text "You chop the tree"
+state chopped

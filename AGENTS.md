@@ -11,7 +11,7 @@ You should use `rustup` to run `cargo` and other tools.
 
 Please avoid running `cargo clean`. It takes a long time to rebuild rust modules.
 
-Also never run `just client-linux` / `just client-windows` or any other TUI because you might be in a terminal that cannot display properly as you're an AI agent. Instead, ask me to run `just client-linux` or use unit testing to test code.
+Never run the interactive client (`just client-linux` / `just client-windows`) or any other TUI: your terminal can't display it. To see the running game, use the headless client (below). If something can only be judged by a human looking at the real TUI, ask me to run `just client-linux`.
 
 ## Demos
 
@@ -25,6 +25,29 @@ Run tests with `cargo test --workspace` to validate game systems (`just test-lin
 - Edge cases and bug fixes
 
 Tests help ensure systems work correctly and prevent regressions during development.
+
+## Headless client (seeing the running game)
+
+`just client-blind <script>` runs the full client with no terminal, no audio and a fake clock, and prints text screen dumps and JSON state dumps. Use it to check a change in the real game, or to reproduce a bug as a committed script under `scripts/`. Example: `just client-blind scripts/agent/smoke.txt`.
+
+Scripts have one step per line; `#` starts a comment.
+
+| Step | Effect |
+|---|---|
+| `seed <u64>`, `size <cols>x<rows>` | Setup; only before other steps. Defaults: config `DEFAULT_SEED`, 160x50 |
+| `skip-splash` | Jump past the splash screens to the main UI |
+| `key <category>.<ACTION> [n]` | Press the key bound to a keybind (e.g. `movement.MOVE_SOUTH`, `action.MINE`), n times |
+| `rawkey <NAME>` | Press a key by config name (`ENTER`, `ESCAPE`, `TAB`, `F1`, `q`) |
+| `type "<text>"` | Press one key per character |
+| `wait <ms>` | Advance the fake clock in 50 ms frames (splash timers, combat auto-ticks) |
+| `tick [n]` | Advance the game simulation n ticks |
+| `cheat <command>` | Run a cheat console command (`tp x y z`, `giveitem <item> <qty>`, ...) |
+| `screen [label]` | Print the screen as text |
+| `state [label]` | Print a JSON summary: player, body, inventory, tab/modal, combat, nearby entities, recent messages |
+| `expect-text "<text>"` | Fail (exit 2) unless the screen contains the text |
+| `quit` | Stop successfully |
+
+Exit status: 0 ok, 1 script error, 2 failed `expect-text`. The same script, seed and build always print identical output, so all time-dependent behavior and rendering must read time from `app.clock`, never `Instant::now()` or `SystemTime::now()`.
 
 ## Planning with OpenSpec
 

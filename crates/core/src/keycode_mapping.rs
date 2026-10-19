@@ -1,6 +1,12 @@
 use crossterm::event::KeyCode;
 
+/// Parse a config key name, panicking on unknown names so bad config fails loudly.
 pub fn parse_keycode(s: &str) -> Option<KeyCode> {
+    Some(try_parse_keycode(s).unwrap_or_else(|| panic!("Invalid keycode: {s:?}")))
+}
+
+/// Parse a config key name, returning `None` for unknown names.
+pub fn try_parse_keycode(s: &str) -> Option<KeyCode> {
     match s.to_uppercase().as_str() {
         "UP" => Some(KeyCode::Up),
         "DOWN" => Some(KeyCode::Down),
@@ -50,10 +56,10 @@ pub fn parse_keycode(s: &str) -> Option<KeyCode> {
         "DECIMAL" => Some(KeyCode::Char('.')),
         "DIVIDE" => Some(KeyCode::Char('/')),
         _ => {
-            if s.len() == 1 {
-                Some(KeyCode::Char(s.chars().next().unwrap()))
-            } else {
-                panic!("Invalid keycode: {s:?}");
+            let mut chars = s.chars();
+            match (chars.next(), chars.next()) {
+                (Some(c), None) => Some(KeyCode::Char(c)),
+                _ => None,
             }
         }
     }
