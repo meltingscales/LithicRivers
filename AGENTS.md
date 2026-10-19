@@ -67,6 +67,15 @@ Scripts have one step per line; `#` starts a comment.
 
 Exit status: 0 ok, 1 script error, 2 failed `expect-text`. The same script, seed and build always print identical output, so all time-dependent behavior and rendering must read time from `app.clock`, never `Instant::now()` or `SystemTime::now()`.
 
+### Snapshot tests (catching UI regressions)
+
+Every script in `scripts/snapshots/*.txt` runs during `cargo test`, and its full output is compared with a stored snapshot in `crates/client/src/snapshots/`. Build-specific text (version, git branch/commit, config file path) is masked.
+
+- **Add coverage:** write a script in `scripts/snapshots/` (start with `seed`, `size 100x30`, `skip-splash`; add an `expect-text` so the script itself fails loudly if it stops reaching the right screen), then accept its new snapshot.
+- **A snapshot test fails:** read the diff in the test output. If the change is a regression, fix the code. If it is intended, accept it with `cargo insta review` (interactive; `just install` installs `cargo-insta`) or `cargo insta accept`, or re-record everything with `INSTA_UPDATE=always cargo test -p lithicrivers-client`.
+- **Never accept snapshots blindly.** Commit updated `.snap` files together with the change that caused them, and say in the PR why each snapshot changed.
+- Bug reproductions belong in `scripts/agent/bugs/` with a test that runs them; screens worth guarding belong in `scripts/snapshots/`.
+
 ## Planning with OpenSpec
 
 For anything larger than a small fix, use OpenSpec (`openspec/`):

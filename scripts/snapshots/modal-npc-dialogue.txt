@@ -1,0 +1,9 @@
+# NPC dialogue with the tutorial android, two tiles east of the bunker spawn
+seed 12345
+size 100x30
+skip-splash
+key ui.MENU_PREV
+key movement.MOVE_EAST
+key action.INTERACT
+expect-text "End Conversation"
+screen npc-dialogue

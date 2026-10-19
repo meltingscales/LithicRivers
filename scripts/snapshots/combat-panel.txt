@@ -1,0 +1,9 @@
+# Combat panel after walking into the feral dog at (-15, -15, 0)
+seed 12345
+size 100x30
+skip-splash
+cheat tp -16 -16 0
+key movement.MOVE_SOUTHEAST
+expect-text "Action Queue"
+screen combat
+state

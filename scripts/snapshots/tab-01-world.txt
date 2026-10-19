@@ -1,0 +1,8 @@
+# World tab right after starting a new game
+seed 12345
+size 100x30
+skip-splash
+key ui.MENU_PREV
+expect-text "MODES"
+screen world
+state

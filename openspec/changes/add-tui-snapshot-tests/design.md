@@ -4,7 +4,7 @@
 
 - `add-headless-client-driver` provides deterministic headless runs with framed `screen` and `state` dumps on stdout.
 - The client is a binary crate; its `#[cfg(test)]` modules run under `cargo test`.
-- CI (`.github/workflows/ci.yml`) runs `just test-release-*` (release-mode `cargo test`) on Windows, macOS and Linux.
+- The release workflow (`.github/workflows/ci.yml`) runs `just test-release-*` on Windows, macOS and Linux, but only on `v*` tags. A new `pr-checks.yml` runs clippy and `cargo test --workspace` on all three for every PR into `release`, so snapshot drift is caught before merge.
 
 ## Goals / Non-Goals
 

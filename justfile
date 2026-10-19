@@ -31,6 +31,8 @@ install:
     cargo install cargo-tarpaulin --locked
     @echo "Installing cargo-audit..."
     cargo install cargo-audit --locked
+    @echo "Installing cargo-insta (snapshot review)..."
+    cargo install cargo-insta --locked
 
 
 # Run security audit on dependencies

@@ -9,6 +9,8 @@ mod boot_message;
 mod clock;
 mod dialogue_presenter;
 mod headless;
+#[cfg(test)]
+mod snapshot_tests;
 mod tutorialsystem;
 mod ui;
 

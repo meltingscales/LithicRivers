@@ -8,6 +8,16 @@ use std::path::{Path, PathBuf};
 
 use rust_embed::RustEmbed;
 // All color data must come from data.json in each .lrsprite. No hardcoded fallbacks.
+
+/// Convert CRLF line endings to LF and drop any stray CR.
+fn normalize_line_endings(text: String) -> String {
+    if text.contains('\r') {
+        text.replace('\r', "")
+    } else {
+        text
+    }
+}
+
 #[derive(RustEmbed)]
 #[folder = "assets/"]
 struct EmbeddedAssets;
@@ -136,12 +146,20 @@ impl SpriteLoader {
     }
 
     fn get_embedded_text(path: &str) -> String {
-        let asset =
-            EmbeddedAssets::get(path).unwrap_or_else(|| panic!("Missing embedded asset: {}", path));
-        match asset.data {
-            Cow::Borrowed(b) => String::from_utf8(b.to_vec()).expect("embedded text not UTF-8"),
-            Cow::Owned(v) => String::from_utf8(v).expect("embedded text not UTF-8"),
+        Self::try_get_embedded_text(path)
+            .unwrap_or_else(|| panic!("Missing embedded asset: {}", path))
+    }
+
+    /// Read an embedded text asset with line endings normalized to `\n`, so sprite files
+    /// checked out with CRLF (e.g. on Windows) render the same as LF ones.
+    fn try_get_embedded_text(path: &str) -> Option<String> {
+        let asset = EmbeddedAssets::get(path)?;
+        let text = match asset.data {
+            Cow::Borrowed(b) => String::from_utf8(b.to_vec()),
+            Cow::Owned(v) => String::from_utf8(v),
         }
+        .unwrap_or_else(|_| panic!("Embedded asset is not UTF-8: {}", path));
+        Some(normalize_line_endings(text))
     }
 
     pub fn load_sprite(&mut self, sprite_name: &str, category: &str) -> &SpriteData {
@@ -183,11 +201,7 @@ impl SpriteLoader {
         let mut art12x8_sprites: Vec<String> = Vec::new();
 
         // Try to load the main art12x8.txt first
-        if let Some(d) = EmbeddedAssets::get(&art12x8_path) {
-            let text = match d.data {
-                Cow::Borrowed(b) => String::from_utf8(b.to_vec()).expect("art12x8 not UTF-8"),
-                Cow::Owned(v) => String::from_utf8(v).expect("art12x8 not UTF-8"),
-            };
+        if let Some(text) = Self::try_get_embedded_text(&art12x8_path) {
             art12x8_sprites.push(text);
         }
 
@@ -200,11 +214,7 @@ impl SpriteLoader {
         ];
         for mood_file in &mood_files {
             let mood_path = format!("{}{}", base, mood_file);
-            if let Some(d) = EmbeddedAssets::get(&mood_path) {
-                let text = match d.data {
-                    Cow::Borrowed(b) => String::from_utf8(b.to_vec()).expect("mood art not UTF-8"),
-                    Cow::Owned(v) => String::from_utf8(v).expect("mood art not UTF-8"),
-                };
+            if let Some(text) = Self::try_get_embedded_text(&mood_path) {
                 art12x8_sprites.push(text);
             } else {
                 // Panic if mood files are expected but missing
@@ -414,3 +424,17 @@ pub fn parse_color_string(s: &str) -> Option<Color> {
 }
 
 // Fluids removed
+
+#[cfg(test)]
+mod line_ending_tests {
+    use super::normalize_line_endings;
+
+    #[test]
+    fn crlf_and_lf_art_are_identical() {
+        let lf = "xxxxxxxxxxxx\nxxxTODO.xxxx\n".to_string();
+        let crlf = "xxxxxxxxxxxx\r\nxxxTODO.xxxx\r\n".to_string();
+        assert_eq!(normalize_line_endings("ab\r".to_string()), "ab");
+        assert_eq!(normalize_line_endings(crlf), lf);
+        assert_eq!(normalize_line_endings(lf.clone()), lf);
+    }
+}

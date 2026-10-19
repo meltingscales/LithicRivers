@@ -1,0 +1,6 @@
+# Global Map tab
+seed 12345
+size 100x30
+skip-splash
+key ui.MENU_NEXT 1
+screen global-map

@@ -1,0 +1,37 @@
+---
+source: crates/client/src/snapshot_tests.rs
+expression: "String::from_utf8(out).unwrap()"
+input_file: scripts/snapshots/tab-05-body.txt
+---
+=== screen body ===
+                                            LithicRivers
+┌Body──────────────────────┐┌Parts─────────────────────────────────────────────────────────────────┐
+│      ███                 ││           Head: Functional (100)                                     │
+│     █████                ││          Torso: Functional (100)                                     │
+│      ███                 ││    Fusion Core: Damaged (21)                                         │
+│   █  ███  █              ││       Left Arm: Missing (0)                                          │
+│  █  █████  █             ││      Right Arm: Functional (100)                                     │
+│ █   █████   █            ││       Left Leg: Functional (100)                                     │
+│     █████                ││      Right Leg: Damaged (43)                                         │
+│     █████                ││                                                                      │
+│     ██ ██                ││                                                                      │
+│     █   █                ││                                                                      │
+│     █   █                ││                                                                      │
+│     █   █                ││                                                                      │
+│    █     █               ││                                                                      │
+│                          ││                                                                      │
+└──────────────────────────┘└──────────────────────────────────────────────────────────────────────┘
+┌Controls──────────────────────────────────────────────────────────────────────────────────────────┐
+│                                            [R] Repair                                            │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
+│[0] Loading structure 'sapiencorp-bunker.lrstructure' at (10, 10, 1) for chunk (0, 0, 1)          │
+│[0] Quest marker added: SapienCorp Bunker                                                         │
+│[0] Player moved to bunker spawn at (11, 11, -19)                                                 │
+│[0] Loading structure 'sapiencorp-factory.lrstructure' at (200, 1609, 1) for chunk (3, 25, 1)     │
+│[0] Quest marker added: SapienCorp Factory                                                        │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Menu │ Help │ Credits │ Qu│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===

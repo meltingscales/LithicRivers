@@ -1,0 +1,5 @@
+# Tutorial tab
+seed 12345
+size 100x30
+skip-splash
+screen tutorial

@@ -1,0 +1,9 @@
+# Corpse loot window for the dead feral dog Game::new places at (18, 21, 0)
+seed 12345
+size 100x30
+skip-splash
+key ui.MENU_PREV
+cheat tp 17 21 0
+key action.INTERACT
+expect-text "Looting Corpse"
+screen corpse-loot
