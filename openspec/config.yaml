@@ -1,0 +1,40 @@
+schema: spec-driven
+
+context: |
+  All randomness (combat, loot, worldgen, AI choices) must be deterministic from world seed, world tick, and coordinates/biome, so the game stays TAS-able for a given seed and code version.
+  Never hardcode keys: add keybinds to default_config.rs and check them with keybinds.matches(); print keys via get_printable_key_for_keybind().
+  The game renders ASCII via ratatui. Never run TUI binaries (just client, etc.) to verify; verify with unit tests (make test).
+  Use rustup to run cargo; never run cargo clean.
+  demo_*.rs files are self-contained demos and out of scope for refactors.
+  Current focus is the "MVP for steam release (2026)" section of docs/TODO.md; docs/STEAM-MVP.md is the high-level roadmap.
+
+# Project context (optional)
+# Add only constraints that should guide OpenSpec artifacts and workflows.
+# Include constraints an agent cannot infer by reading the code.
+# Keep general project documentation and discoverable codebase facts out.
+# Example:
+#   context: |
+#     Designs and tasks must cover Windows, macOS, and Linux
+#     Write all artifacts in Spanish
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+#   rules:
+#     proposal:
+#       - Keep proposals under 500 words
+#       - Always state what is out of scope
+#     tasks:
+#       - Break tasks into chunks of max 2 hours
+
+# Per-operation guidance (optional)
+# Add advisory guidance for how apply and archive work should be conducted.
+# This is separate from artifact rules above.
+# Example:
+#   operations:
+#     apply:
+#       guidance:
+#         - Keep test summaries concise
+#     archive:
+#       guidance:
+#         - Summarize the archive outcome before finishing
