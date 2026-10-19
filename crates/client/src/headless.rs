@@ -51,6 +51,46 @@ pub enum Step {
     Quit,
 }
 
+/// Renders a step back to script syntax; parsing the result gives the same step.
+impl std::fmt::Display for Step {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Step::SkipSplash => write!(f, "skip-splash"),
+            Step::Key {
+                category,
+                action,
+                count: 1,
+            } => write!(f, "key {category}.{action}"),
+            Step::Key {
+                category,
+                action,
+                count,
+            } => write!(f, "key {category}.{action} {count}"),
+            Step::RawKey { name, .. } => write!(f, "rawkey {name}"),
+            Step::Type(text) => write!(f, "type \"{text}\""),
+            Step::Wait(ms) => write!(f, "wait {ms}"),
+            Step::Tick(n) => write!(f, "tick {n}"),
+            Step::Cheat(command) => write!(f, "cheat {command}"),
+            Step::Screen(None) => write!(f, "screen"),
+            Step::Screen(Some(label)) => write!(f, "screen {label}"),
+            Step::State(None) => write!(f, "state"),
+            Step::State(Some(label)) => write!(f, "state {label}"),
+            Step::ExpectText(text) => write!(f, "expect-text \"{text}\""),
+            Step::Quit => write!(f, "quit"),
+        }
+    }
+}
+
+impl Step {
+    /// Whether running this step can change game or UI state (as opposed to only reading it).
+    pub fn changes_state(&self) -> bool {
+        !matches!(
+            self,
+            Step::Screen(_) | Step::State(_) | Step::ExpectText(_) | Step::Quit
+        )
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct ScriptLine {
     pub line: usize,
@@ -208,8 +248,12 @@ pub fn parse_script(text: &str) -> Result<Script, ScriptError> {
 
 /// Check keybind and cheat names against the app's loaded config and command registry.
 pub fn validate(script: &Script, app: &App) -> Result<(), ScriptError> {
+    validate_steps(&script.steps, app)
+}
+
+pub fn validate_steps(steps: &[ScriptLine], app: &App) -> Result<(), ScriptError> {
     let registry = get_command_registry();
-    for ScriptLine { line, step } in &script.steps {
+    for ScriptLine { line, step } in steps {
         match step {
             Step::Key {
                 category, action, ..
@@ -248,6 +292,39 @@ pub enum StepFailure {
         expected: String,
         screen: String,
     },
+}
+
+impl StepFailure {
+    /// Exit status and the message a script run prints for this failure.
+    fn report(&self) -> (i32, String) {
+        match self {
+            StepFailure::Error(e) => (EXIT_SCRIPT_ERROR, format!("script error: {e}\n")),
+            StepFailure::Expectation {
+                line,
+                expected,
+                screen,
+            } => (
+                EXIT_EXPECT_FAILED,
+                format!(
+                    "expectation failed at line {line}: screen does not contain \"{expected}\"\n\
+                     === screen ===\n{screen}=== end screen ===\n"
+                ),
+            ),
+        }
+    }
+}
+
+/// Outcome of running steps against a session.
+#[derive(Debug)]
+pub struct StepsReport {
+    /// `EXIT_OK`, `EXIT_SCRIPT_ERROR` or `EXIT_EXPECT_FAILED`
+    pub status: i32,
+    /// Screen and state dumps, in order
+    pub output: String,
+    /// What went wrong, if a step failed
+    pub error: Option<String>,
+    /// Steps that ran successfully, in order (excludes the failing step)
+    pub completed: Vec<ScriptLine>,
 }
 
 /// A headless client session: the app, an in-memory terminal, and the dump output.
@@ -291,6 +368,34 @@ impl Runner {
     pub fn screen_text(&mut self) -> String {
         self.draw();
         screen_text(self.terminal.backend())
+    }
+
+    /// Run steps in order, stopping at the first failure or `quit`. Never panics on a bad
+    /// step: failures come back in the report.
+    pub fn run_steps(&mut self, steps: &[ScriptLine]) -> StepsReport {
+        let mut report = StepsReport {
+            status: EXIT_OK,
+            output: String::new(),
+            error: None,
+            completed: Vec::new(),
+        };
+        for script_line in steps {
+            match self.exec(script_line, &mut report.output) {
+                Ok(keep_going) => {
+                    report.completed.push(script_line.clone());
+                    if !keep_going {
+                        break;
+                    }
+                }
+                Err(failure) => {
+                    let (status, message) = failure.report();
+                    report.status = status;
+                    report.error = Some(message);
+                    break;
+                }
+            }
+        }
+        report
     }
 
     /// Execute one step, appending any dump to `out`. Returns `Ok(false)` on `quit`.
@@ -444,37 +549,13 @@ pub fn run_script(
         return EXIT_SCRIPT_ERROR;
     }
 
-    let mut buf = String::new();
-    let mut status = EXIT_OK;
-    for script_line in &script.steps {
-        let result = runner.exec(script_line, &mut buf);
-        let _ = out.write_all(buf.as_bytes());
-        buf.clear();
-        match result {
-            Ok(true) => {}
-            Ok(false) => break,
-            Err(StepFailure::Error(e)) => {
-                let _ = writeln!(err_out, "script error: {e}");
-                status = EXIT_SCRIPT_ERROR;
-                break;
-            }
-            Err(StepFailure::Expectation {
-                line,
-                expected,
-                screen,
-            }) => {
-                let _ = writeln!(
-                    err_out,
-                    "expectation failed at line {line}: screen does not contain \"{expected}\""
-                );
-                let _ = write!(err_out, "=== screen ===\n{screen}=== end screen ===\n");
-                status = EXIT_EXPECT_FAILED;
-                break;
-            }
-        }
+    let report = runner.run_steps(&script.steps);
+    let _ = out.write_all(report.output.as_bytes());
+    if let Some(error) = &report.error {
+        let _ = err_out.write_all(error.as_bytes());
     }
     let _ = out.flush();
-    status
+    report.status
 }
 
 // ---------------------------------------------------------------------------
@@ -935,5 +1016,32 @@ mod smoke_tests {
         let (mut out, mut err_out) = (Vec::new(), Vec::new());
         let code = run_script(script, 0, Overrides::default(), &mut out, &mut err_out);
         assert_eq!(code, EXIT_OK, "{}", String::from_utf8_lossy(&err_out));
+    }
+}
+
+#[cfg(test)]
+mod render_tests {
+    use super::*;
+
+    #[test]
+    fn every_step_renders_back_to_the_same_step() {
+        let text = "skip-splash\nkey movement.MOVE_NORTH\nkey movement.MOVE_SOUTH 3\nrawkey ENTER\n\
+                    type \"say \"hi\" now\"\nwait 250\ntick 4\ncheat tp 1 2 3\nscreen\nscreen after\n\
+                    state\nstate end\nexpect-text \"Messages\"\nquit\n";
+        let steps: Vec<Step> = parse_script(text)
+            .unwrap()
+            .steps
+            .into_iter()
+            .map(|l| l.step)
+            .collect();
+        let rendered: String = steps.iter().map(|s| format!("{s}\n")).collect();
+        assert_eq!(rendered, text);
+        let reparsed: Vec<Step> = parse_script(&rendered)
+            .unwrap()
+            .steps
+            .into_iter()
+            .map(|l| l.step)
+            .collect();
+        assert_eq!(reparsed, steps);
     }
 }

@@ -58,6 +58,10 @@ state chopped
 
 `--seed` and `--size` on the command line override the script (`cargo run -q -p lithicrivers-client --bin lithicrivers-client -- --script s.txt --seed 7`).
 
+## Exploring live over MCP
+
+If the `lithicrivers` MCP tools are available (from the repo's `.mcp.json`), they run the same steps interactively: `new_game`, `press_key`, `cheat`, `wait`, `tick`, `screen`, `state`, `run_script`, and so on. They're good for poking around. When you find something, call `export_script`, save it under `scripts/agent/bugs/`, and replay it with `just client-blind` before reporting it.
+
 ## Snapshot tests
 
 `cargo test` runs every `scripts/snapshots/*.txt` and compares its output with `crates/client/src/snapshots/*.snap`.

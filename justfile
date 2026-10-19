@@ -253,10 +253,15 @@ util-monitor-logs:
     @echo "Monitoring logs..."
     @tail -f LithicRivers.log.`date +%Y-%m-%d`
 
-# Run the client headless against a script: no terminal, no audio, fake clock.
 # Safe for AI agents and CI. Exit status: 0 ok, 1 script error, 2 failed expect-text.
+# Run the client headless against a script: no terminal, no audio, fake clock.
 client-blind script:
     cargo run -q -p lithicrivers-client --bin lithicrivers-client -- --script {{script}}
+
+# For agents exploring live; export findings with export_script and save them under scripts/.
+# Serve a headless game session over MCP on stdio (used by .mcp.json).
+client-mcp:
+    cargo run -q -p lithicrivers-client --bin lithicrivers-client -- --mcp
 
 # Format code
 code-fmt:
