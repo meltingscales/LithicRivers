@@ -23,7 +23,7 @@ macro_rules! define_tiles {
                 }
             }
 
-            pub fn from_str(s: &str) -> Option<TileKind> {
+            pub fn from_key(s: &str) -> Option<TileKind> {
                 match s {
                     $($key => Some(TileKind::$variant),)*
                     _ => None,
@@ -115,7 +115,7 @@ mod tests {
     fn string_conversion_roundtrip() {
         for &kind in TileKind::all_variants() {
             let key = kind.sprite_key();
-            let parsed = TileKind::from_str(key).expect("from_str should work");
+            let parsed = TileKind::from_key(key).expect("from_key should work");
             assert_eq!(kind, parsed);
         }
     }

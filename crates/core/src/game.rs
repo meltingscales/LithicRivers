@@ -399,6 +399,7 @@ impl Game {
 
     /// Sprinkle items randomly around a center position
     /// Uses deterministic seeded RNG to maintain reproducibility
+    #[allow(clippy::too_many_arguments)]
     fn sprinkle_items_random(
         world: &mut hecs::World,
         res: &mut Resources,
@@ -654,10 +655,7 @@ impl Game {
     }
 
     /// Get player component of specified type
-    pub fn get_player_component<T: hecs::Component>(&self) -> Option<T>
-    where
-        T: Clone,
-    {
+    pub fn get_player_component<T: hecs::Component + Clone>(&self) -> Option<T> {
         self.world
             .query::<(&Player, &T)>()
             .iter()

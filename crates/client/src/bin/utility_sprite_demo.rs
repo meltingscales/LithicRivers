@@ -187,26 +187,26 @@ impl App {
     }
 
     fn next_layer(&mut self) {
-        if matches!(self.current_category(), SpriteCategory::Structures) {
-            if self.index < self.structures.len() {
-                let layer_count = self.structures[self.index].layers.len();
-                if layer_count > 0 {
-                    self.layer_index = (self.layer_index + 1) % layer_count;
-                }
+        if matches!(self.current_category(), SpriteCategory::Structures)
+            && self.index < self.structures.len()
+        {
+            let layer_count = self.structures[self.index].layers.len();
+            if layer_count > 0 {
+                self.layer_index = (self.layer_index + 1) % layer_count;
             }
         }
     }
 
     fn prev_layer(&mut self) {
-        if matches!(self.current_category(), SpriteCategory::Structures) {
-            if self.index < self.structures.len() {
-                let layer_count = self.structures[self.index].layers.len();
-                if layer_count > 0 {
-                    if self.layer_index == 0 {
-                        self.layer_index = layer_count - 1;
-                    } else {
-                        self.layer_index -= 1;
-                    }
+        if matches!(self.current_category(), SpriteCategory::Structures)
+            && self.index < self.structures.len()
+        {
+            let layer_count = self.structures[self.index].layers.len();
+            if layer_count > 0 {
+                if self.layer_index == 0 {
+                    self.layer_index = layer_count - 1;
+                } else {
+                    self.layer_index -= 1;
                 }
             }
         }
@@ -375,20 +375,20 @@ impl App {
                     let sprite = match current_scale {
                         Scale::Small => sprite_data
                             .sprites
-                            .get(0)
+                            .first()
                             .cloned()
                             .unwrap_or_else(|| "?".to_string()),
                         Scale::Medium => sprite_data
                             .sprites
                             .get(1)
-                            .or(sprite_data.sprites.get(0))
+                            .or(sprite_data.sprites.first())
                             .cloned()
                             .unwrap_or_else(|| "?".to_string()),
                         Scale::Large => sprite_data
                             .sprites
                             .get(2)
                             .or(sprite_data.sprites.get(1))
-                            .or(sprite_data.sprites.get(0))
+                            .or(sprite_data.sprites.first())
                             .cloned()
                             .unwrap_or_else(|| "?".to_string()),
                     };
@@ -400,7 +400,7 @@ impl App {
                     );
                     let art12x8 = sprite_data
                         .art12x8_sprites
-                        .get(0)
+                        .first()
                         .cloned()
                         .unwrap_or_else(|| "No art".to_string());
 
@@ -423,20 +423,20 @@ impl App {
                     let sprite = match current_scale {
                         Scale::Small => sprite_data
                             .sprites
-                            .get(0)
+                            .first()
                             .cloned()
                             .unwrap_or_else(|| "?".to_string()),
                         Scale::Medium => sprite_data
                             .sprites
                             .get(1)
-                            .or(sprite_data.sprites.get(0))
+                            .or(sprite_data.sprites.first())
                             .cloned()
                             .unwrap_or_else(|| "?".to_string()),
                         Scale::Large => sprite_data
                             .sprites
                             .get(2)
                             .or(sprite_data.sprites.get(1))
-                            .or(sprite_data.sprites.get(0))
+                            .or(sprite_data.sprites.first())
                             .cloned()
                             .unwrap_or_else(|| "?".to_string()),
                     };
@@ -658,7 +658,7 @@ fn ui(f: &mut Frame, app: &mut App) {
     }
 
     // Controls
-    let controls = vec![
+    let controls = [
         "Tab/Shift+Tab: Switch category",
         "←/→ or h/l: Navigate items",
         "↑/↓ or k/j: Navigate items",

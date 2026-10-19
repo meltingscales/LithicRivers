@@ -295,11 +295,7 @@ impl SpriteLoader {
         }
     }
 
-    fn validate_12x8sprite_dimensions(
-        sprite_blocks: &Vec<String>,
-        sprite_name: &str,
-        category: &str,
-    ) {
+    fn validate_12x8sprite_dimensions(sprite_blocks: &[String], sprite_name: &str, category: &str) {
         if sprite_blocks.is_empty() {
             // Optional for now; nothing to validate
             return;
@@ -338,7 +334,7 @@ impl SpriteLoader {
         }
     }
 
-    fn validate_sprite_dimensions(sprites: &Vec<String>, sprite_name: &str, category: &str) {
+    fn validate_sprite_dimensions(sprites: &[String], sprite_name: &str, category: &str) {
         for (i, sprite) in sprites.iter().enumerate() {
             if sprite.is_empty() {
                 panic!(

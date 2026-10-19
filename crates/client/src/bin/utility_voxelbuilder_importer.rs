@@ -1,5 +1,5 @@
-/// Voxel Builder Importer for LithicRivers
-/// Converts Voxel Builder JSON exports to .lrstructure format
+//! Voxel Builder Importer for LithicRivers
+//! Converts Voxel Builder JSON exports to .lrstructure format
 
 /// Convert hex color to RGB values
 fn hex_to_rgb(hex: &str) -> (u8, u8, u8) {
@@ -100,11 +100,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("   Output: {}", output_dir);
 
         // Create output directory
-        std::fs::create_dir_all(&output_dir)?;
+        std::fs::create_dir_all(output_dir)?;
 
         // Parse the Voxel Builder JSON file
         println!("   🔍 Parsing Voxel Builder JSON...");
-        parse_voxelbuilder_json_to_structure(input_path, &output_dir)?;
+        parse_voxelbuilder_json_to_structure(input_path, output_dir)?;
 
         println!("   ✓ Structure imported successfully!");
         println!("     - {}/data.json", output_dir);

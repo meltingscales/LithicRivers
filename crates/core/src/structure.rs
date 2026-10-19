@@ -126,7 +126,7 @@ impl StructureDefinition {
         let blocks: HashMap<String, String> =
             serde_json::from_value(data["blocks"].clone()).expect("blocks must be a map");
         for (symbol, tile_str) in &blocks {
-            if TileKind::from_str(tile_str).is_none() {
+            if TileKind::from_key(tile_str).is_none() {
                 panic!(
                     "Unknown tile kind '{}' for symbol '{}' in structure '{}'. Valid: {}",
                     tile_str,
@@ -193,7 +193,7 @@ impl StructureDefinition {
             serde_json::from_value(data["blocks"].clone()).expect("blocks must be a map");
         // Validate all tile kinds
         for (symbol, tile_str) in &blocks {
-            if TileKind::from_str(tile_str).is_none() {
+            if TileKind::from_key(tile_str).is_none() {
                 panic!(
                     "Unknown tile kind '{}' for symbol '{}' in structure '{}'. Valid: {}",
                     tile_str,
@@ -221,6 +221,6 @@ impl StructureDefinition {
     pub fn get_tile_for_symbol(&self, symbol: &str) -> Option<TileKind> {
         self.blocks
             .get(symbol)
-            .and_then(|tile_str| TileKind::from_str(tile_str))
+            .and_then(|tile_str| TileKind::from_key(tile_str))
     }
 }

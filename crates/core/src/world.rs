@@ -596,6 +596,7 @@ impl GameWorld {
     /// Apply a structure using WORLD coordinates so placement can cross chunk boundaries
     /// and span multiple vertical layers (Z). Each structure layer `li` is written to
     /// world Z = `cz * CHUNK_SIZE + li`.
+    #[allow(clippy::too_many_arguments)]
     pub fn apply_structure_world(
         &mut self,
         ecs_world: &mut hecs::World,
