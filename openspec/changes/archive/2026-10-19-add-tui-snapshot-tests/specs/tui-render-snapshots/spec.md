@@ -39,8 +39,16 @@ The initial suite SHALL include snapshots for the world view after start and for
 - **THEN** there is at least one snapshot showing each top-level menu tab
 
 ### Requirement: Stable across machines
-Snapshot output SHALL be identical on Linux, Windows, and macOS CI and across runs, including line endings, in both debug and release test builds.
+Snapshot output SHALL be identical on Linux, Windows, and macOS and across runs, including line endings, in both debug and release test builds. Text that depends on the build or machine (version, git branch and commit, config and log file paths) SHALL be masked or hidden.
 
 #### Scenario: CI on another OS
-- **WHEN** the snapshot tests run on Windows or macOS in release mode after snapshots were recorded on Linux in debug mode
+- **WHEN** the PR checks run the snapshot tests on Windows and macOS after snapshots were recorded on Linux
 - **THEN** they pass
+
+#### Scenario: Release build
+- **WHEN** the tests run with `cargo test --release`
+- **THEN** the snapshots recorded from a debug build pass
+
+#### Scenario: New commit
+- **WHEN** the version or git commit changes and nothing else does
+- **THEN** every snapshot test still passes
