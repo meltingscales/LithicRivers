@@ -1,6 +1,6 @@
 use crate::{App, SplashState};
 use crossterm::event::KeyCode;
-use std::{error::Error, time::Instant};
+use std::error::Error;
 
 /// Handle splash screen input - returns true if input was handled
 pub fn handle_splash_input(app: &mut App, _key: KeyCode) -> Result<bool, Box<dyn Error>> {
@@ -10,16 +10,16 @@ pub fn handle_splash_input(app: &mut App, _key: KeyCode) -> Result<bool, Box<dyn
             SplashState::Logo => {
                 // Any key skips to next screen
                 app.splash.state = SplashState::GameTitle;
-                app.splash.start_time = Some(Instant::now());
+                app.splash.start_time = Some(app.clock.now());
                 return Ok(true);
             }
             SplashState::GameTitle => {
                 // Any key skips to boot message
                 app.splash.state = SplashState::BootMessage;
-                app.splash.start_time = Some(Instant::now());
+                app.splash.start_time = Some(app.clock.now());
                 app.splash.boot_display_text.clear();
                 app.splash.boot_line_index = 0;
-                app.splash.last_line_time = Instant::now();
+                app.splash.last_line_time = app.clock.now();
                 app.splash.boot_complete = false;
                 return Ok(true);
             }
@@ -30,7 +30,7 @@ pub fn handle_splash_input(app: &mut App, _key: KeyCode) -> Result<bool, Box<dyn
                     app.splash.boot_display_text = full_text.clone();
                     app.splash.boot_line_index = full_text.len();
                     app.splash.boot_complete = true;
-                    app.splash.start_time = Some(Instant::now());
+                    app.splash.start_time = Some(app.clock.now());
                 } else {
                     // Move to main UI if already complete
                     app.splash.state = SplashState::MainUI;

@@ -15,7 +15,7 @@
 **Goals:**
 - One code path for "advance one frame" shared by the interactive loop and the script runner.
 - Byte-identical output for the same script, seed and build.
-- No new crate dependencies.
+- No new crate downloads. `unicode-width` (already in the lockfile via ratatui) becomes a direct dependency so screen text skips cells hidden by wide characters the same way ratatui does.
 
 **Non-Goals:**
 - Mouse input in scripts.
@@ -28,8 +28,8 @@
 ### Run mode lives in the main client binary, behind `--script <path>`
 `main()` checks `std::env::args()` for `--script <path>` (and `--seed`, `--size` overrides) before touching the terminal. A separate `bin/` target would have to `#[path]`-include half the client the way demos do, which duplicates module trees and drifts. clap is not added; two flags don't justify a dependency.
 
-### Extract `step(app, now)` from `run_app`
-Everything in the loop except "poll terminal events" and "draw to the terminal" moves into `fn step(app: &mut App, now: Instant)`: combat auto-tick and `on_tick`. The interactive loop becomes `step(app, Instant::now()); terminal.draw(..); poll/handle events`. The script runner calls `step` with fake time and draws into a `TestBackend` only when it needs a screen.
+### Extract `step(app)` from `run_app`
+Everything in the loop except "poll terminal events" and "draw to the terminal" moves into `fn step(app: &mut App)`: combat auto-tick and `on_tick`, reading time from `app.clock`. The interactive loop becomes `step(app); terminal.draw(..); poll/handle events`. The script runner mirrors that loop: each input and each simulated frame runs `step` and draws into a `TestBackend`, so any state the UI computes while drawing stays in sync.
 
 ### App-owned clock
 Add `Clock` to `App`: `Real` returns `Instant::now()`; `Fake { base: Instant, offset: Duration }` returns `base + offset`, where `base` is captured once at startup. Because behavior only ever uses differences between instants, a fake clock with a real base is fully deterministic. Every behavior-affecting time read listed in Context goes through `app.clock.now()`. `dialogue_presenter` text effects take the animation time in milliseconds as a parameter derived from the clock instead of reading `SystemTime`.
@@ -57,7 +57,9 @@ After `terminal.draw` into `TestBackend`, read the buffer row by row, concatenat
 
 - [Unrouted time read added later breaks determinism] → Add a determinism test that runs a short script twice and compares output; document "use `app.clock`" in AGENTS.md.
 - [`HashMap` iteration order leaks into rendering] → The repeat-run test catches it; fix any offender by sorting at the render site.
-- [Rendering cost if a script dumps every frame] → Rendering only happens on `screen`/`expect-text` steps, not every `wait` frame.
+- [Rendering cost] → The runner draws every simulated frame to stay faithful to the interactive loop; a `wait 3000` is 60 small in-memory draws, well under a second.
+- [Config comes from the file next to the binary] → Headless runs read the same config file as the interactive client (`<exe_dir>/config/`, created from embedded defaults if missing). A hand-edited config there changes key mapping and rendered key names; CI and fresh builds use defaults.
+- [Tutorial highlights started inside tutorial logic] → They get their start time on the next frame (`update_highlights(now)`) instead of threading the clock through tutorial step code; the up-to-50 ms delay is invisible.
 - [Splash `skip-splash` diverges from real startup] → It sets the same state the splash flow ends in (`SplashState::MainUI`), the same thing pressing through the splash does.
 
 ## Migration Plan

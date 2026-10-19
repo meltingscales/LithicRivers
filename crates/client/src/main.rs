@@ -6,7 +6,9 @@ use crossterm::{
 mod app;
 mod app_state;
 mod boot_message;
+mod clock;
 mod dialogue_presenter;
+mod headless;
 mod tutorialsystem;
 mod ui;
 
@@ -20,7 +22,7 @@ use ratatui::{
     Frame, Terminal,
 };
 use rust_embed::RustEmbed;
-use std::{error::Error, io, time::Duration, time::Instant};
+use std::{error::Error, io, time::Duration};
 use tracing_subscriber::EnvFilter;
 
 // Tracing file appender for log file output
@@ -220,6 +222,8 @@ struct App {
     pub splash: SplashScreenState,
     /// Last time we advanced a combat tick (for 10 ticks/second)
     pub last_combat_tick: Option<std::time::Instant>,
+    /// Time source for all time-dependent behavior and rendering
+    pub clock: clock::Clock,
 }
 
 impl App {
@@ -228,28 +232,28 @@ impl App {
         if let Some(start_time) = self.splash.start_time {
             match self.splash.state {
                 SplashState::Logo => {
-                    if start_time.elapsed() >= Duration::from_secs(3) {
+                    if self.clock.since(start_time) >= Duration::from_secs(3) {
                         self.splash.state = SplashState::GameTitle;
-                        self.splash.start_time = Some(Instant::now());
+                        self.splash.start_time = Some(self.clock.now());
                     }
                 }
                 SplashState::GameTitle => {
-                    if start_time.elapsed() >= Duration::from_secs(3) {
+                    if self.clock.since(start_time) >= Duration::from_secs(3) {
                         self.splash.state = SplashState::BootMessage;
-                        self.splash.start_time = Some(Instant::now());
+                        self.splash.start_time = Some(self.clock.now());
                         self.splash.boot_display_text.clear();
                         self.splash.boot_line_index = 0;
-                        self.splash.last_line_time = Instant::now();
+                        self.splash.last_line_time = self.clock.now();
                         self.splash.boot_complete = false;
                     }
                 }
                 SplashState::BootMessage => {
                     // Handle typewriter effect
                     if !self.splash.boot_complete {
-                        let elapsed = self.splash.last_line_time.elapsed();
+                        let elapsed = self.clock.since(self.splash.last_line_time);
                         if elapsed >= Duration::from_millis(BOOT_MESSAGE_TYPEWRITER_MS) {
                             // ~(1000/x) characters per second
-                            self.splash.last_line_time = Instant::now();
+                            self.splash.last_line_time = self.clock.now();
 
                             // Get all text as a single string with newlines
                             let full_text = self.splash.boot_message_lines.join("\n");
@@ -268,10 +272,10 @@ impl App {
                             } else if !self.splash.boot_complete {
                                 self.splash.boot_complete = true;
                                 // Set a minimum display time after completion
-                                self.splash.start_time = Some(Instant::now());
+                                self.splash.start_time = Some(self.clock.now());
                             }
                         }
-                    } else if start_time.elapsed() >= Duration::from_secs(2) {
+                    } else if self.clock.since(start_time) >= Duration::from_secs(2) {
                         // 2 seconds after completion, move to main UI
                         self.splash.state = SplashState::MainUI;
                     }
@@ -385,6 +389,11 @@ fn main() -> Result<(), Box<dyn Error>> {
         let _ = Box::leak(Box::new(_guard));
     }
 
+    // Headless scripted run: no terminal, no audio, fake clock
+    if let Some(code) = run_headless_from_args(seed_val)? {
+        std::process::exit(code);
+    }
+
     // Ensure we restore the terminal if a panic occurs
     std::panic::set_hook(Box::new(|info| {
         let _ = disable_raw_mode();
@@ -420,81 +429,100 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-/// Update combat timers and trigger world ticks when moves execute
-/// Returns true if combat should exit (due to escape)
-fn update_combat_timing(
-    _app: &mut App,
-    _delta_time: std::time::Duration,
-) -> Result<bool, Box<dyn std::error::Error>> {
-    // This function is deprecated - combat timing is now handled by ActionQueue system in core
-    // Always return false (don't exit combat from here)
-    Ok(false)
+/// Handle `--script <path> [--seed <u64>] [--size <cols>x<rows>]`.
+/// Returns the exit status if a script was run, or `None` to start the interactive client.
+fn run_headless_from_args(default_seed: u64) -> Result<Option<i32>, Box<dyn Error>> {
+    let mut args = std::env::args().skip(1);
+    let mut script_path = None;
+    let mut overrides = headless::Overrides::default();
+    while let Some(arg) = args.next() {
+        let mut value = || args.next().ok_or_else(|| format!("{arg} expects a value"));
+        match arg.as_str() {
+            "--script" => script_path = Some(value()?),
+            "--seed" => overrides.seed = Some(value()?.parse()?),
+            "--size" => {
+                let v = value()?;
+                overrides.size =
+                    Some(headless::parse_size(&v).ok_or_else(|| format!("invalid --size '{v}'"))?);
+            }
+            other => return Err(format!("unknown argument '{other}'").into()),
+        }
+    }
+    let Some(path) = script_path else {
+        if overrides.seed.is_some() || overrides.size.is_some() {
+            return Err("--seed and --size require --script".into());
+        }
+        return Ok(None);
+    };
+    let text = std::fs::read_to_string(&path).map_err(|e| format!("cannot read {path}: {e}"))?;
+    let code = headless::run_script(
+        &text,
+        default_seed,
+        overrides,
+        &mut io::stdout().lock(),
+        &mut io::stderr().lock(),
+    );
+    Ok(Some(code))
+}
+
+/// Advance the client by one frame: combat auto-ticks and splash/UI timers.
+/// Shared by the interactive loop and headless runs; reads time only from `app.clock`.
+fn step(app: &mut App) {
+    // Auto-advance ticks when combat is active (one tick per COMBAT_MS_PER_TICK)
+    if app.combat.is_active() {
+        let tick_ms = app
+            .core
+            .game
+            .res
+            .config
+            .get_setting("game", "COMBAT_MS_PER_TICK")
+            .and_then(|v| v.as_u64())
+            .unwrap_or_else(|| {
+                panic!(
+                    "COMBAT_MS_PER_TICK must be set in config. raw value: {:?}",
+                    app.core
+                        .game
+                        .res
+                        .config
+                        .get_setting("game", "COMBAT_MS_PER_TICK")
+                )
+            });
+        let tick_interval = Duration::from_millis(tick_ms);
+
+        let current_time = app.clock.now();
+        let should_tick = match app.last_combat_tick {
+            None => {
+                app.last_combat_tick = Some(current_time);
+                false
+            }
+            Some(last_time) => {
+                if current_time.saturating_duration_since(last_time) >= tick_interval {
+                    app.last_combat_tick = Some(current_time);
+                    true
+                } else {
+                    false
+                }
+            }
+        };
+
+        if should_tick {
+            let tick_result = app.core.game.tick();
+            // Check if combat ended during auto-tick
+            if tick_result.contains(lithicrivers_core::game::GameTickResult::CombatEnded) {
+                app.combat = CombatUiState::None;
+            }
+        }
+    } else {
+        // Reset tick timer when not in combat
+        app.last_combat_tick = None;
+    }
+
+    app.on_tick();
 }
 
 fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<(), Box<dyn Error>> {
-    let mut last_update = std::time::Instant::now();
-
     loop {
-        let now = std::time::Instant::now();
-        let delta_time = now.duration_since(last_update);
-        last_update = now;
-
-        // Update combat timing (but don't tick world yet!)
-        let should_exit_combat = update_combat_timing(app, delta_time)?;
-
-        // Exit combat if escape was successful
-        if should_exit_combat {
-            app.combat = CombatUiState::None;
-        }
-
-        // Auto-advance ticks when combat is active (1 tick per second)
-        if app.combat.is_active() {
-            let tick_interval: std::time::Duration = std::time::Duration::from_millis(
-                app.core
-                    .game
-                    .res
-                    .config
-                    .get_setting("game", "COMBAT_MS_PER_TICK")
-                    .and_then(|v| v.as_u64())
-                    .unwrap_or_else(|| {
-                        panic!(
-                            "COMBAT_MS_PER_TICK must be set in config. raw value: {:?}",
-                            app.core
-                                .game
-                                .res
-                                .config
-                                .get_setting("game", "COMBAT_MS_PER_TICK")
-                        )
-                    }),
-            );
-
-            let current_time = std::time::Instant::now();
-            let should_tick = match app.last_combat_tick {
-                None => {
-                    app.last_combat_tick = Some(current_time);
-                    false
-                }
-                Some(last_time) => {
-                    if current_time.duration_since(last_time) >= tick_interval {
-                        app.last_combat_tick = Some(current_time);
-                        true
-                    } else {
-                        false
-                    }
-                }
-            };
-
-            if should_tick {
-                let tick_result = app.core.game.tick();
-                // Check if combat ended during auto-tick
-                if tick_result.contains(lithicrivers_core::game::GameTickResult::CombatEnded) {
-                    app.combat = CombatUiState::None;
-                }
-            }
-        } else {
-            // Reset tick timer when not in combat
-            app.last_combat_tick = None;
-        }
+        step(app);
 
         terminal.draw(|f| ui(f, app))?;
 
@@ -531,8 +559,6 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<(), 
             }
         }
 
-        app.on_tick();
-
         if app.core.should_quit {
             app.core.game.res.log("Shutting down...");
             tracing::info!(
@@ -549,7 +575,8 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<(), 
 
 fn ui(f: &mut Frame, app: &mut App) {
     // Update tutorial highlights (remove expired ones)
-    app.ui.tutorial_system.update_highlights();
+    let now = app.clock.now();
+    app.ui.tutorial_system.update_highlights(now);
 
     // Show splash screens if needed
     match app.splash.state {
@@ -1412,6 +1439,7 @@ fn render_npc_dialogue_modal(
             conversation,
             selected_choice,
             &app.core.game.res,
+            app.clock.animation_millis(),
         )
     } else {
         use ratatui::text::{Line, Span};
