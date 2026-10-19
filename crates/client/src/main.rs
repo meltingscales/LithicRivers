@@ -9,6 +9,7 @@ mod boot_message;
 mod clock;
 mod dialogue_presenter;
 mod headless;
+mod mcp;
 #[cfg(test)]
 mod snapshot_tests;
 mod tutorialsystem;
@@ -431,16 +432,18 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-/// Handle `--script <path> [--seed <u64>] [--size <cols>x<rows>]`.
-/// Returns the exit status if a script was run, or `None` to start the interactive client.
+/// Handle `--script <path> [--seed <u64>] [--size <cols>x<rows>]` and `--mcp`.
+/// Returns the exit status if a headless mode ran, or `None` to start the interactive client.
 fn run_headless_from_args(default_seed: u64) -> Result<Option<i32>, Box<dyn Error>> {
     let mut args = std::env::args().skip(1);
     let mut script_path = None;
+    let mut mcp = false;
     let mut overrides = headless::Overrides::default();
     while let Some(arg) = args.next() {
         let mut value = || args.next().ok_or_else(|| format!("{arg} expects a value"));
         match arg.as_str() {
             "--script" => script_path = Some(value()?),
+            "--mcp" => mcp = true,
             "--seed" => overrides.seed = Some(value()?.parse()?),
             "--size" => {
                 let v = value()?;
@@ -449,6 +452,13 @@ fn run_headless_from_args(default_seed: u64) -> Result<Option<i32>, Box<dyn Erro
             }
             other => return Err(format!("unknown argument '{other}'").into()),
         }
+    }
+    if mcp {
+        if script_path.is_some() || overrides.size.is_some() {
+            return Err("--mcp can't be combined with --script or --size".into());
+        }
+        mcp::serve_stdio(overrides.seed.unwrap_or(default_seed))?;
+        return Ok(Some(0));
     }
     let Some(path) = script_path else {
         if overrides.seed.is_some() || overrides.size.is_some() {

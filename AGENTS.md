@@ -76,6 +76,14 @@ Every script in `scripts/snapshots/*.txt` runs during `cargo test`, and its full
 - **Never accept snapshots blindly.** Commit updated `.snap` files together with the change that caused them, and say in the PR why each snapshot changed.
 - Bug reproductions belong in `scripts/agent/bugs/` with a test that runs them; screens worth guarding belong in `scripts/snapshots/`.
 
+### Live exploration over MCP
+
+For open-ended exploration ("play the crafting flow and look for bugs"), the repo's `.mcp.json` registers a local MCP server, `lithicrivers` (`just client-mcp`; stdio only, no network, no auth). Its tools mirror the script steps: `new_game`, `press_key`, `raw_key`, `type_text`, `wait`, `tick`, `cheat`, `screen`, `state`, `expect_text`, `run_script`, and `export_script`. It uses the same fake clock, so the same calls give the same results.
+
+- Use **scripts** (`just client-blind`) for anything that must be reproducible or checked in CI; use **MCP** to explore.
+- A bug found over MCP is not reproduced until you call `export_script`, save the result under `scripts/agent/bugs/`, and confirm `just client-blind` shows the bug. Add a test that runs it, as the existing bug scripts do.
+- The first launch builds the client, which can be slow; run `cargo build -p lithicrivers-client` first if the MCP connection times out.
+
 ## Planning with OpenSpec
 
 For anything larger than a small fix, use OpenSpec (`openspec/`):

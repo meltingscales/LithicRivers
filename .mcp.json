@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "lithicrivers": {
+      "command": "cargo",
+      "args": ["run", "-q", "-p", "lithicrivers-client", "--bin", "lithicrivers-client", "--", "--mcp"]
+    }
+  }
+}
