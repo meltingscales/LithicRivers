@@ -49,7 +49,7 @@ struct DialogueNode {
 
 #[derive(Debug, Clone)]
 #[allow(dead_code)]
-struct NPC {
+struct Npc {
     name: String,
     portrait: String, // ASCII art portrait
     dialogue_type: DialogueType,
@@ -70,7 +70,7 @@ struct Player {
 }
 
 struct App {
-    npcs: Vec<NPC>,
+    npcs: Vec<Npc>,
     dialogue_tree: Vec<DialogueNode>,
     player: Player,
     current_npc: Option<usize>,
@@ -107,7 +107,7 @@ impl App {
     fn setup_npcs_and_dialogue(&mut self) {
         // Create NPCs with portraits inspired by classic RPGs
         self.npcs = vec![
-            NPC {
+            Npc {
                 name: "Merchant Aldric".to_string(),
                 portrait: "
     ╔═══════════╗
@@ -130,7 +130,7 @@ impl App {
                     "Elixir".to_string(),
                 ],
             },
-            NPC {
+            Npc {
                 name: "Knight Captain Elena".to_string(),
                 portrait: "
     ╔═══════════╗
@@ -149,7 +149,7 @@ impl App {
                 has_quest: true,
                 shop_inventory: Vec::new(),
             },
-            NPC {
+            Npc {
                 name: "Mysterious Oracle".to_string(),
                 portrait: "
     ╔═══════════╗
@@ -168,7 +168,7 @@ impl App {
                 has_quest: false,
                 shop_inventory: Vec::new(),
             },
-            NPC {
+            Npc {
                 name: "Innkeeper Marta".to_string(),
                 portrait: "
     ╔═══════════╗
@@ -187,7 +187,7 @@ impl App {
                 has_quest: false,
                 shop_inventory: Vec::new(),
             },
-            NPC {
+            Npc {
                 name: "Bandit Leader Raven".to_string(),
                 portrait: "
     ╔═══════════╗
@@ -908,7 +908,7 @@ impl App {
         }
     }
 
-    fn get_portrait_with_mood(&self, npc: &NPC) -> String {
+    fn get_portrait_with_mood(&self, npc: &Npc) -> String {
         let eyes = self.get_mood_eyes(npc.current_mood);
         let mouth = self.get_mood_face(npc.current_mood);
         let symbol = match npc.dialogue_type {
@@ -1074,15 +1074,13 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
                         }
                         KeyCode::Char(c) if c.is_ascii_digit() => {
                             let num = c.to_digit(10).unwrap() as usize;
-                            if num >= 1 && num <= 5 {
+                            if (1..=5).contains(&num) {
                                 app.start_conversation(num - 1);
                             }
                         }
                         KeyCode::Up => {
-                            if app.current_dialogue.is_some() {
-                                if app.selected_choice > 0 {
-                                    app.selected_choice -= 1;
-                                }
+                            if app.current_dialogue.is_some() && app.selected_choice > 0 {
+                                app.selected_choice -= 1;
                             }
                         }
                         KeyCode::Down => {
@@ -1097,10 +1095,8 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
                                 app.select_choice(app.selected_choice);
                             }
                         }
-                        KeyCode::Char('x') => {
-                            if app.current_dialogue.is_some() {
-                                app.end_conversation();
-                            }
+                        KeyCode::Char('x') if app.current_dialogue.is_some() => {
+                            app.end_conversation();
                         }
                         _ => {}
                     }
@@ -1158,11 +1154,8 @@ fn render_npc_selection_screen(f: &mut Frame, app: &App, area: Rect) {
         let mood_prefix = app.get_mood_prefix(npc.current_mood);
 
         let npc_text = format!(
-            "{}\n{}\n\n{}{}",
-            npc.portrait,
-            npc.name,
-            mood_prefix,
-            format!("{:?}", npc.dialogue_type)
+            "{}\n{}\n\n{}{:?}",
+            npc.portrait, npc.name, mood_prefix, npc.dialogue_type
         );
 
         let mut block = Block::default()

@@ -355,7 +355,7 @@ impl App {
 
                         // Adjust selection if needed
                         if self.selected_loot_item >= corpse.inventory.len()
-                            && corpse.inventory.len() > 0
+                            && !corpse.inventory.is_empty()
                         {
                             self.selected_loot_item = corpse.inventory.len() - 1;
                         }
@@ -436,11 +436,9 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
                                     app.selected_corpse = (app.selected_corpse + 1)
                                         .min(corpses_clone.len().saturating_sub(1));
                                 }
-                                KeyCode::Enter => {
-                                    if app.selected_corpse < corpses_clone.len() {
-                                        let corpse_idx = corpses_clone[app.selected_corpse];
-                                        app.select_corpse(corpse_idx);
-                                    }
+                                KeyCode::Enter if app.selected_corpse < corpses_clone.len() => {
+                                    let corpse_idx = corpses_clone[app.selected_corpse];
+                                    app.select_corpse(corpse_idx);
                                 }
                                 _ => {}
                             }
@@ -480,10 +478,8 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
                                     }
                                 }
                             }
-                            KeyCode::Enter => {
-                                if app.loot_panel_focus {
-                                    app.take_item_from_corpse(corpse_idx, app.selected_loot_item);
-                                }
+                            KeyCode::Enter if app.loot_panel_focus => {
+                                app.take_item_from_corpse(corpse_idx, app.selected_loot_item);
                             }
                             _ => {}
                         },
@@ -562,10 +558,11 @@ fn render_world_map(f: &mut Frame, app: &App, area: Rect) {
             // Check what's at this position
             if world_x == app.player_x && world_y == app.player_y {
                 map_content.push('@'); // Player
-            } else if let Some(_) = app
+            } else if app
                 .corpses
                 .iter()
                 .find(|c| c.x == world_x && c.y == world_y)
+                .is_some()
             {
                 map_content.push('%'); // Corpse
             } else {
