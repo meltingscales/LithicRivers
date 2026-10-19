@@ -17,6 +17,10 @@ context: |
 #     Designs and tasks must cover Windows, macOS, and Linux
 #     Write all artifacts in Spanish
 
+rules:
+  tasks:
+    - Every task states its verification as cargo test, just code-clippy, or a just client-blind script or snapshot once those exist. Never verify by running the interactive client; tasks that need a human to look at the TUI say "user check".
+
 # Per-artifact rules (optional)
 # Add custom rules for specific artifacts.
 # Example:
