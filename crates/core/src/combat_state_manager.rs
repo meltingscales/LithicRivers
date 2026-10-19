@@ -343,4 +343,25 @@ mod tests {
             .count();
         assert_eq!(corpses, 1);
     }
+
+    #[test]
+    fn walking_away_reports_combat_ended() {
+        let mut world = arena();
+        world.feral_dog(1, 0, 0);
+        let mut game = world.build();
+        assert!(game.tick().contains(GameTickResult::CombatTriggered));
+
+        // Step well outside the combat end distance
+        let player = game.game.get_player_entity().unwrap();
+        *game.game.world.get::<&mut Position>(player).unwrap() = Position { x: 40, y: 40, z: 0 };
+        let result = game.tick();
+
+        assert!(!CombatStateManager::is_in_combat(&game.game.res));
+        assert!(
+            result.contains(GameTickResult::CombatEnded),
+            "the tick that ends combat must report CombatEnded so the client closes the panel"
+        );
+        // Reported once, not every tick after
+        assert!(!game.tick().contains(GameTickResult::CombatEnded));
+    }
 }
