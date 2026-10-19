@@ -27,7 +27,7 @@ Refactor `Game::new` into `Game::new_empty(seed, player_pos)` (resources + playe
 Move the inline sheep and NPC spawn tuples from `Game::new` into `spawn_utils` functions (feral dog already has one). `Game::new` and the builder both call them. Behavior-preserving refactor; covered by an equality test that `Game::new` produces the same entities before and after.
 
 ### Builder shape
-`TestWorld::new(seed).player_at(x,y,z).inventory(&[..]).fill(a, b, TileKind).tile(p, TileKind).sheep(p).feral_dog(p).npc(p, ..).item(p, ItemKind, qty).build() -> (TestGame, Handles)`. `TestGame` wraps `Game` with `act(PlayerAction)`, `tick()`, `ticks(n)`, and query helpers (`pos(handle)`, `health(handle)`, `player_inventory()`). Entity adds return handles immediately (an index resolved after build), so tests don't search by position.
+`TestWorld::new(seed).player_at(x,y,z).inventory(&[..]).auto_pickup(bool).fill(a, b, TileKind).tile(p, TileKind).sheep(p).feral_dog(p).npc(p, ..).item(p, ItemKind, qty).build() -> (TestGame, Handles)`. `TestGame` wraps `Game` with `act(PlayerAction)`, `tick()`, `ticks(n)`, and query helpers (`pos(handle)`, `health(handle)`, `player_inventory()`). Entity adds return handles immediately (an index resolved after build), so tests don't search by position.
 
 ### Placement order
 Tiles are applied after worldgen for the touched chunks is forced (`ensure_chunk`), so later lazy generation can't overwrite them.
@@ -38,5 +38,5 @@ Module `test_support` under `#[cfg(any(test, feature = "test-support"))]`. Clien
 ## Risks / Trade-offs
 
 - [Refactoring `Game::new` changes startup state] → Golden test comparing entity kinds/positions from `Game::new(12345)` before and after the refactor.
-- [Worldgen structures spawn near the player on first tick] → `new_empty` skips structure queueing; tests that need structures add them explicitly.
+- [Worldgen runs as ticks generate chunks around the player] → `new_empty` queues no quest structures, but ticking still runs real chunk generation, which can place structure loot (dropped items) in nearby chunks (e.g. two items at (42,22) for seed 1). No creatures or NPCs appear; a test asserts this. Tests look things up by handle or position rather than counting all entities.
 - [Builder grows into a second game API] → Keep it to construction + thin drive/query helpers; anything else goes through `Game`.

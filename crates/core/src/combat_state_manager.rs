@@ -283,3 +283,85 @@ impl CombatStateManager {
         res.player_state.combat_ended_this_tick
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::components::{Health, Position};
+    use crate::game::GameTickResult;
+    use crate::intent::PlayerAction;
+    use crate::test_support::TestWorld;
+    use crate::tiles::TileKind;
+
+    fn arena() -> TestWorld {
+        TestWorld::new(7).fill((-6, -6, 0), (6, 6, 0), TileKind::Grass)
+    }
+
+    #[test]
+    fn walking_up_to_a_feral_dog_starts_combat() {
+        let mut world = arena();
+        let dog = world.feral_dog(2, 0, 0);
+        let mut game = world.build();
+        assert!(!CombatStateManager::is_in_combat(&game.game.res));
+
+        game.act(PlayerAction::Move {
+            dx: 1,
+            dy: 0,
+            dz: 0,
+        });
+        let result = game.tick();
+
+        assert_eq!(game.player_pos(), Position { x: 1, y: 0, z: 0 });
+        assert!(result.contains(GameTickResult::CombatTriggered));
+        assert!(CombatStateManager::is_in_combat(&game.game.res));
+        assert!(game.pos(dog).is_some());
+    }
+
+    #[test]
+    fn combat_ends_when_the_dog_reaches_zero_health() {
+        let mut world = arena();
+        let dog = world.feral_dog(1, 0, 0);
+        let mut game = world.build();
+        assert!(game.tick().contains(GameTickResult::CombatTriggered));
+
+        // Same path as a killing blow in combat_actions: health to zero, then the death handler
+        let dog = game.entity(dog);
+        game.game.world.get::<&mut Health>(dog).unwrap().current = 0;
+        crate::systems::handle_entity_death(&mut game.game.world, &mut game.game.res, dog);
+        // The next tick sees no living enemy nearby and ends combat; it stays over,
+        // since the corpse is not a combatant
+        game.tick();
+        assert!(!CombatStateManager::is_in_combat(&game.game.res));
+        game.ticks(3);
+        assert!(!CombatStateManager::is_in_combat(&game.game.res));
+        let corpses = game
+            .game
+            .world
+            .query::<&crate::components::EntityKind>()
+            .iter()
+            .filter(|(_, k)| **k == crate::components::EntityKind::Corpse)
+            .count();
+        assert_eq!(corpses, 1);
+    }
+
+    #[test]
+    fn walking_away_reports_combat_ended() {
+        let mut world = arena();
+        world.feral_dog(1, 0, 0);
+        let mut game = world.build();
+        assert!(game.tick().contains(GameTickResult::CombatTriggered));
+
+        // Step well outside the combat end distance
+        let player = game.game.get_player_entity().unwrap();
+        *game.game.world.get::<&mut Position>(player).unwrap() = Position { x: 40, y: 40, z: 0 };
+        let result = game.tick();
+
+        assert!(!CombatStateManager::is_in_combat(&game.game.res));
+        assert!(
+            result.contains(GameTickResult::CombatEnded),
+            "the tick that ends combat must report CombatEnded so the client closes the panel"
+        );
+        // Reported once, not every tick after
+        assert!(!game.tick().contains(GameTickResult::CombatEnded));
+    }
+}

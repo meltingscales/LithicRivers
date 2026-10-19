@@ -26,6 +26,24 @@ Run tests with `cargo test --workspace` to validate game systems (`just test-lin
 
 Tests help ensure systems work correctly and prevent regressions during development.
 
+For game-logic tests in `lithicrivers-core`, build a scenario with `test_support::TestWorld` instead of `Game::new` (which spawns sheep, dogs, NPCs and structures). A fixture starts with only the player at (0, 0, 0); you place tiles and entities, get handles back, then drive real ticks:
+
+```rust
+use crate::test_support::TestWorld;
+
+let mut world = TestWorld::new(3)
+    .fill((-3, -3, 0), (3, 3, 0), TileKind::Grass)
+    .inventory(&[])
+    .auto_pickup(true);
+world.item(1, 0, 0, ItemKind::Log, 4);
+let mut game = world.build();
+game.act(PlayerAction::Move { dx: 1, dy: 0, dz: 0 });
+game.tick();
+assert_eq!(game.player_inventory(), vec![(ItemKind::Log, 4)]);
+```
+
+Add creatures with `world.sheep(..)`, `world.feral_dog(..)`, `world.npc(..)`, and look them up with `game.pos(handle)` / `game.health(handle)`. Other crates' tests can use it by enabling the core `test-support` feature in `[dev-dependencies]`. If `Game::new` changes on purpose, the `game_new_matches_golden_entities` test fails and prints the new entity list for `crates/core/src/testdata/game_new_seed_12345.txt`.
+
 ## Headless client (seeing the running game)
 
 `just client-blind <script>` runs the full client with no terminal, no audio and a fake clock, and prints text screen dumps and JSON state dumps. Use it to check a change in the real game, or to reproduce a bug as a committed script under `scripts/`. Example: `just client-blind scripts/agent/smoke.txt`.

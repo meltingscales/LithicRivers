@@ -1,0 +1,88 @@
+ (16,20,-19) item=Diamondx10
+ (17,11,-19) item=Diamondx10
+ (19,19,0) item=Logx1
+ (19,31,0) item=Logx1
+ (20,21,-19) item=Diamondx10
+ (201,1633,-6) item=Leatherx1
+ (201,1634,-6) item=Meatx1
+ (202,1620,-6) item=ScrapElectronicsx10
+ (203,1627,-6) item=ScrapElectronicsx10
+ (204,1618,-6) item=ScrapElectronicsx10
+ (204,1626,-6) item=ScrapElectronicsx10
+ (204,1627,-6) item=ScrapElectronicsx10
+ (206,1611,-6) item=ScrapElectronicsx10
+ (206,1612,-6) item=ScrapElectronicsx10
+ (206,1613,-6) item=ScrapElectronicsx10
+ (206,1614,-6) item=ScrapElectronicsx10
+ (206,1615,-6) item=ScrapElectronicsx10
+ (206,1619,-6) item=ScrapElectronicsx10
+ (206,1620,-6) item=ScrapElectronicsx10
+ (206,1622,-6) item=ScrapElectronicsx10
+ (206,1624,-6) item=ScrapElectronicsx10
+ (206,1625,-6) item=ScrapElectronicsx10
+ (206,1626,-6) item=ScrapElectronicsx10
+ (206,1627,-6) item=ScrapElectronicsx10
+ (206,1628,-6) item=ScrapElectronicsx10
+ (208,1617,-6) item=Diamondx10
+ (208,1618,-6) item=ScrapElectronicsx10
+ (208,1622,-6) item=Diamondx10
+ (208,1623,-6) item=ScrapElectronicsx10
+ (209,1622,-6) item=ScrapElectronicsx10
+ (21,21,0) item=Logx1
+ (21,25,0) item=Logx1
+ (210,1622,-6) item=ScrapElectronicsx10
+ (211,1622,-6) item=ScrapElectronicsx10
+ (211,1623,-6) item=Diamondx10
+ (213,1610,-6) item=Meatx1
+ (213,1611,-6) item=Meatx1
+ (213,1612,-6) item=Logx1
+ (213,1613,-6) item=Meatx1
+ (213,1614,-6) item=Logx1
+ (213,1615,-6) item=Meatx1
+ (213,1616,-6) item=Meatx1
+ (213,1617,-6) item=Meatx1
+ (213,1618,-6) item=Meatx1
+ (213,1619,-6) item=Meatx1
+ (213,1620,-6) item=Meatx1
+ (213,1621,-6) item=Meatx1
+ (213,1622,-6) item=Logx1
+ (213,1623,-6) item=Meatx1
+ (213,1624,-6) item=Meatx1
+ (213,1625,-6) item=Meatx1
+ (213,1626,-6) item=Meatx1
+ (213,1627,-6) item=Meatx1
+ (213,1628,-6) item=Logx1
+ (213,1629,-6) item=Meatx1
+ (213,1633,-6) item=Meatx1
+ (213,1634,-6) item=Meatx1
+ (213,1635,-6) item=Leatherx1
+ (25,30,0) item=Logx1
+ (25,31,0) item=Logx1
+ (27,13,-19) item=Diamondx10
+ (29,21,-19) item=Diamondx10
+ (30,25,0) item=Logx1
+ (31,31,0) item=Logx1
+ (33,11,-19) item=Diamondx10
+ (35,20,-19) item=Diamondx10
+ (36,-16,-16) item=Meatx1
+ (36,-16,-18) item=Meatx1
+ (38,21,-19) item=Diamondx10
+ (45,79,-18) item=Leatherx1
+ (45,79,-20) item=Logx1
+Corpse (18,21,0) inv=[Leatherx1,Meatx2]
+FeralDog (-12,-12,0) hp=80/80 inv=[Leatherx1,Meatx1]
+FeralDog (-13,-13,0) hp=80/80 inv=[Meatx2]
+FeralDog (-14,-14,0) hp=80/80 inv=[Meatx1]
+FeralDog (-15,-15,0) hp=80/80 inv=[Leatherx1,Meatx1]
+FeralDog (201,1631,-3) hp=80/80 inv=[Leatherx2,Meatx3]
+FeralDog (202,1615,-6) hp=80/80 inv=[Meatx3]
+FeralDog (208,1628,-6) hp=80/80 inv=[Leatherx2,Meatx1]
+FeralDog (208,1635,-6) hp=80/80 inv=[Leatherx2,Meatx3]
+FeralDog (210,1612,-6) hp=80/80 inv=[Meatx1]
+FeralDog (37,37,0) hp=80/80 inv=[Meatx1]
+FeralDog (38,38,0) hp=80/80 inv=[Meatx2]
+Player (11,11,-19) inv=[Nailx10,Acornx1,Logx3,Stickx2,Torchx3,Stringx2,ScrapElectronicsx3]
+QuestTutorialBrokenAndroid (13,11,-19) hp=100/100
+Sheep (26,28,0) hp=50/50
+Sheep (27,27,0) hp=50/50
+Sheep (29,25,0) hp=50/50

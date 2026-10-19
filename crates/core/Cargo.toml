@@ -20,3 +20,7 @@ rust-embed = "8"
 bitflags = "2.0"
 crossterm = "0.27"
 strum = { version = "0.25", features = ["derive"] }
+
+[features]
+# Test fixtures (TestWorld/TestGame) for other crates' tests; never enable in release builds
+test-support = []

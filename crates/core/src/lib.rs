@@ -27,6 +27,8 @@ pub mod systems;
 #[cfg(test)]
 mod systems_tests;
 pub mod target_tracker;
+#[cfg(any(test, feature = "test-support"))]
+pub mod test_support;
 pub mod tile_registry;
 pub mod tiles;
 pub mod view;
