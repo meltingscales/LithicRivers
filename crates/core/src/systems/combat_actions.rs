@@ -138,10 +138,9 @@ fn check_combat_end_conditions(world: &mut World, res: &mut Resources) {
         //         tracing::debug!(target: "combat", "Removed dead entity {:?} from world", entity);
         //     }
         // }
-    } else {
-        // Reset combat end flag if combat is still active
-        res.player_state.combat_ended_this_tick = false;
     }
+    // combat_ended_this_tick is cleared by CombatStateManager on the following tick. Clearing it
+    // here would erase an end of combat that combat_trigger_system reported earlier this tick.
 }
 
 /// Execute a completed combat action

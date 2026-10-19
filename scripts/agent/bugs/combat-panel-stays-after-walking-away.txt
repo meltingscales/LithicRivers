@@ -1,0 +1,16 @@
+# Bug: after leaving a fight by walking away, the combat panel stayed open.
+# Core ended combat, but the tick never reported CombatEnded, so the client never closed the panel.
+seed 12345
+size 120x40
+skip-splash
+
+# Start a fight with the feral dog at (-15, -15, 0)
+cheat tp -16 -16 0
+key movement.MOVE_SOUTHEAST
+expect-text "Action Queue"
+
+# Get far away, then take a turn; the World tab should go back to its normal sidebar
+cheat tp -40 -40 0
+key movement.WAIT
+state after-leaving
+expect-text "MODES"
