@@ -42,17 +42,15 @@ pub fn render_modes_panel(f: &mut Frame, app: &mut App, area: Rect) {
 
     // Torch mode status
     let torch_status = {
-        let mut torch_equipped = false;
-        for (_entity, (light_source, _player)) in app
+        // Only one player
+        let torch_equipped = app
             .core
             .game
             .world
             .query::<(&LightSource, &Player)>()
             .iter()
-        {
-            torch_equipped = light_source.torch_equipped;
-            break; // Only one player
-        }
+            .next()
+            .is_some_and(|(_, (light_source, _))| light_source.torch_equipped);
 
         // Check if torch indicator should be highlighted
         let mut style = if torch_equipped {

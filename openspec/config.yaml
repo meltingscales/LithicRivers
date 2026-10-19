@@ -3,7 +3,7 @@ schema: spec-driven
 context: |
   All randomness (combat, loot, worldgen, AI choices) must be deterministic from world seed, world tick, and coordinates/biome, so the game stays TAS-able for a given seed and code version.
   Never hardcode keys: add keybinds to default_config.rs and check them with keybinds.matches(); print keys via get_printable_key_for_keybind().
-  The game renders ASCII via ratatui. Never run TUI binaries (just client, etc.) to verify; verify with unit tests (make test).
+  The game renders ASCII via ratatui. Never run TUI binaries (just client, etc.) to verify; verify with unit tests (cargo test --workspace).
   Use rustup to run cargo; never run cargo clean.
   demo_*.rs files are self-contained demos and out of scope for refactors.
   Current focus is the "MVP for steam release (2026)" section of docs/TODO.md; docs/STEAM-MVP.md is the high-level roadmap.

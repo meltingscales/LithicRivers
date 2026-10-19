@@ -381,12 +381,18 @@ impl Game {
             let target_z = player_position.z + offset_z;
 
             // Find and move the entity with the specified component type
-            for (entity, pos) in self.world.query::<&mut Position>().with::<&T>().iter() {
+            // Only move the first entity found with this component type
+            if let Some((entity, pos)) = self
+                .world
+                .query::<&mut Position>()
+                .with::<&T>()
+                .iter()
+                .next()
+            {
                 pos.x = target_x;
                 pos.y = target_y;
                 pos.z = target_z;
                 tracing::info!(target: "game", "Moved entity {:?} to ({}, {}, {})", entity, target_x, target_y, target_z);
-                break; // Only move the first entity found with this component type
             }
         }
     }

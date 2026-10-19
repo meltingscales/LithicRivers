@@ -178,7 +178,8 @@ pub fn mining_system(world: &mut World, res: &mut Resources) -> bool {
                 .world
                 .set_tile_cached(x, y, z, TileKind::Dirt);
 
-            let mut rng = rand::thread_rng();
+            // Seeded by world seed + tile coords so drops are reproducible
+            let mut rng = res.world_state.world.new_rng(x, y, z);
             let wood_qty = rng.gen_range(2..=3);
             let acorn_qty = rng.gen_range(1..=3);
 
@@ -284,5 +285,51 @@ pub fn pickup_system(world: &mut World, res: &mut Resources) {
     // Remove the picked up items from the world
     for e in pickups {
         let _ = world.despawn(e);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::tiles::TileKind;
+
+    fn chop_tree_drops(seed: u64) -> Vec<(ItemKind, u32)> {
+        let mut world = World::new();
+        let mut res = Resources::new(seed);
+        let (x, y, z) = (10, -4, 0);
+        res.world_state
+            .world
+            .set_tile_cached(x, y, z, TileKind::Tree);
+        res.player_state.intent.action = Some(PlayerAction::MineAt { x, y, z });
+
+        assert!(mining_system(&mut world, &mut res));
+
+        let mut drops: Vec<(ItemKind, u32)> = world
+            .query::<&DroppedItem>()
+            .iter()
+            .map(|(_, d)| (d.kind, d.qty))
+            .collect();
+        drops.sort_by_key(|(kind, _)| format!("{:?}", kind));
+        drops
+    }
+
+    #[test]
+    fn test_tree_chop_drops_are_deterministic() {
+        for seed in [0, 1, 12345, u64::MAX] {
+            let first = chop_tree_drops(seed);
+            assert_eq!(
+                first,
+                chop_tree_drops(seed),
+                "seed {} not deterministic",
+                seed
+            );
+            for (kind, qty) in first {
+                match kind {
+                    ItemKind::Log => assert!((2..=3).contains(&qty)),
+                    ItemKind::Acorn => assert!((1..=3).contains(&qty)),
+                    other => panic!("unexpected drop {:?}", other),
+                }
+            }
+        }
     }
 }

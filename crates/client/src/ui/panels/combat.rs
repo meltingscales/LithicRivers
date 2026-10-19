@@ -52,7 +52,7 @@ pub fn render_combat_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     }
 
     // Victory check
-    if combat_enemies.is_empty() || combat_enemies.iter().all(|e| e.health <= 0) {
+    if combat_enemies.is_empty() || combat_enemies.iter().all(|e| e.health == 0) {
         let victory = Paragraph::new("Victory!")
             .style(Style::default().fg(Color::Green))
             .alignment(Alignment::Center);

@@ -1,6 +1,6 @@
 # AI Instructions
 
-You are allowed to run `just build` and `just install`, and also `just run-*`. This game uses ratatui for the UI.
+You are allowed to run `just build-linux` (or `just build-windows`), `just install`, and the `just demo-*` / `just util-*` recipes. This game uses ratatui for the UI.
 
 If you're running NixOS, make sure to run `nix-shell` to get the right environment.
 
@@ -11,7 +11,7 @@ You should use `rustup` to run `cargo` and other tools.
 
 Please avoid running `cargo clean`. It takes a long time to rebuild rust modules.
 
-Also never run `just client` or any other TUI because you might be in a terminal that cannot display properly as you're an AI agent. Instead, ask me to run `just client` or use unit testing to test code.
+Also never run `just client-linux` / `just client-windows` or any other TUI because you might be in a terminal that cannot display properly as you're an AI agent. Instead, ask me to run `just client-linux` or use unit testing to test code.
 
 ## Demos
 
@@ -19,7 +19,7 @@ All code prefixed with `demo_*.rs` is not meant to be part of the main codebase.
 
 ## Testing
 
-Run tests with `make test` to validate game systems. Write simple unit tests for:
+Run tests with `cargo test --workspace` to validate game systems (`just test-linux` also works, but runs a full `build-linux` first). Lint with `cargo clippy --workspace --all-targets`. Write simple unit tests for:
 - Combat mechanics (damage, death, action queues)
 - Game logic (movement, energy, cooldowns)
 - Edge cases and bug fixes
