@@ -29,7 +29,7 @@ impl CommandRegistry {
         let cmd_list = [
             Command {
                 name: "tp",
-                description: "tp x y z - Teleport to coordinates",
+                description: "tp x y z - Teleport to coordinates (~ = relative to player)",
                 handler: handle_tp_command,
             },
             Command {
@@ -46,6 +46,12 @@ impl CommandRegistry {
                 name: "toggle_tutorial",
                 description: "toggle_tutorial - Toggle tutorial panel visibility",
                 handler: handle_toggle_tutorial_command,
+            },
+            Command {
+                name: "spawn_enemy",
+                description:
+                    "spawn_enemy <kind> [x y z] - Spawn an enemy (default ~2 ~ ~, ~ = relative to player)",
+                handler: handle_spawn_enemy_command,
             },
             Command {
                 name: "giveitem",
@@ -201,27 +207,90 @@ fn update_autocomplete(input: &str) -> (Vec<String>, Option<usize>) {
 }
 
 // Individual command handlers
+/// Parse three coordinates, each absolute (`12`) or relative to `player` (`~`, `~3`, `~-2`).
+fn parse_position(args: &[&str], player: Position) -> Result<Position, String> {
+    let [x, y, z] = args else {
+        return Err(format!("expected 3 coordinates, got {}", args.len()));
+    };
+    let axis = |arg: &str, player_axis: i64| -> Result<i64, String> {
+        let value = match arg.strip_prefix('~') {
+            Some("") => Ok(player_axis),
+            Some(offset) => offset.parse::<i64>().map(|o| player_axis + o),
+            None => arg.parse::<i64>(),
+        };
+        value.map_err(|_| format!("invalid coordinate '{arg}' (use a number, ~ or ~<offset>)"))
+    };
+    Ok(Position {
+        x: axis(x, player.x)?,
+        y: axis(y, player.y)?,
+        z: axis(z, player.z)?,
+    })
+}
+
+fn player_position(app: &App) -> Result<Position, Box<dyn Error>> {
+    app.core
+        .game
+        .get_player_position()
+        .ok_or_else(|| "no player in the world".into())
+}
+
 fn handle_tp_command(app: &mut App, parts: &[&str]) -> Result<(), Box<dyn Error>> {
-    if parts.len() == 4 {
-        if let (Ok(x), Ok(y), Ok(z)) = (
-            parts[1].parse::<i64>(),
-            parts[2].parse::<i64>(),
-            parts[3].parse::<i64>(),
-        ) {
-            let new_position = Position { x, y, z };
-            if let Some(player_entity) = app.core.game.get_player_entity() {
-                if let Ok(mut pos) = app.core.game.world.get::<&mut Position>(player_entity) {
-                    *pos = new_position;
-                    // Update UI viewport to follow player
-                    app.ui.view_x = x;
-                    app.ui.view_y = y;
-                    app.ui.view_z = z;
-                    // Update look cursor to new position
-                    app.panels.look.cursor = new_position;
-                }
-            }
+    let player = player_position(app)?;
+    let new_position =
+        parse_position(&parts[1..], player).map_err(|e| format!("Usage: tp x y z - {e}"))?;
+    if let Some(player_entity) = app.core.game.get_player_entity() {
+        if let Ok(mut pos) = app.core.game.world.get::<&mut Position>(player_entity) {
+            *pos = new_position;
         }
     }
+    // Update UI viewport and look cursor to follow player
+    app.ui.view_x = new_position.x;
+    app.ui.view_y = new_position.y;
+    app.ui.view_z = new_position.z;
+    app.panels.look.cursor = new_position;
+    Ok(())
+}
+
+fn handle_spawn_enemy_command(app: &mut App, parts: &[&str]) -> Result<(), Box<dyn Error>> {
+    use lithicrivers_core::spawn_utils::{spawn_enemy, EnemyKind};
+
+    let kinds = || {
+        EnemyKind::ALL
+            .iter()
+            .map(|k| k.name())
+            .collect::<Vec<_>>()
+            .join(", ")
+    };
+    let usage = || format!("Usage: spawn_enemy <kind> [x y z]; kinds: {}", kinds());
+    let Some(name) = parts.get(1) else {
+        return Err(usage().into());
+    };
+    let kind = EnemyKind::from_name(name)
+        .ok_or_else(|| format!("unknown enemy '{name}'; kinds: {}", kinds()))?;
+    let player = player_position(app)?;
+    let coords: &[&str] = match &parts[2..] {
+        [] => &["~2", "~", "~"],
+        rest => rest,
+    };
+    let pos = parse_position(coords, player).map_err(|e| format!("{} - {e}", usage()))?;
+
+    let game = &mut app.core.game;
+    spawn_enemy(&mut game.world, &mut game.res.world_state.world, kind, pos).map_err(|e| {
+        format!(
+            "can't spawn {} at ({}, {}, {}): {e}",
+            kind.name(),
+            pos.x,
+            pos.y,
+            pos.z
+        )
+    })?;
+    game.res.log(format!(
+        "Spawned {} at ({}, {}, {})",
+        kind.name(),
+        pos.x,
+        pos.y,
+        pos.z
+    ));
     Ok(())
 }
 
@@ -392,7 +461,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Error>>
                 KeyCode::Enter => {
                     let command = input.clone();
                     app.panels.cheat_console = CheatConsoleState::None;
-                    execute_command(app, &command)?;
+                    execute_command(app, &command);
                     return Ok(true);
                 }
                 // Handle text input
@@ -584,14 +653,52 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Error>>
     Ok(false) // Didn't handle input
 }
 
-fn execute_command(app: &mut App, command: &str) -> Result<(), Box<dyn Error>> {
-    let registry = get_command_registry();
-    registry.execute(app, command)
+/// Run a command typed into the in-game console. Failures are shown in the message log;
+/// they must never propagate, or they would end the interactive client's main loop.
+fn execute_command(app: &mut App, command: &str) {
+    if let Err(e) = get_command_registry().execute(app, command) {
+        app.core.game.res.log_red(format!("Cheat failed: {e}"));
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    const P: Position = Position {
+        x: 10,
+        y: 10,
+        z: -19,
+    };
+
+    #[test]
+    fn positions_can_be_absolute_relative_or_mixed() {
+        assert_eq!(
+            parse_position(&["1", "-2", "3"], P),
+            Ok(Position { x: 1, y: -2, z: 3 })
+        );
+        assert_eq!(parse_position(&["~", "~", "~"], P), Ok(P));
+        assert_eq!(
+            parse_position(&["~-2", "~1", "~"], P),
+            Ok(Position {
+                x: 8,
+                y: 11,
+                z: -19
+            })
+        );
+        assert_eq!(
+            parse_position(&["~5", "~", "0"], P),
+            Ok(Position { x: 15, y: 10, z: 0 })
+        );
+    }
+
+    #[test]
+    fn bad_positions_are_errors() {
+        assert!(parse_position(&["~x", "0", "0"], P).is_err());
+        assert!(parse_position(&["1", "2"], P).is_err());
+        assert!(parse_position(&["1", "2", "3", "4"], P).is_err());
+        assert!(parse_position(&["1", "two", "3"], P).is_err());
+    }
 
     #[test]
     fn test_find_common_prefix() {

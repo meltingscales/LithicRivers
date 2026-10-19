@@ -5,7 +5,7 @@
 
 use crate::app::handle_input;
 use crate::app::input::cheat_console::get_command_registry;
-use crate::app_state::{BodyRepairState, CheatConsoleState, CombatUiState, TutorialSelectionState};
+use crate::app_state::{BodyRepairState, CheatConsoleState, TutorialSelectionState};
 use crate::{step, ui, App, SplashState};
 use crossterm::event::KeyCode;
 use lithicrivers_core::components::{
@@ -450,9 +450,7 @@ impl Runner {
             Step::Tick(n) => {
                 for _ in 0..*n {
                     let result = self.app.core.game.tick();
-                    if result.contains(lithicrivers_core::game::GameTickResult::CombatEnded) {
-                        self.app.combat = CombatUiState::None;
-                    }
+                    self.app.apply_tick_result(&result);
                 }
                 self.frame();
             }
@@ -799,7 +797,7 @@ mod tests {
                 &mut String::new(),
             )
             .unwrap();
-        runner.app.combat = CombatUiState::Active {
+        runner.app.combat = crate::app_state::CombatUiState::Active {
             current_move: 0,
             current_enemy: 0,
             enemy_timers: Vec::new(),
@@ -1043,5 +1041,155 @@ mod render_tests {
             .map(|l| l.step)
             .collect();
         assert_eq!(reparsed, steps);
+    }
+}
+
+#[cfg(test)]
+mod cheat_tests {
+    use super::*;
+
+    fn run(text: &str) -> (i32, String, String) {
+        let (mut out, mut err_out) = (Vec::new(), Vec::new());
+        let code = run_script(text, 12345, Overrides::default(), &mut out, &mut err_out);
+        (
+            code,
+            String::from_utf8(out).unwrap(),
+            String::from_utf8(err_out).unwrap(),
+        )
+    }
+
+    fn runner_after(text: &str) -> Runner {
+        let script = parse_script(text).unwrap();
+        let mut runner = Runner::new(12345, (100, 30));
+        let report = runner.run_steps(&script.steps);
+        assert_eq!(report.status, EXIT_OK, "{:?}", report.error);
+        runner
+    }
+
+    fn player(runner: &Runner) -> Position {
+        runner.app.core.game.get_player_position().unwrap()
+    }
+
+    fn dogs(runner: &Runner) -> Vec<Position> {
+        let mut dogs: Vec<Position> = runner
+            .app
+            .core
+            .game
+            .world
+            .query::<(&Position, &EntityKind)>()
+            .iter()
+            .filter(|(_, (_, k))| **k == EntityKind::FeralDog)
+            .map(|(_, (p, _))| *p)
+            .collect();
+        dogs.sort_by_key(|p| (p.x, p.y, p.z));
+        dogs
+    }
+
+    // --- 2.3: tp with relative coordinates and real errors ---------------------------
+
+    #[test]
+    fn tp_accepts_relative_coordinates() {
+        let start = player(&runner_after("skip-splash"));
+        let runner = runner_after("skip-splash\ncheat tp ~5 ~ ~");
+        assert_eq!(
+            player(&runner),
+            Position {
+                x: start.x + 5,
+                ..start
+            }
+        );
+    }
+
+    #[test]
+    fn bad_tp_fails_the_script() {
+        let (code, _, err_out) = run("skip-splash\ncheat tp ~x 0 0");
+        assert_eq!(code, EXIT_SCRIPT_ERROR);
+        assert!(
+            err_out.contains("line 2") && err_out.contains("~x"),
+            "{err_out}"
+        );
+    }
+
+    // --- 2.4: spawn_enemy ---------------------------------------------------------------
+
+    #[test]
+    fn spawn_enemy_defaults_to_two_tiles_east_then_the_dog_closes_in() {
+        let mut runner = runner_after("skip-splash\ncheat tp 0 0 0\ncheat spawn_enemy feral_dog");
+        assert!(dogs(&runner).contains(&Position { x: 2, y: 0, z: 0 }));
+        assert!(!runner.app.core.game.res.player_state.combat_active);
+
+        // One turn later the dog is adjacent and combat starts, panel shown
+        let steps = parse_script("key movement.WAIT\nexpect-text \"Action Queue\"").unwrap();
+        let report = runner.run_steps(&steps.steps);
+        assert_eq!(report.status, EXIT_OK, "{:?}", report.error);
+        assert!(dogs(&runner).contains(&Position { x: 1, y: 0, z: 0 }));
+        assert!(runner.app.combat.is_active());
+    }
+
+    /// A `tick` step that starts combat must open the combat panel, like a player action.
+    #[test]
+    fn tick_step_that_starts_combat_shows_the_combat_panel() {
+        let mut runner =
+            runner_after("skip-splash\ncheat tp 0 0 0\ncheat spawn_enemy feral_dog\ntick");
+        assert!(runner.app.core.game.res.player_state.combat_active);
+        assert!(runner.app.combat.is_active());
+        assert_eq!(runner.app.ui.current_tab, crate::MenuTab::World);
+        assert!(runner.screen_text().contains("Action Queue"));
+        let state = state_json(&runner.app);
+        assert!(state.contains("\"active\": true"), "{state}");
+    }
+
+    #[test]
+    fn spawn_enemy_accepts_relative_coordinates() {
+        let runner =
+            runner_after("skip-splash\ncheat tp 0 0 0\ncheat spawn_enemy feral_dog ~-2 ~1 ~");
+        assert!(dogs(&runner).contains(&Position { x: -2, y: 1, z: 0 }));
+    }
+
+    #[test]
+    fn spawn_enemy_failures_fail_the_script() {
+        let (code, _, err_out) = run("skip-splash\ncheat spawn_enemy dragon");
+        assert_eq!(code, EXIT_SCRIPT_ERROR);
+        assert!(
+            err_out.contains("dragon") && err_out.contains("feral_dog"),
+            "{err_out}"
+        );
+
+        let (code, _, err_out) = run("skip-splash\ncheat spawn_enemy feral_dog ~ ~ ~");
+        assert_eq!(code, EXIT_SCRIPT_ERROR);
+        assert!(err_out.contains("occupied"), "{err_out}");
+    }
+
+    // --- 2.1: the in-game console reports failures and keeps running ------------------
+
+    #[test]
+    fn console_failure_is_logged_in_red_and_the_game_keeps_running() {
+        let mut runner = runner_after(
+            "skip-splash\nkey ui.OPEN_COMMAND_MENU\ntype \"spawn_enemy dragon\"\nrawkey ENTER",
+        );
+        let last = runner
+            .app
+            .core
+            .game
+            .res
+            .events
+            .get_message_log()
+            .messages
+            .last()
+            .cloned()
+            .unwrap();
+        assert!(
+            last.text.contains("Cheat failed") && last.text.contains("dragon"),
+            "{}",
+            last.text
+        );
+        assert_eq!(
+            last.color,
+            lithicrivers_core::message_log::MessageColor::Red
+        );
+        assert!(!runner.app.core.should_quit);
+        // Still playable afterwards
+        let report = runner.run_steps(&parse_script("key movement.MOVE_SOUTH").unwrap().steps);
+        assert_eq!(report.status, EXIT_OK);
     }
 }

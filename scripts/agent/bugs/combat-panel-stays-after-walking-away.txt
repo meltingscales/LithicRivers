@@ -4,13 +4,14 @@ seed 12345
 size 120x40
 skip-splash
 
-# Start a fight with the feral dog at (-15, -15, 0)
-cheat tp -16 -16 0
-key movement.MOVE_SOUTHEAST
+# Start a fight with a spawned dog
+cheat tp 0 0 0
+cheat spawn_enemy feral_dog
+key movement.WAIT
 expect-text "Action Queue"
 
 # Get far away, then take a turn; the World tab should go back to its normal sidebar
-cheat tp -40 -40 0
+cheat tp ~25 ~25 ~
 key movement.WAIT
 state after-leaving
 expect-text "MODES"

@@ -258,8 +258,8 @@ pub fn handle_combat_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn 
             for _ in 0..10 {
                 // Max 10 ticks to prevent infinite loops
                 let tick_result = app.core.game.tick();
+                app.apply_tick_result(&tick_result);
                 if tick_result.contains(GameTickResult::CombatEnded) {
-                    app.combat = CombatUiState::None;
                     break;
                 }
                 // If nothing significant happened, stop ticking
@@ -291,9 +291,7 @@ pub fn handle_combat_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn 
     if app.ui.keybinds.matches("movement", "WAIT", &key) {
         // Process a single game tick to advance combat
         let tick_result = app.core.game.tick();
-        if tick_result.contains(GameTickResult::CombatEnded) {
-            app.combat = CombatUiState::None;
-        }
+        app.apply_tick_result(&tick_result);
         app.core.game.res.log("Advanced combat timing");
         return Ok(true);
     }

@@ -288,6 +288,25 @@ impl App {
         }
     }
 
+    /// Apply a game tick's combat transitions to the UI. Every client path that advances the
+    /// game must call this, so combat can't start without the combat panel (or outlive it).
+    fn apply_tick_result(&mut self, result: &lithicrivers_core::game::GameTickResult) {
+        use lithicrivers_core::game::GameTickResult;
+        if result.contains(GameTickResult::CombatTriggered) {
+            // Only the World tab draws combat
+            self.ui.current_tab = MenuTab::World;
+            self.combat = CombatUiState::Active {
+                current_move: 0,
+                current_enemy: 0,
+                enemy_timers: vec![], // Deprecated - using ActionQueue now
+                move_scroll_offset: 0,
+            };
+        }
+        if result.contains(GameTickResult::CombatEnded) {
+            self.combat = CombatUiState::None;
+        }
+    }
+
     fn snap_view_to_player_z(&mut self) {
         if let Some(e) = self.core.game.get_player_entity() {
             if let Ok(pos) = self
@@ -519,10 +538,7 @@ fn step(app: &mut App) {
 
         if should_tick {
             let tick_result = app.core.game.tick();
-            // Check if combat ended during auto-tick
-            if tick_result.contains(lithicrivers_core::game::GameTickResult::CombatEnded) {
-                app.combat = CombatUiState::None;
-            }
+            app.apply_tick_result(&tick_result);
         }
     } else {
         // Reset tick timer when not in combat

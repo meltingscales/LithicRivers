@@ -390,7 +390,7 @@ impl GameServer {
     }
 
     #[tool(
-        description = "Run a cheat console command: tp x y z, giveitem <item> <qty>, noclip_toggle, toggle_fogofwar, toggle_tutorial."
+        description = "Run a cheat console command: tp x y z, spawn_enemy <kind> [x y z] (kinds: feral_dog; default two tiles east), giveitem <item> <qty>, noclip_toggle, toggle_fogofwar, toggle_tutorial. Coordinates may be player-relative: ~ or ~<offset> per axis."
     )]
     async fn cheat(
         &self,

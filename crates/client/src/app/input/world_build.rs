@@ -93,6 +93,7 @@ pub fn handle_world_build_input(app: &mut App, key: KeyCode) -> Result<bool, Box
                                 target_x, target_y, target_z
                             ));
                         }
+                        app.apply_tick_result(&tick_result);
                         handled = true;
                     }
                     BuildMode::Place => {

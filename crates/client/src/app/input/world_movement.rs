@@ -1,6 +1,5 @@
-use crate::{App, CombatUiState, MenuTab};
+use crate::{App, MenuTab};
 use crossterm::event::KeyCode;
-use lithicrivers_core::game::GameTickResult;
 use std::error::Error;
 
 /// Handle world movement input when on World tab - returns true if input was handled
@@ -61,19 +60,8 @@ pub fn handle_world_movement_input(app: &mut App, key: KeyCode) -> Result<bool, 
             }
         }
 
-        if tick_result.contains(GameTickResult::CombatTriggered) {
-            // Movement also works on the Tutorial tab, but only the World tab draws combat
-            app.ui.current_tab = MenuTab::World;
-            app.combat = CombatUiState::Active {
-                current_move: 0,
-                current_enemy: 0,
-                enemy_timers: vec![], // Deprecated - using ActionQueue now
-                move_scroll_offset: 0,
-            };
-        }
-        if tick_result.contains(GameTickResult::CombatEnded) {
-            app.combat = CombatUiState::None;
-        }
+        // Movement also works on the Tutorial tab; this switches to World if combat starts
+        app.apply_tick_result(&tick_result);
         app.snap_view_to_player_z();
         return Ok(true);
     }

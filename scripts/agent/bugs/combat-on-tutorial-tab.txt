@@ -4,8 +4,10 @@ seed 12345
 size 120x40
 skip-splash
 
-# Stand next to the feral dog at (-15, -15, 0) and walk into it, without leaving the Tutorial tab
-cheat tp -16 -16 0
-key movement.MOVE_SOUTHEAST
+# Spawn a dog two tiles east, then take a turn without leaving the Tutorial tab;
+# the dog closes in and combat starts
+cheat tp 0 0 0
+cheat spawn_enemy feral_dog
+key movement.WAIT
 state after-attack
 expect-text "Action Queue"

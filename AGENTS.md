@@ -59,13 +59,15 @@ Scripts have one step per line; `#` starts a comment.
 | `type "<text>"` | Press one key per character |
 | `wait <ms>` | Advance the fake clock in 50 ms frames (splash timers, combat auto-ticks) |
 | `tick [n]` | Advance the game simulation n ticks |
-| `cheat <command>` | Run a cheat console command (`tp x y z`, `giveitem <item> <qty>`, ...) |
+| `cheat <command>` | Run a cheat console command: `tp x y z`, `spawn_enemy <kind> [x y z]` (kinds: `feral_dog`; default two tiles east), `giveitem <item> <qty>`, `noclip_toggle`, `toggle_fogofwar`, `toggle_tutorial`. Coordinates can be relative to the player: `~` or `~<offset>` per axis, e.g. `spawn_enemy feral_dog ~2 ~ ~` |
 | `screen [label]` | Print the screen as text |
 | `state [label]` | Print a JSON summary: player, body, inventory, tab/modal, combat, nearby entities, recent messages |
 | `expect-text "<text>"` | Fail (exit 2) unless the screen contains the text |
 | `quit` | Stop successfully |
 
-Exit status: 0 ok, 1 script error, 2 failed `expect-text`. The same script, seed and build always print identical output, so all time-dependent behavior and rendering must read time from `app.clock`, never `Instant::now()` or `SystemTime::now()`.
+To set up a fight, spawn the enemy instead of relying on where the starting world places creatures: `cheat spawn_enemy feral_dog` then `key movement.WAIT` (feral dogs chase the player, so combat starts on that turn).
+
+Exit status: 0 ok, 1 script error (including a cheat that fails), 2 failed `expect-text`. The same script, seed and build always print identical output, so all time-dependent behavior and rendering must read time from `app.clock`, never `Instant::now()` or `SystemTime::now()`.
 
 ### Snapshot tests (catching UI regressions)
 
