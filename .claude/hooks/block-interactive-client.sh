@@ -1,18 +1,12 @@
 #!/usr/bin/env bash
 # PreToolUse hook: stop agents from launching the interactive TUI client.
-# Reads the hook's JSON input on stdin; exit 2 blocks the call and shows stderr to the agent.
-input=$(cat)
+# The parsing lives in block_interactive_client.py (only real launches are blocked, not
+# mentions in heredocs or quoted text). Exit 2 blocks the call and shows stderr to the agent.
+script="${0%/*}/block_interactive_client.py"
 
-blocked=0
-if grep -Eq 'just[[:space:]]+client-(release-)?(linux|windows)' <<<"$input"; then
-    blocked=1
-elif grep -Eq '(cargo[[:space:]]+run[^"]*lithicrivers-client|target/(debug|release)/lithicrivers-client)' <<<"$input" \
-    && ! grep -Eq -- '--(script|mcp)' <<<"$input"; then
-    blocked=1
+if ! command -v python3 >/dev/null 2>&1; then
+    echo "block-interactive-client: python3 not found; not checking this command" >&2
+    exit 0
 fi
 
-if [ "$blocked" -eq 1 ]; then
-    echo "Blocked: the interactive client needs a real terminal. Use 'just client-blind <script>' or the lithicrivers MCP tools instead (see AGENTS.md, 'Headless client'), or ask the user to run 'just client-linux'." >&2
-    exit 2
-fi
-exit 0
+exec python3 "$script"
