@@ -175,6 +175,12 @@ pub(crate) struct App {
     pub last_combat_tick: Option<std::time::Instant>,
     /// Time source for all time-dependent behavior and rendering
     pub clock: clock::Clock,
+    /// Seed for worlds started without the create-world screen (`skip-splash`)
+    pub default_seed: u64,
+    /// Folder holding one subfolder per world
+    pub saves_dir: std::path::PathBuf,
+    /// The world being played, if any
+    pub current_world: Option<crate::app::world::CurrentWorld>,
 }
 
 impl App {

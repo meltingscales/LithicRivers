@@ -16,6 +16,7 @@ mod save_reload_tests;
 mod snapshot_tests;
 mod tutorialsystem;
 mod ui;
+mod worlds;
 
 use ratatui::{
     backend::{Backend, CrosstermBackend},

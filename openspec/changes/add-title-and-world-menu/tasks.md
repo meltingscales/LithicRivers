@@ -2,10 +2,10 @@
 
 ## 1. World lifecycle (no menus yet)
 
-- [ ] 1.1 Add `WorldSettings` to core `Resources` (defaults from config) and make developer-mode checks read it; verify core tests pass and a `TestWorld` test that a world with developer mode off reports it off
-- [ ] 1.2 Add `Clock::unix_seconds()` (system time for the real clock, fixed epoch + offset for the fake clock); verify a unit test that the fake clock's value only changes when advanced
-- [ ] 1.3 Add world folders: `WorldMeta` (`meta.json`), folder naming with collision suffixes, listing sorted by last played with unreadable folders flagged, create/save/load/delete (delete refuses paths outside the saves folder), seed parsing (blank, numeric, FNV-1a text hash); verify unit tests for each, including a save → load round trip of position, inventory, tick and settings
-- [ ] 1.4 Add `App::start_world` / `load_world` / `save_world`; make `App::new_headless` start on a placeholder game and `skip-splash` call `start_world`; give headless runs a temporary saves folder removed on drop; verify `cargo test --workspace` passes with no `.snap` changes and the bug scripts pass
+- [x] 1.1 Add `WorldSettings` to core `Resources` (defaults from config) and make developer-mode checks read it; verify core tests pass and a `TestWorld` test that a world with developer mode off reports it off
+- [x] 1.2 Add `Clock::unix_seconds()` (system time for the real clock, fixed epoch + offset for the fake clock); verify a unit test that the fake clock's value only changes when advanced
+- [x] 1.3 Add world folders: `WorldMeta` (`meta.json`), folder naming with collision suffixes, listing sorted by last played with unreadable folders flagged, create/save/load/delete (delete refuses paths outside the saves folder), seed parsing (blank, numeric, FNV-1a text hash); verify unit tests for each, including a save → load round trip of position, inventory, tick and settings
+- [x] 1.4 Add `App::start_world` / `load_world` / `save_world`; make `App::new_headless` start on a placeholder game and `skip-splash` call `start_world`; give headless runs a temporary saves folder removed on drop; verify `cargo test --workspace` passes with no `.snap` changes and the bug scripts pass
 
 ## 2. Title and world screens
 

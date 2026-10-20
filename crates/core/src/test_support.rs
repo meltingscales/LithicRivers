@@ -16,6 +16,7 @@ use crate::components::{
 };
 use crate::game::{Game, GameTickResult};
 use crate::intent::{PlayerAction, PlayerIntent};
+use crate::resources::WorldSettings;
 use crate::spawn_utils;
 use crate::tiles::TileKind;
 
@@ -38,6 +39,7 @@ pub struct TestWorld {
     player: Position,
     inventory: Option<Vec<(ItemKind, u32)>>,
     auto_pickup: Option<bool>,
+    settings: Option<WorldSettings>,
     tiles: Vec<(Position, TileKind)>,
     entities: Vec<(Position, Placement)>,
 }
@@ -50,9 +52,16 @@ impl TestWorld {
             player: Position { x: 0, y: 0, z: 0 },
             inventory: None,
             auto_pickup: None,
+            settings: None,
             tiles: Vec::new(),
             entities: Vec::new(),
         }
+    }
+
+    /// Per-world settings, instead of the defaults from config.
+    pub fn settings(mut self, settings: WorldSettings) -> Self {
+        self.settings = Some(settings);
+        self
     }
 
     pub fn player_at(mut self, x: i64, y: i64, z: i64) -> Self {
@@ -113,6 +122,9 @@ impl TestWorld {
 
     pub fn build(self) -> TestGame {
         let mut game = Game::new_empty(self.seed, self.player);
+        if let Some(settings) = self.settings {
+            game.res.world_settings = settings;
+        }
 
         {
             let player = game.get_player_entity().expect("player exists");

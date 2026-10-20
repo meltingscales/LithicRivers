@@ -60,7 +60,7 @@ pub fn render_menu_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     ))));
     lines.push(Line::from(Span::raw(format!(
         "  Developer mode: {}",
-        if app.core.game.res.config.developer_mode {
+        if app.core.game.res.world_settings.developer_mode {
             "ON"
         } else {
             "OFF"
