@@ -35,6 +35,7 @@ It runs the real client with no terminal, no audio, and a fake clock. Output is 
 | `cheat <command>` | Cheat console: `tp`, `spawn_enemy`, `giveitem`, `noclip_toggle`, `toggle_fogofwar`, `toggle_tutorial`; a failing cheat fails the script |
 | `screen [label]` / `state [label]` | Print a framed text screen / JSON state |
 | `expect-text "<text>"` | Exit 2 unless the screen contains the text |
+| `save-reload` | Save and load back in place; output must not change, so use it to check that a state survives saving |
 | `quit` | Stop successfully |
 
 Keybind names come from `crates/core/src/default_config.rs` (categories like `movement`, `action`, `build`, `ui`, `inventory`). Exit status: 0 ok, 1 script error (bad syntax, unknown keybind or cheat), 2 failed expectation.
