@@ -8,6 +8,8 @@ input_file: scripts/snapshots/tab-09-help.txt
 ┌Help──────────────────────────────────────────────────────────────────────────────────────────────┐
 │Controls                                                                                          │
 │                                                                                                  │
+│On the World page, h shows or hides context help: the keys for what you're doing now.             │
+│                                                                                                  │
 │Movement Directions: Numpad by default                                                            │
 │                                                                                                  │
 │ NW N NE                                                                                          │
@@ -21,8 +23,6 @@ input_file: scripts/snapshots/tab-09-help.txt
 │                                                                                                  │
 │Build Mode Keys: Use '`' to cycle Movement --> Break --> Place                                    │
 │                                                                                                  │
-│ NW N NE                                                                                          │
-│ W  .  E                                                                                          │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
 │[0] Loading structure 'sapiencorp-bunker.lrstructure' at (10, 10, 1) for chunk (0, 0, 1)          │

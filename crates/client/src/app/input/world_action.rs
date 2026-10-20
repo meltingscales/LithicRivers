@@ -36,6 +36,19 @@ pub fn handle_world_action_input(app: &mut App, key: KeyCode) -> Result<bool, Bo
         return Ok(true);
     }
 
+    // Context help panel on the World page
+    if app.ui.keybinds.matches("ui", "TOGGLE_CONTEXT_HELP", &key) {
+        app.ui.show_context_help = !app.ui.show_context_help;
+        app.core.config_manager.data.settings["ui"]["SHOW_CONTEXT_HELP"] =
+            serde_json::json!(app.ui.show_context_help);
+        if app.persist_config {
+            if let Err(e) = app.core.config_manager.save() {
+                tracing::warn!(target: "game", "could not save config: {e:#}");
+            }
+        }
+        return Ok(true);
+    }
+
     // Torch toggle
     if app.ui.keybinds.matches("action", "TOGGLE_TORCH", &key) {
         handle_torch_toggle(app);
@@ -68,30 +81,20 @@ pub fn handle_world_action_input(app: &mut App, key: KeyCode) -> Result<bool, Bo
     Ok(false)
 }
 
-/// Handle general interaction - items, corpses, NPCs
-fn handle_interaction(app: &mut App) {
-    tracing::info!(target: "game", "handle_interaction called, checking for nearby interactables");
+/// What pressing interact would do now: every interaction adjacent to the player, and
+/// whether an empty corpse is nearby (it has nothing to loot, so it isn't an action).
+pub struct NearbyInteractions {
+    pub actions: Vec<crate::app_state::InteractionType>,
+    pub empty_corpse_nearby: bool,
+}
 
-    // Get player position
-    let player_pos = if let Some(player_entity) = app.core.game.get_player_entity() {
-        if let Ok(pos) = app
-            .core
-            .game
-            .world
-            .get::<&lithicrivers_core::components::Position>(player_entity)
-        {
-            *pos
-        } else {
-            app.core.game.res.log("Cannot find player position");
-            return;
-        }
-    } else {
-        app.core.game.res.log("Cannot find player entity");
-        return;
-    };
+/// Find the interactions adjacent to the player. Used by the interact key and the context
+/// help panel, so both always agree. `None` if there is no player.
+pub fn nearby_interactions(app: &App) -> Option<NearbyInteractions> {
+    let player_pos = app.core.game.get_player_position()?;
 
     // Build a list of all available interactions
-    use crate::app_state::{InteractionType, MultiActionSelectState};
+    use crate::app_state::InteractionType;
     use lithicrivers_core::components::{
         itemkind_name, Dialogue, DroppedItem, EntityKind, Inventory, Position,
     };
@@ -210,7 +213,7 @@ fn handle_interaction(app: &mut App) {
             .res
             .world_state
             .world
-            .get_tile_cached(pos.x, pos.y, pos.z);
+            .get_tile(pos.x, pos.y, pos.z);
         match tile {
             TileKind::Door => {
                 available_actions.push(InteractionType::OpenCloseDoor {
@@ -227,6 +230,26 @@ fn handle_interaction(app: &mut App) {
             _ => {}
         }
     }
+
+    Some(NearbyInteractions {
+        actions: available_actions,
+        empty_corpse_nearby,
+    })
+}
+
+/// Handle general interaction - items, corpses, NPCs
+fn handle_interaction(app: &mut App) {
+    use crate::app_state::MultiActionSelectState;
+    tracing::info!(target: "game", "handle_interaction called, checking for nearby interactables");
+
+    let Some(NearbyInteractions {
+        actions: available_actions,
+        empty_corpse_nearby,
+    }) = nearby_interactions(app)
+    else {
+        app.core.game.res.log("Cannot find player position");
+        return;
+    };
 
     tracing::info!(target: "game", "Found {} total interactions nearby", available_actions.len());
 

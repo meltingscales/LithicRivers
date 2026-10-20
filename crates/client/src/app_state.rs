@@ -57,6 +57,8 @@ pub struct UiState {
     #[allow(dead_code)]
     pub tutorial_system: TutorialSystem,
     pub tutorial_visible: bool, // Controls if tutorial tab is shown in bottom menu
+    /// Whether the World page shows the context help panel (`ui.SHOW_CONTEXT_HELP`)
+    pub show_context_help: bool,
     // UI-owned viewport state - what the player is currently viewing
     pub view_x: i64,
     pub view_y: i64,
@@ -540,5 +542,7 @@ mod tests {
             );
         }
         assert!(defaults.keybinds["ui"]["SAVE_AND_QUIT_TO_TITLE"].is_array());
+        assert!(defaults.keybinds["ui"]["TOGGLE_CONTEXT_HELP"].is_array());
+        assert_eq!(defaults.settings["ui"]["SHOW_CONTEXT_HELP"], true);
     }
 }

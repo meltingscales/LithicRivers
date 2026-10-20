@@ -45,3 +45,10 @@ The visibility is read from `ui.SHOW_CONTEXT_HELP` at startup. Toggling updates 
 - [The sidebar is narrow (24 columns)] → Keep labels short ("f: loot corpse"); show the move keys as a grid rather than words.
 - [World snapshots change] → Expected; the PR lists each changed snapshot. Non-World tabs and combat must not change.
 - [Short terminals] → The help panel shrinks first, so the inventory keeps at least 5 lines.
+
+## Implementation Notes
+
+- `nearby_interactions(&App)` reads door tiles with `GameWorld::get_tile`, the read-only twin of `get_tile_cached`: same tile, but it doesn't cache the chunk, so drawing the panel never changes the world.
+- The help panel has a fixed height (12 lines, smaller on short screens) so the inventory doesn't jump when the mode changes. At 100x30 the inventory shows 3 items with help on.
+- Printable key names gained F1–F12, for the hotbar hint.
+- No doc outside the Help tab lists controls, so docs got only a `docs/STEAM-MVP.md` entry; that file's "Main menu with new game/load game" item is also ticked now that the title menu exists.

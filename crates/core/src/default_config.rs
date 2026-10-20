@@ -77,6 +77,7 @@ pub fn default_config() -> ConfigRoot {
             "CHEAT_CONSOLE_SCROLL_UP": ["UP"],
             "CHEAT_CONSOLE_SCROLL_DOWN": ["DOWN"],
             "SAVE_AND_QUIT_TO_TITLE": ["Q"], // Menu tab only
+            "TOGGLE_CONTEXT_HELP": ["h"], // Context help panel on the World page
             "QUIT": []
         },
         "title": {
@@ -110,6 +111,9 @@ pub fn default_config() -> ConfigRoot {
         },
         "inventory": {
             "TOGGLE_ITEM_AUTO_PICKUP_DEFAULT_ENABLED": true
+        },
+        "ui": {
+            "SHOW_CONTEXT_HELP": true
         },
         "audio": {
             "MUSIC_VOLUME": 0.60,

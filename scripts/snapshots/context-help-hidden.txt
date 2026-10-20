@@ -1,0 +1,8 @@
+# Context help hidden with the toggle key: a one-line hint remains
+seed 12345
+size 100x30
+skip-splash
+key ui.MENU_PREV
+key ui.TOGGLE_CONTEXT_HELP
+expect-text "h: help"
+screen hidden
