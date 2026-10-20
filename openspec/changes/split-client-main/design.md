@@ -6,8 +6,8 @@ Current `main.rs` contents (line numbers as of `release` at proposal time):
 
 | Lines | Item | Destination |
 |---|---|---|
-| 59–209 | `SplashState`, `MenuTab` + impl (tab order, indices) | `app/app.rs` |
-| 210–386 | `App` struct + `on_tick`, `apply_tick_result`, `snap_view_to_player_z`, `activate_menu` | `app/app.rs` |
+| 59–209 | `SplashState`, `MenuTab` + impl (tab order, indices) | `app/client_app.rs` |
+| 210–386 | `App` struct + `on_tick`, `apply_tick_result`, `snap_view_to_player_z`, `activate_menu` | `app/client_app.rs` |
 | 604–726 | splash-screen branch of `ui()` | `ui/splash.rs` |
 | 727–901 | rest of `ui()`: hotbar check, root layout, tab dispatch, modal overlay order | `ui/layout.rs` |
 | 902–974 | `render_message_log`, `render_bottom_menu` | `ui/layout.rs` |
@@ -37,10 +37,13 @@ Existing convention: `ui/panels/<name>.rs` exposes `pub fn render_*`, re-exporte
 ## Decisions
 
 ### Move code verbatim, one area per commit
-Each move is cut-and-paste plus visibility and imports. No edits inside function bodies, so review is "same code, new file" and any snapshot diff points to an accidental change. Commit per area (app, splash, layout, each modal file) so a regression bisects to one move.
+Each move is cut-and-paste plus visibility and imports. No edits inside function bodies, so review is "same code, new file" and any snapshot diff points to an accidental change. Commit per area (app, splash, layout, modals) so a regression bisects to one move. The five modal files landed in one commit: splitting them would need hand-built intermediate versions of `main.rs` and `layout.rs`, and each moved function is checked byte-identical to its previous version anyway.
+
+### File names
+`App` and its types live in `app/client_app.rs`, not `app/app.rs`: a module named like its parent trips clippy's `module_inception` lint, and `just code-clippy` denies warnings.
 
 ### Re-export instead of rewriting paths
-`pub use app::app::{App, MenuTab, SplashState};` at the crate root keeps the 39 files that use `crate::App` / `crate::MenuTab` unchanged, and `ui::layout::ui` is re-exported where `headless.rs` and `run_app` call it. Rewriting every import would bloat the diff without improving clarity.
+`pub(crate) use app::client_app::{App, MenuTab, SplashState};` at the crate root keeps the 39 files that use `crate::App` / `crate::MenuTab` unchanged, and `ui::layout::ui` is re-exported where `headless.rs` and `run_app` call it. Rewriting every import would bloat the diff without improving clarity.
 
 ### Visibility
 Moved items become `pub(crate)` only as their callers need. Helpers used within one new file (e.g. `render_corpse_selection_modal`, called only by `render_corpse_looting_modals`) stay private.
