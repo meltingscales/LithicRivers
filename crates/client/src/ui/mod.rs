@@ -1,5 +1,6 @@
 //! UI utility functions and components
 
+pub mod layout;
 pub mod panels;
 pub mod splash;
 
