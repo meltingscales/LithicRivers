@@ -19,4 +19,4 @@
 ## 4. Docs and checks
 
 - [x] 4.1 Document `save-reload` in AGENTS.md and the `play-headless` skill, and note in AGENTS.md that new components must be registered for saving; verify `just code-clippy`, `cargo test --workspace` (twice, no pending snapshots) and the PR checks pass
-- [ ] 4.2 User check: in the interactive client, save mid-fight with a damaged body and a corpse nearby, quit, relaunch, load, and confirm everything is as you left it
+- [x] 4.2 User check: in the interactive client, save mid-fight with a damaged body and a corpse nearby, quit, relaunch, load, and confirm everything is as you left it
