@@ -1,4 +1,4 @@
-use crate::{App, CombatUiState, MenuTab, Scale};
+use crate::{App, MenuTab, Scale};
 use crossterm::event::KeyCode;
 use lithicrivers_core::game::GameTickResult;
 use std::error::Error;
@@ -17,9 +17,7 @@ pub fn handle_world_action_input(app: &mut App, key: KeyCode) -> Result<bool, Bo
         if tick_result.contains(GameTickResult::MiningSuccess) {
             app.snap_view_to_player_z();
         }
-        if tick_result.contains(GameTickResult::CombatEnded) {
-            app.combat = CombatUiState::None;
-        }
+        app.apply_tick_result(&tick_result);
         return Ok(true);
     }
 
@@ -279,18 +277,7 @@ pub fn execute_interaction_action(app: &mut App, action: &crate::app_state::Inte
                 }
             }
 
-            // Handle combat state changes
-            if tick_result.contains(lithicrivers_core::game::GameTickResult::CombatTriggered) {
-                app.combat = CombatUiState::Active {
-                    current_move: 0,
-                    current_enemy: 0,
-                    enemy_timers: vec![],
-                    move_scroll_offset: 0,
-                };
-            }
-            if tick_result.contains(lithicrivers_core::game::GameTickResult::CombatEnded) {
-                app.combat = CombatUiState::None;
-            }
+            app.apply_tick_result(&tick_result);
         }
         InteractionType::LootCorpse { entity, .. } => {
             // Start corpse looting directly

@@ -1,9 +1,10 @@
-# Combat panel after walking into the feral dog at (-15, -15, 0)
+# Combat panel after a spawned feral dog closes in on the player
 seed 12345
 size 100x30
 skip-splash
-cheat tp -16 -16 0
-key movement.MOVE_SOUTHEAST
+cheat tp 0 0 0
+cheat spawn_enemy feral_dog
+key movement.WAIT
 expect-text "Action Queue"
 screen combat
 state

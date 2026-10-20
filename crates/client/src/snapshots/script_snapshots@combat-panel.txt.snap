@@ -5,37 +5,37 @@ input_file: scripts/snapshots/combat-panel.txt
 ---
 === screen combat ===
                                             LithicRivers
-┌──────────────────── Combat ────────────────────┐#vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-│┌HED──┐┌TOR──┐┌PWR──┐┌LAM─┐┌RAM──┐┌LLG──┐┌RLG──┐│##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-││ 100 ││ 100 ││ 21  ││ GON││ 100 ││ 100 ││ 43  ││##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-│└─────┘└─────┘└─────┘└────┘└─────┘└─────┘└─────┘│###vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-│┌──────────────────────┐┌──────────────────────┐│###vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-││     xxxxxxxxxxxx     ││     xxxxxxxxxxxx     ││###vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-││     xxxxxxxxxxxx     ││     xxxxxxxxxxxx     ││####vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-││     xxxxxxxxxxxx     ││     xxxxxxxxxxxx     ││####vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-││┌Enemy 7─────────────┐││┌Enemy 8─────────────┐││#####vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-││└────────────────────┘││└────────────────────┘││#####vvvvvvvvvvvvvvvvvvvv*vvvvvvvvvvvvvvvvvvvvvvvv
-││                      ││                      ││######vvvvvvvvvvvvvvvvvvvffvvvvvvvvvvvvvvvvvvvvvvv
-│└──────────────────────┘└──────────────────────┘│######vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-│1: Melee - 0E - 5t                ┌Action Queue┐│#######vvvvvvvvvvvvvvvvvvvvvfvvvvvvvvvvvvvvvvvvvvv
-│2: Fireball (AoE) - 40E - 12t     │Current:    ││#######vvvvvvvvvvvvvvvvvvvvvfvvvvvvvvvvvvvvvvvvvvv
-│3: Tackle - 20E - 10t             │> Ready     ││#######vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-│4: Escape - 20E - 15t             │            ││########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-│           ▼ More below           └────────────┘│########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-│[←→] Target | [↑↓] Move | [C] Clear | [5] Wait |│#########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-└────────────────────────────────────────────────┘#########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+┌──────────────────── Combat ────────────────────┐vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+│┌HED──┐┌TOR──┐┌PWR──┐┌LAM─┐┌RAM──┐┌LLG──┐┌RLG──┐│vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+││ 100 ││ 100 ││ 21  ││ GON││ 100 ││ 100 ││ 43  ││vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#vvvvvvvvvvvvvvv
+│└─────┘└─────┘└─────┘└────┘└─────┘└─────┘└─────┘│vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+│┌──────────────────────────────────────────────┐│vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+││                 xxxxxxxxxxxx                 ││vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+││                 xxxxxxxxxxxx                 ││vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+││                 xxxxxxxxxxxx                 ││vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+││┌Enemy 88────────────────────────────────────┐││vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+││└────────────────────────────────────────────┘││vvvvvvvvvvvvvvvvvvvvvvvvv*ftvvvtvvvvvvvvvvvvvvvvvv
+││                                              ││vvvvvvvvvvvvvvvvvvvvvvvvvtvtttttvvvvvvvvvvvvvvvvvv
+│└──────────────────────────────────────────────┘│vvvvvvvvvvvvvvvvvvvvvvvvvvvvvtttvvvvvvvvvvvvvvvvvv
+│1: Melee - 0E - 5t                ┌Action Queue┐│vvvvvvvvvvvvvvvvvvvvvvvvvvvvttvvvvvvvvvvvvvvvvvvvv
+│2: Fireball (AoE) - 40E - 12t     │Current:    ││vvvvvvvvvvvvvvvvvvvvvvvvvvvvtttvvvvvvvvvvvvvvvvvvv
+│3: Tackle - 20E - 10t             │> Ready     ││vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+│4: Escape - 20E - 15t             │            ││#vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+│           ▼ More below           └────────────┘│##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+│[←→] Target | [↑↓] Move | [C] Clear | [5] Wait |│##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+└────────────────────────────────────────────────┘###vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 ┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
-│[0] Loading structure 'sapiencorp-bunker.lrstructure' at (10, 10, 1) for chunk (0, 0, 1)          │
 │[0] Quest marker added: SapienCorp Bunker                                                         │
 │[0] Player moved to bunker spawn at (11, 11, -19)                                                 │
 │[0] Loading structure 'sapiencorp-factory.lrstructure' at (200, 1609, 1) for chunk (3, 25, 1)     │
 │[0] Quest marker added: SapienCorp Factory                                                        │
+│[1] Spawned feral_dog at (2, 0, 0)                                                                │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
 │ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Menu │ Help │ Credits │ Qu│
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 === end screen ===
-=== state 9 ===
+=== state 10 ===
 {
   "version": 1,
   "seed": 12345,
@@ -45,8 +45,8 @@ input_file: scripts/snapshots/combat-panel.txt
   "modal": null,
   "player": {
     "position": [
-      -16,
-      -16,
+      0,
+      0,
       0
     ],
     "body": [
@@ -123,18 +123,8 @@ input_file: scripts/snapshots/combat-panel.txt
       {
         "kind": "FeralDog",
         "position": [
-          -16,
-          -15,
-          0
-        ],
-        "distance": 1,
-        "health": 80
-      },
-      {
-        "kind": "FeralDog",
-        "position": [
-          -15,
-          -15,
+          1,
+          0,
           0
         ],
         "distance": 1,
@@ -146,8 +136,8 @@ input_file: scripts/snapshots/combat-panel.txt
     {
       "kind": "FeralDog",
       "position": [
-        -16,
-        -15,
+        1,
+        0,
         0
       ],
       "distance": 1,
@@ -156,31 +146,11 @@ input_file: scripts/snapshots/combat-panel.txt
     {
       "kind": "FeralDog",
       "position": [
-        -15,
-        -15,
-        0
-      ],
-      "distance": 1,
-      "health": 80
-    },
-    {
-      "kind": "FeralDog",
-      "position": [
-        -13,
-        -13,
-        0
-      ],
-      "distance": 3,
-      "health": 80
-    },
-    {
-      "kind": "FeralDog",
-      "position": [
-        -13,
+        -12,
         -12,
         0
       ],
-      "distance": 4,
+      "distance": 12,
       "health": 80
     }
   ],
@@ -191,7 +161,8 @@ input_file: scripts/snapshots/combat-panel.txt
     "[0] Quest marker added: SapienCorp Bunker",
     "[0] Player moved to bunker spawn at (11, 11, -19)",
     "[0] Loading structure 'sapiencorp-factory.lrstructure' at (200, 1609, 1) for chunk (3, 25, 1)",
-    "[0] Quest marker added: SapienCorp Factory"
+    "[0] Quest marker added: SapienCorp Factory",
+    "[1] Spawned feral_dog at (2, 0, 0)"
   ]
 }
 === end state ===
