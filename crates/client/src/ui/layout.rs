@@ -358,14 +358,20 @@ fn calculate_game_viewport_area(f: &Frame, app: &App) -> Rect {
 }
 
 /// The World sidebar: modes (3 lines), the inventory or look panel, then context help
-/// (a framed panel, or a one-line hint when hidden). Help shrinks first on short screens so
-/// the middle panel keeps at least 5 lines.
+/// (half of the space below the modes but at least 12 lines, or a one-line hint when
+/// hidden). Help shrinks first
+/// on short screens so the middle panel keeps at least 5 lines.
 fn sidebar_chunks(app: &App, area: Rect) -> std::rc::Rc<[Rect]> {
     const MODES: u16 = 3;
     const MIN_MIDDLE: u16 = 5;
-    const HELP: u16 = 12;
-    let wanted = if app.ui.show_context_help { HELP } else { 1 };
-    let help = wanted.min(area.height.saturating_sub(MODES + MIN_MIDDLE));
+    const MIN_HELP: u16 = 12;
+    let below_modes = area.height.saturating_sub(MODES);
+    let wanted = if app.ui.show_context_help {
+        (below_modes / 2).max(MIN_HELP)
+    } else {
+        1
+    };
+    let help = wanted.min(below_modes.saturating_sub(MIN_MIDDLE));
     Layout::default()
         .direction(Direction::Vertical)
         .constraints([
@@ -374,4 +380,30 @@ fn sidebar_chunks(app: &App, area: Rect) -> std::rc::Rc<[Rect]> {
             Constraint::Length(help),
         ])
         .split(area)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::sidebar_chunks;
+    use crate::headless::Runner;
+    use ratatui::layout::Rect;
+
+    #[test]
+    fn context_help_takes_half_the_sidebar_but_at_least_12_lines() {
+        let mut runner = Runner::new(12345, (100, 30));
+        let sidebar = |height| Rect::new(0, 0, 24, height);
+        let heights = |runner: &Runner, height| {
+            let chunks = sidebar_chunks(&runner.app, sidebar(height));
+            (chunks[1].height, chunks[2].height)
+        };
+        assert_eq!(
+            heights(&runner, 43),
+            (20, 20),
+            "half of the 40 lines below modes"
+        );
+        assert_eq!(heights(&runner, 25), (10, 12), "at least 12 lines");
+        assert_eq!(heights(&runner, 17), (5, 9), "inventory keeps 5 lines");
+        runner.app.ui.show_context_help = false;
+        assert_eq!(heights(&runner, 43), (39, 1), "one-line hint when hidden");
+    }
 }

@@ -33,7 +33,7 @@ Alternative: a separate, simpler search for the panel. Rejected: the two would d
 Lines are truncated to the sidebar width.
 
 ### Layout
-- **Normal sidebar:** modes (3) / inventory (min 5) / help (fixed height, about 10 lines; less if the terminal is short).
+- **Normal sidebar:** modes (3) / inventory (min 5) / help (half the space below the modes, at least 12 lines; less if the terminal is short).
 - **Look mode:** the help panel goes below the look panel instead.
 - **Hidden:** the help area collapses to a single "h: help" line at the bottom of the sidebar.
 
@@ -49,6 +49,6 @@ The visibility is read from `ui.SHOW_CONTEXT_HELP` at startup. Toggling updates 
 ## Implementation Notes
 
 - `nearby_interactions(&App)` reads door tiles with `GameWorld::get_tile`, the read-only twin of `get_tile_cached`: same tile, but it doesn't cache the chunk, so drawing the panel never changes the world.
-- The help panel has a fixed height (12 lines, smaller on short screens) so the inventory doesn't jump when the mode changes. At 100x30 the inventory shows 3 items with help on.
+- The help panel takes half the sidebar space below the modes panel, at least 12 lines (changed after review; it was a fixed 12). Its height doesn't depend on content, so the inventory doesn't jump when the mode changes. At 100x30 the 12-line floor applies and the inventory shows 3 items with help on.
 - Printable key names gained F1–F12, for the hotbar hint.
 - No doc outside the Help tab lists controls, so docs got only a `docs/STEAM-MVP.md` entry; that file's "Main menu with new game/load game" item is also ticked now that the title menu exists.
