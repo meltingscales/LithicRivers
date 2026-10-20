@@ -19,4 +19,4 @@
 ## 4. Wrap-up
 
 - [x] 4.1 Confirm `main.rs` contains only module declarations, `EmbeddedAssets`, `main`, `run_headless_from_args`, `step` and `run_app` (about 300 lines); verify `just code-clippy` passes, `git diff --stat crates/client/src/snapshots` is empty, and all bug scripts pass via `just client-blind`
-- [ ] 4.2 User check: the interactive client looks and behaves the same (splash, tabs, a modal or two)
+- [x] 4.2 User check: the interactive client looks and behaves the same (splash, tabs, a modal or two)
