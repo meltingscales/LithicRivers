@@ -11,10 +11,10 @@
 
 ## 3. Modals
 
-- [ ] 3.1 Create `ui/modals/` and move the corpse looting modals into `corpse_looting.rs`; verify the `modal-corpse-loot` snapshot is unchanged
-- [ ] 3.2 Move the NPC selection and dialogue modals into `npc_interaction.rs`; verify the `modal-npc-dialogue` snapshot is unchanged
-- [ ] 3.3 Move the hotbar assignment and block picker modals into `hotbar_assignment.rs`, and the multi-action / action selection modals into `action_selection.rs`; verify `cargo test --workspace` passes with no `.snap` changes
-- [ ] 3.4 Move the cheat console modal into `cheat_console.rs`; verify the `cheat-console` snapshot is unchanged
+- [x] 3.1 Create `ui/modals/` and move the corpse looting modals into `corpse_looting.rs`; verify the `modal-corpse-loot` snapshot is unchanged
+- [x] 3.2 Move the NPC selection and dialogue modals into `npc_interaction.rs`; verify the `modal-npc-dialogue` snapshot is unchanged
+- [x] 3.3 Move the hotbar assignment and block picker modals into `hotbar_assignment.rs`, and the multi-action / action selection modals into `action_selection.rs`; verify `cargo test --workspace` passes with no `.snap` changes
+- [x] 3.4 Move the cheat console modal into `cheat_console.rs`; verify the `cheat-console` snapshot is unchanged
 
 ## 4. Wrap-up
 

@@ -1,16 +1,16 @@
 //! Frame layout: title, tab content, message log, bottom menu, and modal overlays in draw order.
 
 use crate::ui::centered_rect;
+use crate::ui::modals::{
+    render_cheat_console_modal, render_corpse_looting_modals, render_hotbar_assignment_modal,
+    render_multi_action_selection_modal, render_npc_interaction_modals,
+};
 use crate::ui::panels::{
     render_body_panel, render_combat_panel, render_crafting_panel, render_credits_panel,
     render_game_view, render_global_map_panel, render_help_panel, render_hotbar_panel,
     render_inventory_list_only, render_inventory_panel, render_look_panel, render_menu_panel,
     render_modes_panel, render_quests_panel, render_quit_panel, render_repair_modal,
     render_tutorial_panel, render_tutorial_selection_modal,
-};
-use crate::{
-    render_cheat_console_modal, render_corpse_looting_modals, render_hotbar_assignment_modal,
-    render_multi_action_selection_modal, render_npc_interaction_modals,
 };
 use crate::{App, MenuTab, SplashState};
 use ratatui::{
