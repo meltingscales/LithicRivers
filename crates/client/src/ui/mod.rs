@@ -1,6 +1,9 @@
 //! UI utility functions and components
 
+pub mod layout;
+pub mod modals;
 pub mod panels;
+pub mod splash;
 
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 
