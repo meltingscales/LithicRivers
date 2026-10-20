@@ -47,3 +47,12 @@ The Crafting panel's detail area renders the selected recipe recursively (indent
 
 - [Iron scrap only in some biomes or structures] → The reachability test checks the recipe graph, not map distribution; a follow-up can check worldgen frequency.
 - [Multiple recipes for one item make the tree ambiguous] → Show the first recipe; acceptable while each item has one.
+
+## Implementation Notes
+
+- **One drop table drives mining:** `crafting::mining_drop` lists every minable tile (tree, plank block, rock, iron scrap, scrap electronics) with what it becomes and drops; `mining_system` uses it for all of them instead of per-tile code. Rolls use one `new_rng(x, y, z)` per tile in table order, so tree drops are unchanged. The tree keeps its "You chop the tree. (+n Wood, +n Acorn)" message; other tiles say "You mine the <tile>. (+n Item)".
+- **Creature loot** is `crafting::FERAL_DOG_LOOT`, used both when a dog spawns and by `raw_sources()`. Same rolls in the same order as before.
+- **Raw sources include the plank block**, because mining a placed plank block drops one.
+- `ItemKind` derives `Ord` so raw sources and reachability use ordered sets.
+- The reachability check is `crafting::unobtainable`; the "fails, naming the item" case is a unit test that adds an extra placeable item and removes a raw source, rather than a test-only item kind.
+- The ingredient tree marks raw materials with `*` (legend below the tree) and intermediates with `-`.
