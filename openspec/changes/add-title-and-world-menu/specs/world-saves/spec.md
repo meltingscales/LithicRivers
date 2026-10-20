@@ -51,6 +51,10 @@ Each world SHALL be stored in its own folder under the saves folder. Saving SHAL
 - **WHEN** the player chooses Save and Quit to Title from the in-game Menu tab
 - **THEN** the world is saved and the title screen is shown
 
+#### Scenario: Quit tab
+- **WHEN** the player activates the in-game Quit tab, which reads "SAVE AND QUIT"
+- **THEN** the world is saved and the title screen is shown; quitting the game is done from the title screen
+
 ### Requirement: Delete a world
 Deleting a world SHALL require a confirmation and then remove that world's folder.
 

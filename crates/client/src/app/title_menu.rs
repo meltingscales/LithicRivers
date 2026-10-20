@@ -462,6 +462,25 @@ mod tests {
     }
 
     #[test]
+    fn quit_tab_saves_and_returns_to_the_title() {
+        let mut runner = after("skip-splash\nkey movement.MOVE_SOUTH\nkey ui.MENU_NEXT 9");
+        assert_eq!(runner.app.ui.current_tab, MenuTab::Quit);
+        let pos = runner.app.core.game.get_player_position();
+        run(&mut runner, "key ui.MENU_ACTIVATE");
+        assert_eq!(runner.app.splash.state, SplashState::Title);
+        assert!(
+            !runner.app.core.should_quit,
+            "the game keeps running at the title"
+        );
+        run(
+            &mut runner,
+            "key title.SELECT\nkey title.SELECT\nkey title.SELECT",
+        );
+        assert_eq!(runner.app.splash.state, SplashState::MainUI);
+        assert_eq!(runner.app.core.game.get_player_position(), pos);
+    }
+
+    #[test]
     fn cheat_console_follows_the_world_setting() {
         // Allow cheats is off by default
         let mut off = after(&format!(

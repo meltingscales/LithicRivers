@@ -5,24 +5,24 @@ input_file: scripts/snapshots/tab-11-quit.txt
 ---
 === screen quit ===
                                             LithicRivers
-┌Quit──────────────────────────────────────────────────────────────────────────────────────────────┐
-│QUIT        QUIT        QUIT        QUIT        QUIT        QUIT        QUIT        QUIT        QU│
-│      QUIT        QUIT        QUIT        QUIT        QUIT        QUIT        QUIT        QUIT    │
-│QUIT        QUIT        QUIT        QUIT        QUIT        QUIT        QUIT        QUIT        QU│
-│      QUIT        QUIT        QUIT        QUIT        QUIT        QUIT        QUIT        QUIT    │
-│QUIT        QUIT        QUIT        QUIT        QUIT        QUIT        QUIT        QUIT        QU│
-│      QUIT        QUIT        QUIT        QUIT        QUIT        QUIT        QUIT        QUIT    │
-│QUIT        QUIT        QUIT        QUIT        QUIT        QUIT        QUIT        QUIT        QU│
-│      QUIT        QUIT        QUIT        QUIT        QUIT        QUIT        QUIT        QUIT    │
-│QUIT        QUIT        QUIT        QUIT        QUIT        QUIT        QUIT        QUIT        QU│
-│      QUIT        QUIT        QUIT        QUIT        QUIT        QUIT        QUIT        QUIT    │
-│QUIT        QUIT        QUIT        QUIT        QUIT        QUIT        QUIT        QUIT        QU│
-│      QUIT        QUIT        QUIT        QUIT        QUIT        QUIT        QUIT        QUIT    │
-│QUIT        QUIT        QUIT        QUIT        QUIT        QUIT        QUIT        QUIT        QU│
-│      QUIT        QUIT        QUIT        QUIT        QUIT        QUIT        QUIT        QUIT    │
-│QUIT        QUIT        QUIT        QUIT        QUIT        QUIT        QUIT        QUIT        QU│
-│      QUIT        QUIT        QUIT        QUIT        QUIT        QUIT        QUIT        QUIT    │
-│QUIT        QUIT        QUIT        QUIT        QUIT        QUIT        QUIT        QUIT        QU│
+┌Save and Quit─────────────────────────────────────────────────────────────────────────────────────┐
+│SAVE AND QUIT        SAVE AND QUIT        SAVE AND QUIT        SAVE AND QUIT        SAVE AND QUIT │
+│          SAVE AND QUIT        SAVE AND QUIT        SAVE AND QUIT        SAVE AND QUIT        SAVE│
+│SAVE AND QUIT        SAVE AND QUIT        SAVE AND QUIT        SAVE AND QUIT        SAVE AND QUIT │
+│          SAVE AND QUIT        SAVE AND QUIT        SAVE AND QUIT        SAVE AND QUIT        SAVE│
+│SAVE AND QUIT        SAVE AND QUIT        SAVE AND QUIT        SAVE AND QUIT        SAVE AND QUIT │
+│          SAVE AND QUIT        SAVE AND QUIT        SAVE AND QUIT        SAVE AND QUIT        SAVE│
+│SAVE AND QUIT        SAVE AND QUIT        SAVE AND QUIT        SAVE AND QUIT        SAVE AND QUIT │
+│          SAVE AND QUIT        SAVE AND QUIT        SAVE AND QUIT        SAVE AND QUIT        SAVE│
+│SAVE AND QUIT        SAVE AND QUIT        SAVE AND QUIT        SAVE AND QUIT        SAVE AND QUIT │
+│          SAVE AND QUIT        SAVE AND QUIT        SAVE AND QUIT        SAVE AND QUIT        SAVE│
+│SAVE AND QUIT        SAVE AND QUIT        SAVE AND QUIT        SAVE AND QUIT        SAVE AND QUIT │
+│          SAVE AND QUIT        SAVE AND QUIT        SAVE AND QUIT        SAVE AND QUIT        SAVE│
+│SAVE AND QUIT        SAVE AND QUIT        SAVE AND QUIT        SAVE AND QUIT        SAVE AND QUIT │
+│          SAVE AND QUIT        SAVE AND QUIT        SAVE AND QUIT        SAVE AND QUIT        SAVE│
+│SAVE AND QUIT        SAVE AND QUIT        SAVE AND QUIT        SAVE AND QUIT        SAVE AND QUIT │
+│          SAVE AND QUIT        SAVE AND QUIT        SAVE AND QUIT        SAVE AND QUIT        SAVE│
+│SAVE AND QUIT        SAVE AND QUIT        SAVE AND QUIT        SAVE AND QUIT        SAVE AND QUIT │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
 │[0] Loading structure 'sapiencorp-bunker.lrstructure' at (10, 10, 1) for chunk (0, 0, 1)          │
