@@ -24,5 +24,5 @@
 ## 4. Docs and checks
 
 - [x] 4.1 Update AGENTS.md and the `play-headless` skill: `skip-splash` starts a world directly, scripts can drive the title menu with `title.*` keybinds, headless saves are isolated; verify the documented example runs with `just client-blind`
-- [ ] 4.2 Verify `just code-clippy` passes, `cargo test --workspace` passes twice with no pending snapshots, and the PR checks pass on Linux, Windows and macOS
+- [x] 4.2 Verify `just code-clippy` passes, `cargo test --workspace` passes twice with no pending snapshots, and the PR checks pass on Linux, Windows and macOS
 - [ ] 4.3 User check: in the interactive client, the title screen, world list, create-world screen, options, save and quit to title, and replaying a world look and feel right
