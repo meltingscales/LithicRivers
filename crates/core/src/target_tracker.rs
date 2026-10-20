@@ -1,5 +1,5 @@
 use hecs::Entity;
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet};
 
 use crate::moves::{CombatAction, QueuedAction};
 
@@ -8,11 +8,11 @@ use crate::moves::{CombatAction, QueuedAction};
 /// Instead of O(n²) cleanup where we scan all entities and their action queues,
 /// we maintain a reverse lookup: target -> set of entities targeting it.
 /// This reduces cleanup to O(1) lookup + O(k) cleanup where k = entities targeting the dead entity.
-#[derive(Debug, Default)]
+#[derive(Debug, Default, serde::Serialize, serde::Deserialize)]
 pub struct TargetTracker {
     /// Maps: target_entity -> set of entities that have actions targeting it
     /// When target_entity dies, we can quickly find all entities that need queue cleanup
-    targeting_relationships: HashMap<Entity, HashSet<Entity>>,
+    targeting_relationships: BTreeMap<Entity, BTreeSet<Entity>>,
 }
 
 impl TargetTracker {

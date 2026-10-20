@@ -48,6 +48,7 @@ pub enum Step {
     Screen(Option<String>),
     State(Option<String>),
     ExpectText(String),
+    SaveReload,
     Quit,
 }
 
@@ -76,6 +77,7 @@ impl std::fmt::Display for Step {
             Step::State(None) => write!(f, "state"),
             Step::State(Some(label)) => write!(f, "state {label}"),
             Step::ExpectText(text) => write!(f, "expect-text \"{text}\""),
+            Step::SaveReload => write!(f, "save-reload"),
             Step::Quit => write!(f, "quit"),
         }
     }
@@ -235,6 +237,10 @@ pub fn parse_script(text: &str) -> Result<Script, ScriptError> {
             "screen" => Step::Screen(optional_label(rest)),
             "state" => Step::State(optional_label(rest)),
             "expect-text" => Step::ExpectText(parse_quoted(line, cmd, rest)?),
+            "save-reload" => {
+                expect_args(0)?;
+                Step::SaveReload
+            }
             "quit" => {
                 expect_args(0)?;
                 Step::Quit
@@ -483,6 +489,14 @@ impl Runner {
                         screen,
                     });
                 }
+            }
+            Step::SaveReload => {
+                let saved = self.app.save_to_string().map_err(|e| {
+                    StepFailure::Error(err(line, format!("save-reload: save failed: {e:#}")))
+                })?;
+                self.app.load_from_str(&saved).map_err(|e| {
+                    StepFailure::Error(err(line, format!("save-reload: load failed: {e:#}")))
+                })?;
             }
             Step::Quit => return Ok(false),
         }
@@ -827,7 +841,7 @@ mod tests {
         let script = parse_script(
             "# comment\n\nseed 7\nsize 80x24\nskip-splash\nkey movement.MOVE_NORTH 3\n\
              rawkey ENTER\ntype \"hi there\"\nwait 250\ntick\ntick 4\ncheat tp 1 2 3\n\
-             screen\nscreen after\nstate\nexpect-text \"Messages\"\nquit\n",
+             screen\nscreen after\nstate\nexpect-text \"Messages\"\nsave-reload\nquit\n",
         )
         .unwrap();
         assert_eq!(script.seed, Some(7));
@@ -855,6 +869,7 @@ mod tests {
                 Step::Screen(Some("after".into())),
                 Step::State(None),
                 Step::ExpectText("Messages".into()),
+                Step::SaveReload,
                 Step::Quit,
             ]
         );
@@ -1025,7 +1040,7 @@ mod render_tests {
     fn every_step_renders_back_to_the_same_step() {
         let text = "skip-splash\nkey movement.MOVE_NORTH\nkey movement.MOVE_SOUTH 3\nrawkey ENTER\n\
                     type \"say \"hi\" now\"\nwait 250\ntick 4\ncheat tp 1 2 3\nscreen\nscreen after\n\
-                    state\nstate end\nexpect-text \"Messages\"\nquit\n";
+                    state\nstate end\nexpect-text \"Messages\"\nsave-reload\nquit\n";
         let steps: Vec<Step> = parse_script(text)
             .unwrap()
             .steps

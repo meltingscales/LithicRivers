@@ -2,10 +2,11 @@ use crate::world::GameWorld;
 use rand::SeedableRng;
 use rand_chacha::ChaCha20Rng;
 
-#[derive(Debug)]
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct WorldState {
     pub seed: u64,
     pub rng: ChaCha20Rng,
+    #[serde(with = "crate::world::chunks_as_pairs")]
     pub world: GameWorld,
 }
 

@@ -100,15 +100,8 @@ pub fn handle_global_ui_input(app: &mut App, key: KeyCode) -> Result<bool, Box<d
             return Ok(true);
         }
         tracing::info!(target: "game", "save_begin path=save.json tick={}", app.core.game.res.time.tick);
-        let viewport = lithicrivers_core::save_load::ViewportSave {
-            view_x: app.ui.view_x,
-            view_y: app.ui.view_y,
-            view_z: app.ui.view_z,
-        };
-        app.core
-            .game
-            .save_json_with_viewport("save.json", viewport)
-            .map_err(|e| format!("save_json_with_viewport error: {:?}", e))?;
+        app.save_to_file("save.json")
+            .map_err(|e| format!("save error: {:?}", e))?;
         app.core.game.res.log("Saved to save.json");
         tracing::info!(target: "game", "save_end path=save.json tick={}", app.core.game.res.time.tick);
         return Ok(true);
@@ -119,17 +112,8 @@ pub fn handle_global_ui_input(app: &mut App, key: KeyCode) -> Result<bool, Box<d
             return Ok(true);
         }
         tracing::info!(target: "game", "load_begin path=save.json tick={}", app.core.game.res.time.tick);
-        let viewport = app
-            .core
-            .game
-            .load_json_with_viewport("save.json")
-            .map_err(|e| format!("load_json_with_viewport error: {:?}", e))?;
-
-        // Restore viewport
-        app.ui.view_x = viewport.view_x;
-        app.ui.view_y = viewport.view_y;
-        app.ui.view_z = viewport.view_z;
-
+        app.load_from_file("save.json")
+            .map_err(|e| format!("load error: {:?}", e))?;
         app.core.game.res.log("Loaded from save.json");
         tracing::info!(target: "game", "load_end path=save.json tick={}", app.core.game.res.time.tick);
         return Ok(true);

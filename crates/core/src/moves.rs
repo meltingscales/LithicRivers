@@ -1,9 +1,10 @@
 use crate::components::Position;
 use crate::model::body::{Body, BodyPartState, BodyPartType};
 use hecs::Entity;
+use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum MoveType {
     Melee,
     Tackle,
@@ -32,7 +33,7 @@ impl MoveType {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Move {
     pub name: String,
     pub move_type: MoveType,
@@ -263,7 +264,7 @@ pub fn calculate_body_integrity(body: &Body) -> f32 {
 }
 
 /// Queued action in the combat system
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct QueuedAction {
     pub entity: Entity,
     pub action: CombatAction,
@@ -272,7 +273,7 @@ pub struct QueuedAction {
 }
 
 /// Types of combat actions that can be queued
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum CombatAction {
     PlayerMove {
         move_data: Move,
@@ -286,7 +287,7 @@ pub enum CombatAction {
 }
 
 /// Component for the action queue system - attached to combat entities
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ActionQueue {
     pub actions: VecDeque<QueuedAction>,
     pub current_action: Option<QueuedAction>,

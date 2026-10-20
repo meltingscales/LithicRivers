@@ -47,18 +47,24 @@ pub enum QuestMarkerType {
     Treasure,
 }
 
+/// Everything a save stores about the world besides entities. `config` comes from the
+/// config file and is rebuilt on load.
+#[derive(serde::Serialize, serde::Deserialize)]
 pub struct Resources {
     pub time: GameTime,
     pub world_state: WorldState,
+    #[serde(skip, default = "GameConfig::new")]
     pub config: GameConfig,
     pub player_state: PlayerState,
     pub events: GameEvents,
     pub target_tracker: TargetTracker,
     pub pending_structures: Vec<PendingStructure>,
+    #[serde(with = "crate::serde_pairs")]
     pub chunk_generation_states: HashMap<(i64, i64, i64), ChunkGenerationState>,
     pub structure_generation_states: HashMap<String, StructureGenerationState>,
     pub quest_markers: Vec<QuestMarker>,
     pub active_quests: Vec<ActiveQuest>,
+    #[serde(with = "crate::serde_pairs")]
     pub explored_chunks: HashMap<(i64, i64, i64), bool>,
 }
 

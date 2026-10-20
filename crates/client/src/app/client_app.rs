@@ -241,18 +241,23 @@ impl App {
     pub(crate) fn apply_tick_result(&mut self, result: &lithicrivers_core::game::GameTickResult) {
         use lithicrivers_core::game::GameTickResult;
         if result.contains(GameTickResult::CombatTriggered) {
-            // Only the World tab draws combat
-            self.ui.current_tab = MenuTab::World;
-            self.combat = CombatUiState::Active {
-                current_move: 0,
-                current_enemy: 0,
-                enemy_timers: vec![], // Deprecated - using ActionQueue now
-                move_scroll_offset: 0,
-            };
+            self.open_combat_ui();
         }
         if result.contains(GameTickResult::CombatEnded) {
             self.combat = CombatUiState::None;
         }
+    }
+
+    /// Show the combat panel with the first move and enemy selected.
+    pub(crate) fn open_combat_ui(&mut self) {
+        // Only the World tab draws combat
+        self.ui.current_tab = MenuTab::World;
+        self.combat = CombatUiState::Active {
+            current_move: 0,
+            current_enemy: 0,
+            enemy_timers: vec![], // Deprecated - using ActionQueue now
+            move_scroll_offset: 0,
+        };
     }
 
     pub(crate) fn snap_view_to_player_z(&mut self) {

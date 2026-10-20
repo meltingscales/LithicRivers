@@ -17,11 +17,11 @@ impl fmt::Display for Position {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Player;
 
 /// Marker for all in-world game entities (parents Player, Sheep, etc.)
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct GameEntity;
 
 /// Renderable glyph for ASCII views
@@ -29,7 +29,7 @@ pub struct GameEntity;
 pub struct Glyph(pub char);
 
 /// Marker for a simple wandering sheep
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Sheep;
 
 /// Marker for a simple wandering feral dog
@@ -133,7 +133,7 @@ impl Energy {
 }
 
 /// Component for entities that are stunned
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Stunned {
     pub remaining_ticks: u64,
 }
@@ -147,7 +147,7 @@ impl Stunned {
 }
 
 /// Marker for entities that block movement
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct BlocksMovement;
 
 // Body lives in `crate::model::body` now.
@@ -315,7 +315,7 @@ pub struct SpriteRef {
 }
 
 /// Marker component for entities that are dead
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Dead;
 
 /// Quest-giving NPC marker
@@ -356,7 +356,7 @@ impl SpriteRef {
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct FogOfWar {
     /// Set of (x, y, z) positions that have been visited by the player
-    pub visited_tiles: std::collections::HashSet<(i64, i64, i64)>,
+    pub visited_tiles: std::collections::BTreeSet<(i64, i64, i64)>,
 }
 
 impl FogOfWar {

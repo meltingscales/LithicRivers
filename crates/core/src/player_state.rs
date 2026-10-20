@@ -1,6 +1,6 @@
 use crate::intent::PlayerIntent;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct PlayerState {
     pub intent: PlayerIntent,
     pub last_blocked_tile: Option<(i64, i64)>,

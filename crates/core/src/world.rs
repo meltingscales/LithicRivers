@@ -744,3 +744,40 @@ impl GameWorld {
         self.chunks = entries.into_iter().collect();
     }
 }
+
+/// `#[serde(with = "crate::world::chunks_as_pairs")]`: a `GameWorld` as its seed plus cached
+/// chunks as `[coords, chunk]` pairs (JSON can't key objects by tuples).
+pub mod chunks_as_pairs {
+    use super::{Chunk, GameWorld};
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
+    use std::collections::HashMap;
+
+    #[derive(Serialize)]
+    struct WorldRef<'a> {
+        seed: u64,
+        #[serde(with = "crate::serde_pairs")]
+        chunks: &'a HashMap<(i64, i64, i64), Chunk>,
+    }
+
+    #[derive(Deserialize)]
+    struct WorldOwned {
+        seed: u64,
+        #[serde(with = "crate::serde_pairs")]
+        chunks: HashMap<(i64, i64, i64), Chunk>,
+    }
+
+    pub fn serialize<S: Serializer>(world: &GameWorld, serializer: S) -> Result<S::Ok, S::Error> {
+        WorldRef {
+            seed: world.seed,
+            chunks: &world.chunks,
+        }
+        .serialize(serializer)
+    }
+
+    pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<GameWorld, D::Error> {
+        let WorldOwned { seed, chunks } = WorldOwned::deserialize(deserializer)?;
+        let mut world = GameWorld::new(0, 0, seed);
+        world.chunks = chunks;
+        Ok(world)
+    }
+}
