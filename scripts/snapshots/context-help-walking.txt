@@ -1,0 +1,8 @@
+# Context help while walking next to the starting corpse: loot is offered
+seed 12345
+size 100x30
+skip-splash
+key ui.MENU_PREV
+cheat tp 17 21 0
+expect-text "f: loot corpse"
+screen walking

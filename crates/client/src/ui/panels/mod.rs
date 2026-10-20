@@ -1,5 +1,6 @@
 pub mod body;
 pub mod combat;
+pub mod context_help;
 pub mod crafting;
 pub mod credits;
 pub mod global_map;

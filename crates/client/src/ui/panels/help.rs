@@ -28,6 +28,13 @@ pub fn render_help_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
         Style::default().fg(Color::Cyan),
     )));
     lines.push(Line::from(""));
+    lines.push(Line::from(format!(
+        "On the World page, {} shows or hides context help: the keys for what you're doing now.",
+        app.core
+            .config_manager
+            .get_printable_key_for_keybind("ui", "TOGGLE_CONTEXT_HELP")
+    )));
+    lines.push(Line::from(""));
     let movement_keys_list = vec![
         app.core
             .config_manager

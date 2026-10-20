@@ -196,11 +196,13 @@ first quest and associated dungeons
   - [x] **Interactive Tutorial System with modal overlays, popup GUI and keybind detection**
   - [x] **TutorialSystem class with toggleable panel (F1) and Menu integration**
 - [ ] Basic sound effects, not just music
-- [ ] Main menu with new game/load game
+- [x] Main menu with new game/load game
+  - [x] **Title screen, world list (play, rename, delete) and Create New World with per-world settings**
 - [x] Basic UI feedback for player actions
   - [x] **Save/load keybinds displayed in menu**
   - [x] **Cross-platform NumLock detection and warnings**
   - [x] **Colored message system for better user feedback**
+  - [x] **Context help panel on the World page (toggle with h)**
 
 ## Post-MVP (After Release)
 - [ ] Multiplayer support

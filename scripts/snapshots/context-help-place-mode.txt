@@ -1,0 +1,8 @@
+# Context help in place mode: direction keys and the hotbar
+seed 12345
+size 100x30
+skip-splash
+key ui.MENU_PREV
+key build.TOGGLE_BREAK_PLACE_MODE 2
+expect-text "Place mode, direction:"
+screen place-mode

@@ -5,6 +5,7 @@ use crate::ui::modals::{
     render_cheat_console_modal, render_corpse_looting_modals, render_hotbar_assignment_modal,
     render_multi_action_selection_modal, render_npc_interaction_modals,
 };
+use crate::ui::panels::context_help::render_context_help;
 use crate::ui::panels::{
     render_body_panel, render_combat_panel, render_crafting_panel, render_credits_panel,
     render_game_view, render_global_map_panel, render_help_panel, render_hotbar_panel,
@@ -90,13 +91,11 @@ pub(crate) fn ui(f: &mut Frame, app: &mut App) {
                     .split(root_chunks[1]);
                 render_game_view(f, app, main_chunks[0]);
 
-                // Split right panel vertically: modes (3 lines) + look panel (rest)
-                let right_chunks = Layout::default()
-                    .direction(Direction::Vertical)
-                    .constraints([Constraint::Length(3), Constraint::Min(0)])
-                    .split(main_chunks[1]);
+                // Split right panel vertically: modes (3 lines) + look panel + context help
+                let right_chunks = sidebar_chunks(app, main_chunks[1]);
                 render_modes_panel(f, app, right_chunks[0]);
                 render_look_panel(f, app, right_chunks[1]);
+                render_context_help(f, app, right_chunks[2]);
             } else {
                 // Show modes panel and inventory list as sidebar
                 let main_chunks = Layout::default()
@@ -105,13 +104,11 @@ pub(crate) fn ui(f: &mut Frame, app: &mut App) {
                     .split(root_chunks[1]);
                 render_game_view(f, app, main_chunks[0]);
 
-                // Split right panel vertically: modes (3 lines) + inventory (rest)
-                let right_chunks = Layout::default()
-                    .direction(Direction::Vertical)
-                    .constraints([Constraint::Length(3), Constraint::Min(0)])
-                    .split(main_chunks[1]);
+                // Split right panel vertically: modes (3 lines) + inventory + context help
+                let right_chunks = sidebar_chunks(app, main_chunks[1]);
                 render_modes_panel(f, app, right_chunks[0]);
                 render_inventory_list_only(f, app, right_chunks[1]);
+                render_context_help(f, app, right_chunks[2]);
             }
         }
         MenuTab::Tutorial => {
@@ -358,4 +355,23 @@ fn calculate_game_viewport_area(f: &Frame, app: &App) -> Rect {
             root_chunks[1]
         }
     }
+}
+
+/// The World sidebar: modes (3 lines), the inventory or look panel, then context help
+/// (a framed panel, or a one-line hint when hidden). Help shrinks first on short screens so
+/// the middle panel keeps at least 5 lines.
+fn sidebar_chunks(app: &App, area: Rect) -> std::rc::Rc<[Rect]> {
+    const MODES: u16 = 3;
+    const MIN_MIDDLE: u16 = 5;
+    const HELP: u16 = 12;
+    let wanted = if app.ui.show_context_help { HELP } else { 1 };
+    let help = wanted.min(area.height.saturating_sub(MODES + MIN_MIDDLE));
+    Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Length(MODES),
+            Constraint::Min(0),
+            Constraint::Length(help),
+        ])
+        .split(area)
 }
