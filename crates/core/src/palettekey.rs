@@ -44,4 +44,7 @@ pub enum PaletteKey {
 
     //other special tiles
     SpecialPlayerSpawn,
+
+    // Marker under a factory block entity
+    FactoryBlock,
 }

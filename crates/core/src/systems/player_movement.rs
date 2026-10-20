@@ -152,6 +152,21 @@ pub fn mining_system(world: &mut World, res: &mut Resources) -> bool {
     use crate::tiles::TileKind;
     use rand::Rng;
     match tile_to_mine {
+        TileKind::FactoryBlock => {
+            let Some(player) = get_player_entity(world) else {
+                return false;
+            };
+            match crate::factory::break_block(world, res, Position { x, y, z }, player) {
+                Some(kind) => {
+                    res.events.interaction_event(
+                        format!("You break the {}.", kind.name()),
+                        res.time.tick,
+                    );
+                    true
+                }
+                None => false,
+            }
+        }
         // This is the place that mining gets processed.
         TileKind::PlankBlock => {
             // Mine plank block: Remove block and drop 1 ItemKind::PlankBlock

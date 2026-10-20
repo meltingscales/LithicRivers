@@ -107,6 +107,7 @@ saved_components! {
     "dead" => Dead,
     "fog_of_war" => FogOfWar,
     "light_source" => LightSource,
+    "factory_block" => crate::factory::FactoryBlock,
 }
 
 /// Entities that carry a component type the registry doesn't know, described by the
@@ -166,6 +167,7 @@ impl SaveOwned {
         }
         game.world = self.entities;
         game.res = self.resources;
+        game.res.factory_index = crate::factory::rebuild_index(&game.world);
         Ok(LoadedSave {
             client: self.client,
             viewport: None,
@@ -329,6 +331,38 @@ mod tests {
     }
 
     #[test]
+    fn factory_blocks_survive_a_reload_with_their_index() {
+        use crate::factory::{place, Facing, FactoryBlock, FactoryKind};
+        let mut game = TestWorld::new(1).build().game;
+        let pos = Position { x: 2, y: 0, z: 0 };
+        let chest = place(
+            &mut game.world,
+            &mut game.res,
+            FactoryKind::Chest,
+            pos,
+            Facing::West,
+        )
+        .unwrap();
+        game.res.player_state.intent = crate::intent::PlayerIntent::movement(0, 0, 0, 130);
+        game.tick();
+        let clock = game.res.factory_clock.clone();
+        let before = snapshot(&game);
+
+        reload(&mut game);
+        assert_same(&before, &snapshot(&game));
+        assert_eq!(
+            game.res.factory_index.get(&pos),
+            Some(&chest),
+            "index rebuilt"
+        );
+        assert_eq!(
+            game.world.get::<&FactoryBlock>(chest).unwrap().facing,
+            Facing::West
+        );
+        assert_eq!(game.res.factory_clock, clock);
+    }
+
+    #[test]
     fn msgpack_round_trip_keeps_everything() {
         let mut game = Game::new(999);
         game.tick();
@@ -415,6 +449,20 @@ mod tests {
         world.npc(-4, 3, 0);
         world.item(2, 2, 0, crate::components::ItemKind::Log, 1);
         let mut fight = world.build();
+        let chest = crate::factory::place(
+            &mut fight.game.world,
+            &mut fight.game.res,
+            crate::factory::FactoryKind::Chest,
+            Position { x: -2, y: -2, z: 0 },
+            crate::factory::Facing::East,
+        )
+        .unwrap();
+        fight
+            .game
+            .world
+            .get::<&mut Inventory>(chest)
+            .unwrap()
+            .add(crate::components::ItemKind::Log, 3);
         fight.ticks(30);
         let dog = fight.entity(dog);
         crate::systems::handle_entity_death(&mut fight.game.world, &mut fight.game.res, dog);
