@@ -35,6 +35,19 @@ pub fn render_help_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
             .get_printable_key_for_keybind("ui", "TOGGLE_CONTEXT_HELP")
     )));
     lines.push(Line::from(""));
+    lines.push(Line::from(format!(
+        "Factory blocks (chests): place them in Place mode, where {} turns the next one; Rotate mode turns placed ones. {} on a chest opens it. {} lets 10 game seconds pass.",
+        app.core
+            .config_manager
+            .get_printable_key_for_keybind("build", "ROTATE_PLACEMENT"),
+        app.core
+            .config_manager
+            .get_printable_key_for_keybind("action", "INTERACT"),
+        app.core
+            .config_manager
+            .get_printable_key_for_keybind("action", "PASS_TIME")
+    )));
+    lines.push(Line::from(""));
     let movement_keys_list = vec![
         app.core
             .config_manager
@@ -119,7 +132,7 @@ pub fn render_help_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
             .get_printable_key_for_keybind("build", "BREAK_SOUTHEAST"),
     ];
     lines.push(Line::from(Span::raw(format!(
-        "Build Mode Keys: Use '{}' to cycle Movement --> Break --> Place",
+        "Build Mode Keys: Use '{}' to cycle Movement --> Break --> Place --> Rotate",
         app.core
             .config_manager
             .get_printable_key_for_keybind("build", "TOGGLE_BREAK_PLACE_MODE")

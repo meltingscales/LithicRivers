@@ -72,7 +72,7 @@ impl Facing {
 pub enum FactoryKind {
     Chest,
     /// A directional block with no behavior, for tests of facing and rotation.
-    #[cfg(test)]
+    #[cfg(any(test, feature = "test-support"))]
     TestArrow,
 }
 
@@ -89,7 +89,7 @@ impl FactoryKind {
     pub fn item(self) -> Option<ItemKind> {
         match self {
             FactoryKind::Chest => Some(ItemKind::Chest),
-            #[cfg(test)]
+            #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestArrow => None,
         }
     }
@@ -97,7 +97,7 @@ impl FactoryKind {
     pub fn name(self) -> &'static str {
         match self {
             FactoryKind::Chest => "chest",
-            #[cfg(test)]
+            #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestArrow => "test arrow",
         }
     }
@@ -106,7 +106,7 @@ impl FactoryKind {
     pub fn directional(self) -> bool {
         match self {
             FactoryKind::Chest => false,
-            #[cfg(test)]
+            #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestArrow => true,
         }
     }
@@ -116,7 +116,7 @@ impl FactoryKind {
         let _ = facing; // No directional sprites yet; belts will add `belt_<facing>`
         match self {
             FactoryKind::Chest => SpriteRef::new("factory", "chest"),
-            #[cfg(test)]
+            #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestArrow => SpriteRef::new("factory", "chest"),
         }
     }
@@ -372,7 +372,6 @@ impl crate::Game {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::components::Player;
     use crate::test_support::TestWorld;
     use crate::Game;
 

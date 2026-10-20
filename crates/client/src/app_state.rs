@@ -145,12 +145,14 @@ pub struct LookPanelState {
     pub cursor: Position,
 }
 
-/// Build mode states: Movement -> Break -> Place
+/// Build mode states: Movement -> Break -> Place -> Rotate
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BuildMode {
     Movement,
     Break,
     Place,
+    /// Direction keys rotate the adjacent factory block
+    Rotate,
 }
 
 impl BuildMode {
@@ -158,7 +160,8 @@ impl BuildMode {
         match self {
             BuildMode::Movement => BuildMode::Break,
             BuildMode::Break => BuildMode::Place,
-            BuildMode::Place => BuildMode::Movement,
+            BuildMode::Place => BuildMode::Rotate,
+            BuildMode::Rotate => BuildMode::Movement,
         }
     }
 
@@ -167,6 +170,7 @@ impl BuildMode {
             BuildMode::Movement => "Movement",
             BuildMode::Break => "Break",
             BuildMode::Place => "Place",
+            BuildMode::Rotate => "Rotate",
         }
     }
 }
@@ -177,6 +181,8 @@ pub struct BuildPanelState {
     pub selected_hotbar_slot: usize,
     /// Assigned blocks for each hotbar slot (None = empty slot)
     pub hotbar_assignments: [Option<ItemKind>; 12],
+    /// Facing of the next factory block placed (cycled with `build.ROTATE_PLACEMENT`)
+    pub placement_facing: lithicrivers_core::factory::Facing,
     /// Track last F-key press for double-tap detection
     pub last_fkey_press: Option<(usize, Instant)>,
 }
@@ -187,6 +193,7 @@ impl Default for BuildPanelState {
             mode: BuildMode::Movement,
             selected_hotbar_slot: 0,
             hotbar_assignments: [None; 12],
+            placement_facing: lithicrivers_core::factory::Facing::default(),
             last_fkey_press: None,
         }
     }
@@ -359,6 +366,10 @@ pub enum InteractionType {
         position: Position,
         is_open: bool,
     },
+    OpenChest {
+        entity: hecs::Entity,
+        position: Position,
+    },
 }
 
 impl InteractionType {
@@ -381,6 +392,7 @@ impl InteractionType {
                 }
             }
             InteractionType::TalkToNPC { npc_name, .. } => format!("Talk to {}", npc_name),
+            InteractionType::OpenChest { .. } => "Open chest".to_string(),
             InteractionType::OpenCloseDoor { position, is_open } => {
                 let direction_text = if let Some(player_position) = player_pos {
                     let dx = position.x - player_position.x;
@@ -421,6 +433,7 @@ impl InteractionType {
             InteractionType::PickupItem { .. } => "^", // Up arrow for pickup
             InteractionType::LootCorpse { .. } => "x", // x for corpse looting
             InteractionType::TalkToNPC { .. } => "t",  // t for talking
+            InteractionType::OpenChest { .. } => "c",  // c for chest
             InteractionType::OpenCloseDoor { is_open, .. } => {
                 if *is_open {
                     "o"

@@ -1,0 +1,37 @@
+---
+source: crates/client/src/snapshot_tests.rs
+expression: "String::from_utf8(out).unwrap()"
+input_file: scripts/snapshots/factory-chest-window.txt
+---
+=== screen chest ===
+                                            LithicRivers
+#####vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,          ┌MODES─────────────────┐
+######vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,         │  ------ - - -- - FOG │
+######vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#vvvvvvvvvvvvvvvvv,,,        └──────────────────────┘
+#######vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,        ┌Inventory─────────────┐
+#######vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,       │Nail x8               │
+########vvvvvvv┌────────────────────────────── Chest ───────────────────────────────┐              │
+########vvvvvvv│┌ Chest Items (1/16) ────────────┐┌ Your Items ────────────────────┐│              │
+#########vvvvvv││ 2 x Nail                       ││ 8 x Nail                       ││──────────────┘
+#########vvvvvv││                                ││ 1 x Acorn                      ││──────────────┐
+##########vvvvv││                                ││ 3 x Log                        ││              │
+###########vvvv││                                ││ 2 x Stick                      ││              │
+###########vvvv││                                ││ 3 x Torch                      ││              │
+############vvv││                                ││ 2 x String                     ││              │
+############vvv││                                ││ 3 x Scrap Electronics          ││              │
+#############vv││                                ││                                ││              │
+##############v││                                ││                                ││ mode         │
+###############││                                ││                                ││chest         │
+###############││                                ││                                ││              │
+###############││                                ││                                ││──────────────┘
+┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
+│[1] Build mode: Rotate                          ││                                ││              │
+│[1] Build mode: Movementwitch Panel | ↑↓: Select | Enter: Move Item | Esc: Close──┘│              │
+│[1] Opened chest───────────────────────────────────────────────────────────────────┘              │
+│[1] Stored Nail                                                                                   │
+│[1] Stored Nail                                                                                   │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Menu │ Help │ Credits │ Qu│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===

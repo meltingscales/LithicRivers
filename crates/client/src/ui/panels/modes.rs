@@ -31,6 +31,7 @@ pub fn render_modes_panel(f: &mut Frame, app: &mut App, area: Rect) {
         BuildMode::Movement => Span::styled("-", Style::default().fg(Color::DarkGray)),
         BuildMode::Break => Span::styled("B", Style::default().fg(Color::Cyan)),
         BuildMode::Place => Span::styled("P", Style::default().fg(Color::Green)),
+        BuildMode::Rotate => Span::styled("R", Style::default().fg(Color::Yellow)),
     };
 
     // Noclip mode status

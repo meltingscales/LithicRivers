@@ -1,0 +1,10 @@
+# Place mode hotbar after turning the next placement to face east
+seed 12345
+size 100x30
+skip-splash
+key ui.MENU_PREV
+cheat giveitem chest 1
+key build.TOGGLE_BREAK_PLACE_MODE 2
+key build.ROTATE_PLACEMENT
+expect-text "facing > east"
+screen hotbar

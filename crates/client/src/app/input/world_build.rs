@@ -11,7 +11,20 @@ pub fn handle_world_build_input(app: &mut App, key: KeyCode) -> Result<bool, Box
         return Ok(false);
     }
 
-    // In Break/Place mode, handle 9-directional actions FIRST (before look toggle)
+    // Rotate the next placement (Place mode only)
+    if app.panels.build.mode == BuildMode::Place
+        && app.ui.keybinds.matches("build", "ROTATE_PLACEMENT", &key)
+    {
+        let facing = app.panels.build.placement_facing.rotate_cw();
+        app.panels.build.placement_facing = facing;
+        app.core
+            .game
+            .res
+            .log(format!("Placing facing {}", facing.name()));
+        return Ok(true);
+    }
+
+    // In Break/Place/Rotate mode, handle 9-directional actions FIRST (before look toggle)
     if app.panels.build.mode != BuildMode::Movement {
         let mut handled = false;
 
@@ -40,7 +53,8 @@ pub fn handle_world_build_input(app: &mut App, key: KeyCode) -> Result<bool, Box
                     None
                 }
             }
-            BuildMode::Place => {
+            // Rotate mode reuses the place-direction keys
+            BuildMode::Place | BuildMode::Rotate => {
                 if app.ui.keybinds.matches("build", "PLACE_NORTHWEST", &key) {
                     Some((-1, -1))
                 } else if app.ui.keybinds.matches("build", "PLACE_NORTH", &key) {
@@ -97,61 +111,27 @@ pub fn handle_world_build_input(app: &mut App, key: KeyCode) -> Result<bool, Box
                         handled = true;
                     }
                     BuildMode::Place => {
-                        // Check if player has a block assigned to the selected hotbar slot
-                        let selected_slot = app.panels.build.selected_hotbar_slot;
-                        if let Some(block_item) = app.panels.build.hotbar_assignments[selected_slot]
-                        {
-                            // Check if this item can be placed as a block
-                            if let Some(tile_kind) =
-                                lithicrivers_core::tiles::TileKind::from_item_kind(block_item)
-                            {
-                                // Check if player has this item in inventory
-                                if has_item_in_inventory(app, block_item) {
-                                    // Check if placement position is valid
-                                    if is_valid_placement_position(
-                                        app, target_x, target_y, target_z,
-                                    ) {
-                                        // Place the block in the world
-                                        app.core.game.res.world_state.world.set_tile_cached(
-                                            target_x, target_y, target_z, tile_kind,
-                                        );
-
-                                        // Remove 1 from player inventory
-                                        remove_item_from_inventory(app, block_item, 1);
-
-                                        let item_name =
-                                            lithicrivers_core::components::itemkind_name(
-                                                block_item,
-                                            );
-                                        app.core.game.res.log(format!(
-                                            "Placed {} at ({}, {}, {})",
-                                            item_name, target_x, target_y, target_z
-                                        ));
-                                    } else {
-                                        app.core.game.res.log("Cannot place block here");
-                                    }
-                                } else {
-                                    let item_name =
-                                        lithicrivers_core::components::itemkind_name(block_item);
-                                    app.core
-                                        .game
-                                        .res
-                                        .log(format!("No {} in inventory", item_name));
+                        place_from_hotbar(app, target_x, target_y, target_z);
+                        handled = true;
+                    }
+                    BuildMode::Rotate => {
+                        use lithicrivers_core::factory::{rotate, RotateResult};
+                        let pos = lithicrivers_core::components::Position {
+                            x: target_x,
+                            y: target_y,
+                            z: target_z,
+                        };
+                        let message =
+                            match rotate(&mut app.core.game.world, &app.core.game.res, pos) {
+                                RotateResult::Rotated(facing) => {
+                                    format!("Rotated the block to face {}", facing.name())
                                 }
-                            } else {
-                                let item_name =
-                                    lithicrivers_core::components::itemkind_name(block_item);
-                                app.core
-                                    .game
-                                    .res
-                                    .log(format!("{} cannot be placed as a block", item_name));
-                            }
-                        } else {
-                            app.core
-                                .game
-                                .res
-                                .log(format!("No block assigned to slot F{}", selected_slot + 1));
-                        }
+                                RotateResult::NotDirectional(kind) => {
+                                    format!("The {} has no direction to rotate", kind.name())
+                                }
+                                RotateResult::NoBlock => "Nothing to rotate there".to_string(),
+                            };
+                        app.core.game.res.log(message);
                         handled = true;
                     }
                     BuildMode::Movement => {
@@ -275,11 +255,8 @@ fn get_blocks_from_inventory(app: &App) -> Vec<lithicrivers_core::components::It
             for stack in &inv.slots {
                 // Only include items that are placeable blocks
                 // For now, let's include all ItemKind variants that could be blocks
-                match stack.kind {
-                    ItemKind::Stone | ItemKind::PlankBlock if !blocks.contains(&stack.kind) => {
-                        blocks.push(stack.kind);
-                    }
-                    _ => {} // Skip non-block items
+                if is_placeable(stack.kind) && !blocks.contains(&stack.kind) {
+                    blocks.push(stack.kind);
                 }
             }
         }
@@ -325,46 +302,54 @@ fn remove_item_from_inventory(
     }
 }
 
-/// Check if a position is valid for placing a block
-fn is_valid_placement_position(app: &mut App, x: i64, y: i64, z: i64) -> bool {
-    // Check if there's already a solid block at this position
-    let current_tile = app.core.game.res.world_state.world.get_tile_cached(x, y, z);
+/// Items that can be placed: plain blocks and factory blocks.
+fn is_placeable(item: ItemKind) -> bool {
+    lithicrivers_core::tiles::TileKind::from_item_kind(item).is_some()
+        || lithicrivers_core::factory::FactoryKind::from_item(item).is_some()
+}
 
-    // Can only place on passable tiles (not on solid blocks)
-    if !current_tile.is_passable() {
-        return false;
+/// Place the item on the selected hotbar slot at the target, using one from the inventory.
+fn place_from_hotbar(app: &mut App, x: i64, y: i64, z: i64) {
+    use lithicrivers_core::components::{itemkind_name, Position};
+    use lithicrivers_core::factory::{self, FactoryKind};
+    let slot = app.panels.build.selected_hotbar_slot;
+    let Some(item) = app.panels.build.hotbar_assignments[slot] else {
+        app.core
+            .game
+            .res
+            .log(format!("No block assigned to slot F{}", slot + 1));
+        return;
+    };
+    let name = itemkind_name(item);
+    if !is_placeable(item) {
+        app.core
+            .game
+            .res
+            .log(format!("{} cannot be placed as a block", name));
+        return;
     }
-
-    // Check if there's an entity (like the player) at this position
-    for (_, (pos, _)) in app
-        .core
-        .game
-        .world
-        .query::<(
-            &lithicrivers_core::components::Position,
-            &lithicrivers_core::components::Player,
-        )>()
-        .iter()
-    {
-        if pos.x == x && pos.y == y && pos.z == z {
-            return false; // Can't place on player
+    if !has_item_in_inventory(app, item) {
+        app.core.game.res.log(format!("No {} in inventory", name));
+        return;
+    }
+    let pos = Position { x, y, z };
+    let game = &mut app.core.game;
+    if let Some(kind) = FactoryKind::from_item(item) {
+        let facing = app.panels.build.placement_facing;
+        if let Err(e) = factory::place(&mut game.world, &mut game.res, kind, pos, facing) {
+            game.res.log(factory::place_error_message(e, item));
+            return;
         }
-    }
-
-    // Additional check: don't place on other entities either
-    for (_, pos) in app
-        .core
-        .game
-        .world
-        .query::<&lithicrivers_core::components::Position>()
-        .iter()
-    {
-        if pos.x == x && pos.y == y && pos.z == z {
-            // There's some entity at this position, check if it blocks placement
-            // For now, let's be conservative and not place blocks where entities are
-            return false;
+    } else if let Some(tile) = lithicrivers_core::tiles::TileKind::from_item_kind(item) {
+        if !factory::can_place_at(&game.world, &mut game.res, pos) {
+            game.res.log("Cannot place block here");
+            return;
         }
+        game.res.world_state.world.set_tile_cached(x, y, z, tile);
     }
-
-    true
+    remove_item_from_inventory(app, item, 1);
+    app.core
+        .game
+        .res
+        .log(format!("Placed {} at ({}, {}, {})", name, x, y, z));
 }
