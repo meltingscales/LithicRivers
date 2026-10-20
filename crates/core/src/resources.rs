@@ -47,6 +47,30 @@ pub enum QuestMarkerType {
     Treasure,
 }
 
+/// Settings chosen when a world is created; they apply only to that world.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct WorldSettings {
+    pub cheats_allowed: bool,
+    pub developer_mode: bool,
+    pub show_tutorial: bool,
+}
+
+impl WorldSettings {
+    /// Cheats on, developer mode from the config, tutorial shown: what a world started
+    /// without the create-world screen gets.
+    pub fn defaults(config: &GameConfig) -> Self {
+        Self {
+            cheats_allowed: true,
+            developer_mode: config.developer_mode,
+            show_tutorial: true,
+        }
+    }
+}
+
+fn default_world_settings() -> WorldSettings {
+    WorldSettings::defaults(&GameConfig::new())
+}
+
 /// Everything a save stores about the world besides entities. `config` comes from the
 /// config file and is rebuilt on load.
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -55,6 +79,8 @@ pub struct Resources {
     pub world_state: WorldState,
     #[serde(skip, default = "GameConfig::new")]
     pub config: GameConfig,
+    #[serde(default = "default_world_settings")]
+    pub world_settings: WorldSettings,
     pub player_state: PlayerState,
     pub events: GameEvents,
     pub target_tracker: TargetTracker,
@@ -70,10 +96,12 @@ pub struct Resources {
 
 impl Resources {
     pub fn new(seed: u64) -> Self {
+        let config = GameConfig::new();
         Self {
             time: GameTime::new(),
             world_state: WorldState::new(seed),
-            config: GameConfig::new(),
+            world_settings: WorldSettings::defaults(&config),
+            config,
             player_state: PlayerState::new(),
             events: GameEvents::new(),
             target_tracker: TargetTracker::new(),
@@ -296,5 +324,30 @@ impl Resources {
         }
 
         consumable_items
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::WorldSettings;
+    use crate::test_support::TestWorld;
+
+    #[test]
+    fn world_settings_default_from_config_and_can_be_set_per_world() {
+        let game = TestWorld::new(1).build().game;
+        assert_eq!(
+            game.res.world_settings,
+            WorldSettings::defaults(&game.res.config)
+        );
+        assert!(game.res.world_settings.cheats_allowed);
+
+        let settings = WorldSettings {
+            cheats_allowed: false,
+            developer_mode: false,
+            show_tutorial: false,
+        };
+        let game = TestWorld::new(1).settings(settings).build().game;
+        assert!(!game.res.world_settings.developer_mode);
+        assert_eq!(game.res.world_settings, settings);
     }
 }

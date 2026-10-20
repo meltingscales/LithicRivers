@@ -1,0 +1,304 @@
+//! Title menu screens: title, world list, world actions, delete confirmation, create world,
+//! options.
+
+use crate::app::title_menu::{
+    CREATE_FIELDS, DELETE_CHOICES, OPTIONS_ROWS, TITLE_CHOICES, WORLD_ACTIONS,
+};
+use crate::ui::centered_rect;
+use crate::{App, SplashState};
+use ratatui::{
+    layout::{Alignment, Rect},
+    style::{Color, Modifier, Style},
+    text::{Line, Span},
+    widgets::{Block, Borders, Clear, Paragraph, Wrap},
+    Frame,
+};
+
+/// Menu rows with the selected one marked and highlighted.
+fn menu_lines(items: &[String], selected: usize) -> Vec<Line<'static>> {
+    items
+        .iter()
+        .enumerate()
+        .map(|(i, item)| {
+            if i == selected {
+                Line::from(Span::styled(
+                    format!("> {item} <"),
+                    Style::default()
+                        .fg(Color::Yellow)
+                        .add_modifier(Modifier::BOLD),
+                ))
+            } else {
+                Line::from(format!("  {item}  "))
+            }
+        })
+        .collect()
+}
+
+fn key(app: &App, action: &str) -> &'static str {
+    app.core
+        .config_manager
+        .get_printable_key_for_keybind("title", action)
+}
+
+fn hint(app: &App, extra: &str) -> Line<'static> {
+    Line::from(Span::styled(
+        format!(
+            "{}/{} move   {} select   {} back{extra}",
+            key(app, "UP"),
+            key(app, "DOWN"),
+            key(app, "SELECT"),
+            key(app, "BACK")
+        ),
+        Style::default().fg(Color::DarkGray),
+    ))
+}
+
+fn date(unix: u64) -> String {
+    chrono::DateTime::from_timestamp(unix as i64, 0)
+        .map(|d| d.format("%Y-%m-%d %H:%M UTC").to_string())
+        .unwrap_or_else(|| "?".to_string())
+}
+
+fn on_off(on: bool) -> &'static str {
+    if on {
+        "ON"
+    } else {
+        "OFF"
+    }
+}
+
+/// A bordered box centered on the screen with the given lines.
+fn boxed(f: &mut Frame, area: Rect, title: &str, lines: Vec<Line<'static>>) {
+    let height = (lines.len() as u16 + 4).min(area.height);
+    let width = lines
+        .iter()
+        .map(|l| l.width() as u16 + 6)
+        .max()
+        .unwrap_or(20)
+        .max(title.len() as u16 + 6)
+        .min(area.width);
+    let rect = Rect {
+        x: area.x + (area.width - width) / 2,
+        y: area.y + (area.height - height) / 2,
+        width,
+        height,
+    };
+    f.render_widget(Clear, rect);
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .title(format!(" {title} "))
+        .title_alignment(Alignment::Center);
+    let paragraph = Paragraph::new(lines)
+        .alignment(Alignment::Center)
+        .wrap(Wrap { trim: false })
+        .block(block);
+    f.render_widget(paragraph, rect);
+}
+
+fn world_rows(app: &App) -> Vec<String> {
+    let mut rows: Vec<String> = app
+        .title
+        .worlds
+        .iter()
+        .map(|w| match &w.meta {
+            Some(meta) => format!(
+                "{}  (seed {}, last played {})",
+                meta.name,
+                meta.seed,
+                date(meta.last_played_unix)
+            ),
+            None => format!(
+                "{}  (unreadable)",
+                w.folder.file_name().unwrap_or_default().to_string_lossy()
+            ),
+        })
+        .collect();
+    rows.push("Create New World".to_string());
+    rows.push("Back".to_string());
+    rows
+}
+
+fn render_world_list(f: &mut Frame, app: &App, area: Rect) {
+    let mut lines = vec![Line::from("")];
+    lines.extend(menu_lines(&world_rows(app), app.title.world_selected));
+    lines.push(Line::from(""));
+    if let Some(message) = &app.title.message {
+        lines.push(Line::from(Span::styled(
+            message.clone(),
+            Style::default().fg(Color::Red),
+        )));
+    }
+    lines.push(hint(app, ""));
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .title(" Select World ")
+        .title_alignment(Alignment::Center);
+    let paragraph = Paragraph::new(lines)
+        .alignment(Alignment::Center)
+        .wrap(Wrap { trim: false })
+        .block(block);
+    f.render_widget(paragraph, centered_rect(80, 80, area));
+}
+
+fn selected_world_name(app: &App) -> String {
+    app.title
+        .selected_world()
+        .map(|w| match &w.meta {
+            Some(meta) => meta.name.clone(),
+            None => w
+                .folder
+                .file_name()
+                .unwrap_or_default()
+                .to_string_lossy()
+                .to_string(),
+        })
+        .unwrap_or_default()
+}
+
+fn render_create(f: &mut Frame, app: &App, area: Rect) {
+    let form = &app.title.create;
+    let cursor = |i: usize| if form.field == i { "_" } else { "" };
+    let rows: Vec<String> = CREATE_FIELDS
+        .iter()
+        .enumerate()
+        .map(|(i, label)| match i {
+            0 => format!("{label}: [{}{}]", form.name, cursor(0)),
+            1 => format!("{label}: [{}{}]", form.seed, cursor(1)),
+            2 => format!("{label}: {}", on_off(form.settings.cheats_allowed)),
+            3 => format!("{label}: {}", on_off(form.settings.developer_mode)),
+            4 => format!("{label}: {}", on_off(form.settings.show_tutorial)),
+            _ => label.to_string(),
+        })
+        .collect();
+    let mut lines = vec![Line::from("")];
+    lines.extend(menu_lines(&rows, form.field));
+    lines.push(Line::from(""));
+    lines.push(Line::from(Span::styled(
+        "Leave the seed blank for a random world; any text works as a seed.",
+        Style::default().fg(Color::DarkGray),
+    )));
+    lines.push(hint(
+        app,
+        &format!(
+            "   {}/{} toggle   {} erase",
+            key(app, "LEFT"),
+            key(app, "RIGHT"),
+            key(app, "DELETE_CHAR")
+        ),
+    ));
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .title(" Create New World ")
+        .title_alignment(Alignment::Center);
+    let paragraph = Paragraph::new(lines)
+        .alignment(Alignment::Center)
+        .wrap(Wrap { trim: false })
+        .block(block);
+    f.render_widget(paragraph, centered_rect(80, 80, area));
+}
+
+fn render_options(f: &mut Frame, app: &App, area: Rect) {
+    let percent = |key: &str| (app.volume_setting(key) * 100.0).round() as u32;
+    let rows = vec![
+        format!("{}: {}%", OPTIONS_ROWS[0], percent("MUSIC_VOLUME")),
+        format!("{}: {}%", OPTIONS_ROWS[1], percent("SFX_VOLUME")),
+        OPTIONS_ROWS[2].to_string(),
+    ];
+    let mut lines = vec![Line::from("")];
+    lines.extend(menu_lines(&rows, app.title.options_selected));
+    lines.push(Line::from(""));
+    lines.push(hint(
+        app,
+        &format!("   {}/{} change", key(app, "LEFT"), key(app, "RIGHT")),
+    ));
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .title(" Options ")
+        .title_alignment(Alignment::Center);
+    let paragraph = Paragraph::new(lines)
+        .alignment(Alignment::Center)
+        .block(block);
+    f.render_widget(paragraph, centered_rect(70, 60, area));
+}
+
+fn render_title(f: &mut Frame, app: &App, area: Rect) {
+    // Pad the art's lines to one width so centering keeps them aligned
+    let art: Vec<&str> = app.splash.game_title_text.lines().collect();
+    let width = art.iter().map(|l| l.chars().count()).max().unwrap_or(0);
+    let mut lines: Vec<Line> = art
+        .iter()
+        .map(|l| Line::from(format!("{l:<width$}")))
+        .collect();
+    lines.push(Line::from(""));
+    lines.push(Line::from(Span::styled(
+        app.title.splash_text().to_string(),
+        Style::default().fg(Color::Yellow),
+    )));
+    lines.push(Line::from(""));
+    let choices: Vec<String> = TITLE_CHOICES.iter().map(|c| c.to_string()).collect();
+    lines.extend(menu_lines(&choices, app.title.selected));
+    lines.push(Line::from(""));
+    lines.push(Line::from(Span::styled(
+        format!(
+            "{}/{} move   {} select",
+            key(app, "UP"),
+            key(app, "DOWN"),
+            key(app, "SELECT")
+        ),
+        Style::default().fg(Color::DarkGray),
+    )));
+    let height = (lines.len() as u16).min(area.height);
+    let rect = Rect {
+        y: area.y + (area.height - height) / 2,
+        height,
+        ..area
+    };
+    f.render_widget(Paragraph::new(lines).alignment(Alignment::Center), rect);
+}
+
+/// Draw the current title-menu screen. Returns false if the state isn't a title screen.
+pub(crate) fn render_title_menu(f: &mut Frame, app: &App) -> bool {
+    let area = f.size();
+    match app.splash.state {
+        SplashState::Title => render_title(f, app, area),
+        SplashState::WorldList => render_world_list(f, app, area),
+        SplashState::WorldActions => {
+            render_world_list(f, app, area);
+            let actions: Vec<String> = WORLD_ACTIONS.iter().map(|a| a.to_string()).collect();
+            let lines = menu_lines(&actions, app.title.world_action);
+            boxed(f, area, &selected_world_name(app), lines);
+        }
+        SplashState::RenameWorld => {
+            render_world_list(f, app, area);
+            let lines = vec![
+                Line::from(format!("New name: [{}_]", app.title.rename)),
+                Line::from(""),
+                Line::from(Span::styled(
+                    format!(
+                        "{} rename   {} erase   {} cancel",
+                        key(app, "SELECT"),
+                        key(app, "DELETE_CHAR"),
+                        key(app, "BACK")
+                    ),
+                    Style::default().fg(Color::DarkGray),
+                )),
+            ];
+            boxed(f, area, "Rename World", lines);
+        }
+        SplashState::ConfirmDelete => {
+            render_world_list(f, app, area);
+            let mut lines = vec![
+                Line::from(format!("Delete \"{}\"?", selected_world_name(app))),
+                Line::from("This can't be undone."),
+                Line::from(""),
+            ];
+            let choices: Vec<String> = DELETE_CHOICES.iter().map(|c| c.to_string()).collect();
+            lines.extend(menu_lines(&choices, app.title.delete_choice));
+            boxed(f, area, "Delete World", lines);
+        }
+        SplashState::CreateWorld => render_create(f, app, area),
+        SplashState::Options => render_options(f, app, area),
+        _ => return false,
+    }
+    true
+}

@@ -8,6 +8,14 @@ use std::time::Duration;
 pub(crate) enum SplashState {
     Logo,
     GameTitle,
+    /// Title menu screens (see `app::title_menu`)
+    Title,
+    WorldList,
+    WorldActions,
+    RenameWorld,
+    ConfirmDelete,
+    CreateWorld,
+    Options,
     BootMessage,
     MainUI,
 }
@@ -175,6 +183,16 @@ pub(crate) struct App {
     pub last_combat_tick: Option<std::time::Instant>,
     /// Time source for all time-dependent behavior and rendering
     pub clock: clock::Clock,
+    /// Seed for worlds started without the create-world screen (`skip-splash`)
+    pub default_seed: u64,
+    /// Folder holding one subfolder per world
+    pub saves_dir: std::path::PathBuf,
+    /// The world being played, if any
+    pub current_world: Option<crate::app::world::CurrentWorld>,
+    /// Title menu selections and forms
+    pub title: crate::app::title_menu::TitleMenuState,
+    /// Whether settings changed in Options are written to the config file
+    pub persist_config: bool,
 }
 
 impl App {
@@ -190,12 +208,7 @@ impl App {
                 }
                 SplashState::GameTitle => {
                     if self.clock.since(start_time) >= Duration::from_secs(3) {
-                        self.splash.state = SplashState::BootMessage;
-                        self.splash.start_time = Some(self.clock.now());
-                        self.splash.boot_display_text.clear();
-                        self.splash.boot_line_index = 0;
-                        self.splash.last_line_time = self.clock.now();
-                        self.splash.boot_complete = false;
+                        self.show_title();
                     }
                 }
                 SplashState::BootMessage => {
@@ -324,10 +337,11 @@ impl App {
                     .log("Credits panel active (Up/Down to scroll)");
             }
             MenuTab::Quit => {
-                // Quit
-                self.core.game.res.log("Quit requested (menu)");
-                tracing::info!(target: "game", "quit_requested input=menu tick={}", self.core.game.res.time.tick);
-                self.core.should_quit = true;
+                // Save the world and go back to the title screen (quit the game from there)
+                tracing::info!(target: "game", "save_and_quit_requested input=menu tick={}", self.core.game.res.time.tick);
+                if let Err(e) = self.save_and_quit_to_title() {
+                    self.core.game.res.log_red(format!("Save failed: {e:#}"));
+                }
             }
             MenuTab::Crafting => {
                 // Crafting

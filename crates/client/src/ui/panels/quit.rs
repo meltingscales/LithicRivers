@@ -9,16 +9,17 @@ use ratatui::{
 pub fn render_quit_panel(f: &mut Frame, _app: &mut crate::App, area: Rect) {
     let block = Block::default()
         .borders(Borders::ALL)
-        .title(Line::from("Quit"));
+        .title(Line::from("Save and Quit"));
     let inner = block.inner(area);
     let mut lines: Vec<Line<'static>> = Vec::new();
     let width = inner.width as usize;
     let height = inner.height as usize;
     // Build a staggered (diamond-like) pattern:
-    // rows alternate between starting with 0 and an offset, then repeating "QUIT" with wide spacing
-    let word = "QUIT";
+    // rows alternate between starting with 0 and an offset, then repeating the words with wide
+    // spacing
+    let word = "SAVE AND QUIT";
     let sep = "        "; // 8 spaces between words
-    let offset = "      "; // 6 spaces offset on alternating rows
+    let offset = "          "; // half a word plus gap, on alternating rows
     for row in 0..height {
         let mut s = String::new();
         if row % 2 == 1 {

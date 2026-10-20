@@ -3,5 +3,7 @@ pub mod client_app;
 pub mod input;
 pub mod input_handler;
 pub mod save;
+pub mod title_menu;
+pub mod world;
 
 pub use input_handler::*;

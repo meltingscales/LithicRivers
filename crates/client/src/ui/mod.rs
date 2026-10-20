@@ -4,6 +4,7 @@ pub mod layout;
 pub mod modals;
 pub mod panels;
 pub mod splash;
+pub mod title;
 
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 

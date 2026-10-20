@@ -24,19 +24,18 @@ impl App {
         let mut app = Self::build(seed, audio::AudioManager::disabled(), Clock::fake());
         // The real path contains the working directory and today's date; keep output reproducible
         app.logging.log_full_path = "(hidden in headless runs)".to_string();
+        // Never write the player's config file from a scripted run
+        app.persist_config = false;
         app
     }
 
     fn build(seed: u64, mut audio: audio::AudioManager, clock: Clock) -> App {
-        // Initialize game and sprite loader
-        let game = Game::new(seed);
+        // The title menu shows before any world exists; until one starts, a cheap empty game
+        // stands in so the rest of the client can assume a game is there
+        let game = Game::new_empty(seed, Position { x: 0, y: 0, z: 0 });
         let mut sprite_loader = SpriteLoader::new(None);
         // Preload all assets to eliminate runtime I/O during rendering
         sprite_loader.preload_all();
-
-        // Set volumes
-        audio.set_music_volume(0.60);
-        audio.set_sfx_volume(0.35);
 
         // Register and play the opening music
         let music_track = audio::AudioTrack::new("crates/client/assets/sound/music/opening.mp3");
@@ -102,23 +101,15 @@ impl App {
         let config_manager = ConfigManager::new();
         let keybinds = Keybinds::from_config(&config_manager);
 
-        // Initialize look cursor and viewport to player's position (or origin fallback)
-        let mut look_cursor = Position { x: 0, y: 0, z: 0 };
-        let mut initial_view_x = 0;
-        let mut initial_view_y = 0;
-        let mut initial_view_z = 0;
-        if let Some(pos) = game.get_player_position() {
-            look_cursor = pos;
-            // Center initial UI viewport on player
-            initial_view_x = look_cursor.x;
-            initial_view_y = look_cursor.y;
-            initial_view_z = look_cursor.z;
-        }
-
-        let recipe_handler = RecipeHandler::new();
         let repair_handler = RepairRecipeHandler::new();
+        let saves_dir = config_manager
+            .get_setting("game", "SAVES_FOLDER")
+            .and_then(|v| v.as_str())
+            .unwrap_or("lithicrivers-saves/saves")
+            .into();
 
-        App {
+        let developer_mode = game.res.config.developer_mode;
+        let mut app = App {
             core: CoreState {
                 game,
                 config_manager,
@@ -133,47 +124,14 @@ impl App {
                 keybinds,
                 tutorial_system: TutorialDatabase::create_tutorial_system_with_basics(),
                 tutorial_visible: true, // Tutorial tab is visible by default
-                view_x: initial_view_x,
-                view_y: initial_view_y,
-                view_z: initial_view_z,
+                view_x: 0,
+                view_y: 0,
+                view_z: 0,
             },
             audio: AudioState { audio },
             logging: LoggingState { log_full_path },
             combat: CombatUiState::default(),
-            panels: PanelStates {
-                inventory: InventoryPanelState { selected: 0 },
-                crafting: CraftingPanelState {
-                    recipe_handler,
-                    selected: 0,
-                    message: None,
-                },
-                credits: CreditsPanelState {
-                    text: credits_text,
-                    scroll: 0,
-                },
-                help: HelpPanelState { scroll: 0 },
-                look: LookPanelState {
-                    mode: false,
-                    cursor: look_cursor,
-                },
-                build: BuildPanelState::default(),
-                corpse_looting: CorpseLootingState::default(),
-                hotbar_assignment: HotbarAssignmentState::default(),
-                npc_interaction: NPCInteractionState::default(),
-                multi_action_select: MultiActionSelectState::default(),
-                dialogue_tree: {
-                    let database = DialogueDatabase::new();
-                    database
-                        .get_tree("broken_android_tutorial")
-                        .expect("broken_android_tutorial dialogue tree should exist")
-                        .clone()
-                },
-                body_repair: BodyRepairState::default(),
-                cheat_console: CheatConsoleState::default(),
-                global_map: GlobalMapPanelState::default(),
-                tutorial_selection: TutorialSelectionState::default(),
-                quests: QuestPanelState::default(),
-            },
+            panels: Self::fresh_panels(credits_text),
             splash: SplashScreenState {
                 state: SplashState::Logo,
                 start_time: Some(clock.now()),
@@ -189,6 +147,74 @@ impl App {
             },
             last_combat_tick: None,
             clock,
+            default_seed: seed,
+            saves_dir,
+            current_world: None,
+            title: crate::app::title_menu::TitleMenuState::new(developer_mode),
+            persist_config: true,
+        };
+        app.apply_volumes();
+        app.reset_for_game();
+        app
+    }
+
+    /// Panel state as a newly started world has it.
+    fn fresh_panels(credits_text: String) -> PanelStates {
+        PanelStates {
+            inventory: InventoryPanelState { selected: 0 },
+            crafting: CraftingPanelState {
+                recipe_handler: RecipeHandler::new(),
+                selected: 0,
+                message: None,
+            },
+            credits: CreditsPanelState {
+                text: credits_text,
+                scroll: 0,
+            },
+            help: HelpPanelState { scroll: 0 },
+            look: LookPanelState {
+                mode: false,
+                cursor: Position { x: 0, y: 0, z: 0 },
+            },
+            build: BuildPanelState::default(),
+            corpse_looting: CorpseLootingState::default(),
+            hotbar_assignment: HotbarAssignmentState::default(),
+            npc_interaction: NPCInteractionState::default(),
+            multi_action_select: MultiActionSelectState::default(),
+            dialogue_tree: {
+                let database = DialogueDatabase::new();
+                database
+                    .get_tree("broken_android_tutorial")
+                    .expect("broken_android_tutorial dialogue tree should exist")
+                    .clone()
+            },
+            body_repair: BodyRepairState::default(),
+            cheat_console: CheatConsoleState::default(),
+            global_map: GlobalMapPanelState::default(),
+            tutorial_selection: TutorialSelectionState::default(),
+            quests: QuestPanelState::default(),
         }
+    }
+
+    /// Put all in-game UI state back to how a new world starts, for the current `core.game`:
+    /// Tutorial tab, view and look cursor on the player, fresh panels, tutorial and combat.
+    pub(crate) fn reset_for_game(&mut self) {
+        let credits_text = std::mem::take(&mut self.panels.credits.text);
+        self.panels = Self::fresh_panels(credits_text);
+        self.ui.current_tab = MenuTab::Tutorial;
+        self.ui.tutorial_system = TutorialDatabase::create_tutorial_system_with_basics();
+        self.ui.tutorial_visible = self.core.game.res.world_settings.show_tutorial;
+        if !self.ui.tutorial_visible {
+            self.ui.current_tab = MenuTab::World;
+        }
+        let player = self
+            .core
+            .game
+            .get_player_position()
+            .unwrap_or(Position { x: 0, y: 0, z: 0 });
+        self.panels.look.cursor = player;
+        (self.ui.view_x, self.ui.view_y, self.ui.view_z) = (player.x, player.y, player.z);
+        self.combat = CombatUiState::default();
+        self.last_combat_tick = None;
     }
 }

@@ -20,7 +20,7 @@
 **Non-Goals:**
 - Fixing `SaveData` gaps (corpses, body damage, tutorial progress, etc.); that is the separate `flawless-world-saves` change. Switching to msgpack is also out of scope.
 - Importing the old `save.json`.
-- Autosave, world rename/duplicate, world thumbnails, game-mode/difficulty settings, keybind editing in Options.
+- Autosave, world duplicate, world thumbnails, game-mode/difficulty settings, keybind editing in Options.
 - Steam Cloud or OS-specific save locations (`SAVES_FOLDER` stays relative to the working directory, as `save.json` was).
 
 ## Decisions
@@ -66,3 +66,14 @@ New `title` category in `default_config.rs`: `UP` (`UP`), `DOWN` (`DOWN`), `SELE
 - [Deleting a world folder is destructive] → Confirmation screen; delete only paths inside the saves folder, refuse otherwise.
 - [`SaveData` gaps mean a reloaded world isn't perfect (e.g. corpses vanish)] → Fixed by `flawless-world-saves`; this change stores `world.json` with whatever save format is current, so the two can land in either order.
 - [Overlap with `split-client-main`] → Land that refactor first if possible; otherwise this change's new code still goes in new `ui/title/` files, and the conflict is limited to `ui()` and `SplashState`.
+
+## Implementation Notes
+
+- **Save format:** `flawless-world-saves` landed first, so `world.json` is the version 5 save written by `App::save_to_file` (including the client section). `WorldSettings` is part of the saved `Resources` too; on load the settings in `meta.json` win, so the two can't disagree.
+- **Rename** (added after review): a Rename choice opens a name field; confirming rewrites the name in `meta.json` only, so the folder and save stay put.
+- **Selecting a world** opens a small Play / Rename / Delete / Back box (`SplashState::WorldActions`), so the world list itself stays one vertical menu: worlds, Create New World, Back.
+- **Config defaults are filled in on load:** an existing config file is missing the new `title` keybinds and `audio` volumes, so `ConfigManager` now copies any key the file lacks from the defaults (existing values are kept).
+- **Printable key names** gained Backspace, Tab, Delete, Insert, PageUp/PageDown, Home and End, needed for the title hints.
+- Headless runs never write the config file (`App::persist_config`), so Options tests don't touch the player's config.
+- The `toggle_tutorial` cheat also updates the world's Show tutorial setting, so a save keeps it.
+- `tab-08-menu` snapshot changes on purpose: the Menu panel describes the world's save keys instead of `save.json`.

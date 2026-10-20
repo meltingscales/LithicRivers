@@ -55,7 +55,7 @@ Scripts have one step per line; `#` starts a comment.
 | Step | Effect |
 |---|---|
 | `seed <u64>`, `size <cols>x<rows>` | Setup; only before other steps. Defaults: config `DEFAULT_SEED`, 160x50 |
-| `skip-splash` | Jump past the splash screens to the main UI |
+| `skip-splash` | Skip the splash screens and title menu: start a new world with the run's seed and cheats on, and show the main UI |
 | `key <category>.<ACTION> [n]` | Press the key bound to a keybind (e.g. `movement.MOVE_SOUTH`, `action.MINE`), n times |
 | `rawkey <NAME>` | Press a key by config name (`ENTER`, `ESCAPE`, `TAB`, `F1`, `q`) |
 | `type "<text>"` | Press one key per character |
@@ -67,6 +67,8 @@ Scripts have one step per line; `#` starts a comment.
 | `expect-text "<text>"` | Fail (exit 2) unless the screen contains the text |
 | `save-reload` | Save the game (with tutorial progress, hotbar and view) in memory and load it back; fails (exit 1) if either step fails |
 | `quit` | Stop successfully |
+
+Without `skip-splash`, the client starts at the logo; two `rawkey ENTER` reach the title screen, which scripts drive with the `title.*` keybinds (`title.UP`, `title.DOWN`, `title.SELECT`, `title.BACK`, `title.LEFT`/`title.RIGHT` for toggles and volume, `title.DELETE_CHAR` in text fields; `type` fills the name and seed fields). Each headless run and MCP session gets its own empty saves folder, removed when it ends, so worlds created in a script never touch real saves and the world list always starts empty. Options changes are not written to the config file in headless runs.
 
 To set up a fight, spawn the enemy instead of relying on where the starting world places creatures: `cheat spawn_enemy feral_dog` then `key movement.WAIT` (feral dogs chase the player, so combat starts on that turn).
 

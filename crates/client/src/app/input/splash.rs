@@ -3,7 +3,10 @@ use crossterm::event::KeyCode;
 use std::error::Error;
 
 /// Handle splash screen input - returns true if input was handled
-pub fn handle_splash_input(app: &mut App, _key: KeyCode) -> Result<bool, Box<dyn Error>> {
+pub fn handle_splash_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Error>> {
+    if app.handle_title_input(key) {
+        return Ok(true);
+    }
     // Handle splash screen skipping first
     if let Some(_start_time) = app.splash.start_time {
         match app.splash.state {
@@ -14,13 +17,8 @@ pub fn handle_splash_input(app: &mut App, _key: KeyCode) -> Result<bool, Box<dyn
                 return Ok(true);
             }
             SplashState::GameTitle => {
-                // Any key skips to boot message
-                app.splash.state = SplashState::BootMessage;
-                app.splash.start_time = Some(app.clock.now());
-                app.splash.boot_display_text.clear();
-                app.splash.boot_line_index = 0;
-                app.splash.last_line_time = app.clock.now();
-                app.splash.boot_complete = false;
+                // Any key skips to the title screen
+                app.show_title();
                 return Ok(true);
             }
             SplashState::BootMessage => {

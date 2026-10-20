@@ -8,9 +8,10 @@ input_file: scripts/snapshots/tab-08-menu.txt
 ┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
 │Game Menu                                                                                         │
 │                                                                                                  │
-│Save/Load Controls:                                                                               │
-│  Save: Char('S')                                                                                 │
-│  Load: Char('L')                                                                                 │
+│World: New World                                                                                  │
+│  Save world: S                                                                                   │
+│  Reload last save: L                                                                             │
+│  Save and quit to title: Q                                                                       │
 │                                                                                                  │
 │Configuration:                                                                                    │
 │  External file: <config path>│
@@ -22,7 +23,6 @@ input_file: scripts/snapshots/tab-08-menu.txt
 │                                                                                                  │
 │Seed: 12345                                                                                       │
 │Tick: 1                                                                                           │
-│View Z: -19                                                                                       │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
 │[0] Loading structure 'sapiencorp-bunker.lrstructure' at (10, 10, 1) for chunk (0, 0, 1)          │

@@ -4,3 +4,6 @@ size 100x30
 skip-splash
 key ui.MENU_NEXT 9
 screen quit
+# Activating the tab saves the world and returns to the title screen
+key ui.MENU_ACTIVATE
+expect-text "Play Game"

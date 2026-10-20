@@ -6,7 +6,7 @@
 use crate::app::handle_input;
 use crate::app::input::cheat_console::get_command_registry;
 use crate::app_state::{BodyRepairState, CheatConsoleState, TutorialSelectionState};
-use crate::{step, ui, App, SplashState};
+use crate::{step, ui, App};
 use crossterm::event::KeyCode;
 use lithicrivers_core::components::{
     Combat, DroppedItem, EntityKind, Health, Inventory, Player, Position,
@@ -337,14 +337,42 @@ pub struct StepsReport {
 pub struct Runner {
     pub app: App,
     terminal: Terminal<TestBackend>,
+    _saves: TempSaves,
+}
+
+/// A new, empty saves folder for one run, removed when the run ends.
+struct TempSaves(std::path::PathBuf);
+
+impl TempSaves {
+    fn new() -> Self {
+        static RUNS: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+        let n = RUNS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        let dir =
+            std::env::temp_dir().join(format!("lithicrivers-headless-{}-{n}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).expect("create headless saves folder");
+        Self(dir)
+    }
+}
+
+impl Drop for TempSaves {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.0);
+    }
 }
 
 impl Runner {
     pub fn new(seed: u64, size: (u16, u16)) -> Self {
-        let app = App::new_headless(seed);
+        let saves = TempSaves::new();
+        let mut app = App::new_headless(seed);
+        app.saves_dir = saves.0.clone();
         let terminal =
             Terminal::new(TestBackend::new(size.0, size.1)).expect("TestBackend never fails");
-        let mut runner = Self { app, terminal };
+        let mut runner = Self {
+            app,
+            terminal,
+            _saves: saves,
+        };
         runner.frame();
         runner
     }
@@ -413,7 +441,7 @@ impl Runner {
         let line = script_line.line;
         match &script_line.step {
             Step::SkipSplash => {
-                self.app.splash.state = SplashState::MainUI;
+                self.app.start_default_world();
                 self.frame();
             }
             Step::Key {
@@ -910,10 +938,9 @@ mod tests {
     fn keybind_press_moves_the_player() {
         let mut runner = Runner::new(SEED, (80, 24));
         let script = parse_script("skip-splash\nkey movement.MOVE_SOUTH").unwrap();
+        runner.exec(&script.steps[0], &mut String::new()).unwrap();
         let start = player_pos(&runner.app);
-        for line in &script.steps {
-            runner.exec(line, &mut String::new()).unwrap();
-        }
+        runner.exec(&script.steps[1], &mut String::new()).unwrap();
         let end = player_pos(&runner.app);
         assert_eq!((end.x, end.y, end.z), (start.x, start.y + 1, start.z));
     }

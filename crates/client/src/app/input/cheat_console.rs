@@ -322,6 +322,7 @@ fn handle_toggle_tutorial_command(app: &mut App, _parts: &[&str]) -> Result<(), 
 
     // Toggle tutorial visibility
     app.ui.tutorial_visible = !app.ui.tutorial_visible;
+    app.core.game.res.world_settings.show_tutorial = app.ui.tutorial_visible;
 
     if app.ui.tutorial_visible {
         // Tutorial is now visible - switch to Tutorial tab
@@ -434,6 +435,13 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Error>>
         CheatConsoleState::None => {
             // Check if we should open the console with OPEN_COMMAND_MENU keybind
             if app.ui.keybinds.matches("ui", "OPEN_COMMAND_MENU", &key) {
+                if !app.core.game.res.world_settings.cheats_allowed {
+                    app.core
+                        .game
+                        .res
+                        .log_yellow("Cheats are disabled for this world");
+                    return Ok(true);
+                }
                 app.panels.cheat_console = CheatConsoleState::Open {
                     input: String::new(),
                     cursor_position: 0,

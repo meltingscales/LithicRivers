@@ -76,7 +76,17 @@ pub fn default_config() -> ConfigRoot {
             "TUTORIAL_SKIP": ["Y"],
             "CHEAT_CONSOLE_SCROLL_UP": ["UP"],
             "CHEAT_CONSOLE_SCROLL_DOWN": ["DOWN"],
+            "SAVE_AND_QUIT_TO_TITLE": ["Q"], // Menu tab only
             "QUIT": []
+        },
+        "title": {
+            "UP": ["UP"],
+            "DOWN": ["DOWN"],
+            "SELECT": ["ENTER"],
+            "BACK": ["ESCAPE"],
+            "LEFT": ["LEFT"],   // Toggles and volume
+            "RIGHT": ["RIGHT"],
+            "DELETE_CHAR": ["BACKSPACE"] // Text fields
         },
         "inventory": {
             "DROP_ITEM": ["g"], // Drop item
@@ -100,6 +110,10 @@ pub fn default_config() -> ConfigRoot {
         },
         "inventory": {
             "TOGGLE_ITEM_AUTO_PICKUP_DEFAULT_ENABLED": true
+        },
+        "audio": {
+            "MUSIC_VOLUME": 0.60,
+            "SFX_VOLUME": 0.35
         },
         "world": {
             "DEFAULT_PLAYER_POSITION": {"production": [25, 25, 0], "testing": [0, 0, 0]}

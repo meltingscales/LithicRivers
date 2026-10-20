@@ -1,5 +1,8 @@
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
+/// What a fake clock reports as the wall-clock time at start: 2026-01-01 00:00:00 UTC.
+pub const FAKE_EPOCH_UNIX: u64 = 1_767_225_600;
+
 /// Source of time for everything in the client that changes behavior or rendering over time.
 ///
 /// Gameplay and UI code must read time through `App::clock` rather than `Instant::now()`,
@@ -44,6 +47,18 @@ impl Clock {
         }
     }
 
+    /// Seconds since the Unix epoch, for dates and seeds. A fake clock starts at
+    /// `FAKE_EPOCH_UNIX` and moves only when advanced.
+    pub fn unix_seconds(&self) -> u64 {
+        match self {
+            Clock::Real => SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_secs(),
+            Clock::Fake { offset, .. } => FAKE_EPOCH_UNIX + offset.as_secs(),
+        }
+    }
+
     /// Advance a fake clock. Has no effect on a real clock.
     pub fn advance(&mut self, by: Duration) {
         if let Clock::Fake { offset, .. } = self {
@@ -64,5 +79,14 @@ mod tests {
         clock.advance(Duration::from_millis(1500));
         assert_eq!(clock.since(start), Duration::from_millis(1500));
         assert_eq!(clock.animation_millis(), 1500);
+    }
+
+    #[test]
+    fn fake_unix_time_only_changes_when_advanced() {
+        let mut clock = Clock::fake();
+        assert_eq!(clock.unix_seconds(), FAKE_EPOCH_UNIX);
+        assert_eq!(clock.unix_seconds(), FAKE_EPOCH_UNIX);
+        clock.advance(Duration::from_secs(90));
+        assert_eq!(clock.unix_seconds(), FAKE_EPOCH_UNIX + 90);
     }
 }

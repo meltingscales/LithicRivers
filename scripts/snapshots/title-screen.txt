@@ -1,0 +1,7 @@
+# Title screen, reached by skipping the logo and game-title splashes
+seed 12345
+size 100x30
+rawkey ENTER
+rawkey ENTER
+expect-text "Play Game"
+screen title

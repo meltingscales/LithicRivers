@@ -1,0 +1,13 @@
+# Create New World form with a typed seed and cheats turned on
+seed 12345
+size 100x30
+rawkey ENTER
+rawkey ENTER
+key title.SELECT
+key title.SELECT
+key title.DOWN
+type "lithic"
+key title.DOWN
+key title.SELECT
+expect-text "Allow cheats: ON"
+screen create-world
