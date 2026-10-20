@@ -33,6 +33,7 @@ tokio = { version = "1.54.0", features = ["rt", "macros", "io-std", "sync"] }
 schemars = "1.2.3"
 
 [dev-dependencies]
+lithicrivers-core = { path = "../core", features = ["test-support"] }
 insta = { version = "1", features = ["filters", "glob"] }
 
 [target.'cfg(windows)'.dependencies]

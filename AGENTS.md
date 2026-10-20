@@ -70,6 +70,8 @@ Scripts have one step per line; `#` starts a comment.
 
 Without `skip-splash`, the client starts at the logo; two `rawkey ENTER` reach the title screen, which scripts drive with the `title.*` keybinds (`title.UP`, `title.DOWN`, `title.SELECT`, `title.BACK`, `title.LEFT`/`title.RIGHT` for toggles and volume, `title.DELETE_CHAR` in text fields; `type` fills the name and seed fields). Each headless run and MCP session gets its own empty saves folder, removed when it ends, so worlds created in a script never touch real saves and the world list always starts empty. Options changes are not written to the config file in headless runs.
 
+Factory blocks: `cheat giveitem chest 1`, then `key build.TOGGLE_BREAK_PLACE_MODE 2` (Place mode), `key hotbar.HOTBAR_SLOT_1 2` (double tap opens the block picker), `key movement.MOVE_SOUTH`, `key ui.MENU_ACTIVATE` (assign the chest), and `key build.PLACE_<DIRECTION>`. `key build.ROTATE_PLACEMENT` turns the next placement; one more `TOGGLE_BREAK_PLACE_MODE` gives Rotate mode, where the place-direction keys turn a placed block. `key action.PASS_TIME` lets 10 game seconds (1000 ticks) pass. See `scripts/snapshots/factory-chest-window.txt`.
+
 To set up a fight, spawn the enemy instead of relying on where the starting world places creatures: `cheat spawn_enemy feral_dog` then `key movement.WAIT` (feral dogs chase the player, so combat starts on that turn).
 
 Exit status: 0 ok, 1 script error (including a cheat that fails), 2 failed `expect-text`. The same script, seed and build always print identical output, so all time-dependent behavior and rendering must read time from `app.clock`, never `Instant::now()` or `SystemTime::now()`.

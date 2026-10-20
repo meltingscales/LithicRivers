@@ -157,6 +157,26 @@ fn render_corpse_loot_modal(
         return;
     };
 
+    // Chests share this window, with items moving both ways
+    let is_chest = app
+        .core
+        .game
+        .world
+        .get::<&lithicrivers_core::factory::FactoryBlock>(corpse_entity)
+        .is_ok();
+    let (title, items_title) = if is_chest {
+        (
+            " Chest ".to_string(),
+            format!(
+                " Chest Items ({}/{}) ",
+                corpse_inv.slots.len(),
+                corpse_inv.max_slots
+            ),
+        )
+    } else {
+        (" Looting Corpse ".to_string(), " Corpse Items ".to_string())
+    };
+
     // Create modal area (centered, 70% width, 60% height)
     let area = centered_rect(70, 60, f.size());
 
@@ -166,7 +186,7 @@ fn render_corpse_loot_modal(
     // Main modal block
     let block = Block::default()
         .borders(Borders::ALL)
-        .title(Line::from(" Looting Corpse "))
+        .title(Line::from(title))
         .title_alignment(Alignment::Center)
         .style(Style::default());
 
@@ -182,7 +202,7 @@ fn render_corpse_loot_modal(
     // Left side: Corpse inventory
     let corpse_block = Block::default()
         .borders(Borders::ALL)
-        .title(Line::from(" Corpse Items "))
+        .title(Line::from(items_title))
         .border_style(if loot_panel_focus {
             Style::default().fg(Color::Yellow)
         } else {
@@ -248,9 +268,13 @@ fn render_corpse_loot_modal(
     f.render_widget(player_list, chunks[1]);
 
     // Controls at bottom
-    let controls = Paragraph::new("←→: Switch Panel | ↑↓: Select | Enter: Take Item | Esc: Close")
-        .alignment(Alignment::Center)
-        .style(Style::default().fg(Color::Gray));
+    let controls = Paragraph::new(if is_chest {
+        "←→: Switch Panel | ↑↓: Select | Enter: Move Item | Esc: Close"
+    } else {
+        "←→: Switch Panel | ↑↓: Select | Enter: Take Item | Esc: Close"
+    })
+    .alignment(Alignment::Center)
+    .style(Style::default().fg(Color::Gray));
 
     if inner.height > 1 {
         let controls_area = Rect {

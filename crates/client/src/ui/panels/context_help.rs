@@ -66,6 +66,7 @@ fn interaction_label(action: &InteractionType) -> String {
         InteractionType::PickupItem { item_name, .. } => format!("pick up {item_name}"),
         InteractionType::LootCorpse { .. } => "loot corpse".to_string(),
         InteractionType::TalkToNPC { npc_name, .. } => format!("talk to {npc_name}"),
+        InteractionType::OpenChest { .. } => "open chest".to_string(),
         InteractionType::OpenCloseDoor { is_open: true, .. } => "close door".to_string(),
         InteractionType::OpenCloseDoor { is_open: false, .. } => "open door".to_string(),
     }
@@ -102,7 +103,18 @@ pub fn context_help_lines(app: &App) -> Vec<String> {
                     key(app, "hotbar", "HOTBAR_SLOT_1"),
                     key(app, "hotbar", "HOTBAR_SLOT_12")
                 ));
+                lines.push(format!(
+                    "{}: turn ({})",
+                    key(app, "build", "ROTATE_PLACEMENT"),
+                    app.panels.build.placement_facing.arrow()
+                ));
             }
+            lines.push(format!("{mode_key}: next mode"));
+        }
+        BuildMode::Rotate => {
+            lines.push("Rotate block, direction:".to_string());
+            let actions = directions("PLACE");
+            lines.extend(grid(app, "build", actions.each_ref().map(String::as_str)));
             lines.push(format!("{mode_key}: next mode"));
         }
         BuildMode::Movement => {

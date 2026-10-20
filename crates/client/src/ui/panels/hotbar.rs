@@ -74,13 +74,18 @@ pub fn render_hotbar_panel(f: &mut Frame, app: &mut App, area: Rect) {
             Block::default()
                 .borders(Borders::ALL)
                 .title(Line::from(format!(
-                    "Hotbar ({}-{})",
+                    "Hotbar ({}-{}) | facing {} {} ({} to turn)",
                     app.core
                         .config_manager
                         .get_keybind_str("hotbar", "HOTBAR_SLOT_1"),
                     app.core
                         .config_manager
-                        .get_keybind_str("hotbar", "HOTBAR_SLOT_12")
+                        .get_keybind_str("hotbar", "HOTBAR_SLOT_12"),
+                    app.panels.build.placement_facing.arrow(),
+                    app.panels.build.placement_facing.name(),
+                    app.core
+                        .config_manager
+                        .get_printable_key_for_keybind("build", "ROTATE_PLACEMENT")
                 )))
                 .style(Style::default().fg(Color::White)),
         );

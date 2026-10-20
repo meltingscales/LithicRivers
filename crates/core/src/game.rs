@@ -547,6 +547,7 @@ impl Game {
         let system_results = self
             .scheduler
             .run_all_systems(&mut self.world, &mut self.res);
+        crate::factory::run_due_steps(&mut self.world, &mut self.res);
 
         let mut result = GameTickResult::NoAction;
         if system_results.mining_success {

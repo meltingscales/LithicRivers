@@ -92,6 +92,11 @@ pub struct Resources {
     pub active_quests: Vec<ActiveQuest>,
     #[serde(with = "crate::serde_pairs")]
     pub explored_chunks: HashMap<(i64, i64, i64), bool>,
+    /// Factory blocks by position; rebuilt from the entities on load
+    #[serde(skip)]
+    pub factory_index: crate::factory::FactoryIndex,
+    #[serde(default)]
+    pub factory_clock: crate::factory::FactoryClock,
 }
 
 impl Resources {
@@ -111,6 +116,8 @@ impl Resources {
             quest_markers: Vec::new(),
             active_quests: Vec::new(),
             explored_chunks: HashMap::new(),
+            factory_index: HashMap::new(),
+            factory_clock: crate::factory::FactoryClock::default(),
         }
     }
 

@@ -23,12 +23,14 @@ pub fn default_config() -> ConfigRoot {
             "PICKUP_ITEMS": ["r"],  // Quick grab
             "LOOK_TOGGLE": ["v"],   // Look around
             "TOGGLE_TORCH": ["t"],  // Toggle torch light source
+            "PASS_TIME": [","],     // Let 10 game seconds pass
         },
         "combat": {
             "CLEAR_MOVE_QUEUE": ["c"], // Clear queued moves in combat
         },
         "build": {
-            "TOGGLE_BREAK_PLACE_MODE": ["`"], // Cycle break/place mode
+            "TOGGLE_BREAK_PLACE_MODE": ["`"], // Cycle movement/break/place/rotate mode
+            "ROTATE_PLACEMENT": ["r"], // Place mode: turn the next factory block clockwise
             "BREAK_NORTHWEST": ["q"],
             "BREAK_NORTH": ["w"],
             "BREAK_NORTHEAST": ["e"],

@@ -173,9 +173,47 @@ pub fn handle_corpse_looting_input(app: &mut App, key: KeyCode) -> Result<bool, 
             }
         }
 
-        if (app.ui.keybinds.matches("ui", "MENU_ACTIVATE", &key) || key == KeyCode::Enter)
-            && panel_focus
-        {
+        let activate =
+            app.ui.keybinds.matches("ui", "MENU_ACTIVATE", &key) || key == KeyCode::Enter;
+        let is_chest = app
+            .core
+            .game
+            .world
+            .get::<&lithicrivers_core::factory::FactoryBlock>(corpse_entity)
+            .is_ok();
+        if activate && is_chest {
+            // Chests move items both ways: from the focused panel to the other one
+            if let Some(player) = app.core.game.get_player_entity() {
+                use lithicrivers_core::factory::{move_one_item, TransferError};
+                let (from, to, slot, verb) = if panel_focus {
+                    (corpse_entity, player, loot_item, "Took")
+                } else {
+                    (player, corpse_entity, player_item, "Stored")
+                };
+                match move_one_item(&mut app.core.game.world, from, to, slot) {
+                    Ok(kind) => app.core.game.res.log(format!(
+                        "{verb} {}",
+                        lithicrivers_core::components::itemkind_name(kind)
+                    )),
+                    Err(TransferError::Full) if panel_focus => {
+                        app.core.game.res.log("Your inventory is full")
+                    }
+                    Err(TransferError::Full) => app.core.game.res.log("The chest is full"),
+                    Err(TransferError::Empty) => {}
+                }
+                // Keep both selections on a stack that still exists
+                let len = |e| {
+                    app.core
+                        .game
+                        .world
+                        .get::<&lithicrivers_core::components::Inventory>(e)
+                        .map(|inv| inv.slots.len())
+                        .unwrap_or(0)
+                };
+                loot_item = loot_item.min(len(corpse_entity).saturating_sub(1));
+                player_item = player_item.min(len(player).saturating_sub(1));
+            }
+        } else if activate && panel_focus {
             take_item_from_corpse(app, corpse_entity, loot_item);
             // Adjust selection if needed after taking item
             if let Ok(inv) = app

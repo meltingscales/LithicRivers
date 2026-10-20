@@ -172,6 +172,7 @@ pub enum ItemKind {
     Leather,
     Meat,
     PlankBlock,
+    Chest,
 }
 
 pub fn itemkind_name(kind: ItemKind) -> &'static str {
@@ -191,6 +192,7 @@ pub fn itemkind_name(kind: ItemKind) -> &'static str {
         ItemKind::Leather => "Leather",
         ItemKind::Meat => "Meat",
         ItemKind::PlankBlock => "Plank Block",
+        ItemKind::Chest => "Chest",
     }
 }
 
@@ -211,6 +213,7 @@ pub fn itemkind_sprite_name(kind: ItemKind) -> &'static str {
         ItemKind::Leather => "leather",
         ItemKind::Meat => "meat",
         ItemKind::PlankBlock => "plank_block",
+        ItemKind::Chest => "chest",
     }
 }
 
@@ -231,6 +234,7 @@ pub fn parse_itemkind_from_sprite_name(sprite_name: &str) -> Option<ItemKind> {
         "leather" => Some(ItemKind::Leather),
         "meat" => Some(ItemKind::Meat),
         "plank_block" => Some(ItemKind::PlankBlock),
+        "chest" => Some(ItemKind::Chest),
         _ => None,
     }
 }

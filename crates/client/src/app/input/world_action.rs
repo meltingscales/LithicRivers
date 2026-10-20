@@ -36,6 +36,14 @@ pub fn handle_world_action_input(app: &mut App, key: KeyCode) -> Result<bool, Bo
         return Ok(true);
     }
 
+    // Let 10 game seconds pass (stops early if combat starts)
+    if app.ui.keybinds.matches("action", "PASS_TIME", &key) {
+        let tick_result = app.core.game.pass_time();
+        app.core.game.res.log("Time passes...");
+        app.apply_tick_result(&tick_result);
+        return Ok(true);
+    }
+
     // Context help panel on the World page
     if app.ui.keybinds.matches("ui", "TOGGLE_CONTEXT_HELP", &key) {
         app.ui.show_context_help = !app.ui.show_context_help;
@@ -143,6 +151,26 @@ pub fn nearby_interactions(app: &App) -> Option<NearbyInteractions> {
                     position: *pos,
                 });
             }
+        }
+    }
+
+    // Find nearby chests
+    for (entity, (pos, block)) in app
+        .core
+        .game
+        .world
+        .query::<(&Position, &lithicrivers_core::factory::FactoryBlock)>()
+        .iter()
+    {
+        if block.kind == lithicrivers_core::factory::FactoryKind::Chest
+            && (pos.x - player_pos.x).abs() <= 1
+            && (pos.y - player_pos.y).abs() <= 1
+            && pos.z == player_pos.z
+        {
+            available_actions.push(InteractionType::OpenChest {
+                entity,
+                position: *pos,
+            });
         }
     }
 
@@ -317,6 +345,16 @@ pub fn execute_interaction_action(app: &mut App, action: &crate::app_state::Inte
                 loot_panel_focus: true,
             };
             app.core.game.res.log("Started looting corpse");
+        }
+        InteractionType::OpenChest { entity, .. } => {
+            // Chests use the same two-panel transfer window as corpses
+            app.panels.corpse_looting = CorpseLootingState::LootingCorpse {
+                entity: *entity,
+                selected_loot_item: 0,
+                selected_player_item: 0,
+                loot_panel_focus: true,
+            };
+            app.core.game.res.log("Opened chest");
         }
         InteractionType::TalkToNPC {
             entity, npc_name, ..

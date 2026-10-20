@@ -8,6 +8,8 @@ mod app_state;
 mod boot_message;
 mod clock;
 mod dialogue_presenter;
+#[cfg(test)]
+mod factory_tests;
 mod headless;
 mod mcp;
 #[cfg(test)]

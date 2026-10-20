@@ -1,0 +1,18 @@
+# Chest transfer window after placing a chest and storing two nails in it
+seed 12345
+size 100x30
+skip-splash
+key ui.MENU_PREV
+cheat tp 0 0 0
+cheat giveitem chest 1
+key build.TOGGLE_BREAK_PLACE_MODE 2
+key hotbar.HOTBAR_SLOT_1 2
+key movement.MOVE_SOUTH
+key ui.MENU_ACTIVATE
+key build.PLACE_WEST
+key build.TOGGLE_BREAK_PLACE_MODE 2
+key action.INTERACT
+key movement.MOVE_EAST
+key ui.MENU_ACTIVATE 2
+expect-text "Chest Items (1/16)"
+screen chest
