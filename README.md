@@ -2,6 +2,10 @@
 
 An ASCII game I want to finish.
 
+- **Getting started as a developer:** [QUICKSTART.md](QUICKSTART.md)
+- **Building features with AI agents (OpenSpec, headless testing):** [README.USING-AI.md](README.USING-AI.md)
+- **Agent rules:** [AGENTS.md](AGENTS.md)
+
 ## License
 
 This project is proprietary software. All rights reserved.
@@ -55,8 +59,10 @@ See <https://github.com/meltingscales/LithicRivers/releases> for existing `v1.2.
 
 ## Building
 
-    just build
-    ls ./dist/
+    just build-linux      # or: just build-windows
+    ls ./target/debug/
+
+See [QUICKSTART.md](QUICKSTART.md) for setup and common commands.
 
 ## Notes
 
