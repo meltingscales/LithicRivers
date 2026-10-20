@@ -15,4 +15,4 @@
 ## 3. Docs and checks
 
 - [x] 3.1 Document factory blocks, rotation, chests and pass time in the Help panel and AGENTS.md (headless keybinds); verify `just code-clippy`, `cargo test --workspace` (no unexpected snapshot changes) and PR checks pass
-- [ ] 3.2 User check: placing, rotating, opening and breaking a chest and passing time feel right in the interactive client
+- [x] 3.2 User check: placing, rotating, opening and breaking a chest and passing time feel right in the interactive client
