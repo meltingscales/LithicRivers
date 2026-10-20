@@ -50,7 +50,7 @@ impl TitleMenuState {
     pub fn new(developer_mode: bool) -> Self {
         let splash_texts = EmbeddedAssets::get("config/splashes.txt")
             .map(|d| String::from_utf8_lossy(&d.data).to_string())
-            .unwrap_or_default()
+            .unwrap_or_else(|| panic!("splashes.txt not found"))
             .lines()
             .map(str::trim)
             .filter(|l| !l.is_empty())
