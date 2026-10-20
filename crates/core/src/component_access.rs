@@ -100,13 +100,15 @@ impl<'w> ComponentAccess<'w> {
                     .get::<&mut crate::model::body::Body>(entity)
                     .unwrap();
 
-                // Get all body parts that can be damaged (not already missing)
-                let targetable_parts: Vec<BodyPartType> = body
+                // Get all body parts that can be damaged (not already missing), in a fixed
+                // order so the seeded pick below is reproducible
+                let mut targetable_parts: Vec<BodyPartType> = body
                     .parts
                     .iter()
                     .filter(|(_, part)| part.state != BodyPartState::Missing)
                     .map(|(part_type, _)| *part_type)
                     .collect();
+                targetable_parts.sort();
 
                 if targetable_parts.is_empty() {
                     // All parts are missing - this shouldn't happen but handle gracefully
@@ -114,8 +116,9 @@ impl<'w> ComponentAccess<'w> {
                 }
 
                 // Randomly select a body part to damage
-                let mut rng = rand::thread_rng();
-                let target_part_type = *targetable_parts.choose(&mut rng).unwrap();
+                let target_part_type = *targetable_parts
+                    .choose(&mut self.res.world_state.rng)
+                    .unwrap();
 
                 // Apply damage to the selected part and collect result info
                 if let Some(part) = body.parts.get_mut(&target_part_type) {
