@@ -48,7 +48,7 @@ Add creatures with `world.sheep(..)`, `world.feral_dog(..)`, `world.npc(..)`, an
 
 `just client-blind <script>` runs the full client with no terminal, no audio and a fake clock, and prints text screen dumps and JSON state dumps. Use it to check a change in the real game, or to reproduce a bug as a committed script under `scripts/`. Example: `just client-blind scripts/agent/smoke.txt`.
 
-In Claude Code, a `PreToolUse` hook (`.claude/hooks/block-interactive-client.sh`) blocks Bash commands that would launch the interactive client. It only blocks real launches: mentioning the recipe in a heredoc, a quoted string, a commit message or a `grep` is fine. Its cases are tested in `crates/client/tests/agent_hook.rs`.
+In Claude Code, permission deny rules in `.claude/settings.json` block Bash commands that would launch the interactive client: the `client-linux` / `client-windows` / `client-release-*` recipes, and any direct `cargo run` or `target/*/lithicrivers-client` launch (even with `--script`; use `just client-blind` / `just client-mcp` instead). A blocked command fails with a generic "Permission ... denied" message. Mentioning the recipe in a heredoc, a quoted string, a commit message or a `grep` is fine.
 
 Scripts have one step per line; `#` starts a comment.
 

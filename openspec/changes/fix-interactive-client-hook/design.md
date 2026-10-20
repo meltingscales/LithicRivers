@@ -2,40 +2,42 @@
 
 ## Context
 
-- `.claude/settings.json` registers `bash "$CLAUDE_PROJECT_DIR/.claude/hooks/block-interactive-client.sh"` as a `PreToolUse` hook for the `Bash` tool. It receives JSON on stdin (`{"tool_name": "Bash", "tool_input": {"command": "..."}}`); exit 2 blocks and shows stderr to the agent.
-- The current script greps the entire JSON input, so heredoc bodies, quoted text and file contents count as launches, and the `--script`/`--mcp` exemption is also checked against the whole input.
-- `python3` and `jq` exist on the development machine. The hook only runs inside Claude Code sessions in this repo, never in CI or for players.
+- `.claude/settings.json` registered `.claude/hooks/block-interactive-client.sh` as a `PreToolUse` hook for Bash. It grepped the whole hook JSON, causing false blocks on mentions and a false allow when `--script` appeared in another subcommand.
+- Claude Code permission rules (`permissions.deny`) match Bash commands per subcommand after parsing the command: they split on `&&`, `||`, `;`, `|`, `|&`, `&` and newlines, check commands nested in subshells, command substitutions and control-flow bodies, strip wrappers (`timeout`, `time`, `nice`, `nohup`, `stdbuf`, `command`, `builtin`, `noglob`) and, for deny rules, any leading variable assignment. A `*` matches any text and may appear anywhere in a rule. Rules match the command text as written, not the program by path.
 
 ## Goals / Non-Goals
 
 **Goals:**
-- Block real launches, allow mentions.
-- Keep the hook fast (it runs before every Bash call) and dependency-light.
-- Cover it with tests.
+- Refuse real launches of the interactive client; never refuse mentions.
+- As little custom machinery as possible.
 
 **Non-Goals:**
-- A full shell parser. Command substitution (`$(...)`), `eval`, and aliases are not analyzed; the hook is a guardrail against mistakes, not a security boundary.
-- Hooks for other tools (Write, MCP).
+- A security boundary. `bash -c '...'`, an absolute binary path, or a shell alias aren't matched; agents aren't adversarial here, and AGENTS.md states the rule.
+- A custom refusal message.
 
 ## Decisions
 
-### Parse in Python, keep the bash entry point
-`block-interactive-client.sh` stays the registered command (no settings change) and runs `python3 .claude/hooks/block_interactive_client.py`. Python's `shlex` handles quoting correctly; doing the same in bash or `jq` would be fragile. If `python3` is missing, the shell script warns and allows (same fail-open rule as unparseable input).
-Alternative: a Rust binary in the workspace. Rejected: the hook would need a build before it works and would slow every cold session.
+### Deny rules instead of a hook
+Seven rules in `.claude/settings.json`:
 
-### What counts as "runs"
-1. Read `tool_input.command` from the JSON.
-2. Remove heredoc bodies: for each `<<[-]['"]?WORD['"]?` operator, drop the following lines through the terminator line.
-3. Tokenize the rest with `shlex` (`punctuation_chars=True`, comments on), which keeps quoted strings as single tokens and splits on `;`, `&&`, `||`, `|`, `&`.
-4. Split tokens into segments at those operators and newlines, and skip leading `VAR=value` assignments in each segment. (`cd dir && ...` is already two segments.)
-5. Block a segment if: its first two words are `just` + one of the four interactive recipes; or it contains `cargo` `run` and the token `lithicrivers-client` (as `-p`/`--bin` value), or its first word ends with `target/debug/lithicrivers-client` / `target/release/lithicrivers-client` (with or without `.exe`), and the segment has no `--script` or `--mcp` token.
-Quoted arguments arrive as single tokens, so `"run just client-linux"` never matches as a command word.
+```
+Bash(just client-linux*)          Bash(just client-windows*)
+Bash(just client-release-linux*)  Bash(just client-release-windows*)
+Bash(cargo run *lithicrivers-client*)
+Bash(./target/*/lithicrivers-client*)  Bash(target/*/lithicrivers-client*)
+```
 
-### Tests run in `cargo test`
-A client integration test (`crates/client/tests/agent_hook.rs`, `#[cfg(unix)]`) pipes JSON cases through the real hook script and checks the exit codes: every scenario in the spec plus the commands that were wrongly blocked this session. It runs on Linux and macOS in the PR checks; Windows runners are skipped because the hook targets the Claude Code environment, not players.
+Alternative 1 (implemented first): a Python tokenizer hook using `shlex` with heredoc stripping and a 24-case `cargo test`. It worked but re-implemented shell parsing, missed launches inside `$(...)`, and needed two scripts. Rejected in favor of the built-in parser.
+Alternative 2: deny rules that end at the client name (`Bash(cargo run *lithicrivers-client)`) to keep allowing `-- --script`. Tested live: it misses launches with trailing flags such as `--release`. Rejected; headless runs go through `just client-blind` / `just client-mcp` instead.
+
+### Binary rules anchored at the start
+`./target/*/lithicrivers-client*` and `target/*/lithicrivers-client*` rather than `*target/*/lithicrivers-client*`, so `ls target/debug/lithicrivers-client` or `file ...` aren't refused.
+
+### Verification
+Deny rules only run inside Claude Code, so verification is live: harmless commands that match each rule shape (an unknown flag makes the binary exit before touching the terminal; `cargo run` of a missing binary errors) are refused, mention cases run, and `just client-blind` runs. The same shapes were first validated with a sentinel rule (`Bash(echo zzprobe *)`) covering direct, compound, newline, `VAR=` + `timeout`, `$(...)`, heredoc and quoted cases.
 
 ## Risks / Trade-offs
 
-- [`python3` missing on some developer machine] → Fail open with a warning; nothing else breaks.
-- [A cleverly hidden launch slips through (`$(...)`, `eval`)] → Accepted; agents aren't adversarial here, and the AGENTS.md rule still applies.
-- [shlex can't parse an unbalanced quote mid-edit] → Fail open with a warning for that command.
+- [Generic refusal message] → AGENTS.md explains what is blocked and what to use instead.
+- [No automated regression test] → Rules are short and declarative; the verification steps are listed in tasks.md for re-running if they change.
+- [Developers outside Claude Code] → Unaffected; these settings only apply to Claude Code sessions in this repo.
