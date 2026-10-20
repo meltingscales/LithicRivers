@@ -93,29 +93,46 @@ pub fn handle_global_ui_input(app: &mut App, key: KeyCode) -> Result<bool, Box<d
         return Ok(true);
     }
 
-    // Save/Load via config (only in Menu tab)
-    if app.ui.keybinds.matches("ui", "SAVE_JSON", &key) {
-        if app.ui.current_tab != crate::MenuTab::Menu {
+    // Save/load the current world (only in Menu tab)
+    let save = app.ui.keybinds.matches("ui", "SAVE_JSON", &key);
+    let load = app.ui.keybinds.matches("ui", "LOAD_JSON", &key);
+    let quit_to_title = app
+        .ui
+        .keybinds
+        .matches("ui", "SAVE_AND_QUIT_TO_TITLE", &key);
+    if (save || load || quit_to_title) && app.ui.current_tab != crate::MenuTab::Menu {
+        if save {
             app.core.game.res.log("Save only available in Menu tab");
             return Ok(true);
         }
-        tracing::info!(target: "game", "save_begin path=save.json tick={}", app.core.game.res.time.tick);
-        app.save_to_file("save.json")
-            .map_err(|e| format!("save error: {:?}", e))?;
-        app.core.game.res.log("Saved to save.json");
-        tracing::info!(target: "game", "save_end path=save.json tick={}", app.core.game.res.time.tick);
-        return Ok(true);
-    }
-    if app.ui.keybinds.matches("ui", "LOAD_JSON", &key) {
-        if app.ui.current_tab != crate::MenuTab::Menu {
+        if load {
             app.core.game.res.log("Load only available in Menu tab");
             return Ok(true);
         }
-        tracing::info!(target: "game", "load_begin path=save.json tick={}", app.core.game.res.time.tick);
-        app.load_from_file("save.json")
-            .map_err(|e| format!("load error: {:?}", e))?;
-        app.core.game.res.log("Loaded from save.json");
-        tracing::info!(target: "game", "load_end path=save.json tick={}", app.core.game.res.time.tick);
+        return Ok(false);
+    }
+    if save {
+        match app.save_world() {
+            Ok(()) => app.core.game.res.log_green("World saved"),
+            Err(e) => app.core.game.res.log_red(format!("Save failed: {e:#}")),
+        }
+        return Ok(true);
+    }
+    if load {
+        let folder = app.current_world.as_ref().and_then(|w| w.folder.clone());
+        match folder {
+            None => app.core.game.res.log("This world hasn't been saved yet"),
+            Some(folder) => match app.load_world(folder) {
+                Ok(()) => app.core.game.res.log_green("World reloaded from last save"),
+                Err(e) => app.core.game.res.log_red(format!("Load failed: {e:#}")),
+            },
+        }
+        return Ok(true);
+    }
+    if quit_to_title {
+        if let Err(e) = app.save_and_quit_to_title() {
+            app.core.game.res.log_red(format!("Save failed: {e:#}"));
+        }
         return Ok(true);
     }
 

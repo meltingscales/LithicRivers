@@ -78,7 +78,7 @@ impl App {
         self.current_world = None;
         self.core.game = Game::new_empty(self.default_seed, Position { x: 0, y: 0, z: 0 });
         self.reset_for_game();
-        self.splash.state = SplashState::GameTitle; // replaced by the title screen in 2.2
+        self.show_title();
         Ok(())
     }
 }

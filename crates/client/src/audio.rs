@@ -149,6 +149,14 @@ impl AudioManager {
     pub fn set_sfx_volume(&mut self, volume: f32) {
         self.sfx_sink.set_volume(volume.clamp(0.0, 1.0));
     }
+
+    pub fn music_volume(&self) -> f32 {
+        self.music_sink.volume()
+    }
+
+    pub fn sfx_volume(&self) -> f32 {
+        self.sfx_sink.volume()
+    }
 }
 
 #[cfg(test)]

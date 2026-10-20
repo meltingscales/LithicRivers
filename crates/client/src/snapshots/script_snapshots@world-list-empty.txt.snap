@@ -1,0 +1,37 @@
+---
+source: crates/client/src/snapshot_tests.rs
+expression: "String::from_utf8(out).unwrap()"
+input_file: scripts/snapshots/world-list-empty.txt
+---
+=== screen world-list ===
+
+
+
+          ┌──────────────────────────────── Select World ────────────────────────────────┐
+          │                                                                              │
+          │                             > Create New World <                             │
+          │                                     Back                                     │
+          │                                                                              │
+          │                   UP/DOWN move   ENTER select   ESCAPE back                  │
+          │                                                                              │
+          │                                                                              │
+          │                                                                              │
+          │                                                                              │
+          │                                                                              │
+          │                                                                              │
+          │                                                                              │
+          │                                                                              │
+          │                                                                              │
+          │                                                                              │
+          │                                                                              │
+          │                                                                              │
+          │                                                                              │
+          │                                                                              │
+          │                                                                              │
+          │                                                                              │
+          │                                                                              │
+          └──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+=== end screen ===

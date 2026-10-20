@@ -471,6 +471,13 @@ pub enum CheatConsoleState {
     },
 }
 
+impl CheatConsoleState {
+    #[cfg(test)]
+    pub fn is_open(&self) -> bool {
+        matches!(self, CheatConsoleState::Open { .. })
+    }
+}
+
 /// Global Map panel state - handles marker selection and arrow display
 #[derive(Default)]
 pub struct GlobalMapPanelState {
@@ -495,5 +502,43 @@ impl Default for QuestPanelState {
             selected_quest_index: 0,
             selected_section: QuestSection::Active,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Keybinds;
+    use lithicrivers_core::default_config::default_config;
+
+    /// Every default keybind names keys that parse, so none silently does nothing.
+    #[test]
+    fn every_default_keybind_parses() {
+        let defaults = default_config();
+        for (category, actions) in defaults.keybinds.as_object().unwrap() {
+            for (action, keys) in actions.as_object().unwrap() {
+                for key in keys.as_array().unwrap() {
+                    let key = key.as_str().unwrap();
+                    assert!(
+                        Keybinds::parse_keycode(key).is_some(),
+                        "{category}.{action}: '{key}' does not parse"
+                    );
+                }
+            }
+        }
+        for action in [
+            "UP",
+            "DOWN",
+            "SELECT",
+            "BACK",
+            "LEFT",
+            "RIGHT",
+            "DELETE_CHAR",
+        ] {
+            assert!(
+                defaults.keybinds["title"][action].is_array(),
+                "title.{action}"
+            );
+        }
+        assert!(defaults.keybinds["ui"]["SAVE_AND_QUIT_TO_TITLE"].is_array());
     }
 }

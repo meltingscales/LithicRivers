@@ -13,6 +13,9 @@ use ratatui::{
 
 /// Draw the current splash screen, if one is showing. Returns true when it drew one.
 pub(crate) fn render_splash(f: &mut Frame, app: &mut App) -> bool {
+    if crate::ui::title::render_title_menu(f, app) {
+        return true;
+    }
     match app.splash.state {
         SplashState::Logo => {
             // Show centered logo
@@ -125,8 +128,8 @@ pub(crate) fn render_splash(f: &mut Frame, app: &mut App) -> bool {
             f.render_widget(block, area);
             return true;
         }
-        SplashState::MainUI => {
-            // Normal UI rendering continues below
+        _ => {
+            // Main UI (title-menu screens were drawn above)
         }
     }
     false

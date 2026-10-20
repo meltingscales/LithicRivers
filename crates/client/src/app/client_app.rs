@@ -8,6 +8,13 @@ use std::time::Duration;
 pub(crate) enum SplashState {
     Logo,
     GameTitle,
+    /// Title menu screens (see `app::title_menu`)
+    Title,
+    WorldList,
+    WorldActions,
+    ConfirmDelete,
+    CreateWorld,
+    Options,
     BootMessage,
     MainUI,
 }
@@ -181,6 +188,10 @@ pub(crate) struct App {
     pub saves_dir: std::path::PathBuf,
     /// The world being played, if any
     pub current_world: Option<crate::app::world::CurrentWorld>,
+    /// Title menu selections and forms
+    pub title: crate::app::title_menu::TitleMenuState,
+    /// Whether settings changed in Options are written to the config file
+    pub persist_config: bool,
 }
 
 impl App {
@@ -196,12 +207,7 @@ impl App {
                 }
                 SplashState::GameTitle => {
                     if self.clock.since(start_time) >= Duration::from_secs(3) {
-                        self.splash.state = SplashState::BootMessage;
-                        self.splash.start_time = Some(self.clock.now());
-                        self.splash.boot_display_text.clear();
-                        self.splash.boot_line_index = 0;
-                        self.splash.last_line_time = self.clock.now();
-                        self.splash.boot_complete = false;
+                        self.show_title();
                     }
                 }
                 SplashState::BootMessage => {

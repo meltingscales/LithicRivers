@@ -1,0 +1,37 @@
+---
+source: crates/client/src/snapshot_tests.rs
+expression: "String::from_utf8(out).unwrap()"
+input_file: scripts/snapshots/create-world.txt
+---
+=== screen create-world ===
+
+
+
+          ┌────────────────────────────── Create New World ──────────────────────────────┐
+          │                                                                              │
+          │                            World name: [New World]                           │
+          │                                Seed: [lithic]                                │
+          │                             > Allow cheats: ON <                             │
+          │                              Developer mode: ON                              │
+          │                               Show tutorial: ON                              │
+          │                                    Create                                    │
+          │                                    Cancel                                    │
+          │                                                                              │
+          │      Leave the seed blank for a random world; any text works as a seed.      │
+          │   UP/DOWN move   ENTER select   ESCAPE back   LEFT/RIGHT toggle   BACKSPACE  │
+          │                                     erase                                    │
+          │                                                                              │
+          │                                                                              │
+          │                                                                              │
+          │                                                                              │
+          │                                                                              │
+          │                                                                              │
+          │                                                                              │
+          │                                                                              │
+          │                                                                              │
+          │                                                                              │
+          └──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+=== end screen ===

@@ -1,0 +1,37 @@
+---
+source: crates/client/src/snapshot_tests.rs
+expression: "String::from_utf8(out).unwrap()"
+input_file: scripts/snapshots/options.txt
+---
+=== screen options ===
+
+
+
+
+
+
+               ┌───────────────────────────── Options ──────────────────────────────┐
+               │                                                                    │
+               │                        > Music volume: 55% <                       │
+               │                          Sound volume: 35%                         │
+               │                                Back                                │
+               │                                                                    │
+               │    UP/DOWN move   ENTER select   ESCAPE back   LEFT/RIGHT change   │
+               │                                                                    │
+               │                                                                    │
+               │                                                                    │
+               │                                                                    │
+               │                                                                    │
+               │                                                                    │
+               │                                                                    │
+               │                                                                    │
+               │                                                                    │
+               │                                                                    │
+               └────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+=== end screen ===

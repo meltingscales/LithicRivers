@@ -1,0 +1,10 @@
+# Options with the music volume lowered one step
+seed 12345
+size 100x30
+rawkey ENTER
+rawkey ENTER
+key title.DOWN
+key title.SELECT
+key title.LEFT
+expect-text "Music volume"
+screen options

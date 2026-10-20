@@ -24,11 +24,32 @@ pub struct ConfigManager {
     pub source: ConfigSourceKind,
 }
 
+/// Copy every key of `defaults` that `value` lacks, recursing into objects. Values already
+/// in `value` are kept.
+fn fill_missing(value: &mut serde_json::Value, defaults: &serde_json::Value) {
+    if let (Some(obj), Some(default_obj)) = (value.as_object_mut(), defaults.as_object()) {
+        for (key, default) in default_obj {
+            match obj.get_mut(key) {
+                Some(existing) => fill_missing(existing, default),
+                None => {
+                    obj.insert(key.clone(), default.clone());
+                }
+            }
+        }
+    }
+}
+
 impl ConfigManager {
     pub fn new() -> Self {
         let (file_path, _dir) = Self::resolve_config_path();
         let (data, source) = match Self::load_from_file(&file_path) {
-            Ok(d) => (d, ConfigSourceKind::ExternalFile),
+            Ok(mut d) => {
+                // Settings added since the file was written come from the defaults
+                let defaults = default_config();
+                fill_missing(&mut d.keybinds, &defaults.keybinds);
+                fill_missing(&mut d.settings, &defaults.settings);
+                (d, ConfigSourceKind::ExternalFile)
+            }
             Err(_) => {
                 // Create with defaults
                 let defaults = default_config();
@@ -195,5 +216,22 @@ impl ConfigManager {
 impl Default for ConfigManager {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn missing_keys_are_filled_from_defaults_without_overwriting() {
+        let mut value = serde_json::json!({"ui": {"QUIT": ["x"]}, "extra": 1});
+        let defaults =
+            serde_json::json!({"ui": {"QUIT": [], "SAVE": ["S"]}, "title": {"UP": ["UP"]}});
+        fill_missing(&mut value, &defaults);
+        assert_eq!(
+            value,
+            serde_json::json!({"ui": {"QUIT": ["x"], "SAVE": ["S"]}, "title": {"UP": ["UP"]}, "extra": 1})
+        );
     }
 }

@@ -24,6 +24,8 @@ impl App {
         let mut app = Self::build(seed, audio::AudioManager::disabled(), Clock::fake());
         // The real path contains the working directory and today's date; keep output reproducible
         app.logging.log_full_path = "(hidden in headless runs)".to_string();
+        // Never write the player's config file from a scripted run
+        app.persist_config = false;
         app
     }
 
@@ -34,10 +36,6 @@ impl App {
         let mut sprite_loader = SpriteLoader::new(None);
         // Preload all assets to eliminate runtime I/O during rendering
         sprite_loader.preload_all();
-
-        // Set volumes
-        audio.set_music_volume(0.60);
-        audio.set_sfx_volume(0.35);
 
         // Register and play the opening music
         let music_track = audio::AudioTrack::new("crates/client/assets/sound/music/opening.mp3");
@@ -110,6 +108,7 @@ impl App {
             .unwrap_or("lithicrivers-saves/saves")
             .into();
 
+        let developer_mode = game.res.config.developer_mode;
         let mut app = App {
             core: CoreState {
                 game,
@@ -151,7 +150,10 @@ impl App {
             default_seed: seed,
             saves_dir,
             current_world: None,
+            title: crate::app::title_menu::TitleMenuState::new(developer_mode),
+            persist_config: true,
         };
+        app.apply_volumes();
         app.reset_for_game();
         app
     }

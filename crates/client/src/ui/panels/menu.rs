@@ -14,36 +14,33 @@ pub fn render_menu_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     )));
     lines.push(Line::from(""));
 
-    // Display save/load keybinds
-    let save_keys = app.ui.keybinds.get_map().get("ui:SAVE_JSON");
-    let load_keys = app.ui.keybinds.get_map().get("ui:LOAD_JSON");
-
-    let save_key_str = if let Some(keys) = save_keys {
-        if keys.is_empty() {
-            "not bound".to_string()
-        } else {
-            format!("{:?}", keys[0])
-        }
-    } else {
-        "not bound".to_string()
+    // The world and its save keys
+    let key = |action: &str| {
+        app.core
+            .config_manager
+            .get_printable_key_for_keybind("ui", action)
     };
-
-    let load_key_str = if let Some(keys) = load_keys {
-        if keys.is_empty() {
-            "not bound".to_string()
-        } else {
-            format!("{:?}", keys[0])
-        }
-    } else {
-        "not bound".to_string()
-    };
-
+    let world_name = app
+        .current_world
+        .as_ref()
+        .map_or("(none)", |w| w.meta.name.as_str())
+        .to_string();
     lines.push(Line::from(Span::styled(
-        "Save/Load Controls:",
+        format!("World: {world_name}"),
         Style::default().fg(Color::Yellow),
     )));
-    lines.push(Line::from(Span::raw(format!("  Save: {}", save_key_str))));
-    lines.push(Line::from(Span::raw(format!("  Load: {}", load_key_str))));
+    lines.push(Line::from(Span::raw(format!(
+        "  Save world: {}",
+        key("SAVE_JSON")
+    ))));
+    lines.push(Line::from(Span::raw(format!(
+        "  Reload last save: {}",
+        key("LOAD_JSON")
+    ))));
+    lines.push(Line::from(Span::raw(format!(
+        "  Save and quit to title: {}",
+        key("SAVE_AND_QUIT_TO_TITLE")
+    ))));
     lines.push(Line::from(""));
     // Config source
     lines.push(Line::from(Span::styled(

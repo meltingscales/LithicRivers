@@ -1,0 +1,8 @@
+# World list in a fresh saves folder: only Create New World
+seed 12345
+size 100x30
+rawkey ENTER
+rawkey ENTER
+key title.SELECT
+expect-text "Create New World"
+screen world-list
