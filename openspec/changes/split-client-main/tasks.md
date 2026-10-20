@@ -6,7 +6,7 @@
 
 ## 2. Frame rendering
 
-- [ ] 2.1 Move the splash-screen branch of `ui()` into `ui/splash.rs` (`render_splash`, returning whether it drew), called from `ui()`; verify `cargo test --workspace` passes with no `.snap` changes and `just client-blind scripts/agent/smoke.txt` exits 0
+- [x] 2.1 Move the splash-screen branch of `ui()` into `ui/splash.rs` (`render_splash`, returning whether it drew), called from `ui()`; verify `cargo test --workspace` passes with no `.snap` changes and `just client-blind scripts/agent/smoke.txt` exits 0
 - [ ] 2.2 Move `ui()`, `render_message_log`, `render_bottom_menu` and `calculate_game_viewport_area` into `ui/layout.rs`, keeping modal draw order unchanged; verify `cargo test --workspace` passes with no `.snap` changes
 
 ## 3. Modals
