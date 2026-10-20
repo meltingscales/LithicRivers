@@ -48,3 +48,14 @@ New components and resources (`FactoryBlock`, `Storage`, `FactoryClock`, the pla
 - [Large factories slow every action] → Steps are cheap fixed-size loops; revisit with profiling once belts exist. Pass time runs in 100-tick chunks.
 - [Machine-triggered chunk generation places structures in odd order] → Structures apply through the same pending-structure path as player visits; equality test covers it.
 - [`r` in Place mode conflicts with a future binding] → All keys are configurable; documented in the help panel.
+
+## Implementation Notes
+
+- **No `Storage` component:** `Inventory` already has `max_slots`, so a chest is a factory block with an `Inventory { max_slots: 16 }`. `factory::move_one_item` moves single items between inventories and refuses a new stack when the target is full.
+- **Saving:** `FactoryBlock` is registered in `saved_components!`; `FactoryClock` is a `Resources` field (saved automatically, `#[serde(default)]` for older saves). The position index is derived data: `#[serde(skip)]`, rebuilt from the entities on load.
+- **Shared placement rule:** "passable tile, no entity" moved from the client into `factory::can_place_at`, used for plain blocks and factory blocks.
+- **Sprites:** factory blocks draw through their `SpriteRef` (category `factory`) over a `TileKind::FactoryBlock` marker tile. `FactoryKind::sprite(facing)` is where directional kinds (belts) will pick per-facing sprites.
+- **Factory systems:** `factory::run_due_steps` runs after the other systems and only counts steps (`FactoryClock.steps`) until later changes add systems; the elapsed-time test compares the whole clock instead of a counter block.
+- **Directional test block:** `FactoryKind::TestArrow` exists only under `cfg(test)` or the core `test-support` feature (client tests now enable it), since the chest is the only real kind and isn't directional.
+- **Pass time** waits in ten 100-tick steps (a zero-distance move with a 100-tick cost, like the wait key) and stops after the step in which combat starts.
+- **Chest window:** the corpse-looting window shows "Chest" titles and moves items both ways when the entity is a factory block; corpses still only give items.
