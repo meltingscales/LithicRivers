@@ -2,7 +2,7 @@
 
 ## 1. App types
 
-- [ ] 1.1 Move `SplashState`, `MenuTab`, `BOOT_MESSAGE_TYPEWRITER_MS`, the `App` struct and its `impl` from `main.rs` to `app/app.rs`, re-exported at the crate root; verify `cargo test --workspace` passes with no `.snap` changes
+- [x] 1.1 Move `SplashState`, `MenuTab`, `BOOT_MESSAGE_TYPEWRITER_MS`, the `App` struct and its `impl` from `main.rs` to `app/client_app.rs` (not `app/app.rs`: clippy `module_inception`), re-exported at the crate root; verify `cargo test --workspace` passes with no `.snap` changes
 
 ## 2. Frame rendering
 
