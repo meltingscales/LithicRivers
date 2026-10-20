@@ -2,6 +2,7 @@ pub mod combat_state_manager;
 pub mod component_access;
 pub mod components;
 pub mod config;
+pub mod crafting;
 pub mod default_config;
 pub mod dialogue;
 pub mod dialogue_database;

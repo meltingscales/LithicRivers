@@ -11,11 +11,11 @@ input_file: scripts/snapshots/tab-07-crafting.txt
 ││  * Plank Block               ││Result: 3x Wooden Plank         ││* Log: x3                     ││
 ││  * Stick                     ││                                ││* Nail: x10                   ││
 ││  * Wooden Shavings           ││Ingredients:                    ││* Scrap Electronics: x3       ││
-││  * Wooden Shavings           ││- 1x Log (have 3)               ││* Stick: x2                   ││
-││  * Torch                     ││                                ││* String: x2                  ││
-││                              ││                                ││* Torch: x3                   ││
-││                              ││                                ││                              ││
-││                              ││                                ││                              ││
+││  * Wooden Shavings           ││  * 1x Log (have 3)             ││* Stick: x2                   ││
+││  * Torch                     ││* raw material                  ││* String: x2                  ││
+││  * Nail                      ││                                ││* Torch: x3                   ││
+││  * String                    ││                                ││                              ││
+││  * Chest                     ││                                ││                              ││
 ││                              ││                                ││                              ││
 ││                              ││                                ││                              ││
 ││                              ││                                ││                              ││
