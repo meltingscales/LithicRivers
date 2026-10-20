@@ -3,9 +3,22 @@ name: "PR checks"
 
 # Tests and lint on every pull request into release, on all three release platforms.
 # The release workflow (ci.yml) only runs on version tags.
+#
+# Also runs on pushes to release: PRs can only read caches saved on their base branch,
+# so this is what gives every PR a warm build cache.
 on:
   pull_request:
     branches: [release]
+    paths-ignore:
+      - "**/*.md"
+      - "docs/**"
+      - "openspec/**"
+  push:
+    branches: [release]
+    paths-ignore:
+      - "**/*.md"
+      - "docs/**"
+      - "openspec/**"
   workflow_dispatch:
 
 permissions:
@@ -13,7 +26,8 @@ permissions:
 
 concurrency:
   group: pr-checks-${{ github.ref }}
-  cancel-in-progress: true
+  # Never cancel a release run: it saves the cache every PR uses
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   test:
@@ -24,6 +38,8 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
     env:
       CARGO_INCREMENTAL: 0
+      # No debug info in CI: faster linking and a smaller cache
+      CARGO_PROFILE_DEV_DEBUG: 0
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -40,14 +56,16 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends pkg-config libasound2-dev
 
+      # PRs restore the cache saved by the latest release run; only release runs save it
       - name: Cache cargo builds
         uses: Swatinem/rust-cache@v2
         with:
-          cache-on-failure: true
           shared-key: pr-checks-${{ runner.os }}
+          save-if: ${{ github.ref == 'refs/heads/release' }}
 
-      # Same as `just code-clippy`
+      # Same as `just code-clippy`. Lint results don't depend on the OS, so Linux only
       - name: Clippy (warnings are errors)
+        if: runner.os == 'Linux'
         run: cargo clippy --all-targets --all-features -- -D warnings
 
       # Includes the headless script tests and UI snapshot tests (scripts/snapshots)
