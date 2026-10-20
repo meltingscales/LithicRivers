@@ -1,15 +1,13 @@
 {
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/block-interactive-client.sh\""
-          }
-        ]
-      }
+  "permissions": {
+    "deny": [
+      "Bash(just client-linux*)",
+      "Bash(just client-windows*)",
+      "Bash(just client-release-linux*)",
+      "Bash(just client-release-windows*)",
+      "Bash(cargo run *lithicrivers-client*)",
+      "Bash(./target/*/lithicrivers-client*)",
+      "Bash(target/*/lithicrivers-client*)"
     ]
   }
 }
