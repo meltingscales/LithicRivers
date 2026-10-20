@@ -118,8 +118,9 @@ fn handle_interaction(app: &mut App) {
         }
     }
 
-    // Find nearby corpses
-    for (entity, (pos, entity_kind, _inv)) in app
+    // Find nearby corpses; empty ones have nothing to loot
+    let mut empty_corpse_nearby = false;
+    for (entity, (pos, entity_kind, inv)) in app
         .core
         .game
         .world
@@ -131,7 +132,9 @@ fn handle_interaction(app: &mut App) {
             let dy = (pos.y - player_pos.y).abs();
             let dz = (pos.z - player_pos.z).abs();
 
-            if dx <= 1 && dy <= 1 && dz == 0 {
+            if dx <= 1 && dy <= 1 && dz == 0 && inv.slots.is_empty() {
+                empty_corpse_nearby = true;
+            } else if dx <= 1 && dy <= 1 && dz == 0 {
                 available_actions.push(InteractionType::LootCorpse {
                     entity,
                     position: *pos,
@@ -228,6 +231,9 @@ fn handle_interaction(app: &mut App) {
     tracing::info!(target: "game", "Found {} total interactions nearby", available_actions.len());
 
     match available_actions.len() {
+        0 if empty_corpse_nearby => {
+            app.core.game.res.log("The corpse is empty.");
+        }
         0 => {
             app.core.game.res.log("Nothing to interact with nearby.");
         }

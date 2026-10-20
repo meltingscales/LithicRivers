@@ -1,0 +1,15 @@
+# Bug: interacting with a corpse you've already emptied opened the loot window.
+# It should say the corpse is empty instead.
+seed 12345
+size 100x30
+skip-splash
+key ui.MENU_PREV
+# Next to the corpse Game::new leaves at (18, 21, 0): 1 Leather, 2 Meat
+cheat tp 17 21 0
+key action.INTERACT
+expect-text "Looting Corpse"
+key ui.MENU_ACTIVATE 3
+key ui.CLOSE_HELP_MENU
+key action.INTERACT
+expect-text "The corpse is empty"
+state empty-corpse
