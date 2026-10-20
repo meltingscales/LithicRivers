@@ -40,15 +40,19 @@ code-security:
     @echo "Running cargo-audit to check for security vulnerabilities..."
     cargo audit
 
+# Build, then run all tests
 test-windows: build-windows
     cargo test
 
+# Build, then run all tests
 test-linux: build-linux
     cargo test
 
+# Build in release mode, then run all tests in release mode
 test-release-windows: build-release-windows
     cargo test --release
 
+# Build in release mode, then run all tests in release mode
 test-release-linux: build-release-linux
     cargo test --release
 
@@ -60,20 +64,25 @@ code-coverage:
     @echo "Coverage report generated in coverage/ directory"
     @echo "Open coverage/tarpaulin-report.html in your browser to view the report"
 
+# Remove build outputs (scripts/clean.ps1)
 clean-windows:
     powershell.exe scripts/clean.ps1
 
+# Remove build outputs (scripts/clean.sh)
 clean-linux:
     bash scripts/clean.sh
 
+# Write VERSION, GIT_SHA and GIT_BRANCH from git for the credits screen
 git-data:
     git describe --tags --always --abbrev=0 > VERSION
     git rev-parse HEAD > GIT_SHA
     git rev-parse --abbrev-ref HEAD > GIT_BRANCH
 
+# Copy config and asset data next to the build
 copy-config-data-windows:
     powershell.exe scripts/copy-config-data.ps1
 
+# Copy config and asset data next to the build
 copy-config-data-linux:
     bash scripts/copy-config-data.sh
 
@@ -103,19 +112,23 @@ build-release-linux: code-fmt util-voxelbuilder-import-release clean-linux git-d
     cargo build -p lithicrivers-core --release {{build_flags}}
     cargo build -p lithicrivers-client --bin lithicrivers-client --release {{build_flags}}
 
+# Build in release mode without cleaning first
 build-release-no-clean-windows: code-fmt util-voxelbuilder-import-release git-data copy-config-data-windows build-demos-release
     cargo --version
     cargo build -p lithicrivers-core --release {{build_flags}}
     cargo build -p lithicrivers-client --bin lithicrivers-client --release {{build_flags}}
 
+# Build in release mode without cleaning first
 build-release-no-clean-linux: code-fmt util-voxelbuilder-import-release git-data copy-config-data-linux build-demos-release
     cargo --version
     cargo build -p lithicrivers-core --release {{build_flags}}
     cargo build -p lithicrivers-client --bin lithicrivers-client --release {{build_flags}}
 
+# Stage license and third-party notice files for release
 stage-artifacts-legal-linux:
     bash scripts/stage-artifacts-legal.sh
 
+# Stage license and third-party notice files for release
 stage-artifacts-legal-windows:
     powershell.exe scripts/stage-artifacts-legal.ps1
 
@@ -127,9 +140,11 @@ clean-artifacts-linux:
 clean-artifacts-windows:
     powershell.exe scripts/clean-artifacts.ps1
 
+# Stage debug build artifacts
 stage-artifacts-linux: clean-artifacts-linux build-linux build-demos stage-artifacts-legal-linux
     bash scripts/stage-artifacts.sh
 
+# Stage debug build artifacts
 stage-artifacts-windows: clean-artifacts-windows build-windows build-demos stage-artifacts-legal-windows
     powershell.exe scripts/stage-artifacts.ps1
 
@@ -141,7 +156,7 @@ stage-artifacts-release-linux: clean-artifacts-linux build-release-linux build-d
 stage-artifacts-release-windows: clean-artifacts-windows build-release-windows build-demos-release stage-artifacts-legal-windows
     powershell.exe scripts/stage-artifacts-release.ps1
 
-## Optional: build demo binaries (may require ratatui API updates)
+# Optional: build demo binaries (may require ratatui API updates)
 build-demos: code-fmt util-voxelbuilder-import
     cargo build -p lithicrivers-client --bin demo_inventory {{build_flags}}
     cargo build -p lithicrivers-client --bin demo_crafting {{build_flags}}
@@ -240,15 +255,18 @@ util-voxelbuilder-import:
     @echo "🧊 Running Voxel Builder Structure Importer..."
     cargo run -p lithicrivers-client --bin utility_voxelbuilder_importer
 
+# Import Voxel Builder JSON files (release build of the importer)
 util-voxelbuilder-import-release:
     @echo "🧊 Running Voxel Builder Structure Importer..."
     cargo run -p lithicrivers-client --bin utility_voxelbuilder_importer --release
 
+# Print how to make structures with the Voxel Builder website
 util-voxelbuilder-import-site:
     @echo "Visit https://nimadez.github.io/voxel-builder/ to create voxel models."
     @echo "Export as JSON format and add to input_output_map in utility_voxelbuilder_importer.rs."
     @echo "Then run 'just util-voxelbuilder-import' to import the structure."
 
+# Follow today's game log
 util-monitor-logs:
     @echo "Monitoring logs..."
     @tail -f LithicRivers.log.`date +%Y-%m-%d`
