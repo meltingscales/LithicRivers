@@ -1,6 +1,6 @@
 use tracing::info;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum MessageColor {
     Default,
     Red,
@@ -11,13 +11,13 @@ pub enum MessageColor {
     Magenta,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct GameMessage {
     pub text: String,
     pub color: MessageColor,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageLog {
     pub messages: Vec<GameMessage>,
 }

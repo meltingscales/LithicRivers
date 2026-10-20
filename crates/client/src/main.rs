@@ -11,6 +11,8 @@ mod dialogue_presenter;
 mod headless;
 mod mcp;
 #[cfg(test)]
+mod save_reload_tests;
+#[cfg(test)]
 mod snapshot_tests;
 mod tutorialsystem;
 mod ui;

@@ -3,6 +3,7 @@ use tracing::{debug, info, warn};
 
 /// Unified logging facade for game events and debug information
 /// Provides structured logging with proper targeting and consistent formatting
+#[derive(serde::Serialize, serde::Deserialize)]
 pub struct GameEvents {
     message_log: MessageLog,
 }

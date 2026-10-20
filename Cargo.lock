@@ -703,6 +703,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e1cbc675ee8d97b4d206a985137f8ad59666538f56f906474f554467a63c776d"
 dependencies = [
  "hashbrown 0.14.5",
+ "serde",
  "spin",
 ]
 
@@ -1281,6 +1282,7 @@ checksum = "e6c10a63a0fa32252be49d21e7709d4d4baf8d231c2dbce1eaa8141b9b127d88"
 dependencies = [
  "ppv-lite86",
  "rand_core 0.6.4",
+ "serde",
 ]
 
 [[package]]

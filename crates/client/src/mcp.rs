@@ -701,6 +701,7 @@ mod tests {
                 "key movement.FLY",
                 "expect-text \"You chop the tree\"",
                 "wait 500",
+                "save-reload",
                 "tick 3",
             ] {
                 server
@@ -715,7 +716,8 @@ mod tests {
             (export, state)
         });
 
-        // Failed and read-only steps are not recorded
+        // Failed and read-only steps are not recorded; save-reload is
+        assert!(export.contains("save-reload"));
         assert!(
             !export.contains("FLY")
                 && !export.contains("screen")

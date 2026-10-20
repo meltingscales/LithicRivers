@@ -65,6 +65,7 @@ Scripts have one step per line; `#` starts a comment.
 | `screen [label]` | Print the screen as text |
 | `state [label]` | Print a JSON summary: player, body, inventory, tab/modal, combat, nearby entities, recent messages |
 | `expect-text "<text>"` | Fail (exit 2) unless the screen contains the text |
+| `save-reload` | Save the game (with tutorial progress, hotbar and view) in memory and load it back; fails (exit 1) if either step fails |
 | `quit` | Stop successfully |
 
 To set up a fight, spawn the enemy instead of relying on where the starting world places creatures: `cheat spawn_enemy feral_dog` then `key movement.WAIT` (feral dogs chase the player, so combat starts on that turn).
@@ -87,6 +88,15 @@ For open-ended exploration ("play the crafting flow and look for bugs"), the rep
 - Use **scripts** (`just client-blind`) for anything that must be reproducible or checked in CI; use **MCP** to explore.
 - A bug found over MCP is not reproduced until you call `export_script`, save the result under `scripts/agent/bugs/`, and confirm `just client-blind` shows the bug. Add a test that runs it, as the existing bug scripts do.
 - The first launch builds the client, which can be slow; run `cargo build -p lithicrivers-client` first if the MCP connection times out.
+
+## Saves
+
+A save holds every entity with every component, all of `Resources` except the config, and the client's play state (view, tutorial progress, hotbar). To keep it complete:
+
+- Register every new component type in `saved_components!` in `crates/core/src/save_load/mod.rs`, with a stable key. `every_component_is_registered` fails if an entity carries an unregistered type; add the spawn path you created to `worlds_from_every_spawn_path` there.
+- New `Resources` fields are saved automatically (it derives serde); mark state that is rebuilt on load `#[serde(skip)]`.
+- Client state that changes what happens next goes in `ClientSave` (`crates/client/src/app/save.rs`).
+- `save_reload_anywhere_changes_nothing` runs every committed script with `save-reload` inserted after each step and fails if any output changes.
 
 ## Planning with OpenSpec
 

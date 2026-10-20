@@ -594,32 +594,16 @@ impl Game {
 
     // Convenience save/load wrappers
     pub fn save_json<P: AsRef<std::path::Path>>(&self, path: P) -> anyhow::Result<()> {
-        crate::save_load::save_game_json(self, path)
+        crate::save_load::save_to_file(self, path, &serde_json::Value::Null)
     }
     pub fn load_json<P: AsRef<std::path::Path>>(&mut self, path: P) -> anyhow::Result<()> {
-        crate::save_load::load_game_json(self, path)
+        crate::save_load::load_from_file(self, path).map(|_| ())
     }
     pub fn save_msgpack<P: AsRef<std::path::Path>>(&self, path: P) -> anyhow::Result<()> {
         crate::save_load::save_game_msgpack(self, path)
     }
     pub fn load_msgpack<P: AsRef<std::path::Path>>(&mut self, path: P) -> anyhow::Result<()> {
         crate::save_load::load_game_msgpack(self, path)
-    }
-
-    // Viewport-aware save/load methods
-    pub fn save_json_with_viewport<P: AsRef<std::path::Path>>(
-        &self,
-        path: P,
-        viewport: crate::save_load::ViewportSave,
-    ) -> anyhow::Result<crate::save_load::ViewportSave> {
-        crate::save_load::save_game_json_with_viewport(self, path, viewport)
-    }
-
-    pub fn load_json_with_viewport<P: AsRef<std::path::Path>>(
-        &mut self,
-        path: P,
-    ) -> anyhow::Result<crate::save_load::ViewportSave> {
-        crate::save_load::load_game_json_with_viewport(self, path)
     }
 
     /// Queue a vertical movement for the player by dz levels.

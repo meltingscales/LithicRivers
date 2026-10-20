@@ -2,13 +2,13 @@
 //!
 //! Replaces the scattered movement intent fields with a single, clean structure
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize)]
 pub struct PlayerIntent {
     pub action: Option<PlayerAction>,
     pub tick_cost: u64,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum PlayerAction {
     /// Move in world space (dx, dy, dz)
     Move { dx: i64, dy: i64, dz: i64 },

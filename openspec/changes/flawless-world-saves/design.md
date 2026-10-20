@@ -50,3 +50,12 @@ The client adds a `client` section: tutorial `current_step_index` and `completed
 - [Entity ID reuse across saves (hecs generations)] → `spawn_at` restores exact IDs including generation; the identity test covers reuse after deaths.
 - [A future component isn't serializable (e.g. holds a handle)] → The completeness test forces a decision: implement serde or mark it explicitly as rebuilt-on-load in the registry with a reason.
 - [Behavior hidden in client-only state we didn't list] → The identity test runs every snapshot script; any client state that matters for output shows up as a mismatch.
+
+## Implementation Notes
+
+- **`Resources` derives serde itself** instead of a separate `SavedResources` struct, with `config` marked `#[serde(skip, default = "GameConfig::new")]`. A new resource field is then saved automatically, or fails to compile until it is serializable or explicitly skipped. `WorldState` saves its `ChaCha20Rng` (rand_chacha `serde1`), since combat rolls draw from it.
+- **Unregistered components are named by entity, not type.** hecs exposes only `TypeId`s for an entity's components, and Rust can't turn a `TypeId` into a name. `unsaved_components` reports the entity, its registered components and how many types are unregistered, which points at the spawn site.
+- **Ordered collections:** `FogOfWar.visited_tiles` is a `BTreeSet` and `TargetTracker` uses `BTreeMap`/`BTreeSet`; maps with tuple keys are written as sorted pairs (`serde_pairs`). Same state, same file.
+- **Determinism fix found by the scenario test:** body-part damage picked its part with `rand::thread_rng()` over `HashMap` order. It now sorts the parts and draws from the seeded `world_state.rng`.
+- **Version 4** code lives in `save_load/v4.rs` as `SaveDataV4`, only for loading; its save functions are test-only. MessagePack helpers write and read version 5 only.
+- The core API takes and returns the client section as `serde_json::Value` (`LoadedSave`); a version 4 load returns its viewport instead.
