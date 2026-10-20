@@ -7,7 +7,7 @@ Lets players keep several named worlds, each with its own seed and settings, and
 ## ADDED Requirements
 
 ### Requirement: World list
-**Play Game** SHALL open a list of saved worlds found in the saves folder, most recently played first, each showing its name, seed and last-played date, followed by **Create New World**. Selecting a world SHALL offer **Play** and **Delete**.
+**Play Game** SHALL open a list of saved worlds found in the saves folder, most recently played first, each showing its name, seed and last-played date, followed by **Create New World**. Selecting a world SHALL offer **Play**, **Rename** and **Delete**.
 
 #### Scenario: No worlds yet
 - **WHEN** the saves folder has no worlds and the player selects Play Game
@@ -54,6 +54,17 @@ Each world SHALL be stored in its own folder under the saves folder. Saving SHAL
 #### Scenario: Quit tab
 - **WHEN** the player activates the in-game Quit tab, which reads "SAVE AND QUIT"
 - **THEN** the world is saved and the title screen is shown; quitting the game is done from the title screen
+
+### Requirement: Rename a world
+Renaming a world SHALL change the name shown in the world list and stored with the world. The world's folder and save data SHALL stay where they are.
+
+#### Scenario: Rename
+- **WHEN** the player selects Rename on a world, types a new name and confirms
+- **THEN** the world list shows the new name, and playing the world loads the same save
+
+#### Scenario: Cancelled rename
+- **WHEN** the player selects Rename and then presses back
+- **THEN** the world keeps its old name
 
 ### Requirement: Delete a world
 Deleting a world SHALL require a confirmation and then remove that world's folder.

@@ -49,12 +49,12 @@ input_file: scripts/snapshots/world-list-one-world.txt
           │                                                                              │
           │                             ┌─ New World Two ─┐                              │
           │                             │    > Play <     │                              │
+          │                             │     Rename      │                              │
           │                             │     Delete      │                              │
           │                             │      Back       │                              │
           │                             │                 │                              │
           │                             │                 │                              │
           │                             └─────────────────┘                              │
-          │                                                                              │
           │                                                                              │
           │                                                                              │
           │                                                                              │

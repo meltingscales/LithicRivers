@@ -12,6 +12,7 @@ pub(crate) enum SplashState {
     Title,
     WorldList,
     WorldActions,
+    RenameWorld,
     ConfirmDelete,
     CreateWorld,
     Options,

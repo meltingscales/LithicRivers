@@ -14,6 +14,7 @@
 - [x] 2.3 Add the world list (worlds + Create New World, Play, Delete with confirmation, Back); verify snapshot scripts for the empty list and for a list with one world created earlier in the same script
 - [x] 2.4 Add Create New World (name, seed, Allow cheats, Developer mode, Show tutorial, Create / Cancel) leading to the boot intro and then the game; verify a snapshot of the form and a headless test that creating with seed `12345` gives the same `state` as `skip-splash` with seed 12345
 - [x] 2.5 Add Options (music and sound volume, applied immediately and saved to config); verify a test that changing a volume updates the config value and the audio manager
+- [x] 2.6 Add Rename to the world actions (new name stored in `meta.json`, folder unchanged; back cancels); verify a unit test that only the name changes and a headless test of rename and cancel
 
 ## 3. In-game changes
 

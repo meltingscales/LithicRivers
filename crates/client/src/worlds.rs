@@ -104,6 +104,13 @@ pub fn create_world_folder(saves: &Path, meta: &WorldMeta) -> Result<PathBuf> {
     Ok(folder)
 }
 
+/// Change a world's display name. Its folder keeps its name, so nothing on disk moves.
+pub fn rename_world(folder: &Path, name: &str) -> Result<()> {
+    let mut meta = read_meta(folder)?;
+    meta.name = name.to_string();
+    write_meta(folder, &meta)
+}
+
 /// Every world folder, most recently played first; unreadable ones last.
 pub fn list_worlds(saves: &Path) -> Vec<WorldEntry> {
     let Ok(dir) = std::fs::read_dir(saves) else {
@@ -204,6 +211,24 @@ mod tests {
         assert_eq!(worlds[0].meta.as_ref().unwrap().settings, SETTINGS);
         assert!(worlds[2].meta.is_none());
         assert!(list_worlds(&saves.join("missing")).is_empty());
+        std::fs::remove_dir_all(&saves).unwrap();
+    }
+
+    #[test]
+    fn rename_changes_only_the_name() {
+        let saves = temp_saves("rename");
+        let folder = make_world(&saves, "Old", 7);
+        rename_world(&folder, "Shiny New").unwrap();
+        let meta = read_meta(&folder).unwrap();
+        assert_eq!(meta.name, "Shiny New");
+        assert_eq!(
+            meta,
+            WorldMeta {
+                name: "Shiny New".into(),
+                ..WorldMeta::new("Old", 1, SETTINGS, 7)
+            }
+        );
+        assert_eq!(list_worlds(&saves)[0].folder, folder, "folder unchanged");
         std::fs::remove_dir_all(&saves).unwrap();
     }
 

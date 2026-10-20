@@ -268,6 +268,23 @@ pub(crate) fn render_title_menu(f: &mut Frame, app: &App) -> bool {
             let lines = menu_lines(&actions, app.title.world_action);
             boxed(f, area, &selected_world_name(app), lines);
         }
+        SplashState::RenameWorld => {
+            render_world_list(f, app, area);
+            let lines = vec![
+                Line::from(format!("New name: [{}_]", app.title.rename)),
+                Line::from(""),
+                Line::from(Span::styled(
+                    format!(
+                        "{} rename   {} erase   {} cancel",
+                        key(app, "SELECT"),
+                        key(app, "DELETE_CHAR"),
+                        key(app, "BACK")
+                    ),
+                    Style::default().fg(Color::DarkGray),
+                )),
+            ];
+            boxed(f, area, "Rename World", lines);
+        }
         SplashState::ConfirmDelete => {
             render_world_list(f, app, area);
             let mut lines = vec![

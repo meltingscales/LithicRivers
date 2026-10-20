@@ -7,7 +7,7 @@ use crossterm::event::KeyCode;
 use lithicrivers_core::resources::WorldSettings;
 
 pub const TITLE_CHOICES: [&str; 3] = ["Play Game", "Options", "Quit"];
-pub const WORLD_ACTIONS: [&str; 3] = ["Play", "Delete", "Back"];
+pub const WORLD_ACTIONS: [&str; 4] = ["Play", "Rename", "Delete", "Back"];
 pub const DELETE_CHOICES: [&str; 2] = ["Cancel", "Delete"];
 /// Create-world rows, in order.
 pub const CREATE_FIELDS: [&str; 7] = [
@@ -42,7 +42,9 @@ pub struct TitleMenuState {
     pub delete_choice: usize,
     pub create: CreateWorldForm,
     pub options_selected: usize,
-    /// A problem to show on the world list (failed load or delete)
+    /// The new name being typed on the rename screen
+    pub rename: String,
+    /// A problem to show on the world list (failed load, rename or delete)
     pub message: Option<String>,
 }
 
@@ -66,6 +68,7 @@ impl TitleMenuState {
             delete_choice: 0,
             create: CreateWorldForm::new(developer_mode),
             options_selected: 0,
+            rename: String::new(),
             message: None,
         }
     }
@@ -204,7 +207,16 @@ impl App {
                                 self.show_world_list();
                             }
                         }
+                        1 if world.meta.is_none() => {
+                            self.title.message =
+                                Some("This world can't be read, so it can't be renamed.".into());
+                            self.splash.state = SplashState::WorldList;
+                        }
                         1 => {
+                            self.title.rename = world.meta.map(|m| m.name).unwrap_or_default();
+                            self.splash.state = SplashState::RenameWorld;
+                        }
+                        2 => {
                             self.title.delete_choice = 0;
                             self.splash.state = SplashState::ConfirmDelete;
                         }
@@ -227,6 +239,25 @@ impl App {
                         }
                     }
                     self.show_world_list();
+                }
+            }
+            SplashState::RenameWorld => {
+                if self.matches("BACK", &key) {
+                    self.splash.state = SplashState::WorldList;
+                } else if self.matches("SELECT", &key) {
+                    let name = self.title.rename.trim().to_string();
+                    if let (Some(world), false) = (self.title.selected_world(), name.is_empty()) {
+                        if let Err(e) = worlds::rename_world(&world.folder, &name) {
+                            self.title.message = Some(format!("Could not rename: {e:#}"));
+                        }
+                    }
+                    self.show_world_list();
+                } else if self.matches("DELETE_CHAR", &key) {
+                    self.title.rename.pop();
+                } else if let KeyCode::Char(c) = key {
+                    if self.title.rename.chars().count() < MAX_TEXT_LEN {
+                        self.title.rename.push(c);
+                    }
                 }
             }
             SplashState::CreateWorld => self.handle_create_input(key),
@@ -531,17 +562,46 @@ mod tests {
         // Delete, then cancel: nothing changes
         run(
             &mut runner,
-            "key title.SELECT\nkey title.DOWN\nkey title.SELECT\nkey title.SELECT",
+            "key title.SELECT\nkey title.DOWN 2\nkey title.SELECT\nkey title.SELECT",
         );
         assert_eq!(runner.app.title.worlds.len(), 2);
         // Delete, then confirm
         run(
             &mut runner,
-            "key title.SELECT\nkey title.DOWN\nkey title.SELECT\nkey title.DOWN\nkey title.SELECT",
+            "key title.SELECT\nkey title.DOWN 2\nkey title.SELECT\nkey title.DOWN\nkey title.SELECT",
         );
         assert_eq!(runner.app.splash.state, SplashState::WorldList);
         assert_eq!(runner.app.title.worlds.len(), 1);
         assert!(!folders[0].exists());
+    }
+
+    #[test]
+    fn rename_changes_the_listed_name_and_back_cancels() {
+        let mut runner = after(&format!(
+            "{TO_TITLE}{TO_CREATE}{CREATE_12345}{MENU_TAB}rawkey Q\nkey title.SELECT"
+        ));
+        let folder = runner.app.title.worlds[0].folder.clone();
+        // Rename, erase "World", type "Place", confirm
+        run(
+            &mut runner,
+            "key title.SELECT\nkey title.DOWN\nkey title.SELECT\nkey title.DELETE_CHAR 5\n\
+             type \"Place\"\nexpect-text \"New name: [New Place_]\"\nkey title.SELECT",
+        );
+        assert_eq!(runner.app.splash.state, SplashState::WorldList);
+        let world = &runner.app.title.worlds[0];
+        assert_eq!(world.meta.as_ref().unwrap().name, "New Place");
+        assert_eq!(world.folder, folder);
+        assert!(runner.screen_text().contains("New Place  (seed 12345"));
+
+        // Back leaves the name alone
+        run(
+            &mut runner,
+            "key title.SELECT\nkey title.DOWN\nkey title.SELECT\ntype \"xyz\"\nkey title.BACK",
+        );
+        assert_eq!(
+            runner.app.title.worlds[0].meta.as_ref().unwrap().name,
+            "New Place"
+        );
     }
 
     #[test]
