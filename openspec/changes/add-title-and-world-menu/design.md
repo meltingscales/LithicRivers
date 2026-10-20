@@ -66,3 +66,13 @@ New `title` category in `default_config.rs`: `UP` (`UP`), `DOWN` (`DOWN`), `SELE
 - [Deleting a world folder is destructive] → Confirmation screen; delete only paths inside the saves folder, refuse otherwise.
 - [`SaveData` gaps mean a reloaded world isn't perfect (e.g. corpses vanish)] → Fixed by `flawless-world-saves`; this change stores `world.json` with whatever save format is current, so the two can land in either order.
 - [Overlap with `split-client-main`] → Land that refactor first if possible; otherwise this change's new code still goes in new `ui/title/` files, and the conflict is limited to `ui()` and `SplashState`.
+
+## Implementation Notes
+
+- **Save format:** `flawless-world-saves` landed first, so `world.json` is the version 5 save written by `App::save_to_file` (including the client section). `WorldSettings` is part of the saved `Resources` too; on load the settings in `meta.json` win, so the two can't disagree.
+- **Selecting a world** opens a small Play / Delete / Back box (`SplashState::WorldActions`), so the world list itself stays one vertical menu: worlds, Create New World, Back.
+- **Config defaults are filled in on load:** an existing config file is missing the new `title` keybinds and `audio` volumes, so `ConfigManager` now copies any key the file lacks from the defaults (existing values are kept).
+- **Printable key names** gained Backspace, Tab, Delete, Insert, PageUp/PageDown, Home and End, needed for the title hints.
+- Headless runs never write the config file (`App::persist_config`), so Options tests don't touch the player's config.
+- The `toggle_tutorial` cheat also updates the world's Show tutorial setting, so a save keeps it.
+- `tab-08-menu` snapshot changes on purpose: the Menu panel describes the world's save keys instead of `save.json`.
