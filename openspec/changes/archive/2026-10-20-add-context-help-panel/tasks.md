@@ -14,4 +14,4 @@
 ## 3. Docs and checks
 
 - [x] 3.1 Mention the panel and the toggle key in the Help tab text and in docs where controls are listed; verify `just code-clippy` and `cargo test --workspace` (twice, no pending snapshots) pass
-- [ ] 3.2 User check: on the World page, the panel's hints are correct and readable while walking, in break and place mode, in look mode and next to a corpse or NPC, and `h` hides and shows it
+- [x] 3.2 User check: on the World page, the panel's hints are correct and readable while walking, in break and place mode, in look mode and next to a corpse or NPC, and `h` hides and shows it
