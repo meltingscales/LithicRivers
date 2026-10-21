@@ -129,18 +129,22 @@ pub fn render_crafting_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
             )),
         ];
 
-        for &(item, qty) in recipe.ingredients {
-            let available = inventory.get(&item).copied().unwrap_or(0);
-            let has_enough = available >= qty;
-            let style = if has_enough {
+        let raw = lithicrivers_core::crafting::raw_sources();
+        let recipes = app.panels.crafting.recipe_handler.get_recipes();
+        for line in lithicrivers_core::crafting::ingredient_tree(recipes, recipe, &raw) {
+            let available = inventory.get(&line.item).copied().unwrap_or(0);
+            let style = if available >= line.needed {
                 Style::default().fg(Color::Green)
             } else {
                 Style::default().fg(Color::Red)
             };
-
+            let marker = if line.raw { "* " } else { "- " };
             details.push(Line::from(vec![
-                Span::styled("  - ", style),
-                Span::styled(format!("{}x {}", qty, itemkind_name(item)), style),
+                Span::styled(format!("{}{marker}", "  ".repeat(line.depth + 1)), style),
+                Span::styled(
+                    format!("{}x {}", line.needed, itemkind_name(line.item)),
+                    style,
+                ),
                 Span::styled(
                     format!(" (have {})", available),
                     Style::default()
@@ -149,14 +153,19 @@ pub fn render_crafting_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
                 ),
             ]));
         }
+        details.push(Line::from(Span::styled(
+            "* raw material",
+            Style::default().fg(Color::DarkGray),
+        )));
 
         let details_block = Block::default()
             .borders(Borders::ALL)
             .title(Line::from("Recipe Details"));
 
+        // Keep leading spaces: they indent the ingredient tree
         let details_paragraph = Paragraph::new(details)
             .block(details_block)
-            .wrap(Wrap { trim: true });
+            .wrap(Wrap { trim: false });
 
         f.render_widget(details_paragraph, details_area);
     }

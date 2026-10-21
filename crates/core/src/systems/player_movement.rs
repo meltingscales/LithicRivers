@@ -1,5 +1,5 @@
 use crate::component_access::{ComponentAccess, ComponentUpdate};
-use crate::components::{BlocksMovement, DroppedItem, Inventory, ItemKind, Position, SpriteRef};
+use crate::components::{BlocksMovement, DroppedItem, Inventory, Position, SpriteRef};
 use crate::intent::PlayerAction;
 use crate::resources::Resources;
 use crate::systems::ecs_utils::get_player_entity;
@@ -167,78 +167,57 @@ pub fn mining_system(world: &mut World, res: &mut Resources) -> bool {
                 None => false,
             }
         }
-        // This is the place that mining gets processed.
-        TileKind::PlankBlock => {
-            // Mine plank block: Remove block and drop 1 ItemKind::PlankBlock
-            res.world_state
-                .world
-                .set_tile_cached(x, y, z, TileKind::Air);
-            world.spawn((
-                Position { x, y, z },
-                DroppedItem {
-                    kind: ItemKind::PlankBlock,
-                    qty: 1,
-                },
-                SpriteRef::new("items", "plank_block"),
-            ));
-            res.events.interaction_event(
-                "You mine the plank block. (+1 Plank Block)".to_string(),
-                res.time.tick,
-            );
-            true
-        }
-        TileKind::Tree => {
-            // Chop tree: convert to Dirt and drop items
-            res.world_state
-                .world
-                .set_tile_cached(x, y, z, TileKind::Dirt);
-
+        tile => {
+            let Some(drop) = crate::crafting::mining_drop(tile) else {
+                res.events.interaction_event(
+                    format!("You can't mine the {:?} tile.", tile_to_mine),
+                    res.time.tick,
+                );
+                return false;
+            };
+            res.world_state.world.set_tile_cached(x, y, z, drop.becomes);
             // Seeded by world seed + tile coords so drops are reproducible
             let mut rng = res.world_state.world.new_rng(x, y, z);
-            let wood_qty = rng.gen_range(2..=3);
-            let acorn_qty = rng.gen_range(1..=3);
-
-            // Spawn Wood
-            world.spawn((
-                Position { x, y, z },
-                DroppedItem {
-                    kind: ItemKind::Log,
-                    qty: wood_qty,
-                },
-                SpriteRef::new("items", "log"),
-            ));
-
-            // Spawn Acorns
-            world.spawn((
-                Position { x, y, z },
-                DroppedItem {
-                    kind: ItemKind::Acorn,
-                    qty: acorn_qty,
-                },
-                SpriteRef::new("items", "acorn"),
-            ));
-
-            res.events.interaction_event(
+            let mut gained = Vec::new();
+            for &(kind, min, max) in drop.items {
+                let qty = if min == max {
+                    min
+                } else {
+                    rng.gen_range(min..=max)
+                };
+                if qty == 0 {
+                    continue;
+                }
+                world.spawn((
+                    Position { x, y, z },
+                    DroppedItem { kind, qty },
+                    SpriteRef::new("items", crate::components::itemkind_sprite_name(kind)),
+                ));
+                gained.push((kind, qty));
+            }
+            let message = if tile == TileKind::Tree {
                 format!(
                     "You chop the tree. (+{} Wood, +{} Acorn)",
-                    wood_qty, acorn_qty
-                ),
-                res.time.tick,
-            );
+                    gained[0].1, gained[1].1
+                )
+            } else {
+                let items: Vec<String> = gained
+                    .iter()
+                    .map(|(kind, qty)| {
+                        format!("+{qty} {}", crate::components::itemkind_name(*kind))
+                    })
+                    .collect();
+                format!(
+                    "You mine the {}. ({})",
+                    tile.display_name(),
+                    items.join(", ")
+                )
+            };
+            res.events.interaction_event(message, res.time.tick);
             true
-        }
-        _ => {
-            // No-op for other tiles for now
-            // print that this block isn't mineable
-            res.events.interaction_event(
-                format!("You can't mine the {:?} tile.", tile_to_mine),
-                res.time.tick,
-            );
-            false
         }
     }
 }
-
 /// When the player is on the same tile as any DroppedItem, pick it up into Inventory.
 pub fn pickup_system(world: &mut World, res: &mut Resources) {
     let Some(player_e) = get_player_entity(world) else {

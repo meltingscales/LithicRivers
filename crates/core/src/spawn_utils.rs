@@ -158,8 +158,9 @@ pub fn world_spawn_feraldog(
     // Create dog inventory with 0-2 Leather and 1-3 Meat using deterministic RNG
     let mut dog_rng = ChaCha20Rng::seed_from_u64(game_world.seed.wrapping_add((x + y + z) as u64));
     let mut dog_inventory = Inventory::default();
-    dog_inventory.add(ItemKind::Leather, dog_rng.gen_range(0..=2));
-    dog_inventory.add(ItemKind::Meat, dog_rng.gen_range(1..=3));
+    for &(item, min, max) in crate::crafting::FERAL_DOG_LOOT {
+        dog_inventory.add(item, dog_rng.gen_range(min..=max));
+    }
 
     ecs_world.spawn((
         Position { x, y, z },

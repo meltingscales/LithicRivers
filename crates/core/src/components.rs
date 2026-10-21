@@ -156,7 +156,9 @@ pub struct BlocksMovement;
 // Items & Inventory Components
 // -----------------------------
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, Eq, PartialEq, Hash, EnumIter)]
+#[derive(
+    Debug, Clone, Copy, Serialize, Deserialize, Eq, PartialEq, Hash, PartialOrd, Ord, EnumIter,
+)]
 pub enum ItemKind {
     Log,
     WoodenPlank,
@@ -173,6 +175,7 @@ pub enum ItemKind {
     Meat,
     PlankBlock,
     Chest,
+    IronScrap,
 }
 
 pub fn itemkind_name(kind: ItemKind) -> &'static str {
@@ -193,6 +196,7 @@ pub fn itemkind_name(kind: ItemKind) -> &'static str {
         ItemKind::Meat => "Meat",
         ItemKind::PlankBlock => "Plank Block",
         ItemKind::Chest => "Chest",
+        ItemKind::IronScrap => "Iron Scrap",
     }
 }
 
@@ -214,6 +218,7 @@ pub fn itemkind_sprite_name(kind: ItemKind) -> &'static str {
         ItemKind::Meat => "meat",
         ItemKind::PlankBlock => "plank_block",
         ItemKind::Chest => "chest",
+        ItemKind::IronScrap => "iron_scrap",
     }
 }
 
@@ -235,6 +240,7 @@ pub fn parse_itemkind_from_sprite_name(sprite_name: &str) -> Option<ItemKind> {
         "meat" => Some(ItemKind::Meat),
         "plank_block" => Some(ItemKind::PlankBlock),
         "chest" => Some(ItemKind::Chest),
+        "iron_scrap" => Some(ItemKind::IronScrap),
         _ => None,
     }
 }

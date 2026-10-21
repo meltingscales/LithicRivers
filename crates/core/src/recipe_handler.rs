@@ -59,6 +59,27 @@ impl RecipeHandler {
                 result: ItemKind::Torch,
                 quantity: 4,
             },
+            // 8 nails: 1x iron scrap
+            Recipe {
+                name: "Nails",
+                ingredients: &[(ItemKind::IronScrap, 1)],
+                result: ItemKind::Nail,
+                quantity: 8,
+            },
+            // 4 string: 1x leather
+            Recipe {
+                name: "String",
+                ingredients: &[(ItemKind::Leather, 1)],
+                result: ItemKind::String,
+                quantity: 4,
+            },
+            // Chest: 8x wooden plank + 4x nail
+            Recipe {
+                name: "Chest",
+                ingredients: &[(ItemKind::WoodenPlank, 8), (ItemKind::Nail, 4)],
+                result: ItemKind::Chest,
+                quantity: 1,
+            },
         ];
 
         Self { recipes }
