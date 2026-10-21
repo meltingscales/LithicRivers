@@ -24,11 +24,14 @@ pub const MACHINE_CAPACITY: u32 = 16;
 /// Item stacks a machine's inventory has room for.
 pub const MACHINE_SLOTS: usize = 4;
 /// What each machine draws while it works, in watts.
-pub const PLANTER_W: u64 = 30_000;
-pub const HARVESTER_W: u64 = 60_000;
+/// Planting costs 0.24 MJ and a chop 1.08 MJ, against about 5 MJ of logs from a tree, so a
+/// farm returns about 4x its fuel. Together they need 240 kW: more than one burner
+/// generator (90 kW) gives, so power planning matters.
+pub const PLANTER_W: u64 = 60_000;
+pub const HARVESTER_W: u64 = 180_000;
 /// Game seconds per action at full power.
-pub const PLANT_SECONDS: u64 = 2;
-pub const CHOP_SECONDS: u64 = 3;
+pub const PLANT_SECONDS: u64 = 4;
+pub const CHOP_SECONDS: u64 = 6;
 
 /// A machine's progress towards its next action, in per-mille steps: full power adds 1000
 /// each factory step.
@@ -275,17 +278,16 @@ mod tests {
         factory::place(&mut g.world, &mut g.res, kind, pos, facing).expect("placed")
     }
 
-    /// A pole at `pole` and a generator beside it with ten logs; returns the generator.
+    /// A pole at `pole` and two generators beside it (180 kW, enough to run a harvester at
+    /// full speed) with ten logs each; returns the first generator.
     fn power(game: &mut TestGame, pole: Position) -> Entity {
         put(game, FactoryKind::PowerPole, pole, Facing::North);
-        let generator = put(
-            game,
-            FactoryKind::BurnerGenerator,
-            at(pole.x, pole.y + 1),
-            Facing::North,
-        );
-        give(game, generator, ItemKind::Log, 10);
-        generator
+        let generators = [at(pole.x, pole.y + 1), at(pole.x, pole.y - 1)]
+            .map(|pos| put(game, FactoryKind::BurnerGenerator, pos, Facing::North));
+        for g in generators {
+            give(game, g, ItemKind::Log, 10);
+        }
+        generators[0]
     }
 
     fn give(game: &mut TestGame, entity: Entity, item: ItemKind, qty: u32) {
@@ -338,13 +340,13 @@ mod tests {
     // --- 1.2 auto-planter --------------------------------------------------------------
 
     #[test]
-    fn planter_plants_in_fixed_order_every_two_seconds() {
+    fn planter_plants_in_fixed_order_once_per_action() {
         let mut game = field();
         let planter = put(&mut game, FactoryKind::AutoPlanter, at(0, 0), Facing::North);
         power(&mut game, at(3, 0));
         give(&mut game, planter, ItemKind::Acorn, 3);
-        seconds(&mut game, 5);
-        assert_eq!(saplings(&game).len(), 2, "two in five seconds");
+        seconds(&mut game, 3 * PLANT_SECONDS - 1);
+        assert_eq!(saplings(&game).len(), 2, "two before the third action ends");
         seconds(&mut game, 1);
         assert_eq!(saplings(&game), [at(-2, -2), at(-1, -2), at(0, -2)]);
         assert_eq!(count(&game, planter, ItemKind::Acorn), 0);
@@ -437,8 +439,12 @@ mod tests {
         put(&mut game, FactoryKind::Belt, at(1, 0), Facing::East);
         let chest = put(&mut game, FactoryKind::Chest, at(2, 0), Facing::North);
         power(&mut game, at(0, 3));
-        seconds(&mut game, 3);
-        assert_eq!(game.tile(-2, -2, 0), TileKind::Dirt, "chopped in 3 s");
+        seconds(&mut game, CHOP_SECONDS);
+        assert_eq!(
+            game.tile(-2, -2, 0),
+            TileKind::Dirt,
+            "chopped in one action"
+        );
         seconds(&mut game, 10);
         let mut delivered: Vec<(ItemKind, u32)> = [ItemKind::Acorn, ItemKind::Log]
             .into_iter()
@@ -548,17 +554,19 @@ mod tests {
 
     #[test]
     fn half_power_doubles_action_time_and_no_power_stops_work() {
-        // Three harvesters (180 kW) on one 90 kW generator: each gets half
+        // A harvester (180 kW) on one 90 kW generator gets half
         let mut game = field();
-        let corners = [at(-3, -3), at(3, -3), at(3, 3)];
-        for c in corners {
-            put(&mut game, FactoryKind::AutoHarvester, c, Facing::North);
-            game.game
-                .res
-                .world_state
-                .world
-                .set_tile_cached(c.x - 2, c.y - 2, 0, TileKind::Tree);
-        }
+        put(
+            &mut game,
+            FactoryKind::AutoHarvester,
+            at(3, 3),
+            Facing::North,
+        );
+        game.game
+            .res
+            .world_state
+            .world
+            .set_tile_cached(1, 1, 0, TileKind::Tree);
         put(&mut game, FactoryKind::PowerPole, at(0, 0), Facing::North);
         let generator = put(
             &mut game,
@@ -567,22 +575,15 @@ mod tests {
             Facing::North,
         );
         give(&mut game, generator, ItemKind::Log, 10);
-        seconds(&mut game, 5);
-        for c in corners {
-            assert_eq!(
-                game.tile(c.x - 2, c.y - 2, 0),
-                TileKind::Tree,
-                "{c:?} at 5 s"
-            );
-        }
+        assert_eq!(HARVESTER_W, 2 * crate::power::BURNER_MAX_W);
+        seconds(&mut game, 2 * CHOP_SECONDS - 1);
+        assert_eq!(game.tile(1, 1, 0), TileKind::Tree, "not yet at half speed");
         seconds(&mut game, 1);
-        for c in corners {
-            assert_eq!(
-                game.tile(c.x - 2, c.y - 2, 0),
-                TileKind::Dirt,
-                "{c:?} at 6 s"
-            );
-        }
+        assert_eq!(
+            game.tile(1, 1, 0),
+            TileKind::Dirt,
+            "twice the full-power time"
+        );
 
         // No pole: nothing happens
         let mut game = field();
@@ -633,7 +634,7 @@ mod tests {
             Facing::North,
         );
         power(&mut game, at(edge - 3, edge));
-        seconds(&mut game, 3 * trees.len() as u64);
+        seconds(&mut game, CHOP_SECONDS * trees.len() as u64);
         for t in trees {
             assert_eq!(game.tile(t.x, t.y, 0), TileKind::Dirt, "{t:?}");
         }

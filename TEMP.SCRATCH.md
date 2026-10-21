@@ -19,6 +19,10 @@ Ask for "Add an openspec feat that adds XYZ" or "Bugfix: Something not rendering
 
 <!-- ACTIONED ON ALREADY -->
 
+- FIXED (fix/machine-power-on-logistics): auto-planters and auto-harvesters drew almost nothing (a farm returned ~20x its fuel at ~2 kW average). Now the planter draws 60 kW for 4 s per acorn and the harvester 180 kW for 6 s per chop; together they need more than one burner generator, and a tree returns ~4x its cost
+
+- PROPOSED as `add-demo-mode`: Watch Demo on the title screen; scripted explore / combat / build / factory scenarios cut together in a loop under a scrolling red CICADAMATA-style "DEMO" banner; Escape returns to the title
+
 - DONE (feature/chest-take-all): "Take all" keybind (`ui.TAKE_ALL`, `a`) in chest, corpse, generator and machine windows
 
 - PROPOSED as `add-factory-stats`: power graph per network in the pole info box (last 60 s / 10 min), item produced/consumed counts by source, and a Production tab
