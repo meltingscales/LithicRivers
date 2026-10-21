@@ -74,6 +74,8 @@ Factory blocks: `cheat giveitem chest 1`, then `key build.TOGGLE_BREAK_PLACE_MOD
 
 To set up a fight, spawn the enemy instead of relying on where the starting world places creatures: `cheat spawn_enemy feral_dog` then `key movement.WAIT` (feral dogs chase the player, so combat starts on that turn).
 
+In Rust tests, build a run from a list of steps with `headless::chain_commands(&["skip-splash", "cheat tp 0 0 0"])` (seed 12345, 100x30) and continue it with `runner.chain(&["key movement.WAIT"])`; both fail the test with the step's error.
+
 Exit status: 0 ok, 1 script error (including a cheat that fails), 2 failed `expect-text`. The same script, seed and build always print identical output, so all time-dependent behavior and rendering must read time from `app.clock`, never `Instant::now()` or `SystemTime::now()`.
 
 ### Snapshot tests (catching UI regressions)
