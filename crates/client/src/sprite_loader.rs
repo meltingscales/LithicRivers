@@ -327,7 +327,8 @@ impl SpriteLoader {
                     i
                 );
             }
-            let line_lengths: Vec<usize> = lines.iter().map(|l| l.len()).collect();
+            // Characters, not bytes, so box-drawing and block characters count as one column
+            let line_lengths: Vec<usize> = lines.iter().map(|l| l.chars().count()).collect();
             let width = line_lengths[0];
             if line_lengths.iter().any(|&len| len != width) {
                 panic!(
@@ -363,7 +364,8 @@ impl SpriteLoader {
                     i + 1
                 );
             }
-            let line_lengths: Vec<usize> = lines.iter().map(|l| l.len()).collect();
+            // Characters, not bytes, so box-drawing and block characters count as one column
+            let line_lengths: Vec<usize> = lines.iter().map(|l| l.chars().count()).collect();
             if line_lengths.iter().any(|&len| len != line_lengths[0]) {
                 panic!(
                     "Sprite '{}' in '{}' category has inconsistent line lengths at scale {}. All lines must have the same width for square sprites.",
@@ -424,6 +426,89 @@ pub fn parse_color_string(s: &str) -> Option<Color> {
 }
 
 // Fluids removed
+
+/// Whether 12x8 art is still the placeholder box: more than half its characters are `x`.
+#[cfg(test)]
+pub fn is_placeholder_art(art: &str) -> bool {
+    let chars: Vec<char> = art.chars().filter(|c| *c != '\n').collect();
+    chars.iter().filter(|&&c| c == 'x').count() * 2 > chars.len()
+}
+
+#[cfg(test)]
+impl SpriteLoader {
+    /// Every embedded sprite as (category, name), sorted.
+    pub fn all_sprite_names() -> Vec<(String, String)> {
+        let mut seen = std::collections::BTreeSet::new();
+        for file in EmbeddedAssets::iter() {
+            let parts: Vec<&str> = file.as_ref().split('/').collect();
+            if parts.len() >= 4 && parts[0] == "sprites" {
+                if let Some(name) = parts[2].strip_suffix(".lrsprite") {
+                    seen.insert((parts[1].to_string(), name.to_string()));
+                }
+            }
+        }
+        seen.into_iter().collect()
+    }
+
+    /// Every sprite with its color, small sizes and every 12x8 art entry, as plain text.
+    pub fn gallery(&mut self) -> String {
+        let mut out = String::new();
+        for (category, name) in Self::all_sprite_names() {
+            let sd = self.load_sprite(&name, &category).clone();
+            out.push_str(&format!(
+                "=== {category}/{name}  {}  {}\n",
+                sd.color, sd.description
+            ));
+            for (i, sprite) in sd.sprites.iter().enumerate() {
+                out.push_str(&format!("-- {}x\n{sprite}\n", i + 1));
+            }
+            for (i, art) in sd.art12x8_sprites.iter().enumerate() {
+                out.push_str(&format!("-- art {i}\n{}\n", art.trim_end_matches('\n')));
+            }
+        }
+        out
+    }
+}
+
+#[cfg(test)]
+mod art_tests {
+    use super::*;
+
+    #[test]
+    fn no_sprite_has_placeholder_art() {
+        let mut loader = SpriteLoader::new(None);
+        let placeholders: Vec<String> = SpriteLoader::all_sprite_names()
+            .into_iter()
+            .filter(|(category, name)| {
+                let sd = loader.load_sprite(name, category);
+                sd.art12x8_sprites.iter().any(|a| is_placeholder_art(a))
+            })
+            .map(|(category, name)| format!("{category}/{name}"))
+            .collect();
+        assert!(
+            placeholders.is_empty(),
+            "{} sprites still have placeholder 12x8 art (see docs/ART-DIRECTION.md): {}",
+            placeholders.len(),
+            placeholders.join(", ")
+        );
+    }
+
+    #[test]
+    fn placeholder_detection() {
+        assert!(is_placeholder_art("xxxxxxxxxxxx\nxxxxCHARxxxx"));
+        assert!(!is_placeholder_art("   ▄████▄   \n  ██▓▓▓▓██  "));
+    }
+
+    /// Every sprite at every size, so art changes show up as snapshot diffs.
+    #[test]
+    fn sprite_gallery() {
+        let mut loader = SpriteLoader::new(None);
+        // A fixed name: demo binaries include this file under other module paths
+        let mut settings = insta::Settings::clone_current();
+        settings.set_prepend_module_to_snapshot(false);
+        settings.bind(|| insta::assert_snapshot!("sprite_gallery", loader.gallery()));
+    }
+}
 
 #[cfg(test)]
 mod line_ending_tests {
