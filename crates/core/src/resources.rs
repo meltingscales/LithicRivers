@@ -158,6 +158,9 @@ pub struct Resources {
     /// Power networks; rebuilt from the factory blocks when dirty
     #[serde(default)]
     pub power: crate::power::PowerNetworks,
+    /// Factory steps the player has stood on a belt since it last carried them
+    #[serde(default)]
+    pub belt_ride_steps: u8,
 }
 
 impl Resources {
@@ -180,6 +183,7 @@ impl Resources {
             factory_index: HashMap::new(),
             factory_clock: crate::factory::FactoryClock::default(),
             power: crate::power::PowerNetworks::default(),
+            belt_ride_steps: 0,
         }
     }
 

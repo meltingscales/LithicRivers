@@ -3,6 +3,7 @@
 mod action_selection;
 mod cheat_console;
 mod corpse_looting;
+mod filter_picker;
 mod furnace_window;
 mod hotbar_assignment;
 mod npc_interaction;
@@ -11,6 +12,7 @@ mod power_info;
 pub(crate) use action_selection::render_multi_action_selection_modal;
 pub(crate) use cheat_console::render_cheat_console_modal;
 pub(crate) use corpse_looting::render_corpse_looting_modals;
+pub(crate) use filter_picker::render_filter_picker;
 pub(crate) use furnace_window::render_furnace_window;
 pub(crate) use hotbar_assignment::render_hotbar_assignment_modal;
 pub(crate) use npc_interaction::render_npc_interaction_modals;

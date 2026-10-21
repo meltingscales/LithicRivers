@@ -183,6 +183,13 @@ pub fn nearby_interactions(app: &App) -> Option<NearbyInteractions> {
             FactoryKind::CrudeFurnace => {
                 available_actions.push(InteractionType::OpenFurnace { entity, position })
             }
+            FactoryKind::FilterExtractor | FactoryKind::BeltRouter => {
+                available_actions.push(InteractionType::SetFilter {
+                    entity,
+                    position,
+                    kind: block.kind,
+                })
+            }
             FactoryKind::AutoPlanter | FactoryKind::AutoHarvester => {
                 available_actions.push(InteractionType::OpenMachine {
                     entity,
@@ -432,6 +439,20 @@ pub fn execute_interaction_action(app: &mut App, action: &crate::app_state::Inte
         }
         InteractionType::InspectPole { entity, .. } => {
             app.panels.power_info = Some(*entity);
+        }
+        InteractionType::SetFilter { entity, .. } => {
+            // Start on the current filter
+            let current = lithicrivers_core::logistics::filter(&app.core.game.world, *entity);
+            let selected = current.map_or(0, |item| {
+                use strum::IntoEnumIterator;
+                1 + lithicrivers_core::components::ItemKind::iter()
+                    .position(|i| i == item)
+                    .unwrap_or(0)
+            });
+            app.panels.filter_picker = Some(crate::app_state::FilterPicker {
+                entity: *entity,
+                selected,
+            });
         }
         InteractionType::OpenFurnace { entity, .. } => {
             app.panels.furnace_window = Some(crate::app_state::FurnaceWindow {

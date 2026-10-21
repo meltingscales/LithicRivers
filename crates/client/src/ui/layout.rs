@@ -183,6 +183,7 @@ pub(crate) fn ui(f: &mut Frame, app: &mut App) {
     // Render the power pole info box if open
     crate::ui::modals::render_power_info_modal(f, app);
     crate::ui::modals::render_furnace_window(f, app);
+    crate::ui::modals::render_filter_picker(f, app);
 
     // Render repair modal if active
     if matches!(

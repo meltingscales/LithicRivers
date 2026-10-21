@@ -314,6 +314,82 @@ pPp
   ║ ▓ ║ ▓ ║ 
   ║   ║   ║ 
             
+=== factory/belt_router_east  #9C6B30  A wooden junction that deals items left, straight and right in turn
+-- 1x
+╬
+-- 2x
+╬→
+╬→
+-- 3x
+ ║ 
+═╬→
+ ║ 
+-- art 0
+     ▲      
+     ║      
+   ┌─╨─┐    
+═══╡ ╬ ╞══► 
+   └─╥─┘    
+     ║      
+     ▼      
+            
+=== factory/belt_router_north  #9C6B30  A wooden junction that deals items left, straight and right in turn
+-- 1x
+╬
+-- 2x
+╬↑
+╬↑
+-- 3x
+ ║ 
+═╬↑
+ ║ 
+-- art 0
+     ▲      
+     ║      
+   ┌─╨─┐    
+◄══╡ ╬ ╞══► 
+   └─╥─┘    
+     ║      
+     ║      
+            
+=== factory/belt_router_south  #9C6B30  A wooden junction that deals items left, straight and right in turn
+-- 1x
+╬
+-- 2x
+╬↓
+╬↓
+-- 3x
+ ║ 
+═╬↓
+ ║ 
+-- art 0
+     ║      
+     ║      
+   ┌─╨─┐    
+◄══╡ ╬ ╞══► 
+   └─╥─┘    
+     ║      
+     ▼      
+            
+=== factory/belt_router_west  #9C6B30  A wooden junction that deals items left, straight and right in turn
+-- 1x
+╬
+-- 2x
+╬←
+╬←
+-- 3x
+ ║ 
+═╬←
+ ║ 
+-- art 0
+      ▲     
+      ║     
+    ┌─╨─┐   
+ ◄══╡ ╬ ╞═══
+    └─╥─┘   
+      ║     
+      ▼     
+            
 === factory/belt_south  #9C6B30  A wooden conveyor belt facing south
 -- 1x
 v
@@ -542,6 +618,158 @@ f<
   █▓└──┘▓▓█ 
   ▀▀▀▀▀▀▀▀▀ 
             
+=== factory/extractor_east  #D4A017  A salvaged grabber arm: pulls one item a second from behind and drops it ahead
+-- 1x
+→
+-- 2x
+▐→
+▐→
+-- 3x
+▐═→
+▐ →
+▐═→
+-- art 0
+            
+  ┌──┐      
+  │▓▓├──╮   
+══╡▓▓│  ╰─► 
+  │▓▓├──╯   
+  └──┘      
+            
+            
+=== factory/extractor_north  #D4A017  A salvaged grabber arm: pulls one item a second from behind and drops it ahead
+-- 1x
+↑
+-- 2x
+▐↑
+▐↑
+-- 3x
+▐═↑
+▐ ↑
+▐═↑
+-- art 0
+    ▲       
+   ╭┴╮      
+   │ │      
+  ┌┴─┴┐     
+  │▓▓▓│     
+  └─╥─┘     
+    ║       
+            
+=== factory/extractor_south  #D4A017  A salvaged grabber arm: pulls one item a second from behind and drops it ahead
+-- 1x
+↓
+-- 2x
+▐↓
+▐↓
+-- 3x
+▐═↓
+▐ ↓
+▐═↓
+-- art 0
+    ║       
+  ┌─╨─┐     
+  │▓▓▓│     
+  └┬─┬┘     
+   │ │      
+   ╰┬╯      
+    ▼       
+            
+=== factory/extractor_west  #D4A017  A salvaged grabber arm: pulls one item a second from behind and drops it ahead
+-- 1x
+←
+-- 2x
+▐←
+▐←
+-- 3x
+▐═←
+▐ ←
+▐═←
+-- art 0
+            
+      ┌──┐  
+   ╭──┤▓▓│  
+ ◄─╯  │▓▓╞══
+   ╰──┤▓▓│  
+      └──┘  
+            
+            
+=== factory/filter_extractor_east  #4FC3F7  A grabber arm with a sorting eye: moves only the item it's set to
+-- 1x
+→
+-- 2x
+◘→
+◘→
+-- 3x
+▐◘→
+▐ →
+▐◘→
+-- art 0
+            
+  ┌──┐      
+  │◘▓├──╮   
+══╡▓▓│  ╰─► 
+  │◘▓├──╯   
+  └──┘      
+            
+            
+=== factory/filter_extractor_north  #4FC3F7  A grabber arm with a sorting eye: moves only the item it's set to
+-- 1x
+↑
+-- 2x
+◘↑
+◘↑
+-- 3x
+▐◘↑
+▐ ↑
+▐◘↑
+-- art 0
+    ▲       
+   ╭┴╮      
+   │ │      
+  ┌┴─┴┐     
+  │▓◘▓│     
+  └─╥─┘     
+    ║       
+            
+=== factory/filter_extractor_south  #4FC3F7  A grabber arm with a sorting eye: moves only the item it's set to
+-- 1x
+↓
+-- 2x
+◘↓
+◘↓
+-- 3x
+▐◘↓
+▐ ↓
+▐◘↓
+-- art 0
+    ║       
+  ┌─╨─┐     
+  │▓◘▓│     
+  └┬─┬┘     
+   │ │      
+   ╰┬╯      
+    ▼       
+            
+=== factory/filter_extractor_west  #4FC3F7  A grabber arm with a sorting eye: moves only the item it's set to
+-- 1x
+←
+-- 2x
+◘←
+◘←
+-- 3x
+▐◘←
+▐ ←
+▐◘←
+-- art 0
+            
+      ┌──┐  
+   ╭──┤▓◘│  
+ ◄─╯  │▓▓╞══
+   ╰──┤▓◘│  
+      └──┘  
+            
+            
 === factory/power_pole  #E5B53A  Links to poles within 8 tiles and powers blocks within 3
 -- 1x
 +
@@ -713,6 +941,25 @@ pPp
  ▀▀▀▀▀▀▀▀▀▀ 
             
             
+=== items/belt_router  #9C6B30  A wooden junction that deals items left, straight and right in turn
+-- 1x
+╬
+-- 2x
+╬→
+╬→
+-- 3x
+ ║ 
+═╬→
+ ║ 
+-- art 0
+     ▲      
+     ║      
+   ┌─╨─┐    
+═══╡ ╬ ╞══► 
+   └─╥─┘    
+     ║      
+     ▼      
+            
 === items/biochar  #3D3D3D  Smelted wood: a dense fuel for furnaces and generators
 -- 1x
 *
@@ -807,6 +1054,44 @@ ddd
    ╲  ╳  ╱  
     ╲ │ ╱   
      ╲│╱    
+            
+=== items/extractor  #D4A017  A salvaged grabber arm: pulls one item a second from behind and drops it ahead
+-- 1x
+→
+-- 2x
+▐→
+▐→
+-- 3x
+▐═→
+▐ →
+▐═→
+-- art 0
+            
+  ┌──┐      
+  │▓▓├──╮   
+══╡▓▓│  ╰─► 
+  │▓▓├──╯   
+  └──┘      
+            
+            
+=== items/filter_extractor  #4FC3F7  A grabber arm with a sorting eye: moves only the item it's set to
+-- 1x
+→
+-- 2x
+◘→
+◘→
+-- 3x
+▐◘→
+▐ →
+▐◘→
+-- art 0
+            
+  ┌──┐      
+  │◘▓├──╮   
+══╡▓▓│  ╰─► 
+  │◘▓├──╯   
+  └──┘      
+            
             
 === items/gold_nugget  #FFFF00  A valuable gold nugget
 -- 1x

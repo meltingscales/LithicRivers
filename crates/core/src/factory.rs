@@ -87,6 +87,12 @@ pub enum FactoryKind {
     AutoHarvester,
     /// Burns fuel to smelt wood into biochar; fed from its back and sides
     CrudeFurnace,
+    /// Moves items from the block behind it into the block in front
+    Extractor,
+    /// An extractor that moves only one item kind
+    FilterExtractor,
+    /// Splits a belt line in turn, or sorts one item kind to the left
+    BeltRouter,
     /// A consumer that does nothing but draw power, for grid tests
     #[cfg(any(test, feature = "test-support"))]
     TestConsumer,
@@ -106,6 +112,9 @@ impl FactoryKind {
             ItemKind::AutoPlanter => Some(FactoryKind::AutoPlanter),
             ItemKind::AutoHarvester => Some(FactoryKind::AutoHarvester),
             ItemKind::CrudeFurnace => Some(FactoryKind::CrudeFurnace),
+            ItemKind::Extractor => Some(FactoryKind::Extractor),
+            ItemKind::FilterExtractor => Some(FactoryKind::FilterExtractor),
+            ItemKind::BeltRouter => Some(FactoryKind::BeltRouter),
             _ => None,
         }
     }
@@ -120,6 +129,9 @@ impl FactoryKind {
             FactoryKind::AutoPlanter => Some(ItemKind::AutoPlanter),
             FactoryKind::AutoHarvester => Some(ItemKind::AutoHarvester),
             FactoryKind::CrudeFurnace => Some(ItemKind::CrudeFurnace),
+            FactoryKind::Extractor => Some(ItemKind::Extractor),
+            FactoryKind::FilterExtractor => Some(ItemKind::FilterExtractor),
+            FactoryKind::BeltRouter => Some(ItemKind::BeltRouter),
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestConsumer => None,
             #[cfg(any(test, feature = "test-support"))]
@@ -136,6 +148,9 @@ impl FactoryKind {
             FactoryKind::AutoPlanter => "auto-planter",
             FactoryKind::AutoHarvester => "auto-harvester",
             FactoryKind::CrudeFurnace => "crude furnace",
+            FactoryKind::Extractor => "extractor",
+            FactoryKind::FilterExtractor => "filter extractor",
+            FactoryKind::BeltRouter => "belt router",
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestConsumer => "test consumer",
             #[cfg(any(test, feature = "test-support"))]
@@ -147,7 +162,12 @@ impl FactoryKind {
     pub fn directional(self) -> bool {
         match self {
             FactoryKind::Chest => false,
-            FactoryKind::Belt | FactoryKind::AutoHarvester | FactoryKind::CrudeFurnace => true,
+            FactoryKind::Belt
+            | FactoryKind::AutoHarvester
+            | FactoryKind::CrudeFurnace
+            | FactoryKind::Extractor
+            | FactoryKind::FilterExtractor
+            | FactoryKind::BeltRouter => true,
             FactoryKind::AutoPlanter => false,
             FactoryKind::BurnerGenerator | FactoryKind::PowerPole => false,
             #[cfg(any(test, feature = "test-support"))]
@@ -185,6 +205,15 @@ impl FactoryKind {
                 SpriteRef::new("factory", &format!("auto_harvester_{}", facing.name()))
             }
             FactoryKind::CrudeFurnace => crate::furnace::sprite(facing, false),
+            FactoryKind::Extractor => {
+                SpriteRef::new("factory", &format!("extractor_{}", facing.name()))
+            }
+            FactoryKind::FilterExtractor => {
+                SpriteRef::new("factory", &format!("filter_extractor_{}", facing.name()))
+            }
+            FactoryKind::BeltRouter => {
+                SpriteRef::new("factory", &format!("belt_router_{}", facing.name()))
+            }
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestConsumer => SpriteRef::new("factory", "chest"),
             #[cfg(any(test, feature = "test-support"))]
@@ -278,6 +307,12 @@ pub fn place(
         FactoryKind::CrudeFurnace => {
             builder.add(crate::furnace::Furnace::default());
         }
+        FactoryKind::Extractor | FactoryKind::FilterExtractor => {
+            builder.add(crate::logistics::Extractor::default());
+        }
+        FactoryKind::BeltRouter => {
+            builder.add(crate::logistics::Router::default());
+        }
         FactoryKind::AutoPlanter | FactoryKind::AutoHarvester => {
             builder.add(crate::machines::Machine::default());
             builder.add(crate::power::PowerConsumer::idle(
@@ -322,6 +357,13 @@ pub fn break_block(
     }
     if let Ok(furnace) = world.get::<&crate::furnace::Furnace>(entity) {
         contents.extend(furnace.slots().into_iter().flatten());
+    }
+    if let Some(item) = world
+        .get::<&crate::logistics::Router>(entity)
+        .ok()
+        .and_then(|r| r.item)
+    {
+        contents.push(crate::components::ItemStack::new(item, 1));
     }
     let _ = world.despawn(entity);
     if crate::power::is_grid_block(block.kind) {
@@ -449,7 +491,7 @@ pub fn move_all_items(world: &mut World, from: Entity, to: Entity) -> u32 {
 
 /// Run every factory step that fits in the ticks elapsed since the last call. Each step runs
 /// the factory systems in a fixed order (growth, machine demand, power, machines, furnaces,
-/// belts)
+/// extractors, routers, belts, then carrying the player along belts)
 /// over everything, wherever it is.
 pub fn run_due_steps(world: &mut World, res: &mut Resources) {
     let clock = &mut res.factory_clock;
@@ -466,7 +508,10 @@ pub fn run_due_steps(world: &mut World, res: &mut Resources) {
         crate::power::step_power(world, res);
         crate::machines::step_machines(world, res);
         crate::furnace::step_furnaces(world, res);
+        crate::logistics::step_extractors(world, res);
+        crate::logistics::step_routers(world, res);
         step_belts(world, res);
+        crate::logistics::carry_player(world, res);
         res.factory_clock.steps += 1;
     }
 }
@@ -511,6 +556,11 @@ pub fn accepts_from(
         FactoryKind::CrudeFurnace => {
             return crate::furnace::accepts(world, target, block.facing, item, heading)
         }
+        FactoryKind::BeltRouter => {
+            return crate::logistics::router_accepts(world, target, block.facing, heading)
+        }
+        // Extractors only pass items through
+        FactoryKind::Extractor | FactoryKind::FilterExtractor => return false,
         FactoryKind::BurnerGenerator if crate::power::fuel_energy(item).is_none() => return false,
         FactoryKind::AutoPlanter | FactoryKind::AutoHarvester => {
             return crate::machines::accepts_input(world, target, block.kind, item)
@@ -543,6 +593,10 @@ pub fn insert_from(
         (world.get::<&mut crate::furnace::Furnace>(target), facing)
     {
         furnace.insert(facing, item, heading);
+        return true;
+    }
+    if let Ok(mut router) = world.get::<&mut crate::logistics::Router>(target) {
+        router.item = Some(item);
         return true;
     }
     if let Ok(mut belt) = world.get::<&mut BeltSlot>(target) {
