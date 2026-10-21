@@ -115,6 +115,8 @@ saved_components! {
     "power_consumer" => crate::power::PowerConsumer,
     "machine" => crate::machines::Machine,
     "furnace" => crate::furnace::Furnace,
+    "extractor" => crate::logistics::Extractor,
+    "router" => crate::logistics::Router,
 }
 
 /// Entities that carry a component type the registry doesn't know, described by the
@@ -502,6 +504,14 @@ mod tests {
             (
                 crate::factory::FactoryKind::CrudeFurnace,
                 Position { x: 7, y: -4, z: 0 },
+            ),
+            (
+                crate::factory::FactoryKind::FilterExtractor,
+                Position { x: 8, y: -4, z: 0 },
+            ),
+            (
+                crate::factory::FactoryKind::BeltRouter,
+                Position { x: 9, y: -4, z: 0 },
             ),
         ] {
             crate::factory::place(

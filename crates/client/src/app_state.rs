@@ -115,6 +115,14 @@ pub struct ItemDictionaryState {
     pub searching: bool,
 }
 
+/// The filter picker of a filter extractor or belt router: row 0 is "no filter", then
+/// every item.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct FilterPicker {
+    pub entity: hecs::Entity,
+    pub selected: usize,
+}
+
 /// All UI panel-specific states grouped by functionality
 pub struct PanelStates {
     /// The power pole whose network info box is open
@@ -122,6 +130,7 @@ pub struct PanelStates {
     /// The open furnace window, if any
     pub furnace_window: Option<FurnaceWindow>,
     pub item_dictionary: ItemDictionaryState,
+    pub filter_picker: Option<FilterPicker>,
     pub inventory: InventoryPanelState,
     pub crafting: CraftingPanelState,
     pub credits: CreditsPanelState,
@@ -406,6 +415,12 @@ pub enum InteractionType {
         position: Position,
         kind: lithicrivers_core::factory::FactoryKind,
     },
+    /// Set a filter extractor's or belt router's filter
+    SetFilter {
+        entity: hecs::Entity,
+        position: Position,
+        kind: lithicrivers_core::factory::FactoryKind,
+    },
     /// Open a furnace's window
     OpenFurnace {
         entity: hecs::Entity,
@@ -436,6 +451,7 @@ impl InteractionType {
             | InteractionType::OpenGenerator { position, .. }
             | InteractionType::OpenMachine { position, .. }
             | InteractionType::OpenFurnace { position, .. }
+            | InteractionType::SetFilter { position, .. }
             | InteractionType::InspectPole { position, .. }
             | InteractionType::LoadBelt { position, .. } => *position,
         }
@@ -466,6 +482,7 @@ impl InteractionType {
             InteractionType::OpenGenerator { .. } => "Fuel generator".to_string(),
             InteractionType::OpenMachine { kind, .. } => format!("Open {}", kind.name()),
             InteractionType::OpenFurnace { .. } => "Open crude furnace".to_string(),
+            InteractionType::SetFilter { kind, .. } => format!("Set {} filter", kind.name()),
             InteractionType::InspectPole { .. } => "Inspect power pole".to_string(),
             InteractionType::LoadBelt { item, .. } => format!(
                 "Put {} on belt",
@@ -504,6 +521,7 @@ impl InteractionType {
             InteractionType::OpenGenerator { .. } => "G",
             InteractionType::OpenMachine { .. } => "M",
             InteractionType::OpenFurnace { .. } => "F",
+            InteractionType::SetFilter { .. } => "?",
             InteractionType::InspectPole { .. } => "+",
             InteractionType::LoadBelt { .. } => ">", // onto the belt
             InteractionType::OpenCloseDoor { is_open, .. } => {

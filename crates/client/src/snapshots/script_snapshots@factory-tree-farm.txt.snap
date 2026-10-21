@@ -10,9 +10,9 @@ input_file: scripts/snapshots/factory-tree-farm.txt
 #######################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#vvvvvvvvvvv└──────────────────────┘
 ########################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Inventory─────────────┐
 ########################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Nail x10              │
-###############┌────────────── Auto-Planter - working 0%, power 100% ───────────────┐              │
-###############│┌ Acorns (11/16) ────────────────┐┌ Your Items ────────────────────┐│              │
-###############││11 x Acorn                      ││10 x Nail                       ││──────────────┘
+###############┌────────────── Auto-Planter - working 50%, power 100% ──────────────┐              │
+###############│┌ Acorns (14/16) ────────────────┐┌ Your Items ────────────────────┐│              │
+###############││14 x Acorn                      ││10 x Nail                       ││──────────────┘
 ###############││                                ││ 2 x Stick                      ││──────────────┐
 ###############││                                ││ 3 x Torch                      ││              │
 ###############││                                ││ 2 x String                     ││              │
@@ -40,10 +40,10 @@ input_file: scripts/snapshots/factory-tree-farm.txt
 ######################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌MODES─────────────────┐
 #######################vvvvvvvvvvvvvGvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  ------ - - -- - FOG │
 #######################vvvvvvvvvvvvvv+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
-########################vvvvvvvvvvvt,,,,vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Inventory─────────────┐
-########################vvvvvvvvvvvt,,,,vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Nail x10              │
-#########################vvvvvvvvvvt,pH>>Cvvvvvvvvvvvtttvvvtvvvvvvvvvvvvvvvv│Stick x2              │
-##########################vvvvvvvvvt,,,vvvvvvvvvvvvvvtvtttttvvvvvvvvvvvvvvvv│Torch x3              │
+########################vvvvvvvvvvvt,tt,vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Inventory─────────────┐
+########################vvvvvvvvvvvtttttvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Nail x10              │
+#########################vvvvvvvvvvttpH>>Cvvvvvvvvvvvtttvvvtvvvvvvvvvvvvvvvv│Stick x2              │
+##########################vvvvvvvvvttttvvvvvvvvvvvvvvtvtttttvvvvvvvvvvvvvvvv│Torch x3              │
 ##########################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvtttvvvvvvvvvvvvvvvv└──────────────────────┘
 ###########################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvttvvvvvvvvvvvvvvvvvv┌Help (h)──────────────┐
 ###########################vvvvvvvvvvv@vvvvvvvvvvvvvvvvvtttvvvvvvvvvvvvvvvvv│Move:                 │

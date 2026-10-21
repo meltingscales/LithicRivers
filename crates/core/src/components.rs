@@ -183,6 +183,9 @@ pub enum ItemKind {
     AutoHarvester,
     Biochar,
     CrudeFurnace,
+    Extractor,
+    FilterExtractor,
+    BeltRouter,
 }
 
 pub fn itemkind_name(kind: ItemKind) -> &'static str {
@@ -211,6 +214,9 @@ pub fn itemkind_name(kind: ItemKind) -> &'static str {
         ItemKind::AutoHarvester => "Auto-Harvester",
         ItemKind::Biochar => "Biochar",
         ItemKind::CrudeFurnace => "Crude Furnace",
+        ItemKind::Extractor => "Extractor",
+        ItemKind::FilterExtractor => "Filter Extractor",
+        ItemKind::BeltRouter => "Belt Router",
     }
 }
 
@@ -240,6 +246,9 @@ pub fn itemkind_sprite_name(kind: ItemKind) -> &'static str {
         ItemKind::AutoHarvester => "auto_harvester",
         ItemKind::Biochar => "biochar",
         ItemKind::CrudeFurnace => "crude_furnace",
+        ItemKind::Extractor => "extractor",
+        ItemKind::FilterExtractor => "filter_extractor",
+        ItemKind::BeltRouter => "belt_router",
     }
 }
 
@@ -269,6 +278,9 @@ pub fn parse_itemkind_from_sprite_name(sprite_name: &str) -> Option<ItemKind> {
         "auto_harvester" => Some(ItemKind::AutoHarvester),
         "biochar" => Some(ItemKind::Biochar),
         "crude_furnace" => Some(ItemKind::CrudeFurnace),
+        "extractor" => Some(ItemKind::Extractor),
+        "filter_extractor" => Some(ItemKind::FilterExtractor),
+        "belt_router" => Some(ItemKind::BeltRouter),
         _ => None,
     }
 }

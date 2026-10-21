@@ -138,6 +138,35 @@ impl RecipeHandler {
                 result: ItemKind::CrudeFurnace,
                 quantity: 1,
             },
+            // Extractor: 2x wooden plank + 1x iron scrap + 2x nail
+            Recipe {
+                name: "Extractor",
+                ingredients: &[
+                    (ItemKind::WoodenPlank, 2),
+                    (ItemKind::IronScrap, 1),
+                    (ItemKind::Nail, 2),
+                ],
+                result: ItemKind::Extractor,
+                quantity: 1,
+            },
+            // Filter extractor: 1x extractor + 1x scrap electronics
+            Recipe {
+                name: "Filter Extractor",
+                ingredients: &[(ItemKind::Extractor, 1), (ItemKind::ScrapElectronics, 1)],
+                result: ItemKind::FilterExtractor,
+                quantity: 1,
+            },
+            // Belt router: 2x wooden conveyor + 1x iron scrap + 1x scrap electronics
+            Recipe {
+                name: "Belt Router",
+                ingredients: &[
+                    (ItemKind::WoodenConveyor, 2),
+                    (ItemKind::IronScrap, 1),
+                    (ItemKind::ScrapElectronics, 1),
+                ],
+                result: ItemKind::BeltRouter,
+                quantity: 1,
+            },
         ];
 
         Self { recipes }

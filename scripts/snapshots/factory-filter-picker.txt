@@ -1,0 +1,24 @@
+# A filter extractor's filter picker after setting it to Acorn, reopened to show the mark
+seed 12345
+size 100x30
+skip-splash
+key ui.MENU_PREV
+cheat tp 0 0 0
+cheat giveitem filter_extractor
+key build.TOGGLE_BREAK_PLACE_MODE 2
+# Picker: Clear slot, Acorn, Filter Extractor
+key hotbar.HOTBAR_SLOT_1 2
+key movement.MOVE_SOUTH 2
+key ui.MENU_ACTIVATE
+key hotbar.HOTBAR_SLOT_1
+key build.PLACE_WEST
+key build.TOGGLE_BREAK_PLACE_MODE 2
+key action.INTERACT
+expect-text "Filter extractor: pick a filter"
+# Rows: (no filter), then items in order: Log, Wooden Plank, Acorn
+key movement.MOVE_SOUTH 3
+key ui.MENU_ACTIVATE
+expect-text "Filter set to Acorn"
+key action.INTERACT
+expect-text "* Acorn"
+screen filter-picker

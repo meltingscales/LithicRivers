@@ -33,14 +33,26 @@ pub const EXAMPLES: &[Example] = &[
         build: belt_line,
     },
     Example {
+        name: "Extractor: chest to chest",
+        size: (5, 1),
+        has_input: true,
+        build: extractor_line,
+    },
+    Example {
+        name: "Belt router split three ways",
+        size: (5, 5),
+        has_input: true,
+        build: router_split,
+    },
+    Example {
         name: "Belt-fed crude furnace",
         size: (5, 2),
         has_input: true,
         build: belt_fed_furnace,
     },
     Example {
-        name: "Powered tree farm",
-        size: (7, 6),
+        name: "Self-feeding tree farm",
+        size: (7, 7),
         has_input: true,
         build: tree_farm,
     },
@@ -159,28 +171,92 @@ fn belt_fed_furnace(game: &mut Game, o: Position) {
     }
 }
 
-/// A generator and pole powering an auto-planter and an auto-harvester; grown trees in
-/// reach, the harvester feeding two belts into a chest.
+/// A chest of logs, an extractor pulling them onto two belts, and a chest at the end.
+///
+/// ```text
+///   C > = = C
+/// ```
+fn extractor_line(game: &mut Game, o: Position) {
+    let source = place(game, FactoryKind::Chest, o, Facing::North);
+    fill(game, source, &[(ItemKind::Log, 6)]);
+    place(game, FactoryKind::Extractor, at(o, 1, 0), Facing::East);
+    place(game, FactoryKind::Belt, at(o, 2, 0), Facing::East);
+    place(game, FactoryKind::Belt, at(o, 3, 0), Facing::East);
+    place(game, FactoryKind::Chest, at(o, 4, 0), Facing::North);
+}
+
+/// Logs on a belt into a router that sends them left, straight and right in turn, each
+/// output belt ending in a chest.
+///
+/// ```text
+///   . . C . .
+///   . . ^ . .
+///   = = R = C
+///   . . v . .
+///   . . C . .
+/// ```
+fn router_split(game: &mut Game, o: Position) {
+    place(game, FactoryKind::Belt, at(o, 0, 2), Facing::East);
+    place(game, FactoryKind::Belt, at(o, 1, 2), Facing::East);
+    place(game, FactoryKind::BeltRouter, at(o, 2, 2), Facing::East);
+    place(game, FactoryKind::Belt, at(o, 2, 1), Facing::North);
+    place(game, FactoryKind::Belt, at(o, 3, 2), Facing::East);
+    place(game, FactoryKind::Belt, at(o, 2, 3), Facing::South);
+    for (dx, dy) in [(2, 0), (4, 2), (2, 4)] {
+        place(game, FactoryKind::Chest, at(o, dx, dy), Facing::North);
+    }
+    game.world.spawn((
+        at(o, 0, 2),
+        DroppedItem {
+            kind: ItemKind::Log,
+            qty: 6,
+        },
+        SpriteRef::new("items", "log"),
+    ));
+}
+
+/// Two generators and a pole powering an auto-planter and an auto-harvester. The harvester fills
+/// a chest; a filter extractor set to acorns feeds them back to the planter, so the farm
+/// replants itself.
 ///
 /// ```text
 ///   G . . . . . .
-///   . + . . t . .
+///   G + . . . . .
+///   . . . p . . t
+///   . . . ^ . . .      ^ filter extractor (acorns), facing the planter
+///   . . . C H . .      H harvester facing west into the chest
 ///   . . . . . . .
-///   . . p H = = C
-///   . . . . . . .
-///   . t . t . t .
+///   . . t . . t t
 /// ```
 fn tree_farm(game: &mut Game, o: Position) {
-    let generator = place(game, FactoryKind::BurnerGenerator, o, Facing::North);
-    fill(game, generator, &[(ItemKind::Log, 5)]);
+    // Two generators (180 kW) of the 240 kW the planter and harvester draw together
+    for dy in [0, 1] {
+        let generator = place(
+            game,
+            FactoryKind::BurnerGenerator,
+            at(o, 0, dy),
+            Facing::North,
+        );
+        fill(game, generator, &[(ItemKind::Log, 5)]);
+    }
     place(game, FactoryKind::PowerPole, at(o, 1, 1), Facing::North);
-    let planter = place(game, FactoryKind::AutoPlanter, at(o, 2, 3), Facing::North);
-    fill(game, planter, &[(ItemKind::Acorn, 8)]);
-    place(game, FactoryKind::AutoHarvester, at(o, 3, 3), Facing::East);
-    place(game, FactoryKind::Belt, at(o, 4, 3), Facing::East);
-    place(game, FactoryKind::Belt, at(o, 5, 3), Facing::East);
-    place(game, FactoryKind::Chest, at(o, 6, 3), Facing::North);
-    for (dx, dy) in [(4, 1), (1, 5), (3, 5), (5, 5)] {
+    let planter = place(game, FactoryKind::AutoPlanter, at(o, 3, 2), Facing::North);
+    fill(game, planter, &[(ItemKind::Acorn, 4)]);
+    let extractor = place(
+        game,
+        FactoryKind::FilterExtractor,
+        at(o, 3, 3),
+        Facing::North,
+    );
+    if let Ok(mut ex) = game
+        .world
+        .get::<&mut crate::logistics::Extractor>(extractor)
+    {
+        ex.filter = Some(ItemKind::Acorn);
+    }
+    place(game, FactoryKind::Chest, at(o, 3, 4), Facing::North);
+    place(game, FactoryKind::AutoHarvester, at(o, 4, 4), Facing::West);
+    for (dx, dy) in [(6, 2), (2, 6), (5, 6), (6, 6)] {
         let p = at(o, dx, dy);
         game.res
             .world_state

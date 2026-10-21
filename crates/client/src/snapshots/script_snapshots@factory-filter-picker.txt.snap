@@ -1,0 +1,37 @@
+---
+source: crates/client/src/snapshot_tests.rs
+expression: "String::from_utf8(out).unwrap()"
+input_file: scripts/snapshots/factory-filter-picker.txt
+---
+=== screen filter-picker ===
+                                            LithicRivers
+#####vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,          ┌MODES─────────────────┐
+######vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,         │  ------ - - -- - FOG │
+######vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#vvvvvvvvvvvvvvvvv,,,        └──────────────────────┘
+#######vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,        ┌Inventory─────────────┐
+#######vvvvvvvvvvvvvvvvvvvvvvv┌── Filter extractor: pick a filter ───┐      │Nail x10              │
+########vvvvvvvvvvvvvvvvvvvvvv│  (no filter)                         │      │Acorn x1              │
+########vvvvvvvvvvvvvvvvvvvvvv│  Log                                 │,     │Log x3                │
+#########vvvvvvvvvvvvvvvvvvvvv│  Wooden Plank                        │,     └──────────────────────┘
+#########vvvvvvvvvvvvvvvvvvvvv│* Acorn                               │,,    ┌Help (h)──────────────┐
+##########vvvvvvvvvvvvvvvvvvvv│  Stick                               │,,,   │Move:                 │
+###########vvvvvvvvvvvvvvvvvvv│  Nail                                │,,,,  │  7 8 9               │
+###########vvvvvvvvvvvvvvvvvvv│  Stone                               │v,,t  │  4 5 6               │
+############vvvvvvvvvvvvvvvvvv│  String                              │tvttt │  1 2 3               │
+############vvvvvvvvvvvvvvvvvv│  Torch                               │ttt,,t│q: mine               │
+#############vvvvvvvvvvvvvvvvv│  Wooden Shavings                     │vvvttt│v: look               │
+##############vvvvvvvvvvvvvvvv│  Scrap Electronics                   │vvvv,,│`: build mode         │
+###############vvvvvvvvvvvvvvv│  Diamond                             │vvvvv,│f: set filter         │
+###############vvvvvvvvvvvvvvv│  Leather                             │vvvvvv│                      │
+################vvvvvvvvvvvvvv│  Meat                                │vvvvvv└──────────────────────┘
+┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
+│[1] Selected hotbar slot: 1  │  Chest                               │                             │
+│[1] Placed Filter Extractor at (-1, 0, 0)p                          │                             │
+│[1] Build mode: Rotate       │  Wooden Conveyor                     │                             │
+│[1] Build mode: Movement     │  Burner Generator                    │                             │
+│[1] Filter set to Acorn      └───── ENTER: set  ESCAPE: close ──────┘                             │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===

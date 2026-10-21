@@ -30,7 +30,13 @@ pub fn move_player_system(world: &mut World, res: &mut Resources) {
                         if dx != 0 || dy != 0 {
                             // Horizontal movement collision
                             let t = res.world_state.world.get_tile_cached(nx, ny, cz);
-                            blocked = !t.is_passable();
+                            // Belts are walkable even though their tile is a factory block
+                            let to = Position {
+                                x: nx,
+                                y: ny,
+                                z: cz,
+                            };
+                            blocked = !crate::logistics::walkable(res, world, to);
                             if !blocked {
                                 for (_, (_, epos)) in
                                     world.query::<(&BlocksMovement, &Position)>().iter()
