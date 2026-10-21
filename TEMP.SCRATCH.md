@@ -16,8 +16,20 @@ Ask for "Add an openspec feat that adds XYZ" or "Bugfix: Something not rendering
 
 .
 
-
 <!-- ACTIONED ON ALREADY -->
+
+- PROPOSED as `add-mouse-building` (answers "how should we handle mouse input?"):
+  - Factorio/Minecraft-style buttons: left click places the hotbar block, else interacts, else looks; right click breaks; middle click picks the block (selects its item and copies its facing); scroll cycles hotbar slots; Shift+scroll rotates.
+  - Same reach as the keyboard, a hover highlight with a Place-mode ghost, clickable tabs and scrollable lists.
+  - Mouse bindings live in the config, and headless scripts get `click` / `scroll` / `move` steps.
+
+- PROPOSED as `add-blueprints`: copy an area into a blueprint, blinking paste preview with rotation, warning before replacing player-built blocks (they go to your inventory), paid from your inventory, blueprint library saved with the world
+
+- PROPOSED as `add-nanobot-modules`: Mk1-Mk3 nanobot modules in torso slots build blueprints over time (more and better modules build faster and farther), drawing on the robot's power source; `nanobots_free` cheat for free, instant building
+
+- PROPOSED as `add-teleporters`: Waystones-style teleporters with battery banks charged from the grid, a named destination list, jump cost growing with distance, and a "needs more charge" message when short
+
+- PROPOSED as `add-vertical-conveyors`: up/down conveyors between layers (stackable, toggle with Rotate), same recipe as wooden conveyors plus one-for-one conversion recipes both ways
 
 - FIXED (fix/machine-power-on-logistics): auto-planters and auto-harvesters drew almost nothing (a farm returned ~20x its fuel at ~2 kW average). Now the planter draws 60 kW for 4 s per acorn and the harvester 180 kW for 6 s per chop; together they need more than one burner generator, and a tree returns ~4x its cost
 
