@@ -9,4 +9,4 @@
 ## 2. Client and checks
 
 - [x] 2.1 Sapling glyph and sprite; acorn placeable from the hotbar; verify a headless script that plants an acorn, passes time until it grows, chops the tree, and checks the drops
-- [ ] 2.2 Verify `just code-clippy`, `cargo test --workspace` and PR checks pass; user check that planting and growth feel right
+- [x] 2.2 Verify `just code-clippy`, `cargo test --workspace` and PR checks pass; user check that planting and growth feel right

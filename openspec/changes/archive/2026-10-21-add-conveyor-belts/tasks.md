@@ -11,4 +11,4 @@
 
 - [x] 2.1 Add the wooden conveyor recipe; verify the crafting reachability test still passes
 - [x] 2.2 Belt glyphs with carried items; dropping onto an adjacent belt; verify a headless script building a 4-belt line into a chest, dropping logs on it, passing time, and checking the chest; add a snapshot of the running line
-- [ ] 2.3 Verify `just code-clippy`, `cargo test --workspace` and PR checks pass; user check that belts read clearly
+- [x] 2.3 Verify `just code-clippy`, `cargo test --workspace` and PR checks pass; user check that belts read clearly

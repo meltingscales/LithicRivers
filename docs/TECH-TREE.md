@@ -15,10 +15,10 @@ Hands and the starting kit. Trees give logs and acorns. Rock gives stone, scrap 
 - `add-factory-foundation` (archived): factory blocks, chests, rotation, pass time.
 - `add-crafting-tree` (archived): raw sources, the reachability test, the ingredient tree view.
 
-### 1. Wood automation (planned)
+### 1. Wood automation (in progress)
 Turn the forest into a machine: farm trees, move items on belts, burn wood for power, smelt wood into denser fuel.
-- `add-tree-farming`: planting and growth.
-- `add-conveyor-belts`: belts and how blocks hand items to them.
+- `add-tree-farming` (archived): planting and growth.
+- `add-conveyor-belts` (archived): belts and how blocks hand items to them.
 - `add-power-grid`: burner generators, poles, networks.
 - `add-crude-furnace`: unpowered smelting, biochar.
 - `add-tree-automation`: auto-planters and auto-harvesters.
