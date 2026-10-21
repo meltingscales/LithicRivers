@@ -373,12 +373,25 @@ pub enum InteractionType {
 }
 
 impl InteractionType {
+    /// Where the interaction happens.
+    pub fn position(&self) -> Position {
+        match self {
+            InteractionType::PickupItem { position, .. }
+            | InteractionType::LootCorpse { position, .. }
+            | InteractionType::TalkToNPC { position, .. }
+            | InteractionType::OpenCloseDoor { position, .. }
+            | InteractionType::OpenChest { position, .. } => *position,
+        }
+    }
+
+    /// The menu label, ending with the compass direction from the player (" (NE)") or
+    /// " (here)" on the player's own tile, so same-named choices can be told apart.
     pub fn display_name_with_context(
         &self,
         world: &hecs::World,
         player_pos: Option<Position>,
     ) -> String {
-        match self {
+        let name = match self {
             InteractionType::PickupItem { item_name, .. } => format!("Pick up {}", item_name),
             InteractionType::LootCorpse { entity, .. } => {
                 // Try to get inventory to count items
@@ -393,39 +406,28 @@ impl InteractionType {
             }
             InteractionType::TalkToNPC { npc_name, .. } => format!("Talk to {}", npc_name),
             InteractionType::OpenChest { .. } => "Open chest".to_string(),
-            InteractionType::OpenCloseDoor { position, is_open } => {
-                let direction_text = if let Some(player_position) = player_pos {
-                    let dx = position.x - player_position.x;
-                    let dy = position.y - player_position.y;
-
-                    let direction = match (dx.signum(), dy.signum()) {
-                        (0, -1) => "N",   // North
-                        (1, -1) => "NE",  // Northeast
-                        (1, 0) => "E",    // East
-                        (1, 1) => "SE",   // Southeast
-                        (0, 1) => "S",    // South
-                        (-1, 1) => "SW",  // Southwest
-                        (-1, 0) => "W",   // West
-                        (-1, -1) => "NW", // Northwest
-                        _ => "",          // Same position (shouldn't happen)
-                    };
-
-                    if direction.is_empty() {
-                        String::new()
-                    } else {
-                        format!(" ({})", direction)
-                    }
-                } else {
-                    String::new()
-                };
-
-                if *is_open {
-                    format!("Close door{}", direction_text)
-                } else {
-                    format!("Open door{}", direction_text)
-                }
-            }
-        }
+            InteractionType::OpenCloseDoor { is_open: true, .. } => "Close door".to_string(),
+            InteractionType::OpenCloseDoor { is_open: false, .. } => "Open door".to_string(),
+        };
+        let Some(player) = player_pos else {
+            return name;
+        };
+        let position = self.position();
+        let direction = match (
+            (position.x - player.x).signum(),
+            (position.y - player.y).signum(),
+        ) {
+            (0, -1) => "N",
+            (1, -1) => "NE",
+            (1, 0) => "E",
+            (1, 1) => "SE",
+            (0, 1) => "S",
+            (-1, 1) => "SW",
+            (-1, 0) => "W",
+            (-1, -1) => "NW",
+            _ => "here",
+        };
+        format!("{name} ({direction})")
     }
 
     pub fn icon(&self) -> &'static str {

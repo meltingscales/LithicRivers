@@ -1,0 +1,20 @@
+# Bug: the "Choose interaction" menu didn't say where each choice is, so with two
+# similar things nearby you couldn't tell which one you'd use. Each choice now ends with
+# its direction from the player.
+seed 12345
+size 100x30
+skip-splash
+key ui.MENU_PREV
+# Next to the corpse Game::new leaves at (18, 21, 0), with a chest placed to the west
+cheat tp 17 21 0
+cheat giveitem chest
+key build.TOGGLE_BREAK_PLACE_MODE 2
+key hotbar.HOTBAR_SLOT_1 2
+key movement.MOVE_SOUTH
+key ui.MENU_ACTIVATE
+key build.PLACE_WEST
+key build.TOGGLE_BREAK_PLACE_MODE 2
+key action.INTERACT
+expect-text "Loot corpse (2 items) (E)"
+expect-text "Open chest (W)"
+screen choose-interaction
