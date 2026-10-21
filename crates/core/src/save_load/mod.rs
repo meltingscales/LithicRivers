@@ -109,6 +109,7 @@ saved_components! {
     "light_source" => LightSource,
     "factory_block" => crate::factory::FactoryBlock,
     "growth" => crate::plants::Growth,
+    "belt_slot" => crate::factory::BeltSlot,
 }
 
 /// Entities that carry a component type the registry doesn't know, described by the
@@ -464,6 +465,14 @@ mod tests {
             .get::<&mut Inventory>(chest)
             .unwrap()
             .add(crate::components::ItemKind::Log, 3);
+        crate::factory::place(
+            &mut fight.game.world,
+            &mut fight.game.res,
+            crate::factory::FactoryKind::Belt,
+            Position { x: -2, y: 2, z: 0 },
+            crate::factory::Facing::South,
+        )
+        .unwrap();
         crate::plants::plant(
             &mut fight.game.world,
             &mut fight.game.res,

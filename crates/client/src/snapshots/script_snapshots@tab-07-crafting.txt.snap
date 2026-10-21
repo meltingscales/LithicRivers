@@ -15,8 +15,8 @@ input_file: scripts/snapshots/tab-07-crafting.txt
 ││  * Torch                     ││* raw material                  ││* String: x2                  ││
 ││  * Nail                      ││                                ││* Torch: x3                   ││
 ││  * String                    ││                                ││                              ││
+││  * Wooden Conveyor           ││                                ││                              ││
 ││  * Chest                     ││                                ││                              ││
-││                              ││                                ││                              ││
 ││                              ││                                ││                              ││
 ││                              ││                                ││                              ││
 │└──────────────────────────────┘└────────────────────────────────┘└──────────────────────────────┘│

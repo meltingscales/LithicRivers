@@ -71,6 +71,8 @@ impl Facing {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum FactoryKind {
     Chest,
+    /// Wooden conveyor: carries one item a tile in its facing direction
+    Belt,
     /// A directional block with no behavior, for tests of facing and rotation.
     #[cfg(any(test, feature = "test-support"))]
     TestArrow,
@@ -81,6 +83,7 @@ impl FactoryKind {
     pub fn from_item(item: ItemKind) -> Option<Self> {
         match item {
             ItemKind::Chest => Some(FactoryKind::Chest),
+            ItemKind::WoodenConveyor => Some(FactoryKind::Belt),
             _ => None,
         }
     }
@@ -89,6 +92,7 @@ impl FactoryKind {
     pub fn item(self) -> Option<ItemKind> {
         match self {
             FactoryKind::Chest => Some(ItemKind::Chest),
+            FactoryKind::Belt => Some(ItemKind::WoodenConveyor),
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestArrow => None,
         }
@@ -97,6 +101,7 @@ impl FactoryKind {
     pub fn name(self) -> &'static str {
         match self {
             FactoryKind::Chest => "chest",
+            FactoryKind::Belt => "wooden conveyor",
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestArrow => "test arrow",
         }
@@ -106,6 +111,7 @@ impl FactoryKind {
     pub fn directional(self) -> bool {
         match self {
             FactoryKind::Chest => false,
+            FactoryKind::Belt => true,
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestArrow => true,
         }
@@ -113,9 +119,9 @@ impl FactoryKind {
 
     /// The sprite (category "factory") drawn for this kind and facing.
     pub fn sprite(self, facing: Facing) -> SpriteRef {
-        let _ = facing; // No directional sprites yet; belts will add `belt_<facing>`
         match self {
             FactoryKind::Chest => SpriteRef::new("factory", "chest"),
+            FactoryKind::Belt => SpriteRef::new("factory", &format!("belt_{}", facing.name())),
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestArrow => SpriteRef::new("factory", "chest"),
         }
@@ -184,11 +190,18 @@ pub fn place(
     builder.add(pos);
     builder.add(FactoryBlock { kind, facing });
     builder.add(kind.sprite(facing));
-    if kind == FactoryKind::Chest {
-        builder.add(Inventory {
-            max_slots: CHEST_SLOTS,
-            ..Default::default()
-        });
+    match kind {
+        FactoryKind::Chest => {
+            builder.add(Inventory {
+                max_slots: CHEST_SLOTS,
+                ..Default::default()
+            });
+        }
+        FactoryKind::Belt => {
+            builder.add(BeltSlot::default());
+        }
+        #[cfg(any(test, feature = "test-support"))]
+        FactoryKind::TestArrow => {}
     }
     let entity = world.spawn(builder.build());
     res.factory_index.insert(pos, entity);
@@ -205,10 +218,13 @@ pub fn break_block(
 ) -> Option<FactoryKind> {
     let entity = res.factory_index.remove(&pos)?;
     let block = *world.get::<&FactoryBlock>(entity).ok()?;
-    let contents = world
+    let mut contents = world
         .get::<&Inventory>(entity)
         .map(|inv| inv.slots.clone())
         .unwrap_or_default();
+    if let Some(item) = world.get::<&BeltSlot>(entity).ok().and_then(|b| b.item) {
+        contents.push(crate::components::ItemStack::new(item, 1));
+    }
     let _ = world.despawn(entity);
     res.world_state
         .world
@@ -313,7 +329,180 @@ pub fn run_due_steps(world: &mut World, res: &mut Resources) {
     for i in 0..steps {
         let step_tick = first_step_tick + i * FACTORY_STEP_TICKS;
         crate::plants::grow_saplings(world, res, step_tick);
+        step_belts(world, res);
         res.factory_clock.steps += 1;
+    }
+}
+
+/// Steps an item spends on a belt before it moves on (half a game second).
+pub const BELT_STEPS_PER_TILE: u8 = 2;
+
+/// What a belt carries: at most one item, and how many steps it has been on this belt.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct BeltSlot {
+    pub item: Option<ItemKind>,
+    pub progress: u8,
+}
+
+/// Whether `target` (a factory block) would take `item` right now: an empty belt, or a
+/// chest with room for it. Later machines add their inputs here.
+pub fn accepts(world: &World, target: Entity, item: ItemKind) -> bool {
+    if let Ok(belt) = world.get::<&BeltSlot>(target) {
+        return belt.item.is_none();
+    }
+    if world.get::<&FactoryBlock>(target).is_err() {
+        return false;
+    }
+    world.get::<&Inventory>(target).is_ok_and(|inv| {
+        inv.slots.iter().any(|s| s.kind == item) || inv.slots.len() < inv.max_slots
+    })
+}
+
+/// Give `item` to `target` if it accepts it. Returns whether it did.
+pub fn insert(world: &mut World, target: Entity, item: ItemKind) -> bool {
+    if !accepts(world, target, item) {
+        return false;
+    }
+    if let Ok(mut belt) = world.get::<&mut BeltSlot>(target) {
+        *belt = BeltSlot {
+            item: Some(item),
+            progress: 0,
+        };
+        return true;
+    }
+    if let Ok(mut inv) = world.get::<&mut Inventory>(target) {
+        inv.add(item, 1);
+        return true;
+    }
+    false
+}
+
+/// Move one item from stack `slot` of `from`'s inventory into the factory block `to` (a belt
+/// or chest), using the same handoff as belts.
+pub fn move_one_item_to_block(
+    world: &mut World,
+    from: Entity,
+    to: Entity,
+    slot: usize,
+) -> Result<ItemKind, TransferError> {
+    let kind = world
+        .get::<&Inventory>(from)
+        .ok()
+        .and_then(|inv| inv.slots.get(slot).filter(|s| s.qty > 0).map(|s| s.kind))
+        .ok_or(TransferError::Empty)?;
+    if !insert(world, to, kind) {
+        return Err(TransferError::Full);
+    }
+    let mut inv = world.get::<&mut Inventory>(from).expect("checked above");
+    inv.slots[slot].qty -= 1;
+    if inv.slots[slot].qty == 0 {
+        inv.slots.remove(slot);
+    }
+    Ok(kind)
+}
+
+/// Belts in processing order: each belt after the belt it feeds, so a full line shifts by
+/// one tile in a single step. Ties and loops go by position.
+fn belt_order(world: &World, res: &Resources) -> Vec<(Entity, Position, Facing)> {
+    let mut belts: Vec<(Entity, Position, Facing)> = world
+        .query::<(&Position, &FactoryBlock)>()
+        .with::<&BeltSlot>()
+        .iter()
+        .map(|(e, (p, b))| (e, *p, b.facing))
+        .collect();
+    belts.sort_by_key(|(_, p, _)| (p.z, p.y, p.x));
+    let by_entity: HashMap<Entity, (Position, Facing)> =
+        belts.iter().map(|(e, p, f)| (*e, (*p, *f))).collect();
+    let next = |pos: Position, facing: Facing| {
+        let (dx, dy) = facing.offset();
+        let target = Position {
+            x: pos.x + dx,
+            y: pos.y + dy,
+            z: pos.z,
+        };
+        res.factory_index
+            .get(&target)
+            .copied()
+            .filter(|e| by_entity.contains_key(e))
+    };
+    // 0 = not seen, 1 = on the current path (a loop), 2 = placed in the order
+    let mut state: HashMap<Entity, u8> = HashMap::new();
+    let mut order = Vec::with_capacity(belts.len());
+    for &(start, _, _) in &belts {
+        let mut path = Vec::new();
+        let mut current = Some(start);
+        while let Some(e) = current {
+            if state.get(&e).copied().unwrap_or(0) != 0 {
+                break;
+            }
+            state.insert(e, 1);
+            path.push(e);
+            let (pos, facing) = by_entity[&e];
+            current = next(pos, facing);
+        }
+        for e in path.into_iter().rev() {
+            state.insert(e, 2);
+            let (pos, facing) = by_entity[&e];
+            order.push((e, pos, facing));
+        }
+    }
+    order
+}
+
+/// One factory step for every belt: advance items, hand them on, then load dropped items.
+fn step_belts(world: &mut World, res: &mut Resources) {
+    let order = belt_order(world, res);
+    for &(belt, pos, facing) in &order {
+        let Some(item) = ({
+            let mut slot = world.get::<&mut BeltSlot>(belt).expect("belt has a slot");
+            match slot.item {
+                Some(item) => {
+                    slot.progress = slot.progress.saturating_add(1);
+                    (slot.progress >= BELT_STEPS_PER_TILE).then_some(item)
+                }
+                None => None,
+            }
+        }) else {
+            continue;
+        };
+        let (dx, dy) = facing.offset();
+        let target = Position {
+            x: pos.x + dx,
+            y: pos.y + dy,
+            z: pos.z,
+        };
+        let Some(&target) = res.factory_index.get(&target) else {
+            continue;
+        };
+        if insert(world, target, item) {
+            *world.get::<&mut BeltSlot>(belt).expect("belt has a slot") = BeltSlot::default();
+        }
+    }
+    // Empty belts pick up one item lying on their tile
+    for &(belt, pos, _) in &order {
+        if world.get::<&BeltSlot>(belt).is_ok_and(|s| s.item.is_some()) {
+            continue;
+        }
+        let lying = world
+            .query::<(&Position, &DroppedItem)>()
+            .iter()
+            .find(|(_, (p, d))| **p == pos && d.qty > 0)
+            .map(|(e, (_, d))| (e, d.kind));
+        let Some((drop, kind)) = lying else {
+            continue;
+        };
+        let emptied = {
+            let mut d = world.get::<&mut DroppedItem>(drop).expect("found above");
+            d.qty -= 1;
+            d.qty == 0
+        };
+        if emptied {
+            let _ = world.despawn(drop);
+        }
+        *world.get::<&mut BeltSlot>(belt).expect("belt has a slot") = BeltSlot {
+            item: Some(kind),
+            progress: 0,
+        };
     }
 }
 
@@ -652,5 +841,276 @@ mod tests {
             chunk_tiles(&plain, cx, cy),
             "the structure was placed"
         );
+    }
+
+    // --- Belts -----------------------------------------------------------------------
+
+    fn belt_item(game: &Game, pos: Position) -> Option<ItemKind> {
+        let e = game.res.factory_index[&pos];
+        game.world.get::<&BeltSlot>(e).unwrap().item
+    }
+
+    fn put_on_belt(game: &mut Game, pos: Position, item: ItemKind) {
+        let e = game.res.factory_index[&pos];
+        *game.world.get::<&mut BeltSlot>(e).unwrap() = BeltSlot {
+            item: Some(item),
+            progress: 0,
+        };
+    }
+
+    fn belts(game: &mut Game, from: Position, len: i64, facing: Facing) {
+        let (dx, dy) = facing.offset();
+        for i in 0..len {
+            let pos = Position {
+                x: from.x + dx * i,
+                y: from.y + dy * i,
+                z: from.z,
+            };
+            game.res
+                .world_state
+                .world
+                .set_tile_cached(pos.x, pos.y, pos.z, TileKind::Grass);
+            place_in(game, FactoryKind::Belt, pos, facing);
+        }
+    }
+
+    /// Run `n` factory steps (20 ticks each) as waiting actions.
+    fn steps(game: &mut Game, n: u64) {
+        game.res.player_state.intent =
+            crate::intent::PlayerIntent::movement(0, 0, 0, n * FACTORY_STEP_TICKS);
+        game.tick();
+    }
+
+    /// Items on belts, in chests and lying around.
+    fn item_count(game: &Game, kind: ItemKind) -> u32 {
+        let on_belts = game
+            .world
+            .query::<&BeltSlot>()
+            .iter()
+            .filter(|(_, b)| b.item == Some(kind))
+            .count() as u32;
+        let in_chests: u32 = game
+            .world
+            .query::<(&FactoryBlock, &Inventory)>()
+            .iter()
+            .flat_map(|(_, (_, inv))| inv.slots.clone())
+            .filter(|s| s.kind == kind)
+            .map(|s| s.qty)
+            .sum();
+        let lying: u32 = game
+            .world
+            .query::<&DroppedItem>()
+            .iter()
+            .filter(|(_, d)| d.kind == kind)
+            .map(|(_, d)| d.qty)
+            .sum();
+        on_belts + in_chests + lying
+    }
+
+    fn belt_game() -> Game {
+        TestWorld::new(5).player_at(0, 10, 0).build().game
+    }
+
+    #[test]
+    fn handoff_into_belts_and_chests() {
+        let mut game = belt_game();
+        belts(&mut game, at(0, 0), 1, Facing::East);
+        let chest = place_in(&mut game, FactoryKind::Chest, at(1, 0), Facing::North);
+        let belt = game.res.factory_index[&at(0, 0)];
+        assert!(accepts(&game.world, belt, ItemKind::Log));
+        assert!(insert(&mut game.world, belt, ItemKind::Log));
+        assert!(
+            !accepts(&game.world, belt, ItemKind::Stick),
+            "a belt holds one item"
+        );
+        assert!(insert(&mut game.world, chest, ItemKind::Log));
+        game.world.get::<&mut Inventory>(chest).unwrap().max_slots = 1;
+        assert!(
+            accepts(&game.world, chest, ItemKind::Log),
+            "stacks onto its log"
+        );
+        assert!(
+            !accepts(&game.world, chest, ItemKind::Stick),
+            "no room for a new stack"
+        );
+        let player = game.get_player_entity().unwrap();
+        assert!(
+            !accepts(&game.world, player, ItemKind::Log),
+            "only factory blocks"
+        );
+    }
+
+    #[test]
+    fn items_move_one_tile_every_half_second() {
+        let mut game = belt_game();
+        belts(&mut game, at(0, 0), 3, Facing::East);
+        put_on_belt(&mut game, at(0, 0), ItemKind::Log);
+        steps(&mut game, 5); // one game second
+        assert_eq!(belt_item(&game, at(2, 0)), Some(ItemKind::Log));
+        assert_eq!(belt_item(&game, at(0, 0)), None);
+    }
+
+    #[test]
+    fn corner_and_delivery_into_a_chest() {
+        let mut game = belt_game();
+        belts(&mut game, at(0, 0), 2, Facing::East); // (0,0) (1,0) east
+        belts(&mut game, at(2, 0), 2, Facing::South); // (2,0) (2,1) south
+        let chest = place_in(&mut game, FactoryKind::Chest, at(2, 2), Facing::North);
+        put_on_belt(&mut game, at(0, 0), ItemKind::Log);
+        steps(&mut game, 8); // four tiles
+        let inv = game.world.get::<&Inventory>(chest).unwrap().slots.clone();
+        assert_eq!(inv.len(), 1);
+        assert_eq!((inv[0].kind, inv[0].qty), (ItemKind::Log, 1));
+        assert_eq!(item_count(&game, ItemKind::Log), 1);
+    }
+
+    #[test]
+    fn full_chest_backs_up_the_line_and_it_resumes() {
+        let mut game = belt_game();
+        belts(&mut game, at(0, 0), 3, Facing::East);
+        let chest = place_in(&mut game, FactoryKind::Chest, at(3, 0), Facing::North);
+        {
+            let mut inv = game.world.get::<&mut Inventory>(chest).unwrap();
+            inv.max_slots = 1;
+            inv.add(ItemKind::Stone, 1);
+        }
+        for x in 0..3 {
+            put_on_belt(&mut game, at(x, 0), ItemKind::Log);
+        }
+        steps(&mut game, 20);
+        for x in 0..3 {
+            assert_eq!(
+                belt_item(&game, at(x, 0)),
+                Some(ItemKind::Log),
+                "waits at {x}"
+            );
+        }
+        game.world
+            .get::<&mut Inventory>(chest)
+            .unwrap()
+            .slots
+            .clear();
+        steps(&mut game, 20);
+        assert_eq!(
+            item_count(&game, ItemKind::Log),
+            3,
+            "nothing lost or duplicated"
+        );
+        let inv = game.world.get::<&Inventory>(chest).unwrap().slots.clone();
+        assert_eq!((inv[0].kind, inv[0].qty), (ItemKind::Log, 3));
+    }
+
+    #[test]
+    fn two_lines_merge_without_losing_items() {
+        let mut game = belt_game();
+        belts(&mut game, at(0, 0), 2, Facing::East); // into (2,0)
+        belts(&mut game, at(2, -2), 2, Facing::South); // into (2,0)
+        belts(&mut game, at(2, 0), 2, Facing::East);
+        let chest = place_in(&mut game, FactoryKind::Chest, at(4, 0), Facing::North);
+        for pos in [at(0, 0), at(1, 0), at(2, -2), at(2, -1)] {
+            put_on_belt(&mut game, pos, ItemKind::Log);
+        }
+        steps(&mut game, 40);
+        let inv = game.world.get::<&Inventory>(chest).unwrap().slots.clone();
+        assert_eq!((inv[0].kind, inv[0].qty), (ItemKind::Log, 4));
+    }
+
+    #[test]
+    fn a_loop_with_a_gap_keeps_turning() {
+        let mut game = belt_game();
+        // A 2x2 loop: (0,0) E -> (1,0) S -> (1,1) W -> (0,1) N -> (0,0)
+        for (pos, facing) in [
+            (at(0, 0), Facing::East),
+            (at(1, 0), Facing::South),
+            (at(1, 1), Facing::West),
+            (at(0, 1), Facing::North),
+        ] {
+            belts(&mut game, pos, 1, facing);
+        }
+        put_on_belt(&mut game, at(0, 0), ItemKind::Log);
+        put_on_belt(&mut game, at(1, 0), ItemKind::Stick);
+        let mut seen = std::collections::BTreeSet::new();
+        for _ in 0..8 {
+            steps(&mut game, 2);
+            assert_eq!(item_count(&game, ItemKind::Log), 1);
+            assert_eq!(item_count(&game, ItemKind::Stick), 1);
+            for pos in [at(0, 0), at(1, 0), at(1, 1), at(0, 1)] {
+                if belt_item(&game, pos) == Some(ItemKind::Log) {
+                    seen.insert((pos.x, pos.y));
+                }
+            }
+        }
+        assert_eq!(seen.len(), 4, "the log visits every belt");
+    }
+
+    #[test]
+    fn empty_belts_pick_up_dropped_items() {
+        let mut game = belt_game();
+        belts(&mut game, at(0, 0), 2, Facing::East);
+        game.world.spawn((
+            at(0, 0),
+            DroppedItem {
+                kind: ItemKind::Log,
+                qty: 2,
+            },
+            SpriteRef::new("items", "log"),
+        ));
+        steps(&mut game, 1);
+        assert_eq!(belt_item(&game, at(0, 0)), Some(ItemKind::Log));
+        steps(&mut game, 2);
+        assert_eq!(belt_item(&game, at(1, 0)), Some(ItemKind::Log));
+        assert_eq!(
+            belt_item(&game, at(0, 0)),
+            Some(ItemKind::Log),
+            "second log loaded"
+        );
+        assert_eq!(item_count(&game, ItemKind::Log), 2);
+    }
+
+    #[test]
+    fn belt_lines_deliver_the_same_across_chunk_edges() {
+        use crate::world::CHUNK_SIZE;
+        let steps_to_deliver = |start_x: i64| {
+            let mut game = belt_game();
+            belts(&mut game, at(start_x, 0), 5, Facing::East);
+            let end = at(start_x + 5, 0);
+            game.res
+                .world_state
+                .world
+                .set_tile_cached(end.x, 0, 0, TileKind::Grass);
+            let chest = place_in(&mut game, FactoryKind::Chest, end, Facing::North);
+            put_on_belt(&mut game, at(start_x, 0), ItemKind::Log);
+            (1..100)
+                .find(|_| {
+                    steps(&mut game, 1);
+                    !game
+                        .world
+                        .get::<&Inventory>(chest)
+                        .unwrap()
+                        .slots
+                        .is_empty()
+                })
+                .expect("delivered")
+        };
+        let inside = steps_to_deliver(2);
+        assert_eq!(
+            steps_to_deliver(CHUNK_SIZE - 2),
+            inside,
+            "x = 62..66, chest at 67"
+        );
+        assert_eq!(steps_to_deliver(-3), inside, "x = -3..1, across 0");
+    }
+
+    #[test]
+    fn breaking_a_belt_drops_what_it_carried() {
+        let mut game = belt_game();
+        belts(&mut game, at(0, 0), 1, Facing::East);
+        put_on_belt(&mut game, at(0, 0), ItemKind::Log);
+        let p = player(&game);
+        assert_eq!(
+            break_block(&mut game.world, &mut game.res, at(0, 0), p),
+            Some(FactoryKind::Belt)
+        );
+        assert_eq!(item_count(&game, ItemKind::Log), 1);
     }
 }

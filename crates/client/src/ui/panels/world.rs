@@ -83,13 +83,14 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
     // Build an entity overlay map for current bounds and Z slice using SpriteRef
     let mut ent_overlay: HashMap<(i64, i64), (String, String)> = HashMap::new();
     let z = app.ui.view_z;
-    for (_e, (pos, sr_opt)) in app
+    for (_e, (pos, sr_opt, belt)) in app
         .core
         .game
         .world
         .query::<(
             &lithicrivers_core::components::Position,
             Option<&lithicrivers_core::components::SpriteRef>,
+            Option<&lithicrivers_core::factory::BeltSlot>,
         )>()
         .iter()
     {
@@ -97,7 +98,11 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
             continue;
         }
         if pos.x >= left && pos.x <= right && pos.y >= top && pos.y <= bottom {
-            if let Some(sr) = sr_opt {
+            // A belt carrying something shows what it carries
+            if let Some(item) = belt.and_then(|b| b.item) {
+                let name = lithicrivers_core::components::itemkind_sprite_name(item);
+                ent_overlay.insert((pos.x, pos.y), ("items".to_string(), name.to_string()));
+            } else if let Some(sr) = sr_opt {
                 ent_overlay.insert((pos.x, pos.y), (sr.category.clone(), sr.name.clone()));
             }
         }

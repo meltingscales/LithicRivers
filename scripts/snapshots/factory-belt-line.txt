@@ -1,0 +1,34 @@
+# A wooden conveyor line north of the player carrying a log toward a chest
+seed 12345
+size 100x30
+skip-splash
+key ui.MENU_PREV
+cheat tp 0 0 0
+cheat giveitem wooden_conveyor 3
+cheat giveitem chest
+key build.TOGGLE_BREAK_PLACE_MODE 2
+# Picker: Clear slot, Acorn, Wooden Conveyor, Chest
+key hotbar.HOTBAR_SLOT_1 2
+key movement.MOVE_SOUTH 2
+key ui.MENU_ACTIVATE
+key hotbar.HOTBAR_SLOT_2 2
+key movement.MOVE_SOUTH 3
+key ui.MENU_ACTIVATE
+key build.ROTATE_PLACEMENT
+key hotbar.HOTBAR_SLOT_1
+key build.PLACE_NORTHWEST
+key build.PLACE_NORTH
+key hotbar.HOTBAR_SLOT_2
+key build.PLACE_NORTHEAST
+key build.TOGGLE_BREAK_PLACE_MODE 2
+# Select logs in the inventory (Nail, Acorn, Log) and put one on the first belt
+key ui.MENU_NEXT 5
+key movement.MOVE_SOUTH 2
+key ui.MENU_PREV 5
+key action.INTERACT
+expect-text "Put Log on belt (NW)"
+# Choices: Open chest (NE), Put Log on belt (NW), Put Log on belt (N)
+key movement.MOVE_SOUTH
+key ui.MENU_ACTIVATE
+expect-text "Put Log on the belt"
+screen belt-line

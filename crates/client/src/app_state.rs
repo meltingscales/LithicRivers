@@ -370,6 +370,12 @@ pub enum InteractionType {
         entity: hecs::Entity,
         position: Position,
     },
+    /// Put one of the selected inventory item on an empty belt
+    LoadBelt {
+        entity: hecs::Entity,
+        position: Position,
+        item: lithicrivers_core::components::ItemKind,
+    },
 }
 
 impl InteractionType {
@@ -380,7 +386,8 @@ impl InteractionType {
             | InteractionType::LootCorpse { position, .. }
             | InteractionType::TalkToNPC { position, .. }
             | InteractionType::OpenCloseDoor { position, .. }
-            | InteractionType::OpenChest { position, .. } => *position,
+            | InteractionType::OpenChest { position, .. }
+            | InteractionType::LoadBelt { position, .. } => *position,
         }
     }
 
@@ -406,6 +413,10 @@ impl InteractionType {
             }
             InteractionType::TalkToNPC { npc_name, .. } => format!("Talk to {}", npc_name),
             InteractionType::OpenChest { .. } => "Open chest".to_string(),
+            InteractionType::LoadBelt { item, .. } => format!(
+                "Put {} on belt",
+                lithicrivers_core::components::itemkind_name(*item)
+            ),
             InteractionType::OpenCloseDoor { is_open: true, .. } => "Close door".to_string(),
             InteractionType::OpenCloseDoor { is_open: false, .. } => "Open door".to_string(),
         };
@@ -436,6 +447,7 @@ impl InteractionType {
             InteractionType::LootCorpse { .. } => "x", // x for corpse looting
             InteractionType::TalkToNPC { .. } => "t",  // t for talking
             InteractionType::OpenChest { .. } => "c",  // c for chest
+            InteractionType::LoadBelt { .. } => ">",   // onto the belt
             InteractionType::OpenCloseDoor { is_open, .. } => {
                 if *is_open {
                     "o"

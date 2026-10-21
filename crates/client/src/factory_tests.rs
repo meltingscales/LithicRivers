@@ -206,3 +206,102 @@ fn a_dog_arriving_stops_passing_time_and_starts_combat() {
     assert!(runner.app.combat.is_active());
     assert!(state_json(&runner.app).contains("\"active\": true"));
 }
+
+/// Where the open Choose Interaction menu lists the choice at `pos`.
+fn choice_index(runner: &Runner, pos: Position) -> usize {
+    let crate::app_state::MultiActionSelectState::SelectingAction {
+        available_actions, ..
+    } = &runner.app.panels.multi_action_select
+    else {
+        panic!("the Choose Interaction menu is open");
+    };
+    available_actions
+        .iter()
+        .position(|a| a.position() == pos)
+        .expect("a choice there")
+}
+
+/// Grass from (-3, -3) to (6, 3) around the origin, so a build site is always clear.
+fn clear_site(runner: &mut Runner) {
+    let world = &mut runner.app.core.game.res.world_state.world;
+    for x in -3..=6 {
+        for y in -3..=3 {
+            world.set_tile_cached(x, y, 0, lithicrivers_core::TileKind::Grass);
+        }
+    }
+}
+
+#[test]
+fn belt_line_carries_logs_into_a_chest() {
+    let mut runner = chain_commands(&[
+        "skip-splash",
+        "key ui.MENU_PREV",
+        "cheat tp 0 0 0",
+        "cheat giveitem wooden_conveyor 4",
+        "cheat giveitem chest",
+    ]);
+    clear_site(&mut runner);
+    // Picker order follows the inventory: Clear slot, Acorn, Wooden Conveyor, Chest
+    runner.chain(&[
+        "key build.TOGGLE_BREAK_PLACE_MODE 2",
+        "key hotbar.HOTBAR_SLOT_1 2",
+        "key movement.MOVE_SOUTH 2",
+        "key ui.MENU_ACTIVATE",
+        "key hotbar.HOTBAR_SLOT_2 2",
+        "key movement.MOVE_SOUTH 3",
+        "key ui.MENU_ACTIVATE",
+        // Belts face east; build y = -1 from x = -1 to 2, chest at x = 3
+        "key build.ROTATE_PLACEMENT",
+        "key hotbar.HOTBAR_SLOT_1",
+        "key build.PLACE_NORTHWEST",
+        "key build.PLACE_NORTH",
+        "key build.PLACE_NORTHEAST",
+        "key build.TOGGLE_BREAK_PLACE_MODE 2",
+        "key movement.MOVE_EAST 2",
+        "key build.TOGGLE_BREAK_PLACE_MODE 2",
+        "key build.PLACE_NORTH",
+        "key hotbar.HOTBAR_SLOT_2",
+        "key build.PLACE_NORTHEAST",
+        "key build.TOGGLE_BREAK_PLACE_MODE 2",
+    ]);
+    let game = &runner.app.core.game;
+    for x in -1..=2 {
+        let pos = Position { x, y: -1, z: 0 };
+        let belt = block_at(&runner, pos);
+        let block = *game.world.get::<&FactoryBlock>(belt).unwrap();
+        assert_eq!(
+            (block.kind, block.facing),
+            (FactoryKind::Belt, Facing::East),
+            "{pos:?}"
+        );
+    }
+    let chest = block_at(&runner, Position { x: 3, y: -1, z: 0 });
+
+    // Select logs (Nail, Acorn, Log, ...) in the inventory, then load the belt north of us
+    runner.chain(&[
+        "key movement.MOVE_WEST 2",
+        "key ui.MENU_NEXT 5",
+        "key movement.MOVE_SOUTH 2",
+        "key ui.MENU_PREV 5",
+        "key action.INTERACT",
+        "expect-text \"Put Log on belt (N)\"",
+    ]);
+    // Three times: choose the belt to the north in the menu, let the log ride, interact again
+    for _ in 0..3 {
+        let north = choice_index(&runner, Position { x: 0, y: -1, z: 0 });
+        if north > 0 {
+            runner.chain(&[&format!("key movement.MOVE_SOUTH {north}")]);
+        }
+        runner.chain(&[
+            "key ui.MENU_ACTIVATE",
+            "key action.PASS_TIME",
+            "key action.INTERACT",
+        ]);
+    }
+    runner.chain(&["key ui.CLOSE_HELP_MENU", "key action.PASS_TIME"]);
+    assert_eq!(
+        count(&runner, chest, ItemKind::Log),
+        3,
+        "three logs arrived"
+    );
+}
