@@ -80,6 +80,7 @@ pub fn default_config() -> ConfigRoot {
             "CHEAT_CONSOLE_SCROLL_DOWN": ["DOWN"],
             "SAVE_AND_QUIT_TO_TITLE": ["Q"], // Menu tab only
             "TOGGLE_CONTEXT_HELP": ["h"], // Context help panel on the World page
+            "TAKE_ALL": ["a"], // Chest and corpse windows: take everything
             "QUIT": []
         },
         "title": {

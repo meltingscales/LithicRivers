@@ -26,7 +26,7 @@ input_file: scripts/snapshots/factory-tree-farm.txt
 ###############││                                ││                                ││──────────────┘
 ┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
 │[1] Stored Acorn                                ││                                ││              │
-│[1] Finished looting→: Switch Panel | ↑↓: Select | Enter: Move Item | Esc: Close──┘│              │
+│[1] Finished looting←→ Panel | ↑↓ Select | Enter Move | a Take All | Esc Close────┘│              │
 │[1001] Time passes...──────────────────────────────────────────────────────────────┘              │
 │[1001] Opened auto-planter                                                                        │
 │[1001] The auto-planter only takes acorns                                                         │

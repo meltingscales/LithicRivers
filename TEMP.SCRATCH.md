@@ -16,9 +16,10 @@ Ask for "Add an openspec feat that adds XYZ" or "Bugfix: Something not rendering
 
 .
 
-- feat: "Take all" from chest keybind
 
 <!-- ACTIONED ON ALREADY -->
+
+- DONE (feature/chest-take-all): "Take all" keybind (`ui.TAKE_ALL`, `a`) in chest, corpse, generator and machine windows
 
 - PROPOSED as `add-factory-stats`: power graph per network in the pole info box (last 60 s / 10 min), item produced/consumed counts by source, and a Production tab
 

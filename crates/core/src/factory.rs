@@ -416,6 +416,37 @@ pub fn move_one_item(
     Ok(kind)
 }
 
+/// Move every item from `from`'s inventory to `to`'s, stack by stack, stopping at the
+/// first stack `to` has no room for. Returns how many items moved.
+pub fn move_all_items(world: &mut World, from: Entity, to: Entity) -> u32 {
+    let mut moved = 0;
+    loop {
+        let Some(stack) = world
+            .get::<&Inventory>(from)
+            .ok()
+            .and_then(|inv| inv.slots.first().copied())
+        else {
+            return moved;
+        };
+        {
+            let Ok(mut dest) = world.get::<&mut Inventory>(to) else {
+                return moved;
+            };
+            let has_stack = dest.slots.iter().any(|s| s.kind == stack.kind);
+            if !has_stack && dest.slots.len() >= dest.max_slots {
+                return moved;
+            }
+            dest.add(stack.kind, stack.qty);
+        }
+        world
+            .get::<&mut Inventory>(from)
+            .expect("read above")
+            .slots
+            .remove(0);
+        moved += stack.qty;
+    }
+}
+
 /// Run every factory step that fits in the ticks elapsed since the last call. Each step runs
 /// the factory systems in a fixed order (growth, machine demand, power, machines, furnaces,
 /// belts)
@@ -889,6 +920,34 @@ mod tests {
             move_one_item(&mut game.world, p, chest, 7),
             Err(TransferError::Empty)
         );
+    }
+
+    #[test]
+    fn taking_all_moves_every_stack_that_fits() {
+        let mut game = arena().inventory(&[]).build().game;
+        let chest = place_in(&mut game, FactoryKind::Chest, at(1, 0), Facing::North);
+        let p = player(&game);
+        {
+            let mut inv = game.world.get::<&mut Inventory>(chest).unwrap();
+            inv.add(ItemKind::Log, 10);
+            inv.add(ItemKind::Stone, 3);
+            inv.add(ItemKind::Stick, 2);
+        }
+        game.world.get::<&mut Inventory>(p).unwrap().max_slots = 2;
+        assert_eq!(
+            move_all_items(&mut game.world, chest, p),
+            13,
+            "logs and stone"
+        );
+        let left = game.world.get::<&Inventory>(chest).unwrap().slots.clone();
+        assert_eq!(
+            (left.len(), left[0].kind),
+            (1, ItemKind::Stick),
+            "no room for sticks"
+        );
+        game.world.get::<&mut Inventory>(p).unwrap().max_slots = 3;
+        assert_eq!(move_all_items(&mut game.world, chest, p), 2);
+        assert_eq!(move_all_items(&mut game.world, chest, p), 0, "empty");
     }
 
     #[test]
