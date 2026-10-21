@@ -180,6 +180,13 @@ pub fn nearby_interactions(app: &App) -> Option<NearbyInteractions> {
             FactoryKind::PowerPole => {
                 available_actions.push(InteractionType::InspectPole { entity, position })
             }
+            FactoryKind::AutoPlanter | FactoryKind::AutoHarvester => {
+                available_actions.push(InteractionType::OpenMachine {
+                    entity,
+                    position,
+                    kind: block.kind,
+                })
+            }
             _ => {}
         }
     }
@@ -422,6 +429,15 @@ pub fn execute_interaction_action(app: &mut App, action: &crate::app_state::Inte
         }
         InteractionType::InspectPole { entity, .. } => {
             app.panels.power_info = Some(*entity);
+        }
+        InteractionType::OpenMachine { entity, kind, .. } => {
+            app.panels.corpse_looting = CorpseLootingState::LootingCorpse {
+                entity: *entity,
+                selected_loot_item: 0,
+                selected_player_item: 0,
+                loot_panel_focus: false,
+            };
+            app.core.game.res.log(format!("Opened {}", kind.name()));
         }
         InteractionType::OpenGenerator { entity, .. } => {
             app.panels.corpse_looting = CorpseLootingState::LootingCorpse {

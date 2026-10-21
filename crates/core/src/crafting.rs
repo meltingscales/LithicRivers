@@ -33,6 +33,35 @@ pub fn mining_drop(tile: TileKind) -> Option<MiningDrop> {
     }
 }
 
+/// Mine the tile at `pos`: it becomes what the drop table says, and the rolled drops are
+/// returned (items rolling 0 are left out). The player and machines both mine through here,
+/// so the same tile always drops the same. `None` if the tile can't be mined.
+pub fn mine_tile(
+    res: &mut crate::resources::Resources,
+    pos: crate::components::Position,
+) -> Option<Vec<(ItemKind, u32)>> {
+    use rand::Rng;
+    let world = &mut res.world_state.world;
+    let drop = mining_drop(world.get_tile_cached(pos.x, pos.y, pos.z))?;
+    world.set_tile_cached(pos.x, pos.y, pos.z, drop.becomes);
+    // Seeded by world seed + tile coords so drops are reproducible
+    let mut rng = world.new_rng(pos.x, pos.y, pos.z);
+    let gained = drop
+        .items
+        .iter()
+        .map(|&(kind, min, max)| {
+            let qty = if min == max {
+                min
+            } else {
+                rng.gen_range(min..=max)
+            };
+            (kind, qty)
+        })
+        .filter(|&(_, qty)| qty > 0)
+        .collect();
+    Some(gained)
+}
+
 /// What a feral dog can carry: `(item, min, max)`, rolled when it spawns.
 pub const FERAL_DOG_LOOT: &[(ItemKind, u32, u32)] =
     &[(ItemKind::Leather, 0, 2), (ItemKind::Meat, 1, 3)];

@@ -377,6 +377,12 @@ pub enum InteractionType {
         entity: hecs::Entity,
         position: Position,
     },
+    /// Open an auto-planter's or auto-harvester's window
+    OpenMachine {
+        entity: hecs::Entity,
+        position: Position,
+        kind: lithicrivers_core::factory::FactoryKind,
+    },
     /// Show a power pole's network
     InspectPole {
         entity: hecs::Entity,
@@ -400,6 +406,7 @@ impl InteractionType {
             | InteractionType::OpenCloseDoor { position, .. }
             | InteractionType::OpenChest { position, .. }
             | InteractionType::OpenGenerator { position, .. }
+            | InteractionType::OpenMachine { position, .. }
             | InteractionType::InspectPole { position, .. }
             | InteractionType::LoadBelt { position, .. } => *position,
         }
@@ -428,6 +435,7 @@ impl InteractionType {
             InteractionType::TalkToNPC { npc_name, .. } => format!("Talk to {}", npc_name),
             InteractionType::OpenChest { .. } => "Open chest".to_string(),
             InteractionType::OpenGenerator { .. } => "Fuel generator".to_string(),
+            InteractionType::OpenMachine { kind, .. } => format!("Open {}", kind.name()),
             InteractionType::InspectPole { .. } => "Inspect power pole".to_string(),
             InteractionType::LoadBelt { item, .. } => format!(
                 "Put {} on belt",
@@ -464,6 +472,7 @@ impl InteractionType {
             InteractionType::TalkToNPC { .. } => "t",  // t for talking
             InteractionType::OpenChest { .. } => "c",  // c for chest
             InteractionType::OpenGenerator { .. } => "G",
+            InteractionType::OpenMachine { .. } => "M",
             InteractionType::InspectPole { .. } => "+",
             InteractionType::LoadBelt { .. } => ">", // onto the belt
             InteractionType::OpenCloseDoor { is_open, .. } => {

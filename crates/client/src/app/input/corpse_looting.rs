@@ -198,17 +198,36 @@ pub fn handle_corpse_looting_input(app: &mut App, key: KeyCode) -> Result<bool, 
                     let result = move_one_item_to_block(world, player, corpse_entity, player_item);
                     (result, "Stored")
                 };
-                let block_name = world
+                use lithicrivers_core::factory::FactoryKind;
+                let block_kind = world
                     .get::<&lithicrivers_core::factory::FactoryBlock>(corpse_entity)
-                    .map(|b| b.kind.name())
-                    .unwrap_or("chest");
-                let refused_fuel = !panel_focus
-                    && block_name == "burner generator"
-                    && world
-                        .get::<&lithicrivers_core::components::Inventory>(player)
-                        .ok()
-                        .and_then(|inv| inv.slots.get(player_item).map(|s| s.kind))
-                        .is_some_and(|k| lithicrivers_core::power::fuel_energy(k).is_none());
+                    .map(|b| b.kind)
+                    .unwrap_or(FactoryKind::Chest);
+                let block_name = block_kind.name();
+                let stored_item = world
+                    .get::<&lithicrivers_core::components::Inventory>(player)
+                    .ok()
+                    .and_then(|inv| inv.slots.get(player_item).map(|s| s.kind));
+                // Why the block refuses this item outright, rather than being full
+                let refusal = match (block_kind, stored_item) {
+                    (FactoryKind::BurnerGenerator, Some(item))
+                        if lithicrivers_core::power::fuel_energy(item).is_none() =>
+                    {
+                        Some(format!(
+                            "{} isn't fuel",
+                            lithicrivers_core::components::itemkind_name(item)
+                        ))
+                    }
+                    (FactoryKind::AutoPlanter, Some(item))
+                        if item != lithicrivers_core::components::ItemKind::Acorn =>
+                    {
+                        Some("The auto-planter only takes acorns".to_string())
+                    }
+                    (FactoryKind::AutoHarvester, Some(_)) => {
+                        Some("The auto-harvester only gives items out".to_string())
+                    }
+                    _ => None,
+                };
                 match result {
                     Ok(kind) => app.core.game.res.log(format!(
                         "{verb} {}",
@@ -217,17 +236,8 @@ pub fn handle_corpse_looting_input(app: &mut App, key: KeyCode) -> Result<bool, 
                     Err(TransferError::Full) if panel_focus => {
                         app.core.game.res.log("Your inventory is full")
                     }
-                    Err(TransferError::Full) if refused_fuel => {
-                        let item = app
-                            .core
-                            .game
-                            .world
-                            .get::<&lithicrivers_core::components::Inventory>(player)
-                            .ok()
-                            .and_then(|inv| inv.slots.get(player_item).map(|s| s.kind));
-                        let name =
-                            item.map_or("That", lithicrivers_core::components::itemkind_name);
-                        app.core.game.res.log(format!("{name} isn't fuel"))
+                    Err(TransferError::Full) if refusal.is_some() => {
+                        app.core.game.res.log(refusal.unwrap_or_default())
                     }
                     Err(TransferError::Full) => {
                         app.core.game.res.log(format!("The {block_name} is full"))

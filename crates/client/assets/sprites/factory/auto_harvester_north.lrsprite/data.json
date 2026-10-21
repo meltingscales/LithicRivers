@@ -1,0 +1,5 @@
+{
+    "name": "Auto-harvester (north)",
+    "color": "#B45F06",
+    "description": "Chops grown trees within 2 tiles and outputs the wood in front"
+}

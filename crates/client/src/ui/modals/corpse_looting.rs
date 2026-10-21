@@ -166,8 +166,9 @@ fn render_corpse_loot_modal(
         .ok()
         .map(|b| b.kind);
     let is_chest = block.is_some();
+    use lithicrivers_core::factory::FactoryKind;
     let (title, items_title) = match block {
-        Some(lithicrivers_core::factory::FactoryKind::BurnerGenerator) => {
+        Some(FactoryKind::BurnerGenerator) => {
             let buffer_kj = app
                 .core
                 .game
@@ -187,6 +188,42 @@ fn render_corpse_loot_modal(
                     corpse_inv.max_slots
                 ),
             )
+        }
+        Some(kind @ (FactoryKind::AutoPlanter | FactoryKind::AutoHarvester)) => {
+            use lithicrivers_core::machines::{action_cost, Machine, MACHINE_CAPACITY};
+            let world = &app.core.game.world;
+            let progress = world
+                .get::<&Machine>(corpse_entity)
+                .map_or(0, |m| m.progress * 100 / action_cost(kind));
+            let consumer = world
+                .get::<&lithicrivers_core::power::PowerConsumer>(corpse_entity)
+                .ok()
+                .map(|c| *c);
+            let powered = app.core.game.res.power.network_of(corpse_entity).is_some();
+            let status = match consumer {
+                Some(c) if c.active && powered => format!(
+                    "working {progress}%, power {}%",
+                    c.satisfaction_permille / 10
+                ),
+                Some(c) if c.active => "no power pole in reach".to_string(),
+                _ => "idle".to_string(),
+            };
+            let facing = world
+                .get::<&lithicrivers_core::factory::FactoryBlock>(corpse_entity)
+                .map(|b| b.facing.name())
+                .unwrap_or("north");
+            let held: u32 = corpse_inv.slots.iter().map(|s| s.qty).sum();
+            if kind == FactoryKind::AutoPlanter {
+                (
+                    format!(" Auto-Planter - {status} "),
+                    format!(" Acorns ({held}/{MACHINE_CAPACITY}) "),
+                )
+            } else {
+                (
+                    format!(" Auto-Harvester facing {facing} - {status} "),
+                    format!(" Output ({held}/{MACHINE_CAPACITY}) "),
+                )
+            }
         }
         Some(_) => (
             " Chest ".to_string(),

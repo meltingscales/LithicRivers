@@ -1,0 +1,92 @@
+# Reference tree farm: an auto-planter and an auto-harvester share a patch of grass west of
+# spawn. The harvester faces east into two belts that end in a chest; a burner generator and
+# a power pole to the north power both. Setup gives the planter 16 acorns and the generator
+# 3 logs, then 30 game minutes pass with no player input.
+#
+#   y=-4  G . . . . .        G generator, + pole, p planter, H harvester (east),
+#   y=-3  . + . . . .        = belts (east), C chest
+#   y= 0  . p H = = C
+#        x=-17 ... -12
+seed 12345
+size 100x30
+skip-splash
+key ui.MENU_PREV
+cheat giveitem auto_harvester
+cheat giveitem wooden_conveyor 2
+cheat giveitem chest
+cheat giveitem auto_planter
+cheat giveitem power_pole
+cheat giveitem burner_generator
+cheat giveitem acorn 15
+key build.TOGGLE_BREAK_PLACE_MODE 2
+# Picker: Clear slot, Acorn, Auto-Harvester, Wooden Conveyor, Chest, Auto-Planter, Power
+# Pole, Burner Generator
+key hotbar.HOTBAR_SLOT_1 2
+key movement.MOVE_SOUTH 2
+key ui.MENU_ACTIVATE
+key hotbar.HOTBAR_SLOT_2 2
+key movement.MOVE_SOUTH 3
+key ui.MENU_ACTIVATE
+key hotbar.HOTBAR_SLOT_3 2
+key movement.MOVE_SOUTH 4
+key ui.MENU_ACTIVATE
+key hotbar.HOTBAR_SLOT_4 2
+key movement.MOVE_SOUTH 5
+key ui.MENU_ACTIVATE
+key hotbar.HOTBAR_SLOT_5 2
+key movement.MOVE_SOUTH 6
+key ui.MENU_ACTIVATE
+key hotbar.HOTBAR_SLOT_6 2
+key movement.MOVE_SOUTH 7
+key ui.MENU_ACTIVATE
+# Everything placed from here faces east
+key build.ROTATE_PLACEMENT
+cheat tp -15 1 0
+key hotbar.HOTBAR_SLOT_1
+key build.PLACE_NORTH
+key hotbar.HOTBAR_SLOT_2
+key build.PLACE_NORTHEAST
+key hotbar.HOTBAR_SLOT_4
+key build.PLACE_NORTHWEST
+cheat tp -13 1 0
+key hotbar.HOTBAR_SLOT_2
+key build.PLACE_NORTH
+key hotbar.HOTBAR_SLOT_3
+key build.PLACE_NORTHEAST
+cheat tp -17 -3 0
+key hotbar.HOTBAR_SLOT_5
+key build.PLACE_EAST
+key hotbar.HOTBAR_SLOT_6
+key build.PLACE_NORTH
+key build.TOGGLE_BREAK_PLACE_MODE 2
+# Fuel the generator: 3 logs (Your Items: Nail, Acorn, Log, ...)
+key action.INTERACT
+expect-text "Fuel generator (N)"
+# Choices: Inspect power pole (E), Fuel generator (N)
+key movement.MOVE_SOUTH
+key ui.MENU_ACTIVATE
+key movement.MOVE_SOUTH 2
+key ui.MENU_ACTIVATE 3
+expect-text "Stored Log"
+key ui.CLOSE_HELP_MENU
+# Load the planter with 16 acorns
+cheat tp -17 0 0
+key action.INTERACT
+expect-text "Auto-Planter"
+key movement.MOVE_SOUTH
+key ui.MENU_ACTIVATE 16
+expect-text "Acorns (16/16)"
+key ui.CLOSE_HELP_MENU
+# Ten seconds in, the planter is working
+key action.PASS_TIME
+key action.INTERACT
+key ui.MENU_ACTIVATE
+expect-text "Auto-Planter - working"
+screen planter-window
+key ui.CLOSE_HELP_MENU
+# Out of the way, then 30 game minutes
+cheat tp -15 12 0
+key action.PASS_TIME 180
+cheat tp -15 4 0
+expect-text "H>>C"
+screen farm

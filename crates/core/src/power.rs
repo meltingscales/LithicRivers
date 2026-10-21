@@ -65,6 +65,14 @@ impl PowerConsumer {
             satisfaction_permille: 0,
         }
     }
+
+    /// A consumer that wants no power until it has work.
+    pub fn idle(demand_w: u64) -> Self {
+        Self {
+            active: false,
+            ..Self::new(demand_w)
+        }
+    }
 }
 
 /// One connected network.
@@ -321,7 +329,13 @@ pub fn step_power(world: &mut World, res: &mut Resources) {
 
 /// Whether a factory block kind belongs to the grid (placing or breaking it changes networks).
 pub fn is_grid_block(kind: FactoryKind) -> bool {
-    matches!(kind, FactoryKind::BurnerGenerator | FactoryKind::PowerPole) || kind.is_test_consumer()
+    matches!(
+        kind,
+        FactoryKind::BurnerGenerator
+            | FactoryKind::PowerPole
+            | FactoryKind::AutoPlanter
+            | FactoryKind::AutoHarvester
+    ) || kind.is_test_consumer()
 }
 
 #[cfg(test)]
