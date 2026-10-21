@@ -15,4 +15,4 @@
 ## 3. Docs and checks
 
 - [x] 3.1 Document world types in Help, AGENTS.md (creating debug worlds in scripts) and `docs/TECH-TREE.md` (showcase rule for new machines); verify `just code-clippy`, `cargo test --workspace` and PR checks pass
-- [ ] 3.2 User check: each world type looks right and is useful in the interactive client
+- [x] 3.2 User check: each world type looks right and is useful in the interactive client
