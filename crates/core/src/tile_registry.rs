@@ -85,6 +85,7 @@ define_tiles! {
     EnemySpawn, "enemy_spawn", "enemy spawn", false,
     SpecialPlayerSpawn, "special_player_spawn", "player spawn", false,
     FactoryBlock, "factory_block", "factory block", false,
+    Sapling, "sapling", "sapling", true,
 }
 
 impl TileKind {
@@ -94,6 +95,8 @@ impl TileKind {
         match item {
             ItemKind::PlankBlock => Some(TileKind::PlankBlock),
             ItemKind::Stone => Some(TileKind::Rock),
+            // Planted rather than placed; see `plants::plant`
+            ItemKind::Acorn => Some(TileKind::Sapling),
             _ => None,
         }
     }

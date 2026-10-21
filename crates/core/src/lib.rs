@@ -18,6 +18,7 @@ pub mod model;
 pub mod moves;
 pub mod palettekey;
 pub mod pathfinding;
+pub mod plants;
 pub mod player_state;
 pub mod recipe_handler;
 pub mod resources;

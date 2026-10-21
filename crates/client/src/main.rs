@@ -10,6 +10,8 @@ mod clock;
 mod dialogue_presenter;
 #[cfg(test)]
 mod factory_tests;
+#[cfg(test)]
+mod farming_tests;
 mod headless;
 mod mcp;
 #[cfg(test)]

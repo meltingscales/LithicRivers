@@ -108,6 +108,7 @@ saved_components! {
     "fog_of_war" => FogOfWar,
     "light_source" => LightSource,
     "factory_block" => crate::factory::FactoryBlock,
+    "growth" => crate::plants::Growth,
 }
 
 /// Entities that carry a component type the registry doesn't know, described by the
@@ -463,6 +464,12 @@ mod tests {
             .get::<&mut Inventory>(chest)
             .unwrap()
             .add(crate::components::ItemKind::Log, 3);
+        crate::plants::plant(
+            &mut fight.game.world,
+            &mut fight.game.res,
+            Position { x: 3, y: -3, z: 0 },
+        )
+        .unwrap();
         fight.ticks(30);
         let dog = fight.entity(dog);
         crate::systems::handle_entity_death(&mut fight.game.world, &mut fight.game.res, dog);

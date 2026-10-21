@@ -14,7 +14,8 @@ const READY_TO_PLACE: &[&str] = &[
     "cheat giveitem chest 1",
     "key build.TOGGLE_BREAK_PLACE_MODE 2",
     "key hotbar.HOTBAR_SLOT_1 2",
-    "key movement.MOVE_SOUTH",
+    // The picker lists Clear slot, then placeable items in inventory order: Acorn, Chest
+    "key movement.MOVE_SOUTH 2",
     "key ui.MENU_ACTIVATE",
 ];
 /// From Place mode: back to movement mode (through Rotate).

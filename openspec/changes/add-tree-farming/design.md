@@ -29,3 +29,12 @@ Runs first in each factory step: for every `Growth` whose `grows_at_tick <= step
 
 - [Players plant whole fields and slow the game] → Growth is a cheap comparison per sapling per step.
 - [Grown trees can block paths] → Same as natural trees; the player chooses where to plant.
+
+## Implementation Notes
+
+- **`crates/core/src/plants.rs`** owns planting (`plant`), growth (`grow_saplings`, run as the first system in each factory step) and breaking (`break_sapling`). Saplings aren't factory blocks, so they aren't in the factory index; the few lookups by position query `Growth` directly.
+- **Exact timing:** `run_due_steps` now passes each step its own tick (the start of the elapsed span plus 20 ticks per step), so a sapling grows in the first step at or after its `grows_at_tick`, however long the action was.
+- **`Growth` remembers the tile it was planted on** (`planted_on`), so pulling up a sapling restores grass or dirt. `Growth` is registered for saving and is in the save-completeness worlds.
+- **Placement:** `TileKind::from_item_kind(Acorn)` is `Sapling` so acorns count as placeable (hotbar picker, crafting reachability), but the client plants them through `plants::plant` rather than setting the tile. Acorns are a raw source, so reachability is unaffected.
+- **Hotbar picker order:** the picker lists placeable items in inventory order, so with the starting kit the acorn comes before a chest. Scripts and docs that assign a chest now move down twice.
+- Mining a sapling pulls it up ("You pull up the sapling. (+1 Acorn)").

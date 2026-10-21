@@ -299,17 +299,21 @@ pub fn move_one_item(
     Ok(kind)
 }
 
-/// Run every factory step that fits in the ticks elapsed since the last call. Factory systems
-/// (none yet; later changes add growth, generators, power, machines and belts, in that order)
-/// run over all factory blocks, wherever they are.
-pub fn run_due_steps(_world: &mut World, res: &mut Resources) {
+/// Run every factory step that fits in the ticks elapsed since the last call. Each step runs
+/// the factory systems in a fixed order (growth; later changes add generators, power,
+/// machines and belts, in that order) over everything, wherever it is.
+pub fn run_due_steps(world: &mut World, res: &mut Resources) {
     let clock = &mut res.factory_clock;
     let elapsed = res.time.tick.saturating_sub(clock.last_tick) + clock.carry;
+    // The tick of the first step due: the start of the elapsed span plus one step
+    let first_step_tick = res.time.tick.saturating_sub(elapsed) + FACTORY_STEP_TICKS;
     clock.last_tick = res.time.tick;
     clock.carry = elapsed % FACTORY_STEP_TICKS;
     let steps = elapsed / FACTORY_STEP_TICKS;
-    for _ in 0..steps {
-        clock.steps += 1;
+    for i in 0..steps {
+        let step_tick = first_step_tick + i * FACTORY_STEP_TICKS;
+        crate::plants::grow_saplings(world, res, step_tick);
+        res.factory_clock.steps += 1;
     }
 }
 
