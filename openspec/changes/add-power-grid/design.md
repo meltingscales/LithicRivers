@@ -44,3 +44,14 @@ Wires are a client-side render of pole links: Bresenham line between pole positi
 - [Floating-point drift breaks determinism] → Integer joules (u64) and fixed-point satisfaction (per-mille); no floats in the simulation.
 - [Wire lines clutter small screens] → Blink keeps terrain visible; view modes can hide them.
 - [Network rebuild cost] → Only on changes, not per step.
+
+## Implementation Notes
+
+- **Module:** `crates/core/src/power.rs`. Generators keep fuel in an `Inventory` (4 stacks), so belts and the transfer window feed them through the shared `factory::accepts` / `insert`, which only lets fuel into a generator.
+- **Networks** (`PowerNetworks` on `Resources`) are rebuilt when a grid block is placed or broken (`dirty`). They are **saved** rather than rebuilt on load: entity ids survive saving, and saving last step's supply/demand and the wire links keeps screens identical across a reload (the save-reload identity test caught the difference).
+- **Merging through a shared block** never changes the result today: two poles whose supply areas overlap (6 tiles) are already within wire reach (8). The rule is implemented anyway, for future pole types with other reaches.
+- **Distribution** uses whole joules per step and per-mille satisfaction; the rounding remainder of each generator's share goes to the first generators one joule at a time.
+- **Consumers** carry `PowerConsumer { demand_w, active, satisfaction_permille }`; a test-only `FactoryKind::TestConsumer` (45 kW) exercises the grid until machines exist.
+- **Inspecting:** a generator opens the two-panel transfer window, titled with its network's supply/demand and the fuel energy left; a pole opens a small "Power Network" box. "Stone isn't fuel" is logged when a non-fuel item is refused.
+- **Wires** are drawn per Bresenham step (`─ │ ╲ ╱`), in yellow, over terrain and under entities, on even seconds of `app.clock`.
+- **Recipe list order:** the generator and pole recipes come before Chest, so scripts selecting the chest recipe move down two more.
