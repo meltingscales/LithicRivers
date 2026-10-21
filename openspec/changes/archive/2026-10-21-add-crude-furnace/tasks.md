@@ -10,4 +10,4 @@
 
 - [x] 2.1 Furnace glyph (lit while smelting) and the three-slot window; verify a snapshot of the window mid-smelt
 - [x] 2.2 Add the crude furnace recipe; verify the crafting reachability test passes
-- [ ] 2.3 Verify `just code-clippy`, `cargo test --workspace` and PR checks pass; user check that the furnace and its window feel right
+- [x] 2.3 Verify `just code-clippy`, `cargo test --workspace` and PR checks pass; user check that the furnace and its window feel right
