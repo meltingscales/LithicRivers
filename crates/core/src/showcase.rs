@@ -215,13 +215,13 @@ fn router_split(game: &mut Game, o: Position) {
     ));
 }
 
-/// A generator and pole powering an auto-planter and an auto-harvester. The harvester fills
+/// Two generators and a pole powering an auto-planter and an auto-harvester. The harvester fills
 /// a chest; a filter extractor set to acorns feeds them back to the planter, so the farm
 /// replants itself.
 ///
 /// ```text
 ///   G . . . . . .
-///   . + . . . . .
+///   G + . . . . .
 ///   . . . p . . t
 ///   . . . ^ . . .      ^ filter extractor (acorns), facing the planter
 ///   . . . C H . .      H harvester facing west into the chest
@@ -229,8 +229,16 @@ fn router_split(game: &mut Game, o: Position) {
 ///   . . t . . t t
 /// ```
 fn tree_farm(game: &mut Game, o: Position) {
-    let generator = place(game, FactoryKind::BurnerGenerator, o, Facing::North);
-    fill(game, generator, &[(ItemKind::Log, 5)]);
+    // Two generators (180 kW) of the 240 kW the planter and harvester draw together
+    for dy in [0, 1] {
+        let generator = place(
+            game,
+            FactoryKind::BurnerGenerator,
+            at(o, 0, dy),
+            Facing::North,
+        );
+        fill(game, generator, &[(ItemKind::Log, 5)]);
+    }
     place(game, FactoryKind::PowerPole, at(o, 1, 1), Facing::North);
     let planter = place(game, FactoryKind::AutoPlanter, at(o, 3, 2), Facing::North);
     fill(game, planter, &[(ItemKind::Acorn, 4)]);
