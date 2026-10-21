@@ -14,4 +14,4 @@
 ## 3. Recipes and checks
 
 - [x] 3.1 Add generator and pole recipes; verify the crafting reachability test passes
-- [ ] 3.2 Verify `just code-clippy`, `cargo test --workspace` and PR checks pass; user check that the grid and blinking wires read well
+- [x] 3.2 Verify `just code-clippy`, `cargo test --workspace` and PR checks pass; user check that the grid and blinking wires read well
