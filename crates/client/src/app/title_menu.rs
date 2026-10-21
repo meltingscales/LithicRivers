@@ -459,7 +459,7 @@ mod tests {
         "rawkey ENTER",
         "rawkey ENTER",
     ];
-    const MENU_TAB: &[&str] = &["key ui.MENU_NEXT 6"];
+    const MENU_TAB: &[&str] = &["key ui.MENU_NEXT 7"];
     /// From the title screen: create seed 12345, then save and quit back to the title.
     fn create_and_quit() -> Vec<&'static str> {
         [TO_CREATE, CREATE_12345, MENU_TAB, &["rawkey Q"]].concat()
@@ -547,7 +547,7 @@ mod tests {
         let mut runner = chain_commands(&[
             "skip-splash",
             "key movement.MOVE_SOUTH",
-            "key ui.MENU_NEXT 9",
+            "key ui.MENU_NEXT 10",
         ]);
         assert_eq!(runner.app.ui.current_tab, MenuTab::Quit);
         let pos = runner.app.core.game.get_player_position();

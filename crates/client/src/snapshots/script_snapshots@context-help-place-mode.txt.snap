@@ -32,6 +32,6 @@ input_file: scripts/snapshots/context-help-place-mode.txt
 │[1] Build mode: Place                                                                             │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
-│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Menu │ Help │ Credits │ Qu│
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 === end screen ===

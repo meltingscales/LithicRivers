@@ -2,5 +2,5 @@
 seed 12345
 size 100x30
 skip-splash
-key ui.MENU_NEXT 8
+key ui.MENU_NEXT 9
 screen credits

@@ -32,7 +32,7 @@ input_file: scripts/snapshots/factory-tree-farm.txt
 │[1001] The auto-planter only takes acorns                                                         │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
-│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Menu │ Help │ Credits │ Qu│
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 === end screen ===
 === screen farm ===
@@ -64,6 +64,6 @@ input_file: scripts/snapshots/factory-tree-farm.txt
 │[181001] Time passes...                                                                           │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
-│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Menu │ Help │ Credits │ Qu│
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 === end screen ===

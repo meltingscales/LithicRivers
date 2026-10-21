@@ -132,6 +132,13 @@ pub(crate) fn ui(f: &mut Frame, app: &mut App) {
             // Crafting panel
             render_crafting_panel(f, app, root_chunks[1]);
         }
+        MenuTab::ItemDictionary => {
+            crate::ui::panels::item_dictionary::render_item_dictionary_panel(
+                f,
+                app,
+                root_chunks[1],
+            );
+        }
         MenuTab::Body => {
             // Body panel
             render_body_panel(f, app, root_chunks[1]);
@@ -248,24 +255,10 @@ fn render_bottom_menu(f: &mut Frame, app: &mut App, area: Rect) {
     // Remember for click handling
     app.ui.bottom_menu_rect = Some(area);
     // All tabs white; selected tab green
-    let mut titles = vec![Span::raw("World")];
-
-    // Conditionally add Tutorial tab if visible
-    if app.ui.tutorial_visible {
-        titles.push(Span::raw("Tutorial"));
-    }
-
-    titles.extend(vec![
-        Span::raw("Global Map"),
-        Span::raw("Quests"),
-        Span::raw("Body"),
-        Span::raw("Inventory"),
-        Span::raw("Crafting"),
-        Span::raw("Menu"),
-        Span::raw("Help"),
-        Span::raw("Credits"),
-        Span::raw("Quit"),
-    ]);
+    let titles: Vec<Span> = MenuTab::visible(app.ui.tutorial_visible)
+        .into_iter()
+        .map(|t| Span::raw(t.title()))
+        .collect();
 
     let tabs = Tabs::new(titles)
         .block(
@@ -349,6 +342,7 @@ fn calculate_game_viewport_area(f: &Frame, app: &App) -> Rect {
         MenuTab::GlobalMap
         | MenuTab::Quests
         | MenuTab::Crafting
+        | MenuTab::ItemDictionary
         | MenuTab::Body
         | MenuTab::Help
         | MenuTab::Inventory

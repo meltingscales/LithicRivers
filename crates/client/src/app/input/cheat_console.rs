@@ -543,8 +543,23 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Error>>
                     app.panels.cheat_console = CheatConsoleState::None;
                     return Ok(true);
                 }
-                // Execute command with Enter
+                // Enter on a picked suggestion fills it in; otherwise it runs the input
                 KeyCode::Enter => {
+                    let picked = autocomplete_index
+                        .and_then(|i| autocomplete_suggestions.get(i))
+                        .filter(|s| *s != input)
+                        .cloned();
+                    if let Some(picked) = picked {
+                        let (suggestions, index) = update_autocomplete(&picked);
+                        app.panels.cheat_console = CheatConsoleState::Open {
+                            cursor_position: picked.len(),
+                            input: picked,
+                            autocomplete_suggestions: suggestions,
+                            autocomplete_index: index,
+                            scroll_offset: *scroll_offset,
+                        };
+                        return Ok(true);
+                    }
                     let command = input.clone();
                     app.panels.cheat_console = CheatConsoleState::None;
                     execute_command(app, &command);
@@ -697,7 +712,18 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Error>>
                     .keybinds
                     .matches("ui", "CHEAT_CONSOLE_SCROLL_UP", &key) =>
                 {
-                    if input.is_empty() && autocomplete_suggestions.is_empty() {
+                    if !autocomplete_suggestions.is_empty() {
+                        // Pick the previous suggestion
+                        app.panels.cheat_console = CheatConsoleState::Open {
+                            input: input.clone(),
+                            cursor_position: *cursor_position,
+                            autocomplete_suggestions: autocomplete_suggestions.clone(),
+                            autocomplete_index: Some(
+                                autocomplete_index.unwrap_or(0).saturating_sub(1),
+                            ),
+                            scroll_offset: *scroll_offset,
+                        };
+                    } else if input.is_empty() {
                         // Only scroll when showing all commands (no input/autocomplete)
                         let new_scroll_offset = scroll_offset.saturating_sub(1);
                         app.panels.cheat_console = CheatConsoleState::Open {
@@ -715,7 +741,18 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Error>>
                     .keybinds
                     .matches("ui", "CHEAT_CONSOLE_SCROLL_DOWN", &key) =>
                 {
-                    if input.is_empty() && autocomplete_suggestions.is_empty() {
+                    if !autocomplete_suggestions.is_empty() {
+                        // Pick the next suggestion
+                        let last = autocomplete_suggestions.len() - 1;
+                        let next = autocomplete_index.map_or(0, |i| (i + 1).min(last));
+                        app.panels.cheat_console = CheatConsoleState::Open {
+                            input: input.clone(),
+                            cursor_position: *cursor_position,
+                            autocomplete_suggestions: autocomplete_suggestions.clone(),
+                            autocomplete_index: Some(next),
+                            scroll_offset: *scroll_offset,
+                        };
+                    } else if input.is_empty() {
                         // Only scroll when showing all commands (no input/autocomplete)
                         let registry = get_command_registry();
                         let commands = registry.get_command_descriptions();
@@ -805,5 +842,33 @@ mod tests {
         // Test items where one is a prefix of another
         let items = vec!["test".to_string(), "testing".to_string()];
         assert_eq!(find_common_prefix(&items), "test");
+    }
+}
+
+#[cfg(test)]
+mod suggestion_tests {
+    use crate::app_state::CheatConsoleState;
+    use crate::headless::chain_commands;
+
+    #[test]
+    fn every_giveitem_suggestion_can_be_reached_and_used() {
+        let names = lithicrivers_core::components::get_all_item_sprite_names();
+        let last = names.last().unwrap();
+        let mut runner = chain_commands(&[
+            "skip-splash",
+            "key ui.OPEN_COMMAND_MENU",
+            "type \"giveitem \"",
+            &format!("key ui.CHEAT_CONSOLE_SCROLL_DOWN {}", names.len() + 3),
+        ]);
+        assert!(
+            runner.screen_text().contains(&format!("> giveitem {last}")),
+            "the last item is picked and visible"
+        );
+        // Enter fills in the pick; the next Enter runs it
+        runner.chain(&["rawkey ENTER"]);
+        let CheatConsoleState::Open { input, .. } = &runner.app.panels.cheat_console else {
+            panic!("still open after picking");
+        };
+        assert_eq!(input, &format!("giveitem {last}"));
     }
 }

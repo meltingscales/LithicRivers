@@ -32,6 +32,6 @@ input_file: scripts/snapshots/modal-npc-dialogue.txt
 │[401] Started conversation with Broken SapienCorp Android                                         │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
-│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Menu │ Help │ Credits │ Qu│
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 === end screen ===

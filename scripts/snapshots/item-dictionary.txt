@@ -1,0 +1,13 @@
+# Item Dictionary tab with a search for "log": Log's art, sources and the recipes using it
+seed 12345
+size 100x30
+skip-splash
+# skip-splash starts on Tutorial: Global Map, Quests, Body, Inventory, Crafting, Items
+key ui.MENU_NEXT 6
+expect-text "Item Dictionary"
+key dictionary.SEARCH
+type "log"
+key dictionary.END_SEARCH
+expect-text "Mined from tree"
+expect-text "Power Pole"
+screen item-dictionary
