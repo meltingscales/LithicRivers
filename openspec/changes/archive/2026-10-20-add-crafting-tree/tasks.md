@@ -13,4 +13,4 @@
 ## 3. Client
 
 - [x] 3.1 Show the ingredient tree for the selected recipe in the Crafting panel; verify a snapshot script selecting the chest recipe
-- [ ] 3.2 Verify `just code-clippy`, `cargo test --workspace` and PR checks pass; user check that the tree reads clearly in the interactive client
+- [x] 3.2 Verify `just code-clippy`, `cargo test --workspace` and PR checks pass; user check that the tree reads clearly in the interactive client
