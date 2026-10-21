@@ -86,6 +86,35 @@ fn chest_stores_and_returns_items() {
 }
 
 #[test]
+fn take_all_empties_a_chest_into_the_inventory() {
+    let mut runner =
+        chain_commands(&[READY_TO_PLACE, &["key build.PLACE_WEST"], TO_MOVEMENT].concat());
+    let chest = block_at(&runner, WEST);
+    {
+        let world = &mut runner.app.core.game.world;
+        let mut inv = world.get::<&mut Inventory>(chest).unwrap();
+        inv.add(ItemKind::Stone, 4);
+        inv.add(ItemKind::Log, 2);
+    }
+    runner.chain(&[
+        "key action.INTERACT",
+        "expect-text \"a Take All\"",
+        "key ui.TAKE_ALL",
+        "expect-text \"Took all 6 items\"",
+        "expect-text \"Chest Items (0/16)\"",
+    ]);
+    let player = runner.app.core.game.get_player_entity().unwrap();
+    assert_eq!(count(&runner, player, ItemKind::Stone), 4);
+    assert_eq!(
+        count(&runner, player, ItemKind::Log),
+        5,
+        "3 starting logs + 2"
+    );
+    runner.chain(&["key ui.TAKE_ALL"]);
+    assert!(last_message(&runner).ends_with("Nothing to take"));
+}
+
+#[test]
 fn breaking_a_chest_gives_it_back_and_spills_its_contents() {
     let mut runner = chain_commands(&[READY_TO_PLACE, &["key build.PLACE_WEST"]].concat());
     let chest = block_at(&runner, WEST);

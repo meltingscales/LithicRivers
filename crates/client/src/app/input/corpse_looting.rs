@@ -173,6 +173,31 @@ pub fn handle_corpse_looting_input(app: &mut App, key: KeyCode) -> Result<bool, 
             }
         }
 
+        if app.ui.keybinds.matches("ui", "TAKE_ALL", &key) {
+            if let Some(player) = app.core.game.get_player_entity() {
+                let world = &mut app.core.game.world;
+                let moved =
+                    lithicrivers_core::factory::move_all_items(world, corpse_entity, player);
+                let left = world
+                    .get::<&lithicrivers_core::components::Inventory>(corpse_entity)
+                    .map_or(0, |inv| inv.slots.len());
+                let message = match (moved, left) {
+                    (0, 0) => "Nothing to take".to_string(),
+                    (0, _) => "Your inventory is full".to_string(),
+                    (n, 0) => format!("Took all {n} items"),
+                    (n, _) => format!("Took {n} items; your inventory is full"),
+                };
+                app.core.game.res.log(message);
+            }
+            app.panels.corpse_looting = crate::app_state::CorpseLootingState::LootingCorpse {
+                entity: corpse_entity,
+                selected_loot_item: 0,
+                selected_player_item: player_item,
+                loot_panel_focus: panel_focus,
+            };
+            return Ok(true);
+        }
+
         let activate =
             app.ui.keybinds.matches("ui", "MENU_ACTIVATE", &key) || key == KeyCode::Enter;
         let is_chest = app

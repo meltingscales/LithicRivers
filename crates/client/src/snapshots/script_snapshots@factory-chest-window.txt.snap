@@ -26,7 +26,7 @@ input_file: scripts/snapshots/factory-chest-window.txt
 ###############││                                ││                                ││──────────────┘
 ┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
 │[1] Build mode: Rotate                          ││                                ││              │
-│[1] Build mode: Movementwitch Panel | ↑↓: Select | Enter: Move Item | Esc: Close──┘│              │
+│[1] Build mode: Movementanel | ↑↓ Select | Enter Move | a Take All | Esc Close────┘│              │
 │[1] Opened chest───────────────────────────────────────────────────────────────────┘              │
 │[1] Stored Nail                                                                                   │
 │[1] Stored Nail                                                                                   │

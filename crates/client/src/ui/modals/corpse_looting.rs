@@ -327,10 +327,14 @@ fn render_corpse_loot_modal(
     f.render_widget(player_list, chunks[1]);
 
     // Controls at bottom
+    let take_all = app
+        .core
+        .config_manager
+        .get_printable_key_for_keybind("ui", "TAKE_ALL");
     let controls = Paragraph::new(if is_chest {
-        "←→: Switch Panel | ↑↓: Select | Enter: Move Item | Esc: Close"
+        format!("←→ Panel | ↑↓ Select | Enter Move | {take_all} Take All | Esc Close")
     } else {
-        "←→: Switch Panel | ↑↓: Select | Enter: Take Item | Esc: Close"
+        format!("←→ Panel | ↑↓ Select | Enter Take | {take_all} Take All | Esc Close")
     })
     .alignment(Alignment::Center)
     .style(Style::default().fg(Color::Gray));
