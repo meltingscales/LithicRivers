@@ -14,4 +14,4 @@
 ## 3. Checks
 
 - [x] 3.1 Verify `just code-clippy`, `cargo test --workspace` and PR checks pass
-- [ ] 3.2 User check: the gallery snapshot (`crates/client/src/snapshots/sprite_gallery.snap`) and the look panel in the interactive client match `docs/ART-DIRECTION.md`
+- [x] 3.2 User check: the gallery snapshot (`crates/client/src/snapshots/sprite_gallery.snap`) and the look panel in the interactive client match `docs/ART-DIRECTION.md`

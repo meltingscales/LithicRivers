@@ -1,13 +1,12 @@
-# Spec Delta
+# power-grid Specification
 
 ## Purpose
-
 Supplies energy to machines: burner generators turn fuel into power, power poles connect generators and machines into networks, and networks share power between their consumers.
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: Burner generators burn only what is used
-A burner generator SHALL accept fuel items (log, wooden plank, stick, wood shavings), each holding a fixed amount of energy, and SHALL produce power up to its maximum output. It SHALL consume fuel energy only equal to the power its network actually draws from it; when nothing draws power, it SHALL consume no fuel. Energy left in a partly used fuel item SHALL be kept for later.
+A burner generator SHALL accept fuel items (log, wooden plank, stick, wood shavings, and biochar from the `smelting` capability), each holding a fixed amount of energy, and SHALL produce power up to its maximum output. It SHALL consume fuel energy only equal to the power its network actually draws from it; when nothing draws power, it SHALL consume no fuel. Energy left in a partly used fuel item SHALL be kept for later.
 
 #### Scenario: Idle grid
 - **WHEN** a generator with 5 logs is connected to a network whose machines are all idle, and 10 game minutes pass
