@@ -1,0 +1,21 @@
+# Looking at a planted sapling panicked ("Missing entity kind for position"): saplings are
+# entities with only a position and a growth timer. Here the showcase tree farm's planter
+# plants one at (0, -5, 0), and look mode inspects it.
+seed 12345
+size 160x50
+rawkey ENTER
+rawkey ENTER
+key title.SELECT
+key title.SELECT
+key title.DOWN 4
+key title.RIGHT 4
+key title.DOWN 2
+key title.SELECT
+rawkey ENTER
+rawkey ENTER
+key ui.MENU_PREV
+key action.PASS_TIME
+key action.LOOK_TOGGLE
+key movement.MOVE_NORTH 5
+expect-text "Tile: Sapling"
+screen look-at-sapling

@@ -1079,6 +1079,14 @@ mod smoke_tests {
     }
 
     #[test]
+    fn looking_at_a_sapling_does_not_panic() {
+        let script = include_str!("../../../scripts/agent/bugs/look-at-sapling.txt");
+        let (mut out, mut err_out) = (Vec::new(), Vec::new());
+        let code = run_script(script, 0, Overrides::default(), &mut out, &mut err_out);
+        assert_eq!(code, EXIT_OK, "{}", String::from_utf8_lossy(&err_out));
+    }
+
+    #[test]
     fn choose_interaction_shows_directions() {
         let script = include_str!("../../../scripts/agent/bugs/choose-interaction-directions.txt");
         let (mut out, mut err_out) = (Vec::new(), Vec::new());

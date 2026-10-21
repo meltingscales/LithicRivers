@@ -2,7 +2,7 @@
 //! options.
 
 use crate::app::title_menu::{
-    CREATE_FIELDS, DELETE_CHOICES, OPTIONS_ROWS, TITLE_CHOICES, WORLD_ACTIONS,
+    CreateField, DELETE_CHOICES, OPTIONS_ROWS, TITLE_CHOICES, WORLD_ACTIONS,
 };
 use crate::ui::centered_rect;
 use crate::{App, SplashState};
@@ -102,8 +102,9 @@ fn world_rows(app: &App) -> Vec<String> {
         .iter()
         .map(|w| match &w.meta {
             Some(meta) => format!(
-                "{}  (seed {}, last played {})",
+                "{}{}  (seed {}, last played {})",
                 meta.name,
+                world_type_label(meta.settings.world_type),
                 meta.seed,
                 date(meta.last_played_unix)
             ),
@@ -116,6 +117,14 @@ fn world_rows(app: &App) -> Vec<String> {
     rows.push("Create New World".to_string());
     rows.push("Back".to_string());
     rows
+}
+
+/// " (Void)" after a debug world's name; nothing for Normal worlds.
+fn world_type_label(world_type: lithicrivers_core::resources::WorldType) -> String {
+    match world_type {
+        lithicrivers_core::resources::WorldType::Normal => String::new(),
+        t => format!(" ({})", t.name()),
+    }
 }
 
 fn render_world_list(f: &mut Frame, app: &App, area: Rect) {
@@ -158,16 +167,27 @@ fn selected_world_name(app: &App) -> String {
 fn render_create(f: &mut Frame, app: &App, area: Rect) {
     let form = &app.title.create;
     let cursor = |i: usize| if form.field == i { "_" } else { "" };
-    let rows: Vec<String> = CREATE_FIELDS
-        .iter()
+    let rows: Vec<String> = form
+        .fields()
+        .into_iter()
         .enumerate()
-        .map(|(i, label)| match i {
-            0 => format!("{label}: [{}{}]", form.name, cursor(0)),
-            1 => format!("{label}: [{}{}]", form.seed, cursor(1)),
-            2 => format!("{label}: {}", on_off(form.settings.cheats_allowed)),
-            3 => format!("{label}: {}", on_off(form.settings.developer_mode)),
-            4 => format!("{label}: {}", on_off(form.settings.show_tutorial)),
-            _ => label.to_string(),
+        .map(|(i, field)| {
+            let label = field.label();
+            match field {
+                CreateField::Name => format!("{label}: [{}{}]", form.name, cursor(i)),
+                CreateField::Seed => format!("{label}: [{}{}]", form.seed, cursor(i)),
+                CreateField::Cheats => format!("{label}: {}", on_off(form.settings.cheats_allowed)),
+                CreateField::DeveloperMode => {
+                    format!("{label}: {}", on_off(form.settings.developer_mode))
+                }
+                CreateField::WorldType => {
+                    format!("{label}: < {} >", form.settings.world_type.name())
+                }
+                CreateField::Tutorial => {
+                    format!("{label}: {}", on_off(form.settings.show_tutorial))
+                }
+                CreateField::Create | CreateField::Cancel => label.to_string(),
+            }
         })
         .collect();
     let mut lines = vec![Line::from("")];

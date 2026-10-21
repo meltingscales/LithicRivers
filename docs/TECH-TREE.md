@@ -47,3 +47,4 @@ Rare ruined reactors from the old world hold nuclear waste and a little uranium.
 2. Give every new placeable item a recipe; the reachability test fails otherwise.
 3. Add new raw materials to the mining drop table (or creature loot), never as special cases.
 4. Update this file: move the step from "planned" to "done" when its change is archived.
+5. Give every new factory block an example in the Factory showcase (`showcase::EXAMPLES` in `crates/core/src/showcase.rs`); `every_factory_block_kind_has_an_example` fails and names any kind without one.

@@ -1,0 +1,254 @@
+//! The Factory showcase: example builds laid out left to right north of spawn, from simple
+//! to complex. Every factory block kind must appear in at least one example (a test checks
+//! this), so a change that adds a kind adds its example here.
+
+use std::collections::BTreeSet;
+
+use crate::components::{DroppedItem, Inventory, ItemKind, Position, SpriteRef};
+use crate::factory::{self, Facing, FactoryBlock, FactoryKind};
+use crate::game::Game;
+use crate::tiles::TileKind;
+
+/// One example build. `build` places it with its top-left corner at the given position.
+pub struct Example {
+    pub name: &'static str,
+    /// Width and height in tiles
+    pub size: (i64, i64),
+    /// Whether it has something to work on, so it changes as time passes
+    pub has_input: bool,
+    pub build: fn(&mut Game, Position),
+}
+
+pub const EXAMPLES: &[Example] = &[
+    Example {
+        name: "Chest",
+        size: (1, 1),
+        has_input: false,
+        build: chest,
+    },
+    Example {
+        name: "Belt line into a chest",
+        size: (5, 1),
+        has_input: true,
+        build: belt_line,
+    },
+    Example {
+        name: "Powered tree farm",
+        size: (7, 6),
+        has_input: true,
+        build: tree_farm,
+    },
+];
+
+/// The top-left corner of the first example; the rest follow eastward.
+pub const SHOWCASE_ORIGIN: Position = Position {
+    x: -12,
+    y: -7,
+    z: 0,
+};
+/// Empty tiles between examples.
+pub const SHOWCASE_GAP: i64 = 3;
+
+/// Each example with the top-left corner it is built at.
+pub fn layout() -> Vec<(&'static Example, Position)> {
+    let mut x = SHOWCASE_ORIGIN.x;
+    EXAMPLES
+        .iter()
+        .map(|example| {
+            let origin = Position {
+                x,
+                ..SHOWCASE_ORIGIN
+            };
+            x += example.size.0 + SHOWCASE_GAP;
+            (example, origin)
+        })
+        .collect()
+}
+
+pub fn build_showcase(game: &mut Game) {
+    for (example, origin) in layout() {
+        (example.build)(game, origin);
+    }
+}
+
+/// Kinds in `kinds` that no placed block in `game` has.
+pub fn missing_kinds(
+    game: &Game,
+    kinds: impl IntoIterator<Item = FactoryKind>,
+) -> Vec<FactoryKind> {
+    let placed: Vec<FactoryKind> = game
+        .world
+        .query::<&FactoryBlock>()
+        .iter()
+        .map(|(_, b)| b.kind)
+        .collect();
+    kinds.into_iter().filter(|k| !placed.contains(k)).collect()
+}
+
+fn at(origin: Position, dx: i64, dy: i64) -> Position {
+    Position {
+        x: origin.x + dx,
+        y: origin.y + dy,
+        z: origin.z,
+    }
+}
+
+fn place(game: &mut Game, kind: FactoryKind, pos: Position, facing: Facing) -> hecs::Entity {
+    factory::place(&mut game.world, &mut game.res, kind, pos, facing)
+        .unwrap_or_else(|e| panic!("showcase: can't place {} at {pos:?}: {e:?}", kind.name()))
+}
+
+fn fill(game: &mut Game, block: hecs::Entity, items: &[(ItemKind, u32)]) {
+    if let Ok(mut inv) = game.world.get::<&mut Inventory>(block) {
+        for &(item, qty) in items {
+            inv.add(item, qty);
+        }
+    }
+}
+
+fn chest(game: &mut Game, o: Position) {
+    let chest = place(game, FactoryKind::Chest, o, Facing::North);
+    fill(game, chest, &[(ItemKind::Log, 10), (ItemKind::Stone, 5)]);
+}
+
+/// Four belts east into a chest, with logs lying on the first belt.
+fn belt_line(game: &mut Game, o: Position) {
+    for dx in 0..4 {
+        place(game, FactoryKind::Belt, at(o, dx, 0), Facing::East);
+    }
+    place(game, FactoryKind::Chest, at(o, 4, 0), Facing::North);
+    game.world.spawn((
+        o,
+        DroppedItem {
+            kind: ItemKind::Log,
+            qty: 6,
+        },
+        SpriteRef::new("items", "log"),
+    ));
+}
+
+/// A generator and pole powering an auto-planter and an auto-harvester; grown trees in
+/// reach, the harvester feeding two belts into a chest.
+///
+/// ```text
+///   G . . . . . .
+///   . + . . t . .
+///   . . . . . . .
+///   . . p H = = C
+///   . . . . . . .
+///   . t . t . t .
+/// ```
+fn tree_farm(game: &mut Game, o: Position) {
+    let generator = place(game, FactoryKind::BurnerGenerator, o, Facing::North);
+    fill(game, generator, &[(ItemKind::Log, 5)]);
+    place(game, FactoryKind::PowerPole, at(o, 1, 1), Facing::North);
+    let planter = place(game, FactoryKind::AutoPlanter, at(o, 2, 3), Facing::North);
+    fill(game, planter, &[(ItemKind::Acorn, 8)]);
+    place(game, FactoryKind::AutoHarvester, at(o, 3, 3), Facing::East);
+    place(game, FactoryKind::Belt, at(o, 4, 3), Facing::East);
+    place(game, FactoryKind::Belt, at(o, 5, 3), Facing::East);
+    place(game, FactoryKind::Chest, at(o, 6, 3), Facing::North);
+    for (dx, dy) in [(4, 1), (1, 5), (3, 5), (5, 5)] {
+        let p = at(o, dx, dy);
+        game.res
+            .world_state
+            .world
+            .set_tile_cached(p.x, p.y, p.z, TileKind::Tree);
+    }
+}
+
+/// Everything inside an example's area that time can change: tiles, block contents and
+/// items lying there.
+pub fn fingerprint(game: &mut Game, example: &Example, origin: Position) -> String {
+    let mut parts = BTreeSet::new();
+    for dy in 0..example.size.1 {
+        for dx in 0..example.size.0 {
+            let p = at(origin, dx, dy);
+            let tile = game.res.world_state.world.get_tile_cached(p.x, p.y, p.z);
+            parts.insert(format!("{dx},{dy} {tile:?}"));
+            if let Some(&block) = game.res.factory_index.get(&p) {
+                if let Ok(inv) = game.world.get::<&Inventory>(block) {
+                    parts.insert(format!("{dx},{dy} holds {:?}", inv.slots));
+                }
+                if let Ok(belt) = game.world.get::<&factory::BeltSlot>(block) {
+                    parts.insert(format!("{dx},{dy} belt {:?}", belt.item));
+                }
+            }
+        }
+    }
+    let inside = |p: &Position| {
+        (origin.x..origin.x + example.size.0).contains(&p.x)
+            && (origin.y..origin.y + example.size.1).contains(&p.y)
+            && p.z == origin.z
+    };
+    for (_, (p, d)) in game.world.query::<(&Position, &DroppedItem)>().iter() {
+        if inside(p) {
+            parts.insert(format!("{p:?} lying {:?} {}", d.kind, d.qty));
+        }
+    }
+    parts.into_iter().collect::<Vec<_>>().join("\n")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::resources::{WorldSettings, WorldType};
+    use strum::IntoEnumIterator;
+
+    fn showcase() -> Game {
+        let mut settings = WorldSettings::defaults(&crate::game_config::GameConfig::new());
+        settings.world_type = WorldType::FactoryShowcase;
+        Game::new_with_settings(5, settings)
+    }
+
+    fn names(kinds: &[FactoryKind]) -> Vec<&'static str> {
+        kinds.iter().map(|k| k.name()).collect()
+    }
+
+    #[test]
+    fn every_factory_block_kind_has_an_example() {
+        let game = showcase();
+        let real = FactoryKind::iter().filter(|k| !k.is_test_only());
+        let missing = missing_kinds(&game, real);
+        assert!(
+            missing.is_empty(),
+            "add a showcase example (showcase::EXAMPLES) using: {:?}",
+            names(&missing)
+        );
+        // The check does name a kind with no example
+        let all = missing_kinds(&game, FactoryKind::iter());
+        assert!(names(&all).contains(&"test arrow"), "{:?}", names(&all));
+    }
+
+    #[test]
+    fn examples_with_inputs_make_progress_in_60_seconds() {
+        let mut game = showcase();
+        let before: Vec<String> = layout()
+            .into_iter()
+            .map(|(e, o)| fingerprint(&mut game, e, o))
+            .collect();
+        for _ in 0..6 {
+            game.pass_time();
+        }
+        for ((example, origin), before) in layout().into_iter().zip(before) {
+            if example.has_input {
+                assert_ne!(
+                    fingerprint(&mut game, example, origin),
+                    before,
+                    "{} made no progress",
+                    example.name
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn examples_do_not_overlap_spawn() {
+        for (example, origin) in layout() {
+            let spawn = crate::debug_worlds::DEBUG_SPAWN;
+            let covers_spawn = (origin.x..origin.x + example.size.0).contains(&spawn.x)
+                && (origin.y..origin.y + example.size.1).contains(&spawn.y);
+            assert!(!covers_spawn, "{}", example.name);
+        }
+    }
+}
