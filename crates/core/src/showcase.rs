@@ -33,6 +33,12 @@ pub const EXAMPLES: &[Example] = &[
         build: belt_line,
     },
     Example {
+        name: "Belt-fed crude furnace",
+        size: (5, 2),
+        has_input: true,
+        build: belt_fed_furnace,
+    },
+    Example {
         name: "Powered tree farm",
         size: (7, 6),
         has_input: true,
@@ -125,6 +131,32 @@ fn belt_line(game: &mut Game, o: Position) {
         },
         SpriteRef::new("items", "log"),
     ));
+}
+
+/// Logs on a belt into a furnace's back, logs as fuel on a belt into its side, and
+/// biochar out its front onto a belt into a chest.
+///
+/// ```text
+///   . . v . .
+///   = = F = C
+/// ```
+fn belt_fed_furnace(game: &mut Game, o: Position) {
+    place(game, FactoryKind::Belt, at(o, 0, 1), Facing::East);
+    place(game, FactoryKind::Belt, at(o, 1, 1), Facing::East);
+    place(game, FactoryKind::CrudeFurnace, at(o, 2, 1), Facing::East);
+    place(game, FactoryKind::Belt, at(o, 3, 1), Facing::East);
+    place(game, FactoryKind::Chest, at(o, 4, 1), Facing::North);
+    place(game, FactoryKind::Belt, at(o, 2, 0), Facing::South);
+    for (pos, qty) in [(at(o, 0, 1), 4), (at(o, 2, 0), 2)] {
+        game.world.spawn((
+            pos,
+            DroppedItem {
+                kind: ItemKind::Log,
+                qty,
+            },
+            SpriteRef::new("items", "log"),
+        ));
+    }
 }
 
 /// A generator and pole powering an auto-planter and an auto-harvester; grown trees in

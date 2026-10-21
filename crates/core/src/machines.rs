@@ -240,7 +240,7 @@ fn push_output(
     let Some(&target) = res.factory_index.get(&front) else {
         return;
     };
-    if crate::factory::insert(world, target, item) {
+    if crate::factory::insert_from(world, target, item, Some(facing)) {
         take_one(world, machine, item);
     }
 }

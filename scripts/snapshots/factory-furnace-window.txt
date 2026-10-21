@@ -1,0 +1,30 @@
+# Crude furnace window mid-smelt: 4 logs stored in the input and 2 in the fuel slot by hand
+seed 12345
+size 100x30
+skip-splash
+key ui.MENU_PREV
+cheat tp 0 0 0
+cheat giveitem crude_furnace
+cheat giveitem log 3
+key build.TOGGLE_BREAK_PLACE_MODE 2
+# Picker: Clear slot, Acorn, Crude Furnace
+key hotbar.HOTBAR_SLOT_1 2
+key movement.MOVE_SOUTH 2
+key ui.MENU_ACTIVATE
+key hotbar.HOTBAR_SLOT_1
+key build.PLACE_WEST
+key build.TOGGLE_BREAK_PLACE_MODE 2
+key action.INTERACT
+expect-text "Crude Furnace facing north - idle"
+# Your Items is focused with the Input slot selected: Nail, Acorn, Log
+key movement.MOVE_SOUTH 2
+key ui.MENU_ACTIVATE 4
+# Over to the slots, up to Fuel, back to your items
+key movement.MOVE_WEST
+key movement.MOVE_NORTH
+key movement.MOVE_EAST
+key ui.MENU_ACTIVATE 2
+expect-text "Stored Log"
+tick 40
+expect-text "smelting"
+screen furnace-window

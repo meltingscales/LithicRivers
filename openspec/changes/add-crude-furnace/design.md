@@ -43,3 +43,14 @@ Crude Furnace: 12 Stone → 1 (tunable).
 
 - [Biochar makes wood fuel loops net-positive and trivializes power] → The 0.36 MJ smelting cost plus 2 MJ log → 4 MJ biochar is a deliberate density upgrade; tune once the reference farm runs.
 - [`insert` signature change ripples into chests/belts] → Chests and belts ignore `from`; one-time mechanical change.
+
+## Implementation Notes
+
+- **Module:** `crates/core/src/furnace.rs`. `Furnace { fuel, input, output: Option<ItemStack>, progress, buffer_j, lit }` holds three single-stack slots of up to 32 items each. Progress counts factory steps, so a 4 s smelt is 20 steps. The planned `fuel: Option<Storage>` for powered furnaces is left to `add-electric-furnace`, which can reuse `SmeltingRecipe` and `Furnace::step` with its own energy source.
+- **Fuel:** each step draws 18 kJ (90 kW). The furnace starts a new fuel item only when the buffer can't cover the step. With no fuel it pauses and keeps its progress. With nothing to smelt (or no room for the result), progress resets.
+- **Side routing:** `accepts` and `insert` keep their direction-free form for the player's windows. Belts and machine outputs call the new `accepts_from` / `insert_from` with the direction the item is moving. For a furnace facing F, an item moving along F enters its back (input), one moving against F hits its front (refused), and one moving sideways enters a side (fuel). A furnace refuses direction-free inserts; the player uses the furnace window's `furnace::store` / `take`.
+- **Lit glyph:** sprites are `crude_furnace_{lit,unlit}_{facing}` (`f` / `F` at 1x). The furnace step swaps the `SpriteRef` when the lit state changes.
+- **Window:** a separate furnace window, not the chest's one-list window. The left panel has the Fuel, Input and Output slots, the right panel the player's items. Storing puts the selected item into the selected slot. The title shows facing and idle / smelting % / out of fuel, and the slots panel shows the fuel energy left.
+- **Biochar** is fuel at 4 MJ (twice a log) in the shared fuel table, so burner generators take it too.
+- **Showcase:** a "Belt-fed crude furnace" example (logs from the back, logs as fuel from the side, biochar out to a chest) sits before the tree farm, which moves 8 tiles east; `look-at-sapling.txt` follows it.
+- `ItemStack` now derives `Copy`, `PartialEq` and `Eq`.

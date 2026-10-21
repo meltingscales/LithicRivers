@@ -397,3 +397,22 @@ fn tree_farm_makes_more_wood_than_it_burns() {
     assert!(count(&runner, chest, ItemKind::Acorn) > 0);
     assert_eq!(run_tree_farm().1, output, "deterministic");
 }
+
+#[test]
+fn furnace_window_refuses_stone_in_the_input() {
+    let script = include_str!("../../../scripts/snapshots/factory-furnace-window.txt");
+    let lines: Vec<&str> = script
+        .lines()
+        .take_while(|l| !l.starts_with("# Your Items"))
+        .collect();
+    let mut runner = Runner::new(12345, (100, 30));
+    runner.chain(&lines);
+    runner.chain(&["cheat giveitem stone"]);
+    // Your Items: Nail, Acorn, Log, Stick, Torch, String, Scrap Electronics, Stone
+    runner.chain(&[
+        "key movement.MOVE_SOUTH 7",
+        "key ui.MENU_ACTIVATE",
+        "expect-text \"Stone can't be smelted\"",
+    ]);
+    assert!(last_message(&runner).contains("Stone can't be smelted"));
+}

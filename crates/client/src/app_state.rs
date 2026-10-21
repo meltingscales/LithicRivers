@@ -95,10 +95,23 @@ impl CombatUiState {
     }
 }
 
+/// A furnace's window: its three slots on the left, the player's items on the right.
+/// Storing puts the selected player item into the selected slot.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct FurnaceWindow {
+    pub entity: hecs::Entity,
+    pub slot: lithicrivers_core::furnace::Slot,
+    pub player_item: usize,
+    /// Whether the player's items have the focus (otherwise the slots do)
+    pub player_focus: bool,
+}
+
 /// All UI panel-specific states grouped by functionality
 pub struct PanelStates {
     /// The power pole whose network info box is open
     pub power_info: Option<hecs::Entity>,
+    /// The open furnace window, if any
+    pub furnace_window: Option<FurnaceWindow>,
     pub inventory: InventoryPanelState,
     pub crafting: CraftingPanelState,
     pub credits: CreditsPanelState,
@@ -383,6 +396,11 @@ pub enum InteractionType {
         position: Position,
         kind: lithicrivers_core::factory::FactoryKind,
     },
+    /// Open a furnace's window
+    OpenFurnace {
+        entity: hecs::Entity,
+        position: Position,
+    },
     /// Show a power pole's network
     InspectPole {
         entity: hecs::Entity,
@@ -407,6 +425,7 @@ impl InteractionType {
             | InteractionType::OpenChest { position, .. }
             | InteractionType::OpenGenerator { position, .. }
             | InteractionType::OpenMachine { position, .. }
+            | InteractionType::OpenFurnace { position, .. }
             | InteractionType::InspectPole { position, .. }
             | InteractionType::LoadBelt { position, .. } => *position,
         }
@@ -436,6 +455,7 @@ impl InteractionType {
             InteractionType::OpenChest { .. } => "Open chest".to_string(),
             InteractionType::OpenGenerator { .. } => "Fuel generator".to_string(),
             InteractionType::OpenMachine { kind, .. } => format!("Open {}", kind.name()),
+            InteractionType::OpenFurnace { .. } => "Open crude furnace".to_string(),
             InteractionType::InspectPole { .. } => "Inspect power pole".to_string(),
             InteractionType::LoadBelt { item, .. } => format!(
                 "Put {} on belt",
@@ -473,6 +493,7 @@ impl InteractionType {
             InteractionType::OpenChest { .. } => "c",  // c for chest
             InteractionType::OpenGenerator { .. } => "G",
             InteractionType::OpenMachine { .. } => "M",
+            InteractionType::OpenFurnace { .. } => "F",
             InteractionType::InspectPole { .. } => "+",
             InteractionType::LoadBelt { .. } => ">", // onto the belt
             InteractionType::OpenCloseDoor { is_open, .. } => {

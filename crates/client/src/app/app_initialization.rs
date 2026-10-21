@@ -167,6 +167,7 @@ impl App {
     fn fresh_panels(credits_text: String) -> PanelStates {
         PanelStates {
             power_info: None,
+            furnace_window: None,
             inventory: InventoryPanelState { selected: 0 },
             crafting: CraftingPanelState {
                 recipe_handler: RecipeHandler::new(),

@@ -28,6 +28,7 @@ pub const SUPPLY_RADIUS: i64 = 3;
 /// Energy in one fuel item, in joules, or `None` if it isn't fuel.
 pub fn fuel_energy(item: ItemKind) -> Option<u64> {
     match item {
+        ItemKind::Biochar => Some(4_000_000),
         ItemKind::Log => Some(2_000_000),
         ItemKind::WoodenPlank => Some(500_000),
         ItemKind::Stick => Some(250_000),

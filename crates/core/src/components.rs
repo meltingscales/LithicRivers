@@ -181,6 +181,8 @@ pub enum ItemKind {
     PowerPole,
     AutoPlanter,
     AutoHarvester,
+    Biochar,
+    CrudeFurnace,
 }
 
 pub fn itemkind_name(kind: ItemKind) -> &'static str {
@@ -207,6 +209,8 @@ pub fn itemkind_name(kind: ItemKind) -> &'static str {
         ItemKind::PowerPole => "Power Pole",
         ItemKind::AutoPlanter => "Auto-Planter",
         ItemKind::AutoHarvester => "Auto-Harvester",
+        ItemKind::Biochar => "Biochar",
+        ItemKind::CrudeFurnace => "Crude Furnace",
     }
 }
 
@@ -234,6 +238,8 @@ pub fn itemkind_sprite_name(kind: ItemKind) -> &'static str {
         ItemKind::PowerPole => "power_pole",
         ItemKind::AutoPlanter => "auto_planter",
         ItemKind::AutoHarvester => "auto_harvester",
+        ItemKind::Biochar => "biochar",
+        ItemKind::CrudeFurnace => "crude_furnace",
     }
 }
 
@@ -261,6 +267,8 @@ pub fn parse_itemkind_from_sprite_name(sprite_name: &str) -> Option<ItemKind> {
         "power_pole" => Some(ItemKind::PowerPole),
         "auto_planter" => Some(ItemKind::AutoPlanter),
         "auto_harvester" => Some(ItemKind::AutoHarvester),
+        "biochar" => Some(ItemKind::Biochar),
+        "crude_furnace" => Some(ItemKind::CrudeFurnace),
         _ => None,
     }
 }
@@ -271,7 +279,7 @@ pub fn get_all_item_sprite_names() -> Vec<&'static str> {
     ItemKind::iter().map(itemkind_sprite_name).collect()
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ItemStack {
     pub kind: ItemKind,
     pub qty: u32,

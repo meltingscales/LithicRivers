@@ -15,14 +15,14 @@ input_file: scripts/snapshots/tab-09-help.txt
 │belt. Belts carry items into whatever they face. Power: burner generators burn logs, planks,      │
 │sticks or shavings; power poles link within 8 tiles and power blocks within 3. Auto-planters plant│
 │acorns and auto-harvesters chop grown trees within 2 tiles, pushing the wood into what they face. │
-│, lets 10 game seconds pass.                                                                      │
+│Crude furnaces smelt wood into biochar, a denser fuel: items from the back go in, fuel comes from │
+│the sides, and biochar leaves the front. , lets 10 game seconds pass.                             │
 │                                                                                                  │
 │Debug worlds: with Developer mode on, Create New World offers a World type: Void (an empty        │
 │platform), Ore test (a row of every minable tile), Dog arena (100 feral dogs) or Factory showcase │
 │(working example builds).                                                                         │
 │                                                                                                  │
 │Movement Directions: Numpad by default                                                            │
-│                                                                                                  │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
 │[0] Loading structure 'sapiencorp-bunker.lrstructure' at (10, 10, 1) for chunk (0, 0, 1)          │

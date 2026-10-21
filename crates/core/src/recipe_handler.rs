@@ -131,6 +131,13 @@ impl RecipeHandler {
                 result: ItemKind::AutoHarvester,
                 quantity: 1,
             },
+            // Crude furnace: 12x stone
+            Recipe {
+                name: "Crude Furnace",
+                ingredients: &[(ItemKind::Stone, 12)],
+                result: ItemKind::CrudeFurnace,
+                quantity: 1,
+            },
         ];
 
         Self { recipes }
