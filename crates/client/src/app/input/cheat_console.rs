@@ -59,6 +59,12 @@ impl CommandRegistry {
                     "giveitem <item_sprite_name> [quantity] - Give items to player inventory (1 if no quantity)",
                 handler: handle_giveitem_command,
             },
+            Command {
+                name: "givecraftingcomponents",
+                description:
+                    "givecraftingcomponents <item> [amount] [raw] - Give what crafting the item needs (raw: its raw materials)",
+                handler: handle_givecraftingcomponents_command,
+            },
         ];
 
         for cmd in cmd_list.iter() {
@@ -188,6 +194,26 @@ fn update_autocomplete(input: &str) -> (Vec<String>, Option<usize>) {
                     .collect();
                 return (matches, None);
             }
+        }
+        "givecraftingcomponents"
+            if parts.len() == 1 || (parts.len() == 2 && !input.ends_with(' ')) =>
+        {
+            // Only items that have a recipe
+            let prefix = parts.get(1).copied().unwrap_or("");
+            let recipes = lithicrivers_core::recipe_handler::RecipeHandler::new();
+            let mut names: Vec<&str> = recipes
+                .get_recipes()
+                .iter()
+                .map(|r| lithicrivers_core::components::itemkind_sprite_name(r.result))
+                .filter(|name| name.starts_with(prefix))
+                .collect();
+            names.sort();
+            names.dedup();
+            let matches = names
+                .into_iter()
+                .map(|name| format!("givecraftingcomponents {name}"))
+                .collect();
+            return (matches, None);
         }
         "tp" if parts.len() < 4 => {
             // For tp command, we could suggest coordinate patterns
@@ -335,6 +361,58 @@ fn handle_toggle_tutorial_command(app: &mut App, _parts: &[&str]) -> Result<(), 
         }
         app.core.game.res.log("Tutorial system disabled");
     }
+    Ok(())
+}
+
+fn handle_givecraftingcomponents_command(
+    app: &mut App,
+    parts: &[&str],
+) -> Result<(), Box<dyn Error>> {
+    use lithicrivers_core::components::{itemkind_name, parse_itemkind_from_sprite_name};
+    let usage = "Usage: givecraftingcomponents <item> [amount] [raw]";
+    let Some(name) = parts.get(1) else {
+        return Err(usage.into());
+    };
+    let item = parse_itemkind_from_sprite_name(name).ok_or_else(|| {
+        format!(
+            "Unknown item '{name}'. Items: {}",
+            lithicrivers_core::components::get_all_item_sprite_names().join(", ")
+        )
+    })?;
+    let (mut amount, mut raw) = (1u32, false);
+    for arg in &parts[2..] {
+        match (*arg, arg.parse::<u32>()) {
+            ("raw", _) => raw = true,
+            (_, Ok(n)) if n > 0 => amount = n,
+            _ => return Err(format!("Unexpected argument '{arg}'. {usage}").into()),
+        }
+    }
+    let recipes = lithicrivers_core::recipe_handler::RecipeHandler::new();
+    let components =
+        lithicrivers_core::crafting::components_for(recipes.get_recipes(), item, amount, raw)
+            .map_err(|e| e.to_string())?;
+    let Some(player) = app.core.game.get_player_entity() else {
+        return Err("No player".into());
+    };
+    if let Ok(mut inv) = app
+        .core
+        .game
+        .world
+        .get::<&mut lithicrivers_core::components::Inventory>(player)
+    {
+        for &(kind, qty) in &components {
+            inv.add(kind, qty);
+        }
+    }
+    let given: Vec<String> = components
+        .iter()
+        .map(|(kind, qty)| format!("{qty} {}", itemkind_name(*kind)))
+        .collect();
+    app.core.game.res.log(format!(
+        "Gave {} for {amount} {}",
+        given.join(", "),
+        itemkind_name(item)
+    ));
     Ok(())
 }
 

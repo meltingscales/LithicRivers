@@ -61,7 +61,7 @@ Scripts have one step per line; `#` starts a comment.
 | `type "<text>"` | Press one key per character |
 | `wait <ms>` | Advance the fake clock in 50 ms frames (splash timers, combat auto-ticks) |
 | `tick [n]` | Advance the game simulation n ticks |
-| `cheat <command>` | Run a cheat console command: `tp x y z`, `spawn_enemy <kind> [x y z]` (kinds: `feral_dog`; default two tiles east), `giveitem <item> [qty]` (qty defaults to 1), `noclip_toggle`, `toggle_fogofwar`, `toggle_tutorial`. Coordinates can be relative to the player: `~` or `~<offset>` per axis, e.g. `spawn_enemy feral_dog ~2 ~ ~` |
+| `cheat <command>` | Run a cheat console command: `tp x y z`, `spawn_enemy <kind> [x y z]` (kinds: `feral_dog`; default two tiles east), `giveitem <item> [qty]` (qty defaults to 1), `givecraftingcomponents <item> [amount] [raw]` (what crafting the item needs, or with `raw` its raw materials), `noclip_toggle`, `toggle_fogofwar`, `toggle_tutorial`. Coordinates can be relative to the player: `~` or `~<offset>` per axis, e.g. `spawn_enemy feral_dog ~2 ~ ~` |
 | `screen [label]` | Print the screen as text |
 | `state [label]` | Print a JSON summary: player, body, inventory, tab/modal, combat, nearby entities, recent messages |
 | `expect-text "<text>"` | Fail (exit 2) unless the screen contains the text |
@@ -73,6 +73,8 @@ Without `skip-splash`, the client starts at the logo; two `rawkey ENTER` reach t
 Factory blocks: `cheat giveitem chest 1`, then `key build.TOGGLE_BREAK_PLACE_MODE 2` (Place mode), `key hotbar.HOTBAR_SLOT_1 2` (double tap opens the block picker), `key movement.MOVE_SOUTH`, `key ui.MENU_ACTIVATE` (assign the chest), and `key build.PLACE_<DIRECTION>`. `key build.ROTATE_PLACEMENT` turns the next placement; one more `TOGGLE_BREAK_PLACE_MODE` gives Rotate mode, where the place-direction keys turn a placed block. `key action.PASS_TIME` lets 10 game seconds (1000 ticks) pass. See `scripts/snapshots/factory-chest-window.txt`.
 
 To set up a fight, spawn the enemy instead of relying on where the starting world places creatures: `cheat spawn_enemy feral_dog` then `key movement.WAIT` (feral dogs chase the player, so combat starts on that turn).
+
+In Rust tests, build a run from a list of steps with `headless::chain_commands(&["skip-splash", "cheat tp 0 0 0"])` (seed 12345, 100x30) and continue it with `runner.chain(&["key movement.WAIT"])`; both fail the test with the step's error.
 
 Exit status: 0 ok, 1 script error (including a cheat that fails), 2 failed `expect-text`. The same script, seed and build always print identical output, so all time-dependent behavior and rendering must read time from `app.clock`, never `Instant::now()` or `SystemTime::now()`.
 

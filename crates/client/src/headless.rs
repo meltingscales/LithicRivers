@@ -532,6 +532,26 @@ impl Runner {
     }
 }
 
+#[cfg(test)]
+impl Runner {
+    /// Run script steps, one per item (`&["skip-splash", "cheat tp 0 0 0"]`), failing the
+    /// test with the step's error if any step fails. Returns the screen and state dumps.
+    pub fn chain(&mut self, steps: &[&str]) -> String {
+        let script = parse_script(&steps.join("\n")).unwrap_or_else(|e| panic!("{e}"));
+        let report = self.run_steps(&script.steps);
+        assert_eq!(report.status, EXIT_OK, "{:?}", report.error);
+        report.output
+    }
+}
+
+/// A new run (seed 12345, 100x30 screen) after `steps`, one script step per item.
+#[cfg(test)]
+pub fn chain_commands(steps: &[&str]) -> Runner {
+    let mut runner = Runner::new(12345, (100, 30));
+    runner.chain(steps);
+    runner
+}
+
 /// Render a TestBackend buffer as text, skipping cells hidden by wide characters
 /// (same rule as ratatui's own buffer view).
 fn screen_text(backend: &TestBackend) -> String {
@@ -1116,14 +1136,6 @@ mod cheat_tests {
         )
     }
 
-    fn runner_after(text: &str) -> Runner {
-        let script = parse_script(text).unwrap();
-        let mut runner = Runner::new(12345, (100, 30));
-        let report = runner.run_steps(&script.steps);
-        assert_eq!(report.status, EXIT_OK, "{:?}", report.error);
-        runner
-    }
-
     fn player(runner: &Runner) -> Position {
         runner.app.core.game.get_player_position().unwrap()
     }
@@ -1147,8 +1159,8 @@ mod cheat_tests {
 
     #[test]
     fn tp_accepts_relative_coordinates() {
-        let start = player(&runner_after("skip-splash"));
-        let runner = runner_after("skip-splash\ncheat tp ~5 ~ ~");
+        let start = player(&chain_commands(&["skip-splash"]));
+        let runner = chain_commands(&["skip-splash", "cheat tp ~5 ~ ~"]);
         assert_eq!(
             player(&runner),
             Position {
@@ -1172,14 +1184,16 @@ mod cheat_tests {
 
     #[test]
     fn spawn_enemy_defaults_to_two_tiles_east_then_the_dog_closes_in() {
-        let mut runner = runner_after("skip-splash\ncheat tp 0 0 0\ncheat spawn_enemy feral_dog");
+        let mut runner = chain_commands(&[
+            "skip-splash",
+            "cheat tp 0 0 0",
+            "cheat spawn_enemy feral_dog",
+        ]);
         assert!(dogs(&runner).contains(&Position { x: 2, y: 0, z: 0 }));
         assert!(!runner.app.core.game.res.player_state.combat_active);
 
         // One turn later the dog is adjacent and combat starts, panel shown
-        let steps = parse_script("key movement.WAIT\nexpect-text \"Action Queue\"").unwrap();
-        let report = runner.run_steps(&steps.steps);
-        assert_eq!(report.status, EXIT_OK, "{:?}", report.error);
+        runner.chain(&["key movement.WAIT", "expect-text \"Action Queue\""]);
         assert!(dogs(&runner).contains(&Position { x: 1, y: 0, z: 0 }));
         assert!(runner.app.combat.is_active());
     }
@@ -1187,8 +1201,12 @@ mod cheat_tests {
     /// A `tick` step that starts combat must open the combat panel, like a player action.
     #[test]
     fn tick_step_that_starts_combat_shows_the_combat_panel() {
-        let mut runner =
-            runner_after("skip-splash\ncheat tp 0 0 0\ncheat spawn_enemy feral_dog\ntick");
+        let mut runner = chain_commands(&[
+            "skip-splash",
+            "cheat tp 0 0 0",
+            "cheat spawn_enemy feral_dog",
+            "tick",
+        ]);
         assert!(runner.app.core.game.res.player_state.combat_active);
         assert!(runner.app.combat.is_active());
         assert_eq!(runner.app.ui.current_tab, crate::MenuTab::World);
@@ -1199,8 +1217,11 @@ mod cheat_tests {
 
     #[test]
     fn spawn_enemy_accepts_relative_coordinates() {
-        let runner =
-            runner_after("skip-splash\ncheat tp 0 0 0\ncheat spawn_enemy feral_dog ~-2 ~1 ~");
+        let runner = chain_commands(&[
+            "skip-splash",
+            "cheat tp 0 0 0",
+            "cheat spawn_enemy feral_dog ~-2 ~1 ~",
+        ]);
         assert!(dogs(&runner).contains(&Position { x: -2, y: 1, z: 0 }));
     }
 
@@ -1220,7 +1241,11 @@ mod cheat_tests {
 
     #[test]
     fn giveitem_without_a_quantity_gives_one() {
-        let runner = runner_after("skip-splash\ncheat giveitem chest\ncheat giveitem log 4");
+        let runner = chain_commands(&[
+            "skip-splash",
+            "cheat giveitem chest",
+            "cheat giveitem log 4",
+        ]);
         let inv = runner
             .app
             .core
@@ -1239,13 +1264,82 @@ mod cheat_tests {
         assert_eq!(qty(ItemKind::Log), 3 + 4, "starting 3 logs plus 4");
     }
 
+    fn qty(runner: &Runner, kind: lithicrivers_core::components::ItemKind) -> u32 {
+        let inv = runner
+            .app
+            .core
+            .game
+            .get_player_component::<Inventory>()
+            .unwrap();
+        inv.slots
+            .iter()
+            .filter(|s| s.kind == kind)
+            .map(|s| s.qty)
+            .sum()
+    }
+
+    #[test]
+    fn givecraftingcomponents_gives_ingredients_or_raw_materials() {
+        use lithicrivers_core::components::ItemKind::*;
+        // Starting inventory: 10 nails, 3 logs, no planks or iron scrap
+        let r = chain_commands(&["skip-splash", "cheat givecraftingcomponents chest"]);
+        assert_eq!((qty(&r, WoodenPlank), qty(&r, Nail)), (8, 14));
+        let log = &r.app.core.game.res.events.get_message_log().messages;
+        assert!(
+            log.last()
+                .unwrap()
+                .text
+                .contains("Gave 8 Wooden Plank, 4 Nail for 1 Chest"),
+            "{}",
+            log.last().unwrap().text
+        );
+
+        let r = chain_commands(&["skip-splash", "cheat givecraftingcomponents wooden_plank 4"]);
+        assert_eq!(qty(&r, Log), 3 + 2, "one log makes 3 planks, so 2 logs");
+
+        let r = chain_commands(&["skip-splash", "cheat givecraftingcomponents chest 1 raw"]);
+        assert_eq!((qty(&r, Log), qty(&r, IronScrap)), (3 + 3, 1));
+    }
+
+    #[test]
+    fn givecraftingcomponents_errors_give_nothing() {
+        for (command, message) in [
+            ("givecraftingcomponents log", "Log has no recipe"),
+            ("givecraftingcomponents dragon", "Unknown item 'dragon'"),
+            (
+                "givecraftingcomponents chest lots",
+                "Unexpected argument 'lots'",
+            ),
+        ] {
+            let (code, _, err_out) = run(&format!("skip-splash\ncheat {command}"));
+            assert_eq!(code, EXIT_SCRIPT_ERROR, "{command}");
+            assert!(err_out.contains(message), "{command}: {err_out}");
+        }
+    }
+
+    #[test]
+    fn crafting_a_chest_after_givecraftingcomponents() {
+        let r = chain_commands(&[
+            "skip-splash",
+            "cheat givecraftingcomponents chest",
+            "key ui.MENU_NEXT 5",
+            "key movement.MOVE_SOUTH 8",
+            "expect-text \"Recipe Name: Chest\"",
+            "rawkey ENTER",
+        ]);
+        assert_eq!(qty(&r, lithicrivers_core::components::ItemKind::Chest), 1);
+    }
+
     // --- 2.1: the in-game console reports failures and keeps running ------------------
 
     #[test]
     fn console_failure_is_logged_in_red_and_the_game_keeps_running() {
-        let mut runner = runner_after(
-            "skip-splash\nkey ui.OPEN_COMMAND_MENU\ntype \"spawn_enemy dragon\"\nrawkey ENTER",
-        );
+        let mut runner = chain_commands(&[
+            "skip-splash",
+            "key ui.OPEN_COMMAND_MENU",
+            "type \"spawn_enemy dragon\"",
+            "rawkey ENTER",
+        ]);
         let last = runner
             .app
             .core
@@ -1268,7 +1362,6 @@ mod cheat_tests {
         );
         assert!(!runner.app.core.should_quit);
         // Still playable afterwards
-        let report = runner.run_steps(&parse_script("key movement.MOVE_SOUTH").unwrap().steps);
-        assert_eq!(report.status, EXIT_OK);
+        runner.chain(&["key movement.MOVE_SOUTH"]);
     }
 }

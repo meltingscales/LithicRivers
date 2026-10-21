@@ -118,11 +118,13 @@ pub struct TreeLine {
     pub raw: bool,
 }
 
-/// The ingredients of one craft of `recipe`, expanded down to raw materials. Intermediate
-/// items use their first recipe; an item already being expanded higher up ends the branch.
+/// The ingredients of `crafts` crafts of `recipe`, expanded down to raw materials.
+/// Intermediate items use their first recipe; an item already being expanded higher up ends
+/// the branch.
 pub fn ingredient_tree(
     recipes: &[Recipe],
     recipe: &Recipe,
+    crafts: u32,
     raw: &BTreeSet<ItemKind>,
 ) -> Vec<TreeLine> {
     fn expand(
@@ -154,8 +156,60 @@ pub fn ingredient_tree(
     }
     let mut out = Vec::new();
     let mut path = vec![recipe.result];
-    expand(recipes, recipe.ingredients, 1, 0, raw, &mut path, &mut out);
+    expand(
+        recipes,
+        recipe.ingredients,
+        crafts,
+        0,
+        raw,
+        &mut path,
+        &mut out,
+    );
     out
+}
+
+/// What it takes to craft at least `amount` of `item` with its first recipe, rounded up to
+/// whole crafts: the recipe's ingredients, or with `raw`, the leaves of its ingredient tree
+/// (raw materials, and items that end a branch), summed by item in tree order.
+pub fn components_for(
+    recipes: &[Recipe],
+    item: ItemKind,
+    amount: u32,
+    raw: bool,
+) -> Result<Vec<(ItemKind, u32)>, NoRecipe> {
+    let recipe = recipes
+        .iter()
+        .find(|r| r.result == item)
+        .ok_or(NoRecipe(item))?;
+    let crafts = amount.max(1).div_ceil(recipe.quantity);
+    if !raw {
+        return Ok(recipe
+            .ingredients
+            .iter()
+            .map(|&(i, q)| (i, q * crafts))
+            .collect());
+    }
+    let mut leaves: Vec<(ItemKind, u32)> = Vec::new();
+    for line in ingredient_tree(recipes, recipe, crafts, &raw_sources()) {
+        if !line.raw {
+            continue;
+        }
+        match leaves.iter_mut().find(|(i, _)| *i == line.item) {
+            Some((_, q)) => *q += line.needed,
+            None => leaves.push((line.item, line.needed)),
+        }
+    }
+    Ok(leaves)
+}
+
+/// The item has no recipe.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct NoRecipe(pub ItemKind);
+
+impl std::fmt::Display for NoRecipe {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{} has no recipe", itemkind_name(self.0))
+    }
 }
 
 #[cfg(test)]
@@ -221,7 +275,7 @@ mod tests {
             .iter()
             .find(|r| r.result == ItemKind::Chest)
             .unwrap();
-        let tree = ingredient_tree(handler.get_recipes(), chest, &raw_sources());
+        let tree = ingredient_tree(handler.get_recipes(), chest, 1, &raw_sources());
         let line = |depth, item, needed, raw| TreeLine {
             depth,
             item,
@@ -349,5 +403,32 @@ mod tests {
             assert!(handler.craft(index, &mut inv), "{name}");
         }
         assert_eq!(inv[&ItemKind::Chest], 1);
+    }
+
+    #[test]
+    fn components_for_direct_raw_and_rounding() {
+        let handler = RecipeHandler::new();
+        let r = handler.get_recipes();
+        assert_eq!(
+            components_for(r, ItemKind::Chest, 1, false),
+            Ok(vec![(ItemKind::WoodenPlank, 8), (ItemKind::Nail, 4)])
+        );
+        assert_eq!(
+            components_for(r, ItemKind::Chest, 1, true),
+            Ok(vec![(ItemKind::Log, 3), (ItemKind::IronScrap, 1)])
+        );
+        // Planks come 3 per log: 4 planks need 2 crafts
+        assert_eq!(
+            components_for(r, ItemKind::WoodenPlank, 4, false),
+            Ok(vec![(ItemKind::Log, 2)])
+        );
+        assert_eq!(
+            components_for(r, ItemKind::Chest, 2, true),
+            Ok(vec![(ItemKind::Log, 6), (ItemKind::IronScrap, 1)]),
+            "16 planks = 6 logs; 8 nails = 1 iron scrap"
+        );
+        let err = components_for(r, ItemKind::Log, 1, false).unwrap_err();
+        assert_eq!(err, NoRecipe(ItemKind::Log));
+        assert_eq!(err.to_string(), "Log has no recipe");
     }
 }
