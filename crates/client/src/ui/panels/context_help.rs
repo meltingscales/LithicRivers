@@ -68,6 +68,7 @@ fn interaction_label(action: &InteractionType) -> String {
         InteractionType::TalkToNPC { npc_name, .. } => format!("talk to {npc_name}"),
         InteractionType::OpenChest { .. } => "open chest".to_string(),
         InteractionType::OpenGenerator { .. } => "fuel generator".to_string(),
+        InteractionType::OpenMachine { kind, .. } => format!("open {}", kind.name()),
         InteractionType::InspectPole { .. } => "inspect pole".to_string(),
         InteractionType::LoadBelt { item, .. } => format!(
             "{} on belt",

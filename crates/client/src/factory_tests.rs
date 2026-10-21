@@ -363,3 +363,37 @@ fn power_pole_shows_its_network() {
     assert!(runner.app.panels.power_info.is_none());
     assert!(!runner.screen_text().contains("Power Network"));
 }
+
+/// The reference tree farm runs 30 game minutes unattended; see the script for its layout.
+const TREE_FARM: &str = include_str!("../../../scripts/snapshots/factory-tree-farm.txt");
+
+fn run_tree_farm() -> (Runner, String) {
+    let lines: Vec<&str> = TREE_FARM.lines().collect();
+    let mut runner = Runner::new(12345, (100, 30));
+    let output = runner.chain(&lines);
+    (runner, output)
+}
+
+#[test]
+fn tree_farm_makes_more_wood_than_it_burns() {
+    let (runner, output) = run_tree_farm();
+    let chest = block_at(&runner, Position { x: -12, y: 0, z: 0 });
+    let generator = block_at(
+        &runner,
+        Position {
+            x: -17,
+            y: -4,
+            z: 0,
+        },
+    );
+    let logs_made = count(&runner, chest, ItemKind::Log);
+    // The generator started with 3 logs; one it has started counts as burned
+    let logs_burned = 3 - count(&runner, generator, ItemKind::Log);
+    assert!(logs_burned > 0, "the farm drew power");
+    assert!(
+        logs_made > logs_burned,
+        "{logs_made} logs made, {logs_burned} burned"
+    );
+    assert!(count(&runner, chest, ItemKind::Acorn) > 0);
+    assert_eq!(run_tree_farm().1, output, "deterministic");
+}

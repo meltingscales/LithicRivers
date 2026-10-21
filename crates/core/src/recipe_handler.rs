@@ -109,6 +109,28 @@ impl RecipeHandler {
                 result: ItemKind::Chest,
                 quantity: 1,
             },
+            // Auto-planter: 6x wooden plank + 4x nail + 2x scrap electronics
+            Recipe {
+                name: "Auto-Planter",
+                ingredients: &[
+                    (ItemKind::WoodenPlank, 6),
+                    (ItemKind::Nail, 4),
+                    (ItemKind::ScrapElectronics, 2),
+                ],
+                result: ItemKind::AutoPlanter,
+                quantity: 1,
+            },
+            // Auto-harvester: 4x stone + 6x iron scrap + 3x scrap electronics
+            Recipe {
+                name: "Auto-Harvester",
+                ingredients: &[
+                    (ItemKind::Stone, 4),
+                    (ItemKind::IronScrap, 6),
+                    (ItemKind::ScrapElectronics, 3),
+                ],
+                result: ItemKind::AutoHarvester,
+                quantity: 1,
+            },
         ];
 
         Self { recipes }

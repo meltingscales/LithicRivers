@@ -150,7 +150,6 @@ pub fn mining_system(world: &mut World, res: &mut Resources) -> bool {
     };
     let tile_to_mine = res.world_state.world.get_tile_cached(x, y, z);
     use crate::tiles::TileKind;
-    use rand::Rng;
     match tile_to_mine {
         TileKind::Sapling => {
             let Some(player) = get_player_entity(world) else {
@@ -181,32 +180,19 @@ pub fn mining_system(world: &mut World, res: &mut Resources) -> bool {
             }
         }
         tile => {
-            let Some(drop) = crate::crafting::mining_drop(tile) else {
+            let Some(gained) = crate::crafting::mine_tile(res, Position { x, y, z }) else {
                 res.events.interaction_event(
                     format!("You can't mine the {:?} tile.", tile_to_mine),
                     res.time.tick,
                 );
                 return false;
             };
-            res.world_state.world.set_tile_cached(x, y, z, drop.becomes);
-            // Seeded by world seed + tile coords so drops are reproducible
-            let mut rng = res.world_state.world.new_rng(x, y, z);
-            let mut gained = Vec::new();
-            for &(kind, min, max) in drop.items {
-                let qty = if min == max {
-                    min
-                } else {
-                    rng.gen_range(min..=max)
-                };
-                if qty == 0 {
-                    continue;
-                }
+            for &(kind, qty) in &gained {
                 world.spawn((
                     Position { x, y, z },
                     DroppedItem { kind, qty },
                     SpriteRef::new("items", crate::components::itemkind_sprite_name(kind)),
                 ));
-                gained.push((kind, qty));
             }
             let message = if tile == TileKind::Tree {
                 format!(

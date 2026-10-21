@@ -13,6 +13,7 @@ pub mod game_events;
 pub mod game_time;
 pub mod intent;
 pub mod keycode_mapping;
+pub mod machines;
 pub mod message_log;
 pub mod model;
 pub mod moves;

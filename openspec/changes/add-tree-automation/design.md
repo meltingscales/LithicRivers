@@ -34,9 +34,18 @@ After acting, and every step, a machine pushes one item per step from `output` i
 | Auto-Harvester | 4 Stone, 6 IronScrap, 3 ScrapElectronics | 1 |
 
 ### Reference farm
-`scripts/agent/farm.txt`: spawn-free setup using `cheat giveitem` for machines, fuel and acorns, places the layout, passes 30 game minutes, dumps `state`. Also added as a `cargo test` that checks logs produced > logs burned, and as a snapshot.
+`scripts/snapshots/factory-tree-farm.txt`: spawn-free setup using `cheat giveitem` for machines, fuel and acorns, places the layout, passes 30 game minutes, dumps `state`. Also added as a `cargo test` that checks logs produced > logs burned, and as a snapshot.
 
 ## Risks / Trade-offs
 
 - [Balance: the farm can't sustain its generator] → The reference-farm test pins the property; tune numbers until it holds.
 - [Harvester and player both chopping the same tree in one tick] → Player actions run before factory steps; the harvester re-checks the tile before acting.
+
+## Implementation Notes
+
+- **Module:** `crates/core/src/machines.rs`. A machine is a factory block with `Machine { progress }`, a `PowerConsumer` and an `Inventory`. The inventory holds the planter's acorns or the harvester's output, so the transfer window, belts and breaking (which spills contents) all work through existing code. This replaces the planned `Machine { input, output, ... }` storage fields: neither machine needs both.
+- **Capacity is 16 items**, not 16 stacks: stacks have no size limit, so a stack cap would never fill. The harvester chops only while its output has room for a tree's largest drop (6 items).
+- **Step order:** growth, `machines::update_demand`, power, `machines::step_machines`, belts. Demand is set before power is shared, so a machine with work is powered in the same step and a 2 s action takes exactly 10 steps at full power.
+- **Chopping:** `crafting::mine_tile` rolls a tile's drops (seeded by position) and changes the tile; the player's mining and the harvester both call it, so drops match.
+- **Glyphs:** `p` (planter) and `H` (harvester) at the default zoom; larger zooms show the harvester's facing arrow. The transfer window title shows the harvester's facing, idle / working % / power %, or "no power pole in reach".
+- **Reference farm:** lives in `scripts/snapshots/` so it gets a snapshot and the save-reload check for free; `factory_tests::tree_farm_makes_more_wood_than_it_burns` runs it twice. In 30 minutes it fills its chest with logs and acorns, but the acorns aren't fed back to the planter (that needs filters), so once its 16 acorns are planted the farm stops replanting.

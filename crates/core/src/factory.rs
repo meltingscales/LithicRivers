@@ -77,6 +77,10 @@ pub enum FactoryKind {
     BurnerGenerator,
     /// Joins generators and consumers into a network
     PowerPole,
+    /// Plants acorns around itself
+    AutoPlanter,
+    /// Chops grown trees around itself and outputs the wood in its facing direction
+    AutoHarvester,
     /// A consumer that does nothing but draw power, for grid tests
     #[cfg(any(test, feature = "test-support"))]
     TestConsumer,
@@ -93,6 +97,8 @@ impl FactoryKind {
             ItemKind::WoodenConveyor => Some(FactoryKind::Belt),
             ItemKind::BurnerGenerator => Some(FactoryKind::BurnerGenerator),
             ItemKind::PowerPole => Some(FactoryKind::PowerPole),
+            ItemKind::AutoPlanter => Some(FactoryKind::AutoPlanter),
+            ItemKind::AutoHarvester => Some(FactoryKind::AutoHarvester),
             _ => None,
         }
     }
@@ -104,6 +110,8 @@ impl FactoryKind {
             FactoryKind::Belt => Some(ItemKind::WoodenConveyor),
             FactoryKind::BurnerGenerator => Some(ItemKind::BurnerGenerator),
             FactoryKind::PowerPole => Some(ItemKind::PowerPole),
+            FactoryKind::AutoPlanter => Some(ItemKind::AutoPlanter),
+            FactoryKind::AutoHarvester => Some(ItemKind::AutoHarvester),
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestConsumer => None,
             #[cfg(any(test, feature = "test-support"))]
@@ -117,6 +125,8 @@ impl FactoryKind {
             FactoryKind::Belt => "wooden conveyor",
             FactoryKind::BurnerGenerator => "burner generator",
             FactoryKind::PowerPole => "power pole",
+            FactoryKind::AutoPlanter => "auto-planter",
+            FactoryKind::AutoHarvester => "auto-harvester",
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestConsumer => "test consumer",
             #[cfg(any(test, feature = "test-support"))]
@@ -128,7 +138,8 @@ impl FactoryKind {
     pub fn directional(self) -> bool {
         match self {
             FactoryKind::Chest => false,
-            FactoryKind::Belt => true,
+            FactoryKind::Belt | FactoryKind::AutoHarvester => true,
+            FactoryKind::AutoPlanter => false,
             FactoryKind::BurnerGenerator | FactoryKind::PowerPole => false,
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestConsumer => false,
@@ -152,6 +163,10 @@ impl FactoryKind {
             FactoryKind::Belt => SpriteRef::new("factory", &format!("belt_{}", facing.name())),
             FactoryKind::BurnerGenerator => SpriteRef::new("factory", "burner_generator"),
             FactoryKind::PowerPole => SpriteRef::new("factory", "power_pole"),
+            FactoryKind::AutoPlanter => SpriteRef::new("factory", "auto_planter"),
+            FactoryKind::AutoHarvester => {
+                SpriteRef::new("factory", &format!("auto_harvester_{}", facing.name()))
+            }
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestConsumer => SpriteRef::new("factory", "chest"),
             #[cfg(any(test, feature = "test-support"))]
@@ -241,6 +256,16 @@ pub fn place(
         }
         FactoryKind::PowerPole => {
             builder.add(crate::power::PowerPole);
+        }
+        FactoryKind::AutoPlanter | FactoryKind::AutoHarvester => {
+            builder.add(crate::machines::Machine::default());
+            builder.add(crate::power::PowerConsumer::idle(
+                crate::machines::demand_w(kind),
+            ));
+            builder.add(Inventory {
+                max_slots: crate::machines::MACHINE_SLOTS,
+                ..Default::default()
+            });
         }
         #[cfg(any(test, feature = "test-support"))]
         FactoryKind::TestConsumer => {
@@ -368,8 +393,8 @@ pub fn move_one_item(
 }
 
 /// Run every factory step that fits in the ticks elapsed since the last call. Each step runs
-/// the factory systems in a fixed order (growth; later changes add generators, power,
-/// machines and belts, in that order) over everything, wherever it is.
+/// the factory systems in a fixed order (growth, machine demand, power, machines, belts)
+/// over everything, wherever it is.
 pub fn run_due_steps(world: &mut World, res: &mut Resources) {
     let clock = &mut res.factory_clock;
     let elapsed = res.time.tick.saturating_sub(clock.last_tick) + clock.carry;
@@ -381,7 +406,9 @@ pub fn run_due_steps(world: &mut World, res: &mut Resources) {
     for i in 0..steps {
         let step_tick = first_step_tick + i * FACTORY_STEP_TICKS;
         crate::plants::grow_saplings(world, res, step_tick);
+        crate::machines::update_demand(world, res);
         crate::power::step_power(world, res);
+        crate::machines::step_machines(world, res);
         step_belts(world, res);
         res.factory_clock.steps += 1;
     }
@@ -401,8 +428,8 @@ pub struct BeltSlot {
     pub progress: u8,
 }
 
-/// Whether `target` (a factory block) would take `item` right now: an empty belt, or a
-/// chest with room for it. Later machines add their inputs here.
+/// Whether `target` (a factory block) would take `item` right now: an empty belt, a chest
+/// with room for it, a generator's fuel slots or a machine's input.
 pub fn accepts(world: &World, target: Entity, item: ItemKind) -> bool {
     if let Ok(belt) = world.get::<&BeltSlot>(target) {
         return belt.item.is_none();
@@ -410,8 +437,12 @@ pub fn accepts(world: &World, target: Entity, item: ItemKind) -> bool {
     let Ok(block) = world.get::<&FactoryBlock>(target).map(|b| *b) else {
         return false;
     };
-    if block.kind == FactoryKind::BurnerGenerator && crate::power::fuel_energy(item).is_none() {
-        return false;
+    match block.kind {
+        FactoryKind::BurnerGenerator if crate::power::fuel_energy(item).is_none() => return false,
+        FactoryKind::AutoPlanter | FactoryKind::AutoHarvester => {
+            return crate::machines::accepts_input(world, target, block.kind, item)
+        }
+        _ => {}
     }
     world.get::<&Inventory>(target).is_ok_and(|inv| {
         inv.slots.iter().any(|s| s.kind == item) || inv.slots.len() < inv.max_slots
@@ -437,8 +468,8 @@ pub fn insert(world: &mut World, target: Entity, item: ItemKind) -> bool {
     false
 }
 
-/// Move one item from stack `slot` of `from`'s inventory into the factory block `to` (a belt
-/// or chest), using the same handoff as belts.
+/// Move one item from stack `slot` of `from`'s inventory into the factory block `to`, using
+/// the same handoff as belts.
 pub fn move_one_item_to_block(
     world: &mut World,
     from: Entity,

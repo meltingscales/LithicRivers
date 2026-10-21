@@ -18,7 +18,7 @@ An auto-planter SHALL hold up to 16 acorns in its input, accept acorns from a be
 - **THEN** the acorns move from the belt into the planter's input
 
 ### Requirement: Auto-harvester
-An auto-harvester SHALL, while powered, chop one grown tree every 3 game seconds within a square of radius 2 around it, choosing trees in a fixed order. The drops SHALL go into its output buffer (up to 16 stacks), and the harvester SHALL push items from its output into the tile it faces: a belt, a chest or a machine that accepts them. When its output is full, it SHALL stop chopping.
+An auto-harvester SHALL, while powered, chop one grown tree every 3 game seconds within a square of radius 2 around it, choosing trees in a fixed order. The drops SHALL go into its output buffer (up to 16 items), and the harvester SHALL push items from its output into the tile it faces: a belt, a chest or a machine that accepts them. When its output is full, it SHALL stop chopping.
 
 #### Scenario: Harvest onto a belt
 - **WHEN** a powered auto-harvester faces east into a belt and a grown tree is within 2 tiles
