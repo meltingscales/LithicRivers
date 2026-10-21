@@ -139,10 +139,12 @@ pub fn entity_art_12x8_lines_for_position(
         if *e_pos != pos {
             continue;
         }
-        let (category, name) = match maybe_kind.copied() {
-            Some(kind) => app.core.sprite_loader.sprite_path_for_entitykind(kind),
-            None => panic!("Missing entity kind for position {}", e_pos),
+        // Entities with neither a sprite nor a kind (a sapling's growth timer) have no art
+        // of their own; the tile's art shows instead
+        let Some(kind) = maybe_kind.copied() else {
+            continue;
         };
+        let (category, name) = app.core.sprite_loader.sprite_path_for_entitykind(kind);
         let sd = app.core.sprite_loader.load_sprite(&name, &category);
         let color = parse_hex_color(&sd.color);
         if let Some(block) = sd.art12x8_sprites.first() {
