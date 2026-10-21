@@ -15,6 +15,7 @@ use std::time::{Duration, Instant};
 /// Scenario files, in playing order.
 pub const SCENARIOS: &[&str] = &[
     "explore",
+    "npc-dialogue",
     "mining-crafting",
     "combat",
     "dog-arena",
@@ -23,11 +24,19 @@ pub const SCENARIOS: &[&str] = &[
     "tree-farm",
 ];
 /// A scenario ends after this long even if its script has more steps.
-pub const SCENARIO_MAX: Duration = Duration::from_secs(20);
+pub const SCENARIO_MAX: Duration = Duration::from_secs(30);
+/// Playback runs this much slower than a script's `beat` and `wait` times, as a fraction
+/// (3/2: one and a half times as slow), so viewers can follow each interaction.
+pub const SLOWDOWN: (u64, u64) = (3, 2);
 /// The blank title card between scenarios.
 pub const CUT: Duration = Duration::from_millis(900);
 /// Time per step until a scenario sets its own `beat`.
 pub const DEFAULT_BEAT_MS: u64 = 200;
+
+/// A script time in ms, slowed for playback.
+pub fn playback(ms: u64) -> Duration {
+    Duration::from_millis(ms * SLOWDOWN.0 / SLOWDOWN.1)
+}
 
 pub struct Scenario {
     /// The script's first comment line
@@ -96,7 +105,7 @@ impl App {
             scenarios: scenarios(),
             index: 0,
             cursor: 0,
-            beat: Duration::from_millis(DEFAULT_BEAT_MS),
+            beat: playback(DEFAULT_BEAT_MS),
             next_at: now,
             scenario_started: now,
             started: now,
@@ -150,14 +159,14 @@ impl App {
     fn begin_scenario(&mut self, demo: &mut DemoState, now: Instant) {
         demo.cursor = 0;
         demo.pending.clear();
-        demo.beat = Duration::from_millis(DEFAULT_BEAT_MS);
+        demo.beat = playback(DEFAULT_BEAT_MS);
         demo.scenario_started = now;
         demo.next_at = now;
         let steps = demo.scenarios[demo.index].steps.clone();
         while let Some(step) = steps.get(demo.cursor) {
             demo.cursor += 1;
             if let Step::Beat(ms) = step {
-                demo.beat = Duration::from_millis(*ms);
+                demo.beat = playback(*ms);
                 break;
             }
             self.run_demo_step(demo, step, now);
@@ -187,7 +196,7 @@ impl App {
     fn run_demo_step(&mut self, demo: &mut DemoState, step: &Step, now: Instant) -> bool {
         match step {
             Step::Beat(ms) => {
-                demo.beat = Duration::from_millis(*ms);
+                demo.beat = playback(*ms);
                 false
             }
             Step::SkipSplash => {
@@ -230,7 +239,7 @@ impl App {
                 true
             }
             Step::Wait(ms) => {
-                demo.next_at = now + Duration::from_millis(*ms);
+                demo.next_at = now + playback(*ms);
                 true
             }
             Step::Tick(n) => {

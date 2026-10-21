@@ -1,0 +1,23 @@
+# A broken android
+# In the bunker, a rusted SapienCorp android flickers back to life. Both portraits change
+# mood as the conversation goes, the robot accepts its first quest, and the Quests tab
+# picks it up.
+skip-splash
+key ui.MENU_PREV
+beat 300
+key movement.MOVE_EAST
+key action.INTERACT
+wait 2400
+key ui.MENU_ACTIVATE
+wait 2400
+key ui.MENU_ACTIVATE
+wait 2400
+key ui.MENU_ACTIVATE
+wait 2500
+# [ACCEPT QUEST]
+key ui.MENU_ACTIVATE
+wait 1500
+# World, Tutorial, Global Map, Quests
+key ui.MENU_NEXT 3
+wait 2500
+screen

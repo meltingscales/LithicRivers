@@ -14,7 +14,7 @@ The title screen SHALL offer a Watch Demo choice that starts the demo.
 - **THEN** the first demo scenario starts playing with the DEMO banner showing
 
 ### Requirement: Demo scenarios
-The demo SHALL play exploring, combat, building and factory scenarios in a fixed order and loop, each a real game world driven by a script, each ending after its script or 20 seconds, with a cut between them. Playback SHALL be deterministic: the same build always shows the same frames.
+The demo SHALL play exploring, NPC dialogue, combat, building and factory scenarios in a fixed order and loop, each a real game world driven by a script and played back 1.5 times slower than its script's timings, each ending after its script or 30 seconds, with a cut between them. Playback SHALL be deterministic: the same build always shows the same frames.
 
 #### Scenario: Cut to the next scenario
 - **WHEN** a scenario's script ends
