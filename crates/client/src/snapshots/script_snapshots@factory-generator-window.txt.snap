@@ -1,0 +1,37 @@
+---
+source: crates/client/src/snapshot_tests.rs
+expression: "String::from_utf8(out).unwrap()"
+input_file: scripts/snapshots/factory-generator-window.txt
+---
+=== screen generator-window ===
+                                            LithicRivers
+#####vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,          ┌MODES─────────────────┐
+######vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,         │  ------ - - -- - FOG │
+######vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#vvvvvvvvvvvvvvvvv,,,        └──────────────────────┘
+#######vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,        ┌Inventory─────────────┐
+#######vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,       │Nail x10              │
+########vvvvvvv┌─────────────── Burner Generator - network 0 / 0 kW ────────────────┐              │
+########vvvvvvv│┌ Fuel (1/4) - 0 kJ left ────────┐┌ Your Items ────────────────────┐│              │
+#########vvvvvv││ 1 x Log                        ││10 x Nail                       ││──────────────┘
+#########vvvvvv││                                ││ 1 x Acorn                      ││──────────────┐
+##########vvvvv││                                ││ 2 x Log                        ││              │
+###########vvvv││                                ││ 2 x Stick                      ││              │
+###########vvvv││                                ││ 3 x Torch                      ││              │
+############vvv││                                ││ 2 x String                     ││              │
+############vvv││                                ││ 3 x Scrap Electronics          ││              │
+#############vv││                                ││                                ││              │
+##############v││                                ││                                ││ mode         │
+###############││                                ││                                ││ct pole       │
+###############││                                ││                                ││generator     │
+###############││                                ││                                ││──────────────┘
+┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
+│[1] Build mode: Rotate                          ││                                ││              │
+│[1] Build mode: Movementwitch Panel | ↑↓: Select | Enter: Move Item | Esc: Close──┘│              │
+│[401] Choose interaction:──────────────────────────────────────────────────────────┘              │
+│[401] Opened generator                                                                            │
+│[401] Stored Log                                                                                  │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Menu │ Help │ Credits │ Qu│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===

@@ -108,6 +108,13 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
         }
     }
 
+    // Power wires between linked poles, shown on even seconds so the terrain shows through
+    let wires = if (app.clock.animation_millis() / 1000) % 2 == 0 {
+        wire_cells(&app.core.game.res.power.links, z)
+    } else {
+        HashMap::new()
+    };
+
     for row in 0..target_rows {
         let mut spans = Vec::with_capacity(target_cols);
         for col in 0..target_cols {
@@ -197,6 +204,11 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
                     sprite_char.to_string(),
                     Style::default().fg(color),
                 ));
+            } else if let Some(wire) = wires.get(&(world_x, world_y)) {
+                spans.push(Span::styled(
+                    wire.to_string(),
+                    Style::default().fg(ratatui::style::Color::Yellow),
+                ));
             } else {
                 let (block, mut color) =
                     sprite_block_for_tile(&mut app.core.sprite_loader, tile_kind, app.ui.scale)
@@ -228,4 +240,48 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
         .wrap(Wrap { trim: false });
 
     f.render_widget(paragraph, area);
+}
+
+/// The tiles between linked poles on level `z`, with the character that draws the wire there:
+/// a Bresenham line between the two poles, not including the poles themselves. Each tile's
+/// character follows the step that reached it (`─`, `│`, `╲` or `╱`).
+fn wire_cells(
+    links: &[(
+        lithicrivers_core::components::Position,
+        lithicrivers_core::components::Position,
+    )],
+    z: i64,
+) -> HashMap<(i64, i64), char> {
+    let mut cells = HashMap::new();
+    for (a, b) in links.iter().filter(|(a, _)| a.z == z) {
+        let (dx, dy) = (b.x - a.x, b.y - a.y);
+        let (step_x, step_y) = (dx.signum(), dy.signum());
+        let (adx, ady) = (dx.abs(), -dy.abs());
+        let (mut x, mut y, mut err) = (a.x, a.y, adx + ady);
+        loop {
+            let e2 = 2 * err;
+            let (mut moved_x, mut moved_y) = (false, false);
+            if e2 >= ady {
+                err += ady;
+                x += step_x;
+                moved_x = true;
+            }
+            if e2 <= adx {
+                err += adx;
+                y += step_y;
+                moved_y = true;
+            }
+            if (x, y) == (b.x, b.y) {
+                break;
+            }
+            let glyph = match (moved_x, moved_y) {
+                (true, false) => '─',
+                (false, true) => '│',
+                _ if step_x == step_y => '╲',
+                _ => '╱',
+            };
+            cells.insert((x, y), glyph);
+        }
+    }
+    cells
 }

@@ -1,0 +1,31 @@
+# Two linked power poles: the wire between them is drawn, then hidden one second later
+seed 12345
+size 100x30
+skip-splash
+key ui.MENU_PREV
+cheat tp 0 0 0
+cheat giveitem power_pole 2
+cheat giveitem burner_generator
+key build.TOGGLE_BREAK_PLACE_MODE 2
+key hotbar.HOTBAR_SLOT_1 2
+key movement.MOVE_SOUTH 2
+key ui.MENU_ACTIVATE
+key hotbar.HOTBAR_SLOT_2 2
+key movement.MOVE_SOUTH 3
+key ui.MENU_ACTIVATE
+key hotbar.HOTBAR_SLOT_1
+key build.PLACE_NORTHWEST
+key hotbar.HOTBAR_SLOT_2
+key build.PLACE_WEST
+key build.TOGGLE_BREAK_PLACE_MODE 2
+key movement.MOVE_SOUTH
+key movement.MOVE_WEST 5
+key build.TOGGLE_BREAK_PLACE_MODE 2
+key hotbar.HOTBAR_SLOT_1
+key build.PLACE_NORTHWEST
+key build.TOGGLE_BREAK_PLACE_MODE 2
+# Networks are rebuilt on the next factory step
+key movement.WAIT
+screen wires-on
+wait 1000
+screen wires-off

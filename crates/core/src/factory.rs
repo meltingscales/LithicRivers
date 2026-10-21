@@ -73,6 +73,13 @@ pub enum FactoryKind {
     Chest,
     /// Wooden conveyor: carries one item a tile in its facing direction
     Belt,
+    /// Burns fuel items to power its network
+    BurnerGenerator,
+    /// Joins generators and consumers into a network
+    PowerPole,
+    /// A consumer that does nothing but draw power, for grid tests
+    #[cfg(any(test, feature = "test-support"))]
+    TestConsumer,
     /// A directional block with no behavior, for tests of facing and rotation.
     #[cfg(any(test, feature = "test-support"))]
     TestArrow,
@@ -84,6 +91,8 @@ impl FactoryKind {
         match item {
             ItemKind::Chest => Some(FactoryKind::Chest),
             ItemKind::WoodenConveyor => Some(FactoryKind::Belt),
+            ItemKind::BurnerGenerator => Some(FactoryKind::BurnerGenerator),
+            ItemKind::PowerPole => Some(FactoryKind::PowerPole),
             _ => None,
         }
     }
@@ -93,6 +102,10 @@ impl FactoryKind {
         match self {
             FactoryKind::Chest => Some(ItemKind::Chest),
             FactoryKind::Belt => Some(ItemKind::WoodenConveyor),
+            FactoryKind::BurnerGenerator => Some(ItemKind::BurnerGenerator),
+            FactoryKind::PowerPole => Some(ItemKind::PowerPole),
+            #[cfg(any(test, feature = "test-support"))]
+            FactoryKind::TestConsumer => None,
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestArrow => None,
         }
@@ -102,6 +115,10 @@ impl FactoryKind {
         match self {
             FactoryKind::Chest => "chest",
             FactoryKind::Belt => "wooden conveyor",
+            FactoryKind::BurnerGenerator => "burner generator",
+            FactoryKind::PowerPole => "power pole",
+            #[cfg(any(test, feature = "test-support"))]
+            FactoryKind::TestConsumer => "test consumer",
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestArrow => "test arrow",
         }
@@ -112,9 +129,20 @@ impl FactoryKind {
         match self {
             FactoryKind::Chest => false,
             FactoryKind::Belt => true,
+            FactoryKind::BurnerGenerator | FactoryKind::PowerPole => false,
+            #[cfg(any(test, feature = "test-support"))]
+            FactoryKind::TestConsumer => false,
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestArrow => true,
         }
+    }
+
+    /// The test-only power consumer (always false outside tests).
+    pub fn is_test_consumer(self) -> bool {
+        #[cfg(any(test, feature = "test-support"))]
+        return self == FactoryKind::TestConsumer;
+        #[cfg(not(any(test, feature = "test-support")))]
+        false
     }
 
     /// The sprite (category "factory") drawn for this kind and facing.
@@ -122,6 +150,10 @@ impl FactoryKind {
         match self {
             FactoryKind::Chest => SpriteRef::new("factory", "chest"),
             FactoryKind::Belt => SpriteRef::new("factory", &format!("belt_{}", facing.name())),
+            FactoryKind::BurnerGenerator => SpriteRef::new("factory", "burner_generator"),
+            FactoryKind::PowerPole => SpriteRef::new("factory", "power_pole"),
+            #[cfg(any(test, feature = "test-support"))]
+            FactoryKind::TestConsumer => SpriteRef::new("factory", "chest"),
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestArrow => SpriteRef::new("factory", "chest"),
         }
@@ -200,11 +232,28 @@ pub fn place(
         FactoryKind::Belt => {
             builder.add(BeltSlot::default());
         }
+        FactoryKind::BurnerGenerator => {
+            builder.add(crate::power::Generator::default());
+            builder.add(Inventory {
+                max_slots: crate::power::BURNER_FUEL_SLOTS,
+                ..Default::default()
+            });
+        }
+        FactoryKind::PowerPole => {
+            builder.add(crate::power::PowerPole);
+        }
+        #[cfg(any(test, feature = "test-support"))]
+        FactoryKind::TestConsumer => {
+            builder.add(crate::power::PowerConsumer::new(TEST_CONSUMER_W));
+        }
         #[cfg(any(test, feature = "test-support"))]
         FactoryKind::TestArrow => {}
     }
     let entity = world.spawn(builder.build());
     res.factory_index.insert(pos, entity);
+    if crate::power::is_grid_block(kind) {
+        res.power.dirty = true;
+    }
     Ok(entity)
 }
 
@@ -226,6 +275,9 @@ pub fn break_block(
         contents.push(crate::components::ItemStack::new(item, 1));
     }
     let _ = world.despawn(entity);
+    if crate::power::is_grid_block(block.kind) {
+        res.power.dirty = true;
+    }
     res.world_state
         .world
         .set_tile_cached(pos.x, pos.y, pos.z, TileKind::Air);
@@ -329,10 +381,15 @@ pub fn run_due_steps(world: &mut World, res: &mut Resources) {
     for i in 0..steps {
         let step_tick = first_step_tick + i * FACTORY_STEP_TICKS;
         crate::plants::grow_saplings(world, res, step_tick);
+        crate::power::step_power(world, res);
         step_belts(world, res);
         res.factory_clock.steps += 1;
     }
 }
+
+/// What the test-only consumer draws, in watts.
+#[cfg(any(test, feature = "test-support"))]
+pub const TEST_CONSUMER_W: u64 = 45_000;
 
 /// Steps an item spends on a belt before it moves on (half a game second).
 pub const BELT_STEPS_PER_TILE: u8 = 2;
@@ -350,7 +407,10 @@ pub fn accepts(world: &World, target: Entity, item: ItemKind) -> bool {
     if let Ok(belt) = world.get::<&BeltSlot>(target) {
         return belt.item.is_none();
     }
-    if world.get::<&FactoryBlock>(target).is_err() {
+    let Ok(block) = world.get::<&FactoryBlock>(target).map(|b| *b) else {
+        return false;
+    };
+    if block.kind == FactoryKind::BurnerGenerator && crate::power::fuel_energy(item).is_none() {
         return false;
     }
     world.get::<&Inventory>(target).is_ok_and(|inv| {

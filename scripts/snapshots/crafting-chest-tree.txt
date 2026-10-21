@@ -3,6 +3,6 @@ seed 12345
 size 100x30
 skip-splash
 key ui.MENU_NEXT 5
-key movement.MOVE_SOUTH 9
+key movement.MOVE_SOUTH 11
 expect-text "Recipe Name: Chest"
 screen chest-tree

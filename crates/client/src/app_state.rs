@@ -97,6 +97,8 @@ impl CombatUiState {
 
 /// All UI panel-specific states grouped by functionality
 pub struct PanelStates {
+    /// The power pole whose network info box is open
+    pub power_info: Option<hecs::Entity>,
     pub inventory: InventoryPanelState,
     pub crafting: CraftingPanelState,
     pub credits: CreditsPanelState,
@@ -370,6 +372,16 @@ pub enum InteractionType {
         entity: hecs::Entity,
         position: Position,
     },
+    /// Open a burner generator's fuel window
+    OpenGenerator {
+        entity: hecs::Entity,
+        position: Position,
+    },
+    /// Show a power pole's network
+    InspectPole {
+        entity: hecs::Entity,
+        position: Position,
+    },
     /// Put one of the selected inventory item on an empty belt
     LoadBelt {
         entity: hecs::Entity,
@@ -387,6 +399,8 @@ impl InteractionType {
             | InteractionType::TalkToNPC { position, .. }
             | InteractionType::OpenCloseDoor { position, .. }
             | InteractionType::OpenChest { position, .. }
+            | InteractionType::OpenGenerator { position, .. }
+            | InteractionType::InspectPole { position, .. }
             | InteractionType::LoadBelt { position, .. } => *position,
         }
     }
@@ -413,6 +427,8 @@ impl InteractionType {
             }
             InteractionType::TalkToNPC { npc_name, .. } => format!("Talk to {}", npc_name),
             InteractionType::OpenChest { .. } => "Open chest".to_string(),
+            InteractionType::OpenGenerator { .. } => "Fuel generator".to_string(),
+            InteractionType::InspectPole { .. } => "Inspect power pole".to_string(),
             InteractionType::LoadBelt { item, .. } => format!(
                 "Put {} on belt",
                 lithicrivers_core::components::itemkind_name(*item)
@@ -447,7 +463,9 @@ impl InteractionType {
             InteractionType::LootCorpse { .. } => "x", // x for corpse looting
             InteractionType::TalkToNPC { .. } => "t",  // t for talking
             InteractionType::OpenChest { .. } => "c",  // c for chest
-            InteractionType::LoadBelt { .. } => ">",   // onto the belt
+            InteractionType::OpenGenerator { .. } => "G",
+            InteractionType::InspectPole { .. } => "+",
+            InteractionType::LoadBelt { .. } => ">", // onto the belt
             InteractionType::OpenCloseDoor { is_open, .. } => {
                 if *is_open {
                     "o"

@@ -110,6 +110,9 @@ saved_components! {
     "factory_block" => crate::factory::FactoryBlock,
     "growth" => crate::plants::Growth,
     "belt_slot" => crate::factory::BeltSlot,
+    "generator" => crate::power::Generator,
+    "power_pole" => crate::power::PowerPole,
+    "power_consumer" => crate::power::PowerConsumer,
 }
 
 /// Entities that carry a component type the registry doesn't know, described by the
@@ -473,6 +476,29 @@ mod tests {
             crate::factory::Facing::South,
         )
         .unwrap();
+        for (kind, pos) in [
+            (
+                crate::factory::FactoryKind::PowerPole,
+                Position { x: 4, y: -4, z: 0 },
+            ),
+            (
+                crate::factory::FactoryKind::BurnerGenerator,
+                Position { x: 5, y: -4, z: 0 },
+            ),
+            (
+                crate::factory::FactoryKind::TestConsumer,
+                Position { x: 3, y: -4, z: 0 },
+            ),
+        ] {
+            crate::factory::place(
+                &mut fight.game.world,
+                &mut fight.game.res,
+                kind,
+                pos,
+                crate::factory::Facing::North,
+            )
+            .unwrap();
+        }
         crate::plants::plant(
             &mut fight.game.world,
             &mut fight.game.res,

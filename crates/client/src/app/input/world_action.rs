@@ -162,15 +162,25 @@ pub fn nearby_interactions(app: &App) -> Option<NearbyInteractions> {
         .query::<(&Position, &lithicrivers_core::factory::FactoryBlock)>()
         .iter()
     {
-        if block.kind == lithicrivers_core::factory::FactoryKind::Chest
-            && (pos.x - player_pos.x).abs() <= 1
+        use lithicrivers_core::factory::FactoryKind;
+        let adjacent = (pos.x - player_pos.x).abs() <= 1
             && (pos.y - player_pos.y).abs() <= 1
-            && pos.z == player_pos.z
-        {
-            available_actions.push(InteractionType::OpenChest {
-                entity,
-                position: *pos,
-            });
+            && pos.z == player_pos.z;
+        if !adjacent {
+            continue;
+        }
+        let position = *pos;
+        match block.kind {
+            FactoryKind::Chest => {
+                available_actions.push(InteractionType::OpenChest { entity, position })
+            }
+            FactoryKind::BurnerGenerator => {
+                available_actions.push(InteractionType::OpenGenerator { entity, position })
+            }
+            FactoryKind::PowerPole => {
+                available_actions.push(InteractionType::InspectPole { entity, position })
+            }
+            _ => {}
         }
     }
 
@@ -409,6 +419,18 @@ pub fn execute_interaction_action(app: &mut App, action: &crate::app_state::Inte
                 )),
                 Err(_) => app.core.game.res.log("The belt is full"),
             }
+        }
+        InteractionType::InspectPole { entity, .. } => {
+            app.panels.power_info = Some(*entity);
+        }
+        InteractionType::OpenGenerator { entity, .. } => {
+            app.panels.corpse_looting = CorpseLootingState::LootingCorpse {
+                entity: *entity,
+                selected_loot_item: 0,
+                selected_player_item: 0,
+                loot_panel_focus: false,
+            };
+            app.core.game.res.log("Opened generator");
         }
         InteractionType::OpenChest { entity, .. } => {
             // Chests use the same two-panel transfer window as corpses

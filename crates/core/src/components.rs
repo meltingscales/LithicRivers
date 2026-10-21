@@ -177,6 +177,8 @@ pub enum ItemKind {
     Chest,
     IronScrap,
     WoodenConveyor,
+    BurnerGenerator,
+    PowerPole,
 }
 
 pub fn itemkind_name(kind: ItemKind) -> &'static str {
@@ -199,6 +201,8 @@ pub fn itemkind_name(kind: ItemKind) -> &'static str {
         ItemKind::Chest => "Chest",
         ItemKind::IronScrap => "Iron Scrap",
         ItemKind::WoodenConveyor => "Wooden Conveyor",
+        ItemKind::BurnerGenerator => "Burner Generator",
+        ItemKind::PowerPole => "Power Pole",
     }
 }
 
@@ -222,6 +226,8 @@ pub fn itemkind_sprite_name(kind: ItemKind) -> &'static str {
         ItemKind::Chest => "chest",
         ItemKind::IronScrap => "iron_scrap",
         ItemKind::WoodenConveyor => "wooden_conveyor",
+        ItemKind::BurnerGenerator => "burner_generator",
+        ItemKind::PowerPole => "power_pole",
     }
 }
 
@@ -245,6 +251,8 @@ pub fn parse_itemkind_from_sprite_name(sprite_name: &str) -> Option<ItemKind> {
         "chest" => Some(ItemKind::Chest),
         "iron_scrap" => Some(ItemKind::IronScrap),
         "wooden_conveyor" => Some(ItemKind::WoodenConveyor),
+        "burner_generator" => Some(ItemKind::BurnerGenerator),
+        "power_pole" => Some(ItemKind::PowerPole),
         _ => None,
     }
 }

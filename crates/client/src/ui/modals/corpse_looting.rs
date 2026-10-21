@@ -157,24 +157,46 @@ fn render_corpse_loot_modal(
         return;
     };
 
-    // Chests share this window, with items moving both ways
-    let is_chest = app
+    // Chests and generators share this window, with items moving both ways
+    let block = app
         .core
         .game
         .world
         .get::<&lithicrivers_core::factory::FactoryBlock>(corpse_entity)
-        .is_ok();
-    let (title, items_title) = if is_chest {
-        (
+        .ok()
+        .map(|b| b.kind);
+    let is_chest = block.is_some();
+    let (title, items_title) = match block {
+        Some(lithicrivers_core::factory::FactoryKind::BurnerGenerator) => {
+            let buffer_kj = app
+                .core
+                .game
+                .world
+                .get::<&lithicrivers_core::power::Generator>(corpse_entity)
+                .map_or(0, |g| g.buffer_j / 1000);
+            let network = app.core.game.res.power.network_of(corpse_entity);
+            let grid = match network {
+                Some(n) => format!("network {} / {} kW", n.supply_w / 1000, n.demand_w / 1000),
+                None => "no power pole in reach".to_string(),
+            };
+            (
+                format!(" Burner Generator - {grid} "),
+                format!(
+                    " Fuel ({}/{}) - {buffer_kj} kJ left ",
+                    corpse_inv.slots.len(),
+                    corpse_inv.max_slots
+                ),
+            )
+        }
+        Some(_) => (
             " Chest ".to_string(),
             format!(
                 " Chest Items ({}/{}) ",
                 corpse_inv.slots.len(),
                 corpse_inv.max_slots
             ),
-        )
-    } else {
-        (" Looting Corpse ".to_string(), " Corpse Items ".to_string())
+        ),
+        None => (" Looting Corpse ".to_string(), " Corpse Items ".to_string()),
     };
 
     // Create modal area (centered, 70% width, 60% height)

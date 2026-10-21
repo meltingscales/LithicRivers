@@ -184,13 +184,32 @@ pub fn handle_corpse_looting_input(app: &mut App, key: KeyCode) -> Result<bool, 
         if activate && is_chest {
             // Chests move items both ways: from the focused panel to the other one
             if let Some(player) = app.core.game.get_player_entity() {
-                use lithicrivers_core::factory::{move_one_item, TransferError};
-                let (from, to, slot, verb) = if panel_focus {
-                    (corpse_entity, player, loot_item, "Took")
-                } else {
-                    (player, corpse_entity, player_item, "Stored")
+                use lithicrivers_core::factory::{
+                    move_one_item, move_one_item_to_block, TransferError,
                 };
-                match move_one_item(&mut app.core.game.world, from, to, slot) {
+                let world = &mut app.core.game.world;
+                // Storing goes through the block's own rules (a generator only takes fuel)
+                let (result, verb) = if panel_focus {
+                    (
+                        move_one_item(world, corpse_entity, player, loot_item),
+                        "Took",
+                    )
+                } else {
+                    let result = move_one_item_to_block(world, player, corpse_entity, player_item);
+                    (result, "Stored")
+                };
+                let block_name = world
+                    .get::<&lithicrivers_core::factory::FactoryBlock>(corpse_entity)
+                    .map(|b| b.kind.name())
+                    .unwrap_or("chest");
+                let refused_fuel = !panel_focus
+                    && block_name == "burner generator"
+                    && world
+                        .get::<&lithicrivers_core::components::Inventory>(player)
+                        .ok()
+                        .and_then(|inv| inv.slots.get(player_item).map(|s| s.kind))
+                        .is_some_and(|k| lithicrivers_core::power::fuel_energy(k).is_none());
+                match result {
                     Ok(kind) => app.core.game.res.log(format!(
                         "{verb} {}",
                         lithicrivers_core::components::itemkind_name(kind)
@@ -198,7 +217,21 @@ pub fn handle_corpse_looting_input(app: &mut App, key: KeyCode) -> Result<bool, 
                     Err(TransferError::Full) if panel_focus => {
                         app.core.game.res.log("Your inventory is full")
                     }
-                    Err(TransferError::Full) => app.core.game.res.log("The chest is full"),
+                    Err(TransferError::Full) if refused_fuel => {
+                        let item = app
+                            .core
+                            .game
+                            .world
+                            .get::<&lithicrivers_core::components::Inventory>(player)
+                            .ok()
+                            .and_then(|inv| inv.slots.get(player_item).map(|s| s.kind));
+                        let name =
+                            item.map_or("That", lithicrivers_core::components::itemkind_name);
+                        app.core.game.res.log(format!("{name} isn't fuel"))
+                    }
+                    Err(TransferError::Full) => {
+                        app.core.game.res.log(format!("The {block_name} is full"))
+                    }
                     Err(TransferError::Empty) => {}
                 }
                 // Keep both selections on a stack that still exists

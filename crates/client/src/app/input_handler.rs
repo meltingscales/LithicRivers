@@ -55,6 +55,14 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
             app.ui.current_tab, app.splash.state);
     }
 
+    // The power pole info box closes on the close key and swallows other keys
+    if app.panels.power_info.is_some() {
+        if app.ui.keybinds.matches("ui", "CLOSE_HELP_MENU", &key) {
+            app.panels.power_info = None;
+        }
+        return Ok(());
+    }
+
     // Handle world/build mode input when on World tab - delegated to input module
     if crate::app::input::world_build::handle_world_build_input(app, key)? {
         return Ok(());

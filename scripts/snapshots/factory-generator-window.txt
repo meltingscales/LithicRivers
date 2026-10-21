@@ -1,0 +1,32 @@
+# Burner generator fuel window after storing a log, with its network status in the title
+seed 12345
+size 100x30
+skip-splash
+key ui.MENU_PREV
+cheat tp 0 0 0
+cheat giveitem power_pole
+cheat giveitem burner_generator
+key build.TOGGLE_BREAK_PLACE_MODE 2
+# Picker: Clear slot, Acorn, Power Pole, Burner Generator
+key hotbar.HOTBAR_SLOT_1 2
+key movement.MOVE_SOUTH 2
+key ui.MENU_ACTIVATE
+key hotbar.HOTBAR_SLOT_2 2
+key movement.MOVE_SOUTH 3
+key ui.MENU_ACTIVATE
+key hotbar.HOTBAR_SLOT_1
+key build.PLACE_NORTHWEST
+key hotbar.HOTBAR_SLOT_2
+key build.PLACE_WEST
+key build.TOGGLE_BREAK_PLACE_MODE 2
+key movement.WAIT
+key action.INTERACT
+expect-text "Fuel generator (W)"
+# Choices: Inspect power pole (NW), Fuel generator (W)
+key movement.MOVE_SOUTH
+key ui.MENU_ACTIVATE
+# Your Items panel is focused: Nail, Acorn, Log
+key movement.MOVE_SOUTH 2
+key ui.MENU_ACTIVATE
+expect-text "Stored Log"
+screen generator-window

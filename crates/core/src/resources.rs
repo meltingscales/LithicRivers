@@ -97,6 +97,9 @@ pub struct Resources {
     pub factory_index: crate::factory::FactoryIndex,
     #[serde(default)]
     pub factory_clock: crate::factory::FactoryClock,
+    /// Power networks; rebuilt from the factory blocks when dirty
+    #[serde(default)]
+    pub power: crate::power::PowerNetworks,
 }
 
 impl Resources {
@@ -118,6 +121,7 @@ impl Resources {
             explored_chunks: HashMap::new(),
             factory_index: HashMap::new(),
             factory_clock: crate::factory::FactoryClock::default(),
+            power: crate::power::PowerNetworks::default(),
         }
     }
 

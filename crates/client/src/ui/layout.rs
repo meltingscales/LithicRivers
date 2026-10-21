@@ -173,6 +173,9 @@ pub(crate) fn ui(f: &mut Frame, app: &mut App) {
     // Render multi-action selection modal if active
     render_multi_action_selection_modal(f, app);
 
+    // Render the power pole info box if open
+    crate::ui::modals::render_power_info_modal(f, app);
+
     // Render repair modal if active
     if matches!(
         app.panels.body_repair,
