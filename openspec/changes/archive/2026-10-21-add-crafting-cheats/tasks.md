@@ -7,4 +7,4 @@
 ## 2. Cheat
 
 - [x] 2.1 Add `givecraftingcomponents` with argument parsing, logging, errors and autocomplete; verify headless tests for each spec scenario, including crafting a chest after the cheat and status 1 for an unknown item
-- [ ] 2.2 Document the command in AGENTS.md and the `play-headless` skill; verify `just code-clippy`, `cargo test --workspace` and PR checks pass
+- [x] 2.2 Document the command in AGENTS.md and the `play-headless` skill; verify `just code-clippy`, `cargo test --workspace` and PR checks pass
