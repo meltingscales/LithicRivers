@@ -17,9 +17,7 @@ pub struct CurrentWorld {
 impl App {
     /// Start a new world and reset all in-game UI for it. Does not save or change screens.
     pub(crate) fn start_world(&mut self, name: &str, seed: u64, settings: WorldSettings) {
-        let mut game = Game::new(seed);
-        game.res.world_settings = settings;
-        self.core.game = game;
+        self.core.game = Game::new_with_settings(seed, settings);
         self.reset_for_game();
         let now = self.clock.unix_seconds();
         self.current_world = Some(CurrentWorld {
@@ -95,6 +93,7 @@ mod tests {
             cheats_allowed: false,
             developer_mode: false,
             show_tutorial: false,
+            world_type: lithicrivers_core::resources::WorldType::Normal,
         };
         runner.app.start_world("Round Trip", 777, settings);
         runner.app.splash.state = crate::SplashState::MainUI;

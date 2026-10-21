@@ -13,6 +13,7 @@ input_file: scripts/snapshots/create-world.txt
           │                                Seed: [lithic]                                │
           │                             > Allow cheats: ON <                             │
           │                              Developer mode: ON                              │
+          │                            World type: < Normal >                            │
           │                               Show tutorial: ON                              │
           │                                    Create                                    │
           │                                    Cancel                                    │
@@ -20,7 +21,6 @@ input_file: scripts/snapshots/create-world.txt
           │      Leave the seed blank for a random world; any text works as a seed.      │
           │   UP/DOWN move   ENTER select   ESCAPE back   LEFT/RIGHT toggle   BACKSPACE  │
           │                                     erase                                    │
-          │                                                                              │
           │                                                                              │
           │                                                                              │
           │                                                                              │

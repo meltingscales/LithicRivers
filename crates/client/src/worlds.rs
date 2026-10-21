@@ -158,6 +158,7 @@ mod tests {
         cheats_allowed: false,
         developer_mode: true,
         show_tutorial: false,
+        world_type: lithicrivers_core::resources::WorldType::Normal,
     };
 
     fn temp_saves(name: &str) -> PathBuf {

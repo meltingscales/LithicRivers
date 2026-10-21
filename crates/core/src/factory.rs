@@ -68,7 +68,7 @@ impl Facing {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, strum::EnumIter)]
 pub enum FactoryKind {
     Chest,
     /// Wooden conveyor: carries one item a tile in its facing direction
@@ -146,6 +146,14 @@ impl FactoryKind {
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestArrow => true,
         }
+    }
+
+    /// Kinds that exist only in tests (always false outside tests).
+    pub fn is_test_only(self) -> bool {
+        #[cfg(any(test, feature = "test-support"))]
+        return matches!(self, FactoryKind::TestConsumer | FactoryKind::TestArrow);
+        #[cfg(not(any(test, feature = "test-support")))]
+        false
     }
 
     /// The test-only power consumer (always false outside tests).

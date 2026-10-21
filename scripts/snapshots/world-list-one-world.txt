@@ -8,7 +8,7 @@ key title.SELECT
 type " Two"
 key title.DOWN
 type "12345"
-key title.DOWN 4
+key title.DOWN 5
 key title.SELECT
 rawkey ENTER
 rawkey ENTER

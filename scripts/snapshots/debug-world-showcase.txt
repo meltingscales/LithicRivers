@@ -1,0 +1,20 @@
+# A Factory showcase world created from the title screen: World type is the row after
+# Developer mode (on by default), and Right steps through Normal, Void, Ore test, Dog arena,
+# Factory showcase. The tutorial is turned off so the world view is clear
+seed 12345
+size 100x30
+rawkey ENTER
+rawkey ENTER
+key title.SELECT
+key title.SELECT
+key title.DOWN 4
+key title.RIGHT 4
+expect-text "World type: < Factory showcase >"
+key title.DOWN
+key title.SELECT
+key title.DOWN
+key title.SELECT
+rawkey ENTER
+rawkey ENTER
+key action.PASS_TIME
+screen showcase

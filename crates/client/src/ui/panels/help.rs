@@ -48,6 +48,10 @@ pub fn render_help_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
             .get_printable_key_for_keybind("action", "PASS_TIME")
     )));
     lines.push(Line::from(""));
+    lines.push(Line::from(
+        "Debug worlds: with Developer mode on, Create New World offers a World type: Void (an empty platform), Ore test (a row of every minable tile), Dog arena (100 feral dogs) or Factory showcase (working example builds).",
+    ));
+    lines.push(Line::from(""));
     let movement_keys_list = vec![
         app.core
             .config_manager

@@ -4,21 +4,39 @@
 use crate::worlds::{self, WorldEntry};
 use crate::{App, EmbeddedAssets, SplashState};
 use crossterm::event::KeyCode;
-use lithicrivers_core::resources::WorldSettings;
+use lithicrivers_core::resources::{WorldSettings, WorldType};
 
 pub const TITLE_CHOICES: [&str; 3] = ["Play Game", "Options", "Quit"];
 pub const WORLD_ACTIONS: [&str; 4] = ["Play", "Rename", "Delete", "Back"];
 pub const DELETE_CHOICES: [&str; 2] = ["Cancel", "Delete"];
-/// Create-world rows, in order.
-pub const CREATE_FIELDS: [&str; 7] = [
-    "World name",
-    "Seed",
-    "Allow cheats",
-    "Developer mode",
-    "Show tutorial",
-    "Create",
-    "Cancel",
-];
+/// A row of the create-world form.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CreateField {
+    Name,
+    Seed,
+    Cheats,
+    DeveloperMode,
+    /// Only shown with Developer mode on
+    WorldType,
+    Tutorial,
+    Create,
+    Cancel,
+}
+
+impl CreateField {
+    pub fn label(self) -> &'static str {
+        match self {
+            CreateField::Name => "World name",
+            CreateField::Seed => "Seed",
+            CreateField::Cheats => "Allow cheats",
+            CreateField::DeveloperMode => "Developer mode",
+            CreateField::WorldType => "World type",
+            CreateField::Tutorial => "Show tutorial",
+            CreateField::Create => "Create",
+            CreateField::Cancel => "Cancel",
+        }
+    }
+}
 pub const OPTIONS_ROWS: [&str; 3] = ["Music volume", "Sound volume", "Back"];
 const VOLUME_STEP: f64 = 0.05;
 const MAX_TEXT_LEN: usize = 32;
@@ -94,9 +112,28 @@ impl CreateWorldForm {
                 cheats_allowed: false,
                 developer_mode,
                 show_tutorial: true,
+                world_type: WorldType::Normal,
             },
             field: 0,
         }
+    }
+
+    /// The rows shown, in order: World type only with Developer mode on.
+    pub fn fields(&self) -> Vec<CreateField> {
+        use CreateField::*;
+        [
+            Name,
+            Seed,
+            Cheats,
+            DeveloperMode,
+            WorldType,
+            Tutorial,
+            Create,
+            Cancel,
+        ]
+        .into_iter()
+        .filter(|&f| f != WorldType || self.settings.developer_mode)
+        .collect()
     }
 }
 
@@ -268,8 +305,9 @@ impl App {
     }
 
     fn handle_create_input(&mut self, key: KeyCode) {
+        let fields = self.title.create.fields();
         let mut field = self.title.create.field;
-        if self.navigate(&key, &mut field, CREATE_FIELDS.len()) {
+        if self.navigate(&key, &mut field, fields.len()) {
             self.title.create.field = field;
             return;
         }
@@ -278,12 +316,13 @@ impl App {
             return;
         }
         let select = self.matches("SELECT", &key);
-        let toggle = select || self.matches("LEFT", &key) || self.matches("RIGHT", &key);
+        let left = self.matches("LEFT", &key);
+        let toggle = select || left || self.matches("RIGHT", &key);
         let erase = self.matches("DELETE_CHAR", &key);
         let form = &mut self.title.create;
-        match field {
-            0 | 1 => {
-                let text = if field == 0 {
+        match fields[field] {
+            CreateField::Name | CreateField::Seed => {
+                let text = if fields[field] == CreateField::Name {
                     &mut form.name
                 } else {
                     &mut form.seed
@@ -296,11 +335,21 @@ impl App {
                     }
                 }
             }
-            2 if toggle => form.settings.cheats_allowed ^= true,
-            3 if toggle => form.settings.developer_mode ^= true,
-            4 if toggle => form.settings.show_tutorial ^= true,
-            5 if select => self.create_world_from_form(),
-            6 if select => self.show_world_list(),
+            CreateField::Cheats if toggle => form.settings.cheats_allowed ^= true,
+            CreateField::DeveloperMode if toggle => {
+                form.settings.developer_mode ^= true;
+                // Debug worlds need developer mode
+                if !form.settings.developer_mode {
+                    form.settings.world_type = WorldType::Normal;
+                }
+            }
+            CreateField::WorldType if toggle => {
+                let t = form.settings.world_type;
+                form.settings.world_type = if left { t.prev() } else { t.next() };
+            }
+            CreateField::Tutorial if toggle => form.settings.show_tutorial ^= true,
+            CreateField::Create if select => self.create_world_from_form(),
+            CreateField::Cancel if select => self.show_world_list(),
             _ => {}
         }
     }
@@ -405,7 +454,7 @@ mod tests {
     const CREATE_12345: &[&str] = &[
         "key title.DOWN",
         "type \"12345\"",
-        "key title.DOWN 4",
+        "key title.DOWN 5",
         "key title.SELECT",
         "rawkey ENTER",
         "rawkey ENTER",
@@ -546,8 +595,72 @@ mod tests {
     }
 
     #[test]
+    fn world_type_row_needs_developer_mode() {
+        // Developer mode is on by default: pick Void, then turn developer mode off
+        let mut runner = chain_commands(
+            &[
+                TO_TITLE,
+                TO_CREATE,
+                &[
+                    "key title.DOWN 4",
+                    "key title.RIGHT",
+                    "expect-text \"World type: < Void >\"",
+                    "key title.UP",
+                    "key title.SELECT",
+                ],
+            ]
+            .concat(),
+        );
+        assert!(!runner.screen_text().contains("World type"));
+        assert_eq!(
+            runner.app.title.create.settings.world_type,
+            lithicrivers_core::resources::WorldType::Normal,
+            "turning developer mode off resets the type"
+        );
+        // Without the row, Create is one row closer
+        runner.chain(&[
+            "key title.UP 2",
+            "type \"7\"",
+            "key title.DOWN 4",
+            "key title.SELECT",
+            "rawkey ENTER",
+            "rawkey ENTER",
+        ]);
+        assert_eq!(runner.app.splash.state, SplashState::MainUI);
+        assert_eq!(
+            runner.app.core.game.res.world_settings.world_type,
+            lithicrivers_core::resources::WorldType::Normal
+        );
+    }
+
+    #[test]
+    fn a_void_world_is_listed_with_its_type() {
+        let create_lab: &[&str] = &[
+            "key title.DELETE_CHAR 9",
+            "type \"Lab\"",
+            "key title.DOWN 4",
+            "key title.RIGHT",
+            "key title.DOWN 2",
+            "key title.SELECT",
+            "rawkey ENTER",
+            "rawkey ENTER",
+        ];
+        let mut runner = chain_commands(&[TO_TITLE, TO_CREATE, create_lab].concat());
+        assert_eq!(
+            runner.app.core.game.res.world_settings.world_type,
+            lithicrivers_core::resources::WorldType::Void
+        );
+        assert_eq!(
+            runner.app.core.game.get_player_position(),
+            Some(lithicrivers_core::debug_worlds::DEBUG_SPAWN)
+        );
+        runner.chain(&[MENU_TAB, &["rawkey Q", "key title.SELECT"]].concat());
+        assert!(runner.screen_text().contains("Lab (Void)"));
+    }
+
+    #[test]
     fn world_without_tutorial_has_no_tutorial_tab() {
-        let hide_tutorial: &[&str] = &["key title.DOWN 4", "key title.SELECT", "key title.UP 4"];
+        let hide_tutorial: &[&str] = &["key title.DOWN 5", "key title.SELECT", "key title.UP 5"];
         let mut runner =
             chain_commands(&[TO_TITLE, TO_CREATE, hide_tutorial, CREATE_12345].concat());
         assert!(!runner.app.core.game.res.world_settings.show_tutorial);

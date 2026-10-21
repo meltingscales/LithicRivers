@@ -47,12 +47,69 @@ pub enum QuestMarkerType {
     Treasure,
 }
 
+/// What kind of world is generated. Everything but Normal is a debug world, offered on the
+/// create-world screen in developer mode.
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    Default,
+    PartialEq,
+    Eq,
+    serde::Serialize,
+    serde::Deserialize,
+    strum::EnumIter,
+)]
+pub enum WorldType {
+    #[default]
+    Normal,
+    /// Empty space with a grass platform at spawn
+    Void,
+    /// Flat ground with a row of every minable tile
+    OreTest,
+    /// A normal world with 100 feral dogs around spawn
+    DogArena,
+    /// Flat ground with example factory builds
+    FactoryShowcase,
+}
+
+impl WorldType {
+    pub fn name(self) -> &'static str {
+        match self {
+            WorldType::Normal => "Normal",
+            WorldType::Void => "Void",
+            WorldType::OreTest => "Ore test",
+            WorldType::DogArena => "Dog arena",
+            WorldType::FactoryShowcase => "Factory showcase",
+        }
+    }
+
+    /// The next type in the list, wrapping around.
+    pub fn next(self) -> Self {
+        use strum::IntoEnumIterator;
+        let all: Vec<Self> = Self::iter().collect();
+        let i = all.iter().position(|&t| t == self).unwrap_or(0);
+        all[(i + 1) % all.len()]
+    }
+
+    /// The previous type in the list, wrapping around.
+    pub fn prev(self) -> Self {
+        use strum::IntoEnumIterator;
+        let all: Vec<Self> = Self::iter().collect();
+        let i = all.iter().position(|&t| t == self).unwrap_or(0);
+        all[(i + all.len() - 1) % all.len()]
+    }
+}
+
 /// Settings chosen when a world is created; they apply only to that world.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct WorldSettings {
     pub cheats_allowed: bool,
     pub developer_mode: bool,
     pub show_tutorial: bool,
+    /// Worlds saved before world types existed are Normal
+    #[serde(default)]
+    pub world_type: WorldType,
 }
 
 impl WorldSettings {
@@ -63,6 +120,7 @@ impl WorldSettings {
             cheats_allowed: true,
             developer_mode: config.developer_mode,
             show_tutorial: true,
+            world_type: WorldType::Normal,
         }
     }
 }
@@ -356,6 +414,7 @@ mod tests {
             cheats_allowed: false,
             developer_mode: false,
             show_tutorial: false,
+            world_type: super::WorldType::Normal,
         };
         let game = TestWorld::new(1).settings(settings).build().game;
         assert!(!game.res.world_settings.developer_mode);

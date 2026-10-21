@@ -140,6 +140,9 @@ impl Chunk {
         let i = Self::idx(tx, ty);
         self.tiles[i] = t;
     }
+    pub fn fill(&mut self, t: TileKind) {
+        self.tiles.fill(t);
+    }
 }
 
 pub const CHUNK_SIZE: i64 = 64;
@@ -148,6 +151,8 @@ pub const CHUNK_SIZE_Z: i64 = 1; // z slices are 1-tile thick for distinct layer
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GameWorld {
     pub seed: u64,
+    /// Debug world types generate their own terrain (or none)
+    pub world_type: crate::resources::WorldType,
     chunks: HashMap<(i64, i64, i64), Chunk>,
     // Guard against re-entrant structure placement triggering recursive generation
     structure_placement_depth: u32,
@@ -158,12 +163,26 @@ impl GameWorld {
         // Width/height kept for compatibility; world is effectively infinite.
         Self {
             seed,
+            world_type: crate::resources::WorldType::Normal,
             chunks: HashMap::new(),
             structure_placement_depth: 0,
         }
     }
 
     fn generate_chunk(&self, cx: i64, cy: i64, cz: i64, chunk: &mut Chunk) {
+        use crate::resources::WorldType;
+        match self.world_type {
+            WorldType::Normal | WorldType::DogArena => {}
+            WorldType::Void => return chunk.fill(TileKind::Air),
+            // Flat: solid rock below z = 0, grass at z = 0, air above
+            WorldType::OreTest | WorldType::FactoryShowcase => {
+                return chunk.fill(match cz.cmp(&0) {
+                    std::cmp::Ordering::Less => TileKind::Rock,
+                    std::cmp::Ordering::Equal => TileKind::Grass,
+                    std::cmp::Ordering::Greater => TileKind::Air,
+                })
+            }
+        }
         // Create Perlin noise generators with different seeds for different features
         let perlin = Perlin::new(self.seed as u32);
         let biome_noise = Perlin::new(self.seed as u32 % 0x10000);
@@ -523,6 +542,13 @@ impl GameWorld {
         if self.structure_placement_depth > 0 {
             return;
         }
+        // Only normal terrain gets structures
+        if !matches!(
+            self.world_type,
+            crate::resources::WorldType::Normal | crate::resources::WorldType::DogArena
+        ) {
+            return;
+        }
 
         // 1) Fixed demo structures near spawn on (0,0) but only once on cz==0
         if cx == 0 && cy == 0 && cz == 0 {
@@ -755,6 +781,7 @@ pub mod chunks_as_pairs {
     #[derive(Serialize)]
     struct WorldRef<'a> {
         seed: u64,
+        world_type: crate::resources::WorldType,
         #[serde(with = "crate::serde_pairs")]
         chunks: &'a HashMap<(i64, i64, i64), Chunk>,
     }
@@ -762,6 +789,8 @@ pub mod chunks_as_pairs {
     #[derive(Deserialize)]
     struct WorldOwned {
         seed: u64,
+        #[serde(default)]
+        world_type: crate::resources::WorldType,
         #[serde(with = "crate::serde_pairs")]
         chunks: HashMap<(i64, i64, i64), Chunk>,
     }
@@ -769,14 +798,20 @@ pub mod chunks_as_pairs {
     pub fn serialize<S: Serializer>(world: &GameWorld, serializer: S) -> Result<S::Ok, S::Error> {
         WorldRef {
             seed: world.seed,
+            world_type: world.world_type,
             chunks: &world.chunks,
         }
         .serialize(serializer)
     }
 
     pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<GameWorld, D::Error> {
-        let WorldOwned { seed, chunks } = WorldOwned::deserialize(deserializer)?;
+        let WorldOwned {
+            seed,
+            world_type,
+            chunks,
+        } = WorldOwned::deserialize(deserializer)?;
         let mut world = GameWorld::new(0, 0, seed);
+        world.world_type = world_type;
         world.chunks = chunks;
         Ok(world)
     }
