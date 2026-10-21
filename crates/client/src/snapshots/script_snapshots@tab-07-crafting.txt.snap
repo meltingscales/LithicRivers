@@ -16,9 +16,9 @@ input_file: scripts/snapshots/tab-07-crafting.txt
 ││  * Nail                      ││                                ││* Torch: x3                   ││
 ││  * String                    ││                                ││                              ││
 ││  * Wooden Conveyor           ││                                ││                              ││
+││  * Burner Generator          ││                                ││                              ││
+││  * Power Pole                ││                                ││                              ││
 ││  * Chest                     ││                                ││                              ││
-││                              ││                                ││                              ││
-││                              ││                                ││                              ││
 │└──────────────────────────────┘└────────────────────────────────┘└──────────────────────────────┘│
 │                                                                                                  │
 │                                                                                                  │

@@ -84,6 +84,24 @@ impl RecipeHandler {
                 result: ItemKind::WoodenConveyor,
                 quantity: 2,
             },
+            // Burner generator: 8x stone + 4x iron scrap + 2x scrap electronics
+            Recipe {
+                name: "Burner Generator",
+                ingredients: &[
+                    (ItemKind::Stone, 8),
+                    (ItemKind::IronScrap, 4),
+                    (ItemKind::ScrapElectronics, 2),
+                ],
+                result: ItemKind::BurnerGenerator,
+                quantity: 1,
+            },
+            // 2 power poles: 1x log + 1x iron scrap
+            Recipe {
+                name: "Power Pole",
+                ingredients: &[(ItemKind::Log, 1), (ItemKind::IronScrap, 1)],
+                result: ItemKind::PowerPole,
+                quantity: 2,
+            },
             // Chest: 8x wooden plank + 4x nail
             Recipe {
                 name: "Chest",

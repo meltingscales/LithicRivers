@@ -16,9 +16,9 @@ input_file: scripts/snapshots/crafting-chest-tree.txt
 ││  * Nail                      ││  - 4x Nail (have 10)           ││* Torch: x3                   ││
 ││  * String                    ││    * 1x Iron Scrap (have 0)    ││                              ││
 ││  * Wooden Conveyor           ││* raw material                  ││                              ││
+││  * Burner Generator          ││                                ││                              ││
+││  * Power Pole                ││                                ││                              ││
 ││> * Chest                     ││                                ││                              ││
-││                              ││                                ││                              ││
-││                              ││                                ││                              ││
 │└──────────────────────────────┘└────────────────────────────────┘└──────────────────────────────┘│
 │                                                                                                  │
 │                                                                                                  │

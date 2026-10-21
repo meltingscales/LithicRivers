@@ -305,3 +305,61 @@ fn belt_line_carries_logs_into_a_chest() {
         "three logs arrived"
     );
 }
+
+/// From the World tab at (0, 0, 0): a power pole to the north-west and a burner generator to
+/// the west, placed from the hotbar, with a stone in the inventory.
+const SMALL_GRID: &[&str] = &[
+    "skip-splash",
+    "key ui.MENU_PREV",
+    "cheat tp 0 0 0",
+    "cheat giveitem power_pole",
+    "cheat giveitem burner_generator",
+    "cheat giveitem stone",
+    "key build.TOGGLE_BREAK_PLACE_MODE 2",
+    // Picker: Clear slot, Acorn, Power Pole, Burner Generator, Stone
+    "key hotbar.HOTBAR_SLOT_1 2",
+    "key movement.MOVE_SOUTH 2",
+    "key ui.MENU_ACTIVATE",
+    "key hotbar.HOTBAR_SLOT_2 2",
+    "key movement.MOVE_SOUTH 3",
+    "key ui.MENU_ACTIVATE",
+    "key hotbar.HOTBAR_SLOT_1",
+    "key build.PLACE_NORTHWEST",
+    "key hotbar.HOTBAR_SLOT_2",
+    "key build.PLACE_WEST",
+    "key build.TOGGLE_BREAK_PLACE_MODE 2",
+    "key movement.WAIT",
+    "key action.INTERACT",
+];
+
+#[test]
+fn generator_window_refuses_stone() {
+    let mut runner = chain_commands(SMALL_GRID);
+    let generator = choice_index(&runner, Position { x: -1, y: 0, z: 0 });
+    // Your Items: Nail, Acorn, Log, Stick, Torch, String, Scrap Electronics, Stone
+    runner.chain(&[
+        &format!("key movement.MOVE_SOUTH {generator}"),
+        "key ui.MENU_ACTIVATE",
+        "expect-text \"Burner Generator - network\"",
+        "key movement.MOVE_SOUTH 7",
+        "key ui.MENU_ACTIVATE",
+        "expect-text \"Stone isn't fuel\"",
+    ]);
+    let generator = block_at(&runner, Position { x: -1, y: 0, z: 0 });
+    assert_eq!(count(&runner, generator, ItemKind::Stone), 0);
+}
+
+#[test]
+fn power_pole_shows_its_network() {
+    let mut runner = chain_commands(SMALL_GRID);
+    let pole = choice_index(&runner, Position { x: -1, y: -1, z: 0 });
+    runner.chain(&[
+        &format!("key movement.MOVE_SOUTH {pole}"),
+        "key ui.MENU_ACTIVATE",
+        "expect-text \"Power Network\"",
+        "expect-text \"Poles: 1   Generators: 1   Machines: 0\"",
+        "key ui.CLOSE_HELP_MENU",
+    ]);
+    assert!(runner.app.panels.power_info.is_none());
+    assert!(!runner.screen_text().contains("Power Network"));
+}

@@ -166,6 +166,7 @@ impl App {
     /// Panel state as a newly started world has it.
     fn fresh_panels(credits_text: String) -> PanelStates {
         PanelStates {
+            power_info: None,
             inventory: InventoryPanelState { selected: 0 },
             crafting: CraftingPanelState {
                 recipe_handler: RecipeHandler::new(),
