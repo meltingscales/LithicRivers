@@ -6,10 +6,24 @@ how can we vibe like:
 - Cataclysm Dark Days Ahead
 - Gnomoria
 - Factorio
+  - belts, ratios and throughput; the factory as the main character
+  - simulate everything that's placed, everywhere
 - Minecraft
   - Gregtech
+    - deep, multi-tier processing chains; every material has a long tree
+    - multiblock machines
   - IC2
   - Thaumcraft
+  - Tekkit (modpack)
+    - industrial + nuclear tech mashup; reactors you can melt down
+  - Big Dig (modpack)
+    - mining as the core loop: digging deep for better ores
+  - Create (mod)
+    - visible, physical machinery; rotation, chutes, funnels and contraptions
+- Downwell
+  - falling deeper is the progression; tight, readable vertical combat
+- Caves of Qud
+  - strange, specific lore and materials; a world that feels ancient and weird
 - Castlevania
   - unique rare items??
     - claihm solais

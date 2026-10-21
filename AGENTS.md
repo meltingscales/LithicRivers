@@ -61,7 +61,7 @@ Scripts have one step per line; `#` starts a comment.
 | `type "<text>"` | Press one key per character |
 | `wait <ms>` | Advance the fake clock in 50 ms frames (splash timers, combat auto-ticks) |
 | `tick [n]` | Advance the game simulation n ticks |
-| `cheat <command>` | Run a cheat console command: `tp x y z`, `spawn_enemy <kind> [x y z]` (kinds: `feral_dog`; default two tiles east), `giveitem <item> <qty>`, `noclip_toggle`, `toggle_fogofwar`, `toggle_tutorial`. Coordinates can be relative to the player: `~` or `~<offset>` per axis, e.g. `spawn_enemy feral_dog ~2 ~ ~` |
+| `cheat <command>` | Run a cheat console command: `tp x y z`, `spawn_enemy <kind> [x y z]` (kinds: `feral_dog`; default two tiles east), `giveitem <item> [qty]` (qty defaults to 1), `noclip_toggle`, `toggle_fogofwar`, `toggle_tutorial`. Coordinates can be relative to the player: `~` or `~<offset>` per axis, e.g. `spawn_enemy feral_dog ~2 ~ ~` |
 | `screen [label]` | Print the screen as text |
 | `state [label]` | Print a JSON summary: player, body, inventory, tab/modal, combat, nearby entities, recent messages |
 | `expect-text "<text>"` | Fail (exit 2) unless the screen contains the text |
@@ -125,7 +125,7 @@ Also, if you need to convert a key into a printable version, please use code lik
 
 - All randomly-generated choices, actions, damage, loot, worldgen, etc - should be fully deterministic and based on world seed and world tick. This means that this game should be fully TAS-able for any specific initial seed (and version of game code). Always use the seed and any permutation (when appropriate) of XYZ coordinate, biome, or other seeded randomness to generate anything "random".
 
-- See `docs/INSPIRATION.md` for inspiration.
+- See `docs/INSPIRATION.md` for inspiration. For factory, crafting and tech-tree work the main references are Minecraft (with GregTech, Tekkit, Big Dig and Create), Factorio and Caves of Qud; for combat and feel, ULTRAKILL, CICADAMATA and Downwell. Borrow mechanics, not content: blocks, materials and lore should be unique to LithicRivers.
 
 - This game renders using ASCII text.
 
