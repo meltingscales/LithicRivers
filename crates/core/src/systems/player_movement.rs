@@ -152,6 +152,19 @@ pub fn mining_system(world: &mut World, res: &mut Resources) -> bool {
     use crate::tiles::TileKind;
     use rand::Rng;
     match tile_to_mine {
+        TileKind::Sapling => {
+            let Some(player) = get_player_entity(world) else {
+                return false;
+            };
+            let pulled = crate::plants::break_sapling(world, res, Position { x, y, z }, player);
+            if pulled {
+                res.events.interaction_event(
+                    "You pull up the sapling. (+1 Acorn)".to_string(),
+                    res.time.tick,
+                );
+            }
+            pulled
+        }
         TileKind::FactoryBlock => {
             let Some(player) = get_player_entity(world) else {
                 return false;

@@ -334,6 +334,18 @@ fn place_from_hotbar(app: &mut App, x: i64, y: i64, z: i64) {
     }
     let pos = Position { x, y, z };
     let game = &mut app.core.game;
+    if lithicrivers_core::plants::is_seed(item) {
+        if let Err(e) = lithicrivers_core::plants::plant(&mut game.world, &mut game.res, pos) {
+            game.res.log(e.to_string());
+            return;
+        }
+        remove_item_from_inventory(app, item, 1);
+        app.core
+            .game
+            .res
+            .log(format!("Planted {} at ({}, {}, {})", name, x, y, z));
+        return;
+    }
     if let Some(kind) = FactoryKind::from_item(item) {
         let facing = app.panels.build.placement_facing;
         if let Err(e) = factory::place(&mut game.world, &mut game.res, kind, pos, facing) {
