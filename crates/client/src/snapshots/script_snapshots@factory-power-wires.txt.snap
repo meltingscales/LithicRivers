@@ -14,7 +14,7 @@ input_file: scripts/snapshots/factory-power-wires.txt
 ##############vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,│Log x3                │
 ##############vvvvvvvvvvvvvvvvvvvvvvvvvv──+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,└──────────────────────┘
 ###############vvvvvvvvvvvvvvvvvvvvvv+─╱vvGtttvvvtvvvvvvvvvvvvvvvvvvvvvvvvv,┌Help (h)──────────────┐
-################vvvvvvvvvvvvvvvvvvvvvv*vvvvtvtttttvvvvvvvvvvvvvvvvvvvvvvvvv,│Move:                 │
+################vvvvvvvvvvvvvvvvvvvvvv@vvvvtvtttttvvvvvvvvvvvvvvvvvvvvvvvvv,│Move:                 │
 ################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvtttvvvvvvvvvvvvvvvvvvvvvvvvvv│  7 8 9               │
 #################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvttvvvvvvvvvvvvvvvvvvvvvvvvvvvt│  4 5 6               │
 #################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvtttvvvvvvvvvvvvvvvvvvvvvvvvvvt│  1 2 3               │
@@ -46,7 +46,7 @@ input_file: scripts/snapshots/factory-power-wires.txt
 ##############vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,│Log x3                │
 ##############vvvvvvvvvvvvvvvvvvvvvvvvvvvv+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,└──────────────────────┘
 ###############vvvvvvvvvvvvvvvvvvvvvv+vvvvGtttvvvtvvvvvvvvvvvvvvvvvvvvvvvvv,┌Help (h)──────────────┐
-################vvvvvvvvvvvvvvvvvvvvvv*vvvvtvtttttvvvvvvvvvvvvvvvvvvvvvvvvv,│Move:                 │
+################vvvvvvvvvvvvvvvvvvvvvv@vvvvtvtttttvvvvvvvvvvvvvvvvvvvvvvvvv,│Move:                 │
 ################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvtttvvvvvvvvvvvvvvvvvvvvvvvvvv│  7 8 9               │
 #################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvttvvvvvvvvvvvvvvvvvvvvvvvvvvvt│  4 5 6               │
 #################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvtttvvvvvvvvvvvvvvvvvvvvvvvvvvt│  1 2 3               │

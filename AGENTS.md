@@ -131,7 +131,7 @@ Also, if you need to convert a key into a printable version, please use code lik
 
 - See `docs/INSPIRATION.md` for inspiration. For factory, crafting and tech-tree work the main references are Minecraft (with GregTech, Tekkit, Big Dig and Create), Factorio and Caves of Qud; for combat and feel, ULTRAKILL, CICADAMATA and Downwell. Borrow mechanics, not content: blocks, materials and lore should be unique to LithicRivers.
 
-- This game renders using ASCII text.
+- This game renders using ASCII text. For how sprites and art should look (Caves of Qud, Metroid and CICADAMATA), follow `docs/ART-DIRECTION.md` when you add or change any sprite, art or item description.
 
 - docs/TODO.md contains a big, unedited list of my long-term goals with this game. By no means do we need to implement all of them. I will likely cut or edit parts of the TODO. I just want to focus on the section called "MVP for steam release (2026)".
 

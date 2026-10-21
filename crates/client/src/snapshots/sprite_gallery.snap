@@ -1,0 +1,1631 @@
+---
+source: crates/client/src/sprite_loader.rs
+expression: loader.gallery()
+---
+=== entities/corpse  #8B4513  The remains of a fallen creature
+-- 1x
+%
+-- art 0
+            
+            
+    _,,_    
+  ,▄▓▓▓▓▄,  
+ ▐▓▒░╳░▒▓█~ 
+  ▀▀ ▀▀ ▀▀  
+  .  '  .   
+            
+=== entities/entity_generic  #FF00FF  A generic entity
+-- 1x
+e
+-- 2x
+e?
+?e
+-- 3x
+e?e
+?e?
+e?e
+-- art 0
+    ┌──┐    
+   ┌┘??└┐   
+   │ ◘◘ │   
+   └┐  ┌┘   
+    │  │    
+   ┌┘  └┐   
+            
+            
+=== entities/feral_dog  #FF0000  A dog that attacks you
+-- 1x
+d
+-- 2x
+d,
+,d
+-- 3x
+dd,
+,dd
+dd,
+-- art 0
+            
+ ▄     ,▄▄▄ 
+ ▀█▄▄▄█▓▓▒▀▄
+   █▓▓▓▓▓█ ▀
+   █▀▀ ▀▀█  
+  ▄▀    ▄▀  
+            
+            
+=== entities/player  #cc0000  The el player character
+-- 1x
+@
+-- 2x
+[]
+%%
+-- 3x
+_o_
+/|\
+/_\
+-- art 0
+    ▄▄▄▄    
+   █▀▀▀▀█   
+   █ ◘  █▌  
+  ▄█▄▄▄▄█▄  
+ ▐█▓▒▒▒▒▓█▌ 
+  ▀█▓▓▓▓█▀  
+   ▐▌  ▐▌   
+            
+-- art 1
+    ▄▄▄▄    
+   █▀▀▀▀█   
+   █ ◘ ‿█▌  
+  ▄█▄▄▄▄█▄  
+ ▐█▓▒▒▒▒▓█▌ 
+  ▀█▓▓▓▓█▀  
+   ▐▌  ▐▌   
+            
+-- art 2
+    ▄▄▄▄    
+   █▀▀▀▀█   
+   █ ◘ ⌐█▌  
+  ▄█▄▄▄▄█▄  
+ ▐█▓▒▒▒▒▓█▌ 
+  ▀█▓▓▓▓█▀  
+   ▐▌ ▐▌.   
+            
+-- art 3
+    ▄▄▄▄    
+   █▀▀▀▀█   
+   █ ◘ ─█▌  
+  ▄█▄▄▄▄█▄  
+ ▐█▓▒▒▒▒▓█▌ 
+  ▀█▓▓▓▓█▀  
+   ▐▌  ▐▌   
+            
+-- art 4
+    ▄▄▄▄    
+   █▀▀▀▀█   
+   █ ◙ ~█▌  
+  ▄█▄▄▄▄█▄  
+ ▐█▓▒▒▒▒▓█▌ 
+  ▀█▓▓▓▓█▀  
+   ▐▌  ▐▌   
+            
+=== entities/quest_tutorial_broken_android  #00FFFF  A broken SapienCorp android. It's covered in rust.
+-- 1x
+N
+-- 2x
+/\
+||
+-- 3x
+`/\
+/|\
+/||
+-- art 0
+   ▄▄▄▄▄    
+  █▀░▀▀▀█   
+  █ o  o█ * 
+  ▀█▄══▄█▀  
+  ▐█▒▓▒▓█▀▀ 
+   █▓▒▓█    
+   ▐▌  ▐▌   
+            
+-- art 1
+   ▄▄▄▄▄    
+  █▀░▀▀▀█   
+  █ o  o█ * 
+  ▀█▄‿‿▄█▀  
+  ▐█▒▓▒▓█▀▀ 
+   █▓▒▓█    
+   ▐▌  ▐▌   
+            
+-- art 2
+   ▄▄▄▄▄    
+  █▀░▀▀▀█   
+  █ ∩  ∩█ * 
+  ▀█▄⌐¬▄█▀  
+  ▐█▒▓▒▓█▀▀ 
+   █▓▒▓█    
+   ▐▌  ▐▌   
+            
+-- art 3
+   ▄▄▄▄▄    
+  █▀░▀▀▀█   
+  █ o  o█ * 
+  ▀█▄══▄█▀  
+  ▐█▒▓▒▓█▀▀ 
+   █▓▒▓█    
+   ▐▌  ▐▌   
+            
+-- art 4
+   ▄▄▄▄▄    
+  █▀░▀▀▀█   
+  █ o  ◙█ * 
+  ▀█▄≈≈▄█▀  
+  ▐█▒▓▒▓█▀▀ 
+   █▓▒▓█    
+   ▐▌  ▐▌   
+            
+=== entities/sheep  #FFFFFF  A sheep that stumbles around aimlessly
+-- 1x
+S
+-- 2x
+@@
+,,
+-- 3x
+@w@
+###
+| |
+-- art 0
+            
+   ▄▓▓▓▓▄ ▄▄
+ ▄▓▒░▒░▒▓█▀▀
+ ▓░▒░▒░▒▓▀  
+  ▀▌▐  ▌▐   
+   ▘▝  ▘▝   
+            
+            
+=== factory/auto_harvester_east  #B45F06  Chops grown trees within 2 tiles and outputs the wood in front
+-- 1x
+H
+-- 2x
+h>
+h>
+-- 3x
+[h>
+[h>
+[h>
+-- art 0
+    ┌┐      
+  ▄█▓▓█▄  /\
+ █▓▓▓▓▓▓█<══
+ █▓◘▓▓▓▓█══►
+ █▓▓▓▓▓▓█<══
+  ▀████▀  \/
+    └┘      
+            
+=== factory/auto_harvester_north  #B45F06  Chops grown trees within 2 tiles and outputs the wood in front
+-- 1x
+H
+-- 2x
+h^
+h^
+-- 3x
+[h^
+[h^
+[h^
+-- art 0
+     ▲      
+   <═╬═>    
+    ║║║     
+  ▄█▓▓▓█▄   
+ █▓▓▓◘▓▓▓█  
+ █▓▓▓▓▓▓▓█  
+  ▀▀███▀▀   
+            
+=== factory/auto_harvester_south  #B45F06  Chops grown trees within 2 tiles and outputs the wood in front
+-- 1x
+H
+-- 2x
+hv
+hv
+-- 3x
+[hv
+[hv
+[hv
+-- art 0
+  ▄▄███▄▄   
+ █▓▓▓▓▓▓▓█  
+ █▓▓▓◘▓▓▓█  
+  ▀█▓▓▓█▀   
+    ║║║     
+   <═╬═>    
+     ▼      
+            
+=== factory/auto_harvester_west  #B45F06  Chops grown trees within 2 tiles and outputs the wood in front
+-- 1x
+H
+-- 2x
+h<
+h<
+-- 3x
+[h<
+[h<
+[h<
+-- art 0
+      ┌┐    
+ /\  ▄█▓▓█▄ 
+══>█▓▓▓▓▓▓█ 
+◄══█▓▓▓▓◘▓█ 
+══>█▓▓▓▓▓▓█ 
+ \/  ▀████▀ 
+      └┘    
+            
+=== factory/auto_planter  #6AA84F  Plants acorns on free grass and dirt within 2 tiles
+-- 1x
+p
+-- 2x
+pp
+pp
+-- 3x
+[p]
+pPp
+[p]
+-- art 0
+    ╔══╗    
+    ║oo║    
+  ▄▄╚╦╦╝▄▄  
+ █▓▓▓║║▓▓▓█ 
+ █▓░▓▓▓▓░▓█ 
+ ▀▀▀▀▀▀▀▀▀▀ 
+  . ,  , .  
+            
+=== factory/belt_east  #9C6B30  A wooden conveyor belt facing east
+-- 1x
+>
+-- 2x
+=>
+=>
+-- 3x
+==>
+==>
+==>
+-- art 0
+            
+════════════
+ ▓ ▓ ▓ ▓ ▓ ▓
+ ═╪═╪═╪═╪═► 
+ ▓ ▓ ▓ ▓ ▓ ▓
+════════════
+            
+            
+=== factory/belt_north  #9C6B30  A wooden conveyor belt facing north
+-- 1x
+^
+-- 2x
+^^
+||
+-- 3x
+/^\
+|||
+|||
+-- art 0
+  ║   ▲   ║ 
+  ║ ▓ ║ ▓ ║ 
+  ║   ╫   ║ 
+  ║ ▓ ║ ▓ ║ 
+  ║   ╫   ║ 
+  ║ ▓ ║ ▓ ║ 
+  ║   ║   ║ 
+            
+=== factory/belt_south  #9C6B30  A wooden conveyor belt facing south
+-- 1x
+v
+-- 2x
+||
+vv
+-- 3x
+|||
+|||
+\v/
+-- art 0
+  ║   ║   ║ 
+  ║ ▓ ║ ▓ ║ 
+  ║   ╫   ║ 
+  ║ ▓ ║ ▓ ║ 
+  ║   ╫   ║ 
+  ║ ▓ ║ ▓ ║ 
+  ║   ▼   ║ 
+            
+=== factory/belt_west  #9C6B30  A wooden conveyor belt facing west
+-- 1x
+<
+-- 2x
+<=
+<=
+-- 3x
+<==
+<==
+<==
+-- art 0
+            
+════════════
+▓ ▓ ▓ ▓ ▓ ▓ 
+ ◄═╪═╪═╪═╪═ 
+▓ ▓ ▓ ▓ ▓ ▓ 
+════════════
+            
+            
+=== factory/burner_generator  #C0392B  Burns logs, planks, sticks and shavings to power its network
+-- 1x
+G
+-- 2x
+[]
+GG
+-- 3x
+[=]
+[G]
+[=]
+-- art 0
+   ▐▌  ▐▌   
+  ▄█▌▄▄▐█▄  
+ █▓▓▓▓▓▓▓▓█ 
+ █▓┌────┐▓█═
+ █▓│░▒▓│▓█═ 
+ █▓└────┘▓█ 
+ ▀▀▀▀▀▀▀▀▀▀ 
+            
+=== factory/chest  #C68E3F  A wooden chest that holds 16 stacks of items
+-- 1x
+C
+-- 2x
+[]
+[]
+-- 3x
+[=]
+[C]
+[=]
+-- art 0
+            
+ ▄▄▄▄▄▄▄▄▄▄ 
+ █▒▒▒▒▒▒▒▒█ 
+ █═════╡▐╞█ 
+ █▒▒▒▒▒▒▒▒█ 
+ █▓▓▓▓▓▓▓▓█ 
+ ▀▀▀▀▀▀▀▀▀▀ 
+            
+=== factory/crude_furnace_lit_east  #E67E22  Burns fuel to smelt wood into biochar; input from the back, fuel from the sides
+-- 1x
+F
+-- 2x
+F>
+F>
+-- 3x
+[F>
+[F>
+[F>
+-- art 0
+  ▄▄▄▄▐▌    
+ █▓▓▓▓██▄   
+ █▓▓▓▓▓▓█▄  
+═█▓▓┌──┐▓█► 
+═█▓▓│▓▒│▓█► 
+ █▓▓└──┘▓█  
+ ▀▀▀▀▀▀▀▀▀  
+            
+=== factory/crude_furnace_lit_north  #E67E22  Burns fuel to smelt wood into biochar; input from the back, fuel from the sides
+-- 1x
+F
+-- 2x
+F^
+F^
+-- 3x
+[F^
+[F^
+[F^
+-- art 0
+     ▲▲     
+  ▄▄▄██▄▄▄  
+ █▓┌────┐▓█ 
+ █▓│▒▓▓▒│▓█ 
+ █▓└────┘▓█ 
+ █▓▓▓▓▓▓▓▓█ 
+ ▀▀▀▀▀▀▀▀▀▀ 
+     ║║     
+=== factory/crude_furnace_lit_south  #E67E22  Burns fuel to smelt wood into biochar; input from the back, fuel from the sides
+-- 1x
+F
+-- 2x
+Fv
+Fv
+-- 3x
+[Fv
+[Fv
+[Fv
+-- art 0
+     ║║     
+  ▄▄▄▄▄▄▄▄  
+ █▓▓▓▓▓▓▓▓█ 
+ █▓┌────┐▓█ 
+ █▓│▒▓▓▒│▓█ 
+ █▓└────┘▓█ 
+ ▀▀▀▀██▀▀▀▀ 
+     ▼▼     
+=== factory/crude_furnace_lit_west  #E67E22  Burns fuel to smelt wood into biochar; input from the back, fuel from the sides
+-- 1x
+F
+-- 2x
+F<
+F<
+-- 3x
+[F<
+[F<
+[F<
+-- art 0
+   ▐▌▄▄▄▄   
+  ▄██▓▓▓▓█  
+ ▄█▓▓▓▓▓▓█  
+◄█▓┌──┐▓▓█═ 
+◄█▓│▓▒│▓▓█═ 
+  █▓└──┘▓▓█ 
+  ▀▀▀▀▀▀▀▀▀ 
+            
+=== factory/crude_furnace_unlit_east  #8E6E53  Burns fuel to smelt wood into biochar; input from the back, fuel from the sides
+-- 1x
+f
+-- 2x
+f>
+f>
+-- 3x
+[f>
+[f>
+[f>
+-- art 0
+  ▄▄▄▄▐▌    
+ █▓▓▓▓██▄   
+ █▓▓▓▓▓▓█▄  
+═█▓▓┌──┐▓█► 
+═█▓▓│  │▓█► 
+ █▓▓└──┘▓█  
+ ▀▀▀▀▀▀▀▀▀  
+            
+=== factory/crude_furnace_unlit_north  #8E6E53  Burns fuel to smelt wood into biochar; input from the back, fuel from the sides
+-- 1x
+f
+-- 2x
+f^
+f^
+-- 3x
+[f^
+[f^
+[f^
+-- art 0
+     ▲▲     
+  ▄▄▄██▄▄▄  
+ █▓┌────┐▓█ 
+ █▓│    │▓█ 
+ █▓└────┘▓█ 
+ █▓▓▓▓▓▓▓▓█ 
+ ▀▀▀▀▀▀▀▀▀▀ 
+     ║║     
+=== factory/crude_furnace_unlit_south  #8E6E53  Burns fuel to smelt wood into biochar; input from the back, fuel from the sides
+-- 1x
+f
+-- 2x
+fv
+fv
+-- 3x
+[fv
+[fv
+[fv
+-- art 0
+     ║║     
+  ▄▄▄▄▄▄▄▄  
+ █▓▓▓▓▓▓▓▓█ 
+ █▓┌────┐▓█ 
+ █▓│    │▓█ 
+ █▓└────┘▓█ 
+ ▀▀▀▀██▀▀▀▀ 
+     ▼▼     
+=== factory/crude_furnace_unlit_west  #8E6E53  Burns fuel to smelt wood into biochar; input from the back, fuel from the sides
+-- 1x
+f
+-- 2x
+f<
+f<
+-- 3x
+[f<
+[f<
+[f<
+-- art 0
+   ▐▌▄▄▄▄   
+  ▄██▓▓▓▓█  
+ ▄█▓▓▓▓▓▓█  
+◄█▓┌──┐▓▓█═ 
+◄█▓│  │▓▓█═ 
+  █▓└──┘▓▓█ 
+  ▀▀▀▀▀▀▀▀▀ 
+            
+=== factory/power_pole  #E5B53A  Links to poles within 8 tiles and powers blocks within 3
+-- 1x
++
+-- 2x
+++
+||
+-- 3x
+-+-
+ | 
+ | 
+-- art 0
+    ═╦═     
+  ──┼╫┼──   
+    ─╫─     
+     ║      
+     ║      
+     ║      
+   ▄▄█▄▄    
+            
+=== fluids/acid  #00FF00  Corrosive acid
+-- 1x
+*
+-- 2x
+**
+**
+-- 3x
+***
+***
+***
+-- art 0
+  o  °   o  
+ ░▒░ o ░▒▓▒░
+░▒▓▒░░▒▓▓▒░ 
+ ░▒▓▓▒▒▓▒░ °
+  ░▒▓▒░▒░   
+ °  ░░  o   
+            
+            
+=== fluids/blood  #FF0000  Dark blood
+-- 1x
+%
+-- 2x
+%%
+%%
+-- 3x
+%%%
+%%%
+%%%
+-- art 0
+            
+     ▄      
+   ▄▓▓▄  .  
+  ▓▓▒▓▓▓▄   
+ ▐▓▒▓▓▓▓▓▌ .
+  ▀▓▓▓▓▀▀   
+  .    '    
+            
+=== fluids/lava  #FF0000  Molten lava
+-- 1x
+=
+-- 2x
+==
+==
+-- 3x
+===
+===
+===
+-- art 0
+▓▒░▒▓█▓▒░▒▓█
+▒░ ░▒▓▒░ ░▒▓
+░▒▓█▓▒░▒▓█▓▒
+▓█▓▒░ ░▒▓▒░ 
+▒░▒▓█▓▒░▒▓█▓
+░ ░▒▓▒░ ░▒▓▒
+▒▓█▓▒░▒▓█▓▒░
+            
+=== fluids/oil  #FFFF00  Slick oil
+-- 1x
+o
+-- 2x
+oo
+oo
+-- 3x
+ooo
+ooo
+ooo
+-- art 0
+            
+  ▄▄▓▓▓▓▄▄  
+ ▓▓▒░  ░▒▓▓▄
+▐▓▒ o   ░▒▓▓
+ ▀▓▓▒░░▒▓▓▀ 
+   ▀▀▓▓▀▀   
+            
+            
+=== fluids/water  #0000FF  Flowing water
+-- 1x
+~
+-- 2x
+~~
+~~
+-- 3x
+~~~
+~~~
+~~~
+-- art 0
+ ~  ≈   ~  ≈
+   ≈  ~   ≈ 
+ ~   ≈  ~   
+  ≈ ~   ≈  ~
+ ~   ≈  ~ ≈ 
+   ~  ≈   ~ 
+ ≈  ~   ≈  ~
+            
+=== items/acorn  #964B00  An acorn that can be planted to grow trees
+-- 1x
+o
+-- 2x
+oo
+oo
+-- 3x
+ooo
+ooo
+ooo
+-- art 0
+      ╱     
+   ▄▓▓▓▓▄   
+  ▐▒▓▒▓▒▓▌  
+   ▀▄▄▄▄▀   
+   ▐▓▓▓▓▌   
+    ▀▓▓▀    
+            
+            
+=== items/auto_harvester  #B45F06  Chops grown trees within 2 tiles and outputs the wood in front
+-- 1x
+h
+-- 2x
+hh
+hh
+-- 3x
+[h]
+hHh
+[h]
+-- art 0
+            
+  ▄█▓▓█▄  /\
+ █▓▓▓▓▓▓█<══
+ █▓◘▓▓▓▓█══ 
+ █▓▓▓▓▓▓█<══
+  ▀████▀  \/
+            
+            
+=== items/auto_planter  #6AA84F  Plants acorns on free grass and dirt within 2 tiles
+-- 1x
+p
+-- 2x
+pp
+pp
+-- 3x
+[p]
+pPp
+[p]
+-- art 0
+            
+    ╔══╗    
+  ▄▄╚╦╦╝▄▄  
+ █▓▓▓║║▓▓▓█ 
+ █▓░▓▓▓▓░▓█ 
+ ▀▀▀▀▀▀▀▀▀▀ 
+            
+            
+=== items/biochar  #3D3D3D  Smelted wood: a dense fuel for furnaces and generators
+-- 1x
+*
+-- 2x
+**
+**
+-- 3x
+.*.
+***
+.*.
+-- art 0
+            
+    ▄▄▄     
+  ▄▓█▓▓█▄   
+ ▐█▓▒█▓▒▓▌ ·
+  ▀▓█▓▓█▀  ·
+    ▀▀▀  ·  
+            
+            
+=== items/burner_generator  #C0392B  Burns logs, planks, sticks and shavings to power its network
+-- 1x
+G
+-- 2x
+[]
+GG
+-- 3x
+[=]
+[G]
+[=]
+-- art 0
+            
+   ▐▌  ▐▌   
+  ▄█▌▄▄▐█▄  
+ █▓┌────┐▓█ 
+ █▓│░▒▓│▓█  
+ ▀▀▀▀▀▀▀▀▀▀ 
+            
+            
+=== items/chest  #C68E3F  A wooden chest; place it to store items
+-- 1x
+C
+-- 2x
+[]
+[]
+-- 3x
+[=]
+[C]
+[=]
+-- art 0
+            
+            
+ ▄▄▄▄▄▄▄▄▄▄ 
+ █▒▒▒▒╡▐╞▒█ 
+ █▓▓▓▓▓▓▓▓█ 
+ ▀▀▀▀▀▀▀▀▀▀ 
+            
+            
+=== items/crude_furnace  #8E6E53  Burns fuel to smelt wood into biochar
+-- 1x
+f
+-- 2x
+ff
+ff
+-- 3x
+[f]
+fFf
+[f]
+-- art 0
+            
+  ▄▄▄▄▐▌    
+ █▓▓▓▓██▄   
+ █▓▓┌──┐▓█  
+ █▓▓│  │▓█  
+ █▓▓└──┘▓█  
+ ▀▀▀▀▀▀▀▀▀  
+            
+=== items/diamond  #00FFFF  A precious diamond
+-- 1x
+d
+-- 2x
+dd
+dd
+-- 3x
+ddd
+ddd
+ddd
+-- art 0
+            
+   ▄▄▄▄▄▄   
+  ╱╲ ╱╲ ╱╲  
+  ╲ ╲╱ ╲╱ ╱ 
+   ╲  ╳  ╱  
+    ╲ │ ╱   
+     ╲│╱    
+            
+=== items/gold_nugget  #FFFF00  A valuable gold nugget
+-- 1x
+c
+-- 2x
+cc
+cc
+-- 3x
+ccc
+ccc
+ccc
+-- art 0
+            
+            
+    ▄▓▓▄    
+  ▄▓▒°▒▓▄   
+  ▀▓▒▓▒▓▀   
+    ▀▀      
+            
+            
+=== items/iron_ore  #FFFF00  iron ore
+-- 1x
+i
+-- 2x
+ii
+ii
+-- 3x
+iii
+iii
+iii
+-- art 0
+            
+    ▄▄▓▄    
+  ▄▓░■▒▓▓▄  
+ ▐▓■░ ■▒▓▓▌ 
+  ▀▓▓■▒▓▓▀  
+            
+            
+            
+=== items/iron_scrap  #808080  Iron scrap.
+-- 1x
+=
+-- 2x
+==
+==
+-- 3x
+===
+===
+===
+-- art 0
+            
+   ▄▄  ┌─┐  
+  ▐▓▒╲═╡ ╞  
+   ▀▒▓▓▀└┬┘ 
+    ╱▓▒▓▄ │ 
+   ▀  ▀▀    
+            
+            
+=== items/leather  #8B4513  Tough hide from an animal
+-- 1x
+L
+-- art 0
+            
+  ▄▄    ▄▄  
+ ▐▓▓▓▓▓▓▓▓▌ 
+  ▓▒▓▒▓▒▓▓  
+ ▐▓▓▓▓▓▓▓▓▌ 
+  ▀▀    ▀▀  
+            
+            
+=== items/log  #964B00  A wooden log.
+-- 1x
+|
+-- 2x
+||
+||
+-- 3x
+|||
+|||
+|||
+-- art 0
+            
+ ▄▄▄▄▄▄▄▄▄  
+▐▓▒▓▒▓▒▓▒(◎)
+▐▒▓▒▓▒▓▒▓(◎)
+ ▀▀▀▀▀▀▀▀▀  
+            
+            
+            
+=== items/meat  #CD5C5C  Fresh meat from an animal
+-- 1x
+M
+-- art 0
+            
+   ▄▄▓▓▄    
+ ▄▓▒░▒▓▓▓▄  
+ ▓░▒▓▒░▓▓█═O
+ ▀▓▓▒▓▓▓▀   
+   ▀▀▀      
+            
+            
+=== items/nail  #964B00  A metal nail.
+-- 1x
+n
+-- 2x
+\ 
+ \
+-- 3x
+---
+| |
+ v 
+-- art 0
+     ▄▄▄    
+     ▀█▀    
+      █     
+      █     
+      █     
+      ▀     
+            
+            
+=== items/plank_block  #A0522D  A block made out of wooden planks
+-- 1x
+p
+-- 2x
+pp
+pp
+-- 3x
+ppp
+ppp
+ppp
+-- art 0
+╔════╦═════╗
+║────║─────║
+╠═╦══╩══╦══╣
+║─║─────║──║
+╠═╩═╦═══╩══╣
+║───║──────║
+╚═══╩══════╝
+            
+=== items/power_pole  #E5B53A  Links to poles within 8 tiles and powers blocks within 3
+-- 1x
++
+-- 2x
+++
+||
+-- 3x
+-+-
+ | 
+ | 
+-- art 0
+    ═╦═     
+  ──┼╫┼──   
+     ║      
+     ║      
+     ║      
+   ▄▄█▄▄    
+            
+            
+=== items/rock  #808080  A rock.
+-- 1x
+*
+-- 2x
+**
+**
+-- 3x
+***
+***
+***
+-- art 0
+            
+    ▄▄▓▄    
+  ▄▓▒░▒▓▓▄  
+ ▐▓▒░ ░▒▓▓▌ 
+  ▀▓▓▒▒▓▓▀  
+            
+            
+            
+=== items/scrap_electronics  #00FF00  Electronic components. They look burnt.
+-- 1x
+e
+-- 2x
+ee
+ee
+-- 3x
+eee
+eee
+eee
+-- art 0
+            
+  ┌┬┬┬┬┬┬┐  
+ ─┤▓ ◘ ▒░├─ 
+ ─┤ ░▓ ▒ ├─ 
+ ─┤▒░ ▓ ◘├─ 
+  └┴┴┴┴┴┴┘  
+            
+            
+=== items/stick  #964B00  A wooden stick.
+-- 1x
+/
+-- 2x
+\ 
+ \
+-- 3x
+  /
+ / 
+/  
+-- art 0
+         ╱  
+        ╱   
+      ┬╱    
+     ╱      
+    ╱       
+  ─╱        
+  ╱         
+            
+=== items/stone  #FFFF00  a block of stone
+-- 1x
+■
+-- 2x
+■■
+■■
+-- 3x
+■■■
+■■■
+■■■
+-- art 0
+            
+  ▄▄▄▄▄▄▄▄  
+ █▓▓▒▓▓▓▒▓█ 
+ █▒▓▓▓▒▓▓▓█ 
+ █▓▓▒▓▓▓▒▓█ 
+  ▀▀▀▀▀▀▀▀  
+            
+            
+=== items/string  #FFFFFF  A piece of string.
+-- 1x
+∞
+-- 2x
+∞,
+,∞
+-- 3x
+,∞∞
+∞,,
+,∞,
+-- art 0
+            
+    ╭──╮    
+   ╭╯  ╰─╮  
+   ╰─╮ ╭─╯  
+     ╰─╯╲   
+         ╲  
+            
+            
+=== items/torch  #FFD700  A small torch.
+-- 1x
+t
+-- 2x
+t,
+t,
+-- 3x
+,f,
+,t,
+,t,
+-- art 0
+     ,      
+    (*)     
+   ( ▓ )    
+    ▀█▀     
+     █      
+     █      
+     ▀      
+            
+=== items/wooden_conveyor  #9C6B30  Place it to carry items one tile at a time
+-- 1x
+=
+-- 2x
+=>
+=>
+-- 3x
+==>
+==>
+==>
+-- art 0
+            
+            
+════════════
+ ▓═╪═╪═╪═►  
+════════════
+            
+            
+            
+=== items/wooden_plank  #964B00  A wooden plank.
+-- 1x
+|
+-- 2x
+||
+||
+-- 3x
+|| 
+|| 
+|| 
+-- art 0
+            
+┌──────────┐
+│ ─  ──  ─ │
+│──  ─  ── │
+│ ─  ──  ─ │
+└──────────┘
+            
+            
+=== items/wooden_shavings  #964B00  Small wooden shavings.
+-- 1x
+"
+-- 2x
+",
+,"
+-- 3x
+,",
+","
+,",
+-- art 0
+            
+   ~   §    
+  §  ~   §  
+    ~  §  ~ 
+  ~  §   ~  
+    §   ~   
+            
+            
+=== tiles/air  #FFFFFF  Air
+-- 1x
+ 
+-- 2x
+  
+  
+-- 3x
+   
+   
+   
+-- art 0
+            
+            
+            
+            
+            
+            
+            
+            
+=== tiles/bedrock  #808080  Unbreakable bedrock that forms the foundation of the world
+-- 1x
+#
+-- 2x
+|/
+/|
+-- 3x
+|,/
+/|\
+|/|
+-- art 0
+████▓███████
+█▓███▓████▓█
+███▓████▓███
+██████▓█████
+█▓██████▓███
+████▓███████
+██▓█████▓██▓
+████████████
+=== tiles/bone_block  #FFFFFF  A block made of ancient bones
+-- 1x
+|
+-- 2x
+||
+||
+-- 3x
+|||
+|||
+|||
+-- art 0
+ ═╗╔═  ╔═╗╔═
+  ╚╝ ═╦╝ ╚╝ 
+ ╔═╗  ║  ═╗ 
+ ╚═╝ ═╩═  ╚═
+  ═╦═  ╔═╗╔ 
+   ║   ╚═╝╚ 
+  ═╩═ ═╗╔═  
+       ╚╝   
+=== tiles/cloud  #FFFFFF  A fluffy cloud floating in the sky
+-- 1x
+~
+-- 2x
+~o
+oo
+-- 3x
+.~~
+~~o
+~oo
+-- art 0
+            
+   ▄▄▒▒▄    
+ ▄▒░░░░▒▄▄▄ 
+▐░░░░░░░░░▒▌
+ ▀▒░░░░░░▒▀ 
+   ▀▀▀▀▀▀   
+            
+            
+=== tiles/dirt  #964B00  Basic dirt that can be mined for resources
+-- 1x
+,
+-- 2x
+,.
+.,
+-- 3x
+,.,
+.,.
+,.,
+-- art 0
+ ,  .  ,  . 
+.  ,  .  ,  
+ .  ,  .  , 
+,  .  ,  .  
+ ,  .  ,  . 
+.  ,  .  ,  
+ .  ,  .  , 
+,  .  ,  .  
+=== tiles/door  #964B00  A wooden door that can be opened
+-- 1x
+D
+-- 2x
+DD
+DD
+-- 3x
+DDD
+DDD
+DDD
+-- art 0
+  ┌───────┐ 
+  │▓▓▓▓▓▓▓│ 
+  │▓┌───┐▓│ 
+  │▓│   │▓│ 
+  │▓│   │▓│ 
+  │▓└───┘◘│ 
+  │▓▓▓▓▓▓▓│ 
+  └───────┘ 
+=== tiles/door_open  #964B00  An open door.
+-- 1x
+d
+-- 2x
+do
+od
+-- 3x
+dod
+odo
+dod
+-- art 0
+  ┌───────┐ 
+  ││      │ 
+  │▓▌     │ 
+  │▓▌     │ 
+  │▓▌     │ 
+  │▓▌     │ 
+  ││      │ 
+  └───────┘ 
+=== tiles/enemy_spawn  #FFFF00  Enemy spawn point
+-- 1x
+!
+-- 2x
+!!
+!!
+-- 3x
+!!!
+!!!
+!!!
+-- art 0
+            
+ ┌ ─ ─ ─ ─┐ 
+ ╎        ╎ 
+ ╎   !!   ╎ 
+ ╎        ╎ 
+ └ ─ ─ ─ ─┘ 
+            
+            
+=== tiles/existing_worldgen  #663300  special block: for use in structure generation. This block is generated by the worldgen algorithm and cannot be placed manually.
+-- 1x
+w
+-- 2x
+!w
+w!
+-- 3x
+www
+w!w
+www
+-- art 0
+            
+ ┌ ─ ─ ─ ─┐ 
+ ╎        ╎ 
+ ╎   ??   ╎ 
+ ╎        ╎ 
+ └ ─ ─ ─ ─┘ 
+            
+            
+=== tiles/factory_block  #808080  Ground under a factory block
+-- 1x
+#
+-- 2x
+##
+##
+-- 3x
+###
+###
+###
+-- art 0
+┌──────────┐
+│▒▒▒▒▒▒▒▒▒▒│
+│▒┼▒▒▒▒▒▒┼▒│
+│▒▒▒▒▒▒▒▒▒▒│
+│▒▒▒▒▒▒▒▒▒▒│
+│▒┼▒▒▒▒▒▒┼▒│
+│▒▒▒▒▒▒▒▒▒▒│
+└──────────┘
+=== tiles/gold_ore  #FFFF00  Gold ore that can be mined for valuable resources
+-- 1x
+?
+-- 2x
+??
+??
+-- 3x
+???
+???
+???
+-- art 0
+▓▓▒▓▓▓▓▒▓▓▓▒
+▓▒°▒▓▓▒░▒▓°▓
+▓▓▒▓▓▒°░░▒▓▓
+▓°▓▓▓▓▒░▒▓▓▒
+▒▓▓▒▓▓▓▒▓°▒░
+░▒▓▓°▒▓▓▓▓▓▒
+▒▓▓▓▒░▒▓°▓▓▓
+▓▓▓▓▓▒▓▓▒▓▓▓
+=== tiles/grass  #006E0C  Basic grass that can be mined for resources
+-- 1x
+v
+-- 2x
+/\
+|/
+-- 3x
+.|,
+\.\
+,|\
+-- art 0
+ v  '  v  ' 
+'  v  ,  v  
+ ,  '  v  ' 
+v  '  v  ,  
+ '  v  '  v 
+,  v  ,  '  
+ v  '  v  ' 
+'  ,  v  '  
+=== tiles/iron_scrap  #808080  Iron scrap that can be mined for metal resources
+-- 1x
+=
+-- 2x
+==
+==
+-- 3x
+===
+===
+===
+-- art 0
+▓▓▒▓┌─┐▓▓▒▓▓
+▓▒░▒╡ ╞▒░▒▓▓
+▓▓═╗└┬┘▒▓▓▓▓
+▓▓▓╚══╝▓▒╲▓▒
+▒▓▓▒▓▓▓▒▓▓╲░
+░▒▓┌──┐▓▓▓▓▒
+▒▓▓│▓▓│▒▓▓▓▓
+▓▓▓└──┘▒▓▒▓▓
+=== tiles/plank_block  #A0522D  A block made out of wooden planks
+-- 1x
+P
+-- 2x
+P!
+!P
+-- 3x
+P!P
+!P!
+P!P
+-- art 0
+╔════╦═════╗
+║────║─────║
+╠═╦══╩══╦══╣
+║─║─────║──║
+╠═╩═╦═══╩══╣
+║───║──────║
+╚═══╩══════╝
+            
+=== tiles/plasteel_scrap  #0000FF  Advanced plasteel scrap with a distinctive blue color
+-- 1x
+=
+-- 2x
+=s
+s=
+-- 3x
+s=s
+=s=
+s=s
+-- art 0
+▓▓▒╔══╗▓▓▒▓▓
+▓▒░║▒▒║▒░▒▓▓
+▓▓▒╚╦╦╝▒▓▓▓▓
+▓▓▓▓║║▓▓▒▓▓▒
+▒╔══╝╚══╗▓▒░
+░║▒▒▒▒▒▒║▓▓▒
+▒╚══════╝▓▓▓
+▓▓▓▓▓▒▓▓▒▓▓▓
+=== tiles/rock  #808080  A solid block of stone.
+-- 1x
+#
+-- 2x
+##
+##
+-- 3x
+###
+###
+###
+-- art 0
+▓▓▒▓▓▓▓▒▓▓▓▒
+▓▒░▒▓▓▒░▒▓▓▓
+▓▓▒▓▓▒░░░▒▓▓
+▓▓▓▓▓▓▒░▒▓▓▒
+▒▓▓▒▓▓▓▒▓▓▒░
+░▒▓▓▓▒▓▓▓▓▓▒
+▒▓▓▓▒░▒▓▓▓▓▓
+▓▓▓▓▓▒▓▓▒▓▓▓
+=== tiles/sapling  #5DBB4A  A young tree growing from a planted acorn
+-- 1x
+τ
+-- 2x
+τ.
+.τ
+-- 3x
+.τ.
+,|,
+.|.
+-- art 0
+            
+            
+     ▄ ▄    
+    ▐▓▌▓    
+     ╲│     
+  ,   │  ,  
+ ,  ▄▄█▄▄ . 
+            
+=== tiles/scrap_common  #FFFF00  Special worldgen block that turns into common scrap
+-- 1x
+$
+-- 2x
+$c
+c$
+-- 3x
+c$c
+$c$
+c$c
+-- art 0
+            
+ ┌ ─ ─ ─ ─┐ 
+ ╎        ╎ 
+ ╎   $    ╎ 
+ ╎        ╎ 
+ └ ─ ─ ─ ─┘ 
+            
+            
+=== tiles/scrap_electronics  #00FF00  Electronic scrap that can be harvested for components
+-- 1x
+e
+-- 2x
+ee
+ee
+-- 3x
+eee
+eee
+eee
+-- art 0
+▓▓▒▓▓▓▓▒▓▓▓▒
+▓┌┬┬┬┐▒░▒▓▓▓
+┤│◘ ▒│├░░▒▓▓
+▓└┴┴┴┘▒░▒▓▓▒
+▒▓▓▒▓▓▓▒┌┬┬┐
+░▒▓▓▓▒▓┤│▒◘│
+▒▓▓▓▒░▒▓└┴┴┘
+▓▓▓▓▓▒▓▓▒▓▓▓
+=== tiles/scrap_rare  #FFFF00  Special worldgen block that turns into rare scrap
+-- 1x
+$
+-- 2x
+$c
+c$
+-- 3x
+c$c
+$c$
+c$c
+-- art 0
+            
+ ┌ ─ ─ ─ ─┐ 
+ ╎        ╎ 
+ ╎   $$   ╎ 
+ ╎        ╎ 
+ └ ─ ─ ─ ─┘ 
+            
+            
+=== tiles/special_player_spawn  #FFFF00  Special block that is meant to be used to mark the player's spawn point in the world.
+-- 1x
+p
+-- 2x
+ps
+ps
+-- 3x
+ps!
+ps!
+ps!
+-- art 0
+            
+ ┌ ─ ─ ─ ─┐ 
+ ╎        ╎ 
+ ╎   @    ╎ 
+ ╎        ╎ 
+ └ ─ ─ ─ ─┘ 
+            
+            
+=== tiles/stairs  #00FF00  Stairs for going up or down.
+-- 1x
+/
+-- 2x
+./
+//
+-- 3x
+../
+.//
+///
+-- art 0
+         ▄▄▄
+         █▓▓
+      ▄▄▄█▓▓
+      █▓▓▓▓▓
+   ▄▄▄█▓▓▓▓▓
+   █▓▓▓▓▓▓▓▓
+▄▄▄█▓▓▓▓▓▓▓▓
+█▓▓▓▓▓▓▓▓▓▓▓
+=== tiles/treasure_common  #FFFF00  Special worldgen block that turns into common treasure
+-- 1x
+$
+-- 2x
+$c
+c$
+-- 3x
+c$c
+$c$
+c$c
+-- art 0
+            
+  ▄▄▄▄▄▄▄▄  
+ █▓▓▓$▓▓▓▓█ 
+ █═══╡╞═══█ 
+ █▓▓▓▓▓▓▓▓█ 
+ ▀▀▀▀▀▀▀▀▀▀ 
+            
+            
+=== tiles/treasure_quest_1  #FFFF00  Special worldgen block that turns into quest 1's treasure
+-- 1x
+$
+-- 2x
+$$
+$$
+-- 3x
+$$$
+$$$
+$$$
+-- art 0
+            
+  ▄▄▄▄▄▄▄▄  
+ █▓▓▓!▓▓▓▓█ 
+ █═══╡╞═══█ 
+ █▓▓▓▓▓▓▓▓█ 
+ ▀▀▀▀▀▀▀▀▀▀ 
+            
+            
+=== tiles/treasure_rare  #FFFF00  Special worldgen block that turns into rare treasure
+-- 1x
+$
+-- 2x
+$r
+r$
+-- 3x
+r$r
+$r$
+r$r
+-- art 0
+            
+  ▄▄▄▄▄▄▄▄  
+ █▓$▓$▓$▓▓█ 
+ █═══╡╞═══█ 
+ █▓▓▓▓▓▓▓▓█ 
+ ▀▀▀▀▀▀▀▀▀▀ 
+            
+            
+=== tiles/tree  #663300  A tree that can be harvested for wood and acorns
+-- 1x
+t
+-- 2x
+/\
+||
+-- 3x
+/|\
+;|;
+/|\
+-- art 0
+   ▄▓▓▓▓▄   
+ ▄▓▒▓▓▓▒▓▓▄ 
+▐▓▓▒▓▓▒▓▒▓▓▌
+ ▀▓▓▒▓▓▓▓▓▀ 
+   ▀▀▐█▀▀   
+     ▐█▌    
+    ▄███▄

@@ -24,6 +24,7 @@ how can we vibe like:
   - falling deeper is the progression; tight, readable vertical combat
 - Caves of Qud
   - strange, specific lore and materials; a world that feels ancient and weird
+  - art: the glyph is the thing; one character and one strong color per object (see `docs/ART-DIRECTION.md`)
 - Castlevania
   - unique rare items??
     - claihm solais
@@ -35,6 +36,7 @@ how can we vibe like:
   - GBA games
 - Metroid Fusion
 - Metroid Zero Mission
+  - art: lonely ruins of an advanced civilization; biomechanical plating, glowing cores (see `docs/ART-DIRECTION.md`)
 - Summon Night: Swordcraft Story
 - Terraria
 - That GBA kingdom hearts game with the cards
@@ -46,3 +48,4 @@ how can we vibe like:
   - arcade score attack with per-level rankings
   - ZONE: temporary score buff you extend by keeping the combo going
   - short campaign made replayable by chasing better scores
+  - art: minimalist, bold, simple shapes that read at speed (see `docs/ART-DIRECTION.md`)

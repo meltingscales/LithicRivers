@@ -7,7 +7,7 @@
 
 ## Goals / Non-Goals
 
-**Goals:** every sprite has art that reads at a glance in one color; a check that keeps it that way.
+**Goals:** every sprite has art that reads at a glance in one color, following `docs/ART-DIRECTION.md` (Caves of Qud, Metroid, CICADAMATA); a check that keeps it that way.
 
 **Non-Goals:** multi-color art, animation, new sprites.
 
@@ -21,3 +21,18 @@
 ## Risks / Trade-offs
 
 - [Art is subjective] → Each batch ends with a user check of the gallery snapshot.
+
+## Implementation Notes
+
+- **Art direction:** chosen by the user and recorded in `docs/ART-DIRECTION.md`, linked from AGENTS.md's guiding principles and from `docs/INSPIRATION.md`. Caves of Qud gives one glyph and one material color per object; Metroid gives plated, biomechanical SapienCorp tech with one glowing focal point; CICADAMATA gives bold, minimal silhouettes that read at speed.
+- **Width checks count characters, not bytes.** The loader now validates 1x/2x/3x sprites and 12x8 art with `chars().count()`, so CP437-style box drawing and block characters (`═║▓▒░▄▀█`) count as one column.
+- **Gallery:** a unit test, `sprite_loader::art_tests::sprite_gallery`, instead of a headless debug screen. It snapshots every sprite (color, description, 1x/2x/3x and every art entry, including mood portraits) to `crates/client/src/snapshots/sprite_gallery.snap`. The name is fixed because `utility_sprite_demo` also compiles `sprite_loader.rs`.
+- **Placeholder check:** `no_sprite_has_placeholder_art` (more than half `x`). All 91 art files (83 sprites, plus the player's and android's mood portraits) now have art.
+- **Look-alike 1x glyphs fixed:**
+  - player `*` to `@` (it clashed with rock, biochar and acid)
+  - feral dog `f` to `d` (it clashed with the furnace)
+  - sapling `,` to `τ` (it clashed with dirt)
+  - stone `s` to `■`, string `s` to `∞`, and wood shavings `s` to `"`
+
+  World snapshots changed only by these swaps; portrait and item-art panels now show real art.
+- **Worldgen marker tiles** (spawns, scrap and treasure markers) are never seen in play and are drawn as dashed boxes with a symbol.

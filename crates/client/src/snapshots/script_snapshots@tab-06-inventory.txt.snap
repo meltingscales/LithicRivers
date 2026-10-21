@@ -6,14 +6,14 @@ input_file: scripts/snapshots/tab-06-inventory.txt
 === screen inventory ===
                                             LithicRivers
 ┌Item──────────────────────┐┌Inventory─────────────────────────────────────────────────────────────┐
-│xxxxxxxxxxxx              ││Nail x10                                                              │
-│xxxxxxxxxxxx              ││Acorn x1                                                              │
-│xxxxxxxxxxxx              ││Log x3                                                                │
-│xxxTODO.xxxx              ││Stick x2                                                              │
-│xxxxxxxxxxxx              ││Torch x3                                                              │
-│xxxxxxxxxxxx              ││String x2                                                             │
-│xxxxxxxxxxxx              ││Scrap Electronics x3                                                  │
-│xxxxxxxxxxxx              ││                                                                      │
+│     ▄▄▄                  ││Nail x10                                                              │
+│     ▀█▀                  ││Acorn x1                                                              │
+│      █                   ││Log x3                                                                │
+│      █                   ││Stick x2                                                              │
+│      █                   ││Torch x3                                                              │
+│      ▀                   ││String x2                                                             │
+│                          ││Scrap Electronics x3                                                  │
+│                          ││                                                                      │
 │                          ││                                                                      │
 │Nail (x10)                ││                                                                      │
 │                          ││                                                                      │

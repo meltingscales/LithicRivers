@@ -10,11 +10,11 @@ input_file: scripts/snapshots/combat-panel.txt
 ││ 100 ││ 100 ││ 21  ││ GON││ 100 ││ 100 ││ 43  ││vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#vvvvvvvvvvvvvvv
 │└─────┘└─────┘└─────┘└────┘└─────┘└─────┘└─────┘│vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 │┌──────────────────────────────────────────────┐│vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-││                 xxxxxxxxxxxx                 ││vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-││                 xxxxxxxxxxxx                 ││vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-││                 xxxxxxxxxxxx                 ││vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+││                                              ││vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+││                  ▄     ,▄▄▄                  ││vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+││                  ▀█▄▄▄█▓▓▒▀▄                 ││vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 ││┌Enemy 88────────────────────────────────────┐││vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-││└────────────────────────────────────────────┘││vvvvvvvvvvvvvvvvvvvvvvvvv*ftvvvtvvvvvvvvvvvvvvvvvv
+││└────────────────────────────────────────────┘││vvvvvvvvvvvvvvvvvvvvvvvvv@dtvvvtvvvvvvvvvvvvvvvvvv
 ││                                              ││vvvvvvvvvvvvvvvvvvvvvvvvvtvtttttvvvvvvvvvvvvvvvvvv
 │└──────────────────────────────────────────────┘│vvvvvvvvvvvvvvvvvvvvvvvvvvvvvtttvvvvvvvvvvvvvvvvvv
 │1: Melee - 0E - 5t                ┌Action Queue┐│vvvvvvvvvvvvvvvvvvvvvvvvvvvvttvvvvvvvvvvvvvvvvvvvv

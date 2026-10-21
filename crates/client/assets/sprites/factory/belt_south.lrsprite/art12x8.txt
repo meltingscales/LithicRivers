@@ -1,8 +1,8 @@
-xxxxxxxxxxxx
-xxxxxxxxxxxx
-xxxxxxxxxxxx
-xxxxBELTxxxx
-xxxxxxxxxxxx
-xxxxxxxxxxxx
-xxxxxxxxxxxx
-xxxxxxxxxxxx
+  ║   ║   ║ 
+  ║ ▓ ║ ▓ ║ 
+  ║   ╫   ║ 
+  ║ ▓ ║ ▓ ║ 
+  ║   ╫   ║ 
+  ║ ▓ ║ ▓ ║ 
+  ║   ▼   ║ 
+            
