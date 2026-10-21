@@ -12,4 +12,4 @@
 - [x] 2.1 Add both recipes; verify the crafting reachability test passes
 - [x] 2.2 Machine glyphs and inspect window; verify a snapshot of the inspect window
 - [x] 2.3 Add `scripts/snapshots/factory-tree-farm.txt` and a `cargo test` that runs it for 30 game minutes and checks logs produced exceed logs burned, deterministically; add a snapshot of the running farm
-- [ ] 2.4 Verify `just code-clippy`, `cargo test --workspace` and PR checks pass; user check that building and watching the farm is fun
+- [x] 2.4 Verify `just code-clippy`, `cargo test --workspace` and PR checks pass; user check that building and watching the farm is fun
