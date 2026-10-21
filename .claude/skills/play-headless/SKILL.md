@@ -17,7 +17,7 @@ It runs the real client with no terminal, no audio, and a fake clock. Output is 
 
 1. Write a script. Put throwaway scripts in your scratchpad; put bug reproductions and checks worth keeping in `scripts/agent/`.
 2. Start with `seed`, `size`, then `skip-splash`. To test the title menu instead, use `rawkey ENTER` twice to reach the title screen and drive it with `title.UP` / `title.DOWN` / `title.SELECT` / `title.BACK` (see `scripts/snapshots/world-list-one-world.txt`). Saves go to a temporary folder per run.
-3. Get to the situation you need with `cheat tp x y z`, `cheat spawn_enemy feral_dog [x y z]`, `cheat giveitem <item> <qty>`, keybind presses, and `tick`/`wait`. Coordinates take `~`/`~<offset>` for player-relative axes (`cheat tp ~5 ~ ~`). For a fight: `cheat spawn_enemy feral_dog` then `key movement.WAIT`.
+3. Get to the situation you need with `cheat tp x y z`, `cheat spawn_enemy feral_dog [x y z]`, `cheat giveitem <item> [qty]`, `cheat givecraftingcomponents <item> [amount] [raw]`, keybind presses, and `tick`/`wait`. Coordinates take `~`/`~<offset>` for player-relative axes (`cheat tp ~5 ~ ~`). For a fight: `cheat spawn_enemy feral_dog` then `key movement.WAIT`.
 4. Observe with `state` (JSON: player, body, inventory, tab/modal, combat, nearby entities, recent messages) and `screen` (text render). Prefer `state` for facts; use `screen` for layout.
 5. Assert with `expect-text "..."` so the script fails (exit 2) if the behavior regresses.
 
@@ -32,7 +32,7 @@ It runs the real client with no terminal, no audio, and a fake clock. Output is 
 | `type "<text>"` | One key press per character |
 | `wait <ms>` | Advance fake time in 50 ms frames |
 | `tick [n]` | Advance the simulation n ticks |
-| `cheat <command>` | Cheat console: `tp`, `spawn_enemy`, `giveitem`, `noclip_toggle`, `toggle_fogofwar`, `toggle_tutorial`; a failing cheat fails the script |
+| `cheat <command>` | Cheat console: `tp`, `spawn_enemy`, `giveitem`, `givecraftingcomponents` (ingredients for a recipe; add `raw` for raw materials), `noclip_toggle`, `toggle_fogofwar`, `toggle_tutorial`; a failing cheat fails the script |
 | `screen [label]` / `state [label]` | Print a framed text screen / JSON state |
 | `expect-text "<text>"` | Exit 2 unless the screen contains the text |
 | `save-reload` | Save and load back in place; output must not change, so use it to check that a state survives saving |

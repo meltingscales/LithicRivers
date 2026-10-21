@@ -1239,6 +1239,68 @@ mod cheat_tests {
         assert_eq!(qty(ItemKind::Log), 3 + 4, "starting 3 logs plus 4");
     }
 
+    fn qty(runner: &Runner, kind: lithicrivers_core::components::ItemKind) -> u32 {
+        let inv = runner
+            .app
+            .core
+            .game
+            .get_player_component::<Inventory>()
+            .unwrap();
+        inv.slots
+            .iter()
+            .filter(|s| s.kind == kind)
+            .map(|s| s.qty)
+            .sum()
+    }
+
+    #[test]
+    fn givecraftingcomponents_gives_ingredients_or_raw_materials() {
+        use lithicrivers_core::components::ItemKind::*;
+        // Starting inventory: 10 nails, 3 logs, no planks or iron scrap
+        let r = runner_after("skip-splash\ncheat givecraftingcomponents chest");
+        assert_eq!((qty(&r, WoodenPlank), qty(&r, Nail)), (8, 14));
+        let log = &r.app.core.game.res.events.get_message_log().messages;
+        assert!(
+            log.last()
+                .unwrap()
+                .text
+                .contains("Gave 8 Wooden Plank, 4 Nail for 1 Chest"),
+            "{}",
+            log.last().unwrap().text
+        );
+
+        let r = runner_after("skip-splash\ncheat givecraftingcomponents wooden_plank 4");
+        assert_eq!(qty(&r, Log), 3 + 2, "one log makes 3 planks, so 2 logs");
+
+        let r = runner_after("skip-splash\ncheat givecraftingcomponents chest 1 raw");
+        assert_eq!((qty(&r, Log), qty(&r, IronScrap)), (3 + 3, 1));
+    }
+
+    #[test]
+    fn givecraftingcomponents_errors_give_nothing() {
+        for (command, message) in [
+            ("givecraftingcomponents log", "Log has no recipe"),
+            ("givecraftingcomponents dragon", "Unknown item 'dragon'"),
+            (
+                "givecraftingcomponents chest lots",
+                "Unexpected argument 'lots'",
+            ),
+        ] {
+            let (code, _, err_out) = run(&format!("skip-splash\ncheat {command}"));
+            assert_eq!(code, EXIT_SCRIPT_ERROR, "{command}");
+            assert!(err_out.contains(message), "{command}: {err_out}");
+        }
+    }
+
+    #[test]
+    fn crafting_a_chest_after_givecraftingcomponents() {
+        let r = runner_after(
+            "skip-splash\ncheat givecraftingcomponents chest\nkey ui.MENU_NEXT 5\n\
+             key movement.MOVE_SOUTH 8\nexpect-text \"Recipe Name: Chest\"\nrawkey ENTER",
+        );
+        assert_eq!(qty(&r, lithicrivers_core::components::ItemKind::Chest), 1);
+    }
+
     // --- 2.1: the in-game console reports failures and keeps running ------------------
 
     #[test]

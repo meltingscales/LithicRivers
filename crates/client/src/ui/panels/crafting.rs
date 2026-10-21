@@ -131,7 +131,7 @@ pub fn render_crafting_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
 
         let raw = lithicrivers_core::crafting::raw_sources();
         let recipes = app.panels.crafting.recipe_handler.get_recipes();
-        for line in lithicrivers_core::crafting::ingredient_tree(recipes, recipe, &raw) {
+        for line in lithicrivers_core::crafting::ingredient_tree(recipes, recipe, 1, &raw) {
             let available = inventory.get(&line.item).copied().unwrap_or(0);
             let style = if available >= line.needed {
                 Style::default().fg(Color::Green)
