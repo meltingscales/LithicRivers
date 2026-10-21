@@ -190,14 +190,21 @@ impl SystemScheduler {
         let mut in_degree: HashMap<SystemId, usize> = HashMap::new();
         let mut adj_list: HashMap<SystemId, Vec<SystemId>> = HashMap::new();
 
+        // Walk systems in a fixed order (phase, then name), never in HashMap order: the
+        // order dependents are released in decides which of two independent systems runs
+        // first, and that must be the same every run
+        let mut ids: Vec<SystemId> = self.systems.keys().copied().collect();
+        ids.sort_by_key(|id| (self.systems[id].0.phase, self.systems[id].0.name));
+
         // Initialize in-degree and adjacency list
-        for &system_id in self.systems.keys() {
+        for &system_id in &ids {
             in_degree.insert(system_id, 0);
             adj_list.insert(system_id, Vec::new());
         }
 
         // Build dependency graph
-        for (system_id, (desc, _)) in &self.systems {
+        for system_id in &ids {
+            let (desc, _) = &self.systems[system_id];
             for &dep in &desc.depends_on {
                 if let Some(deps) = adj_list.get_mut(&dep) {
                     deps.push(*system_id);
@@ -214,7 +221,8 @@ impl SystemScheduler {
 
         // Start with systems that have no dependencies, grouped by phase
         let mut phase_groups: HashMap<SystemPhase, Vec<SystemId>> = HashMap::new();
-        for (&system_id, &degree) in &in_degree {
+        for &system_id in &ids {
+            let degree = in_degree[&system_id];
             if degree == 0 {
                 let (desc, _) = &self.systems[&system_id];
                 phase_groups.entry(desc.phase).or_default().push(system_id);
@@ -345,4 +353,21 @@ fn enemy_combat_ai_system_wrapper(world: &mut World, res: &mut Resources) -> Opt
 fn fog_of_war_system_wrapper(world: &mut World, res: &mut Resources) -> Option<SystemResults> {
     crate::systems::fog_of_war::update_fog_of_war(world, res);
     None
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Every `HashMap` gets its own random iteration order, so a scheduler whose order
+    /// depended on one would differ between instances. Combat with many enemies showed it:
+    /// enemy attacks were queued before or after timers advanced, a tick apart.
+    #[test]
+    fn execution_order_is_the_same_for_every_scheduler() {
+        let first: Vec<SystemId> = SystemScheduler::new().get_execution_order().to_vec();
+        assert!(!first.is_empty());
+        for _ in 0..50 {
+            assert_eq!(SystemScheduler::new().get_execution_order(), &first[..]);
+        }
+    }
 }
