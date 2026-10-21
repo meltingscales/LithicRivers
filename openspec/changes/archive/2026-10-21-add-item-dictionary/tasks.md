@@ -13,4 +13,4 @@
 ## 3. Checks
 
 - [x] 3.1 Verify `just code-clippy`, `cargo test --workspace` and PR checks pass
-- [ ] 3.2 User check that the dictionary is easy to browse
+- [x] 3.2 User check that the dictionary is easy to browse
