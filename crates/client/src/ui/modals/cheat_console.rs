@@ -7,10 +7,13 @@ use crate::App;
 use ratatui::{
     layout::{Alignment, Rect},
     style::{Color, Style},
-    text::Line,
-    widgets::{Block, Borders, Clear, Paragraph},
+    text::{Line, Span},
+    widgets::{Block, Borders, Clear, List, ListItem, Paragraph},
     Frame,
 };
+
+/// Suggestion rows shown at once; the list scrolls to keep the picked one visible.
+const MAX_SUGGESTION_ROWS: usize = 8;
 
 /// Render cheat console modal when active
 pub(crate) fn render_cheat_console_modal(f: &mut Frame, app: &mut App) {
@@ -18,12 +21,17 @@ pub(crate) fn render_cheat_console_modal(f: &mut Frame, app: &mut App) {
         input,
         cursor_position,
         autocomplete_suggestions,
-        autocomplete_index: _,
+        autocomplete_index,
         scroll_offset,
     } = &app.panels.cheat_console
     {
-        // Create modal area (centered, 60% width, taller height for multiline help)
-        let area = centered_rect(60, 25, f.size());
+        // Centered, 60% wide; taller while it lists suggestions
+        let height = if autocomplete_suggestions.is_empty() {
+            25
+        } else {
+            60
+        };
+        let area = centered_rect(60, height, f.size());
 
         // Clear the background
         f.render_widget(Clear, area);
@@ -57,12 +65,54 @@ pub(crate) fn render_cheat_console_modal(f: &mut Frame, app: &mut App) {
         };
         f.render_widget(input_paragraph, input_area);
 
-        // Help text - show autocomplete suggestions if available, otherwise show all commands
+        // Suggestions: a scrolling list under the input, one per line
+        if !autocomplete_suggestions.is_empty() {
+            let rows = (inner.height.saturating_sub(5) as usize)
+                .min(MAX_SUGGESTION_ROWS)
+                .min(autocomplete_suggestions.len())
+                .max(1);
+            let selected = autocomplete_index.unwrap_or(0);
+            let first = selected.saturating_sub(rows - 1);
+            let items: Vec<ListItem> = autocomplete_suggestions
+                .iter()
+                .enumerate()
+                .skip(first)
+                .take(rows)
+                .map(|(i, s)| {
+                    let style = if Some(i) == *autocomplete_index {
+                        Style::default().fg(Color::Black).bg(Color::Cyan)
+                    } else {
+                        Style::default().fg(Color::Gray)
+                    };
+                    let marker = if Some(i) == *autocomplete_index {
+                        "> "
+                    } else {
+                        "  "
+                    };
+                    ListItem::new(Line::from(Span::styled(format!("{marker}{s}"), style)))
+                })
+                .collect();
+            let list = List::new(items).block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title(format!(
+                        " Suggestions ({}) ",
+                        autocomplete_suggestions.len()
+                    ))
+                    .border_style(Style::default().fg(Color::DarkGray)),
+            );
+            let list_area = Rect {
+                x: inner.x,
+                y: inner.y + 2,
+                width: inner.width,
+                height: rows as u16 + 2,
+            };
+            f.render_widget(list, list_area);
+        }
+
+        // Help text: every command, when there are no suggestions
         let help_lines = if !autocomplete_suggestions.is_empty() {
-            vec![Line::from(format!(
-                "Suggestions: {}",
-                autocomplete_suggestions.join(", ")
-            ))]
+            Vec::new()
         } else {
             let registry = app::input::cheat_console::get_command_registry();
             let commands = registry.get_command_descriptions();
@@ -113,7 +163,7 @@ pub(crate) fn render_cheat_console_modal(f: &mut Frame, app: &mut App) {
             .alignment(Alignment::Center);
 
         let help_height = if !autocomplete_suggestions.is_empty() {
-            1
+            0
         } else {
             6
         }; // 1 line for title + 5 commands
@@ -126,9 +176,21 @@ pub(crate) fn render_cheat_console_modal(f: &mut Frame, app: &mut App) {
         f.render_widget(help_paragraph, help_area);
 
         // Controls
-        let controls = Paragraph::new("Enter: Execute | Tab: Autocomplete | Esc: Cancel")
-            .alignment(Alignment::Center)
-            .style(Style::default().fg(Color::Gray));
+        let up = app
+            .core
+            .config_manager
+            .get_printable_key_for_keybind("ui", "CHEAT_CONSOLE_SCROLL_UP");
+        let down = app
+            .core
+            .config_manager
+            .get_printable_key_for_keybind("ui", "CHEAT_CONSOLE_SCROLL_DOWN");
+        let controls = Paragraph::new(if autocomplete_suggestions.is_empty() {
+            "Enter: Execute | Tab: Autocomplete | Esc: Cancel".to_string()
+        } else {
+            format!("{up}/{down}: pick | Enter: use pick, then run | Tab: complete | Esc: Cancel")
+        })
+        .alignment(Alignment::Center)
+        .style(Style::default().fg(Color::Gray));
 
         if inner.height > 7 {
             // Need more height for multiline help + controls

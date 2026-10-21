@@ -1,0 +1,37 @@
+---
+source: crates/client/src/snapshot_tests.rs
+expression: "String::from_utf8(out).unwrap()"
+input_file: scripts/snapshots/item-dictionary.txt
+---
+=== screen item-dictionary ===
+                                            LithicRivers
+┌ Item Dictionary ─────────────────────────────────────────────────────────────────────────────────┐
+│┌ Items (2) ─────────────────────┐┌──────────────────────────────────────────────────────────────┐│
+││| Log                           ││Log                                                           ││
+││G Burner Generator              ││A wooden log.                                    ▄▄▄▄▄▄▄▄▄    ││
+││                                ││                                                ▐▓▒▓▒▓▒▓▒(◎)  ││
+││                                ││Found:                                          ▐▒▓▒▓▒▓▒▓(◎)  ││
+││                                ││  Mined from tree                                ▀▀▀▀▀▀▀▀▀    ││
+││                                ││Used in:                                                      ││
+││                                ││  Wooden Planks x3 <- 1 Log                                   ││
+││                                ││  Power Pole x2 <- 1 Log, 1 Iron Scrap                        ││
+││                                ││                                                              ││
+││                                ││                                                  |||         ││
+││                                ││                                                  |||         ││
+││                                ││                                                  |||         ││
+││                                ││                                                              ││
+││                                ││                                                  ||          ││
+│└────────────────────────────────┘└──────────────────────────────────────────────────────────────┘│
+│Search: log   (s edit, ESCAPE clear)                                                              │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
+│[0] Loading structure 'sapiencorp-bunker.lrstructure' at (10, 10, 1) for chunk (0, 0, 1)          │
+│[0] Quest marker added: SapienCorp Bunker                                                         │
+│[0] Player moved to bunker spawn at (11, 11, -19)                                                 │
+│[0] Loading structure 'sapiencorp-factory.lrstructure' at (200, 1609, 1) for chunk (3, 25, 1)     │
+│[0] Quest marker added: SapienCorp Factory                                                        │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===

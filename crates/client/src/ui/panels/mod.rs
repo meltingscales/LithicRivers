@@ -7,6 +7,7 @@ pub mod global_map;
 pub mod help;
 pub mod hotbar;
 pub mod inventory;
+pub mod item_dictionary;
 pub mod look;
 pub mod menu;
 pub mod modes;

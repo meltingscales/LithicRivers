@@ -12,7 +12,7 @@ key title.DOWN 5
 key title.SELECT
 rawkey ENTER
 rawkey ENTER
-key ui.MENU_NEXT 6
+key ui.MENU_NEXT 7
 expect-text "Save and quit to title"
 key ui.SAVE_AND_QUIT_TO_TITLE
 key title.SELECT

@@ -92,6 +92,11 @@ pub fn default_config() -> ConfigRoot {
             "RIGHT": ["RIGHT"],
             "DELETE_CHAR": ["BACKSPACE"] // Text fields
         },
+        "dictionary": {
+            "SEARCH": ["s"],              // Item Dictionary: start typing a search
+            "DELETE_CHAR": ["BACKSPACE"], // While searching: erase a character
+            "END_SEARCH": ["ENTER"]       // While searching: keep the filter and stop typing
+        },
         "inventory": {
             "DROP_ITEM": ["g"], // Drop item
             "DESTROY_ITEM": ["x"], // Destroy item, remove later

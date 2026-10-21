@@ -29,6 +29,7 @@ pub(crate) enum MenuTab {
     Body,
     Inventory,
     Crafting,
+    ItemDictionary,
     Menu,
     Help,
     Credits,
@@ -38,127 +39,64 @@ pub(crate) enum MenuTab {
 pub(crate) const BOOT_MESSAGE_TYPEWRITER_MS: u64 = 100;
 
 impl MenuTab {
-    #[allow(dead_code)]
-    const COUNT: usize = 10;
+    /// Every tab, in the order the menu bar shows them.
+    const ORDER: [MenuTab; 12] = [
+        MenuTab::World,
+        MenuTab::Tutorial,
+        MenuTab::GlobalMap,
+        MenuTab::Quests,
+        MenuTab::Body,
+        MenuTab::Inventory,
+        MenuTab::Crafting,
+        MenuTab::ItemDictionary,
+        MenuTab::Menu,
+        MenuTab::Help,
+        MenuTab::Credits,
+        MenuTab::Quit,
+    ];
+
+    /// The tabs in the menu bar: all of them, except Tutorial when it is hidden.
+    pub(crate) fn visible(tutorial_visible: bool) -> Vec<MenuTab> {
+        Self::ORDER
+            .into_iter()
+            .filter(|&t| t != MenuTab::Tutorial || tutorial_visible)
+            .collect()
+    }
+
+    /// The tab's name in the menu bar.
+    pub(crate) fn title(self) -> &'static str {
+        match self {
+            MenuTab::World => "World",
+            MenuTab::Tutorial => "Tutorial",
+            MenuTab::GlobalMap => "Global Map",
+            MenuTab::Quests => "Quests",
+            MenuTab::Body => "Body",
+            MenuTab::Inventory => "Inventory",
+            MenuTab::Crafting => "Crafting",
+            MenuTab::ItemDictionary => "Items",
+            MenuTab::Menu => "Menu",
+            MenuTab::Help => "Help",
+            MenuTab::Credits => "Credits",
+            MenuTab::Quit => "Quit",
+        }
+    }
 
     pub(crate) fn next(self, tutorial_visible: bool) -> Self {
-        match self {
-            MenuTab::World => {
-                if tutorial_visible {
-                    MenuTab::Tutorial
-                } else {
-                    MenuTab::GlobalMap
-                }
-            }
-            MenuTab::Tutorial => MenuTab::GlobalMap,
-            MenuTab::GlobalMap => MenuTab::Quests,
-            MenuTab::Quests => MenuTab::Body,
-            MenuTab::Body => MenuTab::Inventory,
-            MenuTab::Inventory => MenuTab::Crafting,
-            MenuTab::Crafting => MenuTab::Menu,
-            MenuTab::Menu => MenuTab::Help,
-            MenuTab::Help => MenuTab::Credits,
-            MenuTab::Credits => MenuTab::Quit,
-            MenuTab::Quit => MenuTab::World,
-        }
+        let tabs = Self::visible(tutorial_visible);
+        tabs[(self.as_index(tutorial_visible) + 1) % tabs.len()]
     }
 
     pub(crate) fn prev(self, tutorial_visible: bool) -> Self {
-        match self {
-            MenuTab::World => MenuTab::Quit,
-            MenuTab::Tutorial => MenuTab::World,
-            MenuTab::GlobalMap => {
-                if tutorial_visible {
-                    MenuTab::Tutorial
-                } else {
-                    MenuTab::World
-                }
-            }
-            MenuTab::Body => MenuTab::Quests,
-            MenuTab::Quests => MenuTab::GlobalMap,
-            MenuTab::Inventory => MenuTab::Body,
-            MenuTab::Crafting => MenuTab::Inventory,
-            MenuTab::Menu => MenuTab::Crafting,
-            MenuTab::Help => MenuTab::Menu,
-            MenuTab::Credits => MenuTab::Help,
-            MenuTab::Quit => MenuTab::Credits,
-        }
+        let tabs = Self::visible(tutorial_visible);
+        tabs[(self.as_index(tutorial_visible) + tabs.len() - 1) % tabs.len()]
     }
 
+    /// Position in the menu bar. A hidden Tutorial tab counts as World.
     pub(crate) fn as_index(&self, tutorial_visible: bool) -> usize {
-        match self {
-            MenuTab::World => 0,
-            MenuTab::Tutorial => {
-                if tutorial_visible {
-                    1
-                } else {
-                    0
-                }
-            } // Should not be selected if not visible
-            MenuTab::GlobalMap => {
-                if tutorial_visible {
-                    2
-                } else {
-                    1
-                }
-            }
-            MenuTab::Quests => {
-                if tutorial_visible {
-                    3
-                } else {
-                    2
-                }
-            }
-            MenuTab::Body => {
-                if tutorial_visible {
-                    4
-                } else {
-                    3
-                }
-            }
-            MenuTab::Inventory => {
-                if tutorial_visible {
-                    5
-                } else {
-                    4
-                }
-            }
-            MenuTab::Crafting => {
-                if tutorial_visible {
-                    6
-                } else {
-                    5
-                }
-            }
-            MenuTab::Menu => {
-                if tutorial_visible {
-                    7
-                } else {
-                    6
-                }
-            }
-            MenuTab::Help => {
-                if tutorial_visible {
-                    8
-                } else {
-                    7
-                }
-            }
-            MenuTab::Credits => {
-                if tutorial_visible {
-                    9
-                } else {
-                    8
-                }
-            }
-            MenuTab::Quit => {
-                if tutorial_visible {
-                    10
-                } else {
-                    9
-                }
-            }
-        }
+        Self::visible(tutorial_visible)
+            .iter()
+            .position(|t| t == self)
+            .unwrap_or(0)
     }
 }
 
@@ -346,6 +284,9 @@ impl App {
             MenuTab::Crafting => {
                 // Crafting
                 self.core.game.res.log("Crafting panel active");
+            }
+            MenuTab::ItemDictionary => {
+                self.core.game.res.log("Item Dictionary active");
             }
         }
     }

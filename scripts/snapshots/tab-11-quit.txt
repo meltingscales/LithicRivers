@@ -2,7 +2,7 @@
 seed 12345
 size 100x30
 skip-splash
-key ui.MENU_NEXT 9
+key ui.MENU_NEXT 10
 screen quit
 # Activating the tab saves the world and returns to the title screen
 key ui.MENU_ACTIVATE

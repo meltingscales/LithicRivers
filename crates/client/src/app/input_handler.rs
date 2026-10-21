@@ -46,6 +46,10 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
         return Ok(());
     }
 
+    if crate::app::input::item_dictionary::handle_item_dictionary_input(app, key) {
+        return Ok(());
+    }
+
     // log key to log
     tracing::info!(target: "game", "key pressed: {:?}", key);
 

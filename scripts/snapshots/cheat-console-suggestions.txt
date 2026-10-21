@@ -1,0 +1,9 @@
+# giveitem suggestions as a list, one per line, with the third one picked
+seed 12345
+size 100x30
+skip-splash
+key ui.OPEN_COMMAND_MENU
+type "giveitem "
+key ui.CHEAT_CONSOLE_SCROLL_DOWN 3
+expect-text "Suggestions ("
+screen cheat-console-suggestions

@@ -79,6 +79,52 @@ pub fn raw_sources() -> BTreeSet<ItemKind> {
         .collect()
 }
 
+/// Where an item comes from without crafting.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RawSource {
+    /// Mining or chopping this tile drops it
+    Mined(TileKind),
+    /// Feral dogs can carry it
+    FeralDog,
+}
+
+impl RawSource {
+    pub fn describe(self) -> String {
+        match self {
+            RawSource::Mined(tile) => format!("Mined from {}", tile.display_name()),
+            RawSource::FeralDog => "Carried by feral dogs".to_string(),
+        }
+    }
+}
+
+/// Every raw source of `item`, in tile variant order, then creature loot.
+pub fn raw_sources_of(item: ItemKind) -> Vec<RawSource> {
+    let mined = TileKind::all_variants().iter().filter(|&&tile| {
+        mining_drop(tile).is_some_and(|d| d.items.iter().any(|&(i, _, max)| i == item && max > 0))
+    });
+    let mut sources: Vec<RawSource> = mined.map(|&tile| RawSource::Mined(tile)).collect();
+    if FERAL_DOG_LOOT
+        .iter()
+        .any(|&(i, _, max)| i == item && max > 0)
+    {
+        sources.push(RawSource::FeralDog);
+    }
+    sources
+}
+
+/// The recipes that make `item`.
+pub fn made_by(recipes: &[Recipe], item: ItemKind) -> Vec<&Recipe> {
+    recipes.iter().filter(|r| r.result == item).collect()
+}
+
+/// The recipes that use `item` as an ingredient.
+pub fn used_in(recipes: &[Recipe], item: ItemKind) -> Vec<&Recipe> {
+    recipes
+        .iter()
+        .filter(|r| r.ingredients.iter().any(|&(i, _)| i == item))
+        .collect()
+}
+
 /// Items that can be placed in the world, as plain blocks or factory blocks.
 pub fn placeable_items() -> Vec<ItemKind> {
     ItemKind::iter()
@@ -243,6 +289,28 @@ impl std::fmt::Display for NoRecipe {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn item_relationships_for_logs() {
+        let handler = crate::recipe_handler::RecipeHandler::new();
+        let recipes = handler.get_recipes();
+        let uses: Vec<&str> = used_in(recipes, ItemKind::Log)
+            .iter()
+            .map(|r| r.name)
+            .collect();
+        assert!(uses.contains(&"Wooden Planks"), "{uses:?}");
+        assert!(uses.contains(&"Power Pole"), "{uses:?}");
+        assert!(made_by(recipes, ItemKind::Log).is_empty());
+        assert_eq!(
+            raw_sources_of(ItemKind::Log),
+            [RawSource::Mined(TileKind::Tree)]
+        );
+        assert_eq!(raw_sources_of(ItemKind::Leather), [RawSource::FeralDog]);
+        assert_eq!(
+            made_by(recipes, ItemKind::Chest).first().map(|r| r.name),
+            Some("Chest")
+        );
+    }
+
     use super::*;
     use crate::recipe_handler::RecipeHandler;
 

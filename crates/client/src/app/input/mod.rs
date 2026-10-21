@@ -8,6 +8,7 @@ pub mod global_map;
 pub mod global_ui;
 pub mod hotbar_assignment;
 pub mod inventory;
+pub mod item_dictionary;
 pub mod look_mode;
 pub mod multi_action;
 pub mod npc_interaction;

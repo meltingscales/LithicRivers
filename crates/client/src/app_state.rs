@@ -106,12 +106,22 @@ pub struct FurnaceWindow {
     pub player_focus: bool,
 }
 
+/// The Item Dictionary tab: the selected row of the filtered list and the search text.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct ItemDictionaryState {
+    pub selected: usize,
+    pub search: String,
+    /// Whether typed keys go into the search text
+    pub searching: bool,
+}
+
 /// All UI panel-specific states grouped by functionality
 pub struct PanelStates {
     /// The power pole whose network info box is open
     pub power_info: Option<hecs::Entity>,
     /// The open furnace window, if any
     pub furnace_window: Option<FurnaceWindow>,
+    pub item_dictionary: ItemDictionaryState,
     pub inventory: InventoryPanelState,
     pub crafting: CraftingPanelState,
     pub credits: CreditsPanelState,
