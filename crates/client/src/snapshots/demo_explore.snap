@@ -1,0 +1,36 @@
+---
+source: crates/client/src/app/demo.rs
+expression: "String::from_utf8(out).unwrap()"
+---
+=== screen 25 ===
+                                            LithicRivers
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,                      ┌MODES─────────────────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#vvvvvvvvvvvvvvvvv,,,                     │  ------ - - -- - FOG │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,                     └──────────────────────┘
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,                    ┌Inventory─────────────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,                   │Nail x10              │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,                  │Acorn x1              │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,                  │Log x3                │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,                 └──────────────────────┘
+vvvvvvvvvvvvvvvvvvvvvvvvvtttvvvtvvvvvvvvvvvvvvvvvvvvvvvvv,,,                ┌Help (h)──────────────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvtvtttttvvvvvv@vvvvvvvvvvvvvvvvvv,,,,               │Move:                 │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvtttvvvvvvvvvvvvvvvvvvvvvvvvvv,,t               │  7 8 9               │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvttvvvvvvvvvvvvvvvvvvvvvvvvvvvtvttt              │  4 5 6               │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvtttvvvvvvvvvvvvvvvvvvvvvvvvvvttt,,t             │  1 2 3               │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvttt,            │q: mine               │
+#vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,,           │v: look               │
+##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,,          │`: build mode         │
+##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,,         │f: interact           │
+###vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,,        │                      │
+####vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,,       └──────────────────────┘
+┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
+│[0] Loading structure 'sapiencorp-bunker.lrstructure' at (10, 10, 1) for chunk (0, 0, 1)          │
+│[0] Quest marker added: SapienCorp Bunker                                                         │
+│[0] Player moved to bunker spawn at (11, 11, -19)                                                 │
+│[0] Loading structure 'sapiencorp-factory.lrstructure' at (200, 1609, 1) for chunk (3, 25, 1)     │
+│[0] Quest marker added: SapienCorp Factory                                                        │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===

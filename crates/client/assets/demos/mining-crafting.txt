@@ -1,0 +1,26 @@
+# Chop, craft, look it up
+# The robot chops a tree in Break mode, gathers the logs, crafts planks in the Crafting tab,
+# and looks logs up in the Item Dictionary.
+skip-splash
+key ui.MENU_PREV
+cheat tp 0 0 0
+beat 300
+key build.TOGGLE_BREAK_PLACE_MODE
+key build.BREAK_EAST
+wait 500
+key build.TOGGLE_BREAK_PLACE_MODE 3
+key movement.MOVE_EAST
+key movement.MOVE_WEST
+wait 400
+# Crafting: World, Tutorial, Global Map, Quests, Body, Inventory, Crafting
+key ui.MENU_NEXT 6
+wait 800
+key ui.MENU_ACTIVATE
+wait 1200
+# The Item Dictionary, searching for logs
+key ui.MENU_NEXT
+key dictionary.SEARCH
+type "log"
+key dictionary.END_SEARCH
+wait 2500
+screen

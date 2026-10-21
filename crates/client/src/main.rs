@@ -164,6 +164,7 @@ fn run_headless_from_args(default_seed: u64) -> Result<Option<i32>, Box<dyn Erro
 /// Advance the client by one frame: combat auto-ticks and splash/UI timers.
 /// Shared by the interactive loop and headless runs; reads time only from `app.clock`.
 fn step(app: &mut App) {
+    app.update_demo();
     // Auto-advance ticks when combat is active (one tick per COMBAT_MS_PER_TICK)
     if app.combat.is_active() {
         let tick_ms = app

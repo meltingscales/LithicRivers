@@ -1,0 +1,25 @@
+# The factory showcase
+# A debug world of working builds: the robot rides a conveyor past an extractor line and a
+# belt router, then opens a lit crude furnace and a filter extractor's filter.
+world factory-showcase
+key ui.MENU_PREV
+beat 300
+key action.PASS_TIME
+# Ride the extractor line's belts
+cheat tp 2 -7 0
+wait 1500
+# The crude furnace, smelting logs into biochar
+cheat tp 18 -5 0
+# Choices: Open crude furnace (N), then the belts beside it
+key action.INTERACT
+key ui.MENU_ACTIVATE
+wait 2500
+key ui.CLOSE_HELP_MENU
+# The farm's filter extractor, set to acorns. Choices: chest (SE), filter extractor (E), planter
+cheat tp 26 -4 0
+key action.INTERACT
+key movement.MOVE_SOUTH
+key ui.MENU_ACTIVATE
+wait 2500
+key ui.CLOSE_HELP_MENU
+screen

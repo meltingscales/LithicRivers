@@ -1,0 +1,36 @@
+---
+source: crates/client/src/app/demo.rs
+expression: "String::from_utf8(out).unwrap()"
+---
+=== screen 27 ===
+                                            LithicRivers
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌MODES─────────────────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  ------ - - -- - FOG │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Inventory─────────────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Nail x10              │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Acorn x1              │
+Cvvv>>>>CvvvC→>>CvvvvvCvvvvvvvvvvvvvGτvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Log x3                │
+vvvvvvvvvvvvvvvvvvvvvv^vvvvv>>F>CvvvG+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
+vvvvvvvvvvvvvvvvvvvv>>╬>Cvvvvvvvvvvvvvvpvv,vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Help (h)──────────────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv@↑vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Move:                 │
+vvvvvvvvvvvvvvvvvvvvvvCvvvvvvvvvvvvvvvvCHvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  7 8 9               │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  4 5 6               │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvtvvttvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  1 2 3               │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│q: mine               │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│v: look               │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│`: build mode         │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│f: open chest         │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│f: set filter         │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
+┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
+│[1001] Time passes...                                                                             │
+│[1001] Choose interaction:                                                                        │
+│[1001] Opened crude furnace                                                                       │
+│[1001] Closed crude furnace                                                                       │
+│[1001] Choose interaction:                                                                        │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===

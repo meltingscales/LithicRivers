@@ -1,0 +1,36 @@
+---
+source: crates/client/src/app/demo.rs
+expression: "String::from_utf8(out).unwrap()"
+---
+=== screen 25 ===
+                                            LithicRivers
+┌Active Quests───────────────────────────────────┐┌Completed Quests────────────────────────────────┐
+│► [ ] Repair the Broken Android                 ││(No completed quests)                           │
+│Find a lab-grown diamond and scrap electronics  ││                                                │
+│to repair the broken SapienCorp android         ││                                                │
+│[ ] Find a lab-grown diamond                    ││                                                │
+│[✓] Find scrap electronics                      ││                                                │
+│[ ] Return to the broken android                ││                                                │
+│                                                ││                                                │
+│─────────────────────────                       ││                                                │
+│↑/↓ Select   Tab: Switch                        ││                                                │
+│                                                ││                                                │
+│                                                ││                                                │
+│                                                ││                                                │
+│                                                ││                                                │
+│                                                ││                                                │
+│                                                ││                                                │
+│                                                ││                                                │
+│                                                ││                                                │
+└────────────────────────────────────────────────┘└────────────────────────────────────────────────┘
+┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
+│[401] New quest unlocked!                                                                         │
+│[401] Quest started: Repair the Broken Android                                                    │
+│[401] Quest objective completed: Find scrap electronics                                           │
+│[401] You feel Friendly.                                                                          │
+│[401] Conversation ended                                                                          │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===

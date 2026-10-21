@@ -131,6 +131,8 @@ pub(crate) struct App {
     pub title: crate::app::title_menu::TitleMenuState,
     /// Whether settings changed in Options are written to the config file
     pub persist_config: bool,
+    /// The attract-mode demo, while it plays
+    pub demo: Option<crate::app::demo::DemoState>,
 }
 
 impl App {

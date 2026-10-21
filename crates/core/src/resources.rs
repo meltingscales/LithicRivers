@@ -84,6 +84,23 @@ impl WorldType {
         }
     }
 
+    /// The type's name in scripts: `normal`, `void`, `ore-test`, `dog-arena`,
+    /// `factory-showcase`.
+    pub fn slug(self) -> &'static str {
+        match self {
+            WorldType::Normal => "normal",
+            WorldType::Void => "void",
+            WorldType::OreTest => "ore-test",
+            WorldType::DogArena => "dog-arena",
+            WorldType::FactoryShowcase => "factory-showcase",
+        }
+    }
+
+    pub fn from_slug(slug: &str) -> Option<Self> {
+        use strum::IntoEnumIterator;
+        Self::iter().find(|t| t.slug() == slug)
+    }
+
     /// The next type in the list, wrapping around.
     pub fn next(self) -> Self {
         use strum::IntoEnumIterator;

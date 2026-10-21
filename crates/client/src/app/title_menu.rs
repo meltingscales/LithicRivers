@@ -6,7 +6,9 @@ use crate::{App, EmbeddedAssets, SplashState};
 use crossterm::event::KeyCode;
 use lithicrivers_core::resources::{WorldSettings, WorldType};
 
-pub const TITLE_CHOICES: [&str; 3] = ["Play Game", "Options", "Quit"];
+pub const TITLE_CHOICES: [&str; 4] = ["Play Game", "Watch Demo", "Options", "Quit"];
+/// The Watch Demo row of the title screen.
+pub const WATCH_DEMO: usize = 1;
 pub const WORLD_ACTIONS: [&str; 4] = ["Play", "Rename", "Delete", "Back"];
 pub const DELETE_CHOICES: [&str; 2] = ["Cancel", "Delete"];
 /// A row of the create-world form.
@@ -192,7 +194,8 @@ impl App {
                             self.title.message = None;
                             self.show_world_list();
                         }
-                        1 => {
+                        WATCH_DEMO => self.start_demo(),
+                        2 => {
                             self.title.options_selected = 0;
                             self.splash.state = SplashState::Options;
                         }
@@ -754,7 +757,7 @@ mod tests {
     #[test]
     fn options_change_volume_in_config_and_audio() {
         let mut runner =
-            chain_commands(&[TO_TITLE, &["key title.DOWN", "key title.SELECT"]].concat());
+            chain_commands(&[TO_TITLE, &["key title.DOWN 2", "key title.SELECT"]].concat());
         assert_eq!(runner.app.splash.state, SplashState::Options);
         let music = runner.app.volume_setting("MUSIC_VOLUME");
         runner.chain(&["key title.LEFT 2"]);

@@ -9,6 +9,7 @@ The title screen can't show what the game is like until you start a world. SNES 
 - **Watch Demo** on the title screen, between Play Game and Options.
 - **Scenarios**, each a real game world driven by a script, played back in real time and cut from one to the next:
   - **Exploring:** the robot walks out of the bunker area and across the surface, with fog of war lifting.
+  - **Talking:** a conversation with an NPC, ending in an accepted quest.
   - **Combat:** a fight with feral dogs.
   - **Building:** placing blocks, belts and a chest.
   - **Factories:** the Factory showcase running, with belts moving, the tree farm planting and chopping, and the furnace lit.

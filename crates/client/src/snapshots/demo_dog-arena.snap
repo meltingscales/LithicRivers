@@ -1,0 +1,36 @@
+---
+source: crates/client/src/app/demo.rs
+expression: "String::from_utf8(out).unwrap()"
+---
+=== screen 10 ===
+                                            LithicRivers
+┌──────────────────── Combat ────────────────────┐vvvvvdvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#  /  Dv,,,
+│┌HED──┐┌TOR──┐┌PWR──┐┌LAM─┐┌RAM──┐┌LLG──┐┌RLG──┐│vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv# d   #vv,,
+││ 100 ││ 100 ││ 21  ││ GON││ 100 ││ 100 ││ 43  ││vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvdvvvvvv#     #vvvv
+│└─────┘└─────┘└─────┘└────┘└─────┘└─────┘└─────┘│vvvvvvvvvvvvvvvvvvv|vvvvvvvvvvvvvvvvvvv#######vvvv
+│┌─────┐┌─────┐┌─────┐┌────┐┌─────┐┌─────┐┌─────┐│vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvdvdvvvvvvvvv
+││     ││     ││     ││    ││     ││     ││     ││vvvvvvvvvvvvvvvvvv%vv|vvvdvdvvdvvvvvvdvvvvvvvvvvvv
+││ ▄   ││ ▄   ││ ▄   ││ ▄  ││ ▄   ││ ▄   ││ ▄   ││vvvvvvvvvdvvvvvvvvvvvvvvvvdvdvvvvvvvvvvvvdvvvvvvvv
+││ ▀█▄▄││ ▀█▄▄││ ▀█▄▄││ ▀█▄││ ▀█▄▄││ ▀█▄▄││ ▀█▄▄││vvvvvdvvvvvvvvvvvvvvvvvdvddvvvvvvvvvvvvvvvvvvvvvvv
+││┌Ene┐││┌Ene┐││┌Ene┐││┌En┐││┌Ene┐││┌Ene┐││┌Ene┐││vvvvvdvvvvvvvvvvvvvvvvvvdddvvvvSvdvvvvvvvvvvvvvvvv
+││└───┘││└───┘││└───┘││└──┘││└───┘││└───┘││└───┘││vvvvvvvvvvvvvvvvvvvvv|vvd@dvvv|vvvvvvvvvvvvvvvvvvv
+││     ││     ││     ││    ││     ││     ││     ││vvvvvvvvvvvvvvvvvvvdvvvvddvdvvvvdvvdvvvvvdvvvvvvvv
+│└─────┘└─────┘└─────┘└────┘└─────┘└─────┘└─────┘│vvvvvvvvvvvvvvvvvvvvvdvddvvSvvvvvvvvvvvvddvvvvvvvv
+│1: Melee - 0E - 5t                ┌Action Queue┐│vvvvvvvvvvvvvvvvvvvvdvdvvvvvvvvvvdvvvvvvdvvvvvvvvv
+│2: Fireball (AoE) - 40E - 12t     │Current:    ││#vvvvdvvvdvvvvtvvvvvvvvvvvvvvvdvdvvvvvvvvvvvvvvvvv
+│3: Tackle - 20E - 10t             │> Ready     ││###vvvvvvvvvvvttvvdvvvvvv|vvvvvvvdvvvvvvvvvvvvvvvv
+│4: Escape - 20E - 15t             │            ││####vvvvvvvvvvvttvv|vvvvv|vvvvv|dvvvvvvvvvvvvvvvvv
+│           ▼ More below           └────────────┘│######vvvvvvvvvvvvdvvvvvvvddvSvvvvvvvvvvvdvvvvvvvv
+│[←→] Target | [↑↓] Move | [C] Clear | [5] Wait |│#######vvvvvvvvvvvvvvvvvvdvvvvvvvvvvvvvvvvvvvvvvvv
+└────────────────────────────────────────────────┘########vvvvvvvvvvvvvvdvvdvvvdvvvvvvvvvvvvvvvvvvvv
+┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
+│[2802] Advanced combat timing                                                                     │
+│[2803] Advanced combat timing                                                                     │
+│[2804] Advanced combat timing                                                                     │
+│[2805] Advanced combat timing                                                                     │
+│[2806] Advanced combat timing                                                                     │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===

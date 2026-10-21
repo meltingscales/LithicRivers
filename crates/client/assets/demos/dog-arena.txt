@@ -1,0 +1,8 @@
+# The dog arena
+# A debug world: a hundred feral dogs in rings around the robot, closing in.
+world dog-arena
+key ui.MENU_PREV
+beat 400
+key movement.WAIT 12
+wait 1500
+screen

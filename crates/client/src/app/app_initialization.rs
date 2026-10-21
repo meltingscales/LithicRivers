@@ -157,6 +157,7 @@ impl App {
             current_world: None,
             title: crate::app::title_menu::TitleMenuState::new(developer_mode),
             persist_config: true,
+            demo: None,
         };
         app.apply_volumes();
         app.reset_for_game();

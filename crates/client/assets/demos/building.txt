@@ -1,0 +1,35 @@
+# Building a belt line
+# In Place mode the robot lays wooden conveyors and a chest from the hotbar, turns the next
+# block with Rotate, and puts a log on the belt to watch it ride into the chest.
+skip-splash
+key ui.MENU_PREV
+cheat tp -15 0 0
+cheat giveitem wooden_conveyor 4
+cheat giveitem chest
+key build.TOGGLE_BREAK_PLACE_MODE 2
+# Picker: Clear slot, Acorn, Wooden Conveyor, Chest
+key hotbar.HOTBAR_SLOT_1 2
+key movement.MOVE_SOUTH 2
+key ui.MENU_ACTIVATE
+key hotbar.HOTBAR_SLOT_2 2
+key movement.MOVE_SOUTH 3
+key ui.MENU_ACTIVATE
+key hotbar.HOTBAR_SLOT_1
+beat 400
+key build.ROTATE_PLACEMENT
+key build.PLACE_NORTHWEST
+key build.PLACE_NORTH
+key hotbar.HOTBAR_SLOT_2
+key build.PLACE_NORTHEAST
+key build.TOGGLE_BREAK_PLACE_MODE 2
+# Select logs in the inventory (Nail, Acorn, Log) and put one on the first belt
+key ui.MENU_NEXT 5
+key movement.MOVE_SOUTH 2
+key ui.MENU_PREV 5
+key action.INTERACT
+key movement.MOVE_SOUTH
+key ui.MENU_ACTIVATE
+wait 800
+key movement.WAIT 6
+wait 1000
+screen

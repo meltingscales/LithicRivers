@@ -29,7 +29,18 @@ impl App {
     /// Start a world the way `skip-splash` does: the default seed, cheats on, other settings
     /// from config, then straight to the main UI.
     pub(crate) fn start_default_world(&mut self) {
-        let settings = WorldSettings::defaults(&self.core.game.res.config);
+        self.start_default_world_of_type(lithicrivers_core::resources::WorldType::Normal);
+    }
+
+    /// `start_default_world` with a world type (the script and demo `world` step).
+    pub(crate) fn start_default_world_of_type(
+        &mut self,
+        world_type: lithicrivers_core::resources::WorldType,
+    ) {
+        let settings = WorldSettings {
+            world_type,
+            ..WorldSettings::defaults(&self.core.game.res.config)
+        };
         self.start_world("New World", self.default_seed, settings);
         self.splash.state = SplashState::MainUI;
     }
@@ -53,6 +64,9 @@ impl App {
 
     /// Save the current world into its folder (creating the folder on first save).
     pub(crate) fn save_world(&mut self) -> anyhow::Result<()> {
+        if self.demo.is_some() {
+            anyhow::bail!("demo worlds are never saved");
+        }
         let now = self.clock.unix_seconds();
         let settings = self.core.game.res.world_settings;
         let saves_dir = self.saves_dir.clone();
