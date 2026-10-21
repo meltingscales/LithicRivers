@@ -36,7 +36,7 @@ pub fn render_help_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     )));
     lines.push(Line::from(""));
     lines.push(Line::from(format!(
-        "Factory blocks (chests): place them in Place mode, where {} turns the next one; Rotate mode turns placed ones. {} on a chest opens it. {} lets 10 game seconds pass.",
+        "Factory blocks (chests, wooden conveyors): place them in Place mode, where {} turns the next one; Rotate mode turns placed ones. {} opens a chest, or puts the selected inventory item on an empty belt. Belts carry items into whatever they face. {} lets 10 game seconds pass.",
         app.core
             .config_manager
             .get_printable_key_for_keybind("build", "ROTATE_PLACEMENT"),

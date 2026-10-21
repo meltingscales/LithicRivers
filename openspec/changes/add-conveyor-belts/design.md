@@ -31,3 +31,12 @@ Belt glyph `^ > v <` in brown; when carrying an item, the item's glyph is drawn 
 
 - [Ordering bugs make lines stutter or duplicate items] → Sink-first processing plus tests for straight lines, corners, merges and loops; an item-count conservation assertion in tests.
 - [Large belt networks slow each step] → Graph built per step is O(belts); optimize later if profiling shows it matters.
+
+## Implementation Notes
+
+- **No separate handoff trait:** `factory::accepts` / `factory::insert` decide by component. An empty `BeltSlot` takes one item; a factory block with an `Inventory` (a chest) takes it if it can stack it or has a free slot. Later machines add their input components there.
+- **Ordering:** `belt_order` walks each belt's chain downstream (by the position index) and emits belts sink-first, starting from belts sorted by position, so lines shift by one tile per move without depending on entity order. A loop is cut at the belt where the walk started; a loop with a gap still turns (tested).
+- **Loading by hand:** instead of a directional drop key, Interact next to an empty belt offers "Put <item> on belt" for the item selected in the inventory. It goes through the Choose Interaction menu and the context help panel like every other interaction, and needs no new key.
+- **Rendering:** a belt carrying an item draws the item's glyph; an empty belt draws `^ > v <` (`factory/belt_<facing>` sprites).
+- **Breaking a belt** drops what it carried.
+- **Recipe list order:** "Wooden Conveyor" sits before "Chest", so scripts that select the chest recipe move down one more.

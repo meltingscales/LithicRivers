@@ -10,8 +10,9 @@ input_file: scripts/snapshots/tab-09-help.txt
 │                                                                                                  │
 │On the World page, h shows or hides context help: the keys for what you're doing now.             │
 │                                                                                                  │
-│Factory blocks (chests): place them in Place mode, where r turns the next one; Rotate mode turns  │
-│placed ones. f on a chest opens it. , lets 10 game seconds pass.                                  │
+│Factory blocks (chests, wooden conveyors): place them in Place mode, where r turns the next one;  │
+│Rotate mode turns placed ones. f opens a chest, or puts the selected inventory item on an empty   │
+│belt. Belts carry items into whatever they face. , lets 10 game seconds pass.                     │
 │                                                                                                  │
 │Movement Directions: Numpad by default                                                            │
 │                                                                                                  │
@@ -22,7 +23,6 @@ input_file: scripts/snapshots/tab-09-help.txt
 │Movement Keys:                                                                                    │
 │ 7  8  9                                                                                          │
 │ 4  5  6                                                                                          │
-│ 1  2  3                                                                                          │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
 │[0] Loading structure 'sapiencorp-bunker.lrstructure' at (10, 10, 1) for chunk (0, 0, 1)          │

@@ -73,6 +73,17 @@ impl RecipeHandler {
                 result: ItemKind::String,
                 quantity: 4,
             },
+            // 2 wooden conveyors: 1x plank + 2x stick + 1x string
+            Recipe {
+                name: "Wooden Conveyor",
+                ingredients: &[
+                    (ItemKind::WoodenPlank, 1),
+                    (ItemKind::Stick, 2),
+                    (ItemKind::String, 1),
+                ],
+                result: ItemKind::WoodenConveyor,
+                quantity: 2,
+            },
             // Chest: 8x wooden plank + 4x nail
             Recipe {
                 name: "Chest",

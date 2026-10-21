@@ -174,6 +174,43 @@ pub fn nearby_interactions(app: &App) -> Option<NearbyInteractions> {
         }
     }
 
+    // Find nearby empty belts, which can take one of the selected inventory item
+    let selected_item = app
+        .core
+        .game
+        .get_player_component::<Inventory>()
+        .and_then(|inv| {
+            inv.slots
+                .get(
+                    app.panels
+                        .inventory
+                        .selected
+                        .min(inv.slots.len().saturating_sub(1)),
+                )
+                .map(|s| s.kind)
+        });
+    if let Some(item) = selected_item {
+        for (entity, (pos, belt)) in app
+            .core
+            .game
+            .world
+            .query::<(&Position, &lithicrivers_core::factory::BeltSlot)>()
+            .iter()
+        {
+            if belt.item.is_none()
+                && (pos.x - player_pos.x).abs() <= 1
+                && (pos.y - player_pos.y).abs() <= 1
+                && pos.z == player_pos.z
+            {
+                available_actions.push(InteractionType::LoadBelt {
+                    entity,
+                    position: *pos,
+                    item,
+                });
+            }
+        }
+    }
+
     // Find nearby NPCs
     for (entity, (dialogue, pos)) in app.core.game.world.query::<(&Dialogue, &Position)>().iter() {
         if (pos.x - player_pos.x).abs() <= 1
@@ -345,6 +382,33 @@ pub fn execute_interaction_action(app: &mut App, action: &crate::app_state::Inte
                 loot_panel_focus: true,
             };
             app.core.game.res.log("Started looting corpse");
+        }
+        InteractionType::LoadBelt { entity, item, .. } => {
+            let Some(player) = app.core.game.get_player_entity() else {
+                return;
+            };
+            let slot = app
+                .core
+                .game
+                .world
+                .get::<&lithicrivers_core::components::Inventory>(player)
+                .ok()
+                .and_then(|inv| inv.slots.iter().position(|s| s.kind == *item));
+            let Some(slot) = slot else {
+                return;
+            };
+            match lithicrivers_core::factory::move_one_item_to_block(
+                &mut app.core.game.world,
+                player,
+                *entity,
+                slot,
+            ) {
+                Ok(kind) => app.core.game.res.log(format!(
+                    "Put {} on the belt",
+                    lithicrivers_core::components::itemkind_name(kind)
+                )),
+                Err(_) => app.core.game.res.log("The belt is full"),
+            }
         }
         InteractionType::OpenChest { entity, .. } => {
             // Chests use the same two-panel transfer window as corpses

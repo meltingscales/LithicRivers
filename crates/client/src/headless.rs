@@ -1323,7 +1323,7 @@ mod cheat_tests {
             "skip-splash",
             "cheat givecraftingcomponents chest",
             "key ui.MENU_NEXT 5",
-            "key movement.MOVE_SOUTH 8",
+            "key movement.MOVE_SOUTH 9",
             "expect-text \"Recipe Name: Chest\"",
             "rawkey ENTER",
         ]);

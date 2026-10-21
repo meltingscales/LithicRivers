@@ -67,6 +67,10 @@ fn interaction_label(action: &InteractionType) -> String {
         InteractionType::LootCorpse { .. } => "loot corpse".to_string(),
         InteractionType::TalkToNPC { npc_name, .. } => format!("talk to {npc_name}"),
         InteractionType::OpenChest { .. } => "open chest".to_string(),
+        InteractionType::LoadBelt { item, .. } => format!(
+            "{} on belt",
+            lithicrivers_core::components::itemkind_name(*item)
+        ),
         InteractionType::OpenCloseDoor { is_open: true, .. } => "close door".to_string(),
         InteractionType::OpenCloseDoor { is_open: false, .. } => "open door".to_string(),
     }
