@@ -52,6 +52,8 @@ Everything bigger than a small fix goes through an OpenSpec change. In Claude Co
 
 Check what's in flight any time with `openspec list` (changes) and `openspec list --specs` (capabilities).
 
+New to OpenSpec? [docs/WHY-OPENSPEC.md](docs/WHY-OPENSPEC.md) walks through a real change (`add-nuclear-slime`) and compares OpenSpec with keeping one big changelog, including what it saves in agent tokens.
+
 ## Writing a good feature request
 
 - **Say what the player sees,** not how to code it: "a title screen with Play Game / Options / Quit, where Play Game lists saved worlds".
