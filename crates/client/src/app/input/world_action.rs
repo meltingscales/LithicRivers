@@ -180,6 +180,9 @@ pub fn nearby_interactions(app: &App) -> Option<NearbyInteractions> {
             FactoryKind::PowerPole => {
                 available_actions.push(InteractionType::InspectPole { entity, position })
             }
+            FactoryKind::CrudeFurnace => {
+                available_actions.push(InteractionType::OpenFurnace { entity, position })
+            }
             FactoryKind::AutoPlanter | FactoryKind::AutoHarvester => {
                 available_actions.push(InteractionType::OpenMachine {
                     entity,
@@ -429,6 +432,15 @@ pub fn execute_interaction_action(app: &mut App, action: &crate::app_state::Inte
         }
         InteractionType::InspectPole { entity, .. } => {
             app.panels.power_info = Some(*entity);
+        }
+        InteractionType::OpenFurnace { entity, .. } => {
+            app.panels.furnace_window = Some(crate::app_state::FurnaceWindow {
+                entity: *entity,
+                slot: lithicrivers_core::furnace::Slot::Input,
+                player_item: 0,
+                player_focus: true,
+            });
+            app.core.game.res.log("Opened crude furnace");
         }
         InteractionType::OpenMachine { entity, kind, .. } => {
             app.panels.corpse_looting = CorpseLootingState::LootingCorpse {

@@ -30,6 +30,10 @@ pub enum Facing {
 }
 
 impl Facing {
+    pub fn opposite(self) -> Self {
+        self.rotate_cw().rotate_cw()
+    }
+
     pub fn rotate_cw(self) -> Self {
         match self {
             Facing::North => Facing::East,
@@ -81,6 +85,8 @@ pub enum FactoryKind {
     AutoPlanter,
     /// Chops grown trees around itself and outputs the wood in its facing direction
     AutoHarvester,
+    /// Burns fuel to smelt wood into biochar; fed from its back and sides
+    CrudeFurnace,
     /// A consumer that does nothing but draw power, for grid tests
     #[cfg(any(test, feature = "test-support"))]
     TestConsumer,
@@ -99,6 +105,7 @@ impl FactoryKind {
             ItemKind::PowerPole => Some(FactoryKind::PowerPole),
             ItemKind::AutoPlanter => Some(FactoryKind::AutoPlanter),
             ItemKind::AutoHarvester => Some(FactoryKind::AutoHarvester),
+            ItemKind::CrudeFurnace => Some(FactoryKind::CrudeFurnace),
             _ => None,
         }
     }
@@ -112,6 +119,7 @@ impl FactoryKind {
             FactoryKind::PowerPole => Some(ItemKind::PowerPole),
             FactoryKind::AutoPlanter => Some(ItemKind::AutoPlanter),
             FactoryKind::AutoHarvester => Some(ItemKind::AutoHarvester),
+            FactoryKind::CrudeFurnace => Some(ItemKind::CrudeFurnace),
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestConsumer => None,
             #[cfg(any(test, feature = "test-support"))]
@@ -127,6 +135,7 @@ impl FactoryKind {
             FactoryKind::PowerPole => "power pole",
             FactoryKind::AutoPlanter => "auto-planter",
             FactoryKind::AutoHarvester => "auto-harvester",
+            FactoryKind::CrudeFurnace => "crude furnace",
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestConsumer => "test consumer",
             #[cfg(any(test, feature = "test-support"))]
@@ -138,7 +147,7 @@ impl FactoryKind {
     pub fn directional(self) -> bool {
         match self {
             FactoryKind::Chest => false,
-            FactoryKind::Belt | FactoryKind::AutoHarvester => true,
+            FactoryKind::Belt | FactoryKind::AutoHarvester | FactoryKind::CrudeFurnace => true,
             FactoryKind::AutoPlanter => false,
             FactoryKind::BurnerGenerator | FactoryKind::PowerPole => false,
             #[cfg(any(test, feature = "test-support"))]
@@ -175,6 +184,7 @@ impl FactoryKind {
             FactoryKind::AutoHarvester => {
                 SpriteRef::new("factory", &format!("auto_harvester_{}", facing.name()))
             }
+            FactoryKind::CrudeFurnace => crate::furnace::sprite(facing, false),
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestConsumer => SpriteRef::new("factory", "chest"),
             #[cfg(any(test, feature = "test-support"))]
@@ -265,6 +275,9 @@ pub fn place(
         FactoryKind::PowerPole => {
             builder.add(crate::power::PowerPole);
         }
+        FactoryKind::CrudeFurnace => {
+            builder.add(crate::furnace::Furnace::default());
+        }
         FactoryKind::AutoPlanter | FactoryKind::AutoHarvester => {
             builder.add(crate::machines::Machine::default());
             builder.add(crate::power::PowerConsumer::idle(
@@ -306,6 +319,9 @@ pub fn break_block(
         .unwrap_or_default();
     if let Some(item) = world.get::<&BeltSlot>(entity).ok().and_then(|b| b.item) {
         contents.push(crate::components::ItemStack::new(item, 1));
+    }
+    if let Ok(furnace) = world.get::<&crate::furnace::Furnace>(entity) {
+        contents.extend(furnace.slots().into_iter().flatten());
     }
     let _ = world.despawn(entity);
     if crate::power::is_grid_block(block.kind) {
@@ -401,7 +417,8 @@ pub fn move_one_item(
 }
 
 /// Run every factory step that fits in the ticks elapsed since the last call. Each step runs
-/// the factory systems in a fixed order (growth, machine demand, power, machines, belts)
+/// the factory systems in a fixed order (growth, machine demand, power, machines, furnaces,
+/// belts)
 /// over everything, wherever it is.
 pub fn run_due_steps(world: &mut World, res: &mut Resources) {
     let clock = &mut res.factory_clock;
@@ -417,6 +434,7 @@ pub fn run_due_steps(world: &mut World, res: &mut Resources) {
         crate::machines::update_demand(world, res);
         crate::power::step_power(world, res);
         crate::machines::step_machines(world, res);
+        crate::furnace::step_furnaces(world, res);
         step_belts(world, res);
         res.factory_clock.steps += 1;
     }
@@ -436,9 +454,22 @@ pub struct BeltSlot {
     pub progress: u8,
 }
 
-/// Whether `target` (a factory block) would take `item` right now: an empty belt, a chest
-/// with room for it, a generator's fuel slots or a machine's input.
+/// Whether `target` (a factory block) would take `item` handed to it with no direction (by
+/// the player's transfer window). See `accepts_from`.
 pub fn accepts(world: &World, target: Entity, item: ItemKind) -> bool {
+    accepts_from(world, target, item, None)
+}
+
+/// Whether `target` (a factory block) would take `item` right now, arriving while moving
+/// along `heading` (a belt or machine pushing it; `None` for the player): an empty belt, a
+/// chest with room for it, a generator's fuel slots, a machine's input, or the furnace slot
+/// for the side it arrives at.
+pub fn accepts_from(
+    world: &World,
+    target: Entity,
+    item: ItemKind,
+    heading: Option<Facing>,
+) -> bool {
     if let Ok(belt) = world.get::<&BeltSlot>(target) {
         return belt.item.is_none();
     }
@@ -446,6 +477,9 @@ pub fn accepts(world: &World, target: Entity, item: ItemKind) -> bool {
         return false;
     };
     match block.kind {
+        FactoryKind::CrudeFurnace => {
+            return crate::furnace::accepts(world, target, block.facing, item, heading)
+        }
         FactoryKind::BurnerGenerator if crate::power::fuel_energy(item).is_none() => return false,
         FactoryKind::AutoPlanter | FactoryKind::AutoHarvester => {
             return crate::machines::accepts_input(world, target, block.kind, item)
@@ -457,10 +491,28 @@ pub fn accepts(world: &World, target: Entity, item: ItemKind) -> bool {
     })
 }
 
-/// Give `item` to `target` if it accepts it. Returns whether it did.
+/// Give `item` to `target` if it accepts it, with no direction. Returns whether it did.
 pub fn insert(world: &mut World, target: Entity, item: ItemKind) -> bool {
-    if !accepts(world, target, item) {
+    insert_from(world, target, item, None)
+}
+
+/// Give `item` to `target`, arriving while moving along `heading`, if it accepts it.
+/// Returns whether it did.
+pub fn insert_from(
+    world: &mut World,
+    target: Entity,
+    item: ItemKind,
+    heading: Option<Facing>,
+) -> bool {
+    if !accepts_from(world, target, item, heading) {
         return false;
+    }
+    let facing = world.get::<&FactoryBlock>(target).map(|b| b.facing).ok();
+    if let (Ok(mut furnace), Some(facing)) =
+        (world.get::<&mut crate::furnace::Furnace>(target), facing)
+    {
+        furnace.insert(facing, item, heading);
+        return true;
     }
     if let Ok(mut belt) = world.get::<&mut BeltSlot>(target) {
         *belt = BeltSlot {
@@ -573,7 +625,7 @@ fn step_belts(world: &mut World, res: &mut Resources) {
         let Some(&target) = res.factory_index.get(&target) else {
             continue;
         };
-        if insert(world, target, item) {
+        if insert_from(world, target, item, Some(facing)) {
             *world.get::<&mut BeltSlot>(belt).expect("belt has a slot") = BeltSlot::default();
         }
     }

@@ -36,7 +36,7 @@ pub fn render_help_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     )));
     lines.push(Line::from(""));
     lines.push(Line::from(format!(
-        "Factory blocks (chests, wooden conveyors): place them in Place mode, where {} turns the next one; Rotate mode turns placed ones. {} opens a chest, or puts the selected inventory item on an empty belt. Belts carry items into whatever they face. Power: burner generators burn logs, planks, sticks or shavings; power poles link within 8 tiles and power blocks within 3. Auto-planters plant acorns and auto-harvesters chop grown trees within 2 tiles, pushing the wood into what they face. {} lets 10 game seconds pass.",
+        "Factory blocks (chests, wooden conveyors): place them in Place mode, where {} turns the next one; Rotate mode turns placed ones. {} opens a chest, or puts the selected inventory item on an empty belt. Belts carry items into whatever they face. Power: burner generators burn logs, planks, sticks or shavings; power poles link within 8 tiles and power blocks within 3. Auto-planters plant acorns and auto-harvesters chop grown trees within 2 tiles, pushing the wood into what they face. Crude furnaces smelt wood into biochar, a denser fuel: items from the back go in, fuel comes from the sides, and biochar leaves the front. {} lets 10 game seconds pass.",
         app.core
             .config_manager
             .get_printable_key_for_keybind("build", "ROTATE_PLACEMENT"),
