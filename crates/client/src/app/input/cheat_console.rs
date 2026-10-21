@@ -56,7 +56,7 @@ impl CommandRegistry {
             Command {
                 name: "giveitem",
                 description:
-                    "giveitem <item_sprite_name> <quantity> - Give items to player inventory",
+                    "giveitem <item_sprite_name> [quantity] - Give items to player inventory (1 if no quantity)",
                 handler: handle_giveitem_command,
             },
         ];
@@ -339,11 +339,11 @@ fn handle_toggle_tutorial_command(app: &mut App, _parts: &[&str]) -> Result<(), 
 }
 
 fn handle_giveitem_command(app: &mut App, parts: &[&str]) -> Result<(), Box<dyn Error>> {
-    if parts.len() < 3 {
+    if parts.len() < 2 {
         app.core
             .game
             .res
-            .log("Usage: giveitem <item_sprite_name> <quantity>".to_string());
+            .log("Usage: giveitem <item_sprite_name> [quantity, default 1]".to_string());
         let available_items = lithicrivers_core::components::get_all_item_sprite_names().join(", ");
         app.core
             .game
@@ -352,8 +352,8 @@ fn handle_giveitem_command(app: &mut App, parts: &[&str]) -> Result<(), Box<dyn 
         return Ok(());
     }
 
-    // Parse quantity
-    let quantity = match parts[2].parse::<u32>() {
+    // Parse quantity (1 when left out)
+    let quantity = match parts.get(2).map_or(Ok(1), |q| q.parse::<u32>()) {
         Ok(q) if q > 0 => q,
         _ => {
             app.core

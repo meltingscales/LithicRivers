@@ -1059,6 +1059,14 @@ mod smoke_tests {
     }
 
     #[test]
+    fn choose_interaction_shows_directions() {
+        let script = include_str!("../../../scripts/agent/bugs/choose-interaction-directions.txt");
+        let (mut out, mut err_out) = (Vec::new(), Vec::new());
+        let code = run_script(script, 0, Overrides::default(), &mut out, &mut err_out);
+        assert_eq!(code, EXIT_OK, "{}", String::from_utf8_lossy(&err_out));
+    }
+
+    #[test]
     fn interacting_with_an_empty_corpse_says_so() {
         let script = include_str!("../../../scripts/agent/bugs/loot-empty-corpse.txt");
         let (mut out, mut err_out) = (Vec::new(), Vec::new());
@@ -1208,6 +1216,27 @@ mod cheat_tests {
         let (code, _, err_out) = run("skip-splash\ncheat spawn_enemy feral_dog ~ ~ ~");
         assert_eq!(code, EXIT_SCRIPT_ERROR);
         assert!(err_out.contains("occupied"), "{err_out}");
+    }
+
+    #[test]
+    fn giveitem_without_a_quantity_gives_one() {
+        let runner = runner_after("skip-splash\ncheat giveitem chest\ncheat giveitem log 4");
+        let inv = runner
+            .app
+            .core
+            .game
+            .get_player_component::<Inventory>()
+            .unwrap();
+        let qty = |kind| {
+            inv.slots
+                .iter()
+                .filter(|s| s.kind == kind)
+                .map(|s| s.qty)
+                .sum::<u32>()
+        };
+        use lithicrivers_core::components::ItemKind;
+        assert_eq!(qty(ItemKind::Chest), 1);
+        assert_eq!(qty(ItemKind::Log), 3 + 4, "starting 3 logs plus 4");
     }
 
     // --- 2.1: the in-game console reports failures and keeps running ------------------
