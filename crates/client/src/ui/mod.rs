@@ -1,5 +1,6 @@
 //! UI utility functions and components
 
+pub mod demo;
 pub mod layout;
 pub mod modals;
 pub mod panels;

@@ -1,0 +1,22 @@
+# A self-feeding tree farm
+# An auto-planter and an auto-harvester on a two-generator grid replant from their own
+# acorns: the pole shows the network's load, then saplings grow and fall at 2x zoom.
+world factory-showcase
+key ui.MENU_PREV
+cheat tp 27 0 0
+beat 500
+key action.PASS_TIME 3
+# Choices: Inspect power pole (W), Open auto-planter (SE)
+cheat tp 26 -6 0
+key action.INTERACT
+key ui.MENU_ACTIVATE
+wait 2500
+key ui.CLOSE_HELP_MENU
+cheat tp 27 0 0
+key scale.SCALE_UP
+key action.PASS_TIME 6
+wait 800
+key action.PASS_TIME 12
+wait 800
+key scale.SCALE_RESET
+screen

@@ -50,6 +50,10 @@ pub enum Step {
     ExpectText(String),
     SaveReload,
     Quit,
+    /// Start a new world of this type with the run's seed and cheats on, like `skip-splash`
+    World(lithicrivers_core::resources::WorldType),
+    /// Demo pacing: steps after it play one every this many ms in the demo; no-op in scripts
+    Beat(u64),
 }
 
 /// Renders a step back to script syntax; parsing the result gives the same step.
@@ -79,6 +83,8 @@ impl std::fmt::Display for Step {
             Step::ExpectText(text) => write!(f, "expect-text \"{text}\""),
             Step::SaveReload => write!(f, "save-reload"),
             Step::Quit => write!(f, "quit"),
+            Step::World(t) => write!(f, "world {}", t.slug()),
+            Step::Beat(ms) => write!(f, "beat {ms}"),
         }
     }
 }
@@ -88,7 +94,7 @@ impl Step {
     pub fn changes_state(&self) -> bool {
         !matches!(
             self,
-            Step::Screen(_) | Step::State(_) | Step::ExpectText(_) | Step::Quit
+            Step::Screen(_) | Step::State(_) | Step::ExpectText(_) | Step::Quit | Step::Beat(_)
         )
     }
 }
@@ -222,6 +228,17 @@ pub fn parse_script(text: &str) -> Result<Script, ScriptError> {
             "wait" => {
                 expect_args(1)?;
                 Step::Wait(parse_num(line, cmd, args[0])?)
+            }
+            "beat" => {
+                expect_args(1)?;
+                Step::Beat(parse_num(line, cmd, args[0])?)
+            }
+            "world" => {
+                expect_args(1)?;
+                let t = lithicrivers_core::resources::WorldType::from_slug(args[0]).ok_or_else(
+                    || err(line, format!("world: unknown type '{}' (normal, void, ore-test, dog-arena, factory-showcase)", args[0])),
+                )?;
+                Step::World(t)
             }
             "tick" => match args.len() {
                 0 => Step::Tick(1),
@@ -444,6 +461,11 @@ impl Runner {
                 self.app.start_default_world();
                 self.frame();
             }
+            Step::World(t) => {
+                self.app.start_default_world_of_type(*t);
+                self.frame();
+            }
+            Step::Beat(_) => {}
             Step::Key {
                 category,
                 action,

@@ -23,6 +23,11 @@ use ratatui::{
 };
 
 pub(crate) fn ui(f: &mut Frame, app: &mut App) {
+    ui_main(f, app);
+    crate::ui::demo::render_demo_overlay(f, app);
+}
+
+fn ui_main(f: &mut Frame, app: &mut App) {
     // Update tutorial highlights (remove expired ones)
     let now = app.clock.now();
     app.ui.tutorial_system.update_highlights(now);

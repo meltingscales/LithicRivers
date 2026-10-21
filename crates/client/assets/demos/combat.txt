@@ -1,0 +1,19 @@
+# A feral dog attacks
+# A dog charges in and the turn-queue combat opens: the robot queues melee strikes and a
+# fireball while the body panel tracks damage to each part.
+skip-splash
+key ui.MENU_PREV
+cheat tp -15 0 0
+beat 350
+cheat spawn_enemy feral_dog
+key movement.WAIT
+wait 600
+key ui.MENU_ACTIVATE 2
+wait 1500
+key movement.MOVE_SOUTH
+key ui.MENU_ACTIVATE
+wait 2500
+key movement.MOVE_NORTH
+key ui.MENU_ACTIVATE 2
+wait 4000
+screen

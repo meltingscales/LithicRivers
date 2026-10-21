@@ -1,0 +1,23 @@
+# Waking up in the bunker
+# Fog of war lifts as the robot walks the dark SapienCorp bunker, then it steps out onto the
+# surface, zooms in to 2x and 3x, and checks the Global Map.
+skip-splash
+key ui.MENU_PREV
+beat 300
+key movement.MOVE_SOUTH 2
+key movement.MOVE_WEST 3
+key movement.MOVE_SOUTH 2
+wait 600
+# Out on the surface
+cheat tp 6 3 0
+key movement.MOVE_EAST 5
+key movement.MOVE_NORTHEAST 2
+key scale.SCALE_UP
+wait 1500
+key scale.SCALE_UP
+wait 1500
+key scale.SCALE_RESET
+key ui.MENU_NEXT 2
+wait 2500
+key ui.MENU_PREV 2
+screen

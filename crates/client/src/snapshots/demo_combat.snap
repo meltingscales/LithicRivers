@@ -1,0 +1,36 @@
+---
+source: crates/client/src/app/demo.rs
+expression: "String::from_utf8(out).unwrap()"
+---
+=== screen 21 ===
+                                            LithicRivers
+┌──────────────────── Combat ────────────────────┐#######vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+│┌HED──┐┌TOR──┐┌PWR──┐┌LAM─┐┌RAM──┐┌LLG──┐┌RLG──┐│########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+││ 100 ││ 100 ││ 11  ││ GON││ 100 ││ 100 ││ 43  ││########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#
+│└─────┘└─────┘└─────┘└────┘└─────┘└─────┘└─────┘│#########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+│┌──────────────┐┌──────────────┐┌──────────────┐│#########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+││              ││              ││              ││##########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+││  ▄     ,▄▄▄  ││  ▄     ,▄▄▄  ││  ▄     ,▄▄▄  ││##########vvvvvvvvvvvvvvdvvvvvvvvvvvvvvvvvvvvvvvvv
+││  ▀█▄▄▄█▓▓▒▀▄ ││  ▀█▄▄▄█▓▓▒▀▄ ││  ▀█▄▄▄█▓▓▒▀▄ ││###########vvvvvvvvvvvvvdvvvvvvvvvvvvvvvvvvvvvvvvv
+││┌Enemy 88────┐││┌Enemy 10────┐││┌Enemy 9─────┐││###########vvvvvvvvvvvvvvddvvvvvvvvvvvvvvvvvvvvvvv
+││└────────────┘││└────────────┘││└────────────┘││############vvvvvvvvvvvvv@dvvvvvvvvvvvvvtttvvvtvvv
+││              ││              ││              ││#############vvvvvvvvvvvvvvvvvvvvvvvvvvvtvtttttvvv
+│└──────────────┘└──────────────┘└──────────────┘│#############vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvtttvvv
+│1: Melee - 0E - 5t                ┌Action Queue┐│##############vvvvvvvvvvvvvvvvvvvvvvvvvvvvvttvvvvv
+│2: Fireball (AoE) - 40E - 12t     │Current:    ││##############vvvvvvvvvvvvvvvvvvvvvvvvvvvvvtttvvvv
+│3: Tackle - 20E - 10t             │> Fireball →││###############vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+│4: Escape - 20E - 15t             │Enemy 88    ││################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+│           ▼ More below           └────────────┘│#################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+│[←→] Target | [↑↓] Move | [C] Clear | [5] Wait |│#################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+└────────────────────────────────────────────────┘##################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
+│[408] Queued Melee against target 0                                                               │
+│[409] You take 10 damage to Fusion Core from enemy attack (11/21 integrity, damaged)              │
+│[409] Queued Melee against target 0                                                               │
+│[411] Enemy takes 10 damage from melee attack (60/70 HP)                                          │
+│[411] Used Melee                                                                                  │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===

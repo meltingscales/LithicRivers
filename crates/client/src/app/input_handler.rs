@@ -3,7 +3,19 @@ use std::error::Error;
 
 use crate::App;
 
+/// A key from the player. While the demo plays, only the back key (which ends it) counts.
 pub fn handle_input(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
+    if app.demo.is_some() {
+        if app.ui.keybinds.matches("title", "BACK", &key) {
+            app.stop_demo();
+        }
+        return Ok(());
+    }
+    dispatch(app, key)
+}
+
+/// Route a key to whatever has focus. The demo plays its scripted keys through here.
+pub fn dispatch(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
     // Handle splash screen input when active - delegated to input module
     if crate::app::input::splash::handle_splash_input(app, key)? {
         return Ok(());
