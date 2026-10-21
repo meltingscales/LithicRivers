@@ -85,7 +85,7 @@ impl App {
 
 #[cfg(test)]
 mod tests {
-    use crate::headless::{parse_script, Runner, EXIT_OK};
+    use crate::headless::Runner;
     use lithicrivers_core::resources::WorldSettings;
 
     #[test]
@@ -98,10 +98,7 @@ mod tests {
         };
         runner.app.start_world("Round Trip", 777, settings);
         runner.app.splash.state = crate::SplashState::MainUI;
-        let steps = parse_script("key movement.MOVE_SOUTH 2\ntick 3")
-            .unwrap()
-            .steps;
-        assert_eq!(runner.run_steps(&steps).status, EXIT_OK);
+        runner.chain(&["key movement.MOVE_SOUTH 2", "tick 3"]);
         let game = &runner.app.core.game;
         let before = (
             game.get_player_position(),

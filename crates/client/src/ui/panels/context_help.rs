@@ -164,14 +164,7 @@ pub fn render_context_help(f: &mut Frame, app: &App, area: Rect) {
 mod tests {
     use super::context_help_lines;
     use crate::app_state::BuildMode;
-    use crate::headless::{parse_script, Runner};
-
-    fn runner(script: &str) -> Runner {
-        let mut runner = Runner::new(12345, (100, 30));
-        let report = runner.run_steps(&parse_script(script).unwrap().steps);
-        assert_eq!(report.status, 0, "{:?}", report.error);
-        runner
-    }
+    use crate::headless::chain_commands;
 
     fn has(lines: &[String], text: &str) -> bool {
         lines.iter().any(|l| l.contains(text))
@@ -179,7 +172,7 @@ mod tests {
 
     #[test]
     fn walking_lists_move_mine_look_build_and_interact() {
-        let lines = context_help_lines(&runner("skip-splash\ncheat tp 0 0 0").app);
+        let lines = context_help_lines(&chain_commands(&["skip-splash", "cheat tp 0 0 0"]).app);
         assert_eq!(lines[0], "Move:");
         assert_eq!(lines[1], "  7 8 9");
         for text in ["q: mine", "v: look", "`: build mode", "f: interact"] {
@@ -189,7 +182,7 @@ mod tests {
 
     #[test]
     fn place_mode_lists_directions_and_hotbar() {
-        let mut runner = runner("skip-splash");
+        let mut runner = chain_commands(&["skip-splash"]);
         runner.app.panels.build.mode = BuildMode::Place;
         let lines = context_help_lines(&runner.app);
         assert_eq!(lines[0], "Place mode, direction:");
@@ -205,7 +198,7 @@ mod tests {
 
     #[test]
     fn look_mode_lists_cursor_keys_and_exit() {
-        let mut runner = runner("skip-splash");
+        let mut runner = chain_commands(&["skip-splash"]);
         runner.app.panels.look.mode = true;
         let lines = context_help_lines(&runner.app);
         assert_eq!(lines[0], "Look mode");
@@ -215,15 +208,15 @@ mod tests {
     #[test]
     fn nearby_corpse_shows_loot_until_it_is_empty() {
         // Next to the corpse Game::new leaves at (18, 21, 0)
-        let mut runner = runner("skip-splash\ncheat tp 17 21 0");
+        let mut runner = chain_commands(&["skip-splash", "cheat tp 17 21 0"]);
         assert!(has(&context_help_lines(&runner.app), "f: loot corpse"));
 
-        let steps = parse_script(
-            "key ui.MENU_PREV\nkey action.INTERACT\nkey ui.MENU_ACTIVATE 3\nkey ui.CLOSE_HELP_MENU",
-        )
-        .unwrap()
-        .steps;
-        runner.run_steps(&steps);
+        runner.chain(&[
+            "key ui.MENU_PREV",
+            "key action.INTERACT",
+            "key ui.MENU_ACTIVATE 3",
+            "key ui.CLOSE_HELP_MENU",
+        ]);
         let lines = context_help_lines(&runner.app);
         assert!(!has(&lines, "loot corpse"), "{lines:?}");
         assert!(has(&lines, "f: interact"), "{lines:?}");
@@ -231,7 +224,7 @@ mod tests {
 
     #[test]
     fn remapped_interact_key_is_shown() {
-        let mut runner = runner("skip-splash\ncheat tp 17 21 0");
+        let mut runner = chain_commands(&["skip-splash", "cheat tp 17 21 0"]);
         runner.app.core.config_manager.data.keybinds["action"]["INTERACT"] =
             serde_json::json!(["j"]);
         let lines = context_help_lines(&runner.app);
@@ -241,13 +234,12 @@ mod tests {
 
     #[test]
     fn toggle_flips_the_setting_without_writing_the_config_file() {
-        let mut runner = runner("skip-splash\nkey ui.MENU_PREV");
+        let mut runner = chain_commands(&["skip-splash", "key ui.MENU_PREV"]);
         let path = runner.app.core.config_manager.file_path.clone();
         let before = std::fs::read_to_string(&path).ok();
         assert!(runner.app.ui.show_context_help);
 
-        let steps = parse_script("key ui.TOGGLE_CONTEXT_HELP").unwrap().steps;
-        runner.run_steps(&steps);
+        runner.chain(&["key ui.TOGGLE_CONTEXT_HELP"]);
         assert!(!runner.app.ui.show_context_help);
         let setting = runner
             .app
@@ -257,7 +249,7 @@ mod tests {
         assert_eq!(setting, Some(&serde_json::json!(false)));
         assert!(runner.screen_text().contains("h: help"));
 
-        runner.run_steps(&steps);
+        runner.chain(&["key ui.TOGGLE_CONTEXT_HELP"]);
         assert!(runner.app.ui.show_context_help);
         assert!(runner.screen_text().contains("Help (h)"));
         assert_eq!(

@@ -2,7 +2,9 @@
 //! output with a `save-reload` step inserted anywhere, and scenarios with state that saves
 //! used to drop (combat, tutorial progress, hotbar) survive a load into a fresh client.
 
-use crate::headless::{parse_script, Runner, Script, ScriptLine, Step, DEFAULT_SIZE, EXIT_OK};
+use crate::headless::{
+    chain_commands, parse_script, Runner, Script, ScriptLine, Step, DEFAULT_SIZE, EXIT_OK,
+};
 use std::path::{Path, PathBuf};
 
 /// Insert `save-reload` at most this many times per script, spread evenly.
@@ -102,27 +104,11 @@ fn save_reload_anywhere_changes_nothing() {
 
 // --- Loading into a fresh client, as the Menu tab's Load does -----------------------
 
-const SEED: u64 = 12345;
-const SIZE: (u16, u16) = (100, 30);
-
-fn runner_after(text: &str) -> Runner {
-    let mut runner = Runner::new(SEED, SIZE);
-    let report = runner.run_steps(&parse_script(text).unwrap().steps);
-    assert_eq!(report.status, EXIT_OK, "{:?}", report.error);
-    runner
-}
-
 /// A new client (past the splash) with `saved` loaded into it.
 fn fresh_runner_with(saved: &str) -> Runner {
-    let mut runner = runner_after("skip-splash");
+    let mut runner = chain_commands(&["skip-splash"]);
     runner.app.load_from_str(saved).expect("load");
     runner
-}
-
-fn output_of(runner: &mut Runner, text: &str) -> String {
-    let report = runner.run_steps(&parse_script(text).unwrap().steps);
-    assert_eq!(report.status, EXIT_OK, "{:?}", report.error);
-    report.output
 }
 
 /// The player's queued combat moves as (move name, target).
@@ -151,12 +137,17 @@ fn player_queue(runner: &Runner) -> Vec<(String, Option<hecs::Entity>)> {
         .collect()
 }
 
-const MID_COMBAT: &str = "skip-splash\ncheat tp 0 0 0\ncheat spawn_enemy feral_dog\n\
-                          key movement.WAIT\nkey ui.MENU_ACTIVATE";
+const MID_COMBAT: &[&str] = &[
+    "skip-splash",
+    "cheat tp 0 0 0",
+    "cheat spawn_enemy feral_dog",
+    "key movement.WAIT",
+    "key ui.MENU_ACTIVATE",
+];
 
 #[test]
 fn loading_mid_combat_restores_combat_and_plays_on_identically() {
-    let mut original = runner_after(MID_COMBAT);
+    let mut original = chain_commands(MID_COMBAT);
     let queue = player_queue(&original);
     assert!(!queue.is_empty(), "the scenario queues an attack");
     let saved = original.app.save_to_string().expect("save");
@@ -169,14 +160,22 @@ fn loading_mid_combat_restores_combat_and_plays_on_identically() {
     );
     assert_eq!(player_queue(&loaded), queue, "same moves, same targets");
 
-    let next = "tick 3\nstate\nscreen\nkey ui.MENU_ACTIVATE\ntick 5\nstate\nscreen";
-    let (expected, got) = (output_of(&mut original, next), output_of(&mut loaded, next));
+    let next = &[
+        "tick 3",
+        "state",
+        "screen",
+        "key ui.MENU_ACTIVATE",
+        "tick 5",
+        "state",
+        "screen",
+    ];
+    let (expected, got) = (original.chain(next), loaded.chain(next));
     assert!(expected == got, "{}", first_difference(&expected, &got));
 }
 
 #[test]
 fn queued_attack_still_targets_the_same_dog() {
-    let original = runner_after(MID_COMBAT);
+    let original = chain_commands(MID_COMBAT);
     let target = player_queue(&original)[0].1.expect("melee has a target");
     let dog_pos = *original
         .app
@@ -200,7 +199,7 @@ fn queued_attack_still_targets_the_same_dog() {
 
 #[test]
 fn tutorial_progress_survives_a_load() {
-    let mut original = runner_after("skip-splash");
+    let mut original = chain_commands(&["skip-splash"]);
     let tutorial = &mut original.app.ui.tutorial_system;
     tutorial.current_step_index = 3;
     tutorial.completed_tutorials = vec!["a".into(), "b".into(), "c".into()];
@@ -214,7 +213,7 @@ fn tutorial_progress_survives_a_load() {
 #[test]
 fn hotbar_assignments_survive_a_load() {
     use lithicrivers_core::components::ItemKind;
-    let mut original = runner_after("skip-splash");
+    let mut original = chain_commands(&["skip-splash"]);
     original.app.panels.build.hotbar_assignments[0] = Some(ItemKind::Log);
     original.app.panels.build.hotbar_assignments[4] = Some(ItemKind::Stick);
 

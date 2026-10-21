@@ -395,37 +395,35 @@ impl App {
 
 #[cfg(test)]
 mod tests {
-    use crate::headless::{parse_script, state_json, Runner, EXIT_OK};
+    use crate::headless::{chain_commands, state_json};
     use crate::{MenuTab, SplashState};
 
-    const TO_TITLE: &str = "rawkey ENTER\nrawkey ENTER\n";
+    const TO_TITLE: &[&str] = &["rawkey ENTER", "rawkey ENTER"];
     /// From the title screen: Play Game, Create New World.
-    const TO_CREATE: &str = "key title.SELECT\nkey title.SELECT\n";
+    const TO_CREATE: &[&str] = &["key title.SELECT", "key title.SELECT"];
     /// From the create form's name field: set the seed, press Create, skip the boot intro.
-    const CREATE_12345: &str =
-        "key title.DOWN\ntype \"12345\"\nkey title.DOWN 4\nkey title.SELECT\nrawkey ENTER\nrawkey ENTER\n";
-    const MENU_TAB: &str = "key ui.MENU_NEXT 6\n";
-
-    fn run(runner: &mut Runner, text: &str) -> String {
-        let report = runner.run_steps(&parse_script(text).unwrap().steps);
-        assert_eq!(report.status, EXIT_OK, "{:?}", report.error);
-        report.output
+    const CREATE_12345: &[&str] = &[
+        "key title.DOWN",
+        "type \"12345\"",
+        "key title.DOWN 4",
+        "key title.SELECT",
+        "rawkey ENTER",
+        "rawkey ENTER",
+    ];
+    const MENU_TAB: &[&str] = &["key ui.MENU_NEXT 6"];
+    /// From the title screen: create seed 12345, then save and quit back to the title.
+    fn create_and_quit() -> Vec<&'static str> {
+        [TO_CREATE, CREATE_12345, MENU_TAB, &["rawkey Q"]].concat()
     }
 
-    fn after(text: &str) -> Runner {
-        let mut runner = Runner::new(12345, (100, 30));
-        run(&mut runner, text);
-        runner
-    }
-
-    fn last_message(runner: &Runner) -> String {
+    fn last_message(runner: &crate::headless::Runner) -> String {
         let log = &runner.app.core.game.res.events.get_message_log().messages;
         log.last().map(|m| m.text.clone()).unwrap_or_default()
     }
 
     #[test]
     fn title_screen_shows_choices_and_back_returns_to_it() {
-        let mut runner = after(TO_TITLE);
+        let mut runner = chain_commands(TO_TITLE);
         assert_eq!(runner.app.splash.state, SplashState::Title);
         let screen = runner.screen_text();
         for choice in [
@@ -436,15 +434,15 @@ mod tests {
         ] {
             assert!(screen.contains(choice), "{choice}: {screen}");
         }
-        run(&mut runner, "key title.SELECT\nkey title.BACK");
+        runner.chain(&["key title.SELECT", "key title.BACK"]);
         assert_eq!(runner.app.splash.state, SplashState::Title);
-        run(&mut runner, "key title.BACK");
+        runner.chain(&["key title.BACK"]);
         assert_eq!(
             runner.app.splash.state,
             SplashState::Title,
             "back does nothing"
         );
-        run(&mut runner, "key title.UP\nkey title.SELECT");
+        runner.chain(&["key title.UP", "key title.SELECT"]);
         assert!(
             runner.app.core.should_quit,
             "Quit is above Play Game when wrapping"
@@ -453,8 +451,8 @@ mod tests {
 
     #[test]
     fn creating_seed_12345_matches_skip_splash() {
-        let mut created = after(&format!("{TO_TITLE}{TO_CREATE}{CREATE_12345}"));
-        let mut skipped = after("skip-splash");
+        let mut created = chain_commands(&[TO_TITLE, TO_CREATE, CREATE_12345].concat());
+        let mut skipped = chain_commands(&["skip-splash"]);
         assert_eq!(created.app.splash.state, SplashState::MainUI);
         assert_eq!(state_json(&created.app), state_json(&skipped.app));
         assert_eq!(created.screen_text(), skipped.screen_text());
@@ -463,50 +461,54 @@ mod tests {
 
     #[test]
     fn save_quit_and_play_restores_position_and_inventory() {
-        let mut runner = after(&format!(
-            "{TO_TITLE}{TO_CREATE}{CREATE_12345}key movement.MOVE_SOUTH 2\ncheat giveitem log 4\n"
-        ));
-        let game = &runner.app.core.game;
-        let before = (
-            game.get_player_position(),
-            format!(
-                "{:?}",
-                game.get_player_component::<lithicrivers_core::components::Inventory>()
-            ),
+        let mut runner = chain_commands(
+            &[
+                TO_TITLE,
+                TO_CREATE,
+                CREATE_12345,
+                &["key movement.MOVE_SOUTH 2", "cheat giveitem log 4"],
+            ]
+            .concat(),
         );
-        run(&mut runner, &format!("{MENU_TAB}rawkey Q"));
+        let snapshot = |runner: &crate::headless::Runner| {
+            let game = &runner.app.core.game;
+            (
+                game.get_player_position(),
+                format!(
+                    "{:?}",
+                    game.get_player_component::<lithicrivers_core::components::Inventory>()
+                ),
+            )
+        };
+        let before = snapshot(&runner);
+        runner.chain(&[MENU_TAB, &["rawkey Q"]].concat());
         assert_eq!(runner.app.splash.state, SplashState::Title);
-        run(
-            &mut runner,
-            "key title.SELECT\nexpect-text \"seed 12345\"\nkey title.SELECT\nkey title.SELECT",
-        );
+        runner.chain(&[
+            "key title.SELECT",
+            "expect-text \"seed 12345\"",
+            "key title.SELECT",
+            "key title.SELECT",
+        ]);
         assert_eq!(runner.app.splash.state, SplashState::MainUI);
-        let game = &runner.app.core.game;
-        let after = (
-            game.get_player_position(),
-            format!(
-                "{:?}",
-                game.get_player_component::<lithicrivers_core::components::Inventory>()
-            ),
-        );
-        assert_eq!(after, before);
+        assert_eq!(snapshot(&runner), before);
     }
 
     #[test]
     fn quit_tab_saves_and_returns_to_the_title() {
-        let mut runner = after("skip-splash\nkey movement.MOVE_SOUTH\nkey ui.MENU_NEXT 9");
+        let mut runner = chain_commands(&[
+            "skip-splash",
+            "key movement.MOVE_SOUTH",
+            "key ui.MENU_NEXT 9",
+        ]);
         assert_eq!(runner.app.ui.current_tab, MenuTab::Quit);
         let pos = runner.app.core.game.get_player_position();
-        run(&mut runner, "key ui.MENU_ACTIVATE");
+        runner.chain(&["key ui.MENU_ACTIVATE"]);
         assert_eq!(runner.app.splash.state, SplashState::Title);
         assert!(
             !runner.app.core.should_quit,
             "the game keeps running at the title"
         );
-        run(
-            &mut runner,
-            "key title.SELECT\nkey title.SELECT\nkey title.SELECT",
-        );
+        runner.chain(&["key title.SELECT", "key title.SELECT", "key title.SELECT"]);
         assert_eq!(runner.app.splash.state, SplashState::MainUI);
         assert_eq!(runner.app.core.game.get_player_position(), pos);
     }
@@ -514,41 +516,62 @@ mod tests {
     #[test]
     fn cheat_console_follows_the_world_setting() {
         // Allow cheats is off by default
-        let mut off = after(&format!(
-            "{TO_TITLE}{TO_CREATE}{CREATE_12345}key ui.OPEN_COMMAND_MENU"
-        ));
+        let mut off = chain_commands(
+            &[
+                TO_TITLE,
+                TO_CREATE,
+                CREATE_12345,
+                &["key ui.OPEN_COMMAND_MENU"],
+            ]
+            .concat(),
+        );
         assert!(!off.app.panels.cheat_console.is_open());
         assert!(last_message(&off).contains("Cheats are disabled for this world"));
         // Headless cheat steps still work
-        run(&mut off, "cheat tp 0 0 0");
+        off.chain(&["cheat tp 0 0 0"]);
 
-        let on = after(&format!(
-            "{TO_TITLE}{TO_CREATE}key title.DOWN 2\nkey title.SELECT\nkey title.UP 2\n{CREATE_12345}key ui.OPEN_COMMAND_MENU"
-        ));
+        let allow_cheats: &[&str] = &["key title.DOWN 2", "key title.SELECT", "key title.UP 2"];
+        let on = chain_commands(
+            &[
+                TO_TITLE,
+                TO_CREATE,
+                allow_cheats,
+                CREATE_12345,
+                &["key ui.OPEN_COMMAND_MENU"],
+            ]
+            .concat(),
+        );
         assert!(on.app.core.game.res.world_settings.cheats_allowed);
         assert!(on.app.panels.cheat_console.is_open());
     }
 
     #[test]
     fn world_without_tutorial_has_no_tutorial_tab() {
-        let runner = after(&format!(
-            "{TO_TITLE}{TO_CREATE}key title.DOWN 4\nkey title.SELECT\nkey title.UP 4\n{CREATE_12345}"
-        ));
+        let hide_tutorial: &[&str] = &["key title.DOWN 4", "key title.SELECT", "key title.UP 4"];
+        let mut runner =
+            chain_commands(&[TO_TITLE, TO_CREATE, hide_tutorial, CREATE_12345].concat());
         assert!(!runner.app.core.game.res.world_settings.show_tutorial);
         assert!(!runner.app.ui.tutorial_visible);
         assert_eq!(runner.app.ui.current_tab, MenuTab::World);
-        let mut runner = runner;
         assert!(!runner.screen_text().contains("Tutorial │"));
     }
 
     #[test]
     fn duplicate_names_make_two_worlds_and_delete_needs_confirmation() {
-        let then = format!("{CREATE_12345}{MENU_TAB}rawkey Q\n");
         // The second time, the list's cursor starts on the first world
-        let mut runner = after(&format!(
-            "{TO_TITLE}{TO_CREATE}{then}key title.SELECT\nkey title.DOWN\nkey title.SELECT\n{then}"
-        ));
-        run(&mut runner, "key title.SELECT");
+        let second: &[&str] = &["key title.SELECT", "key title.DOWN", "key title.SELECT"];
+        let mut runner = chain_commands(
+            &[
+                TO_TITLE,
+                &create_and_quit(),
+                second,
+                CREATE_12345,
+                MENU_TAB,
+                &["rawkey Q"],
+            ]
+            .concat(),
+        );
+        runner.chain(&["key title.SELECT"]);
         assert_eq!(runner.app.title.worlds.len(), 2);
         let folders: Vec<_> = runner
             .app
@@ -560,16 +583,21 @@ mod tests {
         assert_ne!(folders[0], folders[1]);
 
         // Delete, then cancel: nothing changes
-        run(
-            &mut runner,
-            "key title.SELECT\nkey title.DOWN 2\nkey title.SELECT\nkey title.SELECT",
-        );
+        runner.chain(&[
+            "key title.SELECT",
+            "key title.DOWN 2",
+            "key title.SELECT",
+            "key title.SELECT",
+        ]);
         assert_eq!(runner.app.title.worlds.len(), 2);
         // Delete, then confirm
-        run(
-            &mut runner,
-            "key title.SELECT\nkey title.DOWN 2\nkey title.SELECT\nkey title.DOWN\nkey title.SELECT",
-        );
+        runner.chain(&[
+            "key title.SELECT",
+            "key title.DOWN 2",
+            "key title.SELECT",
+            "key title.DOWN",
+            "key title.SELECT",
+        ]);
         assert_eq!(runner.app.splash.state, SplashState::WorldList);
         assert_eq!(runner.app.title.worlds.len(), 1);
         assert!(!folders[0].exists());
@@ -577,16 +605,19 @@ mod tests {
 
     #[test]
     fn rename_changes_the_listed_name_and_back_cancels() {
-        let mut runner = after(&format!(
-            "{TO_TITLE}{TO_CREATE}{CREATE_12345}{MENU_TAB}rawkey Q\nkey title.SELECT"
-        ));
+        let mut runner =
+            chain_commands(&[TO_TITLE, &create_and_quit(), &["key title.SELECT"]].concat());
         let folder = runner.app.title.worlds[0].folder.clone();
         // Rename, erase "World", type "Place", confirm
-        run(
-            &mut runner,
-            "key title.SELECT\nkey title.DOWN\nkey title.SELECT\nkey title.DELETE_CHAR 5\n\
-             type \"Place\"\nexpect-text \"New name: [New Place_]\"\nkey title.SELECT",
-        );
+        runner.chain(&[
+            "key title.SELECT",
+            "key title.DOWN",
+            "key title.SELECT",
+            "key title.DELETE_CHAR 5",
+            "type \"Place\"",
+            "expect-text \"New name: [New Place_]\"",
+            "key title.SELECT",
+        ]);
         assert_eq!(runner.app.splash.state, SplashState::WorldList);
         let world = &runner.app.title.worlds[0];
         assert_eq!(world.meta.as_ref().unwrap().name, "New Place");
@@ -594,10 +625,13 @@ mod tests {
         assert!(runner.screen_text().contains("New Place  (seed 12345"));
 
         // Back leaves the name alone
-        run(
-            &mut runner,
-            "key title.SELECT\nkey title.DOWN\nkey title.SELECT\ntype \"xyz\"\nkey title.BACK",
-        );
+        runner.chain(&[
+            "key title.SELECT",
+            "key title.DOWN",
+            "key title.SELECT",
+            "type \"xyz\"",
+            "key title.BACK",
+        ]);
         assert_eq!(
             runner.app.title.worlds[0].meta.as_ref().unwrap().name,
             "New Place"
@@ -606,10 +640,11 @@ mod tests {
 
     #[test]
     fn options_change_volume_in_config_and_audio() {
-        let mut runner = after(&format!("{TO_TITLE}key title.DOWN\nkey title.SELECT"));
+        let mut runner =
+            chain_commands(&[TO_TITLE, &["key title.DOWN", "key title.SELECT"]].concat());
         assert_eq!(runner.app.splash.state, SplashState::Options);
         let music = runner.app.volume_setting("MUSIC_VOLUME");
-        run(&mut runner, "key title.LEFT 2");
+        runner.chain(&["key title.LEFT 2"]);
         let lowered = runner.app.volume_setting("MUSIC_VOLUME");
         assert!(
             (lowered - (music - 0.10)).abs() < 1e-9,
@@ -619,9 +654,9 @@ mod tests {
         assert!(runner
             .screen_text()
             .contains(&format!("{}%", (lowered * 100.0).round())));
-        run(&mut runner, "key title.DOWN\nkey title.RIGHT");
+        runner.chain(&["key title.DOWN", "key title.RIGHT"]);
         assert!(runner.app.volume_setting("SFX_VOLUME") > 0.35);
-        run(&mut runner, "key title.BACK");
+        runner.chain(&["key title.BACK"]);
         assert_eq!(runner.app.splash.state, SplashState::Title);
     }
 }
