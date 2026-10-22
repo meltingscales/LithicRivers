@@ -4,7 +4,8 @@ All of these are manual steps for the user, outside the codebase.
 
 ## 1. Account
 
-- [ ] 1.1 Create a new Gmail address for the build account (the old `lithicrivers@gmail.com` credentials are lost); user check: you can sign in to it
+- [ ] 1.0 Wait for Google's answer on the appeal for `lithicrivers@gmail.com` (filed by 2026-10-22); user check: Google has replied
+- [ ] 1.1 If the appeal restores `lithicrivers@gmail.com`, sign in and secure it; if it is denied, create a new Gmail address for the build account instead; user check: you can sign in to the address you'll use
 - [ ] 1.2 Recover the old `lithicrivers` Steam account or create a new one on that address, with email Steam Guard (no mobile authenticator); user check: you can sign in at store.steampowered.com
 - [ ] 1.3 In Steamworks (Users & Permissions), add the account to the partner group and give it build upload and publishing rights for app 3940720; user check: the account sees the app's SteamPipe Builds page
 

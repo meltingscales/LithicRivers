@@ -10,6 +10,8 @@
 - The v0.10.0.0 run (39716520594) failed: first `License expired` (the old cached login had expired), then `Cached credentials not found` after the secret was replaced with `henryfbp1`'s login, because `STEAM_USERNAME` names the build account.
 - GitHub secrets hold at most 48 KB. A full desktop `config.vdf` is about 66 KB. Dropping the `WebStorage`, `depots` and `ShaderCacheManager` cache blocks brings it to about 15 KB.
 
+- `lithicrivers@gmail.com`, the build account's address, is under a Google account appeal (2026-10-22), so the Steam account can't be recovered through it until Google answers.
+
 ## Decisions
 
 ### A separate build account, without a mobile authenticator
