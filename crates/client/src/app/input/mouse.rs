@@ -214,10 +214,17 @@ fn scroll_world(app: &mut App, input: &MouseInput) {
         .log(format!("Selected hotbar slot: {}", slot + 1));
 }
 
-/// Within the keyboard's reach: one of the 8 tiles around the player, on their level.
+/// How far the mouse builds and breaks, in tiles (Chebyshev, so an 11x11 square around
+/// the player): farther than the keyboard's 8 neighbours, so building with the mouse is quick.
+pub const MOUSE_REACH: i64 = 5;
+
+/// Within `MOUSE_REACH` of the player, on their level, and not their own tile.
 fn in_reach(app: &App, tile: Position) -> bool {
     app.core.game.get_player_position().is_some_and(|p| {
-        p.z == tile.z && (p.x - tile.x).abs() <= 1 && (p.y - tile.y).abs() <= 1 && p != tile
+        p.z == tile.z
+            && (p.x - tile.x).abs() <= MOUSE_REACH
+            && (p.y - tile.y).abs() <= MOUSE_REACH
+            && p != tile
     })
 }
 
@@ -378,17 +385,34 @@ mod tests {
     }
 
     #[test]
-    fn too_far_looks_instead() {
+    fn builds_up_to_five_tiles_away_and_looks_beyond() {
         let mut runner = chain_commands(WITH_CHEST);
-        click(&mut runner, 4, 0, "left");
-        assert_eq!(block(&runner, -11, 0), None);
+        let reach = MOUSE_REACH;
+        click(&mut runner, reach, -reach, "left");
+        assert_eq!(
+            block(&runner, -15 + reach, -reach),
+            Some(lithicrivers_core::factory::FactoryKind::Chest),
+            "the far corner of the reach"
+        );
+        click(&mut runner, reach, -reach, "right");
+        assert_eq!(
+            block(&runner, -15 + reach, -reach),
+            None,
+            "and breaks there too"
+        );
+        click(&mut runner, reach + 1, 0, "left");
+        assert_eq!(block(&runner, -15 + reach + 1, 0), None);
         assert!(last_message(&runner).ends_with("Too far to build there"));
         assert!(runner.app.panels.look.mode);
         assert_eq!(
             runner.app.panels.look.cursor,
-            Position { x: -11, y: 0, z: 0 }
+            Position {
+                x: -15 + reach + 1,
+                y: 0,
+                z: 0
+            }
         );
-        click(&mut runner, 0, 5, "right");
+        click(&mut runner, 0, reach + 1, "right");
         assert!(last_message(&runner).ends_with("Too far to mine there"));
     }
 

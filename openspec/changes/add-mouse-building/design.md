@@ -40,7 +40,7 @@
 - On a directional block it also sets `placement_facing` to that block's facing. On terrain it does nothing.
 
 ### Reach and feedback
-- Reach is a Chebyshev distance of 1 from the player, matching the 8-direction keys.
+- Reach is a Chebyshev distance of 5 from the player (`MOUSE_REACH`), wider than the 8-direction keys so building with the mouse is quick (raised from 1 after playtesting).
 - Out of reach, a left click looks at the tile and logs "Too far to build there"; a right click logs "Too far to mine there".
 
 ### Hover
@@ -62,7 +62,7 @@
 - **Order of a left click on the world:** interact with what's on the tile first (open a chest, talk), then place the selected hotbar block, then look. So clicking a chest opens it even with a chest selected, as in Factorio. This replaces the planned "place when the slot holds a placeable item, otherwise interact".
 - **Bindings:** a `mouse` category in `default_config.rs` with button names (`LEFT_CLICK`, `RIGHT_CLICK`, `MIDDLE_CLICK`, `SCROLL_UP`, `SCROLL_DOWN`, `SHIFT+SCROLL_UP`, `SHIFT+SCROLL_DOWN`). The key map skips that category, since it holds button names, not keys.
 - **Mapping:** `ui::panels::world::cell_to_tile` is shared by rendering and clicks. The world view stores its `Rect` each frame (`ui.world_view_rect`), and `screen_to_tile` uses it.
-- **Reach and look:** building and breaking need one of the 8 tiles around the player. Out of reach, a click puts look mode's cursor on the tile and logs "Too far to build there" or "Too far to mine there".
+- **Reach and look:** building and breaking reach 5 tiles from the player (`MOUSE_REACH`, raised from the keyboard's 8 neighbours after playtesting). Out of reach, a click puts look mode's cursor on the tile and logs "Too far to build there" or "Too far to mine there".
 - **Pick block** works at any distance. It selects the hotbar slot holding the block's item, or assigns the item to the current slot if the player carries it, and copies a directional block's facing.
 - **Scrolling:**
   - On the World tab with no window open, scrolling cycles hotbar slots, wrapping around.

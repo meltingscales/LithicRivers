@@ -49,7 +49,7 @@ pub fn render_help_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     )));
     lines.push(Line::from(""));
     lines.push(Line::from(
-        "Mouse: left click opens what's there, else places the hotbar block; right click breaks; middle click picks a block and its facing; scroll cycles hotbar slots and Shift + scroll rotates. Building reaches the 8 tiles around you. Click a tab to open it.",
+        "Mouse: left click opens what's there, else places the hotbar block; right click breaks; middle click picks a block and its facing; scroll cycles hotbar slots and Shift + scroll rotates. The mouse builds and breaks up to 5 tiles away. Click a tab to open it.",
     ));
     lines.push(Line::from(""));
     lines.push(Line::from(

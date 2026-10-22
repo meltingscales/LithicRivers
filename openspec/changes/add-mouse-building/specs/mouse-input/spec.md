@@ -7,14 +7,14 @@ Point-and-click building and navigation with the mouse, as an optional alternati
 ## ADDED Requirements
 
 ### Requirement: Clicking world tiles
-On the World tab, a left click on a tile within reach SHALL place the selected hotbar block there (when it holds a placeable item), otherwise interact with the block there, otherwise look at the tile; a right click within reach SHALL break or mine it. Clicks beyond reach SHALL only look at the tile and say it is too far.
+On the World tab, a left click on a tile within reach (up to 5 tiles from the player) SHALL place the selected hotbar block there (when it holds a placeable item), otherwise interact with the block there, otherwise look at the tile; a right click within reach SHALL break or mine it. Clicks beyond reach SHALL only look at the tile and say it is too far.
 
 #### Scenario: Place with the mouse
 - **WHEN** a chest is selected in the hotbar and the player left-clicks the grass tile east of them
 - **THEN** a chest is placed there, as with the place-east key
 
 #### Scenario: Too far
-- **WHEN** the player right-clicks a tree five tiles away
+- **WHEN** the player right-clicks a tree six tiles away
 - **THEN** nothing is mined, the look panel shows the tree, and a message says it is too far
 
 ### Requirement: Scroll and rotate

@@ -22,7 +22,7 @@ input_file: scripts/snapshots/tab-09-help.txt
 │walk on belts, and they carry you along. , lets 10 game seconds pass.                             │
 │                                                                                                  │
 │Mouse: left click opens what's there, else places the hotbar block; right click breaks; middle    │
-│click picks a block and its facing; scroll cycles hotbar slots and Shift + scroll rotates.        │
+│click picks a block and its facing; scroll cycles hotbar slots and Shift + scroll rotates. The    │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
 │[0] Loading structure 'sapiencorp-bunker.lrstructure' at (10, 10, 1) for chunk (0, 0, 1)          │

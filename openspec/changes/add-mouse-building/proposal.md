@@ -14,7 +14,7 @@ LithicRivers is keyboard-first, and that stays. But building a factory tile by t
 - **Right click** breaks or mines the tile (as Break mode does).
 - **Scroll wheel** cycles the selected hotbar slot; **Shift + scroll** rotates the next placement.
 - **Middle click** picks the block under the mouse, as in Minecraft: the hotbar slot holding that block's item is selected, or the item is put in the current slot if the player has it. Clicking a belt facing west also sets the placement facing to west, so copying a line is quick.
-- **Reach:** clicks build and break only within the same reach as the keyboard (the 8 tiles around the player). Farther clicks show "Too far" and fill the look panel instead. The nanobot change can extend reach later.
+- **Reach:** clicks build and break up to 5 tiles from the player, a wider reach than the keyboard's 8 neighbours so mouse building is quick. Farther clicks show "Too far" and fill the look panel instead. The nanobot change can extend reach later.
 - **Elsewhere:** clicking a tab in the menu bar switches to it, and the scroll wheel scrolls lists such as the Item Dictionary, the cheat console suggestions and the crafting list.
 - **Bindings:** mouse buttons are in the config like keys (a `mouse` category: `PLACE`, `BREAK`, `PICK_BLOCK`, `ROTATE`, `NEXT_SLOT`, `PREV_SLOT`), so they can be remapped or turned off.
 - **Headless:** new script steps, `click <col> <row> [left|right|middle]` and `scroll <up|down> [col row]`, so mouse play is testable and scriptable.
