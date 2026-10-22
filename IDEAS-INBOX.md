@@ -16,26 +16,23 @@ Ask for "Add an openspec feat that adds XYZ" or "Bugfix: Something not rendering
 
 .
 
+- feat: enemies should respawn in some way, not sure how yet. perhaps environmental factors could spawn them (or literally rip off minecraft and make spawner blocks) - i.e. underground nuclear waste rivers=nuclear slimes sometimes materialize, or redwood forest biomes will spawn dogs, also need to put limits so we don't get floods of 100 enemeies or something.
+  - enemy farming should be encouraged somehow
+  - new block: fence: can see through but enemies can't pass through it
+
+- feat: enemy that shoots projectiles at you, perhaps a rusty military android with limited ammo
+
+- feat: guns, shooting mechanic, accuracy/dropoff, gunpowder, paper, ammo, shell casings, brass ingots, brass nuggets, etc etc
+
+- feat: dying should create a death marker/waypoint that you can optionally delete with an ARE YOU SURE?
+
+- feat: /keepinventory [on/off] cheat
+- feat: /keepbody [on/off] cheat
+  - dying and respawning gives you same limbs but fully repaired
+
+- thought: a more AI-friendly way of generating multiblock structures since VoxelBuilder (see justfile) is a gui for humans. ideas, ai? it'd be nice to noodle with prompts instead of manually editing voxelbuilder 3d models then mapping colors to blocks/spawnpoints...
+
+- feat: backup bodies can be crafted and will be transferred to upon death (with limb status, power level, etc shown on the "Resurrect" screen). if one or more is active (you get to choose where you respawn if there are >1), with limb/torso/energy core/legs/arms/etc being craftable too, and assignable to a "Robot Resurrection Vat". if you die without one, you respawn...well, I'm not sure yet. Maybe a crappy junker body at the SapienCorp HQ with a though bubble of "I should really make a vat..."?
+  - feat2: cool respawn animation that plays after choosing a resurrection method (junker or vat) that takes your viewport through the overworld like you're flying, towards the respawn point, like in GTA where the camera zooms in, then out, then flies to the respawn point, then zooms in, then you respawn (with zoom level 3)
+
 <!-- ACTIONED ON ALREADY -->
-
-- ANSWERED (switch saves from JSON to TOON?): **no, compress the JSON instead.** Measured on a new world (seed 12345, 59 chunks):
-  - | Format | Size |
-    |---|---|
-    | Pretty JSON (what `save_to_file` writes today) | 5.87 MB |
-    | Compact JSON | 1.73 MB |
-    | MessagePack (`save_game_msgpack`, unused) | 1.24 MB |
-    | Compact JSON with TOON-style tile lists | about 1.25 MB (the tile lists alone shrink 28%) |
-    | Compact JSON, gzip -9 | 19 KB (300x smaller than today's file) |
-  - 99% of a save is chunk tiles stored as strings (`"Rock","Rock",...`); 241,664 tiles are only 10,274 runs of the same tile, so any compression wins big
-  - TOON con: made to save LLM tokens, not disk; young, with no mature serde support in Rust; only about a quarter smaller here; harder to edit than JSON. Pro: easier to read than JSON for tables. That isn't worth a second format
-  - Suggested change if you want it, `compress-saves`: write compact JSON through gzip (the `flate2` crate), load both gzipped and plain saves so old saves keep working, and optionally store tiles as runs or palette indexes later
-
-- DONE: went through STEAM-MVP.md, TODO.md, MECHANICS.md, QUESTS.md and docs/dungeons for ideas with no spec or change yet; they're listed, ranked for the Steam MVP and each with a suggested change name, in `docs/SPEC-GAPS.md`. Top picks: player death (it only logs "You have died!" today), a day/night cycle, the arm-replacement quest, and body damage with real effects. STEAM-MVP.md links the list, and volume sliders are ticked as done
-
-- FIXED: turning Look mode off snaps the view back to the player
-- DONE: the Look panel shows what is on the layers above and below the cursor (a vertical conveyor's own direction shows as "Lifts to" / "Lowers to" instead)
-- FIXED: the Look panel puts its text first and wraps it, names things plainly ("Vertical conveyor (up)", "Log x2 (lying here)"), shows one 12x8 art (the entity's, else the tile's) last, and in Look mode the help box below it shrinks to fit, so nothing important is cut off
-- DONE: in Look mode, hovering the mouse over the world picks what to look at; only the keys move the view
-
-- PROPOSED as `add-underground-belts`: underground conveyor pairs on one layer, up to 10 tiles apart, carrying items under whatever lies between so belt lines can cross. Pipes wait until the game has fluids
-- PROPOSED as `add-blueprint-sharing`: `LITHICRIVERS-BLUEPRINT-<payload>` strings (base64 of compressed JSON with a format version) to export and import blueprints and books; blueprint books as a tree with move, rename and delete; an edit pane that removes every block of one kind from a blueprint
