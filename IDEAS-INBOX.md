@@ -18,5 +18,10 @@ Ask for "Add an openspec feat that adds XYZ" or "Bugfix: Something not rendering
 
 <!-- ACTIONED ON ALREADY -->
 
+- FIXED: turning Look mode off snaps the view back to the player
+- DONE: the Look panel shows what is on the layers above and below the cursor (a vertical conveyor's own direction shows as "Lifts to" / "Lowers to" instead)
+- FIXED: the Look panel puts its text first and wraps it, names things plainly ("Vertical conveyor (up)", "Log x2 (lying here)"), shows one 12x8 art (the entity's, else the tile's) last, and in Look mode the help box below it shrinks to fit, so nothing important is cut off
+- DONE: in Look mode, hovering the mouse over the world picks what to look at; only the keys move the view
+
 - PROPOSED as `add-underground-belts`: underground conveyor pairs on one layer, up to 10 tiles apart, carrying items under whatever lies between so belt lines can cross. Pipes wait until the game has fluids
 - PROPOSED as `add-blueprint-sharing`: `LITHICRIVERS-BLUEPRINT-<payload>` strings (base64 of compressed JSON with a format version) to export and import blueprints and books; blueprint books as a tree with move, rename and delete; an edit pane that removes every block of one kind from a blueprint

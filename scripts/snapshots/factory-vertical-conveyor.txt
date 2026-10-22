@@ -10,10 +10,12 @@ key movement.MOVE_NORTH
 expect-text "Lifts to z = 1:"
 screen look-up
 key action.LOOK_TOGGLE
-# The layer above: a belt carries the logs east into the down conveyor
-cheat tp 35 -6 1
+# Up the example's stairs to the layer above, where a belt carries the logs east into
+# the down conveyor
+key movement.MOVE_WEST
+key movement.MOVE_UP
 key action.LOOK_TOGGLE
-key movement.MOVE_NORTH
+key movement.MOVE_NORTHEAST
 key movement.MOVE_EAST
 expect-text "Lowers to z = 0:"
 screen look-down

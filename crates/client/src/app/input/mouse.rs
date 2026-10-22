@@ -90,6 +90,14 @@ pub fn handle_mouse(app: &mut App, input: MouseInput) {
 pub fn dispatch_mouse(app: &mut App, input: MouseInput) {
     app.ui.mouse_cell = Some((input.col, input.row));
     if input.kind == MouseKind::Move {
+        // In Look mode, hovering picks what to look at; only the keys move the view, so
+        // the view never drifts under a still mouse
+        if app.panels.look.mode && app.ui.current_tab == MenuTab::World && !modal_open(app) {
+            if let Some(tile) = crate::ui::panels::world::screen_to_tile(app, input.col, input.row)
+            {
+                app.panels.look.cursor = tile;
+            }
+        }
         // In Blueprint mode the cursor follows the mouse over the world
         if blueprint_on_world(app) {
             if let Some(tile) = crate::ui::panels::world::screen_to_tile(app, input.col, input.row)
@@ -1207,5 +1215,26 @@ mod tests {
         let tab = (menu.x + 3, menu.y + 1);
         runner.chain(&[&format!("move {} {}", tab.0, tab.1)]);
         assert!(!underlined(&mut runner, tab));
+    }
+
+    #[test]
+    fn hovering_in_look_mode_moves_the_cursor_but_not_the_view() {
+        let mut runner =
+            chain_commands(&["skip-splash", "key ui.MENU_PREV", "key action.LOOK_TOGGLE"]);
+        let _ = runner.screen_text();
+        let view = (runner.app.ui.view_x, runner.app.ui.view_y);
+        let start = runner.app.panels.look.cursor;
+        let (c, r) = cell(&mut runner, 3, -2);
+        runner.chain(&[&format!("move {c} {r}")]);
+        let cursor = runner.app.panels.look.cursor;
+        assert_eq!((cursor.x - start.x, cursor.y - start.y), (3, -2));
+        assert_eq!((runner.app.ui.view_x, runner.app.ui.view_y), view);
+        // Turning Look mode off brings the view back to the player
+        runner.chain(&["key movement.MOVE_EAST", "key action.LOOK_TOGGLE"]);
+        let player = runner.app.core.game.get_player_position().unwrap();
+        assert_eq!(
+            (runner.app.ui.view_x, runner.app.ui.view_y),
+            (player.x, player.y)
+        );
     }
 }

@@ -10,29 +10,29 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│ 
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Look at───────────────┐
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Pos: (35, -7, 0)      │
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Chunk: (0, 0, 0)      │
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│                      │
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Entity: factory::verti│
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Vertical conveyor (up)│
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Lifts to z = 1:       │
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  wooden conveyor     │
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Entity art:           │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Below: Rock           │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│                      │
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│    ▲▲▲▲              │
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  ╔══════╗            │
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  ║ ▓▲▓▲ ║            │
-vvvC→>>CvvvvvCvvvvvvv|vvvvvGvvvvvvvvv|*>Cvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  ║ ▲▓▲▓ ║            │
-vvvvvvvvvvvvv^vvvvv|>f>CvvvG+vvvvvvvvv@vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
-vvvvvvvvvvv|>╬>Cvvvvvvvvvvvvvvpvvtvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Help (h)──────────────┐
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvv↑vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Look mode             │
-vvvvvvvvvvvvvCvvvvvvvvvvvvvvvvCHvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Move cursor:          │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  ║ ▲▓▲▓ ║            │
+vvvC→>>CvvvvvCvvvvvvv|vvvvvGvvvvvvvvv|*>Cvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  ║ ▓▲▓▲ ║            │
+vvvvvvvvvvvvv^vvvvv|>f>CvvvG+vvvvvvvv/@vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  ║ ▲▓▲▓ ║            │
+vvvvvvvvvvv|>╬>Cvvvvvvvvvvvvvvpvvtvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  ╚══════╝            │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvv↑vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│                      │
+vvvvvvvvvvvvvCvvvvvvvvvvvvvvvvCHvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│                      │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│                      │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvtvvttvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Help (h)──────────────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Look mode             │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Move cursor:          │
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  7 8 9               │
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvtvvttvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  4 5 6               │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  4 5 6               │
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  1 2 3               │
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│v: stop looking       │
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│                      │
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│                      │
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│                      │
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│                      │
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│                      │
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
 ┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
 │[1] Look mode: ON                                                                                 │
@@ -52,17 +52,22 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└�
                                                                             └──────────────────────┘
                                                                             ┌Look at───────────────┐
                                                                             │Pos: (36, -7, 1)      │
-                                                                            │Chunk: (0, 0, 1)      │
-                                                                            │                      │
-                                                                            │Entity: factory::verti│
+                                                                            │Vertical conveyor     │
+                                                                            │(down)                │
                                                                             │Lowers to z = 0:      │
                                                                             │  wooden conveyor     │
-                                                                            │Entity art:           │
+                                                                            │Above: Air            │
+                                                                            │                      │
                                                                             │                      │
                                                                             │  ╔══════╗            │
                                                                             │  ║ ▼▓▼▓ ║            │
                                      >*                                     │  ║ ▓▼▓▼ ║            │
-                                     @                                      └──────────────────────┘
+                                    @                                       │  ║ ▼▓▼▓ ║            │
+                                                                            │  ║ ▓▼▓▼ ║            │
+                                                                            │  ╚══════╝            │
+                                                                            │    ▼▼▼▼              │
+                                                                            │                      │
+                                                                            └──────────────────────┘
                                                                             ┌Help (h)──────────────┐
                                                                             │Look mode             │
                                                                             │Move cursor:          │
@@ -70,16 +75,11 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└�
                                                                             │  4 5 6               │
                                                                             │  1 2 3               │
                                                                             │v: stop looking       │
-                                                                            │                      │
-                                                                            │                      │
-                                                                            │                      │
-                                                                            │                      │
-                                                                            │                      │
                                                                             └──────────────────────┘
 ┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
 │[1] Look mode: ON                                                                                 │
 │[1] Look mode: OFF                                                                                │
-│[1] Look mode: ON                                                                                 │
+│[801] Look mode: ON                                                                               │
 │                                                                                                  │
 │                                                                                                  │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
