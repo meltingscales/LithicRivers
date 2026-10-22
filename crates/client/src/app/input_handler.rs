@@ -79,6 +79,10 @@ pub fn dispatch(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
         return Ok(());
     }
 
+    if crate::app::input::blueprint::handle_blueprint_window_input(app, key) {
+        return Ok(());
+    }
+
     // The power pole info box closes on the close key and swallows other keys
     if app.panels.power_info.is_some() {
         if app.ui.keybinds.matches("ui", "CLOSE_HELP_MENU", &key) {

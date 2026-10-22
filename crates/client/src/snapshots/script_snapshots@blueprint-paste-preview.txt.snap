@@ -1,0 +1,101 @@
+---
+source: crates/client/src/snapshot_tests.rs
+expression: "String::from_utf8(out).unwrap()"
+input_file: scripts/snapshots/blueprint-paste-preview.txt
+---
+=== screen preview ===
+                                            LithicRivers
+                                                                            ┌MODES─────────────────┐
+                                                                            │  ------ - # -- - FOG │
+                                                                            └──────────────────────┘
+                                                                            ┌Inventory─────────────┐
+                                                                            │Nail x10              │
+                                                                            │Acorn x1              │
+                                                                            │Log x3                │
+                                    vvvvv                                   └──────────────────────┘
+                                    v>>>v                                   ┌Help (h)──────────────┐
+                                    vv>>>                                   │Paste, cursor:        │
+                                    vvvvC                                   │  q w e               │
+                                    vvvvv                                   │  a s d               │
+                                                                            │  z x c               │
+                                                                            │1 blocked here        │
+                                                                            │s: paste              │
+                                                                            │r: turn               │
+                                                                            │n: copy new           │
+                                                                            │B: blueprints         │
+                                                                            └──────────────────────┘
+┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
+│[1] Build mode: Rotate                                                                            │
+│[1] Build mode: Movement                                                                          │
+│[1] Build mode: Blueprint. Move the cursor (w/a/x/d) and press s on two corners to copy an area   │
+│[1] First corner at (-1, -1); press s on the opposite corner                                      │
+│[1] Saved Blueprint 1 (3x2, 4 blocks)                                                             │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===
+=== screen pasted ===
+                                            LithicRivers
+                                                                            ┌MODES─────────────────┐
+                                                                            │  ------ - # -- - FOG │
+                                                                            └──────────────────────┘
+                                                                            ┌Inventory─────────────┐
+                                                                            │Nail x10              │
+                                                                            │Acorn x1              │
+                                                                            │Log x3                │
+                                    vvvvv                                   └──────────────────────┘
+                                    v>>>v                                   ┌Help (h)──────────────┐
+                                    vv@Cv                                   │Paste, cursor:        │
+                                    vvvvv                                   │  q w e               │
+                                    v>>>v                                   │  a s d               │
+                                       C                                    │  z x c               │
+                                                                            │Replaces 4 built      │
+                                                                            │s: paste              │
+                                                                            │r: turn               │
+                                                                            │n: copy new           │
+                                                                            │B: blueprints         │
+                                                                            └──────────────────────┘
+┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
+│[1] Build mode: Blueprint. Move the cursor (w/a/x/d) and press s on two corners to copy an area   │
+│[1] First corner at (-1, -1); press s on the opposite corner                                      │
+│[1] Saved Blueprint 1 (3x2, 4 blocks)                                                             │
+│[1] Can't paste here: 1 tile blocked                                                              │
+│[1] Pasted Blueprint 1 (4 blocks)                                                                 │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===
+=== screen library ===
+                                            LithicRivers
+                                                                            ┌MODES─────────────────┐
+                                                                            │  ------ - # -- - FOG │
+                                                                            └──────────────────────┘
+                                                                            ┌Inventory─────────────┐
+                                                                            │Nail x10              │
+               ┌──────────────────────────── Blueprints ────────────────────────────┐              │
+               │Blueprint 1  3x2: 1 Chest, 3 Wooden Conveyor                        │              │
+               │                                                                    │──────────────┘
+               │                                                                    │──────────────┐
+               │                                                                    │ursor:        │
+               │                                                                    │              │
+               │                                                                    │              │
+               │                                                                    │              │
+               │                                                                    │ 4 built      │
+               │                                                                    │              │
+               │                                                                    │              │
+               │                                                                    │new           │
+               │                                                                    │rints         │
+               │                                                                    │──────────────┘
+┌Messages──────│                                                                    │──────────────┐
+│[1] Build mode│                                                                    │opy an area   │
+│[1] First corn│                                                                    │              │
+│[1] Saved Blue└───────── ENTER: use  r: rename  x: delete  ESCAPE: close ──────────┘              │
+│[1] Can't paste here: 1 tile blocked                                                              │
+│[1] Pasted Blueprint 1 (4 blocks)                                                                 │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===

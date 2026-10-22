@@ -20,6 +20,7 @@ pub const SCENARIOS: &[&str] = &[
     "combat",
     "dog-arena",
     "building",
+    "blueprints",
     "factory",
     "tree-farm",
 ];

@@ -1,0 +1,36 @@
+---
+source: crates/client/src/app/demo.rs
+expression: "String::from_utf8(out).unwrap()"
+---
+=== screen 60 ===
+                                            LithicRivers
+####################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌MODES─────────────────┐
+#####################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  ------ - # -- - FOG │
+#####################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#vvvvvvvvvvvvv└──────────────────────┘
+######################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Inventory─────────────┐
+######################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Nail x10              │
+#######################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Acorn x1              │
+#######################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Log x3                │
+########################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
+########################vvvvvvvvvvvvv>>>vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Help (h)──────────────┐
+#########################vvvvvvvvvvvvv@Cvvvvvvvvvvvvvtttvvvtvvvvvvvvvvvvvvvv│Paste, cursor:        │
+##########################vvvvvvvvvvvvvvvvvvvvvvvvvvvtvtttttvvvvvvvvvvvvvvvv│  q w e               │
+##########################vvvvvvvvvvvvvvvCvvvvvvvvvvvvvvvtttvvvvvvvvvvvvvvvv│  a s d               │
+###########################vvvvvvvvvv>>>vvvvvvvvvvvvvvvvttvvvvvvvvvvvvvvvvvv│  z x c               │
+###########################vvvvvvvvvvvvCvvvvvvvvvvvvvvvvtttvvvvvvvvvvvvvvvvv│Replaces 4 built      │
+############################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│s: paste              │
+#############################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│r: turn               │
+##############################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│n: copy new           │
+##############################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│B: blueprints         │
+###############################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
+┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
+│[1] First corner at (-16, -1); press s on the opposite corner                                     │
+│[1] Saved Blueprint 1 (3x2, 4 blocks)                                                             │
+│[1] Pasted Blueprint 1 (4 blocks)                                                                 │
+│[1] Turned the blueprint clockwise                                                                │
+│[1] Pasted Blueprint 1 (4 blocks)                                                                 │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===

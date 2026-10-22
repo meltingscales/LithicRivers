@@ -30,7 +30,10 @@ pub fn default_config() -> ConfigRoot {
         },
         "build": {
             "TOGGLE_BREAK_PLACE_MODE": ["`"], // Cycle movement/break/place/rotate mode
-            "ROTATE_PLACEMENT": ["r"], // Place mode: turn the next factory block clockwise
+            "ROTATE_PLACEMENT": ["r"], // Place mode: turn the next factory block clockwise; Blueprint mode: turn the paste
+            "BLUEPRINT_MODE": ["b"], // Enter or leave Blueprint mode
+            "NEW_BLUEPRINT": ["n"], // Blueprint mode: mark two corners to copy an area
+            "BLUEPRINT_LIBRARY": ["B"], // Blueprint mode: open the Blueprints window
             "BREAK_NORTHWEST": ["q"],
             "BREAK_NORTH": ["w"],
             "BREAK_NORTHEAST": ["e"],
@@ -99,6 +102,12 @@ pub fn default_config() -> ConfigRoot {
             "ROTATE": ["SHIFT+SCROLL_UP", "SHIFT+SCROLL_DOWN"], // Turn the next placement
             "NEXT_SLOT": ["SCROLL_DOWN"],    // Next hotbar slot
             "PREV_SLOT": ["SCROLL_UP"]       // Previous hotbar slot
+        },
+        "blueprints": {
+            "RENAME": ["r"],              // Blueprints window: rename the selected blueprint
+            "DELETE": ["x"],              // Blueprints window: delete the selected blueprint
+            "DELETE_CHAR": ["BACKSPACE"], // While renaming: erase a character
+            "END_RENAME": ["ENTER"]       // While renaming: keep the new name
         },
         "dictionary": {
             "SEARCH": ["s"],              // Item Dictionary: start typing a search

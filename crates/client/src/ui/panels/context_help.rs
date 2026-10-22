@@ -126,6 +126,33 @@ pub fn context_help_lines(app: &App) -> Vec<String> {
             lines.extend(grid(app, "build", actions.each_ref().map(String::as_str)));
             lines.push(format!("{mode_key}: next mode"));
         }
+        BuildMode::Blueprint => {
+            let center = key(app, "build", "PLACE_CENTER");
+            if app.panels.build.blueprint.copying {
+                lines.push("Copy, cursor:".to_string());
+                let actions = directions("PLACE");
+                lines.extend(grid(app, "build", actions.each_ref().map(String::as_str)));
+                lines.push(format!("{center}: mark corner"));
+            } else {
+                lines.push("Paste, cursor:".to_string());
+                let actions = directions("PLACE");
+                lines.extend(grid(app, "build", actions.each_ref().map(String::as_str)));
+                let (replace, blocked) = app.panels.build.blueprint.preview;
+                if blocked > 0 {
+                    lines.push(format!("{blocked} blocked here"));
+                } else if replace > 0 {
+                    lines.push(format!("Replaces {replace} built"));
+                }
+                lines.push(format!("{center}: paste"));
+                lines.push(format!("{}: turn", key(app, "build", "ROTATE_PLACEMENT")));
+                lines.push(format!("{}: copy new", key(app, "build", "NEW_BLUEPRINT")));
+            }
+            lines.push(format!(
+                "{}: blueprints",
+                key(app, "build", "BLUEPRINT_LIBRARY")
+            ));
+            lines.push(format!("{}: leave", key(app, "build", "BLUEPRINT_MODE")));
+        }
         BuildMode::Movement => {
             lines.push("Move:".to_string());
             lines.extend(grid(app, "movement", MOVE_KEYS));

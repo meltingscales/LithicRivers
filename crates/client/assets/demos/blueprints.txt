@@ -1,0 +1,58 @@
+# Blueprints
+# The robot copies a belt line feeding a chest, then pastes the build twice: once as it is
+# and once turned to run south.
+skip-splash
+key ui.MENU_PREV
+cheat tp -15 0 0
+cheat giveitem wooden_conveyor 9
+cheat giveitem chest 3
+# Hotbar: F1 wooden conveyor, F2 chest (picker: Clear slot, Acorn, Wooden Conveyor, Chest)
+key build.TOGGLE_BREAK_PLACE_MODE 2
+key hotbar.HOTBAR_SLOT_1 2
+key movement.MOVE_SOUTH 2
+key ui.MENU_ACTIVATE
+key hotbar.HOTBAR_SLOT_2 2
+key movement.MOVE_SOUTH 3
+key ui.MENU_ACTIVATE
+# Three east belts north of the robot, a chest to the east
+key hotbar.HOTBAR_SLOT_1
+key build.ROTATE_PLACEMENT
+key build.PLACE_NORTHWEST
+key build.PLACE_NORTH
+key build.PLACE_NORTHEAST
+key hotbar.HOTBAR_SLOT_2
+key build.PLACE_EAST
+key build.TOGGLE_BREAK_PLACE_MODE 2
+beat 350
+# Copy: the cursor starts one tile east; mark the top-left and bottom-right corners
+key build.BLUEPRINT_MODE
+key build.PLACE_WEST 2
+key build.PLACE_NORTH
+key build.PLACE_CENTER
+key build.PLACE_EAST
+key build.PLACE_EAST
+key build.PLACE_SOUTH
+key build.PLACE_CENTER
+# Slide the preview down onto open ground and paste a copy
+key build.PLACE_WEST
+key build.PLACE_WEST
+key build.PLACE_SOUTH
+key build.PLACE_SOUTH
+key build.PLACE_SOUTH
+wait 1000
+key build.PLACE_CENTER
+# Turn it to run south and paste it again, off to the east
+key build.PLACE_EAST
+key build.PLACE_EAST
+key build.PLACE_EAST
+key build.PLACE_EAST
+key build.PLACE_NORTH
+key build.PLACE_NORTH
+key build.PLACE_NORTH
+key build.ROTATE_PLACEMENT
+wait 1000
+key build.PLACE_CENTER
+key build.BLUEPRINT_LIBRARY
+wait 1500
+key ui.CLOSE_HELP_MENU
+screen

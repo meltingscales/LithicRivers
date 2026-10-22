@@ -174,6 +174,7 @@ impl App {
             furnace_window: None,
             item_dictionary: Default::default(),
             filter_picker: None,
+            blueprint_window: None,
             inventory: InventoryPanelState { selected: 0 },
             crafting: CraftingPanelState {
                 recipe_handler: RecipeHandler::new(),

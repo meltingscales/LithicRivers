@@ -68,6 +68,7 @@ fn modal_open(app: &App) -> bool {
     use crate::app_state::*;
     app.panels.furnace_window.is_some()
         || app.panels.filter_picker.is_some()
+        || app.panels.blueprint_window.is_some()
         || app.panels.power_info.is_some()
         || app.panels.cheat_console.is_open()
         || !matches!(app.panels.corpse_looting, CorpseLootingState::None)
@@ -88,6 +89,13 @@ pub fn handle_mouse(app: &mut App, input: MouseInput) {
 pub fn dispatch_mouse(app: &mut App, input: MouseInput) {
     app.ui.mouse_cell = Some((input.col, input.row));
     if input.kind == MouseKind::Move {
+        // In Blueprint mode the cursor follows the mouse over the world
+        if blueprint_on_world(app) {
+            if let Some(tile) = crate::ui::panels::world::screen_to_tile(app, input.col, input.row)
+            {
+                crate::app::input::blueprint::set_cursor(app, tile);
+            }
+        }
         return;
     }
 
@@ -149,7 +157,10 @@ pub fn dispatch_mouse(app: &mut App, input: MouseInput) {
     let Some(tile) = crate::ui::panels::world::screen_to_tile(app, input.col, input.row) else {
         return;
     };
-    if bound(app, "PICK_BLOCK", &input) {
+    if blueprint_on_world(app) && bound(app, "PLACE", &input) {
+        crate::app::input::blueprint::set_cursor(app, tile);
+        crate::app::input::blueprint::act_at(app, tile);
+    } else if bound(app, "PICK_BLOCK", &input) {
         pick_block(app, tile);
     } else if bound(app, "PLACE", &input) {
         if !in_reach(app, tile) {
@@ -172,6 +183,12 @@ pub fn dispatch_mouse(app: &mut App, input: MouseInput) {
             app.core.game.res.log("Too far to mine there");
         }
     }
+}
+
+fn blueprint_on_world(app: &App) -> bool {
+    app.panels.build.mode == crate::app_state::BuildMode::Blueprint
+        && app.ui.current_tab == MenuTab::World
+        && !modal_open(app)
 }
 
 /// Press the first key bound to `category.action`, as if the player had.
@@ -343,6 +360,10 @@ fn click_target(app: &mut App, target: crate::ui::click_targets::ClickTarget, bu
             }
         }
         T::DictionaryRow(i) => app.panels.item_dictionary.selected = i,
+        T::BlueprintRow(i) => {
+            app.core.game.res.blueprints.selected = i;
+            activate(app);
+        }
     }
 }
 
