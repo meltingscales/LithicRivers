@@ -2,7 +2,7 @@
 name: "PR checks"
 
 # Tests and lint on every pull request into release, on all three release platforms.
-# The release workflow (ci.yml) only runs on version tags.
+# The release workflow (release.yml) only runs on version tags.
 #
 # Also runs on pushes to release: PRs can only read caches saved on their base branch,
 # so this is what gives every PR a warm build cache.

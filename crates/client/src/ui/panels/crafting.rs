@@ -91,10 +91,15 @@ pub fn render_crafting_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
                 .title(Line::from("Recipes")),
         );
 
-    f.render_stateful_widget(
-        list,
-        list_area,
-        &mut ListState::default().with_selected(Some(app.panels.crafting.selected)),
+    let recipe_count = app.panels.crafting.recipe_handler.get_recipes().len();
+    let mut recipe_state = ListState::default().with_selected(Some(app.panels.crafting.selected));
+    f.render_stateful_widget(list, list_area, &mut recipe_state);
+    let first = recipe_state.offset();
+    app.ui.click_targets.rows(
+        crate::ui::click_targets::inset(list_area),
+        first,
+        recipe_count.saturating_sub(first),
+        crate::ui::click_targets::ClickTarget::RecipeRow,
     );
 
     // Render recipe details

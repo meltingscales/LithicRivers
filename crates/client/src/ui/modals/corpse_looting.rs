@@ -70,6 +70,9 @@ fn render_corpse_selection_modal(
 
     let inner = block.inner(area);
     f.render_widget(block, area);
+    app.ui
+        .click_targets
+        .push(area, crate::ui::click_targets::ClickTarget::ModalArea);
 
     // Create list of corpses
     let corpse_items: Vec<ListItem> = adjacent_entities
@@ -106,6 +109,12 @@ fn render_corpse_selection_modal(
         List::new(corpse_items).highlight_style(Style::default().add_modifier(Modifier::BOLD));
 
     f.render_widget(list, inner);
+    app.ui.click_targets.rows(
+        inner,
+        0,
+        adjacent_entities.len(),
+        crate::ui::click_targets::ClickTarget::CorpsePickerRow,
+    );
 
     // Controls at bottom
     let controls = Paragraph::new("↑↓: Select | Enter: Loot | Esc: Cancel")
@@ -251,6 +260,9 @@ fn render_corpse_loot_modal(
 
     let inner = block.inner(area);
     f.render_widget(block, area);
+    app.ui
+        .click_targets
+        .push(area, crate::ui::click_targets::ClickTarget::ModalArea);
 
     // Split into two columns
     let chunks = Layout::default()
@@ -289,8 +301,17 @@ fn render_corpse_loot_modal(
         })
         .collect();
 
+    let container_rows = corpse_inv.slots.len();
     let corpse_list = List::new(corpse_items).block(corpse_block);
     f.render_widget(corpse_list, chunks[0]);
+    app.ui
+        .click_targets
+        .rows(inset(chunks[0]), 0, container_rows, |row| {
+            crate::ui::click_targets::ClickTarget::TransferRow {
+                container: true,
+                row,
+            }
+        });
 
     // Right side: the player's items, only what a machine takes
     let rows = app.core.game.get_player_entity().map(|p| {
@@ -330,8 +351,17 @@ fn render_corpse_loot_modal(
         })
         .collect();
 
+    let player_rows = player_items.len();
     let player_list = List::new(player_items).block(player_block);
     f.render_widget(player_list, chunks[1]);
+    app.ui
+        .click_targets
+        .rows(inset(chunks[1]), 0, player_rows, |row| {
+            crate::ui::click_targets::ClickTarget::TransferRow {
+                container: false,
+                row,
+            }
+        });
 
     // Controls at bottom
     let take_all = app
@@ -355,4 +385,14 @@ fn render_corpse_loot_modal(
         };
         f.render_widget(controls, controls_area);
     }
+}
+
+/// The inside of a bordered box.
+fn inset(rect: Rect) -> Rect {
+    Rect::new(
+        rect.x + 1,
+        rect.y + 1,
+        rect.width.saturating_sub(2),
+        rect.height.saturating_sub(2),
+    )
 }

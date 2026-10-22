@@ -57,6 +57,8 @@ pub struct UiState {
     pub world_view_rect: Option<Rect>,
     /// The screen cell under the mouse, if it has moved over the window
     pub mouse_cell: Option<(u16, u16)>,
+    /// Clickable rows recorded while drawing this frame
+    pub click_targets: crate::ui::click_targets::ClickTargets,
     pub keybinds: Keybinds,
     #[allow(dead_code)]
     pub tutorial_system: TutorialSystem,

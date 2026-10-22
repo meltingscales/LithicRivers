@@ -35,6 +35,9 @@ pub(crate) fn render_cheat_console_modal(f: &mut Frame, app: &mut App) {
 
         // Clear the background
         f.render_widget(Clear, area);
+        app.ui
+            .click_targets
+            .push(area, crate::ui::click_targets::ClickTarget::ModalArea);
 
         // Main modal block
         let block = Block::default()
@@ -108,6 +111,12 @@ pub(crate) fn render_cheat_console_modal(f: &mut Frame, app: &mut App) {
                 height: rows as u16 + 2,
             };
             f.render_widget(list, list_area);
+            app.ui.click_targets.rows(
+                crate::ui::click_targets::inset(list_area),
+                first,
+                rows,
+                crate::ui::click_targets::ClickTarget::Suggestion,
+            );
         }
 
         // Help text: every command, when there are no suggestions

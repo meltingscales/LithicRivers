@@ -110,6 +110,13 @@ pub fn render_item_dictionary_panel(f: &mut Frame, app: &mut crate::App, area: R
         )
         .highlight_style(Style::default().add_modifier(Modifier::REVERSED));
     f.render_stateful_widget(list, columns[0], &mut list_state);
+    let first = list_state.offset();
+    app.ui.click_targets.rows(
+        crate::ui::click_targets::inset(columns[0]),
+        first,
+        items.len().saturating_sub(first),
+        crate::ui::click_targets::ClickTarget::DictionaryRow,
+    );
 
     // Details of the selected item: text on the left, art on the right
     let mut lines: Vec<Line> = Vec::new();

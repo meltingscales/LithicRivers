@@ -493,6 +493,13 @@ impl Runner {
         screen_text(self.terminal.backend())
     }
 
+    /// The current screen with its styles.
+    #[cfg(test)]
+    pub fn buffer(&mut self) -> &ratatui::buffer::Buffer {
+        self.draw();
+        self.terminal.backend().buffer()
+    }
+
     /// Run steps in order, stopping at the first failure or `quit`. Never panics on a bad
     /// step: failures come back in the report.
     pub fn run_steps(&mut self, steps: &[ScriptLine]) -> StepsReport {

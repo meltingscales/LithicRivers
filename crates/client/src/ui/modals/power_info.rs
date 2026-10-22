@@ -43,6 +43,9 @@ pub(crate) fn render_power_info_modal(f: &mut Frame, app: &App) {
     )));
     let area = centered_rect(50, 30, f.size());
     f.render_widget(Clear, area);
+    app.ui
+        .click_targets
+        .push(area, crate::ui::click_targets::ClickTarget::ModalArea);
     let block = Block::default()
         .borders(Borders::ALL)
         .title(" Power Network ")

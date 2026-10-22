@@ -602,6 +602,10 @@ fn render_moves(
             let chunk = move_chunks[chunk_index + i];
             if chunk.height > 0 && chunk.width > 0 {
                 f.render_widget(block, chunk);
+                app.ui.click_targets.push(
+                    chunk,
+                    crate::ui::click_targets::ClickTarget::CombatMove(scroll_offset + i),
+                );
             }
         }
     }

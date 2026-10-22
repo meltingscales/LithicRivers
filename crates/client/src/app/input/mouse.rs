@@ -77,21 +77,6 @@ fn modal_open(app: &App) -> bool {
         || app.combat.is_active()
 }
 
-/// The menu tab under column `col` of the menu bar, matching how the tab bar lays out its
-/// titles: a border, then " title " for each tab with a divider between them.
-pub fn tab_at(app: &App, col: u16) -> Option<MenuTab> {
-    let rect = app.ui.bottom_menu_rect?;
-    let mut x = rect.x + 1;
-    for tab in MenuTab::visible(app.ui.tutorial_visible) {
-        let width = tab.title().chars().count() as u16 + 2;
-        if (x..x + width).contains(&col) {
-            return Some(tab);
-        }
-        x += width + 1;
-    }
-    None
-}
-
 /// A mouse event from the player. The demo ignores it, as it does keys.
 pub fn handle_mouse(app: &mut App, input: MouseInput) {
     if app.demo.is_none() {
@@ -101,26 +86,36 @@ pub fn handle_mouse(app: &mut App, input: MouseInput) {
 
 /// Route a mouse event. The demo plays its scripted mouse steps through here.
 pub fn dispatch_mouse(app: &mut App, input: MouseInput) {
-    if app.splash.state != SplashState::MainUI {
-        return;
-    }
     app.ui.mouse_cell = Some((input.col, input.row));
     if input.kind == MouseKind::Move {
         return;
     }
 
-    // The menu bar
+    // Menus, lists and windows first: whatever recorded its rows while drawing
+    if let MouseKind::Click(button) = input.kind {
+        use crate::ui::click_targets::Resolved;
+        match app.ui.click_targets.resolve(input.col, input.row) {
+            Resolved::Target(target) => {
+                click_target(app, target, button);
+                return;
+            }
+            Resolved::Outside => {
+                close_window(app);
+                return;
+            }
+            Resolved::Nothing => {}
+        }
+    }
+    if app.splash.state != SplashState::MainUI {
+        return;
+    }
+
+    // Scrolling over the menu bar does nothing
     let on_menu = app
         .ui
         .bottom_menu_rect
         .is_some_and(|r| (r.y..r.y + r.height).contains(&input.row));
     if on_menu {
-        if input.kind == MouseKind::Click(MouseButton::Left) {
-            if let Some(tab) = tab_at(app, input.col) {
-                app.ui.current_tab = tab;
-                app.activate_menu();
-            }
-        }
         return;
     }
 
@@ -177,6 +172,253 @@ pub fn dispatch_mouse(app: &mut App, input: MouseInput) {
             app.core.game.res.log("Too far to mine there");
         }
     }
+}
+
+/// Press the first key bound to `category.action`, as if the player had.
+fn press(app: &mut App, category: &str, action: &str) {
+    if let Some(code) = key_for(app, category, action) {
+        let _ = crate::app::input_handler::dispatch(app, code);
+    }
+}
+
+/// A click outside the topmost window closes it, as the back or close key does.
+fn close_window(app: &mut App) {
+    if app.splash.state == SplashState::MainUI {
+        press(app, "ui", "CLOSE_HELP_MENU");
+    } else {
+        press(app, "title", "BACK");
+    }
+}
+
+/// Click a recorded target: select its row, then do what the menu's Enter key does there.
+/// A right click on an item row moves the whole stack.
+fn click_target(app: &mut App, target: crate::ui::click_targets::ClickTarget, button: MouseButton) {
+    use crate::app::title_menu::CreateField;
+    use crate::app_state::*;
+    use crate::ui::click_targets::ClickTarget as T;
+    let select_title = |app: &mut App| press(app, "title", "SELECT");
+    let activate = |app: &mut App| press(app, "ui", "MENU_ACTIVATE");
+    match target {
+        T::ModalArea => {}
+        T::Tab(tab) => {
+            app.ui.current_tab = tab;
+            app.activate_menu();
+        }
+        T::TitleChoice(i) => {
+            app.title.selected = i;
+            select_title(app);
+        }
+        T::WorldRow(i) => {
+            app.title.world_selected = i;
+            select_title(app);
+        }
+        T::WorldAction(i) => {
+            app.title.world_action = i;
+            select_title(app);
+        }
+        T::DeleteChoice(i) => {
+            app.title.delete_choice = i;
+            select_title(app);
+        }
+        T::CreateField(i) => {
+            app.title.create.field = i;
+            // Text fields only take focus; toggles flip, World type cycles, buttons press
+            let field = app.title.create.fields().get(i).copied();
+            if !matches!(field, Some(CreateField::Name | CreateField::Seed) | None) {
+                select_title(app);
+            }
+        }
+        T::OptionsRow(i) => {
+            app.title.options_selected = i;
+            if i + 1 == crate::app::title_menu::OPTIONS_ROWS.len() {
+                select_title(app);
+            }
+        }
+        T::InteractionChoice(i) => {
+            if let MultiActionSelectState::SelectingAction {
+                selected_action, ..
+            } = &mut app.panels.multi_action_select
+            {
+                *selected_action = i;
+            }
+            activate(app);
+        }
+        T::DialogueChoice(i) => {
+            if let NPCInteractionState::InDialogue {
+                selected_choice, ..
+            } = &mut app.panels.npc_interaction
+            {
+                *selected_choice = i;
+            }
+            activate(app);
+        }
+        T::FilterRow(i) => {
+            if let Some(picker) = &mut app.panels.filter_picker {
+                picker.selected = i;
+            }
+            activate(app);
+        }
+        T::BlockPickerRow(i) => {
+            if let HotbarAssignmentState::ChoosingBlock { selected_block, .. } =
+                &mut app.panels.hotbar_assignment
+            {
+                *selected_block = i;
+            }
+            activate(app);
+        }
+        T::CorpsePickerRow(i) => {
+            if let CorpseLootingState::SelectingCorpse {
+                selected_corpse, ..
+            } = &mut app.panels.corpse_looting
+            {
+                *selected_corpse = i;
+            }
+            activate(app);
+        }
+        T::CombatMove(i) => {
+            if let CombatUiState::Active { current_move, .. } = &mut app.combat {
+                *current_move = i;
+            }
+            activate(app);
+        }
+        T::Suggestion(i) => {
+            if let CheatConsoleState::Open {
+                autocomplete_index, ..
+            } = &mut app.panels.cheat_console
+            {
+                *autocomplete_index = Some(i);
+            }
+            // Enter on a pick fills it in
+            let _ = crate::app::input_handler::dispatch(app, KeyCode::Enter);
+        }
+        T::TransferRow { container, row } => {
+            if let CorpseLootingState::LootingCorpse {
+                selected_loot_item,
+                selected_player_item,
+                loot_panel_focus,
+                ..
+            } = &mut app.panels.corpse_looting
+            {
+                *loot_panel_focus = container;
+                if container {
+                    *selected_loot_item = row;
+                } else {
+                    *selected_player_item = row;
+                }
+            }
+            if button == MouseButton::Right {
+                move_whole_stack(app);
+            } else {
+                activate(app);
+            }
+        }
+        T::FurnaceSlot(i) => {
+            if let Some(window) = &mut app.panels.furnace_window {
+                window.slot = lithicrivers_core::furnace::Slot::ALL[i];
+                window.player_focus = false;
+            }
+            if button == MouseButton::Right {
+                move_whole_stack(app);
+            } else {
+                activate(app);
+            }
+        }
+        T::FurnacePlayerRow(i) => {
+            if let Some(window) = &mut app.panels.furnace_window {
+                window.player_item = i;
+                window.player_focus = true;
+            }
+            if button == MouseButton::Right {
+                move_whole_stack(app);
+            } else {
+                activate(app);
+            }
+        }
+        T::RecipeRow(i) => {
+            // The first click selects; clicking the selected recipe crafts it
+            if app.panels.crafting.selected == i {
+                activate(app);
+            } else {
+                app.panels.crafting.selected = i;
+            }
+        }
+        T::DictionaryRow(i) => app.panels.item_dictionary.selected = i,
+    }
+}
+
+/// Right click on an item row: press Activate until the clicked stack is used up, a move
+/// is refused, or the selection lands on a different item, so the window's own rules (and
+/// messages) apply to every item moved.
+fn move_whole_stack(app: &mut App) {
+    let Some(kind) = selected_kind(app) else {
+        return;
+    };
+    for _ in 0..10_000 {
+        let before = format!("{:?}", inventory(app));
+        press(app, "ui", "MENU_ACTIVATE");
+        if format!("{:?}", inventory(app)) == before || selected_kind(app) != Some(kind) {
+            break;
+        }
+    }
+}
+
+fn inventory(app: &App) -> Vec<lithicrivers_core::components::ItemStack> {
+    app.core
+        .game
+        .get_player_entity()
+        .and_then(|p| {
+            app.core
+                .game
+                .world
+                .get::<&lithicrivers_core::components::Inventory>(p)
+                .ok()
+                .map(|i| i.slots.clone())
+        })
+        .unwrap_or_default()
+}
+
+/// The item kind on the selected row of the open item window.
+fn selected_kind(app: &App) -> Option<ItemKind> {
+    use crate::app::item_filter::PlayerRows;
+    use crate::app_state::CorpseLootingState;
+    use lithicrivers_core::components::Inventory;
+    let world = &app.core.game.world;
+    let player = app.core.game.get_player_entity()?;
+    let stack_kind = |entity, slot: usize| {
+        world
+            .get::<&Inventory>(entity)
+            .ok()
+            .and_then(|i| i.slots.get(slot).map(|s| s.kind))
+    };
+    if let Some(window) = app.panels.furnace_window {
+        return if window.player_focus {
+            let rows = PlayerRows::for_furnace_slot(world, player, window.slot);
+            rows.slot(window.player_item)
+                .and_then(|slot| stack_kind(player, slot))
+        } else {
+            world
+                .get::<&lithicrivers_core::furnace::Furnace>(window.entity)
+                .ok()
+                .and_then(|f| f.slot(window.slot))
+                .map(|s| s.kind)
+        };
+    }
+    if let CorpseLootingState::LootingCorpse {
+        entity,
+        selected_loot_item,
+        selected_player_item,
+        loot_panel_focus,
+    } = &app.panels.corpse_looting
+    {
+        return if *loot_panel_focus {
+            stack_kind(*entity, *selected_loot_item)
+        } else {
+            let rows = PlayerRows::for_container(world, player, *entity);
+            rows.slot(*selected_player_item)
+                .and_then(|slot| stack_kind(player, slot))
+        };
+    }
+    None
 }
 
 fn key_for(app: &App, category: &str, action: &str) -> Option<KeyCode> {
@@ -307,6 +549,7 @@ fn pick_block(app: &mut App, tile: Position) {
 mod tests {
     use super::*;
     use crate::headless::{chain_commands, Runner};
+    use crate::ui::click_targets::ClickTarget;
     use crate::ui::panels::world::cell_to_tile;
 
     /// The screen cell of the tile `dx`, `dy` from the player, at the current zoom.
@@ -516,7 +759,12 @@ mod tests {
         let _ = runner.screen_text();
         let menu = runner.app.ui.bottom_menu_rect.unwrap();
         let col = (menu.x..menu.x + menu.width)
-            .find(|&c| tab_at(&runner.app, c) == Some(MenuTab::ItemDictionary))
+            .find(|&c| {
+                matches!(
+                    runner.app.ui.click_targets.hit(c, menu.y + 1),
+                    Some((_, ClickTarget::Tab(MenuTab::ItemDictionary)))
+                )
+            })
             .expect("the Items tab is on the bar");
         runner.chain(&[&format!("click {col} {} left", menu.y + 1)]);
         assert_eq!(runner.app.ui.current_tab, MenuTab::ItemDictionary);
@@ -534,5 +782,407 @@ mod tests {
             None,
             "an unbound button does nothing"
         );
+    }
+
+    /// The screen cell where `target` was drawn on the last frame.
+    fn target_cell(runner: &mut Runner, target: ClickTarget) -> (u16, u16) {
+        let screen = runner.screen_text();
+        let rows = screen.lines().count() as u16;
+        let cols = screen.lines().map(|l| l.chars().count()).max().unwrap_or(0) as u16;
+        for row in 0..rows {
+            for col in 0..cols {
+                if runner.app.ui.click_targets.hit(col, row).map(|(_, t)| t) == Some(target) {
+                    return (col, row);
+                }
+            }
+        }
+        panic!("{target:?} is not on screen:\n{}", runner.screen_text());
+    }
+
+    fn click_on(runner: &mut Runner, target: ClickTarget, button: &str) {
+        let (c, r) = target_cell(runner, target);
+        runner.chain(&[&format!("click {c} {r} {button}")]);
+    }
+
+    const TITLE: &[&str] = &["rawkey ENTER", "rawkey ENTER"];
+
+    #[test]
+    fn clicking_watch_demo_starts_the_demo() {
+        let mut runner = chain_commands(TITLE);
+        assert_eq!(runner.app.splash.state, SplashState::Title);
+        click_on(&mut runner, ClickTarget::TitleChoice(1), "left");
+        assert!(runner.app.demo.is_some());
+    }
+
+    #[test]
+    fn clicking_through_the_create_world_form() {
+        let mut runner = chain_commands(TITLE);
+        click_on(&mut runner, ClickTarget::TitleChoice(0), "left");
+        assert_eq!(runner.app.splash.state, SplashState::WorldList);
+        // With no worlds, the first row creates one
+        click_on(&mut runner, ClickTarget::WorldRow(0), "left");
+        assert_eq!(runner.app.splash.state, SplashState::CreateWorld);
+        click_on(&mut runner, ClickTarget::CreateField(2), "left");
+        assert!(
+            runner.screen_text().contains("Allow cheats: ON"),
+            "{}",
+            runner.screen_text()
+        );
+        // Clicking the name field only focuses it
+        click_on(&mut runner, ClickTarget::CreateField(0), "left");
+        assert_eq!(runner.app.splash.state, SplashState::CreateWorld);
+        assert_eq!(runner.app.title.create.field, 0);
+    }
+
+    #[test]
+    fn clicking_a_block_picker_row_assigns_it() {
+        let mut runner = chain_commands(&WITH_CHEST[..6]);
+        // Picker: Clear slot, Acorn, Chest
+        click_on(&mut runner, ClickTarget::BlockPickerRow(2), "left");
+        let build = &runner.app.panels.build;
+        assert_eq!(
+            build.hotbar_assignments[build.selected_hotbar_slot],
+            Some(ItemKind::Chest)
+        );
+    }
+
+    /// A placed chest, open, with the player's items on the right.
+    fn open_chest() -> Runner {
+        let mut runner = chain_commands(WITH_CHEST);
+        click(&mut runner, 1, 0, "left");
+        click(&mut runner, 1, 0, "left");
+        assert!(matches!(
+            runner.app.panels.corpse_looting,
+            CorpseLootingState::LootingCorpse { .. }
+        ));
+        runner
+    }
+
+    /// The player's stacks, in inventory order.
+    fn player_stacks(runner: &Runner) -> Vec<(ItemKind, u32)> {
+        let game = &runner.app.core.game;
+        let player = game.get_player_entity().unwrap();
+        game.world
+            .get::<&lithicrivers_core::components::Inventory>(player)
+            .map(|inv| inv.slots.iter().map(|s| (s.kind, s.qty)).collect())
+            .unwrap_or_default()
+    }
+
+    fn player_count(runner: &Runner, kind: ItemKind) -> u32 {
+        player_stacks(runner)
+            .into_iter()
+            .filter(|&(k, _)| k == kind)
+            .map(|(_, n)| n)
+            .sum()
+    }
+
+    use crate::app_state::{CheatConsoleState, CombatUiState, CorpseLootingState};
+
+    #[test]
+    fn clicking_outside_a_window_closes_it() {
+        let mut runner = open_chest();
+        runner.chain(&["click 0 0 left"]);
+        assert!(matches!(
+            runner.app.panels.corpse_looting,
+            CorpseLootingState::None
+        ));
+    }
+
+    #[test]
+    fn right_clicking_an_item_moves_the_whole_stack() {
+        let mut runner = open_chest();
+        let before = player_count(&runner, ItemKind::Log);
+        assert!(before > 1, "the starting kit has logs");
+        // A chest takes everything, so its rows are the inventory's stacks
+        let row = player_stacks(&runner)
+            .iter()
+            .position(|&(k, _)| k == ItemKind::Log)
+            .unwrap();
+        click_on(
+            &mut runner,
+            ClickTarget::TransferRow {
+                container: false,
+                row,
+            },
+            "right",
+        );
+        assert_eq!(player_count(&runner, ItemKind::Log), 0);
+    }
+
+    #[test]
+    fn a_full_furnace_slot_refuses_the_rest_of_a_right_clicked_stack() {
+        use crate::app::item_filter::PlayerRows;
+        use lithicrivers_core::furnace::{Furnace, Slot, FURNACE_SLOT_MAX};
+        let mut runner = chain_commands(&[
+            "skip-splash",
+            "key ui.MENU_PREV",
+            "cheat tp 0 0 0",
+            "cheat giveitem crude_furnace",
+            "cheat giveitem log 40",
+            "key build.TOGGLE_BREAK_PLACE_MODE 2",
+            "key hotbar.HOTBAR_SLOT_1 2",
+            "key movement.MOVE_SOUTH 2",
+            "key ui.MENU_ACTIVATE",
+            "key hotbar.HOTBAR_SLOT_1",
+            "key build.PLACE_WEST",
+            "key build.TOGGLE_BREAK_PLACE_MODE 2",
+            "key action.INTERACT",
+        ]);
+        let window = runner
+            .app
+            .panels
+            .furnace_window
+            .expect("the furnace window is open");
+        click_on(&mut runner, ClickTarget::FurnaceSlot(0), "left");
+        let logs = player_count(&runner, ItemKind::Log);
+        let game = &runner.app.core.game;
+        let player = game.get_player_entity().unwrap();
+        let rows = PlayerRows::for_furnace_slot(&game.world, player, Slot::Fuel);
+        let row = rows
+            .slots
+            .iter()
+            .position(|&slot| player_stacks(&runner)[slot].0 == ItemKind::Log)
+            .unwrap();
+        click_on(&mut runner, ClickTarget::FurnacePlayerRow(row), "right");
+        let fuel = runner
+            .app
+            .core
+            .game
+            .world
+            .get::<&Furnace>(window.entity)
+            .unwrap()
+            .slot(Slot::Fuel)
+            .map(|s| s.qty);
+        assert_eq!(fuel, Some(FURNACE_SLOT_MAX));
+        assert_eq!(
+            player_count(&runner, ItemKind::Log),
+            logs - FURNACE_SLOT_MAX
+        );
+    }
+
+    #[test]
+    fn clicking_a_recipe_selects_it_and_a_second_click_crafts() {
+        let mut runner = chain_commands(&["skip-splash", "key ui.MENU_NEXT 5"]);
+        assert_eq!(runner.app.ui.current_tab, MenuTab::Crafting);
+        click_on(&mut runner, ClickTarget::RecipeRow(1), "left");
+        assert_eq!(runner.app.panels.crafting.selected, 1);
+        let recipe = runner.app.panels.crafting.recipe_handler.get_recipes()[1];
+        {
+            let game = &mut runner.app.core.game;
+            let player = game.get_player_entity().unwrap();
+            let mut inv = game
+                .world
+                .get::<&mut lithicrivers_core::components::Inventory>(player)
+                .unwrap();
+            for &(kind, qty) in recipe.ingredients {
+                inv.slots
+                    .push(lithicrivers_core::components::ItemStack { kind, qty });
+            }
+        }
+        let before = player_count(&runner, recipe.result);
+        click_on(&mut runner, ClickTarget::RecipeRow(1), "left");
+        assert_eq!(
+            player_count(&runner, recipe.result),
+            before + recipe.quantity
+        );
+    }
+
+    #[test]
+    fn clicking_a_scrolled_dictionary_row_selects_that_item() {
+        let mut runner = chain_commands(&["skip-splash"]);
+        runner.app.ui.current_tab = MenuTab::ItemDictionary;
+        for _ in 0..20 {
+            runner.chain(&["scroll down 30 10"]);
+        }
+        let selected = runner.app.panels.item_dictionary.selected;
+        assert_eq!(selected, 20);
+        click_on(
+            &mut runner,
+            ClickTarget::DictionaryRow(selected - 2),
+            "left",
+        );
+        assert_eq!(runner.app.panels.item_dictionary.selected, selected - 2);
+        assert!(
+            runner.app.ui.click_targets.hit(0, 0).is_none(),
+            "only rows on screen are recorded"
+        );
+    }
+
+    #[test]
+    fn clicking_a_cheat_suggestion_fills_it_in() {
+        let mut runner = chain_commands(&[
+            "skip-splash",
+            "key ui.OPEN_COMMAND_MENU",
+            "type \"giveitem \"",
+        ]);
+        click_on(&mut runner, ClickTarget::Suggestion(2), "left");
+        let CheatConsoleState::Open { input, .. } = &runner.app.panels.cheat_console else {
+            panic!("the console is open");
+        };
+        assert!(
+            input.starts_with("giveitem ") && input.len() > "giveitem ".len(),
+            "{input}"
+        );
+    }
+
+    #[test]
+    fn clicking_a_combat_move_uses_it() {
+        let mut runner = chain_commands(&[
+            "skip-splash",
+            "cheat tp 0 0 0",
+            "cheat spawn_enemy feral_dog",
+            "key movement.WAIT",
+        ]);
+        let messages = runner
+            .app
+            .core
+            .game
+            .res
+            .events
+            .get_message_log()
+            .messages
+            .len();
+        click_on(&mut runner, ClickTarget::CombatMove(1), "left");
+        assert!(matches!(
+            runner.app.combat,
+            CombatUiState::Active {
+                current_move: 1,
+                ..
+            }
+        ));
+        assert!(
+            runner
+                .app
+                .core
+                .game
+                .res
+                .events
+                .get_message_log()
+                .messages
+                .len()
+                > messages
+        );
+    }
+
+    #[test]
+    fn clicking_an_interaction_choice_picks_it() {
+        let mut runner = chain_commands(WITH_CHEST);
+        runner.chain(&[
+            "key build.PLACE_WEST",
+            "key build.PLACE_EAST",
+            "key build.TOGGLE_BREAK_PLACE_MODE 2",
+            "key action.INTERACT",
+            "expect-text \"Choose Interaction\"",
+        ]);
+        click_on(&mut runner, ClickTarget::InteractionChoice(0), "left");
+        assert!(matches!(
+            runner.app.panels.corpse_looting,
+            CorpseLootingState::LootingCorpse { .. }
+        ));
+    }
+
+    #[test]
+    fn clicking_a_dialogue_choice_picks_it() {
+        // Tall enough to show the choices under the android's greeting
+        let talk = |steps: &[&str]| {
+            let mut runner = Runner::new(12345, (160, 50));
+            runner.chain(&[
+                "skip-splash",
+                "key ui.MENU_PREV",
+                "key movement.MOVE_EAST",
+                "key action.INTERACT",
+                "expect-text \"What happened to you?\"",
+            ]);
+            runner.chain(steps);
+            runner
+        };
+        let mut clicked = talk(&[]);
+        click_on(&mut clicked, ClickTarget::DialogueChoice(1), "left");
+        let mut keyed = talk(&["key movement.MOVE_SOUTH", "key ui.MENU_ACTIVATE"]);
+        let screen = clicked.screen_text();
+        assert!(!screen.contains("2.  What happened to you?"), "{screen}");
+        assert_eq!(screen, keyed.screen_text());
+    }
+
+    #[test]
+    fn clicking_a_filter_row_sets_the_filter() {
+        let mut runner = chain_commands(&[
+            "skip-splash",
+            "key ui.MENU_PREV",
+            "cheat tp 0 0 0",
+            "cheat giveitem filter_extractor",
+            "key build.TOGGLE_BREAK_PLACE_MODE 2",
+            "key hotbar.HOTBAR_SLOT_1 2",
+            "key movement.MOVE_SOUTH 2",
+            "key ui.MENU_ACTIVATE",
+            "key hotbar.HOTBAR_SLOT_1",
+            "key build.PLACE_WEST",
+            "key build.TOGGLE_BREAK_PLACE_MODE 2",
+            "key action.INTERACT",
+            "expect-text \"Filter extractor: pick a filter\"",
+        ]);
+        click_on(&mut runner, ClickTarget::FilterRow(3), "left");
+        assert!(last_message(&runner).ends_with("Filter set to Acorn"));
+    }
+
+    #[test]
+    fn clicking_through_world_actions_and_delete() {
+        // Quitting saves the world and returns to the title
+        let mut runner = chain_commands(&[
+            "skip-splash",
+            "key movement.MOVE_SOUTH",
+            "key ui.MENU_NEXT 10",
+            "key ui.MENU_ACTIVATE",
+        ]);
+        click_on(&mut runner, ClickTarget::TitleChoice(0), "left");
+        click_on(&mut runner, ClickTarget::WorldRow(0), "left");
+        assert_eq!(runner.app.splash.state, SplashState::WorldActions);
+        // Clicking outside the actions box backs out of it
+        runner.chain(&["click 0 0 left"]);
+        assert_eq!(runner.app.splash.state, SplashState::WorldList);
+        click_on(&mut runner, ClickTarget::WorldRow(0), "left");
+        click_on(&mut runner, ClickTarget::WorldAction(2), "left");
+        assert_eq!(runner.app.splash.state, SplashState::ConfirmDelete);
+        click_on(&mut runner, ClickTarget::DeleteChoice(0), "left");
+        assert_eq!(runner.app.splash.state, SplashState::WorldList);
+        assert_eq!(runner.app.title.worlds.len(), 1, "Cancel keeps the world");
+    }
+
+    fn underlined(runner: &mut Runner, (col, row): (u16, u16)) -> bool {
+        runner
+            .buffer()
+            .get(col, row)
+            .modifier
+            .contains(ratatui::style::Modifier::UNDERLINED)
+    }
+
+    #[test]
+    fn hovering_a_row_underlines_only_that_row() {
+        let mut runner = chain_commands(TITLE);
+        let demo = target_cell(&mut runner, ClickTarget::TitleChoice(1));
+        let play = target_cell(&mut runner, ClickTarget::TitleChoice(0));
+        assert!(!underlined(&mut runner, demo));
+        runner.chain(&[&format!("move {} {}", demo.0, demo.1)]);
+        assert!(underlined(&mut runner, demo));
+        assert!(!underlined(&mut runner, play));
+    }
+
+    #[test]
+    fn rows_under_an_open_window_do_not_underline() {
+        let mut runner = open_chest();
+        let row = target_cell(
+            &mut runner,
+            ClickTarget::TransferRow {
+                container: false,
+                row: 0,
+            },
+        );
+        runner.chain(&[&format!("move {} {}", row.0, row.1)]);
+        assert!(underlined(&mut runner, row));
+        // The menu bar's tabs sit under the chest window's backdrop
+        let menu = runner.app.ui.bottom_menu_rect.unwrap();
+        let tab = (menu.x + 3, menu.y + 1);
+        runner.chain(&[&format!("move {} {}", tab.0, tab.1)]);
+        assert!(!underlined(&mut runner, tab));
     }
 }

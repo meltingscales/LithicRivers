@@ -82,6 +82,9 @@ pub(crate) fn render_furnace_window(f: &mut Frame, app: &App) {
         .title_alignment(Alignment::Center);
     let inner = outer.inner(area);
     f.render_widget(outer, area);
+    app.ui
+        .click_targets
+        .push(area, crate::ui::click_targets::ClickTarget::ModalArea);
     let rows = Layout::default()
         .direction(Direction::Vertical)
         .constraints([Constraint::Min(3), Constraint::Length(2)])
@@ -103,12 +106,27 @@ pub(crate) fn render_furnace_window(f: &mut Frame, app: &App) {
         columns[0],
         &mut slot_state,
     );
+    let first = slot_state.offset();
+    app.ui.click_targets.rows(
+        crate::ui::click_targets::inset(columns[0]),
+        first,
+        Slot::ALL.len().saturating_sub(first),
+        crate::ui::click_targets::ClickTarget::FurnaceSlot,
+    );
+    let player_count = player_items.len();
     let mut player_state = ListState::default();
     player_state.select((!player_items.is_empty()).then_some(window.player_item));
     f.render_stateful_widget(
         list(player_title, player_items, window.player_focus),
         columns[1],
         &mut player_state,
+    );
+    let first = player_state.offset();
+    app.ui.click_targets.rows(
+        crate::ui::click_targets::inset(columns[1]),
+        first,
+        player_count.saturating_sub(first),
+        crate::ui::click_targets::ClickTarget::FurnacePlayerRow,
     );
     let key = |c, a| app.core.config_manager.get_printable_key_for_keybind(c, a);
     let hint = format!(
