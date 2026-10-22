@@ -420,6 +420,12 @@ fn sidebar_chunks(app: &App, area: Rect) -> std::rc::Rc<[Rect]> {
     } else {
         1
     };
+    // Look mode's help is short, and the look panel needs the room
+    let wanted = if app.panels.look.mode && app.ui.show_context_help {
+        wanted.min(crate::ui::panels::context_help::context_help_lines(app).len() as u16 + 2)
+    } else {
+        wanted
+    };
     let help = wanted.min(below_modes.saturating_sub(MIN_MIDDLE));
     Layout::default()
         .direction(Direction::Vertical)

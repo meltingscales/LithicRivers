@@ -21,4 +21,4 @@
 ## 4. Checks
 
 - [x] 4.1 Verify `just code-clippy`, `cargo test --workspace` and PR checks pass
-- [ ] 4.2 User check that 3D factories are buildable and readable, and that stairs and their ghosts read clearly
+- [x] 4.2 User check that 3D factories are buildable and readable, and that stairs and their ghosts read clearly

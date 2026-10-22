@@ -30,6 +30,8 @@ pub fn handle_look_mode_input(app: &mut App, key: KeyCode) -> Result<bool, Box<d
             }
             app.core.game.res.log("Look mode: ON");
         } else {
+            // Back to following the player
+            app.snap_view_to_player_z();
             app.core.game.res.log("Look mode: OFF");
         }
         return Ok(true);

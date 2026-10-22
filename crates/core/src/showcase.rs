@@ -58,7 +58,7 @@ pub const EXAMPLES: &[Example] = &[
     },
     Example {
         name: "Vertical conveyors: up a layer and back down",
-        size: (4, 1),
+        size: (4, 2),
         has_input: true,
         build: lift_up_and_down,
     },
@@ -152,11 +152,14 @@ fn belt_line(game: &mut Game, o: Position) {
 }
 
 /// Logs ride a belt into an up conveyor, cross the layer above on a belt, come back down
-/// through a down conveyor, and end in a chest.
+/// through a down conveyor, and end in a chest. A stairway beside it lets the player climb
+/// up to watch the upper belt.
 ///
 /// ```text
 ///   z + 1:  . = v .     (= belt east, v down conveyor)
+///           S . . .     (S stairs)
 ///   z:      = ^ = C     (^ up conveyor)
+///           S . . .
 /// ```
 fn lift_up_and_down(game: &mut Game, o: Position) {
     let above = |dx| Position {
@@ -179,6 +182,12 @@ fn lift_up_and_down(game: &mut Game, o: Position) {
     );
     place(game, FactoryKind::Belt, at(o, 2, 0), Facing::East);
     place(game, FactoryKind::Chest, at(o, 3, 0), Facing::North);
+    for z in [o.z, o.z + 1] {
+        game.res
+            .world_state
+            .world
+            .set_tile_cached(o.x, o.y + 1, z, TileKind::Stairs);
+    }
     game.world.spawn((
         o,
         DroppedItem {
