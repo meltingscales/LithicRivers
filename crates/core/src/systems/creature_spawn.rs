@@ -11,8 +11,15 @@ use rand::Rng;
 use rand::SeedableRng;
 use rand_chacha::ChaCha20Rng;
 
-/// Chance, in percent, that an underground chunk gets a nuclear slime.
-pub const SLIME_CHANCE_PERCENT: u32 = 20;
+/// Chance, in percent, that an underground chunk gets a nuclear slime, by depth band:
+/// rarer in the shallows, commoner in the deep.
+pub fn slime_chance_percent(band: crate::world::DepthBand) -> u32 {
+    match band {
+        crate::world::DepthBand::Shallows => 10,
+        crate::world::DepthBand::Deep => 20,
+        _ => 0,
+    }
+}
 /// Tiles tried when looking for open ground for a slime.
 const SLIME_TRIES: usize = 16;
 /// Slimes never appear this close to the player, so none pops up in view.
@@ -51,7 +58,7 @@ fn roll_slime(
 ) {
     let seed = res.world_state.world.mix_coords(cx, cy, cz) ^ 0x5_1A4E_C4A7;
     let mut rng = ChaCha20Rng::seed_from_u64(seed);
-    if rng.gen_range(0..100) >= SLIME_CHANCE_PERCENT {
+    if rng.gen_range(0..100) >= slime_chance_percent(crate::world::depth_band(cz)) {
         return;
     }
     for _ in 0..SLIME_TRIES {

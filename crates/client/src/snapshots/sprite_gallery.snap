@@ -1307,6 +1307,25 @@ ppp
 ║───║──────║
 ╚═══╩══════╝
             
+=== items/plasteel_scrap  #9FB8C8  A shard of the old world's armor: lighter than steel, and it still won't scratch
+-- 1x
+%
+-- 2x
+%/
+/%
+-- 3x
+%%/
+/%%
+%/%
+-- art 0
+            
+     ▄▄     
+   ▄▓▒▒▓▄   
+  ▐▒▓██▓▒▌  
+   ▀▓▒▒▓▀ / 
+     ▀▀  /  
+            
+            
 === items/power_pole  #E5B53A  Links to poles within 8 tiles and powers blocks within 3
 -- 1x
 +

@@ -50,6 +50,124 @@ pub struct Chunk {
     tiles: Vec<TileKind>, // size CHUNK_SIZE * CHUNK_SIZE
 }
 
+/// The world's vertical layout.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DepthBand {
+    /// z >= 1: open air to build up into
+    Sky,
+    /// z = 0: the biomes
+    Surface,
+    /// z = -1 to `SHALLOWS_BOTTOM`: rock with tunnels and the first deposits
+    Shallows,
+    /// Below the shallows: the Lithic Rivers caverns
+    Deep,
+}
+
+/// The lowest layer of the shallows.
+pub const SHALLOWS_BOTTOM: i64 = -5;
+
+pub fn depth_band(z: i64) -> DepthBand {
+    match z {
+        1.. => DepthBand::Sky,
+        0 => DepthBand::Surface,
+        z if z >= SHALLOWS_BOTTOM => DepthBand::Shallows,
+        _ => DepthBand::Deep,
+    }
+}
+
+/// How much cave noise changes from one layer to the next: small, so caves mostly line up.
+const CAVE_Z_SCALE: f64 = 0.12;
+const STAIRWAY_TRIES: usize = 48;
+const STAIRWAYS_PER_CHUNK: usize = 2;
+
+/// Features placed after terrain that roll dice, each with its own generator (deposits
+/// come from noise and roll none).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Feature {
+    Stairways,
+}
+
+/// A resource that generates as veins, with a vein-noise threshold per band (higher is
+/// rarer; `None` means it doesn't generate there).
+pub struct Deposit {
+    pub tile: TileKind,
+    pub salt: u32,
+    pub scale: f64,
+    pub shallows: Option<f64>,
+    pub deep: Option<f64>,
+}
+
+impl Deposit {
+    fn threshold(&self, band: DepthBand) -> Option<f64> {
+        match band {
+            DepthBand::Shallows => self.shallows,
+            DepthBand::Deep => self.deep,
+            _ => None,
+        }
+    }
+}
+
+pub const DEPOSITS: &[Deposit] = &[
+    Deposit {
+        tile: TileKind::IronScrap,
+        salt: 0x1A0,
+        scale: 0.09,
+        shallows: Some(0.62),
+        deep: Some(0.6),
+    },
+    Deposit {
+        tile: TileKind::ScrapElectronics,
+        salt: 0xE1EC,
+        scale: 0.11,
+        shallows: Some(0.66),
+        deep: Some(0.62),
+    },
+    Deposit {
+        tile: TileKind::PlasteelScrap,
+        salt: 0x9A57,
+        scale: 0.1,
+        shallows: None,
+        deep: Some(0.66),
+    },
+];
+
+/// The noise fields of the legacy terrain (surface biomes and Lithic Rivers caverns).
+pub struct LegacyNoises {
+    perlin: Perlin,
+    biome_noise: Perlin,
+    feature_noise: Perlin,
+}
+
+impl LegacyNoises {
+    fn new(seed: u64) -> Self {
+        Self {
+            perlin: Perlin::new(seed as u32),
+            biome_noise: Perlin::new(seed as u32 % 0x10000),
+            feature_noise: Perlin::new(seed as u32 % 0x20000),
+        }
+    }
+}
+
+/// Every noise field underground generation reads.
+pub struct UndergroundNoises {
+    legacy: LegacyNoises,
+    tunnels: Perlin,
+    chambers: Perlin,
+    veins: Vec<Perlin>,
+}
+
+impl UndergroundNoises {
+    pub fn new(seed: u64) -> Self {
+        let s = seed as u32;
+        Self {
+            legacy: LegacyNoises::new(seed),
+            tunnels: Perlin::new(s ^ 0x7A11),
+            chambers: Perlin::new(s ^ 0xC4A3),
+            veins: DEPOSITS.iter().map(|d| Perlin::new(s ^ d.salt)).collect(),
+        }
+    }
+}
+
 impl GameWorld {
     /// Deterministic post-process that adds small clusters of trees (10-20 tiles)
     /// onto suitable ground (grass/dirt). Uses a seeded RNG derived from
@@ -174,6 +292,9 @@ impl GameWorld {
         match self.world_type {
             WorldType::Normal | WorldType::DogArena => {}
             WorldType::Void => return chunk.fill(TileKind::Air),
+            // Flat grass at z = 0 with sky above, and the real underground bands below, to
+            // look at caves and deposits
+            WorldType::OreTest if cz < 0 => return self.generate_underground(cx, cy, cz, chunk),
             // Flat: solid rock below z = 0, grass at z = 0, air above
             WorldType::OreTest | WorldType::FactoryShowcase => {
                 return chunk.fill(match cz.cmp(&0) {
@@ -183,185 +304,23 @@ impl GameWorld {
                 })
             }
         }
-        // Create Perlin noise generators with different seeds for different features
-        let perlin = Perlin::new(self.seed as u32);
-        let biome_noise = Perlin::new(self.seed as u32 % 0x10000);
-        let feature_noise = Perlin::new(self.seed as u32 % 0x20000);
+        match depth_band(cz) {
+            DepthBand::Sky => chunk.fill(TileKind::Air),
+            DepthBand::Surface => self.generate_surface(cx, cy, cz, chunk),
+            DepthBand::Shallows | DepthBand::Deep => self.generate_underground(cx, cy, cz, chunk),
+        }
+    }
 
-        // Generate terrain using Perlin noise. Incorporate Z to get vertical variation and bands.
-        // Use the center Z of this chunk slice as the sampled Z plane.
+    /// The surface layer, generated exactly as before depth bands existed: the biome noise,
+    /// tree clusters and one-tile rare resources.
+    fn generate_surface(&self, cx: i64, cy: i64, cz: i64, chunk: &mut Chunk) {
+        let noises = LegacyNoises::new(self.seed);
         let zf = (cz as f64) * (CHUNK_SIZE_Z as f64) + (CHUNK_SIZE_Z as f64 * 0.5);
         for y in 0..CHUNK_SIZE {
             for x in 0..CHUNK_SIZE {
-                // Calculate world coordinates
                 let wx = (cx as f64 * CHUNK_SIZE as f64) + x as f64;
                 let wy = (cy as f64 * CHUNK_SIZE as f64) + y as f64;
-                let band = self.biome_for(wx, wy, zf);
-
-                // Generate base terrain height (0.0 to 1.0)
-                let scale = 0.01; // Adjust this to change the scale of the terrain features
-                let height = perlin.get([wx * scale, wy * scale, zf * scale]);
-                let height = (height + 1.0) * 0.5; // Convert from [-1, 1] to [0, 1]
-
-                // Generate biome value
-                let biome_scale = 0.005; // Larger scale for biomes (bigger areas)
-                let biome_value =
-                    biome_noise.get([wx * biome_scale, wy * biome_scale, zf * biome_scale]);
-
-                // Generate feature value
-                let feature_scale = 0.05; // Smaller scale for features
-                let feature_value =
-                    feature_noise.get([wx * feature_scale, wy * feature_scale, zf * feature_scale]);
-
-                // Determine base tile type based on height and biome band
-                let base_tile = match band {
-                    BiomeBand::Plains => {
-                        if height < 0.30 {
-                            if height < 0.27 {
-                                TileKind::Air
-                            } else {
-                                TileKind::Dirt
-                            }
-                        } else if height < 0.55 {
-                            if biome_value > 0.0 {
-                                TileKind::Grass
-                            } else {
-                                TileKind::Dirt
-                            }
-                        } else if height < 0.8 {
-                            if feature_value > 0.6 {
-                                TileKind::Rock
-                            } else {
-                                TileKind::Grass
-                            }
-                        } else {
-                            TileKind::Rock
-                        }
-                    }
-                    BiomeBand::Forest => {
-                        if height < 0.28 {
-                            if height < 0.26 {
-                                TileKind::Air
-                            } else {
-                                TileKind::Dirt
-                            }
-                        } else if height < 0.7 {
-                            // more vegetated
-                            TileKind::Grass
-                        } else {
-                            TileKind::Rock
-                        }
-                    }
-                    BiomeBand::Rocky => {
-                        if height < 0.25 {
-                            TileKind::Dirt
-                        } else {
-                            TileKind::Rock
-                        }
-                    }
-                    BiomeBand::LithicRivers => {
-                        // Horizontal Lithic Rivers (left-right) with cave-like features.
-                        // Build a horizontal stripe field by sampling along Y with an X/Z-dependent offset.
-                        let meander = biome_noise.get([wx * 0.02, zf * 0.02, 17.0]); // [-1,1]
-                        let y_adj = wy + meander * 5.0; // up to ~5 tiles vertical wobble
-                        let period = 22.0; // tiles between river centerlines
-                        let t = (y_adj / period).fract(); // [0,1)
-                        let tri = (t - 0.5).abs(); // distance to center in [0,0.5]
-                        let d_tiles = tri * period; // distance in tiles from nearest river center
-
-                        // Cave noise to make smaller features and open spaces
-                        let cave_coarse =
-                            biome_noise.get([wx * 0.03 + 300.0, wy * 0.03 - 300.0, zf * 0.03]);
-                        let cave_fine =
-                            biome_noise.get([wx * 0.10 - 700.0, wy * 0.10 + 700.0, zf * 0.10]);
-                        let cave_mix = 0.6 * cave_coarse + 0.4 * cave_fine; // [-1,1]
-
-                        // Determine terrain by distance to river and cave field
-                        if d_tiles < 2.0 {
-                            // Core: 0-2 tiles from center -> clear channel for lava flow
-                            TileKind::Air
-                        } else if d_tiles < 3.0 {
-                            // Banks: 2-3 tiles -> mostly air with occasional rock pillars
-                            if feature_value > -0.35 {
-                                TileKind::Air
-                            } else {
-                                TileKind::Rock
-                            }
-                        } else if d_tiles < 4.0 {
-                            // Rim: rocky edge with rare bedrock
-                            if feature_value < -0.93 {
-                                TileKind::Bedrock
-                            } else {
-                                TileKind::Rock
-                            }
-                        } else {
-                            // Away from rivers: mix of rock and caves producing Minecraft-like caverns
-                            // Open where cave noise is high; keep some structure via feature_value
-                            if cave_mix > 0.55 || (cave_mix > 0.35 && feature_value > 0.75) {
-                                TileKind::Air
-                            } else if feature_value < -0.97 {
-                                TileKind::Bedrock
-                            } else {
-                                TileKind::Rock
-                            }
-                        }
-                    }
-                };
-
-                // Add trees and other features depending on band
-                let mut tile = base_tile;
-                match band {
-                    BiomeBand::Plains | BiomeBand::Forest => {
-                        if base_tile == TileKind::Grass || base_tile == TileKind::Dirt {
-                            if biome_value > 0.1
-                                && feature_value > 0.65
-                                && height > 0.33
-                                && height < 0.85
-                            {
-                                tile = TileKind::Tree;
-                            } else if feature_value < -0.75 && height > 0.4 && height < 0.9 {
-                                tile = TileKind::Rock;
-                            }
-                        }
-                    }
-                    BiomeBand::Rocky => {
-                        if base_tile == TileKind::Rock && feature_value > 0.8 {
-                            tile = TileKind::IronScrap;
-                        }
-                    }
-                    BiomeBand::LithicRivers => {
-                        // Ore enrichment near rim based on horizontal stripe distance
-                        let meander = biome_noise.get([wx * 0.02, zf * 0.02, 17.0]);
-                        let y_adj = wy + meander * 5.0;
-                        let period = 22.0;
-                        let t = (y_adj / period).fract();
-                        let tri = (t - 0.5).abs();
-                        let d_tiles = tri * period; // distance in tiles to nearest river centerline
-
-                        if (3.0..4.0).contains(&d_tiles) && tile == TileKind::Rock {
-                            if feature_value > 0.88 {
-                                tile = TileKind::IronScrap;
-                            }
-                            if feature_value < -0.92 {
-                                tile = TileKind::PlasteelScrap;
-                            }
-                        }
-
-                        // Additional small caves away from rivers based on cave noise
-                        if d_tiles >= 4.0 {
-                            let cave_coarse =
-                                biome_noise.get([wx * 0.03 + 300.0, wy * 0.03 - 300.0, zf * 0.03]);
-                            let cave_fine =
-                                biome_noise.get([wx * 0.10 - 700.0, wy * 0.10 + 700.0, zf * 0.10]);
-                            let cave_mix = 0.6 * cave_coarse + 0.4 * cave_fine;
-                            if cave_mix > 0.60 && tile == TileKind::Rock {
-                                tile = TileKind::Air;
-                            }
-                        }
-                    }
-                }
-
-                chunk.set(x, y, tile);
+                chunk.set(x, y, self.legacy_tile(&noises, wx, wy, zf));
             }
         }
 
@@ -387,8 +346,312 @@ impl GameWorld {
                 chunk.set(x, y, *resource);
             }
         }
+    }
 
-        // Note: structure placement is handled in ensure_chunk() via world-level writes
+    /// Today's per-tile terrain: the surface biomes, and the Lithic Rivers caverns that the
+    /// deep band keeps.
+    fn legacy_tile(&self, noises: &LegacyNoises, wx: f64, wy: f64, zf: f64) -> TileKind {
+        let LegacyNoises {
+            perlin,
+            biome_noise,
+            feature_noise,
+        } = noises;
+        let band = self.biome_for(wx, wy, zf);
+
+        // Generate base terrain height (0.0 to 1.0)
+        let scale = 0.01; // Adjust this to change the scale of the terrain features
+        let height = perlin.get([wx * scale, wy * scale, zf * scale]);
+        let height = (height + 1.0) * 0.5; // Convert from [-1, 1] to [0, 1]
+
+        // Generate biome value
+        let biome_scale = 0.005; // Larger scale for biomes (bigger areas)
+        let biome_value = biome_noise.get([wx * biome_scale, wy * biome_scale, zf * biome_scale]);
+
+        // Generate feature value
+        let feature_scale = 0.05; // Smaller scale for features
+        let feature_value =
+            feature_noise.get([wx * feature_scale, wy * feature_scale, zf * feature_scale]);
+
+        // Determine base tile type based on height and biome band
+        let base_tile = match band {
+            BiomeBand::Plains => {
+                if height < 0.30 {
+                    if height < 0.27 {
+                        TileKind::Air
+                    } else {
+                        TileKind::Dirt
+                    }
+                } else if height < 0.55 {
+                    if biome_value > 0.0 {
+                        TileKind::Grass
+                    } else {
+                        TileKind::Dirt
+                    }
+                } else if height < 0.8 {
+                    if feature_value > 0.6 {
+                        TileKind::Rock
+                    } else {
+                        TileKind::Grass
+                    }
+                } else {
+                    TileKind::Rock
+                }
+            }
+            BiomeBand::Forest => {
+                if height < 0.28 {
+                    if height < 0.26 {
+                        TileKind::Air
+                    } else {
+                        TileKind::Dirt
+                    }
+                } else if height < 0.7 {
+                    // more vegetated
+                    TileKind::Grass
+                } else {
+                    TileKind::Rock
+                }
+            }
+            BiomeBand::Rocky => {
+                if height < 0.25 {
+                    TileKind::Dirt
+                } else {
+                    TileKind::Rock
+                }
+            }
+            BiomeBand::LithicRivers => {
+                // Horizontal Lithic Rivers (left-right) with cave-like features.
+                // Build a horizontal stripe field by sampling along Y with an X/Z-dependent offset.
+                let meander = biome_noise.get([wx * 0.02, zf * 0.02, 17.0]); // [-1,1]
+                let y_adj = wy + meander * 5.0; // up to ~5 tiles vertical wobble
+                let period = 22.0; // tiles between river centerlines
+                let t = (y_adj / period).fract(); // [0,1)
+                let tri = (t - 0.5).abs(); // distance to center in [0,0.5]
+                let d_tiles = tri * period; // distance in tiles from nearest river center
+
+                // Cave noise to make smaller features and open spaces
+                let cave_coarse =
+                    biome_noise.get([wx * 0.03 + 300.0, wy * 0.03 - 300.0, zf * 0.03]);
+                let cave_fine = biome_noise.get([wx * 0.10 - 700.0, wy * 0.10 + 700.0, zf * 0.10]);
+                let cave_mix = 0.6 * cave_coarse + 0.4 * cave_fine; // [-1,1]
+
+                // Determine terrain by distance to river and cave field
+                if d_tiles < 2.0 {
+                    // Core: 0-2 tiles from center -> clear channel for lava flow
+                    TileKind::Air
+                } else if d_tiles < 3.0 {
+                    // Banks: 2-3 tiles -> mostly air with occasional rock pillars
+                    if feature_value > -0.35 {
+                        TileKind::Air
+                    } else {
+                        TileKind::Rock
+                    }
+                } else if d_tiles < 4.0 {
+                    // Rim: rocky edge with rare bedrock
+                    if feature_value < -0.93 {
+                        TileKind::Bedrock
+                    } else {
+                        TileKind::Rock
+                    }
+                } else {
+                    // Away from rivers: mix of rock and caves producing Minecraft-like caverns
+                    // Open where cave noise is high; keep some structure via feature_value
+                    if cave_mix > 0.55 || (cave_mix > 0.35 && feature_value > 0.75) {
+                        TileKind::Air
+                    } else if feature_value < -0.97 {
+                        TileKind::Bedrock
+                    } else {
+                        TileKind::Rock
+                    }
+                }
+            }
+        };
+
+        // Add trees and other features depending on band
+        let mut tile = base_tile;
+        match band {
+            BiomeBand::Plains | BiomeBand::Forest => {
+                if base_tile == TileKind::Grass || base_tile == TileKind::Dirt {
+                    if biome_value > 0.1 && feature_value > 0.65 && height > 0.33 && height < 0.85 {
+                        tile = TileKind::Tree;
+                    } else if feature_value < -0.75 && height > 0.4 && height < 0.9 {
+                        tile = TileKind::Rock;
+                    }
+                }
+            }
+            BiomeBand::Rocky => {
+                if base_tile == TileKind::Rock && feature_value > 0.8 {
+                    tile = TileKind::IronScrap;
+                }
+            }
+            BiomeBand::LithicRivers => {
+                // Ore enrichment near rim based on horizontal stripe distance
+                let meander = biome_noise.get([wx * 0.02, zf * 0.02, 17.0]);
+                let y_adj = wy + meander * 5.0;
+                let period = 22.0;
+                let t = (y_adj / period).fract();
+                let tri = (t - 0.5).abs();
+                let d_tiles = tri * period; // distance in tiles to nearest river centerline
+
+                if (3.0..4.0).contains(&d_tiles) && tile == TileKind::Rock {
+                    if feature_value > 0.88 {
+                        tile = TileKind::IronScrap;
+                    }
+                    if feature_value < -0.92 {
+                        tile = TileKind::PlasteelScrap;
+                    }
+                }
+
+                // Additional small caves away from rivers based on cave noise
+                if d_tiles >= 4.0 {
+                    let cave_coarse =
+                        biome_noise.get([wx * 0.03 + 300.0, wy * 0.03 - 300.0, zf * 0.03]);
+                    let cave_fine =
+                        biome_noise.get([wx * 0.10 - 700.0, wy * 0.10 + 700.0, zf * 0.10]);
+                    let cave_mix = 0.6 * cave_coarse + 0.4 * cave_fine;
+                    if cave_mix > 0.60 && tile == TileKind::Rock {
+                        tile = TileKind::Air;
+                    }
+                }
+            }
+        }
+        tile
+    }
+
+    /// The terrain of an underground layer before features: tunnels and chambers in the
+    /// shallows, the Lithic Rivers caverns in the deep. Pure, so a neighboring layer can be
+    /// checked without generating it.
+    pub fn underground_tile(&self, noises: &UndergroundNoises, x: i64, y: i64, z: i64) -> TileKind {
+        let (wx, wy) = (x as f64, y as f64);
+        match depth_band(z) {
+            DepthBand::Shallows => {
+                let zf = z as f64;
+                // Winding tunnels where the ridge noise crosses zero, and a few chambers;
+                // sampled with a small z scale so neighboring layers mostly line up
+                let ridge = noises
+                    .tunnels
+                    .get([wx * 0.035, wy * 0.035, zf * CAVE_Z_SCALE])
+                    .abs();
+                let chamber = noises
+                    .chambers
+                    .get([wx * 0.02, wy * 0.02, zf * CAVE_Z_SCALE]);
+                if ridge < 0.07 || chamber > 0.55 {
+                    TileKind::Air
+                } else {
+                    TileKind::Rock
+                }
+            }
+            _ => {
+                let zf = (z as f64) * (CHUNK_SIZE_Z as f64) + (CHUNK_SIZE_Z as f64 * 0.5);
+                self.legacy_tile(&noises.legacy, wx, wy, zf)
+            }
+        }
+    }
+
+    /// An underground layer: terrain, then the feature stage (deposits, then natural
+    /// stairways), each feature with its own seeded generator.
+    fn generate_underground(&self, cx: i64, cy: i64, cz: i64, chunk: &mut Chunk) {
+        let noises = UndergroundNoises::new(self.seed);
+        for ty in 0..CHUNK_SIZE {
+            for tx in 0..CHUNK_SIZE {
+                let (x, y) = (cx * CHUNK_SIZE + tx, cy * CHUNK_SIZE + ty);
+                chunk.set(tx, ty, self.underground_tile(&noises, x, y, cz));
+            }
+        }
+        self.place_deposits(&noises, cx, cy, cz, chunk);
+        // Stairways shared with the layer above, and with the layer below
+        for lower in [cz, cz - 1] {
+            if lower + 1 > -1 {
+                continue;
+            }
+            for (tx, ty) in self.stairway_spots(&noises, cx, cy, lower) {
+                chunk.set(tx, ty, TileKind::Stairs);
+            }
+        }
+    }
+
+    /// Deposits as veins: where a resource's vein noise crosses its threshold for the band,
+    /// rock becomes the resource. Clusters, not single tiles.
+    fn place_deposits(
+        &self,
+        noises: &UndergroundNoises,
+        cx: i64,
+        cy: i64,
+        cz: i64,
+        chunk: &mut Chunk,
+    ) {
+        let band = depth_band(cz);
+        for (deposit, vein) in DEPOSITS.iter().zip(&noises.veins) {
+            let Some(threshold) = deposit.threshold(band) else {
+                continue;
+            };
+            for ty in 0..CHUNK_SIZE {
+                for tx in 0..CHUNK_SIZE {
+                    if chunk.get(tx, ty) != TileKind::Rock {
+                        continue;
+                    }
+                    let (x, y) = ((cx * CHUNK_SIZE + tx) as f64, (cy * CHUNK_SIZE + ty) as f64);
+                    let v = vein.get([x * deposit.scale, y * deposit.scale, cz as f64 * 0.2]);
+                    if v > threshold {
+                        chunk.set(tx, ty, deposit.tile);
+                    }
+                }
+            }
+        }
+    }
+
+    /// Where natural stairways join layer `lower` to `lower + 1` in this chunk column: tiles
+    /// open on both layers, picked by the stairway feature's own generator. Both layers
+    /// compute the same spots, so the stairs always line up.
+    pub fn stairway_spots(
+        &self,
+        noises: &UndergroundNoises,
+        cx: i64,
+        cy: i64,
+        lower: i64,
+    ) -> Vec<(i64, i64)> {
+        let mut rng = self.feature_rng(cx, cy, lower, Feature::Stairways);
+        let mut spots = Vec::new();
+        for _ in 0..STAIRWAY_TRIES {
+            let (tx, ty) = (rng.gen_range(0..CHUNK_SIZE), rng.gen_range(0..CHUNK_SIZE));
+            let (x, y) = (cx * CHUNK_SIZE + tx, cy * CHUNK_SIZE + ty);
+            let open = |z| self.underground_tile(noises, x, y, z).is_passable();
+            if open(lower) && open(lower + 1) && !spots.contains(&(tx, ty)) {
+                spots.push((tx, ty));
+                if spots.len() == STAIRWAYS_PER_CHUNK {
+                    break;
+                }
+            }
+        }
+        spots
+    }
+
+    /// A generator for one feature of one chunk, so features never shift each other's rolls.
+    pub fn feature_rng(&self, cx: i64, cy: i64, cz: i64, feature: Feature) -> ChaCha20Rng {
+        let salt = (feature as u64 + 1).wrapping_mul(0x9E37_79B9_7F4A_7C15);
+        ChaCha20Rng::seed_from_u64(self.mix_coords(cx, cy, cz) ^ salt)
+    }
+
+    /// The share of each tile kind on layer `z` over a square of `2 * half` tiles around
+    /// (0, 0), for tuning and pinning the generator. Doesn't keep the generated chunks.
+    pub fn survey(&self, z: i64, half: i64) -> std::collections::BTreeMap<String, f64> {
+        let mut counts: std::collections::BTreeMap<String, u64> = Default::default();
+        let first = Self::div_floor(-half, CHUNK_SIZE);
+        let last = Self::div_floor(half - 1, CHUNK_SIZE);
+        let mut total = 0u64;
+        for cy in first..=last {
+            for cx in first..=last {
+                let mut chunk = Chunk::new_filled(TileKind::Dirt);
+                self.generate_chunk(cx, cy, z, &mut chunk);
+                for &t in &chunk.tiles {
+                    *counts.entry(format!("{t:?}")).or_default() += 1;
+                    total += 1;
+                }
+            }
+        }
+        counts
+            .into_iter()
+            .map(|(k, v)| (k, v as f64 * 100.0 / total as f64))
+            .collect()
     }
 
     #[inline]

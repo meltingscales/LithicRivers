@@ -1,110 +1,61 @@
-# World Generation Architecture (LithicRivers)
+# World generation
 
-This document summarizes how world generation, chunking, saving/loading, and client prefetching work after the 3D refactor.
+How LithicRivers builds its world, layer by layer. The code is in `crates/core/src/world.rs`; the tests that pin it are in `crates/core/src/worldgen_tests.rs`.
 
-## Overview
+## Chunks and layers
 
-* __3D addressing, 2D chunks__: The world space is 3D. Chunks are addressed by 3D keys `(cx, cy, cz)` but each chunk stores a 2D tile slice (X,Y) only. Different Z levels map to different chunk Z keys.
-* __Noise-driven terrain__: Generation uses Perlin noise sampled in 3D `(x, y, z)` space. The biome and terrain selection depend on the Z slice being generated.
-* __Explicit Z everywhere__: All tile reads/writes use `(x, y, z)`. Prefetching and systems pass an explicit `z` so the correct Z slice is generated and cached.
+- **A chunk is one layer of 64 by 64 tiles,** keyed by `(cx, cy, cz)`. `CHUNK_SIZE = 64` and `CHUNK_SIZE_Z = 1`, so `cz` is the layer `z` itself.
+- **Coordinates:** `cx = div_floor(x, 64)` and `tx = mod_floor(x, 64)`, and the same for y. Negative coordinates work.
+- **Access:**
+  - `GameWorld::get_tile_cached(x, y, z)` generates and keeps a chunk the first time it's read.
+  - `set_tile_cached` writes a tile, generating the chunk first.
+  - `get_tile` reads without keeping the chunk.
+  - `get_tile_cached_no_worldgen` never generates; rendering uses it for chunks not loaded yet.
+- **Saves** keep every generated chunk, so a chunk is generated once per world. Changing the generator changes only chunks explored afterwards; old worlds can show seams, which is accepted.
 
-## Core Types and Constants
+## Depth bands
 
-File: `crates/core/src/resources/world.rs`
+`depth_band(z)` decides what a layer is. Worldgen, creature spawns and later features all ask it.
 
-* __`CHUNK_SIZE: i64 = 64`__: Chunk width/height in tiles. Z is sliced by chunk Z index; each chunk contains `CHUNK_SIZE * CHUNK_SIZE` tiles.
-* __`World`__:
-  - Fields: `seed: u64`, `gen_z: i64` (current generation slice), `chunks: HashMap<(i64, i64, i64), Chunk>`.
-  - Purpose: generation, cache management, tile access and mutation.
-* __`Chunk`__:
-  - Internals: `tiles: Vec<TileKind>` sized `CHUNK_SIZE * CHUNK_SIZE` (2D only).
-  - Accessors: `get(tx, ty)`, `set(tx, ty, t)`.
+| Band | Layers | What generates |
+|---|---|---|
+| Sky | z ≥ 1 | Open air, to build up into with stairs and vertical conveyors |
+| Surface | z = 0 | The biomes (plains, forest, rocky), tree clusters and rare one-tile resources, exactly as before depth bands existed |
+| Shallows | z = -1 to `SHALLOWS_BOTTOM` (-5) | Rock with winding tunnels and chambers, and the first deposits |
+| Deep | below -5 | The Lithic Rivers caverns (river channels, banks, rims, caverns), richer in deposits |
 
-## Coordinate Conversions
+- `generate_chunk` dispatches on the band:
+  - **Sky:** fills the chunk with air.
+  - **Surface:** `generate_surface` runs the original code path unchanged. `the_surface_is_generated_as_before_depth_bands` pins a hash of its tiles.
+  - **Shallows and deep:** `generate_underground` builds the terrain, then runs the feature stage.
+- **Pure terrain:** `underground_tile(noises, x, y, z)` is the terrain of one underground tile before features. It is pure, so a neighboring layer can be checked without generating it.
+- **Caves line up across layers:** shallow tunnels sample noise with a small z scale (`CAVE_Z_SCALE`), so 50 to 90% of a layer's open tiles are open on the next layer too. The deep caverns' noise varies slowly with z as well.
 
-* __World to chunk/local__:
-  - `cx = div_floor(x, CHUNK_SIZE)`, `cy = div_floor(y, CHUNK_SIZE)`, `cz = div_floor(z, CHUNK_SIZE)`
-  - `tx = mod_floor(x, CHUNK_SIZE)`, `ty = mod_floor(y, CHUNK_SIZE)`
-* Helpers: `div_floor()` handles negatives correctly; `mod_floor()` returns a non-negative remainder in `[0, CHUNK_SIZE)`.
+## The feature stage
 
-## Generation Flow
+After terrain, features run in a fixed order. Each one that rolls dice gets its own generator from `feature_rng(cx, cy, cz, Feature)`, seeded by the world seed, the chunk and the feature, so adding a feature never shifts another's rolls.
 
-* __`ensure_chunk(cx, cy, cz)`__ generates and caches a chunk if absent.
-* __`generate_chunk(cx, cy, cz, &mut chunk)`__ produces the 2D tile slice for the chunk at `(cx, cy, cz)`:
-  - Samples 3D noise using world-space coordinates derived from `(cx, cy)` and local `(tx, ty)` plus the Z slice (`cz` or `gen_z`).
-  - Selects biome via `biome_for(wx: f64, wy: f64, zf: f64)` with Z explicitly included.
-  - Post-processes (e.g., trees) using seeded RNG derived from `seed`, `cx`, `cy`, and current `gen_z`.
-  - Structure application currently applies only the first Z layer of a structure into this 2D slice via `apply_structure(chunk, structure, ox, oy)`.
-
-## Tile Accessors
-
-* __Read (no cache insert)__: `World::get_tile(x, y, z) -> TileKind`
-  - Generates a local chunk transiently if not cached and returns the tile at `(tx, ty)`.
-* __Read (cached)__: `World::get_tile_cached(&mut self, x, y, z) -> TileKind`
-  - Ensures the chunk in cache then returns `chunk.get(tx, ty)`.
-* __Write (cached)__: `World::set_tile_cached(&mut self, x, y, z, t)`
-  - Ensures the chunk in cache then mutates `chunk.set(tx, ty, t)`.
-
-## Prefetching and Z Slices
-
-* __`World::prefetch_rect(left, top, right, bottom, z)`__
-  - Computes `(min_cx..=max_cx, min_cy..=max_cy)` covering the 2D rectangle.
-  - Uses `cz = div_floor(z, CHUNK_SIZE)` and ensures all relevant `(cx, cy, cz)` chunks.
-* __`World::set_generation_z(z)`__
-  - Sets `gen_z` and clears cache so subsequent generation reflects the new Z slice.
-
-Client integration (file: `crates/client/src/main.rs`):
-* Rendering sets `gen_z` from `view_z` each frame and prefetches via `prefetch_rect(..., view_z)`.
-* Look mode also prefetches with the look cursor’s `z` to keep navigation smooth.
-
-## Save/Load (3D Keys)
-
-File: `crates/core/src/save_load.rs`
-
-* __JSON mirror__ `WorldJson` stores `chunks: Vec<((i64, i64, i64), TileChunk)>` to encode the 3D HashMap keys.
-* Round-trip:
-  - Save: `WorldJson::from(world)` uses `world.chunks_to_vec()`.
-  - Load: `TileWorld::from(WorldJson)` sets `gen_z` then `set_chunks_from_vec(chunks)`.
-* __Fluids__ are encoded as `Vec<(Position, Fluid)>`; upon loading, they are restored into `FluidManager`.
-
-## Fluids and World Interaction
-
-File: `crates/core/src/resources/fluids.rs`
-
-* __`FluidManager`__ stores fluids keyed by 3D `Position { x, y, z }`.
-* `can_hold_fluid()` queries tiles via `world.get_tile(x, y, z)` so solidity tests are slice-accurate.
-* `process_fluids()` and `process_fluids_clamped()` operate in 3D, including vertical flow to neighboring Z slices.
-* Deterministic lava seeding for the Lithic Rivers biome occurs for chunks at/under certain Z (`gen_z <= -5`), tracked by `seeded_lava_chunks: HashSet<(i64, i64, i32)>`.
+1. **Deposits** (noise, no dice): each `Deposit` in `DEPOSITS` has a vein-noise field and a threshold per band. Rock becomes the resource where the noise crosses the threshold, which makes clusters rather than single tiles.
+   - Iron scrap and scrap electronics in the shallows and deep; plasteel scrap in the deep only.
+   - Every deposit tile is solid and has a mining drop. `every_generated_solid_tile_can_be_mined` checks this for every tile kind the generator makes.
+2. **Natural stairways:** for each pair of underground layers, `stairway_spots` picks up to two tiles per chunk that are open on both layers, and both layers place stairs there.
+   - Both chunks compute the same spots, so the stairs always line up.
+   - Stairways stop at z = -1, so the surface stays unchanged.
+   - The way to the surface is the SapienCorp bunker's staircase, a column of stairs from z = -19 to z = 0 (`the_bunker_staircase_reaches_the_surface`).
 
 ## Structures
 
-* Structures are currently applied as 2D on a single Z layer per generated chunk slice through `apply_structure(chunk, structure, ox, oy)`.
-* Future direction (see prior work on position-based seeding): move toward position-based seeding on a fixed 3D grid independent of `CHUNK_SIZE`, enabling consistent placement across chunk sizes and full multi-layer structures.
+- **Placement:** structures (`.lrstructure` folders under `crates/client/assets/structures/`) are queued as pending structures and placed when their chunk is first ensured through `Game::ensure_chunk_with_pending_structures`.
+- **Layers:** a buried structure's top layer is at its `z` and its bottom layer `layers - 1` below.
+- **Tiles:** structure tiles marked `existing_worldgen` (`.`) keep the generated terrain.
 
-## Design Decisions
+## Creatures
 
-* __3D keys, 2D storage__: Keeps memory and tile operations simple while enabling vertical gameplay via stacking slices.
-* __Explicit Z in APIs__: Prevents ambiguity and ensures consistent behavior for rendering, systems, and persistence.
-* __Cache invalidation on Z change__: Switching viewed/generated Z clears chunk cache to regenerate content for that slice.
+`systems::creature_spawn_system` rolls each underground chunk once, when the player first comes within a chunk of it. It uses its own seeded generator, and the chance depends on the band (`slime_chance_percent`). The rolled chunks are saved.
 
-## Key Entry Points (by file/function)
+## Tuning
 
-* `crates/core/src/resources/world.rs`
-  - `World::get_tile`, `World::get_tile_cached`, `World::set_tile_cached`
-  - `World::prefetch_rect`, `World::set_generation_z`
-  - `World::ensure_chunk`, `World::generate_chunk`, `World::biome_for`
-* `crates/core/src/save_load.rs`
-  - `WorldJson`, `SaveDataJson` 3D chunk key serialization
-* `crates/core/src/resources/fluids.rs`
-  - `FluidManager::{process_fluids, process_fluids_clamped, seed_lithic_lava_for_chunk}`
-
-## Testing/Verification
-
-* Unit/integration tests round-trip `SaveDataJson` and `SaveData` and validate tile mutations persist across load, including Z.
-* Client smoke tests should verify:
-  - Smooth prefetching while moving in X/Y and when changing `view_z`.
-  - Fluids flow horizontally and vertically and respect solid tiles per Z slice.
-
----
-
-For future enhancements, consider adopting a fixed 3D grid for structure/dungeon seeding independent of `CHUNK_SIZE`, with hash-based position seeding to ensure deterministic placement across chunk sizes.
+- `worldgen_tests::print_the_survey` prints each band's tile mix for seed 12345, using `GameWorld::survey(z, half)`. Run it with `cargo test -p lithicrivers-core --lib print_the_survey -- --nocapture`.
+- The other tests in `worldgen_tests.rs` pin the ranges: open space, deposit shares, overlap between layers.
+- Change a constant, read the survey, and update the pinned ranges in the same change so reviewers see the effect.
+- **Debug worlds:** the ore-test world is flat grass on top with the real bands below, for looking at caves and deposits. `scripts/snapshots/worldgen-depth-bands.txt` shows the shallows, the deep and the sky with fog of war off.

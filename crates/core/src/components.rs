@@ -199,6 +199,7 @@ pub enum ItemKind {
     VerticalConveyor,
     Stairs,
     NuclearWaste,
+    PlasteelScrap,
 }
 
 pub fn itemkind_name(kind: ItemKind) -> &'static str {
@@ -233,6 +234,7 @@ pub fn itemkind_name(kind: ItemKind) -> &'static str {
         ItemKind::VerticalConveyor => "Vertical Conveyor",
         ItemKind::Stairs => "Stairs",
         ItemKind::NuclearWaste => "Nuclear Waste",
+        ItemKind::PlasteelScrap => "Plasteel Scrap",
     }
 }
 
@@ -268,6 +270,7 @@ pub fn itemkind_sprite_name(kind: ItemKind) -> &'static str {
         ItemKind::VerticalConveyor => "vertical_conveyor",
         ItemKind::Stairs => "stairs",
         ItemKind::NuclearWaste => "nuclear_waste",
+        ItemKind::PlasteelScrap => "plasteel_scrap",
     }
 }
 
@@ -303,6 +306,7 @@ pub fn parse_itemkind_from_sprite_name(sprite_name: &str) -> Option<ItemKind> {
         "vertical_conveyor" => Some(ItemKind::VerticalConveyor),
         "stairs" => Some(ItemKind::Stairs),
         "nuclear_waste" => Some(ItemKind::NuclearWaste),
+        "plasteel_scrap" => Some(ItemKind::PlasteelScrap),
         _ => None,
     }
 }
