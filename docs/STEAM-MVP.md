@@ -2,7 +2,7 @@
 
 ## quick list
 
-.
+- Ideas from these docs that have no spec or change yet are listed in [SPEC-GAPS.md](SPEC-GAPS.md).
 
 ## NEXT TODO: Underground Bunker Tutorial & First Quest Design
 **Priority**: HIGHEST - First quest and tutorial implementation
@@ -178,7 +178,8 @@ first quest and associated dungeons
   - [x] **F1-F12 hotbar assignment system (v0.8.2.0)**
   - [x] **Mode toggling blocked during combat**
   - [x] **Colored message log system with red NumLock warnings**
-  - [ ] Volume sliders (music/sfx)
+  - [x] Volume sliders (music/sfx)
+    - [x] **Music and sound volume on the title screen's Options**
 - [ ] Performance optimizations for target hardware
   - [ ] Profiling budget: ~60 FPS at 80x24; ≤16 ms tick under normal load
   - [ ] Identify top 2 hotspots and add targeted optimizations
@@ -231,9 +232,8 @@ first quest and associated dungeons
    - Profiling budget: ~60 FPS at 80x24; ≤16 ms tick under normal load
    - Identify and fix top 2 hotspots
 
-5. **Volume sliders (music/sfx)**
-   - Complete the settings menu
-   - Important for user customization
+5. **~~Volume sliders (music/sfx)~~** ✅ **COMPLETED**
+   - ✅ **Music and sound volume on the title screen's Options**
 
 6. **Tutorial sequence**
    - ✅ **Interactive Tutorial System with modal overlays, popup GUI and keybind detection**
