@@ -91,6 +91,9 @@ pub fn render_look_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     if !any_entity {
         lines.push(Line::from(Span::raw("Entities: (none)")));
     }
+    for line in lift_target(app, pos) {
+        lines.push(Line::from(Span::raw(line)));
+    }
 
     // print the entity's inventory in the Look panel if it exists, with a special case for empty
     //TODO: Claude: Please educate me on how to add this by showing me, not by editing the file yourself.
@@ -133,4 +136,46 @@ pub fn render_look_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
                 .style(Style::default().fg(Color::White)),
         );
     f.render_widget(content, area);
+}
+
+/// For a vertical conveyor: the layer it feeds and what is there, on two short lines (the
+/// panel is narrow). Nothing for other tiles.
+fn lift_target(app: &mut crate::App, pos: lithicrivers_core::components::Position) -> Vec<String> {
+    use lithicrivers_core::factory::FactoryBlock;
+    let game = &mut app.core.game;
+    let Some(&entity) = game.res.factory_index.get(&pos) else {
+        return Vec::new();
+    };
+    let Some(dz) = game
+        .world
+        .get::<&FactoryBlock>(entity)
+        .ok()
+        .and_then(|b| b.kind.lift())
+    else {
+        return Vec::new();
+    };
+    let target = lithicrivers_core::components::Position {
+        z: pos.z + dz,
+        ..pos
+    };
+    let verb = if dz > 0 { "Lifts" } else { "Lowers" };
+    let what = match game.res.factory_index.get(&target) {
+        Some(&e) => game
+            .world
+            .get::<&FactoryBlock>(e)
+            .map_or("a block".to_string(), |b| b.kind.name().to_string()),
+        None => {
+            let tile = game
+                .res
+                .world_state
+                .world
+                .get_tile_at_z(target.x, target.y, target.z);
+            if tile.is_passable() {
+                format!("{tile:?}, empty")
+            } else {
+                format!("{tile:?}, blocked")
+            }
+        }
+    };
+    vec![format!("{verb} to z = {}:", target.z), format!("  {what}")]
 }

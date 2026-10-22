@@ -789,6 +789,44 @@ f<
      ║      
    ▄▄█▄▄    
             
+=== factory/vertical_conveyor_down  #9C6B30  A wooden shaft that lets one item at a time down to the layer below
+-- 1x
+▼
+-- 2x
+║║
+▼▼
+-- 3x
+╔═╗
+║▼║
+╚▼╝
+-- art 0
+            
+  ╔══════╗  
+  ║ ▼▓▼▓ ║  
+  ║ ▓▼▓▼ ║  
+  ║ ▼▓▼▓ ║  
+  ║ ▓▼▓▼ ║  
+  ╚══════╝  
+    ▼▼▼▼    
+=== factory/vertical_conveyor_up  #9C6B30  A wooden shaft that hoists one item at a time to the layer above, creaking
+-- 1x
+▲
+-- 2x
+▲▲
+║║
+-- 3x
+╔▲╗
+║▲║
+╚═╝
+-- art 0
+    ▲▲▲▲    
+  ╔══════╗  
+  ║ ▓▲▓▲ ║  
+  ║ ▲▓▲▓ ║  
+  ║ ▓▲▓▲ ║  
+  ║ ▲▓▲▓ ║  
+  ╚══════╝  
+            
 === fluids/acid  #00FF00  Corrosive acid
 -- 1x
 *
@@ -1363,6 +1401,25 @@ t,
      █      
      █      
      ▀      
+            
+=== items/vertical_conveyor  #9C6B30  A conveyor turned on its end; place it to carry items between layers
+-- 1x
+╫
+-- 2x
+▲▼
+▲▼
+-- 3x
+╔▲╗
+║║║
+╚▼╝
+-- art 0
+            
+     ▲▲     
+   ╔════╗   
+   ║▓▲▼▓║   
+   ║▓▲▼▓║   
+   ╚════╝   
+     ▼▼     
             
 === items/wooden_conveyor  #9C6B30  Place it to carry items one tile at a time
 -- 1x

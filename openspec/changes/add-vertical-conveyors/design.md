@@ -15,8 +15,9 @@
 ## Decisions
 
 ### Block
-- `FactoryKind::VerticalConveyor` carries a `BeltSlot` like a belt, plus `VerticalConveyor { up: bool }`.
-- It isn't directional in x/y, so Rotate toggles `up` instead of turning a facing.
+- *Changed during implementation:* two kinds, `FactoryKind::VerticalConveyorUp` and `VerticalConveyorDown`, each with a `BeltSlot`, instead of one kind with a `VerticalConveyor { up }` component. Both break into the one `VerticalConveyor` item, and the item places an up conveyor. With the direction in the kind, saves, blueprints and sprites keep it with no new component.
+- It isn't directional in x/y, so Rotate swaps it between the two kinds (`RotateResult::Flipped`) instead of turning a facing.
+- It carries items, not the player: standing on one doesn't ride it.
 
 ### Movement
 - After `BELT_STEPS_PER_TILE` steps, the item is offered to the block at z ± 1, with `heading: None`.
@@ -25,8 +26,7 @@
 - Vertical conveyors join `belt_order` as nodes whose next node is the block above or below, keeping one-step line shifts across layers.
 
 ### Open target
-- The target tile must be passable or a factory block.
-- If it's solid or out of loaded chunks, the conveyor first generates the chunk (through `Game::factory_tile` semantics) and then holds its item if the tile is solid.
+- *Simplified during implementation:* items are only handed to a factory block, so a conveyor under rock, open air or an unloaded chunk just holds its item. Nothing needs generating, and nothing is dropped.
 
 ### Recipes
 - **Vertical Conveyor:** the same ingredients as Wooden Conveyor, giving 2.
@@ -35,4 +35,5 @@
 ## Risks / Trade-offs
 
 - [Belt order cycles through layers] → `belt_order` already handles loops by position; vertical edges use the same cycle guard.
-- [Players can't see the other layer] → The look panel names the target layer and what is there.
+- [Players can't see the other layer] → The look panel names the target layer and what is there ("Lifts to z = 1:" and the block, or "Rock, blocked").
+- The showcase example goes last in `EXAMPLES`, so the examples before it keep their coordinates (scripts and demos teleport to them).

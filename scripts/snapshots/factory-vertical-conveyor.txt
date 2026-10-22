@@ -1,0 +1,19 @@
+# Vertical conveyors: the showcase's lift example carries logs up a layer and back down.
+# The look panel names the layer a vertical conveyor feeds and what is there.
+seed 12345
+size 100x40
+world factory-showcase
+key ui.MENU_PREV
+cheat tp 35 -6 0
+key action.LOOK_TOGGLE
+key movement.MOVE_NORTH
+expect-text "Lifts to z = 1:"
+screen look-up
+key action.LOOK_TOGGLE
+# The layer above: a belt carries the logs east into the down conveyor
+cheat tp 35 -6 1
+key action.LOOK_TOGGLE
+key movement.MOVE_NORTH
+key movement.MOVE_EAST
+expect-text "Lowers to z = 0:"
+screen look-down

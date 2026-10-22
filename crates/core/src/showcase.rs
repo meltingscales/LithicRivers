@@ -56,6 +56,12 @@ pub const EXAMPLES: &[Example] = &[
         has_input: true,
         build: tree_farm,
     },
+    Example {
+        name: "Vertical conveyors: up a layer and back down",
+        size: (4, 1),
+        has_input: true,
+        build: lift_up_and_down,
+    },
 ];
 
 /// The top-left corner of the first example; the rest follow eastward.
@@ -140,6 +146,44 @@ fn belt_line(game: &mut Game, o: Position) {
         DroppedItem {
             kind: ItemKind::Log,
             qty: 6,
+        },
+        SpriteRef::new("items", "log"),
+    ));
+}
+
+/// Logs ride a belt into an up conveyor, cross the layer above on a belt, come back down
+/// through a down conveyor, and end in a chest.
+///
+/// ```text
+///   z + 1:  . = v .     (= belt east, v down conveyor)
+///   z:      = ^ = C     (^ up conveyor)
+/// ```
+fn lift_up_and_down(game: &mut Game, o: Position) {
+    let above = |dx| Position {
+        z: o.z + 1,
+        ..at(o, dx, 0)
+    };
+    place(game, FactoryKind::Belt, o, Facing::East);
+    place(
+        game,
+        FactoryKind::VerticalConveyorUp,
+        at(o, 1, 0),
+        Facing::North,
+    );
+    place(game, FactoryKind::Belt, above(1), Facing::East);
+    place(
+        game,
+        FactoryKind::VerticalConveyorDown,
+        above(2),
+        Facing::North,
+    );
+    place(game, FactoryKind::Belt, at(o, 2, 0), Facing::East);
+    place(game, FactoryKind::Chest, at(o, 3, 0), Facing::North);
+    game.world.spawn((
+        o,
+        DroppedItem {
+            kind: ItemKind::Log,
+            qty: 4,
         },
         SpriteRef::new("items", "log"),
     ));
@@ -348,6 +392,29 @@ mod tests {
                 );
             }
         }
+    }
+
+    #[test]
+    fn the_lift_example_delivers_logs_over_the_layer_above() {
+        let mut game = showcase();
+        let (_, origin) = layout()
+            .into_iter()
+            .find(|(e, _)| e.name.starts_with("Vertical conveyors"))
+            .unwrap();
+        for _ in 0..3 {
+            game.pass_time();
+        }
+        let chest = game.res.factory_index[&at(origin, 3, 0)];
+        let logs: u32 = game
+            .world
+            .get::<&Inventory>(chest)
+            .unwrap()
+            .slots
+            .iter()
+            .filter(|s| s.kind == ItemKind::Log)
+            .map(|s| s.qty)
+            .sum();
+        assert_eq!(logs, 4);
     }
 
     #[test]

@@ -513,6 +513,10 @@ mod tests {
                 crate::factory::FactoryKind::BeltRouter,
                 Position { x: 9, y: -4, z: 0 },
             ),
+            (
+                crate::factory::FactoryKind::VerticalConveyorUp,
+                Position { x: 10, y: -4, z: 0 },
+            ),
         ] {
             crate::factory::place(
                 &mut fight.game.world,

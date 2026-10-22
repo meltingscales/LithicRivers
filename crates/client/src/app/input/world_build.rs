@@ -130,6 +130,9 @@ pub fn handle_world_build_input(app: &mut App, key: KeyCode) -> Result<bool, Box
                                 RotateResult::Rotated(facing) => {
                                     format!("Rotated the block to face {}", facing.name())
                                 }
+                                RotateResult::Flipped(kind) => {
+                                    format!("The block is now a {}", kind.name())
+                                }
                                 RotateResult::NotDirectional(kind) => {
                                     format!("The {} has no direction to rotate", kind.name())
                                 }

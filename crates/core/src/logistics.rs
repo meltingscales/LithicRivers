@@ -219,6 +219,8 @@ pub fn carry_player(world: &mut World, res: &mut Resources) {
                 .ok()
                 .and(world.get::<&FactoryBlock>(e).ok())
         })
+        // Vertical conveyors carry items, not the player
+        .filter(|b| b.kind == FactoryKind::Belt)
         .map(|b| b.facing);
     let Some(facing) = belt_facing else {
         res.belt_ride_steps = 0;
