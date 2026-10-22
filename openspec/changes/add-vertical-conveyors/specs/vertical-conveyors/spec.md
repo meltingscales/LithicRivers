@@ -62,3 +62,14 @@ On every other second, a bare tile with stairs or a vertical conveyor directly a
 #### Scenario: Above a stairway
 - **WHEN** the player looks at the layer above a stairway's top
 - **THEN** the tile over it shows a ghost of the stairs every other second
+
+### Requirement: Offer to build stairs
+When the player moves up or down with nothing to climb, the game SHALL ask whether to build a stairway from where they stand, if they hold enough stairs, and SHALL build it and climb on yes. Without enough stairs it SHALL say that crafting stairs and trying again builds one.
+
+#### Scenario: With stairs
+- **WHEN** the player holding 2 Stairs presses down on plain ground and chooses yes
+- **THEN** a stairway down is built where they stood and they are on the layer below
+
+#### Scenario: Without stairs
+- **WHEN** the player holding no Stairs presses down on plain ground
+- **THEN** nothing is built and the message says to craft stairs and try going down again

@@ -138,6 +138,7 @@ pub struct PanelStates {
     pub item_dictionary: ItemDictionaryState,
     pub filter_picker: Option<FilterPicker>,
     pub blueprint_window: Option<BlueprintWindow>,
+    pub stairs_prompt: Option<StairsPrompt>,
     pub inventory: InventoryPanelState,
     pub crafting: CraftingPanelState,
     pub credits: CreditsPanelState,
@@ -249,6 +250,15 @@ pub struct BlueprintTool {
     pub pending_replace: Option<(lithicrivers_core::components::Position, u8)>,
     /// What the paste at the cursor would replace and what blocks it, as last drawn
     pub preview: (usize, usize),
+}
+
+/// The "build stairs here?" prompt: which way, how many stairs, and the selected choice.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct StairsPrompt {
+    pub dz: i64,
+    pub cost: u32,
+    /// 0 for yes, 1 for no
+    pub selected: usize,
 }
 
 /// The Blueprints window: the library, with the selection kept in the core library.

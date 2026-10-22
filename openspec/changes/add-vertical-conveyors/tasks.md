@@ -16,6 +16,7 @@
 - [x] 3.2 The Stairs item, recipe, stairway placement (up or down, digging through rock) and breaking; verify `cargo test` for digging up, going down, too few items, and breaking one back
 - [x] 3.3 Ghost stairs on tiles with something to climb above or below; verify the `stairs-ghost` snapshot
 - [x] 3.4 A "Between layers" demo scene; verify the demo scenario test and its snapshot
+- [x] 3.5 Moving up or down with nothing to climb offers to build a stairway where the player stands (Yes/No), or says to craft stairs and try again; verify the `stairs-prompt` snapshot and tests for No, clicking Yes, and a climbable stack not asking
 
 ## 4. Checks
 

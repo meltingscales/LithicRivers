@@ -1,0 +1,16 @@
+# Going up or down with nothing to climb: without stairs, a message says how to get a
+# stairway; with them, a prompt offers to build one where the robot stands, then climbs it.
+seed 12345
+size 100x30
+world factory-showcase
+key ui.MENU_PREV
+cheat tp 0 5 0
+key movement.MOVE_DOWN
+expect-text "try going down again"
+cheat giveitem stairs 2
+key movement.MOVE_DOWN
+expect-text "Build a stairway down? It uses 2 Stairs."
+screen prompt
+key ui.MENU_ACTIVATE
+expect-text "Built stairs down to z = -1"
+screen climbed

@@ -9,6 +9,15 @@ pub fn handle_world_movement_input(app: &mut App, key: KeyCode) -> Result<bool, 
         return Ok(false);
     }
 
+    // Up or down with nothing to climb offers to build stairs instead
+    for (action, dz) in [("MOVE_UP", 1), ("MOVE_DOWN", -1)] {
+        if app.ui.keybinds.matches("movement", action, &key)
+            && crate::app::input::stairs_prompt::before_climb(app, dz)
+        {
+            return Ok(true);
+        }
+    }
+
     if app.ui.keybinds.matches_movement(&key) {
         if app.ui.keybinds.matches("movement", "MOVE_NORTH", &key) {
             app.core.game.queue_player_move(0, -1);
