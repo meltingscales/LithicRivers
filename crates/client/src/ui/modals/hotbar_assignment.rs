@@ -64,6 +64,9 @@ fn render_block_picker_modal(
 
     let inner = block.inner(area);
     f.render_widget(block, area);
+    app.ui
+        .click_targets
+        .push(area, crate::ui::click_targets::ClickTarget::ModalArea);
 
     // Create list of available blocks with "Clear slot" as first option
     let mut block_items: Vec<ListItem> = Vec::new();
@@ -119,6 +122,12 @@ fn render_block_picker_modal(
         List::new(block_items).highlight_style(Style::default().add_modifier(Modifier::BOLD));
 
     f.render_widget(list, inner);
+    app.ui.click_targets.rows(
+        inner,
+        0,
+        available_blocks.len() + 1,
+        crate::ui::click_targets::ClickTarget::BlockPickerRow,
+    );
 
     // Controls at bottom
     let controls = Paragraph::new("↑↓: Select | Enter: Assign | Esc: Cancel")

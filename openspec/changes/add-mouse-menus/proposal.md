@@ -30,5 +30,5 @@ Mouse building (`add-mouse-building`) made the world clickable, along with the m
   - A `ClickTargets` list on the UI state, cleared each frame and filled by the widgets that draw rows (`Rect` plus target).
   - `app::input::mouse` dispatches clicks on targets before world clicks.
   - Every menu, list and window listed above records its rows.
-- **Headless:** existing `click` and `move` steps drive it; snapshot scripts for hover highlights.
+- **Headless:** existing `click` and `move` steps drive it; tests check hover underlines in the screen buffer.
 - **No core changes.**

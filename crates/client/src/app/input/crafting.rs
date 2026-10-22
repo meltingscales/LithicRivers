@@ -39,7 +39,7 @@ pub fn handle_crafting_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dy
     }
 
     // Craft item on Enter or Activate key
-    if app.ui.keybinds.matches("ui", "ACTIVATE", &key) || key == KeyCode::Enter {
+    if app.ui.keybinds.matches("ui", "MENU_ACTIVATE", &key) || key == KeyCode::Enter {
         if let Some(recipe) = app
             .panels
             .crafting

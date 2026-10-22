@@ -24,10 +24,10 @@ input_file: scripts/snapshots/modal-corpse-loot.txt
 ###############││                                ││                                ││corpse        │
 ###############││                                ││                                ││              │
 ###############││                                ││                                ││──────────────┘
-┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
-│[0] Quest marker added: SapienCorp Bunker       ││                                ││              │
-│[0] Player moved to bunker spawn at (11, 11, -19)Take | a Take All | Esc Close────┘│              │
-│[0] Loading structure 'sapiencorp-factory.lrstructure' at (200, 1609, 1) for chunk (3, 25, 1)     │
+┌Messages──────││                                ││                                ││──────────────┐
+│[0] Quest mark││                                ││                                ││              │
+│[0] Player mov│└────←→ Panel | ↑↓ Select | Enter Take | a Take All | Esc Close────┘│              │
+│[0] Loading st└────────────────────────────────────────────────────────────────────┘3, 25, 1)     │
 │[0] Quest marker added: SapienCorp Factory                                                        │
 │[1] Started looting corpse                                                                        │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘

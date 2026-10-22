@@ -5,6 +5,7 @@ use crate::app::title_menu::{
     CreateField, DELETE_CHOICES, OPTIONS_ROWS, TITLE_CHOICES, WORLD_ACTIONS,
 };
 use crate::ui::centered_rect;
+use crate::ui::click_targets::ClickTarget;
 use crate::{App, SplashState};
 use ratatui::{
     layout::{Alignment, Rect},
@@ -32,6 +33,24 @@ fn menu_lines(items: &[String], selected: usize) -> Vec<Line<'static>> {
             }
         })
         .collect()
+}
+
+/// Record `count` menu rows drawn inside the bordered `rect`, starting `first_line` lines
+/// below the top of its inside.
+fn record_rows(
+    app: &App,
+    rect: Rect,
+    first_line: u16,
+    count: usize,
+    target: impl Fn(usize) -> ClickTarget,
+) {
+    let inner = Rect::new(
+        rect.x + 1,
+        rect.y + 1 + first_line,
+        rect.width.saturating_sub(2),
+        rect.height.saturating_sub(2 + first_line),
+    );
+    app.ui.click_targets.rows(inner, 0, count, target);
 }
 
 fn key(app: &App, action: &str) -> &'static str {
@@ -67,8 +86,8 @@ fn on_off(on: bool) -> &'static str {
     }
 }
 
-/// A bordered box centered on the screen with the given lines.
-fn boxed(f: &mut Frame, area: Rect, title: &str, lines: Vec<Line<'static>>) {
+/// A bordered box centered on the screen with the given lines. Returns where it was drawn.
+fn boxed(f: &mut Frame, area: Rect, title: &str, lines: Vec<Line<'static>>) -> Rect {
     let height = (lines.len() as u16 + 4).min(area.height);
     let width = lines
         .iter()
@@ -93,6 +112,7 @@ fn boxed(f: &mut Frame, area: Rect, title: &str, lines: Vec<Line<'static>>) {
         .wrap(Wrap { trim: false })
         .block(block);
     f.render_widget(paragraph, rect);
+    rect
 }
 
 fn world_rows(app: &App) -> Vec<String> {
@@ -146,7 +166,15 @@ fn render_world_list(f: &mut Frame, app: &App, area: Rect) {
         .alignment(Alignment::Center)
         .wrap(Wrap { trim: false })
         .block(block);
-    f.render_widget(paragraph, centered_rect(80, 80, area));
+    let rect = centered_rect(80, 80, area);
+    f.render_widget(paragraph, rect);
+    record_rows(
+        app,
+        rect,
+        1,
+        app.title.worlds.len() + 2,
+        ClickTarget::WorldRow,
+    );
 }
 
 fn selected_world_name(app: &App) -> String {
@@ -214,7 +242,9 @@ fn render_create(f: &mut Frame, app: &App, area: Rect) {
         .alignment(Alignment::Center)
         .wrap(Wrap { trim: false })
         .block(block);
-    f.render_widget(paragraph, centered_rect(80, 80, area));
+    let rect = centered_rect(80, 80, area);
+    f.render_widget(paragraph, rect);
+    record_rows(app, rect, 1, form.fields().len(), ClickTarget::CreateField);
 }
 
 fn render_options(f: &mut Frame, app: &App, area: Rect) {
@@ -238,7 +268,9 @@ fn render_options(f: &mut Frame, app: &App, area: Rect) {
     let paragraph = Paragraph::new(lines)
         .alignment(Alignment::Center)
         .block(block);
-    f.render_widget(paragraph, centered_rect(70, 60, area));
+    let rect = centered_rect(70, 60, area);
+    f.render_widget(paragraph, rect);
+    record_rows(app, rect, 1, OPTIONS_ROWS.len(), ClickTarget::OptionsRow);
 }
 
 fn render_title(f: &mut Frame, app: &App, area: Rect) {
@@ -274,6 +306,19 @@ fn render_title(f: &mut Frame, app: &App, area: Rect) {
         ..area
     };
     f.render_widget(Paragraph::new(lines).alignment(Alignment::Center), rect);
+    // The choices follow the art, a blank line, the splash text and another blank line
+    let first = art.len() as u16 + 3;
+    let choices_area = Rect {
+        y: rect.y + first,
+        height: rect.height.saturating_sub(first),
+        ..rect
+    };
+    app.ui.click_targets.rows(
+        choices_area,
+        0,
+        TITLE_CHOICES.len(),
+        ClickTarget::TitleChoice,
+    );
 }
 
 /// Draw the current title-menu screen. Returns false if the state isn't a title screen.
@@ -286,7 +331,9 @@ pub(crate) fn render_title_menu(f: &mut Frame, app: &App) -> bool {
             render_world_list(f, app, area);
             let actions: Vec<String> = WORLD_ACTIONS.iter().map(|a| a.to_string()).collect();
             let lines = menu_lines(&actions, app.title.world_action);
-            boxed(f, area, &selected_world_name(app), lines);
+            let rect = boxed(f, area, &selected_world_name(app), lines);
+            app.ui.click_targets.push(rect, ClickTarget::ModalArea);
+            record_rows(app, rect, 0, WORLD_ACTIONS.len(), ClickTarget::WorldAction);
         }
         SplashState::RenameWorld => {
             render_world_list(f, app, area);
@@ -303,7 +350,8 @@ pub(crate) fn render_title_menu(f: &mut Frame, app: &App) -> bool {
                     Style::default().fg(Color::DarkGray),
                 )),
             ];
-            boxed(f, area, "Rename World", lines);
+            let rect = boxed(f, area, "Rename World", lines);
+            app.ui.click_targets.push(rect, ClickTarget::ModalArea);
         }
         SplashState::ConfirmDelete => {
             render_world_list(f, app, area);
@@ -314,7 +362,15 @@ pub(crate) fn render_title_menu(f: &mut Frame, app: &App) -> bool {
             ];
             let choices: Vec<String> = DELETE_CHOICES.iter().map(|c| c.to_string()).collect();
             lines.extend(menu_lines(&choices, app.title.delete_choice));
-            boxed(f, area, "Delete World", lines);
+            let rect = boxed(f, area, "Delete World", lines);
+            app.ui.click_targets.push(rect, ClickTarget::ModalArea);
+            record_rows(
+                app,
+                rect,
+                3,
+                DELETE_CHOICES.len(),
+                ClickTarget::DeleteChoice,
+            );
         }
         SplashState::CreateWorld => render_create(f, app, area),
         SplashState::Options => render_options(f, app, area),

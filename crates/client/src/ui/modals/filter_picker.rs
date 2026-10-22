@@ -38,6 +38,10 @@ pub(crate) fn render_filter_picker(f: &mut Frame, app: &App) {
     let key = |c, a| app.core.config_manager.get_printable_key_for_keybind(c, a);
     let area = centered_rect(40, 70, f.size());
     f.render_widget(Clear, area);
+    app.ui
+        .click_targets
+        .push(area, crate::ui::click_targets::ClickTarget::ModalArea);
+    let row_count = crate::app::input::filter_picker::rows().len();
     let list = List::new(items)
         .block(
             Block::default()
@@ -55,4 +59,11 @@ pub(crate) fn render_filter_picker(f: &mut Frame, app: &App) {
     let mut state = ListState::default();
     state.select(Some(picker.selected));
     f.render_stateful_widget(list, area, &mut state);
+    let first = state.offset();
+    app.ui.click_targets.rows(
+        crate::ui::click_targets::inset(area),
+        first,
+        row_count.saturating_sub(first),
+        crate::ui::click_targets::ClickTarget::FilterRow,
+    );
 }

@@ -18,7 +18,7 @@ Ask for "Add an openspec feat that adds XYZ" or "Bugfix: Something not rendering
 
 <!-- ACTIONED ON ALREADY -->
 
-- PROPOSED as `add-mouse-menus`: click any row in any menu, list, form or window (title screen, world list, Choose Interaction, dialogue, filter and block pickers, combat moves, cheat suggestions, crafting, Item Dictionary); right-click moves a whole stack in item windows; clicking outside a window closes it; hover highlights rows. Widgets record their click areas while drawing, so clicks always match what's on screen
+- DONE as `add-mouse-menus` (awaiting your playtest): click any row in any menu, list, form or window (title screen, world list, Choose Interaction, dialogue, filter and block pickers, combat moves, cheat suggestions, crafting, Item Dictionary); right-click moves a whole stack in item windows; clicking outside a window closes it; hover highlights rows. Widgets record their click areas while drawing, so clicks always match what's on screen
 
 - DONE (feature/machine-window-filter): machine windows list only the items the machine takes, titled like "Showing fuel: 2 of 7". Generators show fuel, planters acorns, harvesters nothing; the furnace list follows the selected slot (fuel, smeltables, nothing for the output). Chests and corpses still list everything
 

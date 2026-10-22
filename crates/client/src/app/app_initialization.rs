@@ -127,6 +127,7 @@ impl App {
                 bottom_menu_rect: None,
                 world_view_rect: None,
                 mouse_cell: None,
+                click_targets: Default::default(),
                 keybinds,
                 tutorial_system: TutorialDatabase::create_tutorial_system_with_basics(),
                 tutorial_visible: true, // Tutorial tab is visible by default
