@@ -26,7 +26,7 @@ jobs:
       CARGO_INCREMENTAL: 0
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0 # need tags for versioning
 
@@ -48,7 +48,7 @@ jobs:
         run: brew install sccache
 
       - name: Cache sccache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cache/sccache
@@ -112,21 +112,21 @@ jobs:
 
       - name: Upload artifacts (Windows)
         if: matrix.os == 'windows-latest'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: lithicrivers-${{ github.ref_name }}-${{ github.sha }}-${{ matrix.os }}
           path: artifacts/lithicrivers-windows.zip
 
       - name: Upload artifacts (Linux)
         if: matrix.os == 'ubuntu-latest'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: lithicrivers-${{ github.ref_name }}-${{ github.sha }}-${{ matrix.os }}
           path: artifacts/lithicrivers-ubuntu.zip
 
       - name: Upload artifacts (macOS)
         if: matrix.os == 'macos-latest'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: lithicrivers-${{ github.ref_name }}-${{ github.sha }}-${{ matrix.os }}
           path: artifacts/lithicrivers-macos.zip
@@ -143,22 +143,22 @@ jobs:
       STEAM_APP_ID: ${{ secrets.STEAM_APP_ID }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Download artifacts for Ubuntu
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: lithicrivers-${{ github.ref_name }}-${{ github.sha }}-ubuntu-latest
           path: artifacts-zip
 
       - name: Download artifacts for Windows
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: lithicrivers-${{ github.ref_name }}-${{ github.sha }}-windows-latest
           path: artifacts-zip
 
       - name: Download artifacts for macOS
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: lithicrivers-${{ github.ref_name }}-${{ github.sha }}-macos-latest
           path: artifacts-zip
@@ -224,18 +224,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: lithicrivers-${{ github.ref_name }}-${{ github.sha }}-ubuntu-latest
           path: artifacts
 
       - name: Create GitHub Release and upload assets
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.ref_name }}
           name: LithicRivers Multiplatform ${{ github.ref_name }}
@@ -256,18 +256,18 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: lithicrivers-${{ github.ref_name }}-${{ github.sha }}-windows-latest
           path: artifacts
 
       - name: Create GitHub Release and upload assets
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.ref_name }}
           name: LithicRivers Multiplatform ${{ github.ref_name }}
@@ -287,18 +287,18 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: lithicrivers-${{ github.ref_name }}-${{ github.sha }}-macos-latest
           path: artifacts
 
       - name: Upload to existing release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.ref_name }}
           name: LithicRivers Multiplatform ${{ github.ref_name }}
