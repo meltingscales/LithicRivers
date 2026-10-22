@@ -186,6 +186,8 @@ pub enum ItemKind {
     Extractor,
     FilterExtractor,
     BeltRouter,
+    VerticalConveyor,
+    Stairs,
 }
 
 pub fn itemkind_name(kind: ItemKind) -> &'static str {
@@ -217,6 +219,8 @@ pub fn itemkind_name(kind: ItemKind) -> &'static str {
         ItemKind::Extractor => "Extractor",
         ItemKind::FilterExtractor => "Filter Extractor",
         ItemKind::BeltRouter => "Belt Router",
+        ItemKind::VerticalConveyor => "Vertical Conveyor",
+        ItemKind::Stairs => "Stairs",
     }
 }
 
@@ -249,6 +253,8 @@ pub fn itemkind_sprite_name(kind: ItemKind) -> &'static str {
         ItemKind::Extractor => "extractor",
         ItemKind::FilterExtractor => "filter_extractor",
         ItemKind::BeltRouter => "belt_router",
+        ItemKind::VerticalConveyor => "vertical_conveyor",
+        ItemKind::Stairs => "stairs",
     }
 }
 
@@ -281,6 +287,8 @@ pub fn parse_itemkind_from_sprite_name(sprite_name: &str) -> Option<ItemKind> {
         "extractor" => Some(ItemKind::Extractor),
         "filter_extractor" => Some(ItemKind::FilterExtractor),
         "belt_router" => Some(ItemKind::BeltRouter),
+        "vertical_conveyor" => Some(ItemKind::VerticalConveyor),
+        "stairs" => Some(ItemKind::Stairs),
         _ => None,
     }
 }

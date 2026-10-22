@@ -231,6 +231,8 @@ pub struct BuildPanelState {
     /// Track last F-key press for double-tap detection
     pub last_fkey_press: Option<(usize, Instant)>,
     pub blueprint: BlueprintTool,
+    /// Stairs placed from the hotbar lead down instead of up (toggled by the rotate key)
+    pub stairs_down: bool,
 }
 
 /// Blueprint mode: a cursor that marks corners when copying and anchors the paste.
@@ -265,6 +267,7 @@ impl Default for BuildPanelState {
             placement_facing: lithicrivers_core::factory::Facing::default(),
             last_fkey_press: None,
             blueprint: BlueprintTool::default(),
+            stairs_down: false,
         }
     }
 }

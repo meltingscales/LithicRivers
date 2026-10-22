@@ -13,6 +13,13 @@ LithicRivers is layered: every z-level is a full world, and the best materials a
 - **Up or down:** a placed vertical conveyor goes up by default, and Rotate mode toggles it between up and down.
 - **The layer above or below must be open:** the tile it feeds needs to be passable or a factory block. A conveyor facing solid rock just holds its item.
 - **Belts flowing between layers:** a belt line ending in an up conveyor continues from whatever is directly above.
+- **Climbing (added during implementation):** the player climbs vertical conveyors like stairs, in either direction, between two stacked conveyors or a conveyor and stairs.
+- **Player-built stairs (added during implementation):**
+  - A Stairs item, crafted 2 at a time from 2 wooden planks and 2 sticks.
+  - Placing it builds a stairway: stair tiles at the target and directly above it (or below; the rotate key switches which). It costs 2 Stairs, one per tile. A solid tile on the other layer is dug out with the usual mining drops.
+  - Breaking a stair tile gives one Stairs back.
+- **Ghost stairs (added during implementation):** on odd seconds, bare tiles with stairs or a vertical conveyor directly above or below show a dim ghost of the stairs, so players can see where stairways lead and where to extend them.
+- **Demo:** a "Between layers" scene builds a stairway, a belt into a vertical conveyor, and a chest on the layer above, and watches a nail rise into it.
 
 ## Capabilities
 

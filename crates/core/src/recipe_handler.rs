@@ -167,6 +167,37 @@ impl RecipeHandler {
                 result: ItemKind::BeltRouter,
                 quantity: 1,
             },
+            // 2 vertical conveyors: the same as 2 wooden conveyors
+            Recipe {
+                name: "Vertical Conveyor",
+                ingredients: &[
+                    (ItemKind::WoodenPlank, 1),
+                    (ItemKind::Stick, 2),
+                    (ItemKind::String, 1),
+                ],
+                result: ItemKind::VerticalConveyor,
+                quantity: 2,
+            },
+            // 2 stairs: 2x wooden plank + 2x stick (a stairway takes both)
+            Recipe {
+                name: "Stairs",
+                ingredients: &[(ItemKind::WoodenPlank, 2), (ItemKind::Stick, 2)],
+                result: ItemKind::Stairs,
+                quantity: 2,
+            },
+            // Turn a wooden conveyor on its end, or lay a vertical one flat
+            Recipe {
+                name: "Vertical Conveyor (from wooden)",
+                ingredients: &[(ItemKind::WoodenConveyor, 1)],
+                result: ItemKind::VerticalConveyor,
+                quantity: 1,
+            },
+            Recipe {
+                name: "Wooden Conveyor (from vertical)",
+                ingredients: &[(ItemKind::VerticalConveyor, 1)],
+                result: ItemKind::WoodenConveyor,
+                quantity: 1,
+            },
         ];
 
         Self { recipes }
@@ -309,5 +340,27 @@ impl RepairRecipeHandler {
 impl Default for RepairRecipeHandler {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn conveyors_convert_one_for_one_both_ways() {
+        let recipes = RecipeHandler::new();
+        let mut inventory = HashMap::from([(ItemKind::WoodenConveyor, 1)]);
+        let up = recipes
+            .find_recipe_by_name("Vertical Conveyor (from wooden)")
+            .unwrap();
+        assert!(recipes.craft(up, &mut inventory));
+        assert_eq!(inventory.get(&ItemKind::VerticalConveyor), Some(&1));
+        assert_eq!(inventory.get(&ItemKind::WoodenConveyor), Some(&0));
+        let flat = recipes
+            .find_recipe_by_name("Wooden Conveyor (from vertical)")
+            .unwrap();
+        assert!(recipes.craft(flat, &mut inventory));
+        assert_eq!(inventory.get(&ItemKind::WoodenConveyor), Some(&1));
     }
 }

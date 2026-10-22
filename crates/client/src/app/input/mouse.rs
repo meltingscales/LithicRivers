@@ -453,12 +453,7 @@ fn key_for(app: &App, category: &str, action: &str) -> Option<KeyCode> {
 /// Scroll over the world: rotate the next placement, or cycle the hotbar slot.
 fn scroll_world(app: &mut App, input: &MouseInput) {
     if bound(app, "ROTATE", input) {
-        let facing = app.panels.build.placement_facing.rotate_cw();
-        app.panels.build.placement_facing = facing;
-        app.core
-            .game
-            .res
-            .log(format!("Placing facing {}", facing.name()));
+        crate::app::input::world_build::rotate_placement(app);
         return;
     }
     let slots = app.panels.build.hotbar_assignments.len();

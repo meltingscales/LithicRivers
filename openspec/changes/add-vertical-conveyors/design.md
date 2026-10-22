@@ -10,13 +10,14 @@
 
 **Goals:** move items between layers with the same feel as belts; deterministic; no change to flat belts.
 
-**Non-Goals:** lifting the player (stairs do that), lifts for fluids.
+**Non-Goals:** lifts for fluids. (Lifting the player was a non-goal; the user asked for climbing, below.)
 
 ## Decisions
 
 ### Block
-- `FactoryKind::VerticalConveyor` carries a `BeltSlot` like a belt, plus `VerticalConveyor { up: bool }`.
-- It isn't directional in x/y, so Rotate toggles `up` instead of turning a facing.
+- *Changed during implementation:* two kinds, `FactoryKind::VerticalConveyorUp` and `VerticalConveyorDown`, each with a `BeltSlot`, instead of one kind with a `VerticalConveyor { up }` component. Both break into the one `VerticalConveyor` item, and the item places an up conveyor. With the direction in the kind, saves, blueprints and sprites keep it with no new component.
+- It isn't directional in x/y, so Rotate swaps it between the two kinds (`RotateResult::Flipped`) instead of turning a facing.
+- It carries items, not the player: standing on one doesn't ride it.
 
 ### Movement
 - After `BELT_STEPS_PER_TILE` steps, the item is offered to the block at z ± 1, with `heading: None`.
@@ -25,14 +26,20 @@
 - Vertical conveyors join `belt_order` as nodes whose next node is the block above or below, keeping one-step line shifts across layers.
 
 ### Open target
-- The target tile must be passable or a factory block.
-- If it's solid or out of loaded chunks, the conveyor first generates the chunk (through `Game::factory_tile` semantics) and then holds its item if the tile is solid.
+- *Simplified during implementation:* items are only handed to a factory block, so a conveyor under rock, open air or an unloaded chunk just holds its item. Nothing needs generating, and nothing is dropped.
 
 ### Recipes
 - **Vertical Conveyor:** the same ingredients as Wooden Conveyor, giving 2.
 - **Conversions:** 1 Wooden Conveyor to 1 Vertical Conveyor, and 1 Vertical Conveyor to 1 Wooden Conveyor. The reachability test is unaffected by the cycle.
 
+### Climbing and stairs (added during implementation)
+- `stairs::climbable(pos)`: a Stairs tile or a vertical conveyor. Moving up or down needs a climbable tile both where the player stands and where they arrive, as stairs did before, so the player is never stranded.
+- **Stairways come in pairs:** the player can only build on their own layer, so placing Stairs makes both tiles at once, the target and the one above or below. Each tile costs one Stairs and breaking one gives one back, so nothing is duplicated. `BuildPanelState::stairs_down` (the rotate key while Stairs is selected) picks the direction, and the hotbar title shows "stairs up" or "stairs down".
+- **Digging:** a solid tile on the other layer is mined with `crafting::mine_tile`, and its drops land on the new stairs. A tile the mining table doesn't list refuses the stairway.
+- **Ghost stairs:** `climb_overlay` in the world view checks the tiles above and below each visible bare tile, without generating chunks (`get_tile_cached_no_worldgen`), and draws the stairs sprite in gray (something above) or dark gray (something below) on odd seconds.
+
 ## Risks / Trade-offs
 
 - [Belt order cycles through layers] → `belt_order` already handles loops by position; vertical edges use the same cycle guard.
-- [Players can't see the other layer] → The look panel names the target layer and what is there.
+- [Players can't see the other layer] → The look panel names the target layer and what is there ("Lifts to z = 1:" and the block, or "Rock, blocked").
+- The showcase example goes last in `EXAMPLES`, so the examples before it keep their coordinates (scripts and demos teleport to them).

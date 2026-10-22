@@ -29,12 +29,7 @@ pub fn handle_world_build_input(app: &mut App, key: KeyCode) -> Result<bool, Box
     if app.panels.build.mode == BuildMode::Place
         && app.ui.keybinds.matches("build", "ROTATE_PLACEMENT", &key)
     {
-        let facing = app.panels.build.placement_facing.rotate_cw();
-        app.panels.build.placement_facing = facing;
-        app.core
-            .game
-            .res
-            .log(format!("Placing facing {}", facing.name()));
+        rotate_placement(app);
         return Ok(true);
     }
 
@@ -129,6 +124,9 @@ pub fn handle_world_build_input(app: &mut App, key: KeyCode) -> Result<bool, Box
                             match rotate(&mut app.core.game.world, &app.core.game.res, pos) {
                                 RotateResult::Rotated(facing) => {
                                     format!("Rotated the block to face {}", facing.name())
+                                }
+                                RotateResult::Flipped(kind) => {
+                                    format!("The block is now a {}", kind.name())
                                 }
                                 RotateResult::NotDirectional(kind) => {
                                     format!("The {} has no direction to rotate", kind.name())
@@ -326,6 +324,27 @@ pub(crate) fn break_at(app: &mut App, x: i64, y: i64, z: i64) {
     app.apply_tick_result(&tick_result);
 }
 
+/// Turn the next placement clockwise, or, with stairs selected, switch them between
+/// leading up and down.
+pub(crate) fn rotate_placement(app: &mut App) {
+    let build = &mut app.panels.build;
+    if build.hotbar_assignments[build.selected_hotbar_slot] == Some(ItemKind::Stairs) {
+        build.stairs_down = !build.stairs_down;
+        let way = if build.stairs_down { "down" } else { "up" };
+        app.core
+            .game
+            .res
+            .log(format!("Placing stairs leading {way}"));
+        return;
+    }
+    let facing = build.placement_facing.rotate_cw();
+    build.placement_facing = facing;
+    app.core
+        .game
+        .res
+        .log(format!("Placing facing {}", facing.name()));
+}
+
 /// Place the item on the selected hotbar slot at the target, using one from the inventory.
 pub(crate) fn place_from_hotbar(app: &mut App, x: i64, y: i64, z: i64) {
     use lithicrivers_core::components::{itemkind_name, Position};
@@ -352,6 +371,27 @@ pub(crate) fn place_from_hotbar(app: &mut App, x: i64, y: i64, z: i64) {
     }
     let pos = Position { x, y, z };
     let game = &mut app.core.game;
+    if item == ItemKind::Stairs {
+        let dz = if app.panels.build.stairs_down { -1 } else { 1 };
+        let Some(player) = game.get_player_entity() else {
+            return;
+        };
+        match lithicrivers_core::stairs::build_stairway(
+            &mut game.world,
+            &mut game.res,
+            pos,
+            dz,
+            player,
+        ) {
+            Ok(()) => game.res.log(format!(
+                "Built stairs {} to z = {} at ({x}, {y})",
+                if dz > 0 { "up" } else { "down" },
+                z + dz
+            )),
+            Err(e) => game.res.log(e.message()),
+        }
+        return;
+    }
     if lithicrivers_core::plants::is_seed(item) {
         if let Err(e) = lithicrivers_core::plants::plant(&mut game.world, &mut game.res, pos) {
             game.res.log(e.to_string());

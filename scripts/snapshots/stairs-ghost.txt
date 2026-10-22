@@ -1,0 +1,27 @@
+# Stairs: build a stairway up from Place mode and climb it. On odd seconds, tiles with
+# stairs directly above or below show a ghost of the stairs.
+seed 12345
+size 100x30
+world factory-showcase
+key ui.MENU_PREV
+cheat tp 0 5 0
+cheat giveitem stairs 2
+key build.TOGGLE_BREAK_PLACE_MODE 2
+# Picker: Clear slot, Acorn, Stairs
+key hotbar.HOTBAR_SLOT_1 2
+key movement.MOVE_SOUTH 2
+key ui.MENU_ACTIVATE
+expect-text "stairs up"
+key build.PLACE_EAST
+expect-text "Built stairs up to z = 1 at (1, 5)"
+key build.TOGGLE_BREAK_PLACE_MODE 2
+key movement.MOVE_EAST
+key movement.MOVE_UP
+
+# One layer higher, the stairway below shows as a ghost on odd seconds: build here to
+# extend it
+cheat tp 2 5 2
+wait 1000
+screen ghost-below
+wait 1000
+screen no-ghost

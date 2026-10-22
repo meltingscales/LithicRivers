@@ -37,3 +37,28 @@ Vertical conveyors SHALL be craftable from the same ingredients as wooden convey
 #### Scenario: Convert
 - **WHEN** the player crafts the conversion with one wooden conveyor
 - **THEN** they get one vertical conveyor
+
+### Requirement: Climbing vertical conveyors
+The player SHALL be able to move up or down from a vertical conveyor or stairs to a vertical conveyor or stairs directly above or below, as with stairs.
+
+#### Scenario: Climb a stack
+- **WHEN** the player stands on a vertical conveyor with another directly above it and moves up
+- **THEN** they are on the upper conveyor, and moving down brings them back
+
+### Requirement: Building stairs
+Stairs SHALL be craftable, and placing them SHALL build a stairway of two stair tiles, at the target and directly above or below it (the player's choice), using one Stairs item per tile. A solid, mineable tile on the other layer SHALL be dug out with its usual drops. Breaking a stair tile SHALL give one Stairs item.
+
+#### Scenario: Dig a stairway up
+- **WHEN** the player with 2 Stairs places them next to them under rock
+- **THEN** stairs appear at the target and above it, the rock's stone drops on the upper stairs, and the player can climb up and back down
+
+#### Scenario: Too few stairs
+- **WHEN** the player places stairs with only 1 in the inventory
+- **THEN** nothing is built and the message says a stairway takes 2
+
+### Requirement: Ghost stairs
+On every other second, a bare tile with stairs or a vertical conveyor directly above or below it SHALL show a dim ghost of the stairs.
+
+#### Scenario: Above a stairway
+- **WHEN** the player looks at the layer above a stairway's top
+- **THEN** the tile over it shows a ghost of the stairs every other second

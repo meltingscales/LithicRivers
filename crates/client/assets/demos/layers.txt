@@ -1,0 +1,53 @@
+# Between layers
+# The robot digs a stairway up, lays a belt into a vertical conveyor, climbs to the layer
+# above to put a chest over the conveyor, and watches a nail rise into it.
+world factory-showcase
+key ui.MENU_PREV
+cheat tp 0 5 0
+cheat giveitem stairs 2
+cheat giveitem wooden_conveyor 1
+cheat giveitem vertical_conveyor 1
+cheat giveitem chest 1
+# Hotbar: F1 stairs, F2 wooden conveyor, F3 vertical conveyor, F4 chest
+# (picker: Clear slot, Acorn, Stairs, Wooden Conveyor, Vertical Conveyor, Chest)
+key build.TOGGLE_BREAK_PLACE_MODE 2
+key hotbar.HOTBAR_SLOT_1 2
+key movement.MOVE_SOUTH 2
+key ui.MENU_ACTIVATE
+key hotbar.HOTBAR_SLOT_2 2
+key movement.MOVE_SOUTH 3
+key ui.MENU_ACTIVATE
+key hotbar.HOTBAR_SLOT_3 2
+key movement.MOVE_SOUTH 4
+key ui.MENU_ACTIVATE
+key hotbar.HOTBAR_SLOT_4 2
+key movement.MOVE_SOUTH 5
+key ui.MENU_ACTIVATE
+beat 350
+# A stairway east, up to the next layer
+key hotbar.HOTBAR_SLOT_1
+key build.PLACE_EAST
+# A belt running east into a vertical conveyor
+key hotbar.HOTBAR_SLOT_2
+key build.ROTATE_PLACEMENT
+key build.PLACE_NORTH
+key hotbar.HOTBAR_SLOT_3
+key build.PLACE_NORTHEAST
+key build.TOGGLE_BREAK_PLACE_MODE 2
+# Put a nail on the belt: it rides into the conveyor and waits there
+key action.INTERACT
+key ui.MENU_ACTIVATE
+tick 80
+# Up the stairs, and a chest over the conveyor
+key movement.MOVE_EAST
+key movement.MOVE_UP
+key build.TOGGLE_BREAK_PLACE_MODE 2
+key hotbar.HOTBAR_SLOT_4
+key build.PLACE_NORTH
+key build.TOGGLE_BREAK_PLACE_MODE 2
+tick 80
+key action.INTERACT
+wait 2000
+key ui.CLOSE_HELP_MENU
+key movement.MOVE_DOWN
+screen end

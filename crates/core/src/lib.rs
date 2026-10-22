@@ -32,6 +32,7 @@ pub mod save_load;
 mod serde_pairs;
 pub mod showcase;
 pub mod spawn_utils;
+pub mod stairs;
 pub mod structure;
 pub mod system_scheduler;
 pub mod systems;

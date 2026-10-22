@@ -93,6 +93,10 @@ pub enum FactoryKind {
     FilterExtractor,
     /// Splits a belt line in turn, or sorts one item kind to the left
     BeltRouter,
+    /// Carries one item to the block on the layer above
+    VerticalConveyorUp,
+    /// Carries one item to the block on the layer below
+    VerticalConveyorDown,
     /// A consumer that does nothing but draw power, for grid tests
     #[cfg(any(test, feature = "test-support"))]
     TestConsumer,
@@ -115,6 +119,7 @@ impl FactoryKind {
             ItemKind::Extractor => Some(FactoryKind::Extractor),
             ItemKind::FilterExtractor => Some(FactoryKind::FilterExtractor),
             ItemKind::BeltRouter => Some(FactoryKind::BeltRouter),
+            ItemKind::VerticalConveyor => Some(FactoryKind::VerticalConveyorUp),
             _ => None,
         }
     }
@@ -132,6 +137,9 @@ impl FactoryKind {
             FactoryKind::Extractor => Some(ItemKind::Extractor),
             FactoryKind::FilterExtractor => Some(ItemKind::FilterExtractor),
             FactoryKind::BeltRouter => Some(ItemKind::BeltRouter),
+            FactoryKind::VerticalConveyorUp | FactoryKind::VerticalConveyorDown => {
+                Some(ItemKind::VerticalConveyor)
+            }
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestConsumer => None,
             #[cfg(any(test, feature = "test-support"))]
@@ -151,6 +159,8 @@ impl FactoryKind {
             FactoryKind::Extractor => "extractor",
             FactoryKind::FilterExtractor => "filter extractor",
             FactoryKind::BeltRouter => "belt router",
+            FactoryKind::VerticalConveyorUp => "vertical conveyor (up)",
+            FactoryKind::VerticalConveyorDown => "vertical conveyor (down)",
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestConsumer => "test consumer",
             #[cfg(any(test, feature = "test-support"))]
@@ -170,6 +180,8 @@ impl FactoryKind {
             | FactoryKind::BeltRouter => true,
             FactoryKind::AutoPlanter => false,
             FactoryKind::BurnerGenerator | FactoryKind::PowerPole => false,
+            // Up or down instead of a facing: see `rotate`
+            FactoryKind::VerticalConveyorUp | FactoryKind::VerticalConveyorDown => false,
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestConsumer => false,
             #[cfg(any(test, feature = "test-support"))]
@@ -213,6 +225,10 @@ impl FactoryKind {
             }
             FactoryKind::BeltRouter => {
                 SpriteRef::new("factory", &format!("belt_router_{}", facing.name()))
+            }
+            FactoryKind::VerticalConveyorUp => SpriteRef::new("factory", "vertical_conveyor_up"),
+            FactoryKind::VerticalConveyorDown => {
+                SpriteRef::new("factory", "vertical_conveyor_down")
             }
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestConsumer => SpriteRef::new("factory", "chest"),
@@ -291,7 +307,7 @@ pub fn place(
                 ..Default::default()
             });
         }
-        FactoryKind::Belt => {
+        FactoryKind::Belt | FactoryKind::VerticalConveyorUp | FactoryKind::VerticalConveyorDown => {
             builder.add(BeltSlot::default());
         }
         FactoryKind::BurnerGenerator => {
@@ -393,11 +409,25 @@ pub fn break_block(
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RotateResult {
     Rotated(Facing),
+    /// A vertical conveyor switched between up and down; this is its new kind
+    Flipped(FactoryKind),
     NotDirectional(FactoryKind),
     NoBlock,
 }
 
-/// Rotate the factory block at `pos` one step clockwise.
+impl FactoryKind {
+    /// Which way a vertical conveyor carries items: +1 up, -1 down, `None` for other blocks.
+    pub fn lift(self) -> Option<i64> {
+        match self {
+            FactoryKind::VerticalConveyorUp => Some(1),
+            FactoryKind::VerticalConveyorDown => Some(-1),
+            _ => None,
+        }
+    }
+}
+
+/// Rotate the factory block at `pos` one step clockwise, or flip a vertical conveyor
+/// between up and down.
 pub fn rotate(world: &mut World, res: &Resources, pos: Position) -> RotateResult {
     let Some(&entity) = res.factory_index.get(&pos) else {
         return RotateResult::NoBlock;
@@ -405,6 +435,16 @@ pub fn rotate(world: &mut World, res: &Resources, pos: Position) -> RotateResult
     let Ok(mut block) = world.get::<&mut FactoryBlock>(entity) else {
         return RotateResult::NoBlock;
     };
+    if block.kind.lift().is_some() {
+        block.kind = match block.kind {
+            FactoryKind::VerticalConveyorUp => FactoryKind::VerticalConveyorDown,
+            _ => FactoryKind::VerticalConveyorUp,
+        };
+        let (kind, facing) = (block.kind, block.facing);
+        drop(block);
+        let _ = world.insert_one(entity, kind.sprite(facing));
+        return RotateResult::Flipped(kind);
+    }
     if !block.kind.directional() {
         return RotateResult::NotDirectional(block.kind);
     }
@@ -669,25 +709,19 @@ pub fn move_one_item_to_block(
 
 /// Belts in processing order: each belt after the belt it feeds, so a full line shifts by
 /// one tile in a single step. Ties and loops go by position.
-fn belt_order(world: &World, res: &Resources) -> Vec<(Entity, Position, Facing)> {
-    let mut belts: Vec<(Entity, Position, Facing)> = world
+fn belt_order(world: &World, res: &Resources) -> Vec<(Entity, Position, FactoryBlock)> {
+    let mut belts: Vec<(Entity, Position, FactoryBlock)> = world
         .query::<(&Position, &FactoryBlock)>()
         .with::<&BeltSlot>()
         .iter()
-        .map(|(e, (p, b))| (e, *p, b.facing))
+        .map(|(e, (p, b))| (e, *p, *b))
         .collect();
     belts.sort_by_key(|(_, p, _)| (p.z, p.y, p.x));
-    let by_entity: HashMap<Entity, (Position, Facing)> =
-        belts.iter().map(|(e, p, f)| (*e, (*p, *f))).collect();
-    let next = |pos: Position, facing: Facing| {
-        let (dx, dy) = facing.offset();
-        let target = Position {
-            x: pos.x + dx,
-            y: pos.y + dy,
-            z: pos.z,
-        };
+    let by_entity: HashMap<Entity, (Position, FactoryBlock)> =
+        belts.iter().map(|(e, p, b)| (*e, (*p, *b))).collect();
+    let next = |pos: Position, block: FactoryBlock| {
         res.factory_index
-            .get(&target)
+            .get(&belt_target(pos, block).0)
             .copied()
             .filter(|e| by_entity.contains_key(e))
     };
@@ -703,22 +737,44 @@ fn belt_order(world: &World, res: &Resources) -> Vec<(Entity, Position, Facing)>
             }
             state.insert(e, 1);
             path.push(e);
-            let (pos, facing) = by_entity[&e];
-            current = next(pos, facing);
+            let (pos, block) = by_entity[&e];
+            current = next(pos, block);
         }
         for e in path.into_iter().rev() {
             state.insert(e, 2);
-            let (pos, facing) = by_entity[&e];
-            order.push((e, pos, facing));
+            let (pos, block) = by_entity[&e];
+            order.push((e, pos, block));
         }
     }
     order
 }
 
+/// Where a belt-like block hands its item, and the heading it arrives with: a belt passes
+/// it on along its facing, a vertical conveyor to the layer above or below, arriving with
+/// no heading (as if put in by hand).
+fn belt_target(pos: Position, block: FactoryBlock) -> (Position, Option<Facing>) {
+    if let Some(dz) = block.kind.lift() {
+        return (
+            Position {
+                z: pos.z + dz,
+                ..pos
+            },
+            None,
+        );
+    }
+    let (dx, dy) = block.facing.offset();
+    let target = Position {
+        x: pos.x + dx,
+        y: pos.y + dy,
+        z: pos.z,
+    };
+    (target, Some(block.facing))
+}
+
 /// One factory step for every belt: advance items, hand them on, then load dropped items.
 fn step_belts(world: &mut World, res: &mut Resources) {
     let order = belt_order(world, res);
-    for &(belt, pos, facing) in &order {
+    for &(belt, pos, block) in &order {
         let Some(item) = ({
             let mut slot = world.get::<&mut BeltSlot>(belt).expect("belt has a slot");
             match slot.item {
@@ -731,16 +787,11 @@ fn step_belts(world: &mut World, res: &mut Resources) {
         }) else {
             continue;
         };
-        let (dx, dy) = facing.offset();
-        let target = Position {
-            x: pos.x + dx,
-            y: pos.y + dy,
-            z: pos.z,
-        };
+        let (target, heading) = belt_target(pos, block);
         let Some(&target) = res.factory_index.get(&target) else {
             continue;
         };
-        if insert_from(world, target, item, Some(facing)) {
+        if insert_from(world, target, item, heading) {
             *world.get::<&mut BeltSlot>(belt).expect("belt has a slot") = BeltSlot::default();
         }
     }
@@ -1406,5 +1457,160 @@ mod tests {
             Some(FactoryKind::Belt)
         );
         assert_eq!(item_count(&game, ItemKind::Log), 1);
+    }
+
+    // --- Vertical conveyors ----------------------------------------------------------
+
+    fn at_z(x: i64, y: i64, z: i64) -> Position {
+        Position { x, y, z }
+    }
+
+    /// Clear the tile, then place a block on it.
+    fn place_open(game: &mut Game, kind: FactoryKind, pos: Position, facing: Facing) -> Entity {
+        game.res
+            .world_state
+            .world
+            .set_tile_cached(pos.x, pos.y, pos.z, TileKind::Air);
+        place_in(game, kind, pos, facing)
+    }
+
+    fn chest_logs(game: &Game, chest: Entity) -> u32 {
+        game.world
+            .get::<&Inventory>(chest)
+            .unwrap()
+            .slots
+            .iter()
+            .filter(|s| s.kind == ItemKind::Log)
+            .map(|s| s.qty)
+            .sum()
+    }
+
+    #[test]
+    fn a_belt_lifts_a_log_into_a_chest_on_the_layer_above() {
+        let mut game = belt_game();
+        belts(&mut game, at(0, 0), 1, Facing::East);
+        place_open(
+            &mut game,
+            FactoryKind::VerticalConveyorUp,
+            at(1, 0),
+            Facing::North,
+        );
+        let chest = place_open(&mut game, FactoryKind::Chest, at_z(1, 0, 1), Facing::North);
+        put_on_belt(&mut game, at(0, 0), ItemKind::Log);
+        steps(&mut game, 4);
+        assert_eq!(chest_logs(&game, chest), 1);
+        assert_eq!(
+            item_count(&game, ItemKind::Log),
+            1,
+            "nothing lost or copied"
+        );
+    }
+
+    #[test]
+    fn stacked_conveyors_climb_several_layers() {
+        let mut game = belt_game();
+        for z in 0..3 {
+            place_open(
+                &mut game,
+                FactoryKind::VerticalConveyorUp,
+                at_z(0, 0, z),
+                Facing::North,
+            );
+        }
+        let chest = place_open(&mut game, FactoryKind::Chest, at_z(0, 0, 3), Facing::North);
+        for _ in 0..3 {
+            put_on_belt(&mut game, at(0, 0), ItemKind::Log);
+            steps(&mut game, 2);
+        }
+        steps(&mut game, 6);
+        assert_eq!(chest_logs(&game, chest), 3);
+        assert_eq!(item_count(&game, ItemKind::Log), 3);
+    }
+
+    #[test]
+    fn a_down_conveyor_lowers_onto_a_belt() {
+        let mut game = belt_game();
+        place_open(
+            &mut game,
+            FactoryKind::VerticalConveyorDown,
+            at_z(0, 0, 1),
+            Facing::North,
+        );
+        belts(&mut game, at(0, 0), 1, Facing::East);
+        let chest = place_open(&mut game, FactoryKind::Chest, at(1, 0), Facing::North);
+        put_on_belt(&mut game, at_z(0, 0, 1), ItemKind::Log);
+        steps(&mut game, 6);
+        assert_eq!(chest_logs(&game, chest), 1);
+    }
+
+    #[test]
+    fn rock_above_holds_the_item() {
+        let mut game = belt_game();
+        place_open(
+            &mut game,
+            FactoryKind::VerticalConveyorUp,
+            at(0, 0),
+            Facing::North,
+        );
+        game.res
+            .world_state
+            .world
+            .set_tile_cached(0, 0, 1, TileKind::Rock);
+        put_on_belt(&mut game, at(0, 0), ItemKind::Log);
+        steps(&mut game, 10);
+        assert_eq!(belt_item(&game, at(0, 0)), Some(ItemKind::Log));
+        assert_eq!(item_count(&game, ItemKind::Log), 1);
+    }
+
+    #[test]
+    fn rotating_flips_up_and_down_and_breaking_gives_one_item() {
+        let mut game = belt_game();
+        let lift = place_open(
+            &mut game,
+            FactoryKind::VerticalConveyorUp,
+            at(0, 0),
+            Facing::North,
+        );
+        assert_eq!(
+            rotate(&mut game.world, &game.res, at(0, 0)),
+            RotateResult::Flipped(FactoryKind::VerticalConveyorDown)
+        );
+        assert_eq!(
+            game.world.get::<&SpriteRef>(lift).unwrap().name,
+            "vertical_conveyor_down"
+        );
+        assert_eq!(
+            rotate(&mut game.world, &game.res, at(0, 0)),
+            RotateResult::Flipped(FactoryKind::VerticalConveyorUp)
+        );
+        let p = player(&game);
+        assert_eq!(
+            break_block(&mut game.world, &mut game.res, at(0, 0), p),
+            Some(FactoryKind::VerticalConveyorUp)
+        );
+        let inv = game.world.get::<&Inventory>(p).unwrap();
+        assert!(inv
+            .slots
+            .iter()
+            .any(|s| s.kind == ItemKind::VerticalConveyor && s.qty == 1));
+    }
+
+    #[test]
+    fn standing_on_a_vertical_conveyor_does_not_carry_the_player() {
+        let mut game = belt_game();
+        place_open(
+            &mut game,
+            FactoryKind::VerticalConveyorUp,
+            at(0, 0),
+            Facing::East,
+        );
+        game.res
+            .world_state
+            .world
+            .set_tile_cached(1, 0, 0, TileKind::Grass);
+        let p = player(&game);
+        *game.world.get::<&mut Position>(p).unwrap() = at(0, 0);
+        steps(&mut game, 6);
+        assert_eq!(game.get_player_position(), Some(at(0, 0)));
     }
 }
