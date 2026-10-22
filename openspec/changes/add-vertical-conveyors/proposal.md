@@ -18,6 +18,7 @@ LithicRivers is layered: every z-level is a full world, and the best materials a
   - A Stairs item, crafted 2 at a time from 2 wooden planks and 2 sticks.
   - Placing it builds a stairway: stair tiles at the target and directly above it (or below; the rotate key switches which). It costs 2 Stairs, one per tile. A solid tile on the other layer is dug out with the usual mining drops.
   - Breaking a stair tile gives one Stairs back.
+- **Build-stairs prompt (added during implementation):** moving up or down with nothing to climb asks whether to build a stairway there, using one Stairs per new stair tile, and then climbs it. Without enough stairs, the message says to craft them and try again.
 - **Ghost stairs (added during implementation):** on odd seconds, bare tiles with stairs or a vertical conveyor directly above or below show a dim ghost of the stairs, so players can see where stairways lead and where to extend them.
 - **Demo:** a "Between layers" scene builds a stairway, a belt into a vertical conveyor, and a chest on the layer above, and watches a nail rise into it.
 

@@ -17,6 +17,7 @@ pub mod multi_action;
 pub mod npc_interaction;
 pub mod quests;
 pub mod splash;
+pub mod stairs_prompt;
 pub mod tutorial_selection;
 pub mod tutorial_skip;
 pub mod world_action;

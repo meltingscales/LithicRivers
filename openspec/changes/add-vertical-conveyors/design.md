@@ -36,6 +36,7 @@
 - `stairs::climbable(pos)`: a Stairs tile or a vertical conveyor. Moving up or down needs a climbable tile both where the player stands and where they arrive, as stairs did before, so the player is never stranded.
 - **Stairways come in pairs:** the player can only build on their own layer, so placing Stairs makes both tiles at once, the target and the one above or below. Each tile costs one Stairs and breaking one gives one back, so nothing is duplicated. `BuildPanelState::stairs_down` (the rotate key while Stairs is selected) picks the direction, and the hotbar title shows "stairs up" or "stairs down".
 - **Digging:** a solid tile on the other layer is mined with `crafting::mine_tile`, and its drops land on the new stairs. A tile the mining table doesn't list refuses the stairway.
+- **The prompt:** the up and down keys check `climbable` here and there before queueing the move. If the climb would fail, `stairs::check_stairway` says what a stairway from the player's tile would cost or why it can't be built. A stairway only charges for tiles that aren't stairs yet, so extending one costs 1.
 - **Ghost stairs:** `climb_overlay` in the world view checks the tiles above and below each visible bare tile, without generating chunks (`get_tile_cached_no_worldgen`), and draws the stairs sprite in gray (something above) or dark gray (something below) on odd seconds.
 
 ## Risks / Trade-offs

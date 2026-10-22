@@ -175,6 +175,7 @@ impl App {
             item_dictionary: Default::default(),
             filter_picker: None,
             blueprint_window: None,
+            stairs_prompt: None,
             inventory: InventoryPanelState { selected: 0 },
             crafting: CraftingPanelState {
                 recipe_handler: RecipeHandler::new(),

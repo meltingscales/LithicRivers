@@ -8,7 +8,7 @@ use crate::resources::Resources;
 use crate::tiles::TileKind;
 use hecs::{Entity, World};
 
-/// Stairs items a stairway uses: one per stair tile.
+/// Stairs items a full stairway uses: one per stair tile.
 pub const STAIRWAY_COST: u32 = 2;
 
 /// Whether the player can climb up or down from `pos`: stairs, or a vertical conveyor
@@ -26,8 +26,8 @@ pub fn climbable(world: &World, res: &mut Resources, pos: Position) -> bool {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum StairsError {
-    /// Fewer than `STAIRWAY_COST` stairs in the inventory
-    NotEnough,
+    /// Fewer stairs in the inventory than the stairway needs (this many)
+    NotEnough(u32),
     /// Something is on one of the two tiles, or the near tile is solid
     Occupied,
     /// The tile on the other layer is solid and can't be dug out
@@ -37,8 +37,8 @@ pub enum StairsError {
 impl StairsError {
     pub fn message(self) -> String {
         match self {
-            StairsError::NotEnough => {
-                format!("A stairway takes {STAIRWAY_COST} stairs, one for each layer")
+            StairsError::NotEnough(need) => {
+                format!("This stairway takes {need} stairs, one for each new stair")
             }
             StairsError::Occupied => "Can't build stairs there: something is in the way".into(),
             StairsError::Undiggable(tile) => {
@@ -48,17 +48,8 @@ impl StairsError {
     }
 }
 
-/// Build a stairway from `pos` to the tile `dz` layers away (1 up, -1 down), paid from
-/// `player`'s inventory. A solid tile on the other layer is dug out first, and what it
-/// drops lands on the new stairs.
-pub fn build_stairway(
-    world: &mut World,
-    res: &mut Resources,
-    pos: Position,
-    dz: i64,
-    player: Entity,
-) -> Result<(), StairsError> {
-    let have: u32 = world
+fn stairs_held(world: &World, player: Entity) -> u32 {
+    world
         .get::<&Inventory>(player)
         .map(|inv| {
             inv.slots
@@ -67,25 +58,71 @@ pub fn build_stairway(
                 .map(|s| s.qty)
                 .sum()
         })
-        .unwrap_or(0);
-    if have < STAIRWAY_COST {
-        return Err(StairsError::NotEnough);
+        .unwrap_or(0)
+}
+
+/// Whether a stairway from `pos` to the tile `dz` layers away could be built, ignoring the
+/// inventory: the stairs it would cost (one per tile that isn't stairs yet), or why not.
+/// `player` may stand on either tile.
+pub fn check_stairway(
+    world: &World,
+    res: &mut Resources,
+    pos: Position,
+    dz: i64,
+    player: Entity,
+) -> Result<u32, StairsError> {
+    let other = Position {
+        z: pos.z + dz,
+        ..pos
+    };
+    let mut cost = 0;
+    for (p, near) in [(pos, true), (other, false)] {
+        let tile = res.world_state.world.get_tile_cached(p.x, p.y, p.z);
+        if tile == TileKind::Stairs {
+            continue;
+        }
+        let blocked = world
+            .query::<&Position>()
+            .iter()
+            .any(|(e, q)| *q == p && e != player);
+        if blocked {
+            return Err(StairsError::Occupied);
+        }
+        if !tile.is_passable() {
+            if near {
+                return Err(StairsError::Occupied);
+            }
+            if crate::crafting::mining_drop(tile).is_none() {
+                return Err(StairsError::Undiggable(tile));
+            }
+        }
+        cost += 1;
+    }
+    Ok(cost)
+}
+
+/// Build a stairway from `pos` to the tile `dz` layers away (1 up, -1 down), paid from
+/// `player`'s inventory, one Stairs per tile that isn't stairs yet. A solid tile on the
+/// other layer is dug out first, and what it drops lands on the new stairs.
+pub fn build_stairway(
+    world: &mut World,
+    res: &mut Resources,
+    pos: Position,
+    dz: i64,
+    player: Entity,
+) -> Result<(), StairsError> {
+    let cost = check_stairway(world, res, pos, dz, player)?;
+    if stairs_held(world, player) < cost {
+        return Err(StairsError::NotEnough(cost));
     }
     let other = Position {
         z: pos.z + dz,
         ..pos
     };
-    let entity_on = |p: Position| world.query::<&Position>().iter().any(|(_, q)| *q == p);
-    if !crate::factory::can_place_at(world, res, pos) || entity_on(other) {
-        return Err(StairsError::Occupied);
-    }
     let other_tile = res
         .world_state
         .world
         .get_tile_cached(other.x, other.y, other.z);
-    if !other_tile.is_passable() && crate::crafting::mining_drop(other_tile).is_none() {
-        return Err(StairsError::Undiggable(other_tile));
-    }
     let dug = if other_tile.is_passable() {
         Vec::new()
     } else {
@@ -104,7 +141,7 @@ pub fn build_stairway(
         ));
     }
     if let Ok(mut inv) = world.get::<&mut Inventory>(player) {
-        let mut left = STAIRWAY_COST;
+        let mut left = cost;
         for slot in inv.slots.iter_mut().filter(|s| s.kind == ItemKind::Stairs) {
             let n = slot.qty.min(left);
             slot.qty -= n;
@@ -181,7 +218,10 @@ mod tests {
     #[test]
     fn one_stairs_item_is_not_enough_and_nothing_changes() {
         let mut t = game(1);
-        assert_eq!(build(&mut t, at(1, 0, 0), 1), Err(StairsError::NotEnough));
+        assert_eq!(
+            build(&mut t, at(1, 0, 0), 1),
+            Err(StairsError::NotEnough(2))
+        );
         assert_eq!(t.tile(1, 0, 1), TileKind::Rock);
         assert_eq!(t.player_has(ItemKind::Stairs), 1);
     }
@@ -227,5 +267,29 @@ mod tests {
         assert_eq!(t.player_pos(), at(1, 0, 1), "nothing to climb onto above");
         climb(&mut t, -1);
         assert_eq!(t.player_pos(), at(1, 0, 0));
+    }
+
+    #[test]
+    fn a_stairway_from_where_the_player_stands() {
+        let mut t = game(2);
+        build(&mut t, at(0, 0, 0), -1).unwrap();
+        assert_eq!(t.tile(0, 0, 0), TileKind::Stairs);
+        climb(&mut t, -1);
+        assert_eq!(t.player_pos(), at(0, 0, -1));
+    }
+
+    #[test]
+    fn extending_a_stairway_costs_only_the_new_stair() {
+        let mut t = game(3);
+        build(&mut t, at(0, 0, 0), 1).unwrap();
+        let player = t.game.get_player_entity().unwrap();
+        let game = &mut t.game;
+        assert_eq!(
+            check_stairway(&game.world, &mut game.res, at(0, 0, 0), -1, player),
+            Ok(1)
+        );
+        build(&mut t, at(0, 0, 0), -1).unwrap();
+        assert_eq!(t.player_has(ItemKind::Stairs), 0);
+        assert_eq!(t.tile(0, 0, -1), TileKind::Stairs);
     }
 }
