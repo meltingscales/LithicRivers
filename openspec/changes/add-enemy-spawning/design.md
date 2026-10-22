@@ -34,9 +34,10 @@
 - `FactoryKind::Spawner { creature }` spawns one creature within 4 tiles every 30 game seconds while the player is within 24 tiles, up to 4 of its own (tracked by a `SpawnedBy` component, saved).
 - Breaking it gives a spawner core item for that creature.
 
-### Fences
-- A fence is a factory block, so it shows in look mode and can be broken back into an item. It is see-through for fog of war and light.
-- Creature pathing treats fences as walls. Whether the player passes is the open question in the proposal.
+### Fences and gates (decided by the user)
+- Fences and gates are factory blocks, so they show in look mode and break back into items. Both are see-through for fog of war and light.
+- **Fences** are walls for creatures and the player.
+- **Gates** are walls for creatures only: the player's movement treats a gate as walkable, the same way it treats belts (`logistics::walkable`), with no open or closed state.
 
 ## Risks / Trade-offs
 

@@ -21,10 +21,19 @@
 
 ## Decisions
 
+### Tiers (decided by the user)
+| Tier | When | Power | Parts it takes | Body layouts |
+|---|---|---|---|---|
+| Crude vat | starter | none | crude parts (wake Damaged, at 40 integrity) | the default two arms, two legs |
+| Standard vat | mid-game | a trickle | crude or standard parts (standard wake Functional at 100) | the default layout |
+| Advanced vat | end-game | a lot | any grade, advanced parts wake Enhanced | four, six or eight arms (`add-multi-arm-bodies`) |
+
+Recipes and power numbers are set in implementation and pinned by the reachability test and the power-balance examples.
+
 ### Parts and the vat
-- Each `BodyPartType` gets an item (`ItemKind::BodyPart(BodyPartType)` or one variant each, decided in implementation by what the item code supports). Parts are made Functional at 100 integrity.
-- **The vat:** one slot per part type. Its spare body is ready when the torso and the fusion core slots are filled (the rest can be missing, and the robot wakes without them) and the vat has power.
-- **Power:** the vat draws a trickle (`demand_w` like other machines) while it holds a ready body.
+- Each part type gets an item per grade (crude, standard, advanced). A part's grade sets the state and integrity it wakes with.
+- **The vat:** one slot per part in its layout. Its spare body is ready when the torso and the fusion core slots are filled (the rest can be missing, and the robot wakes without them) and, for powered tiers, it has power.
+- **Power:** standard and advanced vats draw power (`demand_w` like other machines) while they hold a ready body.
 
 ### Resurrecting
 - **The Resurrect screen** lists ready vats in a fixed order (by distance, then position), each with its parts' states. The junker option is always listed last.
@@ -37,5 +46,5 @@
 
 ## Risks / Trade-offs
 
-- [Too costly early] → The junker is always there, and the first vat's recipe is mid-tier.
+- [Too costly early] → The junker is always there, and the crude vat is cheap and needs no power.
 - [The HQ is far from the bunker] → That's the point of the junker; the vat is the fix.

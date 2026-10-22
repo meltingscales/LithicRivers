@@ -6,15 +6,26 @@ Guns the robot can use in combat, fed by an ammo supply chain whose brass casing
 
 ## ADDED Requirements
 
+### Requirement: Weapon slots
+Each working arm SHALL hold at most one gun, equipped from the Body tab, and an arm that is missing SHALL hold none.
+
+#### Scenario: Starting robot
+- **WHEN** the starting robot (left arm missing) tries to equip two guns
+- **THEN** only one is equipped, in the right arm
+
 ### Requirement: Shooting in combat
-With a gun and matching ammo in the inventory, the player SHALL have a Shoot move in combat that uses one cartridge and hits by the same line-of-sight and distance rules as enemy shots, with the gun's own range, accuracy and damage.
+With at least one equipped gun that has matching ammo, the player SHALL have a Shoot move in combat that fires every equipped, loaded gun in the same turn. Each shot SHALL use one cartridge and hit by the same line-of-sight and distance rules as enemy shots, with its gun's own range, accuracy and damage.
 
 #### Scenario: Shoot
-- **WHEN** the player has a pipe gun and 3 paper cartridges and shoots a dog 3 tiles away
+- **WHEN** the player has a pipe gun equipped, 3 paper cartridges, and shoots a dog 3 tiles away
 - **THEN** one cartridge is used and the shot hits or misses by the pipe gun's chance at 3 tiles
 
+#### Scenario: Many arms, many shots
+- **WHEN** a four-armed robot with four loaded pipe guns equipped uses Shoot once
+- **THEN** four shots are fired that turn, each rolling its own hit
+
 #### Scenario: No ammo
-- **WHEN** the player has a pipe gun and no paper cartridges
+- **WHEN** the player has a pipe gun equipped and no paper cartridges
 - **THEN** the Shoot move isn't offered
 
 ### Requirement: Casings return

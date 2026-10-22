@@ -16,7 +16,9 @@ Creatures are only placed once: feral dogs at world creation, and nuclear slimes
 - **Spawner blocks:** found in ruins and dungeons, each spawns one creature kind nearby on a timer while the player is within range, up to its own cap.
   - Breaking one drops its core: a "spawner core" item that can be placed again.
   - This is how farms are built: wall in a spawner, let creatures come to a killing spot.
-- **Fence:** a craftable block that blocks creatures but not sight or light. The player can walk through a fence gate; fences themselves block the player too.
+- **Fences and gates** (decided by the user): craftable blocks that don't block sight or light.
+  - **Fences** block creatures and the player.
+  - **Gates** block creatures, but the player walks straight through them, with nothing to open or close.
 - **Encouraging farming:** spawner farms and creature loot go through the same loot tables, and creatures killed by machines drop into the machine's output once machine traps exist (later).
 
 ## Capabilities
@@ -42,7 +44,10 @@ Creatures are only placed once: feral dogs at world creation, and nuclear slimes
   - `overhaul-worldgen-depth` (bands)
   - lights and night from `add-day-night-cycle`, for the lit-base rule
 
-## Open questions
+## Decided
 
-- Fences: should the player pass through plain fences too (only creatures blocked), or only through gates?
+- **Fences and gates (the user's decision):** the player walks through gates only, without opening or closing them, and not through fences.
+
+## Open question
+
 - Should spawners be craftable later, or only found?

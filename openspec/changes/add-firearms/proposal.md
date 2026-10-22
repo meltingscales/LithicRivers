@@ -9,7 +9,13 @@ After `add-ranged-combat`, enemies can shoot, but the robot can only punch and t
 - **Two guns to start:**
   - a **pipe gun** (early, crafted from iron scrap and wood; fires paper cartridges; short range, poor accuracy)
   - a **rifle** (later, needs brass and the electric furnace tier; fires brass cartridges; long range, good accuracy)
-- **Shooting in combat:** with a gun and matching ammo in the inventory, the combat move list gains "Shoot (gun)". It uses the same line of sight, accuracy falloff and seeded hit roll as enemy shots (`add-ranged-combat`), with each gun's own range, accuracy and damage.
+- **Weapon slots** (decided by the user): every working arm holds one weapon. A gun is equipped into an arm's slot in the Body tab; a missing or destroyed arm can't hold one.
+  - The starting robot, with its left arm missing, has one weapon slot.
+  - Multi-arm builds (four, six or eight arms, from `add-multi-arm-bodies`) can wield that many guns.
+- **Shooting in combat:** with at least one equipped gun and matching ammo, the combat move list gains "Shoot".
+  - One Shoot move fires **every equipped, loaded gun in the same turn**, each rolling its own hit. A four-armed robot with four pipe guns fires four shots per Shoot.
+  - Shots use the same line of sight, accuracy falloff and seeded hit roll as enemy shots (`add-ranged-combat`), with each gun's own range, accuracy and damage.
+  - The move takes as long as the slowest gun fired.
 - **The ammo chain:**
 
   | Item | From |
@@ -43,13 +49,19 @@ After `add-ranged-combat`, enemies can shoot, but the robot can only punch and t
   - New items and recipes, with the reachability test covering them.
   - Three deposits in `world::DEPOSITS`, each with a mining drop.
   - A furnace smelting recipe for brass.
-  - `MoveType::Shoot` in the player's moves, enabled by inventory.
+  - Weapon slots on the body (one per working arm), saved with the body.
+  - `MoveType::Shoot`, enabled by an equipped, loaded gun, firing every one in the same turn.
   - Ammo use and casings returned.
 - **Client:**
-  - The Shoot move in the combat panel, with the gun's hit chance at the current distance.
+  - Equipping guns into arm slots in the Body tab.
+  - The Shoot move in the combat panel, listing each equipped gun with its hit chance at the current distance and its ammo.
   - Sprites for every new item and deposit.
-- **Depends on:** `add-ranged-combat`, `overhaul-worldgen-depth`, and the crude furnace (later the electric furnace for the rifle's tier).
+- **Depends on:**
+  - `add-ranged-combat`
+  - `overhaul-worldgen-depth`
+  - the crude furnace (later the electric furnace for the rifle's tier)
+  - `add-multi-arm-bodies`, for more than two weapons
 
-## Open question
+## Decided
 
-- Should guns take a slot (an equipment or hotbar slot), or is "the best gun in the inventory" enough for now? This proposal assumes the latter.
+- **Slots (the user's decision):** guns go in weapon slots, one per working arm, and multi-arm builds fire every equipped gun in one turn.

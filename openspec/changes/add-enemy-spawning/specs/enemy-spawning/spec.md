@@ -31,9 +31,13 @@ A spawner block SHALL spawn its creature nearby on a timer while the player is i
 - **WHEN** a dog spawner sits inside a fenced pen and the player waits nearby
 - **THEN** dogs appear in the pen, never more than four from that spawner
 
-### Requirement: Fences block creatures
-Creatures SHALL not pass through fences, and fences SHALL not block sight or light.
+### Requirement: Fences and gates
+Creatures SHALL not pass through fences or gates. The player SHALL not pass through fences, and SHALL walk through gates without opening them. Neither SHALL block sight or light.
 
 #### Scenario: Behind a fence
 - **WHEN** a dog chases the player and a fence is between them
 - **THEN** the dog can't reach the player through the fence, and the player still sees it
+
+#### Scenario: Through a gate
+- **WHEN** the player walks into a gate in a fenced pen with a dog inside
+- **THEN** the player steps onto the gate and into the pen, and the dog still can't leave through it

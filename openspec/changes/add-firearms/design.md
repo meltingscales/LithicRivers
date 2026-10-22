@@ -16,7 +16,7 @@
 - Deterministic.
 
 **Non-Goals:**
-- Equipment slots.
+- Armor and other equipment slots (only weapons, one per arm).
 - Gun upgrades and mods.
 - Explosives.
 - Outside-combat shooting.
@@ -24,9 +24,16 @@
 
 ## Decisions
 
+### Weapon slots (decided by the user)
+- Each arm part has a weapon slot holding at most one gun item. Equipping moves the gun from the inventory into the slot, and unequipping moves it back.
+- An arm that is Missing loses its slot: its gun drops into the inventory, or onto the ground if the inventory is full.
+- The slots are saved with the body. A wreck (`add-player-death`) keeps the guns in its body's slots.
+
 ### Shooting
-- `MoveType::Shoot` is offered when the inventory has a gun and its ammo. The best gun (the rifle over the pipe gun) is used.
-- It queues like other moves, with each gun's time.
+- `MoveType::Shoot` is offered when at least one equipped gun has ammo.
+- One Shoot fires every equipped gun that has ammo, in a fixed order (arm order). Each rolls its own hit and uses its own cartridge, at the same target.
+- The move queues like others and takes the slowest fired gun's time.
+- A Damaged arm's gun shoots at 75% of its accuracy, matching `add-body-damage-effects`.
 - **Hit chance:** the same falloff formula as enemy shots, with each gun's numbers:
 
   | Gun | Range | Accuracy at 1 tile | Falloff per tile | Damage | Time |

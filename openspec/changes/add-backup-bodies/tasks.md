@@ -2,12 +2,12 @@
 
 ## 0. Decisions
 
-- [ ] 0.1 User decisions: the vat's cost and the factory tier of its parts; record them in design.md
+- [x] 0.1 User decisions, recorded in design.md: a crude starter vat, a mid-game standard vat, and an end-game advanced vat for complex bodies
 
 ## 1. Core
 
-- [ ] 1.1 Body-part items and recipes, Functional at 100 integrity; verify the reachability test and installing one into a missing part
-- [ ] 1.2 The resurrection vat (part slots, readiness, power) and a showcase example; verify `cargo test` for readiness with and without power and the showcase coverage test
+- [ ] 1.1 Body-part items in three grades and their recipes, waking at their grade's state; verify the reachability test and installing one into a missing part
+- [ ] 1.2 The three vat tiers (part slots per layout, readiness, power for standard and advanced) and a showcase example of each; verify `cargo test` for readiness with and without power, the advanced vat's multi-arm layouts, and the showcase coverage test
 - [ ] 1.3 Resurrecting into a chosen vat, and the junker fallback at the HQ; verify tests for both, and that the vat empties
 
 ## 2. Client
