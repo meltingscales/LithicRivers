@@ -1,5 +1,9 @@
 ---
-name: "Simplified CI/CD"
+# Release: runs when a version tag (v*) is pushed. Builds and tests Windows, Linux and macOS
+# in release mode, publishes the binaries as a GitHub Release, and uploads them to Steam
+# with SteamPipe (app_build_unified.vdf sets the build live on the public branch).
+# Pull requests and pushes to release are checked by pr-checks.yml instead.
+name: "Release: build, test, GitHub Release and Steam upload"
 
 on:
   push:
