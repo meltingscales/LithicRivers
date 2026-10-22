@@ -157,19 +157,13 @@ pub fn handle_corpse_looting_input(app: &mut App, key: KeyCode) -> Result<bool, 
                         loot_item = (loot_item + 1).min(inv.slots.len() - 1);
                     }
                 }
-            } else {
-                if let Some(player_entity) = app.core.game.get_player_entity() {
-                    if let Ok(inv) = app
-                        .core
-                        .game
-                        .world
-                        .get::<&lithicrivers_core::components::Inventory>(player_entity)
-                    {
-                        if !inv.slots.is_empty() {
-                            player_item = (player_item + 1).min(inv.slots.len() - 1);
-                        }
-                    }
-                }
+            } else if let Some(player_entity) = app.core.game.get_player_entity() {
+                let rows = crate::app::item_filter::PlayerRows::for_container(
+                    &app.core.game.world,
+                    player_entity,
+                    corpse_entity,
+                );
+                player_item = (player_item + 1).min(rows.len().saturating_sub(1));
             }
         }
 
@@ -213,6 +207,13 @@ pub fn handle_corpse_looting_input(app: &mut App, key: KeyCode) -> Result<bool, 
                     move_one_item, move_one_item_to_block, TransferError,
                 };
                 let world = &mut app.core.game.world;
+                // The selected row of the (maybe filtered) list, as an inventory stack
+                let rows = crate::app::item_filter::PlayerRows::for_container(
+                    world,
+                    player,
+                    corpse_entity,
+                );
+                let player_slot = rows.slot(player_item).unwrap_or(usize::MAX);
                 // Storing goes through the block's own rules (a generator only takes fuel)
                 let (result, verb) = if panel_focus {
                     (
@@ -220,7 +221,7 @@ pub fn handle_corpse_looting_input(app: &mut App, key: KeyCode) -> Result<bool, 
                         "Took",
                     )
                 } else {
-                    let result = move_one_item_to_block(world, player, corpse_entity, player_item);
+                    let result = move_one_item_to_block(world, player, corpse_entity, player_slot);
                     (result, "Stored")
                 };
                 use lithicrivers_core::factory::FactoryKind;
@@ -232,7 +233,7 @@ pub fn handle_corpse_looting_input(app: &mut App, key: KeyCode) -> Result<bool, 
                 let stored_item = world
                     .get::<&lithicrivers_core::components::Inventory>(player)
                     .ok()
-                    .and_then(|inv| inv.slots.get(player_item).map(|s| s.kind));
+                    .and_then(|inv| inv.slots.get(player_slot).map(|s| s.kind));
                 // Why the block refuses this item outright, rather than being full
                 let refusal = match (block_kind, stored_item) {
                     (FactoryKind::BurnerGenerator, Some(item))
@@ -279,7 +280,12 @@ pub fn handle_corpse_looting_input(app: &mut App, key: KeyCode) -> Result<bool, 
                         .unwrap_or(0)
                 };
                 loot_item = loot_item.min(len(corpse_entity).saturating_sub(1));
-                player_item = player_item.min(len(player).saturating_sub(1));
+                let rows = crate::app::item_filter::PlayerRows::for_container(
+                    &app.core.game.world,
+                    player,
+                    corpse_entity,
+                );
+                player_item = player_item.min(rows.len().saturating_sub(1));
             }
         } else if activate && panel_focus {
             take_item_from_corpse(app, corpse_entity, loot_item);

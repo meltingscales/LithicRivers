@@ -18,6 +18,8 @@ Ask for "Add an openspec feat that adds XYZ" or "Bugfix: Something not rendering
 
 <!-- ACTIONED ON ALREADY -->
 
+- DONE (feature/machine-window-filter): machine windows list only the items the machine takes, titled like "Showing fuel: 2 of 7". Generators show fuel, planters acorns, harvesters nothing; the furnace list follows the selected slot (fuel, smeltables, nothing for the output). Chests and corpses still list everything
+
 - PROPOSED as `add-mouse-building` (answers "how should we handle mouse input?"):
   - Factorio/Minecraft-style buttons: left click places the hotbar block, else interacts, else looks; right click breaks; middle click picks the block (selects its item and copies its facing); scroll cycles hotbar slots; Shift+scroll rotates.
   - Same reach as the keyboard, a hover highlight with a Place-mode ghost, clickable tabs and scrollable lists.

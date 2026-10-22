@@ -362,20 +362,23 @@ const SMALL_GRID: &[&str] = &[
 ];
 
 #[test]
-fn generator_window_refuses_stone() {
+fn generator_window_lists_only_fuel() {
     let mut runner = chain_commands(SMALL_GRID);
     let generator = choice_index(&runner, Position { x: -1, y: 0, z: 0 });
-    // Your Items: Nail, Acorn, Log, Stick, Torch, String, Scrap Electronics, Stone
+    // Inventory: Nail, Acorn, Log, Stick, Torch, String, Scrap Electronics, Stone; fuel: Log, Stick
     runner.chain(&[
         &format!("key movement.MOVE_SOUTH {generator}"),
         "key ui.MENU_ACTIVATE",
         "expect-text \"Burner Generator - network\"",
+        "expect-text \"Showing fuel: 2 of 8\"",
+        // Past the end of the list stays on Stick, so stone can't be stored
         "key movement.MOVE_SOUTH 7",
         "key ui.MENU_ACTIVATE",
-        "expect-text \"Stone isn't fuel\"",
+        "expect-text \"Stored Stick\"",
     ]);
     let generator = block_at(&runner, Position { x: -1, y: 0, z: 0 });
     assert_eq!(count(&runner, generator, ItemKind::Stone), 0);
+    assert_eq!(count(&runner, generator, ItemKind::Stick), 1);
 }
 
 #[test]
@@ -428,7 +431,7 @@ fn tree_farm_makes_more_wood_than_it_burns() {
 }
 
 #[test]
-fn furnace_window_refuses_stone_in_the_input() {
+fn furnace_window_lists_what_the_selected_slot_takes() {
     let script = include_str!("../../../scripts/snapshots/factory-furnace-window.txt");
     let lines: Vec<&str> = script
         .lines()
@@ -437,11 +440,29 @@ fn furnace_window_refuses_stone_in_the_input() {
     let mut runner = Runner::new(12345, (100, 30));
     runner.chain(&lines);
     runner.chain(&["cheat giveitem stone"]);
-    // Your Items: Nail, Acorn, Log, Stick, Torch, String, Scrap Electronics, Stone
+    // Input selected: smeltables only (Acorn, Log, Stick); stone isn't one
+    runner.chain(&["expect-text \"Showing smeltables: 3 of 8\""]);
+    let rows = |runner: &Runner, slot| {
+        let player = runner.app.core.game.get_player_entity().unwrap();
+        let world = &runner.app.core.game.world;
+        let rows = crate::app::item_filter::PlayerRows::for_furnace_slot(world, player, slot);
+        let inv = world.get::<&Inventory>(player).unwrap();
+        rows.slots
+            .iter()
+            .map(|&i| inv.slots[i].kind)
+            .collect::<Vec<_>>()
+    };
+    use lithicrivers_core::furnace::Slot;
+    assert_eq!(
+        rows(&runner, Slot::Input),
+        [ItemKind::Acorn, ItemKind::Log, ItemKind::Stick]
+    );
+    assert_eq!(rows(&runner, Slot::Fuel), [ItemKind::Log, ItemKind::Stick]);
+    assert!(rows(&runner, Slot::Output).is_empty());
+    // Selecting the Output slot shows that nothing goes in
     runner.chain(&[
-        "key movement.MOVE_SOUTH 7",
-        "key ui.MENU_ACTIVATE",
-        "expect-text \"Stone can't be smelted\"",
+        "key movement.MOVE_WEST",
+        "key movement.MOVE_SOUTH",
+        "expect-text \"Showing nothing: 0 of 8\"",
     ]);
-    assert!(last_message(&runner).contains("Stone can't be smelted"));
 }

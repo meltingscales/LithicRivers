@@ -59,13 +59,13 @@ key build.PLACE_EAST
 key hotbar.HOTBAR_SLOT_6
 key build.PLACE_NORTH
 key build.TOGGLE_BREAK_PLACE_MODE 2
-# Fuel the generator: 3 logs (Your Items: Nail, Acorn, Log, ...)
+# Fuel the generator: 3 logs
 key action.INTERACT
 expect-text "Fuel generator (N)"
 # Choices: Inspect power pole (E), Fuel generator (N)
 key movement.MOVE_SOUTH
 key ui.MENU_ACTIVATE
-key movement.MOVE_SOUTH 2
+# Your Items shows only fuel: Log first
 key ui.MENU_ACTIVATE 3
 expect-text "Stored Log"
 key ui.CLOSE_HELP_MENU
@@ -73,7 +73,7 @@ key ui.CLOSE_HELP_MENU
 cheat tp -17 0 0
 key action.INTERACT
 expect-text "Auto-Planter"
-key movement.MOVE_SOUTH
+# Your Items shows only acorns
 key ui.MENU_ACTIVATE 16
 expect-text "Acorns (16/16)"
 key ui.CLOSE_HELP_MENU

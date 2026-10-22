@@ -11,13 +11,13 @@ input_file: scripts/snapshots/factory-furnace-window.txt
 #######vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,        ┌Inventory─────────────┐
 #######vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,       │Nail x10              │
 ########vvvvvvv┌──────────── Crude Furnace facing north - smelting 10% ─────────────┐              │
-########vvvvvvv│┌ Slots - 3964 kJ of fuel ───────┐┌ Your Items ────────────────────┐│              │
-#########vvvvvv││Fuel:  1 x Log                  ││10 x Nail                       ││──────────────┘
-#########vvvvvv││Input: 4 x Log                  ││ 1 x Acorn                      ││──────────────┐
-##########vvvvv││Output:(empty)                  ││ 2 x Stick                      ││              │
-###########vvvv││                                ││ 3 x Torch                      ││              │
-###########vvvv││                                ││ 2 x String                     ││              │
-############vvv││                                ││ 3 x Scrap Electronics          ││              │
+########vvvvvvv│┌ Slots - 3964 kJ of fuel ───────┐┌ Showing fuel: 1 of 6 ──────────┐│              │
+#########vvvvvv││Fuel:  1 x Log                  ││ 2 x Stick                      ││──────────────┘
+#########vvvvvv││Input: 4 x Log                  ││                                ││──────────────┐
+##########vvvvv││Output:(empty)                  ││                                ││              │
+###########vvvv││                                ││                                ││              │
+###########vvvv││                                ││                                ││              │
+############vvv││                                ││                                ││              │
 ############vvv││                                ││                                ││              │
 #############vv││                                ││                                ││              │
 ##############v││                                ││                                ││ mode         │

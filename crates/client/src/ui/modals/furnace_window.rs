@@ -49,15 +49,21 @@ pub(crate) fn render_furnace_window(f: &mut Frame, app: &App) {
         Some(_) => "out of fuel".to_string(),
         None => "idle".to_string(),
     };
-    let player_items: Vec<String> = app
-        .core
-        .game
-        .get_player_entity()
+    // Only what the selected slot takes
+    let player = app.core.game.get_player_entity();
+    let rows = player
+        .map(|p| crate::app::item_filter::PlayerRows::for_furnace_slot(world, p, window.slot));
+    let stacks = player
         .and_then(|p| world.get::<&Inventory>(p).ok().map(|inv| inv.slots.clone()))
-        .unwrap_or_default()
-        .iter()
+        .unwrap_or_default();
+    let player_items: Vec<String> = rows
+        .as_ref()
+        .map_or_else(Vec::new, |r| r.slots.clone())
+        .into_iter()
+        .filter_map(|i| stacks.get(i))
         .map(|s| format!("{:>2} x {}", s.qty, itemkind_name(s.kind)))
         .collect();
+    let player_title = rows.map_or_else(|| " Your Items ".to_string(), |r| r.title());
     let slot_rows: Vec<String> = Slot::ALL
         .iter()
         .map(|&slot| {
@@ -100,11 +106,7 @@ pub(crate) fn render_furnace_window(f: &mut Frame, app: &App) {
     let mut player_state = ListState::default();
     player_state.select((!player_items.is_empty()).then_some(window.player_item));
     f.render_stateful_widget(
-        list(
-            " Your Items ".to_string(),
-            player_items,
-            window.player_focus,
-        ),
+        list(player_title, player_items, window.player_focus),
         columns[1],
         &mut player_state,
     );

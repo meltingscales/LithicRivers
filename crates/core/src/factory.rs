@@ -530,6 +530,36 @@ pub struct BeltSlot {
     pub progress: u8,
 }
 
+/// Whether a block of this kind ever takes `item` from the player, however full it is:
+/// generators take fuel, planters acorns, furnaces fuel or something smeltable, and
+/// harvesters and extractors nothing. Chests, belts and routers take anything.
+pub fn takes(kind: FactoryKind, item: ItemKind) -> bool {
+    match kind {
+        FactoryKind::BurnerGenerator => crate::power::fuel_energy(item).is_some(),
+        FactoryKind::AutoPlanter => item == ItemKind::Acorn,
+        FactoryKind::CrudeFurnace => {
+            crate::power::fuel_energy(item).is_some()
+                || crate::furnace::smelting_recipe(item).is_some()
+        }
+        FactoryKind::AutoHarvester | FactoryKind::Extractor | FactoryKind::FilterExtractor => false,
+        _ => true,
+    }
+}
+
+/// What a machine takes, for telling the player their item list is filtered; `None` for
+/// blocks that take anything (chests).
+pub fn takes_label(kind: FactoryKind) -> Option<&'static str> {
+    match kind {
+        FactoryKind::BurnerGenerator => Some("fuel"),
+        FactoryKind::AutoPlanter => Some("acorns"),
+        FactoryKind::CrudeFurnace => Some("fuel/smeltables"),
+        FactoryKind::AutoHarvester | FactoryKind::Extractor | FactoryKind::FilterExtractor => {
+            Some("nothing")
+        }
+        _ => None,
+    }
+}
+
 /// Whether `target` (a factory block) would take `item` handed to it with no direction (by
 /// the player's transfer window). See `accepts_from`.
 pub fn accepts(world: &World, target: Entity, item: ItemKind) -> bool {
