@@ -252,6 +252,7 @@ fn ui_main(f: &mut Frame, app: &mut App) {
 
     // Render cheat console if active (on top of everything else)
     render_cheat_console_modal(f, app);
+    crate::ui::modals::render_death_screen(f, app);
 }
 
 fn render_message_log(f: &mut Frame, app: &mut App, area: Rect) {

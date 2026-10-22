@@ -13,4 +13,4 @@
 ## 3. Checks
 
 - [ ] 3.1 Verify `just code-clippy`, `cargo test --workspace` (including the save-reload identity test) and PR checks pass
-- [ ] 3.2 User check: an existing world from before this change loads and saves in a real install
+- [x] 3.2 User check: an existing world from before this change loads and saves in a real install

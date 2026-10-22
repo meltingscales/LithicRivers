@@ -4,6 +4,7 @@ pub mod component_access;
 pub mod components;
 pub mod config;
 pub mod crafting;
+pub mod death;
 pub mod debug_worlds;
 pub mod default_config;
 pub mod dialogue;

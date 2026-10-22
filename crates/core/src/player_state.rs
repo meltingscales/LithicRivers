@@ -9,6 +9,12 @@ pub struct PlayerState {
     pub combat_active: bool,
     pub noclip_enabled: bool,
     pub fog_of_war_enabled: bool,
+    /// Where the player comes back after dying: where a new game placed them
+    #[serde(default)]
+    pub respawn_point: Option<crate::components::Position>,
+    /// What destroyed the player, while they are dead
+    #[serde(default)]
+    pub death_cause: Option<String>,
 }
 
 impl PlayerState {
@@ -21,6 +27,8 @@ impl PlayerState {
             combat_active: false,
             noclip_enabled: false,
             fog_of_war_enabled: true,
+            respawn_point: None,
+            death_cause: None,
         }
     }
 }
