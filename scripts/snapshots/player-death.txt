@@ -6,7 +6,7 @@ skip-splash
 key ui.MENU_PREV
 cheat tp 0 0 0
 cheat giveitem chest 2
-cheat kill_player
+cheat suicide
 expect-text "SYSTEM FAILURE"
 expect-text "self-destruct command"
 screen dead

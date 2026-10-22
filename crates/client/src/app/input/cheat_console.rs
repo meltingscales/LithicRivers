@@ -53,6 +53,11 @@ impl CommandRegistry {
                 handler: handle_kill_player_command,
             },
             Command {
+                name: "suicide",
+                description: "suicide - Destroy your body (the same as kill_player)",
+                handler: handle_kill_player_command,
+            },
+            Command {
                 name: "spawn_enemy",
                 description:
                     "spawn_enemy <kind> [x y z] - Spawn an enemy (default ~2 ~ ~, ~ = relative to player)",
