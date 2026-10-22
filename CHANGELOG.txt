@@ -1,6 +1,37 @@
-# v0.9.0.7
+# v0.10.0.0
 
-- unify justfile. no content
+The factory update. Plus saves, debug worlds, real art, a demo, and mouse controls.
+
+- factories
+  - chests, wooden conveyor belts, and a hotbar block picker with rotation
+  - tree farming: plant acorns, saplings grow into trees
+  - auto-planters and auto-harvesters run a tree farm on their own
+  - power grid: burner generators, power poles and wires; machines draw real power
+  - crude furnace smelts wood into biochar, a denser fuel
+  - extractors, filter extractors and belt routers; walk on belts and ride them
+  - machine windows list only what the machine takes
+  - "Take all" from chests and corpses (a)
+- worlds
+  - a title screen with a world list: create, play, rename and delete worlds
+  - saves keep everything, and reloading changes nothing
+  - debug world types (developer mode): Void, Ore test, Dog arena, Factory showcase
+- look and feel
+  - real ASCII art for every sprite (Caves of Qud, Metroid and CICADAMATA inspired)
+  - map glyphs that are easier to tell apart (you are @ now)
+  - Item Dictionary tab: every item, its art, recipes, uses and where to find it, with search
+  - Watch Demo on the title screen: an attract mode with a scrolling DEMO banner
+  - context help panel and a crafting tree
+- controls
+  - mouse building: left click to open or place, right click to break, middle click to pick a block,
+    scroll for hotbar slots, Shift + scroll to rotate; the mouse reaches 5 tiles
+  - clickable menu tabs and scrollable lists
+- fixes
+  - combat with many enemies now plays out the same every time
+  - looking at a planted sapling no longer crashes
+  - "Choose Interaction" shows each choice's direction
+- under the hood
+  - a headless client, snapshot tests and a local MCP server for testing the game
+  - unified justfile
 
 # v0.9.0.6
 
