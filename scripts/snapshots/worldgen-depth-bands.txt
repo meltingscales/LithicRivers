@@ -1,0 +1,15 @@
+# Worldgen by depth, in the ore-test world (flat grass on top, the real bands below), with
+# fog of war off: tunnels and veins in the shallows, the Lithic Rivers caverns in the deep.
+seed 12345
+size 100x30
+world ore-test
+key ui.MENU_PREV
+cheat toggle_fogofwar
+cheat noclip_toggle
+cheat tp 0 0 -3
+screen shallows
+cheat tp 0 0 -20
+screen deep
+cheat tp 0 0 1
+expect-text "LithicRivers"
+screen sky

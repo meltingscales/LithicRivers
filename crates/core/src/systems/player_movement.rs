@@ -52,42 +52,39 @@ pub fn move_player_system(world: &mut World, res: &mut Resources) {
                                 res.player_state.last_blocked_tile = Some((nx, ny));
                             }
                         } else if dz != 0 {
-                            // Vertical movement - requires stairs at current position AND destination
-                            // Stairs, or a vertical conveyor climbed like a ladder
+                            // Vertical movement: something to climb where the player stands
+                            // or where they arrive (stairs, or a vertical conveyor climbed like
+                            // a ladder), and room to stand there. Coming back is always
+                            // possible, since the tile left behind still has the stairs
                             let here = Position {
                                 x: cx,
                                 y: cy,
                                 z: cz,
                             };
-                            if !crate::stairs::climbable(world, res, here) {
+                            let there = Position {
+                                x: nx,
+                                y: ny,
+                                z: nz,
+                            };
+                            if !crate::stairs::climbable(world, res, here)
+                                && !crate::stairs::climbable(world, res, there)
+                            {
                                 blocked = true;
                                 info!(
-                                    "Vertical movement blocked - not on stairs at ({}, {}, {})",
-                                    cx, cy, cz
+                                    "Vertical movement blocked - no stairs at ({}, {}, {}) or ({}, {}, {})",
+                                    cx, cy, cz, nx, ny, nz
                                 );
                                 res.events.interaction_event(
-                                    "You need to be on stairs to move up or down.".to_string(),
+                                    "You need stairs here or at the other level to move up or down."
+                                        .to_string(),
                                     res.time.tick,
                                 );
-                            } else {
-                                // Also check destination has stairs to prevent stranding
-                                let there = Position {
-                                    x: nx,
-                                    y: ny,
-                                    z: nz,
-                                };
-                                if !crate::stairs::climbable(world, res, there) {
-                                    blocked = true;
-                                    info!(
-                                        "Vertical movement blocked - no stairs at destination ({}, {}, {})",
-                                        nx, ny, nz
-                                    );
-                                    res.events.interaction_event(
-                                        "Cannot move there - no stairs at the destination level."
-                                            .to_string(),
-                                        res.time.tick,
-                                    );
-                                }
+                            } else if !crate::logistics::walkable(res, world, there) {
+                                blocked = true;
+                                res.events.interaction_event(
+                                    "Something solid is in the way at the other level.".to_string(),
+                                    res.time.tick,
+                                );
                             }
                         }
                     } else {

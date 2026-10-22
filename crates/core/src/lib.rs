@@ -46,6 +46,8 @@ pub mod tiles;
 pub mod view;
 pub mod world;
 pub mod world_state;
+#[cfg(test)]
+mod worldgen_tests;
 
 // Re-export commonly used types
 pub use game::Game;

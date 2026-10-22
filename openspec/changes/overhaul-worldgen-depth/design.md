@@ -22,16 +22,19 @@
 ## Decisions
 
 ### Bands
-- `depth_band(z) -> Band { Sky, Surface, Shallows, Deep }`. The cut-offs are constants (`SHALLOWS_BOTTOM = -8`, tunable).
-- z = 0 keeps today's code path exactly. The other bands get their own terrain functions.
+- `depth_band(z) -> DepthBand { Sky, Surface, Shallows, Deep }`.
+- *Changed during implementation:* `SHALLOWS_BOTTOM = -5`, not -8. Today's generator already switches to the Lithic Rivers caverns below -5, so the deep band reuses that terrain unchanged. That keeps the bunker's surroundings, and the snapshots around it, stable.
+- z = 0 keeps today's code path exactly: a hash of 25 surface chunks matches the generator on `release` (`0x998f620ae8afb832`).
+- The shallows are rock with tunnels and chambers. An early version had packed dirt near the top, but dirt is walkable, which made those layers half open, so it was dropped.
 
 ### Caves across layers
 - Cave noise samples `(x * s, y * s, z * s_z)` with `s_z` large enough that neighboring layers differ a little but overlap mostly (target: 60 to 80% of open tiles open on the layer above).
 - The survey pins this overlap.
 
 ### Natural stairways
-- In the feature stage of a chunk at layer z, with its neighbor at z + 1, tiles open on both layers are candidates. A seeded few become stairway pairs (target: about 2 per chunk where there are candidates).
-- **The bunker route:** from the bunker's own staircase, a seeded path up to z = 0 is guaranteed. Each layer carves a short tunnel to the next stairway, so the quest can always be finished without crafting stairs.
+- In the feature stage of a chunk at layer z, with its neighbor at z + 1, tiles open on both layers are candidates. A seeded few become stairway pairs (up to 2 per chunk). Both layers compute the same spots from the pure `underground_tile`, so the pair always lines up.
+- Natural stairways join underground layers only (up to z = -1), so the surface stays unchanged.
+- **The bunker route (corrected during implementation):** the bunker structure already has a staircase on every layer from z = -19 to z = 0. Nothing needed carving; `the_bunker_staircase_reaches_the_surface` pins it.
 
 ### Deposits
 - Each resource has `Deposit { tile, noise_seed, scale, threshold_by_band }`. A tile becomes the deposit where vein noise crosses the band's threshold inside rock, which makes clusters rather than single tiles.
@@ -39,7 +42,8 @@
 - Every deposit tile becomes solid (not passable) and gets a mining drop. A test checks that every generated tile kind is either passable terrain or mineable.
 
 ### Feature stage
-- **Order:** deposits, natural stairs, creature spawns, then later spouts and reactors. Each feature gets its own generator, seeded from `(seed, chunk, feature id)`, so adding a feature never changes another's rolls.
+- **Order:** deposits, then natural stairs, then later spouts and reactors. Each feature that rolls dice gets its own generator from `feature_rng(cx, cy, cz, Feature)`, so adding a feature never changes another's rolls. Deposits come from noise and roll none.
+- **Creature spawns** need entities, so they stay in `creature_spawn_system`, with their own seed and a chance per band (`slime_chance_percent`: 10% in the shallows, 20% in the deep).
 
 ### No generator versions (decided by the user)
 - The new generator replaces today's. There is no `worldgen_version` and no frozen old generator.

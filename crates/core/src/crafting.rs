@@ -30,6 +30,7 @@ pub fn mining_drop(tile: TileKind) -> Option<MiningDrop> {
         TileKind::Rock => drop(TileKind::Air, &[(ItemKind::Stone, 1, 1)]),
         TileKind::IronScrap => drop(TileKind::Air, &[(ItemKind::IronScrap, 1, 2)]),
         TileKind::ScrapElectronics => drop(TileKind::Air, &[(ItemKind::ScrapElectronics, 1, 1)]),
+        TileKind::PlasteelScrap => drop(TileKind::Air, &[(ItemKind::PlasteelScrap, 1, 1)]),
         _ => None,
     }
 }
@@ -391,6 +392,7 @@ mod tests {
             ItemKind::Stone,
             ItemKind::IronScrap,
             ItemKind::ScrapElectronics,
+            ItemKind::PlasteelScrap,
             ItemKind::Leather,
             ItemKind::Meat,
             ItemKind::NuclearWaste,
