@@ -251,7 +251,7 @@ fn render_action_queue(f: &mut Frame, area: Rect, app: &mut crate::App) {
                                     if *target == player_entity {
                                         "Player".to_string()
                                     } else {
-                                        format!("Enemy {}", target.id())
+                                        enemy_name(app, *target)
                                     }
                                 } else {
                                     format!("Entity {}", target.id())
@@ -313,7 +313,7 @@ fn render_action_queue(f: &mut Frame, area: Rect, app: &mut crate::App) {
                                     if *target == player_entity {
                                         "Player".to_string()
                                     } else {
-                                        format!("Enemy {}", target.id())
+                                        enemy_name(app, *target)
                                     }
                                 } else {
                                     format!("Entity {}", target.id())
@@ -446,7 +446,7 @@ fn render_moves(
                                     if *target == player_entity {
                                         "Player".to_string()
                                     } else {
-                                        format!("Enemy {}", target.id())
+                                        enemy_name(app, *target)
                                     }
                                 } else {
                                     format!("Entity {}", target.id())
@@ -727,7 +727,7 @@ fn get_enemy_combat_data(app: &mut crate::App) -> Vec<CombatEnemy> {
                         .expect("Combat entities must have Health component");
 
                     enemies.push(CombatEnemy {
-                        name: format!("Enemy {}", entity.id()), // Use entity ID for now
+                        name: enemy_name(app, entity),
                         health: health.current,
                         max_health: health.max,
                         sprite_ref: sprite_ref.cloned(),
@@ -930,4 +930,15 @@ fn render_player_info(
 
     // Render energy bar on the bottom
     f.render_widget(energy_bar, main_layout[1]);
+}
+
+/// What a combatant is, for the combat panel: "Feral dog", "Nuclear slime".
+fn enemy_name(app: &crate::App, entity: hecs::Entity) -> String {
+    use lithicrivers_core::components::EntityKind;
+    match app.core.game.world.get::<&EntityKind>(entity).map(|k| *k) {
+        Ok(EntityKind::FeralDog) => "Feral dog".to_string(),
+        Ok(EntityKind::NuclearSlime) => "Nuclear slime".to_string(),
+        Ok(EntityKind::Sheep) => "Sheep".to_string(),
+        _ => "Enemy".to_string(),
+    }
 }

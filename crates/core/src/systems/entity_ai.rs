@@ -327,6 +327,72 @@ pub fn feral_dog_system(world: &mut World, res: &mut Resources) {
     }
 }
 
+/// How far a nuclear slime notices the player, in tiles on its level.
+pub const SLIME_NOTICE: i64 = 6;
+
+/// Nuclear slimes: once the player is within `SLIME_NOTICE` tiles on their level, they ooze
+/// one tile toward them every other turn, without planning a path. Combat starts when one
+/// is adjacent, as with dogs.
+pub fn nuclear_slime_system(world: &mut World, res: &mut Resources) {
+    use crate::components::{NuclearSlime, SlimeAI};
+    let Some(player_pos) = get_player_position(world) else {
+        return;
+    };
+    let mut slimes: Vec<(hecs::Entity, Position)> = world
+        .query::<&Position>()
+        .with::<&NuclearSlime>()
+        .iter()
+        .map(|(e, p)| (e, *p))
+        .collect();
+    slimes.sort_by_key(|(e, p)| (p.z, p.y, p.x, e.to_bits()));
+    for (slime, pos) in slimes {
+        let engaged = world.get::<&Combat>(slime).is_ok_and(|c| c.triggered);
+        if is_stunned(world, slime) || world.get::<&Dead>(slime).is_ok() || engaged {
+            continue;
+        }
+        let (dx, dy) = (player_pos.x - pos.x, player_pos.y - pos.y);
+        let noticed = pos.z == player_pos.z && dx.abs().max(dy.abs()) <= SLIME_NOTICE;
+        if !noticed {
+            continue;
+        }
+        let turns = {
+            let mut ai = world
+                .get::<&mut SlimeAI>(slime)
+                .expect("slimes have SlimeAI");
+            ai.turns = ai.turns.wrapping_add(1);
+            ai.turns
+        };
+        // Already beside the player, or resting this turn
+        if dx.abs().max(dy.abs()) <= 1 || turns % 2 == 1 {
+            continue;
+        }
+        let is_passable = |p: Position| {
+            res.world_state.world.is_passable(p.x, p.y, p.z)
+                && !world
+                    .query::<&Position>()
+                    .with::<&BlocksMovement>()
+                    .iter()
+                    .any(|(_, q)| *q == p)
+        };
+        // Slimes don't plan: straight toward the player, else sliding along a wall
+        let (sx, sy) = (dx.signum(), dy.signum());
+        let next = [(sx, sy), (sx, 0), (0, sy)]
+            .into_iter()
+            .filter(|&step| step != (0, 0))
+            .map(|(mx, my)| Position {
+                x: pos.x + mx,
+                y: pos.y + my,
+                z: pos.z,
+            })
+            .find(|&p| p != player_pos && is_passable(p));
+        if let Some(next) = next {
+            if let Ok(mut p) = world.get::<&mut Position>(slime) {
+                *p = next;
+            }
+        }
+    }
+}
+
 /// Very simple deterministic-ish wander: each sheep picks a random 4-neighbor step.
 /// Uses the global RNG for determinism relative to the initial seed and tick order.
 pub fn stumbling_sheep_system(world: &mut World, res: &mut Resources) {
@@ -457,9 +523,18 @@ pub fn generate_enemy_action(world: &mut World, res: &mut Resources, enemy_entit
         }
     };
 
-    // Simple AI: attack the player with random damage and timing
-    let damage = res.world_state.rng.gen_range(5..=15);
-    let execution_time = res.world_state.rng.gen_range(7..=10); // 7-10 ticks for varied enemy attacks
+    // Simple AI: attack the player with random damage and timing. Slimes are slower and
+    // hit harder than dogs
+    let slime = world
+        .get::<&crate::components::NuclearSlime>(enemy_entity)
+        .is_ok();
+    let (damage_range, time_range) = if slime {
+        (10..=20, 14..=18)
+    } else {
+        (5..=15, 7..=10)
+    };
+    let damage = res.world_state.rng.gen_range(damage_range);
+    let execution_time = res.world_state.rng.gen_range(time_range);
 
     tracing::debug!(target: "combat", "Enemy {:?} planning attack on player {:?} with {} damage in {} ticks", 
                    enemy_entity, player_entity, damage, execution_time);

@@ -52,6 +52,25 @@ dd,
   ▄▀    ▄▀  
             
             
+=== entities/nuclear_slime  #7CFF3A  A sludge that soaked in the old world's spills until it learned to crawl, and to want
+-- 1x
+Ω
+-- 2x
+▄▄
+██
+-- 3x
+ ▄ 
+▄o▄
+▀▀▀
+-- art 0
+            
+    ▄▄▄▄    
+  ▄▓▒░░▒▓▄  
+ ▐▓░ o  ░▓▌ 
+ ▐▓▒░ * ▒▓▌ 
+  ▀▓▓▒▒▓▓▀  
+ ░ ▀▀▀▀▀▀ ░ 
+            
 === entities/player  #cc0000  The el player character
 -- 1x
 @
@@ -1249,6 +1268,25 @@ n
       █     
       ▀     
             
+            
+=== items/nuclear_waste  #B6FF00  A cracked SapienCorp canister, still warm after all these years
+-- 1x
+Θ
+-- 2x
+╔╗
+╚╝
+-- 3x
+╔═╗
+║*║
+╚═╝
+-- art 0
+            
+    ▄▄▄▄    
+   █▀▀▀▀█   
+   █▒▓*▓█   
+   █▓▒▓/█   
+   █▄▄▄▄█ ░ 
+    ▀▀▀▀ ░  
             
 === items/plank_block  #A0522D  A block made out of wooden planks
 -- 1x

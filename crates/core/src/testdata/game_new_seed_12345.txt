@@ -81,6 +81,8 @@ FeralDog (208,1635,-6) hp=80/80 inv=[Leatherx2,Meatx3]
 FeralDog (210,1612,-6) hp=80/80 inv=[Meatx1]
 FeralDog (37,37,0) hp=80/80 inv=[Meatx1]
 FeralDog (38,38,0) hp=80/80 inv=[Meatx2]
+NuclearSlime (125,34,-19) hp=120/120 inv=[]
+NuclearSlime (97,97,-19) hp=120/120 inv=[]
 Player (11,11,-19) inv=[Nailx10,Acornx1,Logx3,Stickx2,Torchx3,Stringx2,ScrapElectronicsx3]
 QuestTutorialBrokenAndroid (13,11,-19) hp=100/100
 Sheep (26,28,0) hp=50/50

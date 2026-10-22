@@ -25,6 +25,8 @@ pub enum SystemId {
     FogOfWarSystem,
     PickupSystem,
     FeralDogSystem,
+    NuclearSlimeSystem,
+    CreatureSpawnSystem,
     StumblingSheepSystem,
     BattleDelayTimerSystem,
     CombatTriggerSystem,
@@ -119,6 +121,32 @@ impl SystemScheduler {
 
         self.register_system(
             SystemDesc {
+                id: SystemId::NuclearSlimeSystem,
+                phase: SystemPhase::EntityAI,
+                depends_on: vec![SystemId::MovePlayerSystem],
+                name: "nuclear_slime_system",
+            },
+            |world, res| {
+                crate::systems::nuclear_slime_system(world, res);
+                None
+            },
+        );
+
+        self.register_system(
+            SystemDesc {
+                id: SystemId::CreatureSpawnSystem,
+                phase: SystemPhase::EntityAI,
+                depends_on: vec![SystemId::MovePlayerSystem],
+                name: "creature_spawn_system",
+            },
+            |world, res| {
+                crate::systems::creature_spawn_system(world, res);
+                None
+            },
+        );
+
+        self.register_system(
+            SystemDesc {
                 id: SystemId::StumblingSheepSystem,
                 phase: SystemPhase::EntityAI,
                 depends_on: vec![],
@@ -154,8 +182,9 @@ impl SystemScheduler {
                 id: SystemId::CombatTriggerSystem,
                 phase: SystemPhase::CombatPrep,
                 depends_on: vec![
-                    SystemId::MovePlayerSystem,       // Position-based combat detection
-                    SystemId::FeralDogSystem,         // AI positions finalized
+                    SystemId::MovePlayerSystem, // Position-based combat detection
+                    SystemId::FeralDogSystem,   // AI positions finalized
+                    SystemId::NuclearSlimeSystem,
                     SystemId::BattleDelayTimerSystem, // Timers updated first
                 ],
                 name: "combat_trigger_system",

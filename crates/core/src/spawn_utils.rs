@@ -158,8 +158,8 @@ pub fn world_spawn_feraldog(
     // Create dog inventory with 0-2 Leather and 1-3 Meat using deterministic RNG
     let mut dog_rng = ChaCha20Rng::seed_from_u64(game_world.seed.wrapping_add((x + y + z) as u64));
     let mut dog_inventory = Inventory::default();
-    for &(item, min, max) in crate::crafting::FERAL_DOG_LOOT {
-        dog_inventory.add(item, dog_rng.gen_range(min..=max));
+    for (item, qty) in crate::crafting::roll_loot(crate::crafting::FERAL_DOG_LOOT, &mut dog_rng) {
+        dog_inventory.add(item, qty);
     }
 
     ecs_world.spawn((
@@ -176,18 +176,52 @@ pub fn world_spawn_feraldog(
     ))
 }
 
+/// A nuclear slime's health: more than a feral dog's 80.
+pub const NUCLEAR_SLIME_HEALTH: u32 = 120;
+
+/// Spawn a nuclear slime. Whether it carries nuclear waste is rolled from the world seed
+/// and its spawn position, so the same slime always carries the same thing.
+pub fn world_spawn_nuclear_slime(
+    ecs_world: &mut hecs::World,
+    x: i64,
+    y: i64,
+    z: i64,
+    game_world: &GameWorld,
+) -> hecs::Entity {
+    let mut rng = ChaCha20Rng::seed_from_u64(game_world.mix_coords(x, y, z) ^ 0x51_1AE);
+    let mut inventory = Inventory::default();
+    for (item, qty) in crate::crafting::roll_loot(crate::crafting::NUCLEAR_SLIME_LOOT, &mut rng) {
+        inventory.add(item, qty);
+    }
+    ecs_world.spawn((
+        Position { x, y, z },
+        GameEntity,
+        EntityKind::NuclearSlime,
+        crate::components::NuclearSlime,
+        crate::components::SlimeAI::default(),
+        Health::new(NUCLEAR_SLIME_HEALTH),
+        Glyph('s'),
+        SpriteRef::new("entities", "nuclear_slime"),
+        BlocksMovement,
+        Combat::default(),
+        inventory,
+    ))
+}
+
 /// Hostile creatures that can be spawned on demand (e.g. by the `spawn_enemy` cheat).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EnemyKind {
     FeralDog,
+    NuclearSlime,
 }
 
 impl EnemyKind {
-    pub const ALL: &'static [EnemyKind] = &[EnemyKind::FeralDog];
+    pub const ALL: &'static [EnemyKind] = &[EnemyKind::FeralDog, EnemyKind::NuclearSlime];
 
     pub fn name(self) -> &'static str {
         match self {
             EnemyKind::FeralDog => "feral_dog",
+            EnemyKind::NuclearSlime => "nuclear_slime",
         }
     }
 
@@ -236,6 +270,9 @@ pub fn spawn_enemy(
     }
     Ok(match kind {
         EnemyKind::FeralDog => world_spawn_feraldog(ecs_world, pos.x, pos.y, pos.z, game_world),
+        EnemyKind::NuclearSlime => {
+            world_spawn_nuclear_slime(ecs_world, pos.x, pos.y, pos.z, game_world)
+        }
     })
 }
 
