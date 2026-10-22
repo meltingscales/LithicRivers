@@ -6,6 +6,10 @@ The release workflow's Steam upload fails. It logs in with steamcmd as the accou
 
 A dedicated build account is the right setup: uploads don't send Steam Guard prompts to the personal account, and the build account only gets the permissions SteamPipe needs.
 
+## Status
+
+**Blocked, waiting on Google (since 2026-10-22).** `lithicrivers@gmail.com` is under a Google account appeal. Nothing here can start until Google answers: if the appeal restores the address, the old Steam account can be recovered through it; if not, a new Gmail address and a new Steam account are needed.
+
 ## What Changes
 
 A manual change, done by the user outside the codebase:
