@@ -92,6 +92,14 @@ pub fn default_config() -> ConfigRoot {
             "RIGHT": ["RIGHT"],
             "DELETE_CHAR": ["BACKSPACE"] // Text fields
         },
+        "mouse": {
+            "PLACE": ["LEFT_CLICK"],         // On the world: open what's there, else place the hotbar block, else look
+            "BREAK": ["RIGHT_CLICK"],        // On the world: mine or break
+            "PICK_BLOCK": ["MIDDLE_CLICK"],  // Select the clicked block's item and copy its facing
+            "ROTATE": ["SHIFT+SCROLL_UP", "SHIFT+SCROLL_DOWN"], // Turn the next placement
+            "NEXT_SLOT": ["SCROLL_DOWN"],    // Next hotbar slot
+            "PREV_SLOT": ["SCROLL_UP"]       // Previous hotbar slot
+        },
         "dictionary": {
             "SEARCH": ["s"],              // Item Dictionary: start typing a search
             "DELETE_CHAR": ["BACKSPACE"], // While searching: erase a character

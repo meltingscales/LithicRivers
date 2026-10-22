@@ -249,6 +249,10 @@ impl App {
                 }
                 true
             }
+            Step::Mouse(input) => {
+                crate::app::input::mouse::dispatch_mouse(self, *input);
+                true
+            }
             Step::Cheat(command) => {
                 let _ =
                     crate::app::input::cheat_console::get_command_registry().execute(self, command);

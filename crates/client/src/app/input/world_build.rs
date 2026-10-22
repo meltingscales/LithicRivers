@@ -96,18 +96,7 @@ pub fn handle_world_build_input(app: &mut App, key: KeyCode) -> Result<bool, Box
 
                 match app.panels.build.mode {
                     BuildMode::Break => {
-                        // Queue mining at target position
-                        app.core.game.queue_mine_at(target_x, target_y, target_z);
-                        let tick_result = app.core.game.tick();
-                        if tick_result
-                            .contains(lithicrivers_core::game::GameTickResult::MiningSuccess)
-                        {
-                            app.core.game.res.log(format!(
-                                "Broke block at ({}, {}, {})",
-                                target_x, target_y, target_z
-                            ));
-                        }
-                        app.apply_tick_result(&tick_result);
+                        break_at(app, target_x, target_y, target_z);
                         handled = true;
                     }
                     BuildMode::Place => {
@@ -266,7 +255,10 @@ fn get_blocks_from_inventory(app: &App) -> Vec<lithicrivers_core::components::It
 }
 
 /// Check if the player has a specific item in their inventory
-fn has_item_in_inventory(app: &App, item_kind: lithicrivers_core::components::ItemKind) -> bool {
+pub(crate) fn has_item_in_inventory(
+    app: &App,
+    item_kind: lithicrivers_core::components::ItemKind,
+) -> bool {
     if let Some(player_entity) = app.core.game.get_player_entity() {
         if let Ok(inv) = app.core.game.world.get::<&InvComp>(player_entity) {
             for stack in &inv.slots {
@@ -303,13 +295,26 @@ fn remove_item_from_inventory(
 }
 
 /// Items that can be placed: plain blocks and factory blocks.
-fn is_placeable(item: ItemKind) -> bool {
+pub(crate) fn is_placeable(item: ItemKind) -> bool {
     lithicrivers_core::tiles::TileKind::from_item_kind(item).is_some()
         || lithicrivers_core::factory::FactoryKind::from_item(item).is_some()
 }
 
+/// Mine or break the tile at the target, as Break mode does.
+pub(crate) fn break_at(app: &mut App, x: i64, y: i64, z: i64) {
+    app.core.game.queue_mine_at(x, y, z);
+    let tick_result = app.core.game.tick();
+    if tick_result.contains(lithicrivers_core::game::GameTickResult::MiningSuccess) {
+        app.core
+            .game
+            .res
+            .log(format!("Broke block at ({}, {}, {})", x, y, z));
+    }
+    app.apply_tick_result(&tick_result);
+}
+
 /// Place the item on the selected hotbar slot at the target, using one from the inventory.
-fn place_from_hotbar(app: &mut App, x: i64, y: i64, z: i64) {
+pub(crate) fn place_from_hotbar(app: &mut App, x: i64, y: i64, z: i64) {
     use lithicrivers_core::components::{itemkind_name, Position};
     use lithicrivers_core::factory::{self, FactoryKind};
     let slot = app.panels.build.selected_hotbar_slot;

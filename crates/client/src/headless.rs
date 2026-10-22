@@ -54,6 +54,8 @@ pub enum Step {
     World(lithicrivers_core::resources::WorldType),
     /// Demo pacing: steps after it play one every this many ms in the demo; no-op in scripts
     Beat(u64),
+    /// A mouse event at a screen cell: `click`, `scroll` or `move`
+    Mouse(crate::app::input::mouse::MouseInput),
 }
 
 /// Renders a step back to script syntax; parsing the result gives the same step.
@@ -85,6 +87,23 @@ impl std::fmt::Display for Step {
             Step::Quit => write!(f, "quit"),
             Step::World(t) => write!(f, "world {}", t.slug()),
             Step::Beat(ms) => write!(f, "beat {ms}"),
+            Step::Mouse(m) => {
+                use crate::app::input::mouse::{MouseButton, MouseKind};
+                let shift = if m.shift { " shift" } else { "" };
+                match m.kind {
+                    MouseKind::Click(b) => {
+                        let b = match b {
+                            MouseButton::Left => "left",
+                            MouseButton::Right => "right",
+                            MouseButton::Middle => "middle",
+                        };
+                        write!(f, "click {} {} {b}{shift}", m.col, m.row)
+                    }
+                    MouseKind::ScrollUp => write!(f, "scroll up {} {}{shift}", m.col, m.row),
+                    MouseKind::ScrollDown => write!(f, "scroll down {} {}{shift}", m.col, m.row),
+                    MouseKind::Move => write!(f, "move {} {}", m.col, m.row),
+                }
+            }
         }
     }
 }
@@ -149,6 +168,58 @@ fn parse_num<T: std::str::FromStr>(line: usize, cmd: &str, arg: &str) -> Result<
 fn optional_label(rest: &str) -> Option<String> {
     let rest = rest.trim();
     (!rest.is_empty()).then(|| rest.to_string())
+}
+
+/// `click <col> <row> [left|right|middle] [shift]`, `scroll <up|down> [col row] [shift]`
+/// (without a cell, the scroll is over no particular cell: fine everywhere but the menu
+/// bar) or `move <col> <row>`.
+fn parse_mouse(
+    line: usize,
+    cmd: &str,
+    args: &[&str],
+) -> Result<crate::app::input::mouse::MouseInput, ScriptError> {
+    use crate::app::input::mouse::{MouseButton, MouseInput, MouseKind};
+    let shift = args.last() == Some(&"shift");
+    let args: Vec<&str> = args.iter().copied().filter(|a| *a != "shift").collect();
+    let cell = |c: &str, r: &str| -> Result<(u16, u16), ScriptError> {
+        Ok((parse_num(line, cmd, c)?, parse_num(line, cmd, r)?))
+    };
+    let usage = || {
+        err(line, format!("{cmd}: see `click <col> <row> [left|right|middle] [shift]`, `scroll <up|down> [col row] [shift]`, `move <col> <row>`"))
+    };
+    let (kind, (col, row)) = match (cmd, args.as_slice()) {
+        ("click", [c, r]) => (MouseKind::Click(MouseButton::Left), cell(c, r)?),
+        ("click", [c, r, b]) => {
+            let button = match *b {
+                "left" => MouseButton::Left,
+                "right" => MouseButton::Right,
+                "middle" => MouseButton::Middle,
+                _ => return Err(usage()),
+            };
+            (MouseKind::Click(button), cell(c, r)?)
+        }
+        ("scroll", [dir, rest @ ..]) => {
+            let kind = match *dir {
+                "up" => MouseKind::ScrollUp,
+                "down" => MouseKind::ScrollDown,
+                _ => return Err(usage()),
+            };
+            let at = match rest {
+                [] => (u16::MAX, u16::MAX),
+                [c, r] => cell(c, r)?,
+                _ => return Err(usage()),
+            };
+            (kind, at)
+        }
+        ("move", [c, r]) => (MouseKind::Move, cell(c, r)?),
+        _ => return Err(usage()),
+    };
+    Ok(MouseInput {
+        kind,
+        col,
+        row,
+        shift,
+    })
 }
 
 /// Parse script text. Checks syntax and setup ordering only; see `validate` for
@@ -229,6 +300,7 @@ pub fn parse_script(text: &str) -> Result<Script, ScriptError> {
                 expect_args(1)?;
                 Step::Wait(parse_num(line, cmd, args[0])?)
             }
+            "click" | "scroll" | "move" => Step::Mouse(parse_mouse(line, cmd, &args)?),
             "beat" => {
                 expect_args(1)?;
                 Step::Beat(parse_num(line, cmd, args[0])?)
@@ -466,6 +538,10 @@ impl Runner {
                 self.frame();
             }
             Step::Beat(_) => {}
+            Step::Mouse(input) => {
+                crate::app::input::mouse::handle_mouse(&mut self.app, *input);
+                self.frame();
+            }
             Step::Key {
                 category,
                 action,

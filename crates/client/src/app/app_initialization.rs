@@ -125,6 +125,8 @@ impl App {
                 current_tab: MenuTab::Tutorial,
                 scale: Scale::Small,
                 bottom_menu_rect: None,
+                world_view_rect: None,
+                mouse_cell: None,
                 keybinds,
                 tutorial_system: TutorialDatabase::create_tutorial_system_with_basics(),
                 tutorial_visible: true, // Tutorial tab is visible by default

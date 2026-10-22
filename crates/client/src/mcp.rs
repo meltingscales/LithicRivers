@@ -263,6 +263,35 @@ pub struct CheatArgs {
 }
 
 #[derive(Debug, Deserialize, JsonSchema)]
+pub struct ClickArgs {
+    /// Screen column (0 is the left edge)
+    pub col: u16,
+    /// Screen row (0 is the top edge)
+    pub row: u16,
+    /// left (default), right or middle
+    pub button: Option<String>,
+    /// Hold Shift
+    pub shift: Option<bool>,
+}
+
+#[derive(Debug, Deserialize, JsonSchema)]
+pub struct ScrollArgs {
+    /// up or down
+    pub direction: String,
+    /// Screen cell to scroll over (optional; only matters over the menu bar)
+    pub col: Option<u16>,
+    pub row: Option<u16>,
+    /// Hold Shift (Shift + scroll rotates the next placement on the World tab)
+    pub shift: Option<bool>,
+}
+
+#[derive(Debug, Deserialize, JsonSchema)]
+pub struct MoveArgs {
+    pub col: u16,
+    pub row: u16,
+}
+
+#[derive(Debug, Deserialize, JsonSchema)]
 pub struct ScriptArgs {
     /// Headless script steps, one per line (no seed/size lines)
     pub script: String,
@@ -397,6 +426,51 @@ impl GameServer {
         Parameters(args): Parameters<CheatArgs>,
     ) -> Result<CallToolResult, ErrorData> {
         self.step(format!("cheat {}", args.command)).await
+    }
+
+    #[tool(
+        description = "Click a screen cell (mouse bindings: left places the hotbar block or interacts or looks, right breaks, middle picks a block)."
+    )]
+    async fn click(
+        &self,
+        Parameters(args): Parameters<ClickArgs>,
+    ) -> Result<CallToolResult, ErrorData> {
+        let button = args.button.unwrap_or_else(|| "left".to_string());
+        let shift = if args.shift.unwrap_or(false) {
+            " shift"
+        } else {
+            ""
+        };
+        self.step(format!("click {} {} {button}{shift}", args.col, args.row))
+            .await
+    }
+
+    #[tool(
+        description = "Scroll the mouse wheel up or down (on the World tab it cycles hotbar slots; Shift rotates; elsewhere it scrolls lists)."
+    )]
+    async fn scroll(
+        &self,
+        Parameters(args): Parameters<ScrollArgs>,
+    ) -> Result<CallToolResult, ErrorData> {
+        let at = match (args.col, args.row) {
+            (Some(c), Some(r)) => format!(" {c} {r}"),
+            _ => String::new(),
+        };
+        let shift = if args.shift.unwrap_or(false) {
+            " shift"
+        } else {
+            ""
+        };
+        self.step(format!("scroll {}{at}{shift}", args.direction))
+            .await
+    }
+
+    #[tool(description = "Move the mouse to a screen cell (hover highlight and Place-mode ghost).")]
+    async fn move_mouse(
+        &self,
+        Parameters(args): Parameters<MoveArgs>,
+    ) -> Result<CallToolResult, ErrorData> {
+        self.step(format!("move {} {}", args.col, args.row)).await
     }
 
     #[tool(description = "Get the current screen as plain text.")]

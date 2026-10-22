@@ -4,7 +4,7 @@ use crate::{
 };
 use ratatui::{
     layout::Rect,
-    style::{Color, Style},
+    style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Paragraph, Wrap},
     Frame,
@@ -46,7 +46,53 @@ fn to_grayscale(color: Color) -> Color {
     }
 }
 
+/// The world tile under the view cell (`col`, `row`) of a `cols` x `rows` view centered on
+/// (`center_x`, `center_y`) at `scale` cells per tile, and the cell's position inside that
+/// tile's sprite. Rendering and mouse clicks both use this, so they always agree.
+pub fn cell_to_tile(
+    (center_x, center_y): (i64, i64),
+    (cols, rows): (i64, i64),
+    scale: i64,
+    (col, row): (i64, i64),
+) -> (i64, i64, i64, i64) {
+    let offset_x = col - cols / 2;
+    let offset_y = row - rows / 2;
+    (
+        center_x + offset_x.div_euclid(scale),
+        center_y + offset_y.div_euclid(scale),
+        offset_x.rem_euclid(scale),
+        offset_y.rem_euclid(scale),
+    )
+}
+
+/// The world tile under a screen cell, if the cell is inside the world view last drawn.
+pub fn screen_to_tile(
+    app: &crate::App,
+    col: u16,
+    row: u16,
+) -> Option<lithicrivers_core::components::Position> {
+    let area = app.ui.world_view_rect?;
+    let inside = (area.x..area.x + area.width).contains(&col)
+        && (area.y..area.y + area.height).contains(&row);
+    if !inside {
+        return None;
+    }
+    let (x, y, _, _) = cell_to_tile(
+        (app.ui.view_x, app.ui.view_y),
+        (area.width as i64, area.height as i64),
+        app.ui.scale.as_i64(),
+        ((col - area.x) as i64, (row - area.y) as i64),
+    );
+    Some(lithicrivers_core::components::Position {
+        x,
+        y,
+        z: app.ui.view_z,
+    })
+}
+
 pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
+    // Remember where the world is drawn, for mouse clicks
+    app.ui.world_view_rect = Some(area);
     // Get the game view from the core
     let _view = app.core.game.build_view();
 
@@ -118,14 +164,13 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
     for row in 0..target_rows {
         let mut spans = Vec::with_capacity(target_cols);
         for col in 0..target_cols {
-            let offset_x = col as i64 - target_cols as i64 / 2;
-            let offset_y = row as i64 - target_rows as i64 / 2;
-            let world_x = center_x + offset_x.div_euclid(scale);
-            let world_y = center_y + offset_y.div_euclid(scale);
+            let (world_x, world_y, sprite_x, sprite_y) = cell_to_tile(
+                (center_x, center_y),
+                (target_cols as i64, target_rows as i64),
+                scale,
+                (col as i64, row as i64),
+            );
             let world_z = app.ui.view_z;
-
-            let sprite_x = (col as i64 - target_cols as i64 / 2).rem_euclid(scale);
-            let sprite_y = (row as i64 - target_rows as i64 / 2).rem_euclid(scale);
 
             // Base tile color/glyph
             let tile_kind = app
@@ -235,11 +280,78 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
         lines.push(Line::from(spans));
     }
 
+    hover_overlay(app, area, &mut lines);
+
     let paragraph = Paragraph::new(lines)
         .block(Block::default())
         .wrap(Wrap { trim: false });
 
     f.render_widget(paragraph, area);
+}
+
+/// Highlight the tile under the mouse; in Place mode, show a dim ghost of the selected
+/// hotbar block there, with its facing. Drawing only: nothing in the game changes.
+fn hover_overlay(app: &mut crate::App, area: Rect, lines: &mut [Line]) {
+    let Some((mouse_col, mouse_row)) = app.ui.mouse_cell else {
+        return;
+    };
+    let Some(tile) = screen_to_tile(app, mouse_col, mouse_row) else {
+        return;
+    };
+    let scale = app.ui.scale.as_i64();
+    // The ghost: the selected hotbar block's sprite at this zoom
+    let ghost = (app.panels.build.mode == crate::app_state::BuildMode::Place)
+        .then(|| app.panels.build.hotbar_assignments[app.panels.build.selected_hotbar_slot])
+        .flatten()
+        .map(|item| {
+            let sr = match lithicrivers_core::factory::FactoryKind::from_item(item) {
+                Some(kind) => kind.sprite(app.panels.build.placement_facing),
+                None => lithicrivers_core::components::SpriteRef::new(
+                    "items",
+                    lithicrivers_core::components::itemkind_sprite_name(item),
+                ),
+            };
+            let (block, _) = crate::sprite_loader::sprite_block_for_spriteref(
+                &mut app.core.sprite_loader,
+                &sr,
+                app.ui.scale,
+            );
+            block
+                .lines()
+                .map(|l| l.chars().collect::<Vec<char>>())
+                .collect::<Vec<_>>()
+        });
+    for (row, line) in lines.iter_mut().enumerate() {
+        for (col, span) in line.spans.iter_mut().enumerate() {
+            let (x, y, sx, sy) = cell_to_tile(
+                (app.ui.view_x, app.ui.view_y),
+                (area.width as i64, area.height as i64),
+                scale,
+                (col as i64, row as i64),
+            );
+            if (x, y) != (tile.x, tile.y) {
+                continue;
+            }
+            match &ghost {
+                Some(rows) => {
+                    let c = rows
+                        .get(sy as usize)
+                        .and_then(|r| r.get(sx as usize))
+                        .copied()
+                        .unwrap_or(' ');
+                    *span = Span::styled(
+                        c.to_string(),
+                        Style::default()
+                            .fg(Color::Gray)
+                            .add_modifier(Modifier::REVERSED),
+                    );
+                }
+                None => {
+                    span.style = span.style.add_modifier(Modifier::REVERSED);
+                }
+            }
+        }
+    }
 }
 
 /// The tiles between linked poles on level `z`, with the character that draws the wire there:

@@ -21,8 +21,8 @@ input_file: scripts/snapshots/tab-09-help.txt
 │it). Routers deal items left, straight and right in turn, or send the filtered item left. You can │
 │walk on belts, and they carry you along. , lets 10 game seconds pass.                             │
 │                                                                                                  │
-│Debug worlds: with Developer mode on, Create New World offers a World type: Void (an empty        │
-│platform), Ore test (a row of every minable tile), Dog arena (100 feral dogs) or Factory showcase │
+│Mouse: left click opens what's there, else places the hotbar block; right click breaks; middle    │
+│click picks a block and its facing; scroll cycles hotbar slots and Shift + scroll rotates.        │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
 │[0] Loading structure 'sapiencorp-bunker.lrstructure' at (10, 10, 1) for chunk (0, 0, 1)          │
