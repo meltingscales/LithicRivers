@@ -235,20 +235,67 @@ pub fn load_from_str(game: &mut crate::Game, json: &str) -> Result<LoadedSave> {
     }
 }
 
+/// Write a save: compact JSON, gzipped, through a temporary file renamed into place, so a
+/// failure mid-write leaves the previous save as it was.
 pub fn save_to_file<P: AsRef<Path>>(
     game: &crate::Game,
     path: P,
     client: &serde_json::Value,
 ) -> Result<()> {
-    let path = path.as_ref();
-    let writer = BufWriter::new(File::create(path).with_context(|| format!("create {path:?}"))?);
-    serde_json::to_writer_pretty(writer, &save_ref(game, client)).context("serialize json")
+    write_atomically(path.as_ref(), |file| {
+        let mut gz =
+            flate2::write::GzEncoder::new(BufWriter::new(file), flate2::Compression::default());
+        serde_json::to_writer(&mut gz, &save_ref(game, client)).context("serialize json")?;
+        gz.finish()
+            .context("compress")?
+            .into_inner()
+            .map_err(|e| e.into_error())
+            .context("flush")?
+            .sync_all()
+            .context("sync")
+    })
 }
 
+/// Write `path` by writing a temporary file next to it and renaming it over `path` once
+/// `write` succeeds. On failure, the temporary file is removed and `path` is untouched.
+pub fn write_atomically(path: &Path, write: impl FnOnce(&mut File) -> Result<()>) -> Result<()> {
+    let name = path
+        .file_name()
+        .map(|n| n.to_string_lossy().into_owned())
+        .unwrap_or_default();
+    let tmp = path.with_file_name(format!("{name}.tmp"));
+    let result = (|| {
+        let mut file = File::create(&tmp).with_context(|| format!("create {tmp:?}"))?;
+        write(&mut file)?;
+        drop(file);
+        std::fs::rename(&tmp, path).with_context(|| format!("rename {tmp:?} to {path:?}"))
+    })();
+    if result.is_err() {
+        let _ = std::fs::remove_file(&tmp);
+    }
+    result
+}
+
+/// Load a save file, gzipped or plain JSON (told apart by the gzip header, not the name).
 pub fn load_from_file<P: AsRef<Path>>(game: &mut crate::Game, path: P) -> Result<LoadedSave> {
-    let path = path.as_ref();
-    let json = std::fs::read_to_string(path).with_context(|| format!("read {path:?}"))?;
+    let json = read_save_json(path.as_ref())?;
     load_from_str(game, &json)
+}
+
+/// A save file's JSON, decompressing it if it's gzipped.
+pub fn read_save_json(path: &Path) -> Result<String> {
+    let bytes = std::fs::read(path).with_context(|| format!("read {path:?}"))?;
+    let json = if bytes.starts_with(&[0x1f, 0x8b]) {
+        use std::io::Read;
+        let mut json = String::new();
+        flate2::read::GzDecoder::new(bytes.as_slice())
+            .read_to_string(&mut json)
+            .with_context(|| format!("decompress {path:?}"))?;
+        json
+    } else {
+        String::from_utf8(bytes).with_context(|| format!("{path:?} is not text"))?
+    };
+    Ok(json)
 }
 
 // MessagePack (rmp-serde): version 5 only, no client section
@@ -273,6 +320,72 @@ mod tests {
     use crate::test_support::TestWorld;
     use crate::tiles::TileKind;
     use crate::Game;
+
+    fn temp_dir(name: &str) -> std::path::PathBuf {
+        let dir = std::env::temp_dir().join(format!("lr-save-{name}-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        dir
+    }
+
+    #[test]
+    fn saves_are_gzipped_small_and_load_back() {
+        let dir = temp_dir("gzip");
+        let path = dir.join("world.json.gz");
+        let game = Game::new(12345);
+        let before = snapshot(&game);
+        save_to_file(&game, &path, &serde_json::Value::Null).unwrap();
+        let bytes = std::fs::read(&path).unwrap();
+        assert_eq!(&bytes[..2], &[0x1f, 0x8b], "gzip header");
+        assert!(
+            bytes.len() < 100_000,
+            "a new world's save is {} bytes",
+            bytes.len()
+        );
+        let mut loaded = Game::new(0);
+        load_from_file(&mut loaded, &path).unwrap();
+        assert_same(&before, &snapshot(&loaded));
+        assert!(
+            !dir.join("world.json.gz.tmp").exists(),
+            "no temporary file left"
+        );
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn plain_json_saves_still_load() {
+        let dir = temp_dir("plain");
+        let path = dir.join("world.json");
+        let game = TestWorld::new(7).build().game;
+        std::fs::write(
+            &path,
+            save_to_string(&game, &serde_json::Value::Null).unwrap(),
+        )
+        .unwrap();
+        let mut loaded = Game::new_empty(7, crate::components::Position { x: 0, y: 0, z: 0 });
+        load_from_file(&mut loaded, &path).unwrap();
+        assert_eq!(loaded.get_player_position(), game.get_player_position());
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn a_failed_write_leaves_the_previous_save() {
+        let dir = temp_dir("atomic");
+        let path = dir.join("world.json.gz");
+        std::fs::write(&path, b"previous save").unwrap();
+        let err = write_atomically(&path, |file| {
+            use std::io::Write;
+            file.write_all(b"half a sa")?;
+            anyhow::bail!("disk full")
+        });
+        assert!(err.is_err());
+        assert_eq!(std::fs::read(&path).unwrap(), b"previous save");
+        assert!(
+            !dir.join("world.json.gz.tmp").exists(),
+            "the temporary file is removed"
+        );
+        std::fs::remove_dir_all(&dir).ok();
+    }
 
     fn reload(game: &mut Game) {
         let saved = save_to_string(game, &serde_json::Value::Null).expect("save");

@@ -51,7 +51,8 @@ impl App {
         self.core.game = Game::new_empty(meta.seed, Position { x: 0, y: 0, z: 0 });
         self.core.game.res.world_settings = meta.settings;
         self.reset_for_game();
-        let save = folder.join(worlds::SAVE_FILE);
+        let save = worlds::save_file(&folder)
+            .ok_or_else(|| anyhow::anyhow!("no save file in {folder:?}"))?;
         self.load_from_file(&save.to_string_lossy())?;
         self.core.game.res.world_settings = meta.settings;
         self.current_world = Some(CurrentWorld {
@@ -81,7 +82,13 @@ impl App {
         };
         world.folder = Some(folder.clone());
         worlds::write_meta(&folder, &world.meta)?;
-        self.save_to_file(&folder.join(worlds::SAVE_FILE).to_string_lossy())
+        self.save_to_file(&folder.join(worlds::SAVE_FILE).to_string_lossy())?;
+        // A world saved before compression now has its gzipped save; drop the old one
+        let legacy = folder.join(worlds::LEGACY_SAVE_FILE);
+        if legacy.is_file() {
+            std::fs::remove_file(&legacy).map_err(|e| anyhow::anyhow!("remove {legacy:?}: {e}"))?;
+        }
+        Ok(())
     }
 
     /// Save, then leave the world for the title screen.
@@ -141,5 +148,44 @@ mod tests {
         assert_eq!(game.res.world_settings, settings);
         assert_eq!(game.res.world_state.seed, 777);
         assert!(!runner.app.ui.tutorial_visible);
+    }
+
+    #[test]
+    fn a_world_saved_before_compression_loads_and_is_upgraded() {
+        use crate::worlds::{LEGACY_SAVE_FILE, SAVE_FILE};
+        let mut runner = Runner::new(12345, (100, 30));
+        let settings = WorldSettings {
+            cheats_allowed: false,
+            developer_mode: false,
+            show_tutorial: false,
+            world_type: lithicrivers_core::resources::WorldType::Normal,
+        };
+        runner.app.start_world("Old World", 4242, settings);
+        runner.app.splash.state = crate::SplashState::MainUI;
+        runner.chain(&["key movement.MOVE_SOUTH 2"]);
+        let pos = runner.app.core.game.get_player_position();
+        runner.app.save_and_quit_to_title().unwrap();
+        let folder = crate::worlds::list_worlds(&runner.app.saves_dir)[0]
+            .folder
+            .clone();
+        // Turn the folder into one from before compression: only a plain world.json
+        let mut game = lithicrivers_core::Game::new(0);
+        lithicrivers_core::save_load::load_from_file(&mut game, folder.join(SAVE_FILE)).unwrap();
+        let plain =
+            lithicrivers_core::save_load::save_to_string(&game, &serde_json::Value::Null).unwrap();
+        std::fs::write(folder.join(LEGACY_SAVE_FILE), plain).unwrap();
+        std::fs::remove_file(folder.join(SAVE_FILE)).unwrap();
+        assert_eq!(crate::worlds::list_worlds(&runner.app.saves_dir).len(), 1);
+
+        runner.app.load_world(folder.clone()).unwrap();
+        assert_eq!(runner.app.core.game.get_player_position(), pos);
+        runner.app.save_world().unwrap();
+        assert!(folder.join(SAVE_FILE).is_file());
+        assert!(
+            !folder.join(LEGACY_SAVE_FILE).exists(),
+            "the plain save is replaced"
+        );
+        let bytes = std::fs::read(folder.join(SAVE_FILE)).unwrap();
+        assert_eq!(&bytes[..2], &[0x1f, 0x8b]);
     }
 }

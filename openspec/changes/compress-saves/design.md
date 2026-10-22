@@ -37,7 +37,7 @@ Loading reads the first two bytes: `1f 8b` means gzip, anything else is plain JS
 4. Remove a leftover `world.json` only after the rename succeeds.
 
 ### Where the format is decided
-`save_load` owns the bytes. The client only chooses the path, so headless runs and MCP sessions get the same format.
+`save_load` owns the bytes: `save_to_file`, `load_from_file`, and `read_save_json` (shared with the `print_save` binary). The client only chooses the path (`worlds::save_file`), so headless runs and MCP sessions get the same format.
 
 ## Risks / Trade-offs
 
