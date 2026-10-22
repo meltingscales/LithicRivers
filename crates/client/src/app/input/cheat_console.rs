@@ -48,6 +48,11 @@ impl CommandRegistry {
                 handler: handle_toggle_tutorial_command,
             },
             Command {
+                name: "kill_player",
+                description: "kill_player - Destroy your body (to test dying and respawning)",
+                handler: handle_kill_player_command,
+            },
+            Command {
                 name: "spawn_enemy",
                 description:
                     "spawn_enemy <kind> [x y z] - Spawn an enemy (default ~2 ~ ~, ~ = relative to player)",
@@ -340,6 +345,21 @@ fn handle_toggle_fogofwar_command(app: &mut App, _parts: &[&str]) -> Result<(), 
         "disabled"
     };
     app.core.game.res.log(format!("Fog of war: {}", state));
+    Ok(())
+}
+
+fn handle_kill_player_command(app: &mut App, _parts: &[&str]) -> Result<(), Box<dyn Error>> {
+    let game = &mut app.core.game;
+    let player = game.get_player_entity().ok_or("no player")?;
+    if lithicrivers_core::death::is_dead(&game.world, player) {
+        return Err("you are already dead".into());
+    }
+    lithicrivers_core::death::player_died(
+        &mut game.world,
+        &mut game.res,
+        player,
+        "self-destruct command".to_string(),
+    );
     Ok(())
 }
 

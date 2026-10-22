@@ -4,6 +4,7 @@ pub mod cheat_console;
 pub mod combat;
 pub mod corpse_looting;
 pub mod crafting;
+pub mod death;
 pub mod filter_picker;
 pub mod furnace_window;
 pub mod global_map;

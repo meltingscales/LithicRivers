@@ -29,6 +29,22 @@ bitflags! {
     }
 }
 
+/// The kit a new robot carries: a new game's, and a respawned body's.
+pub fn starting_inventory(auto_pickup: bool) -> Inventory {
+    let mut inv = Inventory {
+        auto_pickup,
+        ..Default::default()
+    };
+    inv.add(ItemKind::Nail, 10);
+    inv.add(ItemKind::Acorn, 1);
+    inv.add(ItemKind::Log, 3);
+    inv.add(ItemKind::Stick, 2);
+    inv.add(ItemKind::Torch, 3);
+    inv.add(ItemKind::String, 2);
+    inv.add(ItemKind::ScrapElectronics, 3);
+    inv
+}
+
 impl Game {
     /// A game with only the player, at `player_pos`: no NPCs, animals, items or structures,
     /// and no tick run yet. Used by `new` and by test fixtures.
@@ -58,19 +74,7 @@ impl Game {
         // Read auto-pickup default from cached config
         let auto_pickup_default = res.config.auto_pickup_enabled;
 
-        // Build starting inventory
-        let mut starting_inv = Inventory {
-            auto_pickup: auto_pickup_default,
-            ..Default::default()
-        };
-        // Starting items
-        starting_inv.add(ItemKind::Nail, 10);
-        starting_inv.add(ItemKind::Acorn, 1);
-        starting_inv.add(ItemKind::Log, 3);
-        starting_inv.add(ItemKind::Stick, 2);
-        starting_inv.add(ItemKind::Torch, 3);
-        starting_inv.add(ItemKind::String, 2);
-        starting_inv.add(ItemKind::ScrapElectronics, 3);
+        let starting_inv = starting_inventory(auto_pickup_default);
 
         // Spawn a player entity with a Position and starting inventory
         let _player = world.spawn((
@@ -931,6 +935,8 @@ impl Game {
     /// Move the player to the spawn position and replace the spawn block with air
     pub fn move_player_to_spawn(&mut self, x: i64, y: i64, z: i64) {
         use crate::tile_registry::TileKind;
+        // Where the player comes back after dying
+        self.res.player_state.respawn_point = Some(Position { x, y, z });
 
         // Find the player entity and update their position
         if let Some(player_entity) = self.get_player_entity() {

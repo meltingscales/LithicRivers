@@ -139,6 +139,8 @@ pub struct PanelStates {
     pub filter_picker: Option<FilterPicker>,
     pub blueprint_window: Option<BlueprintWindow>,
     pub stairs_prompt: Option<StairsPrompt>,
+    /// The selected row of the system-failure screen (0 respawn, 1 quit)
+    pub death_choice: usize,
     pub inventory: InventoryPanelState,
     pub crafting: CraftingPanelState,
     pub credits: CreditsPanelState,
