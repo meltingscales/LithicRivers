@@ -42,9 +42,9 @@ Features placed after terrain (deposits, natural stairs, creature spawns, and la
 - **WHEN** a new feature is added to the stage
 - **THEN** the deposits and natural stairs of every chunk stay the same
 
-### Requirement: Generator versions
-A world SHALL keep the generator version it was created with, and saves made before versions existed SHALL use the original generator.
+### Requirement: Old saves still load
+A save from before this change SHALL load with every chunk it had already explored kept as it was. Chunks explored afterwards SHALL use the new generator.
 
 #### Scenario: Old save
-- **WHEN** a save from before this change is loaded and the player explores new chunks
-- **THEN** those chunks generate with the original generator, without seams
+- **WHEN** a save from before this change is loaded
+- **THEN** its explored chunks are unchanged, and newly explored chunks follow the depth bands

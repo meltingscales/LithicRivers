@@ -35,15 +35,15 @@
 
 ### Deposits
 - Each resource has `Deposit { tile, noise_seed, scale, threshold_by_band }`. A tile becomes the deposit where vein noise crosses the band's threshold inside rock, which makes clusters rather than single tiles.
-- **Plasteel:** add `ItemKind::PlasteelScrap` with a mining drop (it fits the "salvaged advanced tech" lore), or remove the tile until something uses it. *Open question for the user.*
+- **Plasteel (decided by the user):** add `ItemKind::PlasteelScrap` and a mining drop for the tile. It fits the "salvaged advanced tech" lore, and later recipes can use it.
 - Every deposit tile becomes solid (not passable) and gets a mining drop. A test checks that every generated tile kind is either passable terrain or mineable.
 
 ### Feature stage
 - **Order:** deposits, natural stairs, creature spawns, then later spouts and reactors. Each feature gets its own generator, seeded from `(seed, chunk, feature id)`, so adding a feature never changes another's rolls.
 
-### Versions
-- `WorldSettings::worldgen_version: u32`, `#[serde(default = "v1")]`. Version 1 is today's generator, kept as is. New worlds are version 2.
-- *Open question for the user:* keep version 1 forever, or accept seams in old worlds and drop it after the Steam MVP.
+### No generator versions (decided by the user)
+- The new generator replaces today's. There is no `worldgen_version` and no frozen old generator.
+- Old saves keep their saved chunks. Chunks explored after updating use the new generator, so seams can appear in old worlds. That's accepted while the game has few players.
 
 ### Survey
 - `worldgen::survey(seed, layers, area)` returns the tile mix per layer.
@@ -52,6 +52,6 @@
 ## Risks / Trade-offs
 
 - [Every normal-world snapshot changes] → z = 0 is bit-identical, so only scripts that go below or above the surface change, and those are reviewed one by one.
-- [Two generators to maintain] → Version 1 is frozen, never edited, and has its own golden test.
+- [Seams in old worlds] → Accepted by the user; saved chunks still load, nothing is lost.
 - [Natural stairways make vertical conveyors less special] → They are rare and only where caves meet; building your own is still the way to go where you choose.
 - [Tuning by feel] → The survey makes each number visible; the user check plays the bunker escape on a few seeds.

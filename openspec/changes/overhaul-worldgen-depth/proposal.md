@@ -31,21 +31,19 @@ Problems beyond the numbers:
 - **Caves that connect across layers:** cave noise sampled with a small z scale, so a cavern on one layer mostly lines up with the next.
 - **Natural stairways:** where caves on two neighboring layers overlap, a seeded few become stairways, so the underground can be walked through. A guaranteed route connects the bunker to the surface.
 - **Deposits as clusters with a depth table:** each resource has a vein-noise field and a density per band (iron from the shallows down, scrap electronics in the shallows and deep, plasteel in the deep).
-  - Every deposit tile is solid and mineable with a drop. Plasteel gets an item, or is removed until it has a use.
+  - Every deposit tile is solid and mineable with a drop. Plasteel scrap gets an item, `Plasteel Scrap`, as salvaged advanced material for later recipes.
   - Tuned so a player finds enough scrap electronics for the early factory within a few minutes of digging.
 - **A per-chunk feature stage** after terrain, with a deterministic order and its own seeded generator. Deposits, natural stairs, creature spawns (slimes, by band), and later ore spouts and ruined reactors all place through it, so each feature can't shift another's rolls.
 - **A worldgen survey:**
   - A test prints and pins each band's tile mix and deposit counts for a fixed seed, so tuning is deliberate and visible in review.
   - The ore-test debug world shows the bands and deposits.
-- **Old worlds keep their generator:**
-  - A `worldgen_version` in the world settings. Saves without it use today's generator, so already-explored worlds don't get seams.
-  - New worlds use version 2.
+- **One generator, no versions:** the new generator replaces today's outright. Old saves keep the chunks they already explored, and newly explored chunks use the new generator, so old worlds can show seams. The game has few players yet, so a breaking change is acceptable (the user's decision).
 - **Docs:** `docs/WORLDGEN-ARCHITECTURE.md` rewritten to match.
 
 ## Capabilities
 
 ### New Capabilities
-- `worldgen-depth`: Depth bands, connected caves, natural stairways, deposit tables, the feature stage, the survey and generator versions.
+- `worldgen-depth`: Depth bands, connected caves, natural stairways, deposit tables, the feature stage and the survey.
 
 ### Modified Capabilities
 <!-- None in openspec/specs yet: worldgen has no spec today. debug-worlds keeps its world types; the ore-test world gains bands. -->
@@ -55,7 +53,6 @@ Problems beyond the numbers:
 - **Core:**
   - `world.rs` generation split into terrain (by band) and a feature stage.
   - `depth_band`, deposit tables and the natural-stair pass.
-  - `WorldSettings::worldgen_version` (serde default 1 for old saves).
   - Mining drops for every deposit tile, and passability fixes in `tile_registry.rs`.
 - **Other changes:**
   - `add-nuclear-slime` spawns by band through the feature stage.
@@ -64,4 +61,4 @@ Problems beyond the numbers:
   - The survey's pinned bands.
   - The bunker-to-surface route.
   - Surface (z = 0) generation unchanged: the existing golden entity test and every snapshot stay as they are.
-  - Old saves loading with version 1.
+  - Old saves still loading (their explored chunks are kept).

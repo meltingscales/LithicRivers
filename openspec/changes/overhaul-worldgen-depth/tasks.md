@@ -2,15 +2,15 @@
 
 ## 1. Decisions and survey
 
-- [ ] 1.1 User decisions: plasteel (add an item or remove the tile) and whether version 1 is kept forever; record them in design.md
+- [x] 1.1 User decisions, recorded in design.md: plasteel gets an item; no generator versions, old worlds may show seams
 - [ ] 1.2 `worldgen::survey` and a test printing today's table per layer; verify `cargo test` prints it (the baseline in the proposal)
 
 ## 2. Generator
 
-- [ ] 2.1 `depth_band`, `worldgen_version` (serde default 1), and version 1 frozen with a golden test; verify z = 0 is identical, old saves load with version 1, and the save/reload test
+- [ ] 2.1 `depth_band`, replacing the old generator; verify z = 0 is identical, an old save still loads with its explored chunks, and the save/reload test
 - [ ] 2.2 Sky and shallows terrain, and caves that overlap across layers; verify the survey's pinned bands and overlap
 - [ ] 2.3 The feature stage with per-feature generators; verify adding a dummy feature doesn't change deposits
-- [ ] 2.4 Deposit tables and clusters, solid deposits, and a mining drop for every deposit tile; verify the "nothing unmineable" test and the pinned deposit shares
+- [ ] 2.4 Deposit tables and clusters, solid deposits, a mining drop for every deposit tile, and the `Plasteel Scrap` item; verify the "nothing unmineable" test and the pinned deposit shares
 - [ ] 2.5 Natural stairways and the guaranteed bunker route; verify a test that walks from the bunker to z = 0 on several seeds
 
 ## 3. Other changes and docs
