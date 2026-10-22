@@ -53,6 +53,10 @@ pub struct UiState {
     pub current_tab: MenuTab,
     pub scale: Scale,
     pub bottom_menu_rect: Option<Rect>, // Remember for click handling
+    /// Where the world view was last drawn, for mapping mouse cells to tiles
+    pub world_view_rect: Option<Rect>,
+    /// The screen cell under the mouse, if it has moved over the window
+    pub mouse_cell: Option<(u16, u16)>,
     pub keybinds: Keybinds,
     #[allow(dead_code)]
     pub tutorial_system: TutorialSystem,
@@ -313,7 +317,8 @@ impl Keybinds {
     pub fn from_config(cfg: &ConfigManager) -> Self {
         let mut map: HashMap<String, Vec<KeyCode>> = HashMap::new();
         if let Some(obj) = cfg.data.keybinds.as_object() {
-            for (category, actions) in obj.iter() {
+            // Mouse bindings name buttons, not keys; `app::input::mouse` reads them
+            for (category, actions) in obj.iter().filter(|(c, _)| c.as_str() != "mouse") {
                 if let Some(act_obj) = actions.as_object() {
                     for (action, arr) in act_obj.iter() {
                         let mut codes: Vec<KeyCode> = Vec::new();
@@ -577,7 +582,6 @@ pub enum CheatConsoleState {
 }
 
 impl CheatConsoleState {
-    #[cfg(test)]
     pub fn is_open(&self) -> bool {
         matches!(self, CheatConsoleState::Open { .. })
     }
@@ -620,6 +624,10 @@ mod tests {
     fn every_default_keybind_parses() {
         let defaults = default_config();
         for (category, actions) in defaults.keybinds.as_object().unwrap() {
+            if category == "mouse" {
+                // Button names, checked by the mouse tests
+                continue;
+            }
             for (action, keys) in actions.as_object().unwrap() {
                 for key in keys.as_array().unwrap() {
                     let key = key.as_str().unwrap();

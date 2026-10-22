@@ -49,6 +49,10 @@ pub fn render_help_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     )));
     lines.push(Line::from(""));
     lines.push(Line::from(
+        "Mouse: left click opens what's there, else places the hotbar block; right click breaks; middle click picks a block and its facing; scroll cycles hotbar slots and Shift + scroll rotates. The mouse builds and breaks up to 5 tiles away. Click a tab to open it.",
+    ));
+    lines.push(Line::from(""));
+    lines.push(Line::from(
         "Debug worlds: with Developer mode on, Create New World offers a World type: Void (an empty platform), Ore test (a row of every minable tile), Dog arena (100 feral dogs) or Factory showcase (working example builds).",
     ));
     lines.push(Line::from(""));

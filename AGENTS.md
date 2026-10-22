@@ -57,6 +57,7 @@ Scripts have one step per line; `#` starts a comment.
 | `seed <u64>`, `size <cols>x<rows>` | Setup; only before other steps. Defaults: config `DEFAULT_SEED`, 160x50 |
 | `skip-splash` | Skip the splash screens and title menu: start a new world with the run's seed and cheats on, and show the main UI |
 | `world <type>` | Like `skip-splash`, but a debug world type: `normal`, `void`, `ore-test`, `dog-arena` or `factory-showcase`. Nothing is saved |
+| `click <col> <row> [left\|right\|middle] [shift]`, `scroll <up\|down> [col row] [shift]`, `move <col> <row>` | Mouse events at a screen cell, through the `mouse` bindings: on the World tab left click opens what's there, else places the hotbar block, else looks; right click breaks (both up to 5 tiles from the player); middle click picks a block; scroll cycles hotbar slots and Shift + scroll rotates; elsewhere scroll moves lists, and clicking the menu bar switches tabs. At 100x30 the player's cell is (38, 10), or (38, 9) in Place mode |
 | `beat <ms>` | Demo pacing: in a demo scenario, steps before the first `beat` set the scene at once and later steps play one per beat. A no-op in scripts |
 | `key <category>.<ACTION> [n]` | Press the key bound to a keybind (e.g. `movement.MOVE_SOUTH`, `action.MINE`), n times |
 | `rawkey <NAME>` | Press a key by config name (`ENTER`, `ESCAPE`, `TAB`, `F1`, `q`) |

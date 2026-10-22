@@ -161,6 +161,28 @@ fn run_headless_from_args(default_seed: u64) -> Result<Option<i32>, Box<dyn Erro
     Ok(Some(code))
 }
 
+/// A crossterm mouse event as the game's `MouseInput` (button releases and drags are
+/// ignored).
+fn mouse_input(me: &crossterm::event::MouseEvent) -> Option<app::input::mouse::MouseInput> {
+    use app::input::mouse::{MouseButton, MouseInput, MouseKind};
+    use crossterm::event::{KeyModifiers, MouseButton as Button, MouseEventKind};
+    let kind = match me.kind {
+        MouseEventKind::Down(Button::Left) => MouseKind::Click(MouseButton::Left),
+        MouseEventKind::Down(Button::Right) => MouseKind::Click(MouseButton::Right),
+        MouseEventKind::Down(Button::Middle) => MouseKind::Click(MouseButton::Middle),
+        MouseEventKind::ScrollUp => MouseKind::ScrollUp,
+        MouseEventKind::ScrollDown => MouseKind::ScrollDown,
+        MouseEventKind::Moved => MouseKind::Move,
+        _ => return None,
+    };
+    Some(MouseInput {
+        kind,
+        col: me.column,
+        row: me.row,
+        shift: me.modifiers.contains(KeyModifiers::SHIFT),
+    })
+}
+
 /// Advance the client by one frame: combat auto-ticks and splash/UI timers.
 /// Shared by the interactive loop and headless runs; reads time only from `app.clock`.
 fn step(app: &mut App) {
@@ -244,9 +266,11 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<(), 
                             app.splash.boot_scroll = app.splash.boot_scroll.saturating_sub(3);
                             // Scroll 3 lines at a time
                         }
-                    } else {
-                        // Log other mouse events
-                        tracing::debug!("UNHANDLED Mouse event: {:?}", me);
+                    }
+                    if !matches!(app.splash.state, SplashState::BootMessage) {
+                        if let Some(input) = mouse_input(&me) {
+                            app::input::mouse::handle_mouse(app, input);
+                        }
                     }
                 }
                 _ => {}

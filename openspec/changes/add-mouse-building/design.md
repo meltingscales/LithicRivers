@@ -40,7 +40,7 @@
 - On a directional block it also sets `placement_facing` to that block's facing. On terrain it does nothing.
 
 ### Reach and feedback
-- Reach is a Chebyshev distance of 1 from the player, matching the 8-direction keys.
+- Reach is a Chebyshev distance of 5 from the player (`MOUSE_REACH`), wider than the 8-direction keys so building with the mouse is quick (raised from 1 after playtesting).
 - Out of reach, a left click looks at the tile and logs "Too far to build there"; a right click logs "Too far to mine there".
 
 ### Hover
@@ -55,3 +55,18 @@
 
 - [Terminals without mouse support] → Everything stays reachable by keyboard; mouse bindings can be emptied.
 - [Click-through on modals] → While a modal is open, clicks outside it are ignored, as are keys the modal doesn't use.
+
+## Implementation Notes
+
+- **One handler:** `app/input/mouse.rs`. `handle_mouse` ignores events while the demo plays; `dispatch_mouse` is what the demo's scripted mouse steps use. `main.rs` turns crossterm presses, scrolls and moves into `MouseInput`; releases and drags are ignored.
+- **Order of a left click on the world:** interact with what's on the tile first (open a chest, talk), then place the selected hotbar block, then look. So clicking a chest opens it even with a chest selected, as in Factorio. This replaces the planned "place when the slot holds a placeable item, otherwise interact".
+- **Bindings:** a `mouse` category in `default_config.rs` with button names (`LEFT_CLICK`, `RIGHT_CLICK`, `MIDDLE_CLICK`, `SCROLL_UP`, `SCROLL_DOWN`, `SHIFT+SCROLL_UP`, `SHIFT+SCROLL_DOWN`). The key map skips that category, since it holds button names, not keys.
+- **Mapping:** `ui::panels::world::cell_to_tile` is shared by rendering and clicks. The world view stores its `Rect` each frame (`ui.world_view_rect`), and `screen_to_tile` uses it.
+- **Reach and look:** building and breaking reach 5 tiles from the player (`MOUSE_REACH`, raised from the keyboard's 8 neighbours after playtesting). Out of reach, a click puts look mode's cursor on the tile and logs "Too far to build there" or "Too far to mine there".
+- **Pick block** works at any distance. It selects the hotbar slot holding the block's item, or assigns the item to the current slot if the player carries it, and copies a directional block's facing.
+- **Scrolling:**
+  - On the World tab with no window open, scrolling cycles hotbar slots, wrapping around.
+  - Elsewhere it presses the list's Up or Down key: the cheat console's scroll keys while it's open, otherwise `ui.CREDITS_SCROLL_*`, which the Item Dictionary and Crafting lists use.
+- **Tab clicks:** `tab_at` follows the tab bar's layout (a border, then " title " plus a divider for each tab).
+- **Hover:** the tile under the mouse is drawn reversed. In Place mode it shows the selected block's sprite at the current zoom and facing.
+- **Headless and MCP:** the `click`, `scroll` and `move` steps and the `click`, `scroll` and `move_mouse` MCP tools. They're documented in AGENTS.md, including the player's screen cell at 100x30.

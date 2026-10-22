@@ -1,0 +1,18 @@
+# Place mode with a chest on the hotbar: the mouse rests on the tile east of the player,
+# which shows a dim ghost chest (at 100x30 in Place mode the player is at cell 38, 9)
+seed 12345
+size 100x30
+skip-splash
+key ui.MENU_PREV
+cheat tp -15 0 0
+cheat giveitem chest
+key build.TOGGLE_BREAK_PLACE_MODE 2
+# Picker: Clear slot, Acorn, Chest
+key hotbar.HOTBAR_SLOT_1 2
+key movement.MOVE_SOUTH 2
+key ui.MENU_ACTIVATE
+move 39 9
+expect-text "Chest"
+screen hover-ghost
+click 39 9 left
+expect-text "Placed Chest"
