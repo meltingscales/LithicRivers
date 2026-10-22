@@ -16,26 +16,27 @@ Ask for "Add an openspec feat that adds XYZ" or "Bugfix: Something not rendering
 
 .
 
+- feat: special endgame "Fractal Tear" biome that is fractal-inspired, with mandelbrot/menger sponge/douady rabbit/bifurcation curve inspired worldgen for resources and blocks
+  - most blocks can be processed with complex resource chains involving petrogen distillation chains (inspired by minecraft create mod diesel/oil) or complex uranium ore processing (inspired by GregTech or Factorio mods)
+  - or just plain ore washing with extremely rare chances to yield useful materials
+  - highly inspired by Moon Stair from Caves of Qud
+
+- feat: different types of crops, wheat (to be used to make biofuel or ethanol), potatoes (same), carrots (can be used to breed certain animals)
+  - auto-feeders that can be used to automate animal farms
+  - animal counters that output a SapienNet signal based on how many animals are in a X-by-X radius of them
+  - SapienNet network feature: cables (like power cables) that can send signals on a network, similar to redstone or ComputerCraft network cables
+    - feat: some sort of unified logic editor that lets you conditionally trigger machine behavior based on logical operators, like in Factorio's circuit network
+    - feat: lightweight Lua IDE that lets you implement more complex SapienNet logic, ideally with an IDE that's external-IDE-friendly (stores scripts in save folder but separate from gzipped json, for easy editing) and has some sort of guide or documentation, complete with examples of different machines. inspired by ComputerCraft.
+  - some lore-friendly block that lets you damage non-player-entities for the purpose of farming
+  - bio-vats that...do something with meat, not sure yet. To give a purpose to animal farm factories. Possibly require growing "{Deformed/Wrinkly/Perfect} Biomechanical Embryo" items for some crafting purpose.
+
+- feat: biome compass: moderately expensive item that requires power from a power cell item, can be used to locate the closest "X type of Biome" and if activated, displays a waypoint on your Global Map
+
+- feat: power cell items (with 3 tiers) that can be used to store/draw power from battery blocks (on electric grid) that then are used to feed power into items or gear (and get passively charged by your fusion core, depending on what tier it is)
+
+- feat: endgame purpose is actually to build a strange biomechanical teleporter, not a rocket ship. The teleporter requires a continuous drip input of endgame items, forcing the player to build a factory capable of producing them for a sustained period of time. It should be a multiblock structure, 11x11 blocks wide, and a "item flow" GUI showing the player what's green (more than enough), yellow (sustained input/borderline), and red (falling) so they can plan their factory
+  - feat2: possibly add a "Production over time" GUI like Factorio so players can see their factory's crafting chain insufficiencies
+  - feat3: might need to add chunkloading or partial chunkloading for machine block interactions for this to work for large factories.
+  - feat4: lore/questing: This should be completely unknown to the player until they complete a lot of quests. [AI: Put this in our design decisions/fundamentals: I want the player to uncover lore and quests slowly, slowly learning what actually happened to cause the SapienCorp reactor explosion that caused a nuclear holocaust)
+
 <!-- ACTIONED ON ALREADY -->
-
-- ANSWERED (switch saves from JSON to TOON?): **no, compress the JSON instead.** Measured on a new world (seed 12345, 59 chunks):
-  - | Format | Size |
-    |---|---|
-    | Pretty JSON (what `save_to_file` writes today) | 5.87 MB |
-    | Compact JSON | 1.73 MB |
-    | MessagePack (`save_game_msgpack`, unused) | 1.24 MB |
-    | Compact JSON with TOON-style tile lists | about 1.25 MB (the tile lists alone shrink 28%) |
-    | Compact JSON, gzip -9 | 19 KB (300x smaller than today's file) |
-  - 99% of a save is chunk tiles stored as strings (`"Rock","Rock",...`); 241,664 tiles are only 10,274 runs of the same tile, so any compression wins big
-  - TOON con: made to save LLM tokens, not disk; young, with no mature serde support in Rust; only about a quarter smaller here; harder to edit than JSON. Pro: easier to read than JSON for tables. That isn't worth a second format
-  - Suggested change if you want it, `compress-saves`: write compact JSON through gzip (the `flate2` crate), load both gzipped and plain saves so old saves keep working, and optionally store tiles as runs or palette indexes later
-
-- DONE: went through STEAM-MVP.md, TODO.md, MECHANICS.md, QUESTS.md and docs/dungeons for ideas with no spec or change yet; they're listed, ranked for the Steam MVP and each with a suggested change name, in `docs/SPEC-GAPS.md`. Top picks: player death (it only logs "You have died!" today), a day/night cycle, the arm-replacement quest, and body damage with real effects. STEAM-MVP.md links the list, and volume sliders are ticked as done
-
-- FIXED: turning Look mode off snaps the view back to the player
-- DONE: the Look panel shows what is on the layers above and below the cursor (a vertical conveyor's own direction shows as "Lifts to" / "Lowers to" instead)
-- FIXED: the Look panel puts its text first and wraps it, names things plainly ("Vertical conveyor (up)", "Log x2 (lying here)"), shows one 12x8 art (the entity's, else the tile's) last, and in Look mode the help box below it shrinks to fit, so nothing important is cut off
-- DONE: in Look mode, hovering the mouse over the world picks what to look at; only the keys move the view
-
-- PROPOSED as `add-underground-belts`: underground conveyor pairs on one layer, up to 10 tiles apart, carrying items under whatever lies between so belt lines can cross. Pipes wait until the game has fluids
-- PROPOSED as `add-blueprint-sharing`: `LITHICRIVERS-BLUEPRINT-<payload>` strings (base64 of compressed JSON with a format version) to export and import blueprints and books; blueprint books as a tree with move, rename and delete; an edit pane that removes every block of one kind from a blueprint
