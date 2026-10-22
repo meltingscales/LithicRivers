@@ -20,9 +20,10 @@ pub fn before_climb(app: &mut App, dz: i64) -> bool {
         z: here.z + dz,
         ..here
     };
-    if stairs::climbable(&game.world, &mut game.res, here)
-        && stairs::climbable(&game.world, &mut game.res, there)
-    {
+    // Stairs on either end, and room to stand at the other level: the climb goes ahead
+    let climbable = stairs::climbable(&game.world, &mut game.res, here)
+        || stairs::climbable(&game.world, &mut game.res, there);
+    if climbable && lithicrivers_core::logistics::walkable(&mut game.res, &game.world, there) {
         return false;
     }
     let way = if dz > 0 { "up" } else { "down" };
