@@ -141,7 +141,7 @@ pub fn handle_body_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Er
             } else {
                 part_selection = Some(parts[0]);
             }
-        } else if app.ui.keybinds.matches("ui", "ACTIVATE", &key) || key == KeyCode::Enter {
+        } else if app.ui.keybinds.matches("ui", "MENU_ACTIVATE", &key) || key == KeyCode::Enter {
             // Execute repair
             if let Some(body_part) = part_selection {
                 let mut inventory = get_player_inventory(app);

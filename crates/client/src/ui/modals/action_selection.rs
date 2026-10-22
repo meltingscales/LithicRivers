@@ -56,6 +56,9 @@ fn render_action_selection_modal(
 
     let inner = block.inner(area);
     f.render_widget(block, area);
+    app.ui
+        .click_targets
+        .push(area, crate::ui::click_targets::ClickTarget::ModalArea);
 
     // Get player position for directional information
     let player_pos = app
@@ -112,6 +115,12 @@ fn render_action_selection_modal(
     };
 
     f.render_widget(list, list_area);
+    app.ui.click_targets.rows(
+        list_area,
+        0,
+        available_actions.len(),
+        crate::ui::click_targets::ClickTarget::InteractionChoice,
+    );
 
     // Controls at bottom
     let controls = Paragraph::new("↑↓: Select | Enter: Choose | Esc: Cancel")

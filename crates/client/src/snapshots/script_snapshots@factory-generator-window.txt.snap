@@ -24,10 +24,10 @@ input_file: scripts/snapshots/factory-generator-window.txt
 ###############││                                ││                                ││ct pole       │
 ###############││                                ││                                ││generator     │
 ###############││                                ││                                ││──────────────┘
-┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
-│[1] Build mode: Rotate                          ││                                ││              │
-│[1] Build mode: Movementanel | ↑↓ Select | Enter Move | a Take All | Esc Close────┘│              │
-│[401] Choose interaction:──────────────────────────────────────────────────────────┘              │
+┌Messages──────││                                ││                                ││──────────────┐
+│[1] Build mode││                                ││                                ││              │
+│[1] Build mode│└────←→ Panel | ↑↓ Select | Enter Move | a Take All | Esc Close────┘│              │
+│[401] Choose i└────────────────────────────────────────────────────────────────────┘              │
 │[401] Opened generator                                                                            │
 │[401] Stored Log                                                                                  │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘

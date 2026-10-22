@@ -34,16 +34,23 @@
 
 ### Dispatch
 - A click checks the targets from last to first, so the topmost drawn wins, before any world handling.
-- A row target sets the matching selection index and then runs the same function the Enter key runs: the input handlers get small `activate_*` functions that both the key and the click call.
+- A row target sets the matching selection index and then presses that menu's own activate key (`title.SELECT` or `ui.MENU_ACTIVATE`) through `input_handler::dispatch`, so the click runs exactly the code the key runs.
+  - *Changed during implementation:* the plan was new `activate_*` functions shared by the key and the click. Dispatching the bound key needs no change to any input handler and can't drift from the keyboard path.
+  - Exceptions: a create-form text field only takes focus; an options row other than Back only selects; a recipe row selects on the first click and crafts on a second.
 - A click that lands on no target while a window is open, and outside its `ModalArea`, closes it, as Escape does.
 
 ### Right click in transfer windows
-Moves the whole stack: `factory::move_all_items` for one stack (a new `move_stack` next to it), through the block's own `accepts` rules so filtered machines still refuse what they don't take.
+Moves the whole stack.
+- *Changed during implementation:* instead of a new `move_stack`, the click presses activate repeatedly until the stack is gone, a move is refused, or the selection lands on a different item. Every item goes through the window's own rules and messages, so a full furnace slot keeps the rest of the stack.
 
 ### Hover
-`ui.mouse_cell` is already tracked. Widgets that record targets also style the row under the mouse (underlined or highlighted), so the hover state can't drift from the click state.
+`ui.mouse_cell` is already tracked. After drawing, `ui()` underlines the target a click at the mouse cell would press, using the same `resolve` as clicks, so the hover state can't drift from the click state and rows under an open window never light up.
+- Underlines don't show in the text snapshots, so tests check the buffer's cell styles instead of hover snapshots.
+
+### Draw order
+The hotbar, message log and menu bar now draw before every window. Before, the message log drew over the bottom of item windows, hiding their key hints, and the menu bar's tabs sat above open windows.
 
 ## Risks / Trade-offs
 
-- [A widget forgets to record its rows] → A headless test clicks every recorded target type at least once; snapshot scripts cover hover.
+- [A widget forgets to record its rows] → A headless test clicks every recorded target type at least once; buffer-style tests cover hover.
 - [Targets from the previous frame after a layout change] → Targets are rebuilt every frame and a click is handled before the next draw changes layout, the same frame order as keys.

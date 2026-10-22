@@ -158,6 +158,9 @@ fn render_npc_dialogue_modal(
 
     let inner = block.inner(area);
     f.render_widget(block, inner);
+    app.ui
+        .click_targets
+        .push(area, crate::ui::click_targets::ClickTarget::ModalArea);
 
     // Get current dialogue and both portraits using the new DialoguePresenter with Summon Night style
     let (dialogue_lines, npc_portrait, player_portrait) = if let NPCInteractionState::InDialogue {
@@ -292,6 +295,7 @@ fn render_npc_dialogue_modal(
             height: content_area.height,
         };
 
+        record_choices(app, &dialogue_lines, text_area);
         let dialogue_paragraph = Paragraph::new(dialogue_lines)
             .alignment(Alignment::Left)
             .wrap(Wrap { trim: true });
@@ -311,5 +315,32 @@ fn render_npc_dialogue_modal(
             height: 1,
         };
         f.render_widget(controls, controls_area);
+    }
+}
+
+/// Record each numbered choice line ("1.  ..." or "> 2.  ...") of the wrapped dialogue text
+/// as a click target, as tall as it wraps to.
+fn record_choices(app: &App, lines: &[ratatui::text::Line], area: Rect) {
+    let mut y = area.y;
+    for line in lines {
+        let text: String = line.spans.iter().map(|s| s.content.as_ref()).collect();
+        // Lines wrap one at a time, so each line's height is its own wrapped height
+        let height = Paragraph::new(line.clone())
+            .wrap(Wrap { trim: true })
+            .line_count(area.width) as u16;
+        let numbered = text.trim_start().trim_start_matches("> ");
+        let number = numbered
+            .split_once('.')
+            .and_then(|(n, _)| n.trim().parse::<usize>().ok());
+        if let Some(n) = number.filter(|&n| n > 0) {
+            let rect = Rect::new(area.x, y, area.width, height).intersection(area);
+            if rect.height > 0 {
+                app.ui.click_targets.push(
+                    rect,
+                    crate::ui::click_targets::ClickTarget::DialogueChoice(n - 1),
+                );
+            }
+        }
+        y = y.saturating_add(height);
     }
 }

@@ -23,8 +23,40 @@ use ratatui::{
 };
 
 pub(crate) fn ui(f: &mut Frame, app: &mut App) {
+    app.ui.click_targets.clear();
     ui_main(f, app);
+    hover_rows(f, app);
     crate::ui::demo::render_demo_overlay(f, app);
+}
+
+/// Underline the clickable row under the mouse, whatever widget drew it.
+fn hover_rows(f: &mut Frame, app: &App) {
+    use crate::ui::click_targets::ClickTarget;
+    let Some((col, row)) = app.ui.mouse_cell else {
+        return;
+    };
+    // Only what a click there would press: not rows under an open window
+    use crate::ui::click_targets::Resolved;
+    if !matches!(
+        app.ui.click_targets.resolve(col, row),
+        Resolved::Target(target) if target != ClickTarget::ModalArea
+    ) {
+        return;
+    }
+    let Some((rect, _)) = app.ui.click_targets.hit(col, row) else {
+        return;
+    };
+    let area = rect.intersection(f.size());
+    let buf = f.buffer_mut();
+    for y in area.y..area.y + area.height {
+        for x in area.x..area.x + area.width {
+            let cell = buf.get_mut(x, y);
+            cell.set_style(
+                cell.style()
+                    .add_modifier(ratatui::style::Modifier::UNDERLINED),
+            );
+        }
+    }
 }
 
 fn ui_main(f: &mut Frame, app: &mut App) {
@@ -170,6 +202,20 @@ fn ui_main(f: &mut Frame, app: &mut App) {
         }
     }
 
+    // Hotbar, message log and menu bar, under every window
+    if show_hotbar {
+        render_hotbar_panel(f, app, root_chunks[2]);
+        // Message log
+        render_message_log(f, app, root_chunks[3]);
+        // Bottom menu bar
+        render_bottom_menu(f, app, root_chunks[4]);
+    } else {
+        // Message log
+        render_message_log(f, app, root_chunks[2]);
+        // Bottom menu bar
+        render_bottom_menu(f, app, root_chunks[3]);
+    }
+
     // Render corpse looting modals if active
     render_corpse_looting_modals(f, app);
 
@@ -197,20 +243,6 @@ fn ui_main(f: &mut Frame, app: &mut App) {
     ) {
         let modal_area = centered_rect(75, 65, f.size());
         render_repair_modal(f, app, modal_area);
-    }
-
-    // Render hotbar if in place mode
-    if show_hotbar {
-        render_hotbar_panel(f, app, root_chunks[2]);
-        // Message log
-        render_message_log(f, app, root_chunks[3]);
-        // Bottom menu bar
-        render_bottom_menu(f, app, root_chunks[4]);
-    } else {
-        // Message log
-        render_message_log(f, app, root_chunks[2]);
-        // Bottom menu bar
-        render_bottom_menu(f, app, root_chunks[3]);
     }
 
     // Render tutorial selection modal if active
@@ -276,6 +308,17 @@ fn render_bottom_menu(f: &mut Frame, app: &mut App, area: Rect) {
         .style(Style::default().fg(Color::White))
         .highlight_style(Style::default().fg(Color::Green));
     f.render_widget(tabs, area);
+
+    // Each title is drawn as " title " after the border, with a one-cell divider
+    let mut x = area.x + 1;
+    for tab in MenuTab::visible(app.ui.tutorial_visible) {
+        let width = tab.title().chars().count() as u16 + 2;
+        let cell = Rect::new(x, area.y + 1, width, 1).intersection(area);
+        app.ui
+            .click_targets
+            .push(cell, crate::ui::click_targets::ClickTarget::Tab(tab));
+        x += width + 1;
+    }
 }
 
 /// Calculate the game viewport area based on current UI layout
