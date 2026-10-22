@@ -95,6 +95,8 @@ impl TileKind {
         match item {
             ItemKind::PlankBlock => Some(TileKind::PlankBlock),
             ItemKind::Stone => Some(TileKind::Rock),
+            // Placed as a stairway of two; see `stairs::build_stairway`
+            ItemKind::Stairs => Some(TileKind::Stairs),
             // Planted rather than placed; see `plants::plant`
             ItemKind::Acorn => Some(TileKind::Sapling),
             _ => None,

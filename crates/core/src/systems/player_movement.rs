@@ -53,9 +53,13 @@ pub fn move_player_system(world: &mut World, res: &mut Resources) {
                             }
                         } else if dz != 0 {
                             // Vertical movement - requires stairs at current position AND destination
-                            let current_tile = res.world_state.world.get_tile_cached(cx, cy, cz);
-                            use crate::tiles::TileKind;
-                            if current_tile != TileKind::Stairs {
+                            // Stairs, or a vertical conveyor climbed like a ladder
+                            let here = Position {
+                                x: cx,
+                                y: cy,
+                                z: cz,
+                            };
+                            if !crate::stairs::climbable(world, res, here) {
                                 blocked = true;
                                 info!(
                                     "Vertical movement blocked - not on stairs at ({}, {}, {})",
@@ -67,9 +71,12 @@ pub fn move_player_system(world: &mut World, res: &mut Resources) {
                                 );
                             } else {
                                 // Also check destination has stairs to prevent stranding
-                                let destination_tile =
-                                    res.world_state.world.get_tile_cached(nx, ny, nz);
-                                if destination_tile != TileKind::Stairs {
+                                let there = Position {
+                                    x: nx,
+                                    y: ny,
+                                    z: nz,
+                                };
+                                if !crate::stairs::climbable(world, res, there) {
                                     blocked = true;
                                     info!(
                                         "Vertical movement blocked - no stairs at destination ({}, {}, {})",

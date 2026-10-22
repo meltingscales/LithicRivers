@@ -1,0 +1,36 @@
+---
+source: crates/client/src/app/demo.rs
+expression: "String::from_utf8(out).unwrap()"
+---
+=== screen end ===
+                                            LithicRivers
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv↑vvvvvvvvvvv┌MODES─────────────────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvCvvvvvvvvvvvvvvvvCHvvvvvvvvvv│  ------ - - -- - FOG │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvtvvttvvvvvvvv┌Inventory─────────────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Nail x9               │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Acorn x1              │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Log x3                │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv>▲vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Help (h)──────────────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv@vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Move:                 │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  7 8 9               │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  4 5 6               │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  1 2 3               │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│q: mine               │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│v: look               │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│`: build mode         │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│f: Nail on belt       │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│f: Nail on belt       │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
+┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
+│[881] Placed Chest at (1, 4, 1)                                                                   │
+│[881] Build mode: Rotate                                                                          │
+│[881] Build mode: Movement                                                                        │
+│[961] Opened chest                                                                                │
+│[961] Finished looting                                                                            │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===

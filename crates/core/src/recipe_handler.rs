@@ -178,6 +178,13 @@ impl RecipeHandler {
                 result: ItemKind::VerticalConveyor,
                 quantity: 2,
             },
+            // 2 stairs: 2x wooden plank + 2x stick (a stairway takes both)
+            Recipe {
+                name: "Stairs",
+                ingredients: &[(ItemKind::WoodenPlank, 2), (ItemKind::Stick, 2)],
+                result: ItemKind::Stairs,
+                quantity: 2,
+            },
             // Turn a wooden conveyor on its end, or lay a vertical one flat
             Recipe {
                 name: "Vertical Conveyor (from wooden)",

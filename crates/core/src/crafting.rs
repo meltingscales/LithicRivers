@@ -26,6 +26,7 @@ pub fn mining_drop(tile: TileKind) -> Option<MiningDrop> {
             &[(ItemKind::Log, 2, 3), (ItemKind::Acorn, 1, 3)],
         ),
         TileKind::PlankBlock => drop(TileKind::Air, &[(ItemKind::PlankBlock, 1, 1)]),
+        TileKind::Stairs => drop(TileKind::Air, &[(ItemKind::Stairs, 1, 1)]),
         TileKind::Rock => drop(TileKind::Air, &[(ItemKind::Stone, 1, 1)]),
         TileKind::IronScrap => drop(TileKind::Air, &[(ItemKind::IronScrap, 1, 2)]),
         TileKind::ScrapElectronics => drop(TileKind::Air, &[(ItemKind::ScrapElectronics, 1, 1)]),
@@ -320,6 +321,8 @@ mod tests {
             ItemKind::Log,
             ItemKind::Acorn,
             ItemKind::PlankBlock,
+            // Generated stairs can be mined too
+            ItemKind::Stairs,
             ItemKind::Stone,
             ItemKind::IronScrap,
             ItemKind::ScrapElectronics,

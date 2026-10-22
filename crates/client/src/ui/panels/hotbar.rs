@@ -74,15 +74,14 @@ pub fn render_hotbar_panel(f: &mut Frame, app: &mut App, area: Rect) {
             Block::default()
                 .borders(Borders::ALL)
                 .title(Line::from(format!(
-                    "Hotbar ({}-{}) | facing {} {} ({} to turn)",
+                    "Hotbar ({}-{}) | {} ({} to turn)",
                     app.core
                         .config_manager
                         .get_keybind_str("hotbar", "HOTBAR_SLOT_1"),
                     app.core
                         .config_manager
                         .get_keybind_str("hotbar", "HOTBAR_SLOT_12"),
-                    app.panels.build.placement_facing.arrow(),
-                    app.panels.build.placement_facing.name(),
+                    placement_label(app),
                     app.core
                         .config_manager
                         .get_printable_key_for_keybind("build", "ROTATE_PLACEMENT")
@@ -90,4 +89,23 @@ pub fn render_hotbar_panel(f: &mut Frame, app: &mut App, area: Rect) {
                 .style(Style::default().fg(Color::White)),
         );
     f.render_widget(content, area);
+}
+
+/// Which way the next placement goes: the facing, or for stairs, up or down.
+fn placement_label(app: &crate::App) -> String {
+    let build = &app.panels.build;
+    if build.hotbar_assignments[build.selected_hotbar_slot]
+        == Some(lithicrivers_core::components::ItemKind::Stairs)
+    {
+        return if build.stairs_down {
+            "stairs down".to_string()
+        } else {
+            "stairs up".to_string()
+        };
+    }
+    format!(
+        "facing {} {}",
+        build.placement_facing.arrow(),
+        build.placement_facing.name()
+    )
 }

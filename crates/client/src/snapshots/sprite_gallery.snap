@@ -1326,6 +1326,25 @@ eee
   └┴┴┴┴┴┴┘  
             
             
+=== items/stairs  #B08850  A flight of pegged planks; two of them dig a way between layers
+-- 1x
+/
+-- 2x
+./
+//
+-- 3x
+../
+.//
+///
+-- art 0
+            
+            
+        ▄▄  
+      ▄▄█▓  
+    ▄▄█▓▓▓  
+  ▄▄█▓▓▓▓▓  
+  █▓▓▓▓▓▓▓  
+            
 === items/stick  #964B00  A wooden stick.
 -- 1x
 /

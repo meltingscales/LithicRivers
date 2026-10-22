@@ -280,6 +280,7 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
         lines.push(Line::from(spans));
     }
 
+    climb_overlay(app, area, &mut lines);
     hover_overlay(app, area, &mut lines);
     blueprint_overlay(app, area, &mut lines);
 
@@ -356,6 +357,88 @@ fn hover_overlay(app: &mut crate::App, area: Rect, lines: &mut [Line]) {
 }
 
 type SpriteRows = Vec<Vec<char>>;
+
+/// Ghost stairs, on odd seconds (the opposite beat to wires), on tiles with something to
+/// climb directly above (gray) or below (dark gray): where a stairway would lead, or where
+/// one ends. Tiles that are climbable themselves, or have anything on them, draw as they are.
+fn climb_overlay(app: &mut crate::App, area: Rect, lines: &mut [Line]) {
+    if (app.clock.animation_millis() / 1000) % 2 == 0 {
+        return;
+    }
+    let z = app.ui.view_z;
+    let game = &app.core.game;
+    let climbable = |x: i64, y: i64, z: i64| {
+        let pos = lithicrivers_core::components::Position { x, y, z };
+        game.res
+            .world_state
+            .world
+            .get_tile_cached_no_worldgen(x, y, z)
+            == lithicrivers_core::tiles::TileKind::Stairs
+            || game.res.factory_index.get(&pos).is_some_and(|&e| {
+                game.world
+                    .get::<&lithicrivers_core::factory::FactoryBlock>(e)
+                    .is_ok_and(|b| b.kind.lift().is_some())
+            })
+    };
+    // Only bare terrain: never over the player, creatures, items or blocks
+    let occupied: std::collections::HashSet<(i64, i64)> = game
+        .world
+        .query::<&lithicrivers_core::components::Position>()
+        .iter()
+        .filter(|(_, p)| p.z == z)
+        .map(|(_, p)| (p.x, p.y))
+        .collect();
+    let scale = app.ui.scale.as_i64();
+    let mut ghosts: HashMap<(i64, i64), Option<Color>> = HashMap::new();
+    for (row, line) in lines.iter().enumerate() {
+        for col in 0..line.spans.len() {
+            let (x, y, _, _) = cell_to_tile(
+                (app.ui.view_x, app.ui.view_y),
+                (area.width as i64, area.height as i64),
+                scale,
+                (col as i64, row as i64),
+            );
+            ghosts.entry((x, y)).or_insert_with(|| {
+                if occupied.contains(&(x, y)) || climbable(x, y, z) {
+                    None
+                } else if climbable(x, y, z + 1) {
+                    Some(Color::Gray)
+                } else if climbable(x, y, z - 1) {
+                    Some(Color::DarkGray)
+                } else {
+                    None
+                }
+            });
+        }
+    }
+    if ghosts.values().all(Option::is_none) {
+        return;
+    }
+    let (sprite, _) = crate::sprite_loader::sprite_block_for_spriteref(
+        &mut app.core.sprite_loader,
+        &lithicrivers_core::components::SpriteRef::new("tiles", "stairs"),
+        app.ui.scale,
+    );
+    let rows: SpriteRows = sprite.lines().map(|l| l.chars().collect()).collect();
+    for (row, line) in lines.iter_mut().enumerate() {
+        for (col, span) in line.spans.iter_mut().enumerate() {
+            let (x, y, sx, sy) = cell_to_tile(
+                (app.ui.view_x, app.ui.view_y),
+                (area.width as i64, area.height as i64),
+                scale,
+                (col as i64, row as i64),
+            );
+            if let Some(Some(color)) = ghosts.get(&(x, y)) {
+                let c = rows
+                    .get(sy as usize)
+                    .and_then(|r| r.get(sx as usize))
+                    .copied()
+                    .unwrap_or(' ');
+                *span = Span::styled(c.to_string(), Style::default().fg(*color));
+            }
+        }
+    }
+}
 
 /// Blueprint mode: the cursor, the area being copied, and the paste preview, which shows on
 /// even seconds like wires. Free tiles draw cyan, tiles it would replace yellow, and tiles
