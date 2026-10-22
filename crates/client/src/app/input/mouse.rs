@@ -70,6 +70,7 @@ fn modal_open(app: &App) -> bool {
         || app.panels.filter_picker.is_some()
         || app.panels.blueprint_window.is_some()
         || app.panels.stairs_prompt.is_some()
+        || crate::app::input::death::showing(app)
         || app.panels.power_info.is_some()
         || app.panels.cheat_console.is_open()
         || !matches!(app.panels.corpse_looting, CorpseLootingState::None)
@@ -369,6 +370,10 @@ fn click_target(app: &mut App, target: crate::ui::click_targets::ClickTarget, bu
             }
         }
         T::DictionaryRow(i) => app.panels.item_dictionary.selected = i,
+        T::DeathChoice(i) => {
+            app.panels.death_choice = i;
+            activate(app);
+        }
         T::StairsChoice(i) => {
             if let Some(prompt) = &mut app.panels.stairs_prompt {
                 prompt.selected = i;

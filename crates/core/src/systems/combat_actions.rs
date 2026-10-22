@@ -498,7 +498,14 @@ fn apply_damage(
                 )
             };
             res.events.combat_event(message, res.time.tick);
-            // Additional death handling is done by ComponentAccess
+            if is_player {
+                crate::death::player_died(
+                    world,
+                    res,
+                    target_entity,
+                    format!("destroyed by {source}"),
+                );
+            }
         }
         Ok(DamageResult::BodyPartDamaged {
             part_name,
@@ -571,7 +578,14 @@ fn apply_damage(
                 }
             };
             res.events.combat_event(message, res.time.tick);
-            // Additional death handling is done by ComponentAccess
+            if robot_died && is_player {
+                crate::death::player_died(
+                    world,
+                    res,
+                    target_entity,
+                    format!("{part_name} destroyed by {source}"),
+                );
+            }
         }
         Ok(DamageResult::AlreadyDead) => {
             tracing::debug!(target: "combat", "Attempted to damage already dead entity {:?}", target_entity);
@@ -645,8 +659,7 @@ pub fn handle_entity_death(world: &mut World, res: &mut Resources, entity: hecs:
 
     // Log death
     if is_player {
-        res.log("You have died!".to_string());
-        // TODO: Trigger game over state
+        crate::death::player_died(world, res, entity, "shut down".to_string());
     } else {
         res.log("Enemy defeated!".to_string());
     }

@@ -6,14 +6,17 @@ When the robot dies (its power source or torso is destroyed), the game marks it 
 
 ## What Changes
 
-- **A system-failure screen** when the robot dies: what destroyed it, where, and two choices.
-  - **Boot backup body:** the robot wakes in a fresh, barely working backup body at its backup point.
-  - **Quit to title:** the world is saved as it is (the dead body included), so the player can come back to the same choice.
-- **The old body stays where it fell** as a wreck holding everything the robot carried, like a creature's corpse. Walking back to it and looting it recovers the items, so death costs time and risk, not the whole inventory.
-- **The backup body:**
-  - Starts like a new game's body: the left arm missing, one leg damaged, the rest working. Upgrades and repairs made since are lost with the old body.
-  - Carries the starting kit only: everything else stays with the wreck.
-- **The backup point:** the bunker spawn at first. Later changes can add ways to move it (a repair station, for example); this change only stores it.
+*Scope decided by the user: a simple respawn for now, because the backup body isn't designed yet.*
+
+- **A system-failure screen** when the robot dies, saying what destroyed it, with two choices.
+  - **Respawn at the bunker:** the robot comes back at the bunker's spawn point with the default body and the starting kit. This is a stand-in until the backup body is designed.
+  - **Quit to title:** saves the world as it is, dead body included, so the player comes back to the same screen.
+- **The old body stays where it fell** as a wreck that keeps:
+  - **Everything the robot carried,** looted like a creature's corpse.
+  - **Its body parts:** the wreck stores the old body, so a later change can let the player salvage parts from it.
+
+  Walking back and looting the wreck recovers the items, so death costs time and risk, not the whole inventory.
+- **The respawn point:** where a new game put the player (the bunker spawn), stored when the world is created.
 - **No penalty beyond that:** the world, factories and quests keep running and keep their state.
 
 ## Capabilities
@@ -27,9 +30,9 @@ When the robot dies (its power source or torso is destroyed), the game marks it 
 ## Impact
 
 - **Core:**
-  - `handle_entity_death` for the player spawns a wreck (a corpse with the player's inventory and a `Wreck` marker) and keeps the player entity, marked Dead.
-  - `Game::boot_backup_body` moves the player to the backup point, gives it a fresh starting body and kit, and removes the Dead marker.
-  - `PlayerState::backup_point` (saved, defaulting to the bunker spawn).
+  - The player's death, from any cause, spawns a wreck: a corpse with the player's inventory and old `Body`, and a `Wreck` marker. The player entity stays, marked Dead.
+  - `Game::respawn` moves the player to the respawn point, gives it the default body and the starting kit, and removes the Dead marker.
+  - `PlayerState::respawn_point` (saved; older saves fall back to the configured default position).
 - **Client:**
   - A system-failure modal that blocks other input while the player is dead, with its two choices (keys and click targets).
   - The wreck's sprite.

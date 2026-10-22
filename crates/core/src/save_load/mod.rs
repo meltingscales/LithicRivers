@@ -89,6 +89,7 @@ saved_components! {
     "sheep" => Sheep,
     "feral_dog" => FeralDog,
     "nuclear_slime" => crate::components::NuclearSlime,
+    "wreck" => crate::components::Wreck,
     "slime_ai" => crate::components::SlimeAI,
     "quest_tutorial_broken_android" => QuestTutorialBrokenAndroid,
     "quest_testy" => QuestTesty,
@@ -544,7 +545,17 @@ mod tests {
             .world
             .insert(player, (Stunned::new(5), BattleDelay::new(10), Dead))
             .unwrap();
-        vec![started, fight.game]
+        // The player's death leaves a wreck holding their inventory and body
+        let mut dead = TestWorld::new(9).build();
+        let player = dead.game.get_player_entity().unwrap();
+        crate::death::player_died(
+            &mut dead.game.world,
+            &mut dead.game.res,
+            player,
+            "test".into(),
+        );
+
+        vec![started, fight.game, dead.game]
     }
 
     #[test]

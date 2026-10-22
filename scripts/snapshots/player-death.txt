@@ -1,0 +1,18 @@
+# Dying: the system-failure screen, the wreck holding what the robot carried, and
+# respawning at the bunker with the default body and the starting kit.
+seed 12345
+size 100x30
+skip-splash
+key ui.MENU_PREV
+cheat tp 0 0 0
+cheat giveitem chest 2
+cheat suicide
+expect-text "SYSTEM FAILURE"
+expect-text "self-destruct command"
+screen dead
+# Other keys do nothing while dead
+key movement.MOVE_EAST
+expect-text "SYSTEM FAILURE"
+key ui.MENU_ACTIVATE
+expect-text "Backup systems online"
+screen respawned

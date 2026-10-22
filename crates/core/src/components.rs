@@ -36,6 +36,11 @@ pub struct Sheep;
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct FeralDog;
 
+/// The player's old body, left where they died: a corpse holding what they carried and the
+/// body itself
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct Wreck;
+
 /// Marker for nuclear slimes: slow, sturdy, glowing underground creatures
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct NuclearSlime;

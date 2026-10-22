@@ -36,6 +36,7 @@ pub enum ClickTarget {
     DictionaryRow(usize),
     BlueprintRow(usize),
     StairsChoice(usize),
+    DeathChoice(usize),
 }
 
 /// The inside of a bordered box.

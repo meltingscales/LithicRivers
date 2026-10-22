@@ -21,6 +21,11 @@ pub fn dispatch(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
         return Ok(());
     }
 
+    // While the robot is dead, only the system-failure screen takes keys
+    if crate::app::input::death::handle_death_input(app, key) {
+        return Ok(());
+    }
+
     // Handle cheat console input (high priority to intercept "/" key) - delegated to input module
     if crate::app::input::cheat_console::handle_input(app, key)? {
         return Ok(());
