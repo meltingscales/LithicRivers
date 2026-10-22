@@ -1,5 +1,6 @@
-//! Worlds on disk: each world is a folder under the saves folder holding `world.json` (the
-//! game save) and `meta.json` (name, seed, settings and dates, read by the world list).
+//! Worlds on disk: each world is a folder under the saves folder holding `world.json.gz`
+//! (the game save, gzipped JSON) and `meta.json` (name, seed, settings and dates, read by
+//! the world list). Worlds saved before compression have a plain `world.json` instead.
 
 use anyhow::{bail, Context, Result};
 use lithicrivers_core::resources::WorldSettings;
@@ -7,7 +8,17 @@ use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 
 pub const META_FILE: &str = "meta.json";
-pub const SAVE_FILE: &str = "world.json";
+pub const SAVE_FILE: &str = "world.json.gz";
+/// The plain JSON save of worlds saved before compression; loaded, then replaced.
+pub const LEGACY_SAVE_FILE: &str = "world.json";
+
+/// The world's save to load: the gzipped one, else the older plain one, if either exists.
+pub fn save_file(folder: &Path) -> Option<PathBuf> {
+    [SAVE_FILE, LEGACY_SAVE_FILE]
+        .into_iter()
+        .map(|name| folder.join(name))
+        .find(|path| path.is_file())
+}
 const META_VERSION: u32 = 1;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -123,7 +134,7 @@ pub fn list_worlds(saves: &Path) -> Vec<WorldEntry> {
         .map(|folder| {
             let meta = read_meta(&folder)
                 .ok()
-                .filter(|_| folder.join(SAVE_FILE).is_file());
+                .filter(|_| save_file(&folder).is_some());
             WorldEntry { folder, meta }
         })
         .collect();

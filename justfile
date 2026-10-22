@@ -22,6 +22,10 @@ util-publish-release-windows version: test-release-windows
 util-publish-release-linux version: test-release-linux
     powershell scripts/util-publish-release.sh {{version}}
 
+# Print a world's save as readable JSON (saves are gzipped): a world folder or a save file
+util-print-save path:
+    cargo run -q -p lithicrivers-core --bin print_save -- "{{path}}"
+
 # Install dependencies
 install:
     rustup toolchain install {{toolchain}}
