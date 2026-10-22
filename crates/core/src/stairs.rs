@@ -263,8 +263,15 @@ mod tests {
         assert_eq!(t.player_pos(), at(1, 0, 0), "standing on the conveyor");
         climb(&mut t, 1);
         assert_eq!(t.player_pos(), at(1, 0, 1));
+        // Off the top of the stack into the open, and back down onto it
         climb(&mut t, 1);
-        assert_eq!(t.player_pos(), at(1, 0, 1), "nothing to climb onto above");
+        assert_eq!(
+            t.player_pos(),
+            at(1, 0, 2),
+            "climbs off the top into the open"
+        );
+        climb(&mut t, -1);
+        assert_eq!(t.player_pos(), at(1, 0, 1));
         climb(&mut t, -1);
         assert_eq!(t.player_pos(), at(1, 0, 0));
     }
@@ -291,5 +298,43 @@ mod tests {
         build(&mut t, at(0, 0, 0), -1).unwrap();
         assert_eq!(t.player_has(ItemKind::Stairs), 0);
         assert_eq!(t.tile(0, 0, -1), TileKind::Stairs);
+    }
+
+    #[test]
+    fn stairs_on_either_end_are_enough_to_climb() {
+        // Stairs only below the player: step down onto them
+        let mut t = game(0);
+        t.game
+            .res
+            .world_state
+            .world
+            .set_tile_cached(0, 0, -1, TileKind::Stairs);
+        climb(&mut t, -1);
+        assert_eq!(t.player_pos(), at(0, 0, -1), "down onto stairs below");
+        // Stairs only where the player stands: step up into the open tile above
+        climb(&mut t, 1);
+        assert_eq!(t.player_pos(), at(0, 0, 0), "back up off the stairs");
+    }
+
+    #[test]
+    fn something_solid_at_the_other_level_still_blocks() {
+        // Stairs here, rock above: no climbing into rock
+        let mut t = game(0);
+        t.game
+            .res
+            .world_state
+            .world
+            .set_tile_cached(0, 0, 0, TileKind::Stairs);
+        climb(&mut t, 1);
+        assert_eq!(t.player_pos(), at(0, 0, 0));
+        // No stairs on either end: no climbing, even into the open
+        let mut t = game(0);
+        t.game
+            .res
+            .world_state
+            .world
+            .set_tile_cached(0, 0, 1, TileKind::Air);
+        climb(&mut t, 1);
+        assert_eq!(t.player_pos(), at(0, 0, 0));
     }
 }

@@ -38,11 +38,23 @@ Vertical conveyors SHALL be craftable from the same ingredients as wooden convey
 - **THEN** they get one vertical conveyor
 
 ### Requirement: Climbing vertical conveyors
-The player SHALL be able to move up or down from a vertical conveyor or stairs to a vertical conveyor or stairs directly above or below, as with stairs.
+The player SHALL be able to move up or down when the tile they stand on or the tile directly above or below it is climbable (stairs or a vertical conveyor), as long as the destination tile can be stood on. With nothing climbable on either end, or something solid at the destination, the move SHALL be refused.
 
 #### Scenario: Climb a stack
 - **WHEN** the player stands on a vertical conveyor with another directly above it and moves up
 - **THEN** they are on the upper conveyor, and moving down brings them back
+
+#### Scenario: Stairs only below
+- **WHEN** the player stands on plain ground with stairs directly below and moves down
+- **THEN** they are on the stairs below, and moving up brings them back
+
+#### Scenario: Stairs only here
+- **WHEN** the player stands on stairs with open air directly above and moves up
+- **THEN** they are in the open tile above
+
+#### Scenario: Rock at the other level
+- **WHEN** the player stands on stairs with rock directly above and moves up
+- **THEN** they stay where they are
 
 ### Requirement: Building stairs
 Stairs SHALL be craftable, and placing them SHALL build a stairway of two stair tiles, at the target and directly above or below it (the player's choice), using one Stairs item per tile. A solid, mineable tile on the other layer SHALL be dug out with its usual drops. Breaking a stair tile SHALL give one Stairs item.
