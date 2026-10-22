@@ -29,8 +29,8 @@
 `handle_entity_death` leaves a corpse for any dying creature (not the player) whose inventory isn't empty, instead of checking for `FeralDog`. A slime without waste has an empty inventory, so it simply despawns. Dogs behave exactly as before.
 
 ### Slime AI
-- **Movement:** a `slime_system` in the entity AI phase. It notices the player within 6 tiles on the same level and steps one tile toward them every other turn (counted with a per-slime `SlimeAI { turns }` component, saved).
-- **Pathing:** it reuses the dog's pathfinding step.
+- **Movement:** a `nuclear_slime_system` in the entity AI phase. It notices the player within 6 tiles on the same level and steps one tile toward them every other turn (counted with a per-slime `SlimeAI { turns }` component, saved).
+- **Pathing:** *changed during implementation:* a slime doesn't plan a path. It steps straight toward the player, or slides along a wall (one axis), which suits it and avoids the pathfinder aiming at the player's own, blocked tile.
 - **Combat** starts through the existing combat trigger: a slime gets `Combat` like a dog.
 
 ### Combat numbers (tunable)
@@ -40,9 +40,17 @@
 - Rolls come from `world_state.rng`, as for dogs.
 
 ### Spawning
-- In `Game::ensure_chunk_with_pending_structures`, a chunk generated for the first time with `cz < 0` rolls `SLIME_CHANCE` (seeded by chunk coordinates).
-- On success, it places one slime on a passable tile chosen by the same seeded generator.
-- The surface (`cz >= 0`) never rolls.
+- *Changed during implementation:* not in `ensure_chunk_with_pending_structures`. The renderer generates chunks around the view first, so that hook rarely sees a new chunk.
+- Instead, `creature_spawn_system` rolls each underground chunk once, when the player first comes within one chunk of it. The rolled chunks are kept in `Resources::spawn_rolled_chunks`, which is saved.
+- **The roll:** `SLIME_CHANCE_PERCENT` (20), seeded by the world seed and the chunk. On success, up to 16 seeded tries find an open, unoccupied tile at least 16 tiles from the player, so no slime pops up in view.
+- The surface (`cz >= 0`) and debug worlds never roll. `overhaul-worldgen-depth` moves this onto its feature stage by depth band.
+- `Game::new` runs a tick in the bunker at z = -19, so a new game has two slimes underground, far from the start. The golden entity list includes them.
+
+### Loot table
+- `CreatureLoot` with `always()` for dogs. `CREATURE_LOOT` lists every creature's table with its plural name, so `raw_sources` and the Item Dictionary's "Carried by nuclear slimes" read from one place (`RawSource::Carried(name)` replaces `RawSource::FeralDog`).
+
+### Combat panel
+- Enemies are labeled by kind ("Feral dog", "Nuclear slime") instead of by entity number, which shifted whenever anything new spawned.
 
 ### Nuclear waste item
 `ItemKind::NuclearWaste` with a sprite. If `add-ruined-reactors` landed first, the item already exists and this change only adds the loot entry.

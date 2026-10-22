@@ -1343,7 +1343,9 @@ mod cheat_tests {
         let (code, _, err_out) = run("skip-splash\ncheat spawn_enemy dragon");
         assert_eq!(code, EXIT_SCRIPT_ERROR);
         assert!(
-            err_out.contains("dragon") && err_out.contains("feral_dog"),
+            err_out.contains("dragon")
+                && err_out.contains("feral_dog")
+                && err_out.contains("nuclear_slime"),
             "{err_out}"
         );
 

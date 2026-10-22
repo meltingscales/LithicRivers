@@ -587,18 +587,18 @@ fn apply_damage(
 
 /// Handle entity death - add Dead marker and clean up
 pub fn handle_entity_death(world: &mut World, res: &mut Resources, entity: hecs::Entity) {
-    // Check if it's a feral dog and get its position for corpse spawning
-    let is_feral_dog = world.get::<&FeralDog>(entity).is_ok();
     let entity_pos = world.get::<&Position>(entity).ok().map(|p| *p);
     let is_player = is_player_entity(world, entity);
-
-    // If it's a feral dog, collect inventory items before entity cleanup
-    let inventory_items = if is_feral_dog {
-        if let Ok(inv) = world.get::<&Inventory>(entity) {
-            inv.slots.clone()
-        } else {
-            vec![]
-        }
+    // Creatures leave a corpse with what they carried; one carrying nothing just goes
+    let is_creature = world.get::<&FeralDog>(entity).is_ok()
+        || world
+            .get::<&crate::components::NuclearSlime>(entity)
+            .is_ok();
+    let inventory_items = if is_creature {
+        world
+            .get::<&Inventory>(entity)
+            .map(|inv| inv.slots.clone())
+            .unwrap_or_default()
     } else {
         vec![]
     };
@@ -612,8 +612,12 @@ pub fn handle_entity_death(world: &mut World, res: &mut Resources, entity: hecs:
     // Remove combat capability
     world.remove_one::<Combat>(entity).ok();
 
-    // For FeralDog entities, create a corpse with inventory and remove the original entity
-    if is_feral_dog {
+    if is_creature && inventory_items.is_empty() {
+        res.log("It dissolves, leaving nothing.".to_string());
+        if let Err(e) = world.despawn(entity) {
+            tracing::warn!(target: "combat", "Failed to despawn dead creature {:?}: {}", entity, e);
+        }
+    } else if is_creature {
         if let Some(pos) = entity_pos {
             // Create corpse inventory with the items
             let mut corpse_inventory = Inventory::default();
@@ -632,9 +636,9 @@ pub fn handle_entity_death(world: &mut World, res: &mut Resources, entity: hecs:
             ));
             res.log("A corpse remains...".to_string());
 
-            // Remove the original FeralDog entity since it's been replaced by a corpse
+            // Remove the original creature since it's been replaced by a corpse
             if let Err(e) = world.despawn(entity) {
-                tracing::warn!(target: "combat", "Failed to despawn dead FeralDog entity {:?}: {}", entity, e);
+                tracing::warn!(target: "combat", "Failed to despawn dead creature {:?}: {}", entity, e);
             }
         }
     }

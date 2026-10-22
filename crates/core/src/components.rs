@@ -36,6 +36,16 @@ pub struct Sheep;
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct FeralDog;
 
+/// Marker for nuclear slimes: slow, sturdy, glowing underground creatures
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct NuclearSlime;
+
+/// A nuclear slime's pace: it moves on every other turn it is chasing
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SlimeAI {
+    pub turns: u8,
+}
+
 /// AI behavior state for feral dogs
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct DogAI {
@@ -188,6 +198,7 @@ pub enum ItemKind {
     BeltRouter,
     VerticalConveyor,
     Stairs,
+    NuclearWaste,
 }
 
 pub fn itemkind_name(kind: ItemKind) -> &'static str {
@@ -221,6 +232,7 @@ pub fn itemkind_name(kind: ItemKind) -> &'static str {
         ItemKind::BeltRouter => "Belt Router",
         ItemKind::VerticalConveyor => "Vertical Conveyor",
         ItemKind::Stairs => "Stairs",
+        ItemKind::NuclearWaste => "Nuclear Waste",
     }
 }
 
@@ -255,6 +267,7 @@ pub fn itemkind_sprite_name(kind: ItemKind) -> &'static str {
         ItemKind::BeltRouter => "belt_router",
         ItemKind::VerticalConveyor => "vertical_conveyor",
         ItemKind::Stairs => "stairs",
+        ItemKind::NuclearWaste => "nuclear_waste",
     }
 }
 
@@ -289,6 +302,7 @@ pub fn parse_itemkind_from_sprite_name(sprite_name: &str) -> Option<ItemKind> {
         "belt_router" => Some(ItemKind::BeltRouter),
         "vertical_conveyor" => Some(ItemKind::VerticalConveyor),
         "stairs" => Some(ItemKind::Stairs),
+        "nuclear_waste" => Some(ItemKind::NuclearWaste),
         _ => None,
     }
 }
@@ -324,6 +338,7 @@ pub enum EntityKind {
     FeralDog,
     Corpse,
     QuestTutorialBrokenAndroid,
+    NuclearSlime,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

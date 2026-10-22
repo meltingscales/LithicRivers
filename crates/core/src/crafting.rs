@@ -63,21 +63,77 @@ pub fn mine_tile(
     Some(gained)
 }
 
-/// What a feral dog can carry: `(item, min, max)`, rolled when it spawns.
-pub const FERAL_DOG_LOOT: &[(ItemKind, u32, u32)] =
-    &[(ItemKind::Leather, 0, 2), (ItemKind::Meat, 1, 3)];
+/// One kind of item a creature can carry: with `chance_percent`, it carries `min..=max`
+/// of it, rolled when it spawns.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CreatureLoot {
+    pub item: ItemKind,
+    pub chance_percent: u32,
+    pub min: u32,
+    pub max: u32,
+}
+
+const fn always(item: ItemKind, min: u32, max: u32) -> CreatureLoot {
+    CreatureLoot {
+        item,
+        chance_percent: 100,
+        min,
+        max,
+    }
+}
+
+/// What a feral dog can carry.
+pub const FERAL_DOG_LOOT: &[CreatureLoot] = &[
+    always(ItemKind::Leather, 0, 2),
+    always(ItemKind::Meat, 1, 3),
+];
+
+/// What a nuclear slime can carry: rarely, a lump of nuclear waste.
+pub const NUCLEAR_SLIME_LOOT: &[CreatureLoot] = &[CreatureLoot {
+    item: ItemKind::NuclearWaste,
+    chance_percent: 5,
+    min: 1,
+    max: 1,
+}];
+
+/// Every creature's loot, with how the Item Dictionary names the creature.
+pub const CREATURE_LOOT: &[(&str, &[CreatureLoot])] = &[
+    ("feral dogs", FERAL_DOG_LOOT),
+    ("nuclear slimes", NUCLEAR_SLIME_LOOT),
+];
+
+/// Roll a creature's loot. Entries that always drop skip the chance roll, so adding
+/// chances never shifts the rolls of creatures that don't use them.
+pub fn roll_loot(table: &[CreatureLoot], rng: &mut impl rand::Rng) -> Vec<(ItemKind, u32)> {
+    let mut items = Vec::new();
+    for loot in table {
+        if loot.chance_percent < 100 && rng.gen_range(0..100) >= loot.chance_percent {
+            continue;
+        }
+        let qty = rng.gen_range(loot.min..=loot.max);
+        items.push((loot.item, qty));
+    }
+    items
+}
+
+fn can_carry(loot: &CreatureLoot) -> bool {
+    loot.chance_percent > 0 && loot.max > 0
+}
 
 /// Items obtainable without crafting: everything the mining table drops, plus creature loot.
 pub fn raw_sources() -> BTreeSet<ItemKind> {
     let mined = TileKind::all_variants()
         .iter()
         .filter_map(|&tile| mining_drop(tile))
-        .flat_map(|drop| drop.items.iter());
-    mined
-        .chain(FERAL_DOG_LOOT.iter())
+        .flat_map(|drop| drop.items.iter())
         .filter(|(_, _, max)| *max > 0)
-        .map(|(item, _, _)| *item)
-        .collect()
+        .map(|(item, _, _)| *item);
+    let carried = CREATURE_LOOT
+        .iter()
+        .flat_map(|(_, table)| table.iter())
+        .filter(|loot| can_carry(loot))
+        .map(|loot| loot.item);
+    mined.chain(carried).collect()
 }
 
 /// Where an item comes from without crafting.
@@ -85,15 +141,15 @@ pub fn raw_sources() -> BTreeSet<ItemKind> {
 pub enum RawSource {
     /// Mining or chopping this tile drops it
     Mined(TileKind),
-    /// Feral dogs can carry it
-    FeralDog,
+    /// These creatures (named in the plural) can carry it
+    Carried(&'static str),
 }
 
 impl RawSource {
     pub fn describe(self) -> String {
         match self {
             RawSource::Mined(tile) => format!("Mined from {}", tile.display_name()),
-            RawSource::FeralDog => "Carried by feral dogs".to_string(),
+            RawSource::Carried(creatures) => format!("Carried by {creatures}"),
         }
     }
 }
@@ -104,11 +160,13 @@ pub fn raw_sources_of(item: ItemKind) -> Vec<RawSource> {
         mining_drop(tile).is_some_and(|d| d.items.iter().any(|&(i, _, max)| i == item && max > 0))
     });
     let mut sources: Vec<RawSource> = mined.map(|&tile| RawSource::Mined(tile)).collect();
-    if FERAL_DOG_LOOT
-        .iter()
-        .any(|&(i, _, max)| i == item && max > 0)
-    {
-        sources.push(RawSource::FeralDog);
+    for (creatures, table) in CREATURE_LOOT {
+        if table
+            .iter()
+            .any(|loot| loot.item == item && can_carry(loot))
+        {
+            sources.push(RawSource::Carried(creatures));
+        }
     }
     sources
 }
@@ -305,7 +363,14 @@ mod tests {
             raw_sources_of(ItemKind::Log),
             [RawSource::Mined(TileKind::Tree)]
         );
-        assert_eq!(raw_sources_of(ItemKind::Leather), [RawSource::FeralDog]);
+        assert_eq!(
+            raw_sources_of(ItemKind::Leather),
+            [RawSource::Carried("feral dogs")]
+        );
+        assert_eq!(
+            raw_sources_of(ItemKind::NuclearWaste),
+            [RawSource::Carried("nuclear slimes")]
+        );
         assert_eq!(
             made_by(recipes, ItemKind::Chest).first().map(|r| r.name),
             Some("Chest")
@@ -328,6 +393,7 @@ mod tests {
             ItemKind::ScrapElectronics,
             ItemKind::Leather,
             ItemKind::Meat,
+            ItemKind::NuclearWaste,
         ]
         .into_iter()
         .collect();

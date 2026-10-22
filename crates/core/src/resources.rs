@@ -181,6 +181,9 @@ pub struct Resources {
     /// The player's saved blueprints
     #[serde(default)]
     pub blueprints: crate::blueprints::BlueprintLibrary,
+    /// Chunks whose creature spawns have been rolled, so each is rolled once
+    #[serde(default)]
+    pub spawn_rolled_chunks: std::collections::BTreeSet<(i64, i64, i64)>,
 }
 
 impl Resources {
@@ -205,6 +208,7 @@ impl Resources {
             power: crate::power::PowerNetworks::default(),
             belt_ride_steps: 0,
             blueprints: Default::default(),
+            spawn_rolled_chunks: Default::default(),
         }
     }
 

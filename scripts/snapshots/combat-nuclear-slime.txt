@@ -1,0 +1,10 @@
+# A nuclear slime, spawned two tiles east, oozes over on its second turn and starts a fight.
+seed 12345
+size 100x30
+world factory-showcase
+key ui.MENU_PREV
+cheat tp 0 5 0
+cheat spawn_enemy nuclear_slime
+key movement.WAIT 3
+expect-text "Action Queue"
+screen

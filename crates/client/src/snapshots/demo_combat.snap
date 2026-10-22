@@ -12,14 +12,14 @@ expression: "String::from_utf8(out).unwrap()"
 ││              ││              ││              ││##########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 ││  ▄     ,▄▄▄  ││  ▄     ,▄▄▄  ││  ▄     ,▄▄▄  ││##########vvvvvvvvvvvvvvdvvvvvvvvvvvvvvvvvvvvvvvvv
 ││  ▀█▄▄▄█▓▓▒▀▄ ││  ▀█▄▄▄█▓▓▒▀▄ ││  ▀█▄▄▄█▓▓▒▀▄ ││###########vvvvvvvvvvvvvdvvvvvvvvvvvvvvvvvvvvvvvvv
-││┌Enemy 88────┐││┌Enemy 10────┐││┌Enemy 9─────┐││###########vvvvvvvvvvvvvvddvvvvvvvvvvvvvvvvvvvvvvv
+││┌Feral dog───┐││┌Feral dog───┐││┌Feral dog───┐││###########vvvvvvvvvvvvvvddvvvvvvvvvvvvvvvvvvvvvvv
 ││└────────────┘││└────────────┘││└────────────┘││############vvvvvvvvvvvvv@dvvvvvvvvvvvvvtttvvvtvvv
 ││              ││              ││              ││#############vvvvvvvvvvvvvvvvvvvvvvvvvvvtvtttttvvv
 │└──────────────┘└──────────────┘└──────────────┘│#############vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvtttvvv
 │1: Melee - 0E - 5t                ┌Action Queue┐│##############vvvvvvvvvvvvvvvvvvvvvvvvvvvvvttvvvvv
 │2: Fireball (AoE) - 40E - 12t     │Current:    ││##############vvvvvvvvvvvvvvvvvvvvvvvvvvvvvtttvvvv
 │3: Tackle - 20E - 10t             │> Fireball →││###############vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-│4: Escape - 20E - 15t             │Enemy 88    ││################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+│4: Escape - 20E - 15t             │Feral dog   ││################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 │           ▼ More below           └────────────┘│#################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 │[←→] Target | [↑↓] Move | [C] Clear | [5] Wait |│#################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 └────────────────────────────────────────────────┘##################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv

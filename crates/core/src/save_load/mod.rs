@@ -88,6 +88,8 @@ saved_components! {
     "player" => Player,
     "sheep" => Sheep,
     "feral_dog" => FeralDog,
+    "nuclear_slime" => crate::components::NuclearSlime,
+    "slime_ai" => crate::components::SlimeAI,
     "quest_tutorial_broken_android" => QuestTutorialBrokenAndroid,
     "quest_testy" => QuestTesty,
     "glyph" => Glyph,
