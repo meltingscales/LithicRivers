@@ -18,6 +18,8 @@ Ask for "Add an openspec feat that adds XYZ" or "Bugfix: Something not rendering
 
 <!-- ACTIONED ON ALREADY -->
 
+- DONE: went through STEAM-MVP.md, TODO.md, MECHANICS.md, QUESTS.md and docs/dungeons for ideas with no spec or change yet; they're listed, ranked for the Steam MVP and each with a suggested change name, in `docs/SPEC-GAPS.md`. Top picks: player death (it only logs "You have died!" today), a day/night cycle, the arm-replacement quest, and body damage with real effects. STEAM-MVP.md links the list, and volume sliders are ticked as done
+
 - FIXED: turning Look mode off snaps the view back to the player
 - DONE: the Look panel shows what is on the layers above and below the cursor (a vertical conveyor's own direction shows as "Lifts to" / "Lowers to" instead)
 - FIXED: the Look panel puts its text first and wraps it, names things plainly ("Vertical conveyor (up)", "Log x2 (lying here)"), shows one 12x8 art (the entity's, else the tile's) last, and in Look mode the help box below it shrinks to fit, so nothing important is cut off
