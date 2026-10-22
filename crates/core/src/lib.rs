@@ -1,3 +1,4 @@
+pub mod blueprints;
 pub mod combat_state_manager;
 pub mod component_access;
 pub mod components;

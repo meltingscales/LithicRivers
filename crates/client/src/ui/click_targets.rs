@@ -34,6 +34,7 @@ pub enum ClickTarget {
     FurnacePlayerRow(usize),
     RecipeRow(usize),
     DictionaryRow(usize),
+    BlueprintRow(usize),
 }
 
 /// The inside of a bordered box.

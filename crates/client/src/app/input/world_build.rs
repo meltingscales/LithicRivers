@@ -11,6 +11,20 @@ pub fn handle_world_build_input(app: &mut App, key: KeyCode) -> Result<bool, Box
         return Ok(false);
     }
 
+    if app.ui.keybinds.matches("build", "BLUEPRINT_MODE", &key) {
+        if lithicrivers_core::combat_state_manager::CombatStateManager::is_in_combat(
+            &app.core.game.res,
+        ) {
+            app.core.game.res.log("Cannot change modes during combat!");
+        } else {
+            crate::app::input::blueprint::toggle_mode(app);
+        }
+        return Ok(true);
+    }
+    if crate::app::input::blueprint::handle_blueprint_input(app, key) {
+        return Ok(true);
+    }
+
     // Rotate the next placement (Place mode only)
     if app.panels.build.mode == BuildMode::Place
         && app.ui.keybinds.matches("build", "ROTATE_PLACEMENT", &key)
@@ -77,7 +91,8 @@ pub fn handle_world_build_input(app: &mut App, key: KeyCode) -> Result<bool, Box
                     None
                 }
             }
-            BuildMode::Movement => None, // This shouldn't happen due to outer condition
+            // Blueprint mode handles its own keys above
+            BuildMode::Movement | BuildMode::Blueprint => None,
         };
 
         if let Some((dx, dy)) = direction_offset {
@@ -123,9 +138,7 @@ pub fn handle_world_build_input(app: &mut App, key: KeyCode) -> Result<bool, Box
                         app.core.game.res.log(message);
                         handled = true;
                     }
-                    BuildMode::Movement => {
-                        // This case shouldn't happen due to the outer condition
-                    }
+                    BuildMode::Movement | BuildMode::Blueprint => {}
                 }
             }
         }

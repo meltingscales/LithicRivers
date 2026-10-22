@@ -1,6 +1,7 @@
 //! Modal windows drawn over the main UI.
 
 mod action_selection;
+mod blueprint_window;
 mod cheat_console;
 mod corpse_looting;
 mod filter_picker;
@@ -10,6 +11,7 @@ mod npc_interaction;
 mod power_info;
 
 pub(crate) use action_selection::render_multi_action_selection_modal;
+pub(crate) use blueprint_window::render_blueprint_window;
 pub(crate) use cheat_console::render_cheat_console_modal;
 pub(crate) use corpse_looting::render_corpse_looting_modals;
 pub(crate) use filter_picker::render_filter_picker;

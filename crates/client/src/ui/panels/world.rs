@@ -281,6 +281,7 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
     }
 
     hover_overlay(app, area, &mut lines);
+    blueprint_overlay(app, area, &mut lines);
 
     let paragraph = Paragraph::new(lines)
         .block(Block::default())
@@ -349,6 +350,88 @@ fn hover_overlay(app: &mut crate::App, area: Rect, lines: &mut [Line]) {
                 None => {
                     span.style = span.style.add_modifier(Modifier::REVERSED);
                 }
+            }
+        }
+    }
+}
+
+type SpriteRows = Vec<Vec<char>>;
+
+/// Blueprint mode: the cursor, the area being copied, and the paste preview, which shows on
+/// even seconds like wires. Free tiles draw cyan, tiles it would replace yellow, and tiles
+/// that block it red.
+fn blueprint_overlay(app: &mut crate::App, area: Rect, lines: &mut [Line]) {
+    use crate::app::input::blueprint;
+    use lithicrivers_core::blueprints::{self as bp, Piece, Target};
+    if app.panels.build.mode != crate::app_state::BuildMode::Blueprint {
+        return;
+    }
+    let Some(cursor) = blueprint::cursor_tile(app) else {
+        return;
+    };
+    // Each marked tile: the sprite to draw there (or none, to tint what is there), and a color
+    let mut cells: HashMap<(i64, i64), (Option<SpriteRows>, Color)> = HashMap::new();
+    let tool = app.panels.build.blueprint.clone();
+    if tool.copying {
+        let first = tool.first_corner.unwrap_or(cursor);
+        for x in first.x.min(cursor.x)..=first.x.max(cursor.x) {
+            for y in first.y.min(cursor.y)..=first.y.max(cursor.y) {
+                cells.insert((x, y), (None, Color::LightMagenta));
+            }
+        }
+    } else if let Some(blueprint) = blueprint::paste_preview(app) {
+        let game = &mut app.core.game;
+        let targets = bp::targets(&game.world, &mut game.res, &blueprint, cursor);
+        let count = |t| targets.iter().filter(|(_, target)| *target == t).count();
+        app.panels.build.blueprint.preview = (count(Target::Replace), count(Target::Blocked));
+        if (app.clock.animation_millis() / 1000) % 2 == 0 {
+            for (block, (pos, target)) in blueprint.blocks.iter().zip(targets) {
+                let sr = match block.piece {
+                    Piece::Factory(kind) => kind.sprite(block.facing),
+                    Piece::Tile(tile) => {
+                        lithicrivers_core::components::SpriteRef::new("tiles", tile.sprite_key())
+                    }
+                };
+                let (sprite, _) = crate::sprite_loader::sprite_block_for_spriteref(
+                    &mut app.core.sprite_loader,
+                    &sr,
+                    app.ui.scale,
+                );
+                let rows = sprite.lines().map(|l| l.chars().collect()).collect();
+                let color = match target {
+                    Target::Free => Color::Cyan,
+                    Target::Replace => Color::Yellow,
+                    Target::Blocked => Color::Red,
+                };
+                cells.insert((pos.x, pos.y), (Some(rows), color));
+            }
+        }
+    }
+    cells
+        .entry((cursor.x, cursor.y))
+        .or_insert((None, Color::LightMagenta));
+    let scale = app.ui.scale.as_i64();
+    for (row, line) in lines.iter_mut().enumerate() {
+        for (col, span) in line.spans.iter_mut().enumerate() {
+            let (x, y, sx, sy) = cell_to_tile(
+                (app.ui.view_x, app.ui.view_y),
+                (area.width as i64, area.height as i64),
+                scale,
+                (col as i64, row as i64),
+            );
+            match cells.get(&(x, y)) {
+                Some((Some(rows), color)) => {
+                    let c = rows
+                        .get(sy as usize)
+                        .and_then(|r| r.get(sx as usize))
+                        .copied()
+                        .unwrap_or(' ');
+                    *span = Span::styled(c.to_string(), Style::default().fg(*color));
+                }
+                Some((None, color)) => {
+                    span.style = span.style.fg(*color).add_modifier(Modifier::REVERSED);
+                }
+                None => {}
             }
         }
     }

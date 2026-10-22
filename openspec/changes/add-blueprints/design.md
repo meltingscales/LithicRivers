@@ -31,7 +31,16 @@
 - Tiles that would be replaced draw in yellow, and tiles that block the paste in red.
 
 ### Nanobot hook
-- `paste` takes a `BuildCost` policy, `Inventory` for now. `add-nanobot-modules` adds a policy that also needs modules and spreads the placement over time.
+- *Changed during implementation:* no `BuildCost` policy yet. With one policy it would be an unused extension point, so `paste` pays from the inventory directly. `add-nanobot-modules` adds the policy when there is a second one.
+
+### Decided during implementation
+- **Entering the mode:** `build.BLUEPRINT_MODE` (`b`) enters and leaves Blueprint mode. It is outside the Movement, Break, Place and Rotate cycle, so existing scripts and habits that cycle the modes are unchanged; the mode key from Blueprint mode goes to Movement.
+- **The cursor:** an offset from the player, moved with the place-direction keys or by the mouse over the world, so it walks with the player. It is the paste's top-left corner. `PLACE_CENTER` (or a left click) marks a corner or pastes. `NEW_BLUEPRINT` (`n`) starts a copy, and Blueprint mode starts copying while the library is empty.
+- **Confirming a replace:** the first paste says how many blocks it would replace; pasting again at the same spot and rotation confirms. Moving or turning cancels. This keeps the flow on one key instead of a dialog.
+- **Contents of replaced blocks** go to the inventory with the block, and drop at the player's feet if it is full. Left on the tile, they would block the paste.
+- **Built tiles:** only plank blocks count as player-built plain blocks. Placed stone can't be told apart from generated rock, so rock is terrain and blocks a paste.
+- **The Blueprints panel** is a window (`build.BLUEPRINT_LIBRARY`, `B`), not a menu tab, so the tab bar and every tab-index script stay as they are. It lists each blueprint's size and cost; `blueprints.RENAME` and `blueprints.DELETE` act on the selection.
+- **Text snapshots don't show colors**, so the help panel also says how many tiles block the paste or would be replaced.
 
 ## Risks / Trade-offs
 

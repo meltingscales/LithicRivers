@@ -27,7 +27,7 @@ Ask for "Add an openspec feat that adds XYZ" or "Bugfix: Something not rendering
   - Same reach as the keyboard, a hover highlight with a Place-mode ghost, clickable tabs and scrollable lists.
   - Mouse bindings live in the config, and headless scripts get `click` / `scroll` / `move` steps.
 
-- PROPOSED as `add-blueprints`: copy an area into a blueprint, blinking paste preview with rotation, warning before replacing player-built blocks (they go to your inventory), paid from your inventory, blueprint library saved with the world
+- DONE as `add-blueprints` (awaiting your playtest): copy an area into a blueprint, blinking paste preview with rotation, warning before replacing player-built blocks (they go to your inventory), paid from your inventory, blueprint library saved with the world
 
 - PROPOSED as `add-nanobot-modules`: Mk1-Mk3 nanobot modules in torso slots build blueprints over time (more and better modules build faster and farther), drawing on the robot's power source; `nanobots_free` cheat for free, instant building
 

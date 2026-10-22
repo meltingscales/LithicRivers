@@ -1,0 +1,49 @@
+# Blueprints: copy three east belts and a chest, then preview a paste that would cover the
+# player (blocked) and the chest (replaced), and paste it on open ground instead.
+seed 12345
+size 100x30
+world void
+key ui.MENU_PREV
+cheat giveitem wooden_conveyor 6
+cheat giveitem chest 2
+# Hotbar: F1 wooden conveyor, F2 chest (picker: Clear slot, Acorn, Wooden Conveyor, Chest)
+key build.TOGGLE_BREAK_PLACE_MODE 2
+key hotbar.HOTBAR_SLOT_1 2
+key movement.MOVE_SOUTH 2
+key ui.MENU_ACTIVATE
+key hotbar.HOTBAR_SLOT_2 2
+key movement.MOVE_SOUTH 3
+key ui.MENU_ACTIVATE
+# Three east belts north of the player, a chest to the east
+key hotbar.HOTBAR_SLOT_1
+key build.ROTATE_PLACEMENT
+key build.PLACE_NORTHWEST
+key build.PLACE_NORTH
+key build.PLACE_NORTHEAST
+key hotbar.HOTBAR_SLOT_2
+key build.PLACE_EAST
+key build.TOGGLE_BREAK_PLACE_MODE 2
+# Blueprint mode starts copying while the library is empty; the cursor starts east
+key build.BLUEPRINT_MODE
+key build.PLACE_WEST 2
+key build.PLACE_NORTH
+key build.PLACE_CENTER
+key build.PLACE_EAST 2
+key build.PLACE_SOUTH
+key build.PLACE_CENTER
+expect-text "Saved Blueprint 1 (3x2, 4 blocks)"
+# Over the player and the chest: blocked
+key build.PLACE_WEST
+expect-text "1 blocked here"
+screen preview
+key build.PLACE_CENTER
+expect-text "Can't paste here: 1 tile blocked"
+# Open ground two rows down
+key build.PLACE_WEST
+key build.PLACE_SOUTH 2
+key build.PLACE_CENTER
+expect-text "Pasted Blueprint 1 (4 blocks)"
+screen pasted
+key build.BLUEPRINT_LIBRARY
+expect-text "Blueprint 1  3x2: 1 Chest, 3 Wooden Conveyor"
+screen library

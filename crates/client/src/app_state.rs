@@ -137,6 +137,7 @@ pub struct PanelStates {
     pub furnace_window: Option<FurnaceWindow>,
     pub item_dictionary: ItemDictionaryState,
     pub filter_picker: Option<FilterPicker>,
+    pub blueprint_window: Option<BlueprintWindow>,
     pub inventory: InventoryPanelState,
     pub crafting: CraftingPanelState,
     pub credits: CreditsPanelState,
@@ -193,6 +194,9 @@ pub enum BuildMode {
     Place,
     /// Direction keys rotate the adjacent factory block
     Rotate,
+    /// Copy an area as a blueprint, or paste the selected one (entered with
+    /// `build.BLUEPRINT_MODE`, outside the cycle)
+    Blueprint,
 }
 
 impl BuildMode {
@@ -201,7 +205,7 @@ impl BuildMode {
             BuildMode::Movement => BuildMode::Break,
             BuildMode::Break => BuildMode::Place,
             BuildMode::Place => BuildMode::Rotate,
-            BuildMode::Rotate => BuildMode::Movement,
+            BuildMode::Rotate | BuildMode::Blueprint => BuildMode::Movement,
         }
     }
 
@@ -211,6 +215,7 @@ impl BuildMode {
             BuildMode::Break => "Break",
             BuildMode::Place => "Place",
             BuildMode::Rotate => "Rotate",
+            BuildMode::Blueprint => "Blueprint",
         }
     }
 }
@@ -225,6 +230,30 @@ pub struct BuildPanelState {
     pub placement_facing: lithicrivers_core::factory::Facing,
     /// Track last F-key press for double-tap detection
     pub last_fkey_press: Option<(usize, Instant)>,
+    pub blueprint: BlueprintTool,
+}
+
+/// Blueprint mode: a cursor that marks corners when copying and anchors the paste.
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct BlueprintTool {
+    /// The cursor's offset from the player: the paste's top-left corner, or the next corner
+    pub cursor: (i64, i64),
+    /// Marking corners for a new blueprint (otherwise pasting the selected one)
+    pub copying: bool,
+    pub first_corner: Option<lithicrivers_core::components::Position>,
+    /// Quarter turns clockwise applied to the selected blueprint
+    pub rotation: u8,
+    /// A paste that would replace blocks, confirmed by the same paste again
+    pub pending_replace: Option<(lithicrivers_core::components::Position, u8)>,
+    /// What the paste at the cursor would replace and what blocks it, as last drawn
+    pub preview: (usize, usize),
+}
+
+/// The Blueprints window: the library, with the selection kept in the core library.
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct BlueprintWindow {
+    /// The new name being typed, while renaming the selected blueprint
+    pub renaming: Option<String>,
 }
 
 impl Default for BuildPanelState {
@@ -235,6 +264,7 @@ impl Default for BuildPanelState {
             hotbar_assignments: [None; 12],
             placement_facing: lithicrivers_core::factory::Facing::default(),
             last_fkey_press: None,
+            blueprint: BlueprintTool::default(),
         }
     }
 }
