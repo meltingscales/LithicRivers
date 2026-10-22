@@ -1,5 +1,7 @@
 # Spec gaps
 
+AI Note: When an item is proposed, delete its row from SPEC-GAPS.md after it's migrated to openspec... The change takes over from there, so the file only ever lists ideas without a change.
+
 Feature ideas from the docs that no OpenSpec spec (`openspec/specs/`) or open change (`openspec/changes/`) covers yet, as of 2026-10-22. Sources: `docs/STEAM-MVP.md`, `docs/TODO.md` (mostly its "MVP for steam release" section), `docs/MECHANICS.md`, `docs/QUESTS.md` and `docs/dungeons/`.
 
 To act on one, ask for it by its suggested change name ("propose add-day-night-cycle"). Ideas that are already done or already have a change are listed at the end, so they aren't proposed twice.
@@ -8,10 +10,6 @@ To act on one, ask for it by its suggested change name ("propose add-day-night-c
 
 | Idea | Source | Today | Suggested change |
 |---|---|---|---|
-| **Player death:** what happens when the robot dies. Today it only logs "You have died!" (`combat_actions.rs` has a `TODO: Trigger game over state`). Options from the docs: a backup body to continue from, or a game-over screen that offers the last world snapshot. | TODO.md ("backup body" system) | Missing | `add-player-death` |
-| **Day/night cycle:** 10 to 20 minutes per day, with a visual cue; affects pacing and difficulty. | STEAM-MVP.md (core loop, high priority) | Missing | `add-day-night-cycle` |
-| **The second quest:** walk from the bunker to the SapienCorp facility and find a replacement arm in a guaranteed chest. The facility structure and its quest marker exist; the arm reward and quest steps don't. | STEAM-MVP.md (Quest 2), QUESTS.md | Partly | `add-arm-replacement-quest` |
-| **Damage with consequences:** the body panel and repairs exist; the MVP asks for at least one damage type with a clear mechanical effect (for example, a damaged leg slows walking, a missing arm blocks two-handed actions). Needs a check of what already applies. | STEAM-MVP.md (survival mechanics) | Partly | `add-body-damage-effects` |
 | **Steamworks:** achievements, cloud saves and the overlay. | STEAM-MVP.md, TODO.md | Missing | `add-steamworks` |
 | **Performance budget:** about 60 FPS at 80x24 and at most 16 ms per tick; profile and fix the top two hotspots, with a benchmark that guards them. | STEAM-MVP.md | Missing | `add-performance-budget` |
 | **Combat panel cleanup:** too much spacing, emojis and a stray "z" character. | STEAM-MVP.md ("ugly combat UI") | Missing | `polish-combat-panel` |
@@ -68,4 +66,5 @@ These came up in the docs but need no new change:
 | Ore spouts, ruined reactors, nuclear tier | `add-ore-spouts`, `add-ruined-reactors`, `add-nuclear-slime` |
 | Lithic Rivers depth, caves and deposits | `overhaul-worldgen-depth` |
 | Factorio-style hotbar, building that isn't annoying | `mouse-input`, `blueprints` and the factory specs |
+| Player death, day/night cycle, the arm quest, body damage effects | `add-player-death`, `add-day-night-cycle`, `add-arm-replacement-quest`, `add-body-damage-effects` |
 | Title screen, world list and load game | `title-menu`, `world-saves` |
