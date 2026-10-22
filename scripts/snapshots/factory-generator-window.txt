@@ -25,8 +25,7 @@ expect-text "Fuel generator (W)"
 # Choices: Inspect power pole (NW), Fuel generator (W)
 key movement.MOVE_SOUTH
 key ui.MENU_ACTIVATE
-# Your Items panel is focused: Nail, Acorn, Log
-key movement.MOVE_SOUTH 2
+# Your Items shows only fuel: Log, Stick
 key ui.MENU_ACTIVATE
 expect-text "Stored Log"
 screen generator-window

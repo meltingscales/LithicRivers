@@ -16,13 +16,14 @@ key build.PLACE_WEST
 key build.TOGGLE_BREAK_PLACE_MODE 2
 key action.INTERACT
 expect-text "Crude Furnace facing north - idle"
-# Your Items is focused with the Input slot selected: Nail, Acorn, Log
-key movement.MOVE_SOUTH 2
+# Your Items is focused with the Input slot selected, showing smeltables: Acorn, Log, Stick
+key movement.MOVE_SOUTH
 key ui.MENU_ACTIVATE 4
-# Over to the slots, up to Fuel, back to your items
+# Over to the slots, up to Fuel, back to your items (now fuel: Log, Stick)
 key movement.MOVE_WEST
 key movement.MOVE_NORTH
 key movement.MOVE_EAST
+key movement.MOVE_NORTH
 key ui.MENU_ACTIVATE 2
 expect-text "Stored Log"
 tick 40

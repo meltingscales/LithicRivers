@@ -11,12 +11,12 @@ input_file: scripts/snapshots/factory-tree-farm.txt
 ########################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Inventory─────────────┐
 ########################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Nail x10              │
 ###############┌────────────── Auto-Planter - working 50%, power 100% ──────────────┐              │
-###############│┌ Acorns (14/16) ────────────────┐┌ Your Items ────────────────────┐│              │
-###############││14 x Acorn                      ││10 x Nail                       ││──────────────┘
-###############││                                ││ 2 x Stick                      ││──────────────┐
-###############││                                ││ 3 x Torch                      ││              │
-###############││                                ││ 2 x String                     ││              │
-###############││                                ││ 3 x Scrap Electronics          ││              │
+###############│┌ Acorns (14/16) ────────────────┐┌ Showing acorns: 0 of 5 ────────┐│              │
+###############││14 x Acorn                      ││                                ││──────────────┘
+###############││                                ││                                ││──────────────┐
+###############││                                ││                                ││              │
+###############││                                ││                                ││              │
+###############││                                ││                                ││              │
 ###############││                                ││                                ││              │
 ###############││                                ││                                ││              │
 ###############││                                ││                                ││              │
@@ -26,10 +26,10 @@ input_file: scripts/snapshots/factory-tree-farm.txt
 ###############││                                ││                                ││──────────────┘
 ┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
 │[1] Stored Acorn                                ││                                ││              │
-│[1] Finished looting←→ Panel | ↑↓ Select | Enter Move | a Take All | Esc Close────┘│              │
-│[1001] Time passes...──────────────────────────────────────────────────────────────┘              │
+│[1] Stored Acorn────←→ Panel | ↑↓ Select | Enter Move | a Take All | Esc Close────┘│              │
+│[1] Finished looting───────────────────────────────────────────────────────────────┘              │
+│[1001] Time passes...                                                                             │
 │[1001] Opened auto-planter                                                                        │
-│[1001] The auto-planter only takes acorns                                                         │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
 │ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│

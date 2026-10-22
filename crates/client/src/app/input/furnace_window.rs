@@ -21,12 +21,12 @@ pub fn handle_furnace_window_input(app: &mut App, key: KeyCode) -> bool {
     let Some(player) = app.core.game.get_player_entity() else {
         return true;
     };
-    let player_items = app
-        .core
-        .game
-        .world
-        .get::<&Inventory>(player)
-        .map_or(0, |inv| inv.slots.len());
+    let player_items = crate::app::item_filter::PlayerRows::for_furnace_slot(
+        &app.core.game.world,
+        player,
+        window.slot,
+    )
+    .len();
     let slot_index = Slot::ALL
         .iter()
         .position(|&s| s == window.slot)
@@ -48,13 +48,13 @@ pub fn handle_furnace_window_input(app: &mut App, key: KeyCode) -> bool {
     } else if keys.matches("ui", "MENU_ACTIVATE", &key) || key == KeyCode::Enter {
         transfer(app, &window, player);
     }
-    // Keep the player selection on a stack that still exists
-    let player_items = app
-        .core
-        .game
-        .world
-        .get::<&Inventory>(player)
-        .map_or(0, |inv| inv.slots.len());
+    // Keep the player selection on a shown stack (the list follows the selected slot)
+    let player_items = crate::app::item_filter::PlayerRows::for_furnace_slot(
+        &app.core.game.world,
+        player,
+        window.slot,
+    )
+    .len();
     window.player_item = window.player_item.min(player_items.saturating_sub(1));
     app.panels.furnace_window = Some(window);
     true
@@ -63,18 +63,14 @@ pub fn handle_furnace_window_input(app: &mut App, key: KeyCode) -> bool {
 /// Store the selected player item into the selected slot, or take one item out of it.
 fn transfer(app: &mut App, window: &FurnaceWindow, player: hecs::Entity) {
     let world = &mut app.core.game.world;
+    let rows = crate::app::item_filter::PlayerRows::for_furnace_slot(world, player, window.slot);
+    let player_slot = rows.slot(window.player_item).unwrap_or(usize::MAX);
     let item = world
         .get::<&Inventory>(player)
         .ok()
-        .and_then(|inv| inv.slots.get(window.player_item).map(|s| s.kind));
+        .and_then(|inv| inv.slots.get(player_slot).map(|s| s.kind));
     let (result, verb) = if window.player_focus {
-        let result = furnace::store(
-            world,
-            player,
-            window.entity,
-            window.player_item,
-            window.slot,
-        );
+        let result = furnace::store(world, player, window.entity, player_slot, window.slot);
         (result, "Stored")
     } else {
         (

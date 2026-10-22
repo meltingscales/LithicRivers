@@ -292,19 +292,26 @@ fn render_corpse_loot_modal(
     let corpse_list = List::new(corpse_items).block(corpse_block);
     f.render_widget(corpse_list, chunks[0]);
 
-    // Right side: Player inventory
+    // Right side: the player's items, only what a machine takes
+    let rows = app.core.game.get_player_entity().map(|p| {
+        crate::app::item_filter::PlayerRows::for_container(&app.core.game.world, p, corpse_entity)
+    });
+    let shown: Vec<usize> = rows.as_ref().map_or_else(Vec::new, |r| r.slots.clone());
+    let player_title = rows
+        .as_ref()
+        .map_or_else(|| " Your Items ".to_string(), |r| r.title());
     let player_block = Block::default()
         .borders(Borders::ALL)
-        .title(Line::from(" Your Items "))
+        .title(Line::from(player_title))
         .border_style(if !loot_panel_focus {
             Style::default().fg(Color::Yellow)
         } else {
             Style::default()
         });
 
-    let player_items: Vec<ListItem> = player_inv
-        .slots
+    let player_items: Vec<ListItem> = shown
         .iter()
+        .filter_map(|&slot| player_inv.slots.get(slot))
         .enumerate()
         .map(|(i, stack)| {
             let is_selected = !loot_panel_focus && selected_player_item == i;

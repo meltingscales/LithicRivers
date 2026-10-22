@@ -11,14 +11,14 @@ input_file: scripts/snapshots/factory-generator-window.txt
 #######vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,        ┌Inventory─────────────┐
 #######vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,       │Nail x10              │
 ########vvvvvvv┌─────────────── Burner Generator - network 0 / 0 kW ────────────────┐              │
-########vvvvvvv│┌ Fuel (1/4) - 0 kJ left ────────┐┌ Your Items ────────────────────┐│              │
-#########vvvvvv││ 1 x Log                        ││10 x Nail                       ││──────────────┘
-#########vvvvvv││                                ││ 1 x Acorn                      ││──────────────┐
-##########vvvvv││                                ││ 2 x Log                        ││              │
-###########vvvv││                                ││ 2 x Stick                      ││              │
-###########vvvv││                                ││ 3 x Torch                      ││              │
-############vvv││                                ││ 2 x String                     ││              │
-############vvv││                                ││ 3 x Scrap Electronics          ││              │
+########vvvvvvv│┌ Fuel (1/4) - 0 kJ left ────────┐┌ Showing fuel: 2 of 7 ──────────┐│              │
+#########vvvvvv││ 1 x Log                        ││ 2 x Log                        ││──────────────┘
+#########vvvvvv││                                ││ 2 x Stick                      ││──────────────┐
+##########vvvvv││                                ││                                ││              │
+###########vvvv││                                ││                                ││              │
+###########vvvv││                                ││                                ││              │
+############vvv││                                ││                                ││              │
+############vvv││                                ││                                ││              │
 #############vv││                                ││                                ││              │
 ##############v││                                ││                                ││ mode         │
 ###############││                                ││                                ││ct pole       │

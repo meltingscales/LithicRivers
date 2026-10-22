@@ -71,6 +71,24 @@ pub enum Slot {
 impl Slot {
     pub const ALL: [Slot; 3] = [Slot::Fuel, Slot::Input, Slot::Output];
 
+    /// Whether the player can ever put `item` in this slot (however full it is).
+    pub fn takes(self, item: ItemKind) -> bool {
+        match self {
+            Slot::Fuel => fuel_energy(item).is_some(),
+            Slot::Input => smelting_recipe(item).is_some(),
+            Slot::Output => false,
+        }
+    }
+
+    /// What the slot takes, for the filtered item list.
+    pub fn takes_label(self) -> &'static str {
+        match self {
+            Slot::Fuel => "fuel",
+            Slot::Input => "smeltables",
+            Slot::Output => "nothing",
+        }
+    }
+
     pub fn name(self) -> &'static str {
         match self {
             Slot::Fuel => "Fuel",
