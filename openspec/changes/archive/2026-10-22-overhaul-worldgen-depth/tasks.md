@@ -22,4 +22,4 @@
 ## 4. Checks
 
 - [x] 4.1 Verify `just code-clippy`, `cargo test --workspace` and PR checks pass, and review every changed snapshot
-- [ ] 4.2 User check: escape the bunker on a few seeds, and digging feels rewarding at each depth
+- [x] 4.2 User check: escape the bunker on a few seeds, and digging feels rewarding at each depth

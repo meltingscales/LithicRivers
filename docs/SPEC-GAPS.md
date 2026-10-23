@@ -24,7 +24,7 @@ To act on one, ask for it by its suggested change name ("propose add-day-night-c
 | **Landmark structures** placed by worldgen, like the Python version's: a crashed ship and an abandoned research station (the abandoned factory exists). | STEAM-MVP.md | Partly | `add-landmark-structures` |
 | **Procedural dungeons v2**, using the TinyKeep layout algorithm in `docs/dungeons/tinybuild-dungeons.md`. | TODO.md, docs/dungeons | Missing | `add-procedural-dungeons` |
 | **Mining bots:** dangerous enemies of the Lithic Rivers depths. | STEAM-MVP.md (core loop) | Missing | `add-mining-bots` |
-| **Structure generation "stretched" across z**, noted as a bug. `overhaul-worldgen-depth` should check it while reworking the bands. | STEAM-MVP.md (small temp list) | Bug | Fold into `overhaul-worldgen-depth` |
+| **Structure generation "stretched" across z**, noted as a bug. `overhaul-worldgen-depth` (archived) reworked the bands but did not check it. | STEAM-MVP.md (small temp list) | Bug | `fix-structure-z-stretch` |
 
 ## Getting around
 
@@ -64,7 +64,7 @@ These came up in the docs but need no new change:
 | Branching saves and checkpoints | `add-world-snapshots` |
 | A 3D world explorer | `add-3d-viewer` |
 | Ore spouts, ruined reactors, nuclear tier | `add-ore-spouts`, `add-ruined-reactors`, `add-nuclear-slime` |
-| Lithic Rivers depth, caves and deposits | `overhaul-worldgen-depth` |
+| Lithic Rivers depth, caves and deposits | `worldgen-depth` spec |
 | Factorio-style hotbar, building that isn't annoying | `mouse-input`, `blueprints` and the factory specs |
 | Player death, day/night cycle, the arm quest, body damage effects | `add-player-death`, `add-day-night-cycle`, `add-arm-replacement-quest`, `add-body-damage-effects` |
 | Title screen, world list and load game | `title-menu`, `world-saves` |
