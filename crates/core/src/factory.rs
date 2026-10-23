@@ -97,6 +97,8 @@ pub enum FactoryKind {
     VerticalConveyorUp,
     /// Carries one item to the block on the layer below
     VerticalConveyorDown,
+    /// Smelts on grid power instead of fuel; fed from its back and sides
+    ElectricFurnace,
     /// A consumer that does nothing but draw power, for grid tests
     #[cfg(any(test, feature = "test-support"))]
     TestConsumer,
@@ -116,6 +118,7 @@ impl FactoryKind {
             ItemKind::AutoPlanter => Some(FactoryKind::AutoPlanter),
             ItemKind::AutoHarvester => Some(FactoryKind::AutoHarvester),
             ItemKind::CrudeFurnace => Some(FactoryKind::CrudeFurnace),
+            ItemKind::ElectricFurnace => Some(FactoryKind::ElectricFurnace),
             ItemKind::Extractor => Some(FactoryKind::Extractor),
             ItemKind::FilterExtractor => Some(FactoryKind::FilterExtractor),
             ItemKind::BeltRouter => Some(FactoryKind::BeltRouter),
@@ -134,6 +137,7 @@ impl FactoryKind {
             FactoryKind::AutoPlanter => Some(ItemKind::AutoPlanter),
             FactoryKind::AutoHarvester => Some(ItemKind::AutoHarvester),
             FactoryKind::CrudeFurnace => Some(ItemKind::CrudeFurnace),
+            FactoryKind::ElectricFurnace => Some(ItemKind::ElectricFurnace),
             FactoryKind::Extractor => Some(ItemKind::Extractor),
             FactoryKind::FilterExtractor => Some(ItemKind::FilterExtractor),
             FactoryKind::BeltRouter => Some(ItemKind::BeltRouter),
@@ -156,6 +160,7 @@ impl FactoryKind {
             FactoryKind::AutoPlanter => "auto-planter",
             FactoryKind::AutoHarvester => "auto-harvester",
             FactoryKind::CrudeFurnace => "crude furnace",
+            FactoryKind::ElectricFurnace => "electric furnace",
             FactoryKind::Extractor => "extractor",
             FactoryKind::FilterExtractor => "filter extractor",
             FactoryKind::BeltRouter => "belt router",
@@ -175,6 +180,7 @@ impl FactoryKind {
             FactoryKind::Belt
             | FactoryKind::AutoHarvester
             | FactoryKind::CrudeFurnace
+            | FactoryKind::ElectricFurnace
             | FactoryKind::Extractor
             | FactoryKind::FilterExtractor
             | FactoryKind::BeltRouter => true,
@@ -216,7 +222,9 @@ impl FactoryKind {
             FactoryKind::AutoHarvester => {
                 SpriteRef::new("factory", &format!("auto_harvester_{}", facing.name()))
             }
-            FactoryKind::CrudeFurnace => crate::furnace::sprite(facing, false),
+            FactoryKind::CrudeFurnace | FactoryKind::ElectricFurnace => {
+                crate::furnace::sprite(self, facing, false)
+            }
             FactoryKind::Extractor => {
                 SpriteRef::new("factory", &format!("extractor_{}", facing.name()))
             }
@@ -322,6 +330,12 @@ pub fn place(
         }
         FactoryKind::CrudeFurnace => {
             builder.add(crate::furnace::Furnace::default());
+        }
+        FactoryKind::ElectricFurnace => {
+            builder.add(crate::furnace::Furnace::default());
+            builder.add(crate::power::PowerConsumer::idle(
+                crate::furnace::ELECTRIC_FURNACE_W,
+            ));
         }
         FactoryKind::Extractor | FactoryKind::FilterExtractor => {
             builder.add(crate::logistics::Extractor::default());
@@ -530,7 +544,7 @@ pub fn move_all_items(world: &mut World, from: Entity, to: Entity) -> u32 {
 }
 
 /// Run every factory step that fits in the ticks elapsed since the last call. Each step runs
-/// the factory systems in a fixed order (growth, machine demand, power, machines, furnaces,
+/// the factory systems in a fixed order (growth, machine and furnace demand, power, machines, furnaces,
 /// extractors, routers, belts, then carrying the player along belts)
 /// over everything, wherever it is.
 pub fn run_due_steps(world: &mut World, res: &mut Resources) {
@@ -545,6 +559,7 @@ pub fn run_due_steps(world: &mut World, res: &mut Resources) {
         let step_tick = first_step_tick + i * FACTORY_STEP_TICKS;
         crate::plants::grow_saplings(world, res, step_tick);
         crate::machines::update_demand(world, res);
+        crate::furnace::update_demand(world);
         crate::power::step_power(world, res);
         crate::machines::step_machines(world, res);
         crate::furnace::step_furnaces(world, res);
@@ -581,6 +596,7 @@ pub fn takes(kind: FactoryKind, item: ItemKind) -> bool {
             crate::power::fuel_energy(item).is_some()
                 || crate::furnace::smelting_recipe(item).is_some()
         }
+        FactoryKind::ElectricFurnace => crate::furnace::smelting_recipe(item).is_some(),
         FactoryKind::AutoHarvester | FactoryKind::Extractor | FactoryKind::FilterExtractor => false,
         _ => true,
     }
@@ -593,6 +609,7 @@ pub fn takes_label(kind: FactoryKind) -> Option<&'static str> {
         FactoryKind::BurnerGenerator => Some("fuel"),
         FactoryKind::AutoPlanter => Some("acorns"),
         FactoryKind::CrudeFurnace => Some("fuel/smeltables"),
+        FactoryKind::ElectricFurnace => Some("smeltables"),
         FactoryKind::AutoHarvester | FactoryKind::Extractor | FactoryKind::FilterExtractor => {
             Some("nothing")
         }
@@ -623,8 +640,8 @@ pub fn accepts_from(
         return false;
     };
     match block.kind {
-        FactoryKind::CrudeFurnace => {
-            return crate::furnace::accepts(world, target, block.facing, item, heading)
+        FactoryKind::CrudeFurnace | FactoryKind::ElectricFurnace => {
+            return crate::furnace::accepts(world, target, block, item, heading)
         }
         FactoryKind::BeltRouter => {
             return crate::logistics::router_accepts(world, target, block.facing, heading)
@@ -658,11 +675,11 @@ pub fn insert_from(
     if !accepts_from(world, target, item, heading) {
         return false;
     }
-    let facing = world.get::<&FactoryBlock>(target).map(|b| b.facing).ok();
-    if let (Ok(mut furnace), Some(facing)) =
-        (world.get::<&mut crate::furnace::Furnace>(target), facing)
+    let block = world.get::<&FactoryBlock>(target).map(|b| *b).ok();
+    if let (Ok(mut furnace), Some(block)) =
+        (world.get::<&mut crate::furnace::Furnace>(target), block)
     {
-        furnace.insert(facing, item, heading);
+        furnace.insert(block, item, heading);
         return true;
     }
     if let Ok(mut router) = world.get::<&mut crate::logistics::Router>(target) {

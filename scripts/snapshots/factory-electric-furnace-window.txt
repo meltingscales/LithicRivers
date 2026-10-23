@@ -1,0 +1,19 @@
+# The electric furnace window in the Factory showcase: a generator and pole power it, an
+# extractor feeds it logs from a chest down a long belt, and its biochar rides another belt
+# into a chest. The window has no fuel slot and shows the network's power instead.
+seed 12345
+size 100x30
+world factory-showcase
+key ui.MENU_PREV
+key action.PASS_TIME
+# South of the electric furnace. Choices: Open electric furnace (N), then the belts beside it
+cheat tp 46 -5 0
+screen line
+key action.INTERACT
+key ui.MENU_ACTIVATE
+expect-text "Electric Furnace facing east - smelting"
+expect-text "power 100%"
+# Two game seconds: halfway through a log
+tick 200
+expect-text "smelting 50%"
+screen furnace-window

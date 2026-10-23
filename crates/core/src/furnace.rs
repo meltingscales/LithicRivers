@@ -1,23 +1,43 @@
-//! Smelting: the shared smelting table and the crude furnace, an unpowered block that burns
-//! fuel to turn wood into biochar.
+//! Smelting: the shared smelting table and the furnaces that use it. A crude furnace burns
+//! fuel to turn wood into biochar; an electric furnace draws grid power instead.
 //!
-//! A furnace has three single-stack slots. Items arriving from its back go to the input,
-//! from either side to the fuel, and finished items leave through its front. Fuel energy is
-//! whole joules, drawn only while smelting; a partly burned item's energy stays in
-//! `buffer_j`.
+//! A furnace has three single-stack slots. Items arriving from its back go to the input, and
+//! finished items leave through its front. From either side, items go to a crude furnace's
+//! fuel and to an electric furnace's input (it has no fuel slot). Fuel energy is whole
+//! joules, drawn only while smelting; a partly burned item's energy stays in `buffer_j`. An
+//! electric furnace wants power only while it has a batch to smelt, and smelts at its
+//! network's satisfaction.
 
 use hecs::{Entity, World};
 use serde::{Deserialize, Serialize};
 
 use crate::components::{ItemKind, ItemStack, Position, SpriteRef};
-use crate::factory::{Facing, FactoryBlock};
-use crate::power::{fuel_energy, STEPS_PER_SECOND};
+use crate::factory::{Facing, FactoryBlock, FactoryKind};
+use crate::power::{fuel_energy, PowerConsumer, STEPS_PER_SECOND};
 use crate::resources::Resources;
 
 /// Items a furnace slot holds.
 pub const FURNACE_SLOT_MAX: u32 = 32;
 /// Fuel energy a crude furnace burns while smelting, in watts.
 pub const CRUDE_FURNACE_W: u64 = 90_000;
+/// Grid power an electric furnace draws while smelting, in watts.
+pub const ELECTRIC_FURNACE_W: u64 = 90_000;
+/// Progress a furnace makes in one fully powered (or fueled) factory step.
+const FULL_STEP: u64 = 1000;
+
+/// Whether a furnace kind runs on grid power, with no fuel slot.
+pub fn is_electric(kind: FactoryKind) -> bool {
+    kind == FactoryKind::ElectricFurnace
+}
+
+/// Where a furnace's energy comes from this step.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Energy {
+    /// Burn this much fuel energy to smelt one step
+    Fuel { step_j: u64 },
+    /// Smelt at the network's satisfaction, out of 1000
+    Grid { satisfaction_permille: u16 },
+}
 
 /// One row of the smelting table: `input_count` of `input` become `output_count` of
 /// `output` after `seconds` game seconds of smelting.
@@ -70,6 +90,16 @@ pub enum Slot {
 
 impl Slot {
     pub const ALL: [Slot; 3] = [Slot::Fuel, Slot::Input, Slot::Output];
+
+    /// The slots a furnace of this kind has, in window order: an electric furnace has no
+    /// fuel slot.
+    pub fn for_kind(kind: FactoryKind) -> &'static [Slot] {
+        if is_electric(kind) {
+            &[Slot::Input, Slot::Output]
+        } else {
+            &Slot::ALL
+        }
+    }
 
     /// Whether the player can ever put `item` in this slot (however full it is).
     pub fn takes(self, item: ItemKind) -> bool {
@@ -127,7 +157,7 @@ pub struct Furnace {
     pub fuel: Option<ItemStack>,
     pub input: Option<ItemStack>,
     pub output: Option<ItemStack>,
-    /// Factory steps smelted so far of the current smelt
+    /// Progress of the current smelt, in thousandths of a fully powered factory step
     pub progress: u64,
     /// Energy left in the fuel item being burned, in joules
     pub buffer_j: u64,
@@ -209,23 +239,25 @@ impl Furnace {
         Some(kind)
     }
 
-    /// The slot an item moving along `heading` arrives at, for a furnace facing `facing`:
-    /// the input from behind, the fuel from either side, nothing from the front or with no
-    /// direction.
-    pub fn slot_for(facing: Facing, heading: Option<Facing>) -> Option<Slot> {
+    /// The slot an item moving along `heading` arrives at for the furnace `block`: the input
+    /// from behind, the fuel (or an electric furnace's input) from either side, nothing from
+    /// the front or with no direction.
+    pub fn slot_for(block: FactoryBlock, heading: Option<Facing>) -> Option<Slot> {
         let heading = heading?;
-        if heading == facing {
+        if heading == block.facing {
             Some(Slot::Input)
-        } else if heading == facing.opposite() {
+        } else if heading == block.facing.opposite() {
             None
+        } else if is_electric(block.kind) {
+            Some(Slot::Input)
         } else {
             Some(Slot::Fuel)
         }
     }
 
     /// Insert one item arriving along `heading`; the caller checked `accepts`.
-    pub fn insert(&mut self, facing: Facing, item: ItemKind, heading: Option<Facing>) {
-        if let Some(slot) = Self::slot_for(facing, heading) {
+    pub fn insert(&mut self, block: FactoryBlock, item: ItemKind, heading: Option<Facing>) {
+        if let Some(slot) = Self::slot_for(block, heading) {
             let _ = self.put(slot, item);
         }
     }
@@ -238,6 +270,13 @@ impl Furnace {
             .then_some(recipe)
     }
 
+    /// How far the current smelt is, in percent.
+    pub fn progress_percent(&self) -> u64 {
+        self.ready_recipe().map_or(0, |recipe| {
+            self.progress * 100 / (recipe.steps() * FULL_STEP).max(1)
+        })
+    }
+
     /// Fuel energy left: the buffer plus every fuel item.
     pub fn energy_left_j(&self) -> u64 {
         let items = self
@@ -246,29 +285,37 @@ impl Furnace {
         self.buffer_j + items
     }
 
-    /// One factory step: smelt if there's a full batch, room for the result and fuel for
-    /// the step. Without fuel it pauses, keeping its progress; with nothing to smelt it
+    /// One factory step: smelt if there's a full batch, room for the result and energy for
+    /// the step. Without energy it pauses, keeping its progress; with nothing to smelt it
     /// resets.
-    pub fn step(&mut self, step_j: u64) {
+    pub fn step(&mut self, energy: Energy) {
         let Some(recipe) = self.ready_recipe() else {
             self.progress = 0;
             self.lit = false;
             return;
         };
-        if self.buffer_j < step_j {
-            if let Some(energy) = self.fuel.and_then(|s| fuel_energy(s.kind)) {
-                self.buffer_j += energy;
-                remove(&mut self.fuel, 1);
+        let gained = match energy {
+            Energy::Fuel { step_j } => {
+                if self.buffer_j < step_j {
+                    if let Some(energy) = self.fuel.and_then(|s| fuel_energy(s.kind)) {
+                        self.buffer_j += energy;
+                        remove(&mut self.fuel, 1);
+                    }
+                }
+                if self.buffer_j < step_j {
+                    0
+                } else {
+                    self.buffer_j -= step_j;
+                    FULL_STEP
+                }
             }
-        }
-        if self.buffer_j < step_j {
-            self.lit = false;
-            return;
-        }
-        self.buffer_j -= step_j;
-        self.lit = true;
-        self.progress += 1;
-        if self.progress >= recipe.steps() {
+            Energy::Grid {
+                satisfaction_permille,
+            } => satisfaction_permille as u64,
+        };
+        self.lit = gained > 0;
+        self.progress += gained;
+        if self.progress >= recipe.steps() * FULL_STEP {
             self.progress = 0;
             remove(&mut self.input, recipe.input_count);
             add(&mut self.output, recipe.output, recipe.output_count);
@@ -350,15 +397,15 @@ pub fn take(
     Ok(item)
 }
 
-/// Whether the furnace `target` (facing `facing`) takes `item` arriving along `heading`.
+/// Whether the furnace `target` (the block `block`) takes `item` arriving along `heading`.
 pub fn accepts(
     world: &World,
     target: Entity,
-    facing: Facing,
+    block: FactoryBlock,
     item: ItemKind,
     heading: Option<Facing>,
 ) -> bool {
-    let Some(slot) = Furnace::slot_for(facing, heading) else {
+    let Some(slot) = Furnace::slot_for(block, heading) else {
         return false;
     };
     world
@@ -366,38 +413,55 @@ pub fn accepts(
         .is_ok_and(|f| f.check(slot, item).is_ok())
 }
 
-/// The furnace sprite for its facing and whether it is lit.
-pub fn sprite(facing: Facing, lit: bool) -> SpriteRef {
+/// The furnace sprite for its kind, facing and whether it is lit.
+pub fn sprite(kind: FactoryKind, facing: Facing, lit: bool) -> SpriteRef {
+    let base = if is_electric(kind) {
+        "electric_furnace"
+    } else {
+        "crude_furnace"
+    };
     let state = if lit { "lit" } else { "unlit" };
-    SpriteRef::new(
-        "factory",
-        &format!("crude_furnace_{state}_{}", facing.name()),
-    )
+    SpriteRef::new("factory", &format!("{base}_{state}_{}", facing.name()))
+}
+
+/// Before power is shared: an electric furnace wants power only with a batch to smelt.
+pub fn update_demand(world: &mut World) {
+    for (_, (furnace, consumer)) in world.query_mut::<(&Furnace, &mut PowerConsumer)>() {
+        consumer.active = furnace.ready_recipe().is_some();
+    }
 }
 
 /// One factory step for every furnace, in position order: smelt, redraw when it lights up
 /// or goes out, and push one finished item out its front.
 pub fn step_furnaces(world: &mut World, res: &mut Resources) {
-    let mut furnaces: Vec<(Entity, Position, Facing)> = world
+    let mut furnaces: Vec<(Entity, Position, FactoryBlock)> = world
         .query::<(&Position, &FactoryBlock)>()
         .with::<&Furnace>()
         .iter()
-        .map(|(e, (p, b))| (e, *p, b.facing))
+        .map(|(e, (p, b))| (e, *p, *b))
         .collect();
     if furnaces.is_empty() {
         return;
     }
     furnaces.sort_by_key(|(_, p, _)| (p.z, p.y, p.x));
-    let step_j = CRUDE_FURNACE_W / STEPS_PER_SECOND;
-    for (entity, pos, facing) in furnaces {
+    for (entity, pos, block) in furnaces {
+        let facing = block.facing;
+        let energy = match world.get::<&PowerConsumer>(entity) {
+            Ok(consumer) => Energy::Grid {
+                satisfaction_permille: consumer.satisfaction_permille,
+            },
+            Err(_) => Energy::Fuel {
+                step_j: CRUDE_FURNACE_W / STEPS_PER_SECOND,
+            },
+        };
         let (was_lit, lit, output) = {
             let mut furnace = world.get::<&mut Furnace>(entity).expect("furnace");
             let was_lit = furnace.lit;
-            furnace.step(step_j);
+            furnace.step(energy);
             (was_lit, furnace.lit, furnace.output.map(|s| s.kind))
         };
         if lit != was_lit {
-            let _ = world.insert_one(entity, sprite(facing, lit));
+            let _ = world.insert_one(entity, sprite(block.kind, facing, lit));
         }
         let Some(item) = output else {
             continue;
@@ -566,7 +630,7 @@ mod tests {
         load(&mut g, f, Slot::Fuel, ItemKind::WoodenShavings, 1);
         steps(&mut g, 10);
         let paused = furnace(&g, f);
-        assert_eq!(paused.progress, 5);
+        assert_eq!(paused.progress, 5 * FULL_STEP);
         assert_eq!(paused.buffer_j, 100_000 - 5 * 18_000, "partial energy kept");
         assert!(!paused.lit);
         load(&mut g, f, Slot::Fuel, ItemKind::Log, 1);
@@ -676,6 +740,105 @@ mod tests {
             Err(TransferError::Empty)
         );
         assert_eq!(qty(furnace(&g, f).input), 3);
+    }
+
+    // --- electric furnace ---------------------------------------------------------------
+
+    /// A generator with `fuel` biochar and a pole beside it, powering blocks within three
+    /// tiles of (1, 2).
+    fn grid(game: &mut Game, fuel: u32) {
+        let generator = put(game, FactoryKind::BurnerGenerator, at(0, 2), Facing::North);
+        game.world
+            .get::<&mut Inventory>(generator)
+            .unwrap()
+            .add(ItemKind::Biochar, fuel);
+        put(game, FactoryKind::PowerPole, at(1, 2), Facing::North);
+    }
+
+    fn consumer(game: &Game, e: Entity) -> PowerConsumer {
+        *game.world.get::<&PowerConsumer>(e).unwrap()
+    }
+
+    #[test]
+    fn a_powered_electric_furnace_smelts_a_log_in_four_seconds() {
+        let mut g = game();
+        grid(&mut g, 2);
+        let f = put(&mut g, FactoryKind::ElectricFurnace, at(2, 0), Facing::East);
+        load(&mut g, f, Slot::Input, ItemKind::Log, 1);
+        steps(&mut g, 19);
+        assert_eq!(qty(furnace(&g, f).output), 0, "not yet");
+        assert!(furnace(&g, f).lit);
+        assert_eq!(consumer(&g, f).satisfaction_permille, 1000);
+        steps(&mut g, 1);
+        let state = furnace(&g, f);
+        assert_eq!(state.input, None);
+        assert_eq!(state.output, Some(ItemStack::new(ItemKind::Biochar, 1)));
+        assert_eq!(state.buffer_j, 0, "no fuel buffer");
+        assert_eq!(
+            Slot::for_kind(FactoryKind::ElectricFurnace),
+            [Slot::Input, Slot::Output]
+        );
+    }
+
+    #[test]
+    fn an_idle_electric_furnace_draws_nothing() {
+        let mut g = game();
+        grid(&mut g, 1);
+        let f = put(&mut g, FactoryKind::ElectricFurnace, at(2, 0), Facing::East);
+        seconds(&mut g, 60);
+        assert!(!consumer(&g, f).active);
+        let network = g.res.power.network_of(f).expect("on the grid");
+        assert_eq!(network.demand_w, 0);
+        assert!(!furnace(&g, f).lit);
+    }
+
+    #[test]
+    fn half_power_doubles_the_smelting_time() {
+        let mut g = game();
+        // One 90 kW generator for two 90 kW furnaces
+        grid(&mut g, 4);
+        let a = put(&mut g, FactoryKind::ElectricFurnace, at(2, 0), Facing::East);
+        let b = put(&mut g, FactoryKind::ElectricFurnace, at(2, 4), Facing::East);
+        for f in [a, b] {
+            load(&mut g, f, Slot::Input, ItemKind::Log, 2);
+        }
+        steps(&mut g, 39);
+        assert_eq!(consumer(&g, a).satisfaction_permille, 500);
+        assert_eq!(qty(furnace(&g, a).output), 0, "eight seconds at half power");
+        steps(&mut g, 1);
+        for f in [a, b] {
+            assert_eq!(qty(furnace(&g, f).output), 1);
+        }
+    }
+
+    #[test]
+    fn an_unpowered_electric_furnace_does_not_smelt() {
+        let mut g = game();
+        grid(&mut g, 1);
+        // Out of the pole's reach
+        let f = put(&mut g, FactoryKind::ElectricFurnace, at(8, 0), Facing::East);
+        load(&mut g, f, Slot::Input, ItemKind::Log, 1);
+        seconds(&mut g, 30);
+        let state = furnace(&g, f);
+        assert_eq!((state.progress, state.lit, state.output), (0, false, None));
+        // Fuel isn't power: it has no fuel slot
+        assert!(!factory::takes(FactoryKind::ElectricFurnace, ItemKind::Biochar));
+        assert!(factory::takes(FactoryKind::ElectricFurnace, ItemKind::Log));
+    }
+
+    #[test]
+    fn a_belt_feeds_an_electric_furnace_from_the_side() {
+        let mut g = game();
+        grid(&mut g, 2);
+        let f = put(&mut g, FactoryKind::ElectricFurnace, at(2, 0), Facing::East);
+        // Logs from the north side and the back both go to the input
+        belt_with(&mut g, at(2, -1), Facing::South, ItemKind::Log, 2);
+        belt_with(&mut g, at(1, 0), Facing::East, ItemKind::Log, 1);
+        put(&mut g, FactoryKind::Belt, at(3, 0), Facing::East);
+        let chest = put(&mut g, FactoryKind::Chest, at(4, 0), Facing::North);
+        seconds(&mut g, 20);
+        assert_eq!(chest_count(&g, chest, ItemKind::Biochar), 3);
+        assert_eq!(furnace(&g, f).fuel, None);
     }
 
     #[test]

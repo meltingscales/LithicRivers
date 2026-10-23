@@ -205,6 +205,7 @@ pub enum ItemKind {
     Stairs,
     NuclearWaste,
     PlasteelScrap,
+    ElectricFurnace,
 }
 
 pub fn itemkind_name(kind: ItemKind) -> &'static str {
@@ -240,6 +241,7 @@ pub fn itemkind_name(kind: ItemKind) -> &'static str {
         ItemKind::Stairs => "Stairs",
         ItemKind::NuclearWaste => "Nuclear Waste",
         ItemKind::PlasteelScrap => "Plasteel Scrap",
+        ItemKind::ElectricFurnace => "Electric Furnace",
     }
 }
 
@@ -276,6 +278,7 @@ pub fn itemkind_sprite_name(kind: ItemKind) -> &'static str {
         ItemKind::Stairs => "stairs",
         ItemKind::NuclearWaste => "nuclear_waste",
         ItemKind::PlasteelScrap => "plasteel_scrap",
+        ItemKind::ElectricFurnace => "electric_furnace",
     }
 }
 
@@ -312,6 +315,7 @@ pub fn parse_itemkind_from_sprite_name(sprite_name: &str) -> Option<ItemKind> {
         "stairs" => Some(ItemKind::Stairs),
         "nuclear_waste" => Some(ItemKind::NuclearWaste),
         "plasteel_scrap" => Some(ItemKind::PlasteelScrap),
+        "electric_furnace" => Some(ItemKind::ElectricFurnace),
         _ => None,
     }
 }

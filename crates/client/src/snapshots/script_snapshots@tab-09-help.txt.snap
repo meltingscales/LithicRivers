@@ -16,13 +16,13 @@ input_file: scripts/snapshots/tab-09-help.txt
 │sticks or shavings; power poles link within 8 tiles and power blocks within 3. Auto-planters plant│
 │acorns and auto-harvesters chop grown trees within 2 tiles, pushing the wood into what they face. │
 │Crude furnaces smelt wood into biochar, a denser fuel: items from the back go in, fuel comes from │
-│the sides, and biochar leaves the front. Extractors move one item a second from the block behind  │
-│them into the block in front; filter extractors and belt routers take a filter (interact to set   │
-│it). Routers deal items left, straight and right in turn, or send the filtered item left. You can │
-│walk on belts, and they carry you along. , lets 10 game seconds pass.                             │
+│the sides, and biochar leaves the front. Electric furnaces smelt the same on grid power, taking   │
+│items from the back and both sides. Extractors move one item a second from the block behind them  │
+│into the block in front; filter extractors and belt routers take a filter (interact to set it).   │
+│Routers deal items left, straight and right in turn, or send the filtered item left. You can walk │
+│on belts, and they carry you along. , lets 10 game seconds pass.                                  │
 │                                                                                                  │
 │Mouse: left click opens what's there, else places the hotbar block; right click breaks; middle    │
-│click picks a block and its facing; scroll cycles hotbar slots and Shift + scroll rotates. The    │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
 │[0] Loading structure 'sapiencorp-bunker.lrstructure' at (10, 10, 1) for chunk (0, 0, 1)          │
