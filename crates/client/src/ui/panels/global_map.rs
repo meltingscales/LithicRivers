@@ -23,6 +23,8 @@ pub fn render_global_map_panel(f: &mut Frame, app: &mut App, area: Rect) {
 
     // Render the markers panel
     render_markers_panel(f, app, main_chunks[1]);
+
+    render_delete_prompt(f, app);
 }
 
 /// Render the map portion of the global map
@@ -64,14 +66,8 @@ fn render_map_panel(f: &mut Frame, app: &mut App, area: Rect) {
 
     // Get selected marker for arrow drawing
     // Index 0 is the "unselect" option, so actual markers start at index 1
-    let selected_marker = if app.panels.global_map.selected_marker_index > 0
-        && app.core.game.res.quest_markers.len() >= app.panels.global_map.selected_marker_index
-    {
-        let marker_index = app.panels.global_map.selected_marker_index - 1; // Convert to 0-based marker index
-        app.core.game.res.quest_markers.get(marker_index)
-    } else {
-        None
-    };
+    let selected_marker =
+        selected_marker(app).and_then(|i| app.core.game.res.quest_markers.get(i));
 
     let selected_marker_chunk = selected_marker.map(|marker| {
         (
@@ -121,6 +117,7 @@ fn render_map_panel(f: &mut Frame, app: &mut App, area: Rect) {
                     QuestMarkerType::FetchQuest => 'F',
                     QuestMarkerType::Location => 'L',
                     QuestMarkerType::Treasure => '$',
+                    QuestMarkerType::Death => 'X',
                 };
                 style = Style::default().fg(Color::Red);
             }
@@ -191,7 +188,9 @@ fn render_map_panel(f: &mut Frame, app: &mut App, area: Rect) {
             Span::styled("[ ] ", Style::default().fg(Color::DarkGray)),
             Span::raw("Unexplored  "),
             Span::styled("[$] ", Style::default().fg(Color::Red)),
-            Span::raw("Treasure"),
+            Span::raw("Treasure  "),
+            Span::styled("[X] ", Style::default().fg(Color::Red)),
+            Span::raw("Wreck"),
         ]),
     ];
 
@@ -258,25 +257,17 @@ fn render_markers_panel(f: &mut Frame, app: &mut App, area: Rect) {
     // Get player position for distance calculations
     let player_pos = app.core.game.get_player_position();
 
-    if let Some(player_position) = player_pos {
-        // Get all quest markers and calculate distances
-        let mut marker_distances: Vec<_> = app
-            .core
-            .game
-            .res
-            .quest_markers
-            .iter()
-            .map(|marker| {
-                let dx = marker.x - player_position.x;
-                let dy = marker.y - player_position.y;
-                let dz = marker.z - player_position.z;
-                let distance = ((dx * dx + dy * dy + dz * dz) as f64).sqrt();
-                (marker, distance)
-            })
+    if player_pos.is_some() {
+        // The quest markers, closest first
+        let marker_distances: Vec<_> = markers_by_distance(app)
+            .into_iter()
+            .map(|(i, distance)| (&app.core.game.res.quest_markers[i], distance))
             .collect();
-
-        // Sort by distance (closest first)
-        marker_distances.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
+        let wrap_width = inner_area.width.saturating_sub(3) as usize;
+        let delete_key = app
+            .core
+            .config_manager
+            .get_printable_key_for_keybind("global_map", "DELETE_MARKER");
 
         // Create list items - start with "unselect" option
         let mut marker_items: Vec<ListItem> = Vec::new();
@@ -329,6 +320,7 @@ fn render_markers_panel(f: &mut Frame, app: &mut App, area: Rect) {
                     QuestMarkerType::FetchQuest => "F",
                     QuestMarkerType::Location => "L",
                     QuestMarkerType::Treasure => "$",
+                    QuestMarkerType::Death => "X",
                 };
 
                 let marker_color = match marker.marker_type {
@@ -337,6 +329,7 @@ fn render_markers_panel(f: &mut Frame, app: &mut App, area: Rect) {
                     QuestMarkerType::FetchQuest => Color::Cyan,
                     QuestMarkerType::Location => Color::Blue,
                     QuestMarkerType::Treasure => Color::Green,
+                    QuestMarkerType::Death => Color::LightRed,
                 };
 
                 let distance_text = if *distance < 1000.0 {
@@ -370,7 +363,7 @@ fn render_markers_panel(f: &mut Frame, app: &mut App, area: Rect) {
 
                 let selection_indicator = if is_selected { "► " } else { "  " };
 
-                let content = vec![
+                let mut content = vec![
                     Line::from(vec![
                         Span::styled(selection_indicator, Style::default().fg(Color::Cyan)),
                         Span::styled(
@@ -393,6 +386,19 @@ fn render_markers_panel(f: &mut Frame, app: &mut App, area: Rect) {
                         ),
                     ]),
                 ];
+                // The selected marker shows what it is about
+                if is_selected {
+                    let mut details = wrap_words(&marker.description, wrap_width);
+                    if marker.marker_type == QuestMarkerType::Death {
+                        details.push(format!("{delete_key}: delete marker"));
+                    }
+                    for text in details {
+                        content.push(Line::from(vec![
+                            Span::raw("   "),
+                            Span::styled(text, distance_style),
+                        ]));
+                    }
+                }
 
                 ListItem::new(content)
             })
@@ -422,6 +428,102 @@ fn render_markers_panel(f: &mut Frame, app: &mut App, area: Rect) {
 
         f.render_widget(error_text, inner_area);
     }
+}
+
+/// The quest markers as indices into `quest_markers` with their distance from the player,
+/// closest first: the order of the markers list, whose row 0 is "unselect".
+pub(crate) fn markers_by_distance(app: &App) -> Vec<(usize, f64)> {
+    let Some(player) = app.core.game.get_player_position() else {
+        return vec![];
+    };
+    let mut markers: Vec<(usize, f64)> = app
+        .core
+        .game
+        .res
+        .quest_markers
+        .iter()
+        .enumerate()
+        .map(|(i, marker)| {
+            let dx = marker.x - player.x;
+            let dy = marker.y - player.y;
+            let dz = marker.z - player.z;
+            (i, ((dx * dx + dy * dy + dz * dz) as f64).sqrt())
+        })
+        .collect();
+    markers.sort_by(|a, b| a.1.total_cmp(&b.1));
+    markers
+}
+
+/// The selected marker's index into `quest_markers`, if a marker is selected.
+pub(crate) fn selected_marker(app: &App) -> Option<usize> {
+    let row = app.panels.global_map.selected_marker_index.checked_sub(1)?;
+    markers_by_distance(app).get(row).map(|&(i, _)| i)
+}
+
+/// Split text into lines of at most `width` characters, breaking between words.
+fn wrap_words(text: &str, width: usize) -> Vec<String> {
+    let mut lines: Vec<String> = Vec::new();
+    for word in text.split_whitespace() {
+        match lines.last_mut() {
+            Some(line) if line.chars().count() + 1 + word.chars().count() <= width => {
+                line.push(' ');
+                line.push_str(word);
+            }
+            _ => lines.push(word.to_string()),
+        }
+    }
+    lines
+}
+
+/// The "delete this marker?" prompt over the Global Map.
+pub(crate) fn render_delete_prompt(f: &mut Frame, app: &App) {
+    let Some(marker) = app
+        .panels
+        .global_map
+        .confirm_delete
+        .and_then(|i| app.core.game.res.quest_markers.get(i))
+    else {
+        return;
+    };
+    let key = |a| {
+        app.core
+            .config_manager
+            .get_printable_key_for_keybind("global_map", a)
+    };
+    let lines = vec![
+        Line::from(format!(
+            "Delete the marker for {} at ({}, {}, {})?",
+            marker.name, marker.x, marker.y, marker.z
+        )),
+        Line::from("Its items stay there."),
+        Line::from(""),
+        Line::from(format!(
+            "[{}] Yes    [{}] No",
+            key("CONFIRM_DELETE"),
+            key("CANCEL_DELETE")
+        )),
+    ];
+    let area = crate::ui::centered_rect(50, 30, f.size());
+    let area = Rect {
+        height: area.height.min(lines.len() as u16 + 2),
+        ..area
+    };
+    f.render_widget(ratatui::widgets::Clear, area);
+    app.ui
+        .click_targets
+        .push(area, crate::ui::click_targets::ClickTarget::ModalArea);
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .title(" Are you sure? ")
+        .title_alignment(Alignment::Center)
+        .style(Style::default().fg(Color::White));
+    f.render_widget(
+        Paragraph::new(lines)
+            .alignment(Alignment::Center)
+            .wrap(ratatui::widgets::Wrap { trim: true })
+            .block(block),
+        area,
+    );
 }
 
 /// Generate all points on a line using Bresenham's algorithm

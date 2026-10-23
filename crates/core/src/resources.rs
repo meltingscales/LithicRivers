@@ -45,6 +45,8 @@ pub enum QuestMarkerType {
     FetchQuest,
     Location,
     Treasure,
+    /// Where the player's old body lies; it goes away once the wreck is empty
+    Death,
 }
 
 /// What kind of world is generated. Everything but Normal is a debug world, offered on the

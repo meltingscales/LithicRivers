@@ -18,13 +18,13 @@ input_file: scripts/snapshots/player-death.txt
 ###########vvvvvvvvvvv│                                                      │ 7 8 9               │
 ###########vvvvvvvvvvv│    Your body was destroyed: self-destruct command.   │ 4 5 6               │
 ############vvvvvvvvvv│  It lies where it fell, with everything you carried. │ 1 2 3               │
-############vvvvvvvvvv│                                                      │: mine               │
-#############vvvvvvvvv│                Respawn at the bunker                 │: look               │
-##############vvvvvvvv│               Save and quit to title                 │: build mode         │
-###############vvvvvvv│                                                      │: loot corpse        │
+############vvvvvvvvvv│              The Global Map marks where.             │: mine               │
+#############vvvvvvvvv│                                                      │: look               │
+##############vvvvvvvv│                Respawn at the bunker                 │: build mode         │
+###############vvvvvvv│               Save and quit to title                 │: loot corpse        │
 ###############vvvvvvv│                                                      │                     │
-################vvvvvv└─────────────────── ENTER: choose ────────────────────┘─────────────────────┘
-┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
+################vvvvvv│                                                      │─────────────────────┘
+┌Messages─────────────└─────────────────── ENTER: choose ────────────────────┘─────────────────────┐
 │[0] Player moved to bunker spawn at (11, 11, -19)                                                 │
 │[0] Loading structure 'sapiencorp-factory.lrstructure' at (200, 1609, 1) for chunk (3, 25, 1)     │
 │[0] Quest marker added: SapienCorp Factory                                                        │

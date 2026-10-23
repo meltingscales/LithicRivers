@@ -32,6 +32,7 @@ pub(crate) fn render_death_screen(f: &mut Frame, app: &App) {
         Line::from(""),
         Line::from(format!("Your body was destroyed: {cause}.")),
         Line::from("It lies where it fell, with everything you carried."),
+        Line::from("The Global Map marks where."),
         Line::from(""),
     ];
     for (i, choice) in CHOICES.iter().enumerate() {
@@ -67,9 +68,9 @@ pub(crate) fn render_death_screen(f: &mut Frame, app: &App) {
             .block(block),
         area,
     );
-    // The choices' rows, after the four lines above them and the title
+    // The choices' rows, after the six lines above them
     let inner = inset(area);
-    let first_row = inner.y + 5 + extra_wrapped_rows(&cause, inner.width);
+    let first_row = inner.y + 6 + extra_wrapped_rows(&cause, inner.width);
     let rows = Rect {
         y: first_row,
         height: CHOICES.len() as u16,

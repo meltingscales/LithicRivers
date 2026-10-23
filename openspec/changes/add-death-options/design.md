@@ -14,9 +14,12 @@
 ## Decisions
 
 ### Markers
-- A death marker is a `QuestMarker` with `QuestMarkerType::Death`, named "Wreck 1", "Wreck 2"... in order of death.
-- **Removal:** each tick in the interaction phase (cheap: one check per marker), a death marker whose wreck no longer exists, or is empty, is removed.
-- **Deleting by hand** asks first, and only removes the marker: the wreck and its items stay.
+- A death marker is a `QuestMarker` with `QuestMarkerType::Death`, named "Wreck 1", "Wreck 2"... in order of death (`PlayerState.deaths`, saved).
+- **Description:** "Cause: <cause>. Holds Nail x10, Log x3, Torch x3, 5 more." — the three biggest stacks, so the player knows what is worth going back for. The Global Map shows the selected marker's description under it.
+- **World view:** the wreck's sprite already marks the spot, so there is no extra blinking `X`. The Global Map draws death markers as `X`.
+- **Removal:** after each tick's systems (`death::prune_death_markers`, which returns at once without death markers), a death marker with no non-empty wreck at its position is removed.
+- **Deleting by hand:** on the Global Map, `global_map.DELETE_MARKER` (`x`) on a selected death marker opens an "Are you sure?" prompt; `global_map.CONFIRM_DELETE` (`y`) deletes and `global_map.CANCEL_DELETE` (`n`, Escape) keeps it. The prompt takes every key until answered. Only the marker goes: the wreck and its items stay. Other markers can't be deleted.
+- **Marker order:** the markers list is sorted by distance; the selection, the arrow and deleting all use that same order (`markers_by_distance`).
 
 ### Keep options
 - `keep_inventory`: `player_died` leaves the slots on the player. The wreck still spawns, empty, so the marker and the place of death read the same.

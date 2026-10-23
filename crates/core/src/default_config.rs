@@ -109,6 +109,11 @@ pub fn default_config() -> ConfigRoot {
             "DELETE_CHAR": ["BACKSPACE"], // While renaming: erase a character
             "END_RENAME": ["ENTER"]       // While renaming: keep the new name
         },
+        "global_map": {
+            "DELETE_MARKER": ["x"],              // Global Map: delete the selected wreck marker
+            "CONFIRM_DELETE": ["y"],             // Delete marker prompt: yes
+            "CANCEL_DELETE": ["n", "ESCAPE"]     // Delete marker prompt: no
+        },
         "dictionary": {
             "SEARCH": ["s"],              // Item Dictionary: start typing a search
             "DELETE_CHAR": ["BACKSPACE"], // While searching: erase a character

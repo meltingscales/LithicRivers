@@ -56,6 +56,7 @@ mod tests {
     use crate::headless::Runner;
     use crate::ui::click_targets::ClickTarget;
     use lithicrivers_core::components::{Inventory, ItemKind, Position, Wreck};
+    use lithicrivers_core::resources::QuestMarkerType;
 
     fn dead() -> Runner {
         let mut runner = Runner::new(12345, (100, 30));
@@ -112,6 +113,46 @@ mod tests {
         runner.chain(&["cheat tp 1 0 0", "key action.INTERACT"]);
         runner.chain(&["key ui.TAKE_ALL"]);
         assert_eq!(held(&runner, ItemKind::Chest), 2);
+    }
+
+    #[test]
+    fn deleting_the_wreck_marker_keeps_the_wreck_and_looting_it_removes_the_marker() {
+        let wreck_markers = |runner: &Runner| {
+            runner
+                .app
+                .core
+                .game
+                .res
+                .quest_markers
+                .iter()
+                .filter(|m| m.marker_type == QuestMarkerType::Death)
+                .count()
+        };
+        let mut runner = dead();
+        runner.chain(&["key ui.MENU_ACTIVATE"]);
+        assert_eq!(wreck_markers(&runner), 1);
+
+        // Looting it empty takes the marker away
+        runner.chain(&["cheat tp 1 0 0", "key action.INTERACT", "key ui.TAKE_ALL"]);
+        runner.chain(&["key ui.CLOSE_HELP_MENU", "key movement.WAIT"]);
+        assert_eq!(wreck_markers(&runner), 0);
+
+        // A second death, whose marker is deleted by hand
+        runner.chain(&["cheat kill_player", "key ui.MENU_ACTIVATE", "key ui.MENU_NEXT 2"]);
+        runner.chain(&["rawkey DOWN", "rawkey DOWN", "expect-text \"Wreck 2\""]);
+        runner.chain(&["key global_map.DELETE_MARKER", "key global_map.CONFIRM_DELETE"]);
+        assert_eq!(wreck_markers(&runner), 0);
+        let wreck_items: u32 = runner
+            .app
+            .core
+            .game
+            .world
+            .query::<&Inventory>()
+            .with::<&Wreck>()
+            .iter()
+            .map(|(_, inv)| inv.slots.iter().map(|s| s.qty).sum::<u32>())
+            .sum();
+        assert!(wreck_items > 0, "the wreck keeps its items");
     }
 
     #[test]
