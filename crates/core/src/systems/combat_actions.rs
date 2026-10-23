@@ -505,6 +505,9 @@ fn apply_damage(
                     target_entity,
                     format!("destroyed by {source}"),
                 );
+            } else {
+                // Drop the creature's loot and remove its body
+                handle_entity_death(world, res, target_entity);
             }
         }
         Ok(DamageResult::BodyPartDamaged {
@@ -683,6 +686,25 @@ pub fn end_combat_for_nearby_enemies(world: &mut World, center_pos: Position) {
     for entity in entities_to_update {
         if let Ok(mut combat) = world.get::<&mut Combat>(entity) {
             combat.triggered = false;
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::test_support::TestWorld;
+
+    #[test]
+    fn a_creature_killed_in_combat_is_removed() {
+        let mut world = TestWorld::new(3);
+        let slime = world.nuclear_slime(1, 0, 0);
+        let dog = world.feral_dog(-1, 0, 0);
+        let mut game = world.build();
+        for handle in [slime, dog] {
+            let entity = game.entity(handle);
+            apply_damage(&mut game.game.world, &mut game.game.res, entity, 10_000, "a test");
+            assert!(!game.game.world.contains(entity));
         }
     }
 }
