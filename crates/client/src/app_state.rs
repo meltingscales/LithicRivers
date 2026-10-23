@@ -101,11 +101,13 @@ impl CombatUiState {
     }
 }
 
-/// A furnace's window: its three slots on the left, the player's items on the right.
+/// A furnace's window: its slots on the left, the player's items on the right.
 /// Storing puts the selected player item into the selected slot.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct FurnaceWindow {
     pub entity: hecs::Entity,
+    /// Crude or electric: which slots it has
+    pub kind: lithicrivers_core::factory::FactoryKind,
     pub slot: lithicrivers_core::furnace::Slot,
     pub player_item: usize,
     /// Whether the player's items have the focus (otherwise the slots do)
@@ -477,6 +479,7 @@ pub enum InteractionType {
     OpenFurnace {
         entity: hecs::Entity,
         position: Position,
+        kind: lithicrivers_core::factory::FactoryKind,
     },
     /// Show a power pole's network
     InspectPole {
@@ -533,7 +536,7 @@ impl InteractionType {
             InteractionType::OpenChest { .. } => "Open chest".to_string(),
             InteractionType::OpenGenerator { .. } => "Fuel generator".to_string(),
             InteractionType::OpenMachine { kind, .. } => format!("Open {}", kind.name()),
-            InteractionType::OpenFurnace { .. } => "Open crude furnace".to_string(),
+            InteractionType::OpenFurnace { kind, .. } => format!("Open {}", kind.name()),
             InteractionType::SetFilter { kind, .. } => format!("Set {} filter", kind.name()),
             InteractionType::InspectPole { .. } => "Inspect power pole".to_string(),
             InteractionType::LoadBelt { item, .. } => format!(

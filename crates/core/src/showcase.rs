@@ -62,6 +62,12 @@ pub const EXAMPLES: &[Example] = &[
         has_input: true,
         build: lift_up_and_down,
     },
+    Example {
+        name: "Powered electric furnace, chest to chest",
+        size: (11, 2),
+        has_input: true,
+        build: electric_furnace_line,
+    },
 ];
 
 /// The top-left corner of the first example; the rest follow eastward.
@@ -222,6 +228,38 @@ fn belt_fed_furnace(game: &mut Game, o: Position) {
             SpriteRef::new("items", "log"),
         ));
     }
+}
+
+/// A chest of logs, an extractor pulling them onto a long belt into an electric furnace's
+/// back, and its biochar riding another long belt into a chest. A generator burning biochar
+/// and a pole power the furnace.
+///
+/// ```text
+///   . . G . + . . . . . .      G generator, + pole
+///   C > = = = E = = = = C      E electric furnace facing east
+/// ```
+fn electric_furnace_line(game: &mut Game, o: Position) {
+    let generator = place(
+        game,
+        FactoryKind::BurnerGenerator,
+        at(o, 2, 0),
+        Facing::North,
+    );
+    fill(game, generator, &[(ItemKind::Biochar, 4)]);
+    place(game, FactoryKind::PowerPole, at(o, 4, 0), Facing::North);
+    let source = place(game, FactoryKind::Chest, at(o, 0, 1), Facing::North);
+    fill(game, source, &[(ItemKind::Log, 40)]);
+    place(game, FactoryKind::Extractor, at(o, 1, 1), Facing::East);
+    for dx in [2, 3, 4, 6, 7, 8, 9] {
+        place(game, FactoryKind::Belt, at(o, dx, 1), Facing::East);
+    }
+    place(
+        game,
+        FactoryKind::ElectricFurnace,
+        at(o, 5, 1),
+        Facing::East,
+    );
+    place(game, FactoryKind::Chest, at(o, 10, 1), Facing::North);
 }
 
 /// A chest of logs, an extractor pulling them onto two belts, and a chest at the end.

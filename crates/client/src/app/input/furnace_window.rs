@@ -15,7 +15,10 @@ pub fn handle_furnace_window_input(app: &mut App, key: KeyCode) -> bool {
     let keys = &app.ui.keybinds;
     if keys.matches("ui", "CLOSE_HELP_MENU", &key) {
         app.panels.furnace_window = None;
-        app.core.game.res.log("Closed crude furnace");
+        app.core
+            .game
+            .res
+            .log(format!("Closed {}", window.kind.name()));
         return true;
     }
     let Some(player) = app.core.game.get_player_entity() else {
@@ -27,7 +30,8 @@ pub fn handle_furnace_window_input(app: &mut App, key: KeyCode) -> bool {
         window.slot,
     )
     .len();
-    let slot_index = Slot::ALL
+    let slots = Slot::for_kind(window.kind);
+    let slot_index = slots
         .iter()
         .position(|&s| s == window.slot)
         .unwrap_or(0);
@@ -37,13 +41,13 @@ pub fn handle_furnace_window_input(app: &mut App, key: KeyCode) -> bool {
         if window.player_focus {
             window.player_item = window.player_item.saturating_sub(1);
         } else {
-            window.slot = Slot::ALL[slot_index.saturating_sub(1)];
+            window.slot = slots[slot_index.saturating_sub(1)];
         }
     } else if keys.matches("movement", "MOVE_SOUTH", &key) {
         if window.player_focus {
             window.player_item = (window.player_item + 1).min(player_items.saturating_sub(1));
         } else {
-            window.slot = Slot::ALL[(slot_index + 1).min(Slot::ALL.len() - 1)];
+            window.slot = slots[(slot_index + 1).min(slots.len() - 1)];
         }
     } else if keys.matches("ui", "MENU_ACTIVATE", &key) || key == KeyCode::Enter {
         transfer(app, &window, player);

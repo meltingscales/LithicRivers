@@ -2,7 +2,7 @@
 source: crates/client/src/app/demo.rs
 expression: "String::from_utf8(out).unwrap()"
 ---
-=== screen 27 ===
+=== screen 66 ===
                                             LithicRivers
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌MODES─────────────────┐
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  ------ - - -- - FOG │
@@ -10,25 +10,25 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└�
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Inventory─────────────┐
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Nail x10              │
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Acorn x1              │
-Cvvv>>>>CvvvC→>>CvvvvvCvvvvvvvvvvvvvGτvvvvvvvv>▲>Cvvvvvvvvvvvvvvvvvvvvvvvvvv│Log x3                │
-vvvvvvvvvvvvvvvvvvvvvv^vvvvv>>F>CvvvG+vvvvvvvv/vvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
-vvvvvvvvvvvvvvvvvvvv>>╬>Cvvvvvvvvvvvvvvpvv,vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Help (h)──────────────┐
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv@↑vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Move:                 │
-vvvvvvvvvvvvvvvvvvvvvvCvvvvvvvvvvvvvvvvCHvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  7 8 9               │
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  4 5 6               │
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvtvvttvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  1 2 3               │
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│q: mine               │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Log x3                │
+vvCvvvvvvvvvvvvvGττττvvvvv>▲>CvvvvvGv+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
+vv^vvvvv>>f>CvvvG+vvvvvvvv/vvvvvvC→|>>E>>>>Cvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Help (h)──────────────┐
+>>╬>Cvvvvvvvvvvvvvvpvv,vvvvvvvvvvvvvvv@vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Move:                 │
+vvvvvvvvvvvvvvvvvvv↑vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  7 8 9               │
+vvCvvvvvvvvvvvvvvvvCHvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  4 5 6               │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  1 2 3               │
+vvvvvvvvvvvvvvvvvv,vv,tvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│q: mine               │
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│v: look               │
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│`: build mode         │
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│f: open chest         │
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│f: set filter         │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│f: open furnace       │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│f: Nail on belt       │
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
 ┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
-│[1001] Time passes...                                                                             │
-│[1001] Choose interaction:                                                                        │
-│[1001] Opened crude furnace                                                                       │
 │[1001] Closed crude furnace                                                                       │
 │[1001] Choose interaction:                                                                        │
+│[1801] Choose interaction:                                                                        │
+│[1801] Opened electric furnace                                                                    │
+│[2101] Closed electric furnace                                                                    │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
 │ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│

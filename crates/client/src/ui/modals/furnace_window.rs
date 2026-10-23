@@ -1,11 +1,12 @@
-//! The furnace window: fuel, input and output slots with smelting progress and fuel energy,
-//! next to the player's items.
+//! The furnace window: its slots (fuel, for a crude furnace), input and output, with smelting
+//! progress and fuel energy or power, next to the player's items.
 
 use crate::ui::centered_rect;
 use crate::App;
 use lithicrivers_core::components::{itemkind_name, Inventory};
 use lithicrivers_core::factory::FactoryBlock;
-use lithicrivers_core::furnace::{Furnace, Slot};
+use lithicrivers_core::furnace::{self, Furnace, Slot};
+use lithicrivers_core::power::PowerConsumer;
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout},
     style::{Color, Modifier, Style},
@@ -41,14 +42,14 @@ pub(crate) fn render_furnace_window(f: &mut Frame, app: &App) {
     let facing = world
         .get::<&FactoryBlock>(window.entity)
         .map_or("north", |b| b.facing.name());
+    let electric = furnace::is_electric(window.kind);
     let status = match furnace.ready_recipe() {
-        Some(recipe) if furnace.lit => format!(
-            "smelting {}%",
-            furnace.progress * 100 / recipe.steps().max(1)
-        ),
+        Some(_) if furnace.lit => format!("smelting {}%", furnace.progress_percent()),
+        Some(_) if electric => "no power".to_string(),
         Some(_) => "out of fuel".to_string(),
         None => "idle".to_string(),
     };
+    let slots = Slot::for_kind(window.kind);
     // Only what the selected slot takes
     let player = app.core.game.get_player_entity();
     let rows = player
@@ -64,7 +65,7 @@ pub(crate) fn render_furnace_window(f: &mut Frame, app: &App) {
         .map(|s| format!("{:>2} x {}", s.qty, itemkind_name(s.kind)))
         .collect();
     let player_title = rows.map_or_else(|| " Your Items ".to_string(), |r| r.title());
-    let slot_rows: Vec<String> = Slot::ALL
+    let slot_rows: Vec<String> = slots
         .iter()
         .map(|&slot| {
             let contents = furnace.slot(slot).map_or("(empty)".to_string(), |s| {
@@ -78,7 +79,10 @@ pub(crate) fn render_furnace_window(f: &mut Frame, app: &App) {
     f.render_widget(Clear, area);
     let outer = Block::default()
         .borders(Borders::ALL)
-        .title(format!(" Crude Furnace facing {facing} - {status} "))
+        .title(format!(
+            " {} facing {facing} - {status} ",
+            window.kind.item().map_or("Furnace", itemkind_name)
+        ))
         .title_alignment(Alignment::Center);
     let inner = outer.inner(area);
     f.render_widget(outer, area);
@@ -94,13 +98,20 @@ pub(crate) fn render_furnace_window(f: &mut Frame, app: &App) {
         .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
         .split(rows[0]);
 
-    let slot_index = Slot::ALL
+    let slot_index = slots
         .iter()
         .position(|&s| s == window.slot)
         .unwrap_or(0);
     let mut slot_state = ListState::default();
     slot_state.select(Some(slot_index));
-    let slots_title = format!(" Slots - {} kJ of fuel ", furnace.energy_left_j() / 1000);
+    let slots_title = if electric {
+        let power = world
+            .get::<&PowerConsumer>(window.entity)
+            .map_or(0, |c| c.satisfaction_permille / 10);
+        format!(" Slots - power {power}% ")
+    } else {
+        format!(" Slots - {} kJ of fuel ", furnace.energy_left_j() / 1000)
+    };
     f.render_stateful_widget(
         list(slots_title, slot_rows, !window.player_focus),
         columns[0],
@@ -110,7 +121,7 @@ pub(crate) fn render_furnace_window(f: &mut Frame, app: &App) {
     app.ui.click_targets.rows(
         crate::ui::click_targets::inset(columns[0]),
         first,
-        Slot::ALL.len().saturating_sub(first),
+        slots.len().saturating_sub(first),
         crate::ui::click_targets::ClickTarget::FurnaceSlot,
     );
     let player_count = player_items.len();

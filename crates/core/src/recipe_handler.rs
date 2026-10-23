@@ -138,6 +138,17 @@ impl RecipeHandler {
                 result: ItemKind::CrudeFurnace,
                 quantity: 1,
             },
+            // Electric furnace: 1x crude furnace + 4x iron scrap + 4x scrap electronics
+            Recipe {
+                name: "Electric Furnace",
+                ingredients: &[
+                    (ItemKind::CrudeFurnace, 1),
+                    (ItemKind::IronScrap, 4),
+                    (ItemKind::ScrapElectronics, 4),
+                ],
+                result: ItemKind::ElectricFurnace,
+                quantity: 1,
+            },
             // Extractor: 2x wooden plank + 1x iron scrap + 2x nail
             Recipe {
                 name: "Extractor",

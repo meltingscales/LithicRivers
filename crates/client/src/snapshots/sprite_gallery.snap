@@ -1,5 +1,5 @@
 ---
-source: crates/client/src/sprite_loader.rs
+source: crates/client/src/bin/../sprite_loader.rs
 expression: loader.gallery()
 ---
 === entities/corpse  #8B4513  The remains of a fallen creature
@@ -656,6 +656,158 @@ f<
   █▓└──┘▓▓█ 
   ▀▀▀▀▀▀▀▀▀ 
             
+=== factory/electric_furnace_lit_east  #9FF2E0  A crude furnace rewired around a salvaged heating coil; it smelts on grid power and hums while it works
+-- 1x
+E
+-- 2x
+E>
+E>
+-- 3x
+[E>
+[E>
+[E>
+-- art 0
+  ╥    ╥    
+ █▓▓▓▓▓▓█▄  
+ █▓▓▓▓▓▓▓█▄ 
+═█▓┌──┐▓▓█► 
+═█▓│**│▓▓█► 
+ █▓└──┘▓▓█  
+ ▀▀▀▀▀▀▀▀▀  
+            
+=== factory/electric_furnace_lit_north  #9FF2E0  A crude furnace rewired around a salvaged heating coil; it smelts on grid power and hums while it works
+-- 1x
+E
+-- 2x
+E^
+E^
+-- 3x
+[E^
+[E^
+[E^
+-- art 0
+     ▲▲     
+  ╥▄▄██▄▄╥  
+ █▓┌────┐▓█ 
+ █▓│****│▓█ 
+ █▓└────┘▓█ 
+ █▓▓▓▓▓▓▓▓█ 
+ ▀▀▀▀▀▀▀▀▀▀ 
+     ║║     
+=== factory/electric_furnace_lit_south  #9FF2E0  A crude furnace rewired around a salvaged heating coil; it smelts on grid power and hums while it works
+-- 1x
+E
+-- 2x
+Ev
+Ev
+-- 3x
+[Ev
+[Ev
+[Ev
+-- art 0
+     ║║     
+  ╥▄▄▄▄▄▄╥  
+ █▓▓▓▓▓▓▓▓█ 
+ █▓┌────┐▓█ 
+ █▓│****│▓█ 
+ █▓└────┘▓█ 
+ ▀▀▀▀██▀▀▀▀ 
+     ▼▼     
+=== factory/electric_furnace_lit_west  #9FF2E0  A crude furnace rewired around a salvaged heating coil; it smelts on grid power and hums while it works
+-- 1x
+E
+-- 2x
+E<
+E<
+-- 3x
+[E<
+[E<
+[E<
+-- art 0
+    ╥    ╥  
+  ▄█▓▓▓▓▓▓█ 
+ ▄█▓▓▓▓▓▓▓█ 
+ ◄█▓▓┌──┐▓█═
+ ◄█▓▓│**│▓█═
+  █▓▓└──┘▓█ 
+  ▀▀▀▀▀▀▀▀▀ 
+            
+=== factory/electric_furnace_unlit_east  #4A8C7E  A crude furnace rewired around a salvaged heating coil; it smelts on grid power and hums while it works
+-- 1x
+e
+-- 2x
+e>
+e>
+-- 3x
+[e>
+[e>
+[e>
+-- art 0
+  ╥    ╥    
+ █▓▓▓▓▓▓█▄  
+ █▓▓▓▓▓▓▓█▄ 
+═█▓┌──┐▓▓█► 
+═█▓│≈≈│▓▓█► 
+ █▓└──┘▓▓█  
+ ▀▀▀▀▀▀▀▀▀  
+            
+=== factory/electric_furnace_unlit_north  #4A8C7E  A crude furnace rewired around a salvaged heating coil; it smelts on grid power and hums while it works
+-- 1x
+e
+-- 2x
+e^
+e^
+-- 3x
+[e^
+[e^
+[e^
+-- art 0
+     ▲▲     
+  ╥▄▄██▄▄╥  
+ █▓┌────┐▓█ 
+ █▓│≈≈≈≈│▓█ 
+ █▓└────┘▓█ 
+ █▓▓▓▓▓▓▓▓█ 
+ ▀▀▀▀▀▀▀▀▀▀ 
+     ║║     
+=== factory/electric_furnace_unlit_south  #4A8C7E  A crude furnace rewired around a salvaged heating coil; it smelts on grid power and hums while it works
+-- 1x
+e
+-- 2x
+ev
+ev
+-- 3x
+[ev
+[ev
+[ev
+-- art 0
+     ║║     
+  ╥▄▄▄▄▄▄╥  
+ █▓▓▓▓▓▓▓▓█ 
+ █▓┌────┐▓█ 
+ █▓│≈≈≈≈│▓█ 
+ █▓└────┘▓█ 
+ ▀▀▀▀██▀▀▀▀ 
+     ▼▼     
+=== factory/electric_furnace_unlit_west  #4A8C7E  A crude furnace rewired around a salvaged heating coil; it smelts on grid power and hums while it works
+-- 1x
+e
+-- 2x
+e<
+e<
+-- 3x
+[e<
+[e<
+[e<
+-- art 0
+    ╥    ╥  
+  ▄█▓▓▓▓▓▓█ 
+ ▄█▓▓▓▓▓▓▓█ 
+ ◄█▓▓┌──┐▓█═
+ ◄█▓▓│≈≈│▓█═
+  █▓▓└──┘▓█ 
+  ▀▀▀▀▀▀▀▀▀ 
+            
 === factory/extractor_east  #D4A017  A salvaged grabber arm: pulls one item a second from behind and drops it ahead
 -- 1x
 →
@@ -1130,6 +1282,25 @@ ddd
    ╲  ╳  ╱  
     ╲ │ ╱   
      ╲│╱    
+            
+=== items/electric_furnace  #4A8C7E  A heating coil caged in an old furnace shell; it smelts on grid power instead of fuel
+-- 1x
+e
+-- 2x
+ee
+ee
+-- 3x
+[e]
+eEe
+[e]
+-- art 0
+            
+  ╥▄▄▄▄▄▄╥  
+ █▓▓▓▓▓▓▓▓█ 
+ █▓┌────┐▓█ 
+ █▓│≈≈≈≈│▓█ 
+ █▓└────┘▓█ 
+ ▀▀▀▀▀▀▀▀▀▀ 
             
 === items/extractor  #D4A017  A salvaged grabber arm: pulls one item a second from behind and drops it ahead
 -- 1x

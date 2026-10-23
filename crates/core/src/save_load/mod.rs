@@ -520,6 +520,10 @@ mod tests {
                 crate::factory::FactoryKind::VerticalConveyorUp,
                 Position { x: 10, y: -4, z: 0 },
             ),
+            (
+                crate::factory::FactoryKind::ElectricFurnace,
+                Position { x: 11, y: -4, z: 0 },
+            ),
         ] {
             crate::factory::place(
                 &mut fight.game.world,

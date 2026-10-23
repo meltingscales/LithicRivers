@@ -1,6 +1,8 @@
 # The factory showcase
 # A debug world of working builds: the robot rides a conveyor past an extractor line and a
-# belt router, then opens a lit crude furnace and a filter extractor's filter.
+# belt router, opens a lit crude furnace and a filter extractor's filter, then watches logs
+# ride a long belt from a chest into a powered electric furnace and biochar ride out to
+# another chest.
 world factory-showcase
 key ui.MENU_PREV
 beat 300
@@ -22,4 +24,41 @@ key movement.MOVE_SOUTH
 key ui.MENU_ACTIVATE
 wait 2500
 key ui.CLOSE_HELP_MENU
+# The electric furnace line: chest, extractor, long belts, furnace, long belts, chest.
+# Half a game second a beat, so each log and biochar steps one tile at a time.
+cheat tp 46 -5 0
+tick 50
+tick 50
+tick 50
+tick 50
+tick 50
+tick 50
+tick 50
+tick 50
+tick 50
+tick 50
+tick 50
+tick 50
+tick 50
+tick 50
+tick 50
+tick 50
+# Choices: Open electric furnace (N), then the belts beside it
+key action.INTERACT
+key ui.MENU_ACTIVATE
+tick 50
+tick 50
+tick 50
+tick 50
+tick 50
+tick 50
+key ui.CLOSE_HELP_MENU
+tick 50
+tick 50
+tick 50
+tick 50
+tick 50
+tick 50
+tick 50
+tick 50
 screen
