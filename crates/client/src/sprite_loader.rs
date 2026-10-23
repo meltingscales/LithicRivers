@@ -494,6 +494,59 @@ mod art_tests {
         );
     }
 
+    /// Every sprite a placed block can show: each tile, or each factory kind the item
+    /// places or breaks back into, at every facing, lit and unlit.
+    fn block_sprites(item: lithicrivers_core::components::ItemKind) -> Vec<(String, String)> {
+        use lithicrivers_core::factory::{Facing, FactoryKind};
+        use lithicrivers_core::tiles::TileKind;
+        use strum::IntoEnumIterator;
+        let mut refs = Vec::new();
+        if let Some(tile) = TileKind::from_item_kind(item) {
+            refs.push(("tiles".to_string(), tile.sprite_key().to_string()));
+        }
+        for kind in FactoryKind::iter().filter(|k| k.item() == Some(item)) {
+            for facing in [Facing::North, Facing::East, Facing::South, Facing::West] {
+                let mut sprites = vec![kind.sprite(facing)];
+                if matches!(kind, FactoryKind::CrudeFurnace | FactoryKind::ElectricFurnace) {
+                    sprites.push(lithicrivers_core::furnace::sprite(kind, facing, true));
+                }
+                refs.extend(sprites.into_iter().map(|s| (s.category, s.name)));
+            }
+        }
+        refs.sort();
+        refs.dedup();
+        refs
+    }
+
+    /// A placed block and the same item lying on the ground must never look the same on the
+    /// map: their 1x glyphs or colors differ (docs/ART-DIRECTION.md).
+    #[test]
+    fn blocks_and_dropped_items_look_different() {
+        use lithicrivers_core::components::itemkind_sprite_name;
+        let mut loader = SpriteLoader::new(None);
+        let mut alike = Vec::new();
+        for item in lithicrivers_core::crafting::placeable_items() {
+            let dropped = loader
+                .load_sprite(itemkind_sprite_name(item), "items")
+                .clone();
+            for (category, name) in block_sprites(item) {
+                let block = loader.load_sprite(&name, &category);
+                if block.sprites.first() == dropped.sprites.first() && block.color == dropped.color
+                {
+                    alike.push(format!(
+                        "items/{} and {category}/{name}",
+                        itemkind_sprite_name(item)
+                    ));
+                }
+            }
+        }
+        assert!(
+            alike.is_empty(),
+            "dropped items look like their placed blocks: {}",
+            alike.join(", ")
+        );
+    }
+
     #[test]
     fn placeholder_detection() {
         assert!(is_placeholder_art("xxxxxxxxxxxx\nxxxxCHARxxxx"));

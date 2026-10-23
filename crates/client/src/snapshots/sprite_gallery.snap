@@ -1150,7 +1150,7 @@ hHh
   ▀████▀  \/
             
             
-=== items/auto_planter  #6AA84F  Plants acorns on free grass and dirt within 2 tiles
+=== items/auto_planter  #4F7E3B  Plants acorns on free grass and dirt within 2 tiles
 -- 1x
 p
 -- 2x
@@ -1169,7 +1169,7 @@ pPp
  ▀▀▀▀▀▀▀▀▀▀ 
             
             
-=== items/belt_router  #9C6B30  A wooden junction that deals items left, straight and right in turn
+=== items/belt_router  #755024  A wooden junction that deals items left, straight and right in turn
 -- 1x
 ╬
 -- 2x
@@ -1207,7 +1207,7 @@ pPp
     ▀▀▀  ·  
             
             
-=== items/burner_generator  #C0392B  Burns logs, planks, sticks and shavings to power its network
+=== items/burner_generator  #902A20  Burns logs, planks, sticks and shavings to power its network
 -- 1x
 G
 -- 2x
@@ -1226,7 +1226,7 @@ GG
  ▀▀▀▀▀▀▀▀▀▀ 
             
             
-=== items/chest  #C68E3F  A wooden chest; place it to store items
+=== items/chest  #946A2F  A wooden chest; place it to store items
 -- 1x
 C
 -- 2x
@@ -1245,7 +1245,7 @@ C
  ▀▀▀▀▀▀▀▀▀▀ 
             
             
-=== items/crude_furnace  #8E6E53  Burns fuel to smelt wood into biochar
+=== items/crude_furnace  #6A523E  Burns fuel to smelt wood into biochar
 -- 1x
 f
 -- 2x
@@ -1283,7 +1283,7 @@ ddd
     ╲ │ ╱   
      ╲│╱    
             
-=== items/electric_furnace  #4A8C7E  A heating coil caged in an old furnace shell; it smelts on grid power instead of fuel
+=== items/electric_furnace  #37695E  A heating coil caged in an old furnace shell; it smelts on grid power instead of fuel
 -- 1x
 e
 -- 2x
@@ -1302,7 +1302,7 @@ eEe
  █▓└────┘▓█ 
  ▀▀▀▀▀▀▀▀▀▀ 
             
-=== items/extractor  #D4A017  A salvaged grabber arm: pulls one item a second from behind and drops it ahead
+=== items/extractor  #9F7811  A salvaged grabber arm: pulls one item a second from behind and drops it ahead
 -- 1x
 →
 -- 2x
@@ -1321,7 +1321,7 @@ eEe
   └──┘      
             
             
-=== items/filter_extractor  #4FC3F7  A grabber arm with a sorting eye: moves only the item it's set to
+=== items/filter_extractor  #3B92B9  A grabber arm with a sorting eye: moves only the item it's set to
 -- 1x
 →
 -- 2x
@@ -1516,7 +1516,7 @@ ppp
      ▀▀  /  
             
             
-=== items/power_pole  #E5B53A  Links to poles within 8 tiles and powers blocks within 3
+=== items/power_pole  #AB872B  Links to poles within 8 tiles and powers blocks within 3
 -- 1x
 +
 -- 2x

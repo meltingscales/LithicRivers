@@ -1,5 +1,5 @@
 {
     "name": "Burner generator (item)",
-    "color": "#C0392B",
+    "color": "#902A20",
     "description": "Burns logs, planks, sticks and shavings to power its network"
 }
