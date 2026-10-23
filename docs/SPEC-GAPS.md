@@ -23,7 +23,7 @@ To act on one, ask for it by its suggested change name ("propose add-day-night-c
 |---|---|---|---|
 | **More surface biomes:** arboreal, frozen wasteland, lush forest with springs, pools and ruins, nuked city, abandoned mine. `overhaul-worldgen-depth` leaves the surface as it is on purpose. | STEAM-MVP.md (small temp list), TODO.md | Missing | `add-surface-biomes` |
 | **Landmark structures** placed by worldgen, like the Python version's: a crashed ship and an abandoned research station (the abandoned factory exists). | STEAM-MVP.md | Partly | `add-landmark-structures` |
-| **Procedural dungeons v2**, using the TinyKeep layout algorithm in `docs/dungeons/tinybuild-dungeons.md`. | TODO.md, docs/dungeons | Missing | `add-procedural-dungeons` |
+| **Procedural dungeons v2**, using the TinyKeep layout algorithm in `docs/dungeons/tinybuild-dungeons.md` (originally from https://www.gamedeveloper.com/programming/procedural-dungeon-generation-algorithm). | TODO.md, docs/dungeons | Missing | `add-procedural-dungeons` |
 | **Mining bots:** dangerous enemies of the Lithic Rivers depths. | STEAM-MVP.md (core loop) | Missing | `add-mining-bots` |
 | **Structure generation "stretched" across z**, noted as a bug. `overhaul-worldgen-depth` (archived) reworked the bands but did not check it. | STEAM-MVP.md (small temp list) | Bug | `fix-structure-z-stretch` |
 
@@ -45,6 +45,10 @@ To act on one, ask for it by its suggested change name ("propose add-day-night-c
 | **Inventory comfort:** junk rules, auto-dump, and "are you sure" for destructive actions. | TODO.md | Missing | `polish-inventory` |
 | **Auto-harvest and dig modes** for the player: harvest what you walk past, and dig through rock instead of getting stuck when moving between layers. | TODO.md (MVP section) | Missing | `add-movement-modes` |
 | **Explosions and fire.** | TODO.md | Missing | `add-explosions` |
+| **Fights capped at 3 enemies**, Chrono Trigger style, so players don't get swarmed. | TODO.md | Missing | `cap-combat-enemies` |
+| **Dogs drawn to food and organic matter.** | TODO.md (MVP section) | Missing | `add-creature-attraction` |
+| **Crafting ratios:** a view of recipe ratios for spreadsheet-style factory planning, like Factorio's. The missing-materials tracker exists. | TODO.md | Missing | `add-crafting-ratios` |
+| **Variable Z rendering:** show several layers at once for tall buildings. | TODO.md | Missing | `add-layered-view` |
 
 ## Later, or flavor
 
@@ -52,12 +56,16 @@ To act on one, ask for it by its suggested change name ("propose add-day-night-c
 - **NPC tribes** that gather from the world and build machines on their own. *(TODO.md)*
 - **Difficulty templates:** true roguelike, roguelite and custom. *(TODO.md)*
 - **Autosave with crash durability** (a write-ahead log or frequent snapshots). Mostly covered by `add-world-snapshots`; check whether a crash mid-save is covered there. *(TODO.md)*
+- **Branching saves view:** `add-world-snapshots` covers checkpoints; the TODO also wanted a `git log --graph` style view and a first-time hint like "This feels very useful. You can access this memory any time in the XYZ menu." *(TODO.md)*
+- **Minecraft-style saves:** chunks, dimensions, a custom binary format, and multi-threaded loading and saving. *(TODO.md)*
+- **Cybernetics and augments** beyond body parts; `add-nanobot-modules` and `add-multi-arm-bodies` cover some of it. *(TODO.md)*
+- **A `SKIP_INTRO` env var** to skip the boot intro during development. *(TODO.md)*
 - **Relics and techmagic, multiple dimensions (space, the void), space travel.** *(TODO.md)*
 - **Main questlines:** 10 to 20 static questlines with their NPCs, buildings, items and dungeons, and finishing `story.txt`. Puzzles and hazards as challenges along the way. *(TODO.md)*
 - **A stats web portal:** a separate site for game stats, the map, entities and performance. *(TODO.md)*
 - **Gaussian noise for resources** (John's idea): scattered ore deposits, cave entrances, rare artifacts and weather events like acid rain or radiation storms, alongside Perlin noise for terrain. *(TODO.md)*
 - **GPU worldgen** that stays deterministic (fixed-point compute shaders). *(TODO.md)*
-- **Flavor:** procedurally generated catgirls; a nod to hushy and lapfox trax (music, sprites, items or tools); an "armless legless" challenge start. *(TODO.md)*
+- **Flavor:** procedurally generated catgirls; a nod to hushy and lapfox trax (music, sprites, items or tools); an "armless legless" challenge start; portable nukes with no consequences thanks to backup bodies. *(TODO.md)*
 - **Research:** the `gale93/sbixel` repo, and how Dwarf Fortress handles vertical combat. *(TODO.md)*
 
 ## Design notes
@@ -68,6 +76,7 @@ Principles from the old TODO.md, for whoever writes the specs:
 - Everything is craftable, and everything breaks down to raw materials.
 - Automation is heavily rewarded but never required to finish the game.
 - Prototype systems (inventory pages, UI, fights) with paper cutouts before building them.
+- Content goals for release: a core gameplay loop, a progression system, at least a few hours of content, and replayability, leaning on procedural generation.
 
 ## Already done or already covered
 
