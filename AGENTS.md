@@ -142,7 +142,7 @@ Also, if you need to convert a key into a printable version, please use code lik
 
 - This game renders using ASCII text. For how sprites and art should look (Caves of Qud, Metroid and CICADAMATA), follow `docs/ART-DIRECTION.md` when you add or change any sprite, art or item description.
 
-- docs/TODO.md contains a big, unedited list of my long-term goals with this game. By no means do we need to implement all of them. I will likely cut or edit parts of the TODO. I just want to focus on the section called "MVP for steam release (2026)".
+- `docs/STEAM-MVP.md` is the Steam release plan, and `docs/SPEC-GAPS.md` lists my long-term ideas that have no OpenSpec change yet. By no means do we need to implement all of them. I just want to focus on the Steam MVP.
 
 Periodic tasks:
 

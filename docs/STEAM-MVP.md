@@ -205,6 +205,31 @@ first quest and associated dungeons
   - [x] **Colored message system for better user feedback**
   - [x] **Context help panel on the World page (toggle with h)**
 
+## Launch checklist
+Non-code work from the old TODO.md.
+
+- **Steam:** App ID, store page, community hub, trading cards, press kit.
+- **Legal:** terms of service, privacy policy, age rating, tax info.
+- **QA:** bug testing, performance testing, user testing, Steam Deck compatibility.
+- **Price:** about $3.
+
+## Launch outreach
+
+**Steam key giveaway list:**
+- skomor123
+- noahnogueras@gmail.com
+- oglingling
+- college friends
+- miguel from colab
+- Hassan a
+- cam 1
+- cam 2
+- cameron (false)
+- https://steamcommunity.com/id/HoneyBottomFairy/ - lipe rineheart
+
+**Streamers:**
+- caseoh
+
 ## Post-MVP (After Release)
 - [ ] Multiplayer support
 - [ ] Advanced crafting system
