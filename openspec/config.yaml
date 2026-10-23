@@ -6,7 +6,7 @@ context: |
   The game renders ASCII via ratatui. Never run TUI binaries (just client, etc.) to verify; verify with unit tests (cargo test --workspace).
   Use rustup to run cargo; never run cargo clean.
   demo_*.rs files are self-contained demos and out of scope for refactors.
-  Current focus is the "MVP for steam release (2026)" section of docs/TODO.md; docs/STEAM-MVP.md is the high-level roadmap.
+  Current focus is the Steam MVP in docs/STEAM-MVP.md; docs/SPEC-GAPS.md lists ideas that have no change yet.
 
 # Project context (optional)
 # Add only constraints that should guide OpenSpec artifacts and workflows.
