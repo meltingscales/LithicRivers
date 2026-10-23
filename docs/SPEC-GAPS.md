@@ -90,10 +90,10 @@ These came up in the docs but need no new change:
 | Body repair | Implemented (repair modal, `RepairRecipeHandler`) |
 | Branching saves and checkpoints | `add-world-snapshots` |
 | A 3D world explorer | `add-3d-viewer` |
-| Ore spouts, ruined reactors, nuclear tier | `add-ore-spouts`, `add-ruined-reactors`, `add-nuclear-slime` |
+| Ore spouts, ruined reactors, nuclear tier | `add-ore-spouts`, `add-ruined-reactors`, `nuclear-slime` spec |
 | Lithic Rivers depth, caves and deposits | `worldgen-depth` spec |
 | Factorio-style hotbar, building that isn't annoying | `mouse-input`, `blueprints` and the factory specs |
-| Player death, day/night cycle, the arm quest, body damage effects | `add-player-death`, `add-day-night-cycle`, `add-arm-replacement-quest`, `add-body-damage-effects` |
+| Player death, day/night cycle, the arm quest, body damage effects | `player-death` spec, `add-day-night-cycle`, `add-arm-replacement-quest`, `add-body-damage-effects` |
 | Title screen, world list and load game | `title-menu`, `world-saves` |
 | Fluids | `add-ore-spouts` (fluids spec) |
 | Missing-materials tracker | `crafting` spec |

@@ -1,6 +1,6 @@
 # Why OpenSpec instead of one big changelog
 
-A walkthrough using a real feature in this repo: a **nuclear slime** enemy that rarely drops nuclear waste (`openspec/changes/add-nuclear-slime/`). Every command below was run in this repo, and the outputs are copied from it.
+A walkthrough using a real feature in this repo: a **nuclear slime** enemy that rarely drops nuclear waste (now archived at `openspec/changes/archive/2026-10-22-add-nuclear-slime/`). Every command below was run in this repo, and the outputs are copied from it.
 
 ## The problem with a big changelog
 
