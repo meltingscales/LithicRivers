@@ -16,4 +16,4 @@
 
 - [x] 3.1 Slime and nuclear waste sprites; verify a snapshot script of combat with a slime (spawned by cheat)
 - [x] 3.2 Verify `just code-clippy`, `cargo test --workspace` and PR checks pass
-- [ ] 3.3 User check that the slime feels different from a dog
+- [x] 3.3 User check that the slime feels different from a dog

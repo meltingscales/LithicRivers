@@ -14,4 +14,4 @@
 ## 3. Checks
 
 - [x] 3.1 Verify `just code-clippy`, `cargo test --workspace` and PR checks pass
-- [ ] 3.2 User check that dying feels clear
+- [x] 3.2 User check that dying feels clear
