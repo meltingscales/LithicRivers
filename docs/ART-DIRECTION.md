@@ -20,6 +20,7 @@ LithicRivers draws everything in text: a 1x glyph on the map (2x and 3x when zoo
 - **12x8 art:** exactly 12 columns by 8 rows. One centered subject, with negative space around it, no frame, no text labels. The silhouette comes first, then one or two details, then a focal point.
 - **Facings:** factory blocks with a facing get art and small sprites per facing. The output side carries the arrow or the opening.
 - **1x glyphs:** blocks that appear side by side in normal play must differ by glyph or by color: a belt and a harvester, dirt and a sapling, a furnace and a feral dog.
+- **Blocks and dropped items:** a placed block and the same item lying on the ground must never look the same on the map, in any facing or lit state. A subtle difference is enough: by default the item is a darker shade of the block's color (about 75% brightness). `blocks_and_dropped_items_look_different` in `sprite_loader.rs` checks this.
 - **Color:** one hex color per sprite. Lit or active states get their own sprite with a hotter color (`crude_furnace_lit_*`).
 - **Descriptions:** one short sentence, specific and a little weird, in the Caves of Qud way. Say what the thing is or does, and add a hint of history when it fits.
 
