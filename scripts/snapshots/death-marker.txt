@@ -1,0 +1,27 @@
+# Dying marks the wreck on the Global Map, with what destroyed it and what it holds, and
+# the marker can be deleted after a yes/no prompt while the wreck keeps its items.
+seed 12345
+size 100x30
+skip-splash
+cheat tp 0 0 0
+cheat giveitem chest 2
+cheat suicide
+key ui.MENU_ACTIVATE
+expect-text "Backup systems online"
+key ui.MENU_NEXT 2
+expect-text "Wreck 1"
+# The wreck is the second marker from the bunker
+rawkey DOWN
+rawkey DOWN
+expect-text "Cause: self-destruct"
+screen selected
+key global_map.DELETE_MARKER
+expect-text "Are you sure?"
+screen prompt
+# No keeps it
+key global_map.CANCEL_DELETE
+expect-text "Wreck 1"
+key global_map.DELETE_MARKER
+key global_map.CONFIRM_DELETE
+expect-text "Deleted the marker for Wreck 1."
+screen deleted

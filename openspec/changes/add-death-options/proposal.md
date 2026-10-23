@@ -7,9 +7,9 @@
 ## What Changes
 
 - **Death markers:**
-  - Dying adds a marker at the wreck: on the Global Map, and in the world view as a blinking `X`, on the wreck's layer.
+  - Dying adds a marker at the wreck on the Global Map, with a brief description: what destroyed the body and the biggest stacks it holds. In the world view the wreck's own sprite marks the spot.
   - Looting the wreck empty removes its marker.
-  - A marker can also be deleted by hand from the Global Map, after a confirmation ("Delete the marker for your wreck at (12, -40, -3)? Its items stay there.").
+  - A marker can also be deleted by hand from the Global Map, after an "Are you sure?" yes/no prompt ("Delete the marker for Wreck 1 at (12, -40, -3)? Its items stay there.").
   - Several deaths keep several markers, numbered.
 - **`keepinventory on|off` cheat:** while on, dying keeps everything the robot carried. The wreck still appears, empty, as a marker of where it happened.
 - **`keepbody on|off` cheat:** while on, respawning gives the robot back the same limbs it died with, fully repaired. A missing arm stays missing; parts it had are restored to full integrity.

@@ -638,6 +638,9 @@ impl CheatConsoleState {
 #[derive(Default)]
 pub struct GlobalMapPanelState {
     pub selected_marker_index: usize, // Index of currently selected marker (for arrow display)
+    /// The death marker (an index into `quest_markers`) waiting for the player to confirm
+    /// its deletion
+    pub confirm_delete: Option<usize>,
 }
 
 /// Quest panel state

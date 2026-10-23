@@ -1,0 +1,101 @@
+---
+source: crates/client/src/snapshot_tests.rs
+expression: "String::from_utf8(out).unwrap()"
+input_file: scripts/snapshots/death-marker.txt
+---
+=== screen selected ===
+                                            LithicRivers
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━ Global Map ━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓┏━━━━━━ Quest Markers ━━━━━━━┓
+┃                                                                    ┃┃  ✗ (unselect quest marker) ┃
+┃                                                                    ┃┃   Hide arrow               ┃
+┃                                                                    ┃┃  ! SapienCorp Bunker       ┃
+┃                                                                    ┃┃   20 blocks                ┃
+┃                                                                    ┃┃   (10, 10, 1)              ┃
+┃                                 ···                                ┃┃► X Wreck 1                 ┃
+┃                                 ·@·                                ┃┃   25 blocks                ┃
+┃                                 ···                                ┃┃   (0, 0, 0)                ┃
+┃                                                                    ┃┃   Cause: self-destruct     ┃
+┃                                                                    ┃┃   command. Holds Nail x10, ┃
+┃                                                                    ┃┃   Log x3, Torch x3, 5 more.┃
+┃                                                                    ┃┃   x: delete marker         ┃
+┃                                                                    ┃┃  ! SapienCorp Factory      ┃
+┃ [@] Player  [!] Main Quest  [?] Side Quest                         ┃┃   1.6k blocks              ┃
+┃ [·] Explored  [ ] Unexplored  [$] Treasure  [X] Wreck              ┃┃   (200, 1609, 1)           ┃
+┃                                                                    ┃┃                            ┃
+┃             Player: (11, 11, -19) | Chunk: (0, 0, -19)             ┃┃                            ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
+│[0] Loading structure 'sapiencorp-factory.lrstructure' at (200, 1609, 1) for chunk (3, 25, 1)     │
+│[0] Quest marker added: SapienCorp Factory                                                        │
+│[1] Added 2 Chest to inventory                                                                    │
+│[1] Your body was destroyed: self-destruct command. It lies here with everything you carried.     │
+│[1] Backup systems online. You come to at the bunker.                                             │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===
+=== screen prompt ===
+                                            LithicRivers
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━ Global Map ━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓┏━━━━━━ Quest Markers ━━━━━━━┓
+┃                                                                    ┃┃  ✗ (unselect quest marker) ┃
+┃                                                                    ┃┃   Hide arrow               ┃
+┃                                                                    ┃┃  ! SapienCorp Bunker       ┃
+┃                                                                    ┃┃   20 blocks                ┃
+┃                                                                    ┃┃   (10, 10, 1)              ┃
+┃                                 ···                                ┃┃► X Wreck 1                 ┃
+┃                                 ·@·                                ┃┃   25 blocks                ┃
+┃                                 ···                                ┃┃   (0, 0, 0)                ┃
+┃                                                                    ┃┃   Cause: self-destruct     ┃
+┃                        ┌──────────────── Are you sure? ─────────────────┐ommand. Holds Nail x10, ┃
+┃                        │   Delete the marker for Wreck 1 at (0, 0, 0)?  │og x3, Torch x3, 5 more.┃
+┃                        │              Its items stay there.             │: delete marker         ┃
+┃                        │                                                │SapienCorp Factory      ┃
+┃ [@] Player  [!] Main Qu│                [y] Yes    [n] No               │.6k blocks              ┃
+┃ [·] Explored  [ ] Unexp└────────────────────────────────────────────────┘200, 1609, 1)           ┃
+┃                                                                    ┃┃                            ┃
+┃             Player: (11, 11, -19) | Chunk: (0, 0, -19)             ┃┃                            ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
+│[0] Loading structure 'sapiencorp-factory.lrstructure' at (200, 1609, 1) for chunk (3, 25, 1)     │
+│[0] Quest marker added: SapienCorp Factory                                                        │
+│[1] Added 2 Chest to inventory                                                                    │
+│[1] Your body was destroyed: self-destruct command. It lies here with everything you carried.     │
+│[1] Backup systems online. You come to at the bunker.                                             │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===
+=== screen deleted ===
+                                            LithicRivers
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━ Global Map ━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓┏━━━━━━ Quest Markers ━━━━━━━┓
+┃                                                                    ┃┃► ✗ (unselect quest marker) ┃
+┃                                                                    ┃┃   Hide arrow               ┃
+┃                                                                    ┃┃  ! SapienCorp Bunker       ┃
+┃                                                                    ┃┃   20 blocks                ┃
+┃                                                                    ┃┃   (10, 10, 1)              ┃
+┃                                 ···                                ┃┃  ! SapienCorp Factory      ┃
+┃                                 ·@·                                ┃┃   1.6k blocks              ┃
+┃                                 ···                                ┃┃   (200, 1609, 1)           ┃
+┃                                                                    ┃┃                            ┃
+┃                                                                    ┃┃                            ┃
+┃                                                                    ┃┃                            ┃
+┃                                                                    ┃┃                            ┃
+┃                                                                    ┃┃                            ┃
+┃ [@] Player  [!] Main Quest  [?] Side Quest                         ┃┃                            ┃
+┃ [·] Explored  [ ] Unexplored  [$] Treasure  [X] Wreck              ┃┃                            ┃
+┃                                                                    ┃┃                            ┃
+┃             Player: (11, 11, -19) | Chunk: (0, 0, -19)             ┃┃                            ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
+│[0] Quest marker added: SapienCorp Factory                                                        │
+│[1] Added 2 Chest to inventory                                                                    │
+│[1] Your body was destroyed: self-destruct command. It lies here with everything you carried.     │
+│[1] Backup systems online. You come to at the bunker.                                             │
+│[2] Deleted the marker for Wreck 1.                                                               │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===

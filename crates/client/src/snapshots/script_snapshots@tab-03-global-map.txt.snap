@@ -20,7 +20,7 @@ input_file: scripts/snapshots/tab-03-global-map.txt
 ┃                                                                    ┃┃                            ┃
 ┃                                                                    ┃┃                            ┃
 ┃ [@] Player  [!] Main Quest  [?] Side Quest                         ┃┃                            ┃
-┃ [·] Explored  [ ] Unexplored  [$] Treasure                         ┃┃                            ┃
+┃ [·] Explored  [ ] Unexplored  [$] Treasure  [X] Wreck              ┃┃                            ┃
 ┃                                                                    ┃┃                            ┃
 ┃             Player: (11, 11, -19) | Chunk: (0, 0, -19)             ┃┃                            ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛

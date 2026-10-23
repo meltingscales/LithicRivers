@@ -15,6 +15,9 @@ pub struct PlayerState {
     /// What destroyed the player, while they are dead
     #[serde(default)]
     pub death_cause: Option<String>,
+    /// How many times the player has died, to number the wreck markers
+    #[serde(default)]
+    pub deaths: u32,
 }
 
 impl PlayerState {
@@ -28,6 +31,7 @@ impl PlayerState {
             noclip_enabled: false,
             fog_of_war_enabled: true,
             respawn_point: None,
+            deaths: 0,
             death_cause: None,
         }
     }
