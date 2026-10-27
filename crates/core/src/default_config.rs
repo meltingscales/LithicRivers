@@ -116,8 +116,8 @@ pub fn default_config() -> ConfigRoot {
             "CONFIRM_DELETE": ["y"],             // Delete marker prompt: yes
             "CANCEL_DELETE": ["n", "ESCAPE"]     // Delete marker prompt: no
         },
-        "dictionary": {
-            "SEARCH": ["s"],              // Item Dictionary: start typing a search
+        "search": {
+            "SEARCH": ["s"],              // Item Dictionary and Crafting: start typing a search
             "DELETE_CHAR": ["BACKSPACE"], // While searching: erase a character
             "END_SEARCH": ["ENTER"]       // While searching: keep the filter and stop typing
         },

@@ -17,6 +17,7 @@ pub mod mouse;
 pub mod multi_action;
 pub mod npc_interaction;
 pub mod quests;
+pub mod search;
 pub mod splash;
 pub mod stairs_prompt;
 pub mod tutorial_selection;

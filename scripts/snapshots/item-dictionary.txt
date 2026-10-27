@@ -5,9 +5,9 @@ skip-splash
 # skip-splash starts on Tutorial: Global Map, Quests, Body, Inventory, Crafting, Items
 key ui.MENU_NEXT 6
 expect-text "Item Dictionary"
-key dictionary.SEARCH
+key search.SEARCH
 type "log"
-key dictionary.END_SEARCH
+key search.END_SEARCH
 expect-text "Mined from tree"
 expect-text "Power Pole"
 screen item-dictionary

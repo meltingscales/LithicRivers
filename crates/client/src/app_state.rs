@@ -118,9 +118,7 @@ pub struct FurnaceWindow {
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ItemDictionaryState {
     pub selected: usize,
-    pub search: String,
-    /// Whether typed keys go into the search text
-    pub searching: bool,
+    pub search: crate::app::input::search::SearchBox,
 }
 
 /// The filter picker of a filter extractor or belt router: row 0 is "no filter", then
@@ -170,7 +168,9 @@ pub struct InventoryPanelState {
 /// Crafting panel state
 pub struct CraftingPanelState {
     pub recipe_handler: RecipeHandler,
+    /// A position in the filtered recipe list (`ui::panels::crafting::filtered_recipes`)
     pub selected: usize,
+    pub search: crate::app::input::search::SearchBox,
     pub message: Option<(String, u8)>, // (message, timer)
 }
 

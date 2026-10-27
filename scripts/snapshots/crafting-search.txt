@@ -1,0 +1,13 @@
+# The Crafting tab filtered by a search: "plank" keeps the Wooden Plank recipe and the
+# recipes that use planks (or mention them, like the burner generator's fuel).
+seed 12345
+size 100x30
+skip-splash
+key ui.MENU_NEXT 5
+expect-text "s: search"
+key search.SEARCH
+type "plank"
+expect-text "Search: plank_"
+key search.END_SEARCH
+expect-text "Recipes - showing"
+screen crafting-search

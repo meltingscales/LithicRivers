@@ -181,6 +181,7 @@ impl App {
             crafting: CraftingPanelState {
                 recipe_handler: RecipeHandler::new(),
                 selected: 0,
+                search: Default::default(),
                 message: None,
             },
             credits: CreditsPanelState {

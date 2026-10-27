@@ -19,8 +19,8 @@ key ui.MENU_ACTIVATE
 wait 1200
 # The Item Dictionary, searching for logs
 key ui.MENU_NEXT
-key dictionary.SEARCH
+key search.SEARCH
 type "log"
-key dictionary.END_SEARCH
+key search.END_SEARCH
 wait 2500
 screen

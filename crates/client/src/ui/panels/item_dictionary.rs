@@ -1,6 +1,7 @@
 //! The Item Dictionary tab: every item with its sprite, name and description, a search over
 //! names and descriptions, and the selected item's art, recipes, uses and raw sources.
 
+use crate::app::input::search::SearchBox;
 use crate::rendering_helpers::parse_hex_color;
 use crate::sprite_loader::SpriteLoader;
 use lithicrivers_core::components::{itemkind_name, itemkind_sprite_name, ItemKind};
@@ -22,15 +23,10 @@ pub fn description(loader: &mut SpriteLoader, item: ItemKind) -> String {
         .clone()
 }
 
-/// Items whose name or description contains `search` (ignoring case), in item order.
-pub fn matching_items(loader: &mut SpriteLoader, search: &str) -> Vec<ItemKind> {
-    let search = search.to_lowercase();
+/// Items whose name or description matches `search`, in item order.
+pub fn matching_items(loader: &mut SpriteLoader, search: &SearchBox) -> Vec<ItemKind> {
     ItemKind::iter()
-        .filter(|&item| {
-            search.is_empty()
-                || itemkind_name(item).to_lowercase().contains(&search)
-                || description(loader, item).to_lowercase().contains(&search)
-        })
+        .filter(|&item| search.matches([itemkind_name(item), &description(loader, item)]))
         .collect()
 }
 
@@ -67,7 +63,7 @@ pub fn render_item_dictionary_panel(f: &mut Frame, app: &mut crate::App, area: R
     let items = filtered_items(app);
     let state = &mut app.panels.item_dictionary;
     state.selected = state.selected.min(items.len().saturating_sub(1));
-    let (selected, searching, search) = (state.selected, state.searching, state.search.clone());
+    let (selected, search) = (state.selected, state.search.clone());
 
     let block = Block::default()
         .borders(Borders::ALL)
@@ -188,22 +184,8 @@ pub fn render_item_dictionary_panel(f: &mut Frame, app: &mut crate::App, area: R
     f.render_widget(Paragraph::new(art), parts[1]);
 
     // The search line
-    let key = |c, a| app.core.config_manager.get_printable_key_for_keybind(c, a);
-    let search_line = if searching {
-        format!(
-            "Search: {search}_   ({} done, {} clear)",
-            key("dictionary", "END_SEARCH"),
-            key("ui", "CLOSE_HELP_MENU")
-        )
-    } else if search.is_empty() {
-        format!("{}: search", key("dictionary", "SEARCH"))
-    } else {
-        format!(
-            "Search: {search}   ({} edit, {} clear)",
-            key("dictionary", "SEARCH"),
-            key("ui", "CLOSE_HELP_MENU")
-        )
-    };
+    let search_line =
+        search.hint(|c, a| app.core.config_manager.get_printable_key_for_keybind(c, a));
     f.render_widget(
         Paragraph::new(Span::styled(search_line, Style::default().fg(Color::Gray))),
         rows[1],
@@ -230,7 +212,11 @@ mod tests {
     #[test]
     fn search_matches_names_and_descriptions() {
         let mut loader = SpriteLoader::new(None);
-        let burn = matching_items(&mut loader, "BURN");
+        let search = |text: &str| SearchBox {
+            text: text.into(),
+            typing: false,
+        };
+        let burn = matching_items(&mut loader, &search("BURN"));
         assert!(burn.contains(&ItemKind::BurnerGenerator), "by name");
         for item in &burn {
             let text = format!(
@@ -241,7 +227,7 @@ mod tests {
             assert!(text.to_lowercase().contains("burn"), "{text}");
         }
         assert_eq!(
-            matching_items(&mut loader, "").len(),
+            matching_items(&mut loader, &search("")).len(),
             ItemKind::iter().count()
         );
     }
@@ -256,13 +242,13 @@ mod headless_tests {
         let mut runner = chain_commands(&[
             "skip-splash",
             "key ui.MENU_NEXT 6",
-            "key dictionary.SEARCH",
+            "key search.SEARCH",
             "type \"burn\"",
         ]);
         let screen = runner.screen_text();
         assert!(screen.contains("Burner Generator"), "{screen}");
         assert!(screen.contains("Search: burn_"));
-        assert!(runner.app.panels.item_dictionary.searching);
+        assert!(runner.app.panels.item_dictionary.search.typing);
         let listed = super::filtered_items(&mut runner.app);
         assert!(listed.contains(&lithicrivers_core::components::ItemKind::BurnerGenerator));
         assert!(
