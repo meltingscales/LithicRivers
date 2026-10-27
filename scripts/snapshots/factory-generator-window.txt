@@ -21,10 +21,9 @@ key build.PLACE_WEST
 key build.TOGGLE_BREAK_PLACE_MODE 2
 key movement.WAIT
 key action.INTERACT
-expect-text "Fuel generator (W)"
-# Choices: Inspect power pole (NW), Fuel generator (W)
-key movement.MOVE_SOUTH
-key ui.MENU_ACTIVATE
+expect-text "[4] Fuel generator"
+# Choices: Inspect power pole (7), Fuel generator (4): west picks the generator
+key movement.MOVE_WEST
 # Your Items shows only fuel: Log, Stick
 key ui.MENU_ACTIVATE
 expect-text "Stored Log"

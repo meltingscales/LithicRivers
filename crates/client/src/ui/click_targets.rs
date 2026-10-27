@@ -19,6 +19,8 @@ pub enum ClickTarget {
     CreateField(usize),
     OptionsRow(usize),
     InteractionChoice(usize),
+    /// A Choose Interaction grid cell: the tile at (dx, dy) from the player
+    InteractionCell((i64, i64)),
     DialogueChoice(usize),
     FilterRow(usize),
     BlockPickerRow(usize),

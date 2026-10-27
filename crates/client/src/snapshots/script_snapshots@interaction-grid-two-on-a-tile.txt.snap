@@ -1,0 +1,101 @@
+---
+source: crates/client/src/snapshot_tests.rs
+expression: "String::from_utf8(out).unwrap()"
+input_file: scripts/snapshots/interaction-grid-two-on-a-tile.txt
+---
+=== screen first-press ===
+                                            LithicRivers
+##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,,         ┌MODES─────────────────┐
+###vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#######,,       │  ------ - - -- - FOG │
+####vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#     #,,,,     └──────────────────────┘
+#####vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#     #,,,,,,,  ┌Inventory─────────────┐
+######vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#  /  Dv,,,,,,,,│Nail x9               │
+#######vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#     #vv,,,,,,,│Acorn x1              │
+########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#     #vvvv,,,,,│Log x3                │
+#########vvvvvvvvvvv┌─────────────────── Choose Interaction ───────────────────┐───────────────────┘
+##########vvvvvvvvvv│ ┌─────┬─────┬─────┐                                      │p (h)──────────────┐
+###########vvvvvvvvv│ │  7  │  8  │  9  │  [6] Pick up Nail                    │e:                 │
+#############vvvvvvv│ │     │     │     │  [6] Loot corpse (2 items)           │ 8 9               │
+##############vvvvvv│ ├─────┼─────┼─────┤                                      │ 5 6               │
+###############vvvvv│ │  4  │  5  │  6  │                                      │ 2 3               │
+#################vvv│ │     │  @  │  n  │                                      │mine               │
+##################vv│ ├─────┼─────┼─────┤                                      │look               │
+###################v│ │  1  │  2  │  3  │                                      │build mode         │
+####################│ │     │     │     │                                      │pick up Nail       │
+####################│ └─────┴─────┴─────┘                                      │loot corpse        │
+####################│                Direction keys: pick a tile               │───────────────────┘
+┌Messages───────────│      ENTER: choose | UP/DOWN: list | ESCAPE: cancel      │───────────────────┐
+│[0] Player moved to└──────────────────────────────────────────────────────────┘                   │
+│[0] Loading structure 'sapiencorp-factory.lrstructure' at (200, 1609, 1) for chunk (3, 25, 1)     │
+│[0] Quest marker added: SapienCorp Factory                                                        │
+│[1] Dropped 1 Nail                                                                                │
+│[401] Choose interaction:                                                                         │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===
+=== screen second-press ===
+                                            LithicRivers
+##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,,         ┌MODES─────────────────┐
+###vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#######,,       │  ------ - - -- - FOG │
+####vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#     #,,,,     └──────────────────────┘
+#####vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#     #,,,,,,,  ┌Inventory─────────────┐
+######vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#  /  Dv,,,,,,,,│Nail x9               │
+#######vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#     #vv,,,,,,,│Acorn x1              │
+########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#     #vvvv,,,,,│Log x3                │
+#########vvvvvvvvvvv┌─────────────────── Choose Interaction ───────────────────┐───────────────────┘
+##########vvvvvvvvvv│ ┌─────┬─────┬─────┐                                      │p (h)──────────────┐
+###########vvvvvvvvv│ │  7  │  8  │  9  │  [6] Pick up Nail                    │e:                 │
+#############vvvvvvv│ │     │     │     │  [6] Loot corpse (2 items)           │ 8 9               │
+##############vvvvvv│ ├─────┼─────┼─────┤                                      │ 5 6               │
+###############vvvvv│ │  4  │  5  │  6  │                                      │ 2 3               │
+#################vvv│ │     │  @  │  n  │                                      │mine               │
+##################vv│ ├─────┼─────┼─────┤                                      │look               │
+###################v│ │  1  │  2  │  3  │                                      │build mode         │
+####################│ │     │     │     │                                      │pick up Nail       │
+####################│ └─────┴─────┴─────┘                                      │loot corpse        │
+####################│                Direction keys: pick a tile               │───────────────────┘
+┌Messages───────────│      ENTER: choose | UP/DOWN: list | ESCAPE: cancel      │───────────────────┐
+│[0] Player moved to└──────────────────────────────────────────────────────────┘                   │
+│[0] Loading structure 'sapiencorp-factory.lrstructure' at (200, 1609, 1) for chunk (3, 25, 1)     │
+│[0] Quest marker added: SapienCorp Factory                                                        │
+│[1] Dropped 1 Nail                                                                                │
+│[401] Choose interaction:                                                                         │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===
+=== screen corpse ===
+                                            LithicRivers
+##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,,         ┌MODES─────────────────┐
+###vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#######,,       │  ------ - - -- - FOG │
+####vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#     #,,,,     └──────────────────────┘
+#####vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#     #,,,,,,,  ┌Inventory─────────────┐
+######vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#  /  Dv,,,,,,,,│Nail x9               │
+#######vvvvvvvv┌────────────────────────── Looting Corpse ──────────────────────────┐              │
+########vvvvvvv│┌ Corpse Items ──────────────────┐┌ Your Items ────────────────────┐│              │
+#########vvvvvv││ 1 x Leather                    ││ 9 x Nail                       ││──────────────┘
+##########vvvvv││ 2 x Meat                       ││ 1 x Acorn                      ││──────────────┐
+###########vvvv││                                ││ 3 x Log                        ││              │
+#############vv││                                ││ 2 x Stick                      ││              │
+##############v││                                ││ 3 x Torch                      ││              │
+###############││                                ││ 2 x String                     ││              │
+###############││                                ││ 3 x Scrap Electronics          ││              │
+###############││                                ││                                ││              │
+###############││                                ││                                ││ mode         │
+###############││                                ││                                ││up Nail       │
+###############││                                ││                                ││corpse        │
+###############││                                ││                                ││──────────────┘
+┌Messages──────││                                ││                                ││──────────────┐
+│[0] Loading st││                                ││                                ││3, 25, 1)     │
+│[0] Quest mark│└────←→ Panel | ↑↓ Select | Enter Take | a Take All | Esc Close────┘│              │
+│[1] Dropped 1 └────────────────────────────────────────────────────────────────────┘              │
+│[401] Choose interaction:                                                                         │
+│[401] Started looting corpse                                                                      │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===

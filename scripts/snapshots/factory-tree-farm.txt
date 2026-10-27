@@ -61,10 +61,9 @@ key build.PLACE_NORTH
 key build.TOGGLE_BREAK_PLACE_MODE 2
 # Fuel the generator: 3 logs
 key action.INTERACT
-expect-text "Fuel generator (N)"
-# Choices: Inspect power pole (E), Fuel generator (N)
-key movement.MOVE_SOUTH
-key ui.MENU_ACTIVATE
+expect-text "[8] Fuel generator"
+# Choices: Inspect power pole (6), Fuel generator (8): north picks the generator
+key movement.MOVE_NORTH
 # Your Items shows only fuel: Log first
 key ui.MENU_ACTIVATE 3
 expect-text "Stored Log"

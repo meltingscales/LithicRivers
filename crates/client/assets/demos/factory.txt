@@ -12,16 +12,15 @@ cheat tp 2 -7 0
 wait 1500
 # The crude furnace, smelting logs into biochar
 cheat tp 18 -5 0
-# Choices: Open crude furnace (N), then the belts beside it
+# Interact, then north: the crude furnace
 key action.INTERACT
-key ui.MENU_ACTIVATE
+key movement.MOVE_NORTH
 wait 2500
 key ui.CLOSE_HELP_MENU
-# The farm's filter extractor, set to acorns. Choices: chest (SE), filter extractor (E), planter
+# The farm's filter extractor, set to acorns: interact, then east
 cheat tp 26 -4 0
 key action.INTERACT
-key movement.MOVE_SOUTH
-key ui.MENU_ACTIVATE
+key movement.MOVE_EAST
 wait 2500
 key ui.CLOSE_HELP_MENU
 # The electric furnace line: chest, extractor, long belts, furnace, long belts, chest.
@@ -43,9 +42,9 @@ tick 120
 tick 120
 tick 120
 tick 120
-# Choices: Open electric furnace (N), then the belts beside it
+# Interact, then north: the electric furnace
 key action.INTERACT
-key ui.MENU_ACTIVATE
+key movement.MOVE_NORTH
 tick 120
 tick 120
 tick 120

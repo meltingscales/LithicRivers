@@ -26,9 +26,8 @@ key ui.MENU_NEXT 5
 key movement.MOVE_SOUTH 2
 key ui.MENU_PREV 5
 key action.INTERACT
-expect-text "Put Log on belt (NW)"
-# Choices: Open chest (NE), Put Log on belt (NW), Put Log on belt (N)
-key movement.MOVE_SOUTH
-key ui.MENU_ACTIVATE
+expect-text "[7] Put Log on belt"
+# Choices: Open chest (9), Put Log on belt (7), Put Log on belt (8): northwest picks that belt
+key movement.MOVE_NORTHWEST
 expect-text "Put Log on the belt"
 screen belt-line

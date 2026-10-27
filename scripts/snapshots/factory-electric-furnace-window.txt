@@ -6,11 +6,11 @@ size 100x30
 world factory-showcase
 key ui.MENU_PREV
 key action.PASS_TIME
-# South of the electric furnace. Choices: Open electric furnace (N), then the belts beside it
+# South of the electric furnace: interact, then north
 cheat tp 46 -5 0
 screen line
 key action.INTERACT
-key ui.MENU_ACTIVATE
+key movement.MOVE_NORTH
 expect-text "Electric Furnace facing east - smelting"
 expect-text "power 100%"
 # Two factory seconds (six game seconds) on: half a log further
