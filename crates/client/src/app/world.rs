@@ -108,6 +108,8 @@ mod tests {
             developer_mode: false,
             show_tutorial: false,
             world_type: lithicrivers_core::resources::WorldType::Normal,
+            keep_inventory: false,
+            keep_body: false,
         };
         runner.app.start_world("Round Trip", 777, settings);
         runner.app.splash.state = crate::SplashState::MainUI;

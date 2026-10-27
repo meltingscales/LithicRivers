@@ -4,7 +4,7 @@ seed 12345
 size 100x30
 skip-splash
 key ui.OPEN_COMMAND_MENU
-expect-text "set_time hh:mm"
+expect-text "kill_player"
 expect-text "more commands below"
 screen help-top
 key ui.CHEAT_CONSOLE_SCROLL_DOWN 20
