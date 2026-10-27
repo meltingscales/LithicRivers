@@ -7,19 +7,19 @@ input_file: scripts/snapshots/crafting-chest-tree.txt
                                             LithicRivers
 ┌Crafting──────────────────────────────────────────────────────────────────────────────────────────┐
 │┌Recipes───────────────────────┐┌Recipe Details──────────────────┐┌Inventory─────────────────────┐│
-││  * Wooden Plank              ││Recipe Name: Chest              ││* Acorn: x1                   ││
-││  * Plank Block               ││Result: 1x Chest                ││* Log: x3                     ││
-││  * Stick                     ││                                ││* Nail: x10                   ││
+││  * Plank Block               ││Recipe Name: Chest              ││* Acorn: x1                   ││
+││  * Stick                     ││Result: 1x Chest                ││* Log: x3                     ││
+││  * Wooden Shavings           ││                                ││* Nail: x10                   ││
 ││  * Wooden Shavings           ││Ingredients:                    ││* Scrap Electronics: x3       ││
-││  * Wooden Shavings           ││  - 8x Wooden Plank (have 0)    ││* Stick: x2                   ││
-││  * Torch                     ││    * 3x Log (have 3)           ││* String: x2                  ││
-││  * Nail                      ││  - 4x Nail (have 10)           ││* Torch: x3                   ││
-││  * String                    ││    * 1x Iron Scrap (have 0)    ││                              ││
-││  * Wooden Conveyor           ││* raw material                  ││                              ││
-││  * Burner Generator          ││                                ││                              ││
+││  * Torch                     ││  - 8x Wooden Plank (have 0)    ││* Stick: x2                   ││
+││  * Nail                      ││    * 3x Log (have 3)           ││* String: x2                  ││
+││  * String                    ││  - 4x Nail (have 10)           ││* Torch: x3                   ││
+││  * Wooden Conveyor           ││    * 1x Iron Scrap (have 0)    ││                              ││
+││  * Burner Generator          ││* raw material                  ││                              ││
 ││  * Power Pole                ││                                ││                              ││
 ││> * Chest                     ││                                ││                              ││
 │└──────────────────────────────┘└────────────────────────────────┘└──────────────────────────────┘│
+│s: search                                                                                         │
 │                                                                                                  │
 │                                                                                                  │
 │                                                                                                  │

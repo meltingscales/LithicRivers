@@ -8,6 +8,27 @@ use ratatui::{
     Frame,
 };
 
+/// The recipes the tab lists right now, as indices into the recipe list: those whose name,
+/// result (name or description) or an ingredient matches the search.
+pub fn filtered_recipes(app: &mut crate::App) -> Vec<usize> {
+    let search = &app.panels.crafting.search;
+    let loader = &mut app.core.sprite_loader;
+    app.panels
+        .crafting
+        .recipe_handler
+        .get_recipes()
+        .iter()
+        .enumerate()
+        .filter(|(_, recipe)| {
+            let description = super::item_dictionary::description(loader, recipe.result);
+            let mut haystacks = vec![recipe.name, itemkind_name(recipe.result), &description];
+            haystacks.extend(recipe.ingredients.iter().map(|&(i, _)| itemkind_name(i)));
+            search.matches(haystacks)
+        })
+        .map(|(i, _)| i)
+        .collect()
+}
+
 pub fn render_crafting_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     let block = Block::default()
         .borders(Borders::ALL)
@@ -25,17 +46,35 @@ pub fn render_crafting_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
         }
     }
 
-    // Split the area into three parts: recipes list, details, and inventory
+    // The shown recipes, keeping the selection on one of them
+    let shown = filtered_recipes(app);
+    let total = app.panels.crafting.recipe_handler.get_recipes().len();
+    let state = &mut app.panels.crafting;
+    state.selected = state.selected.min(shown.len().saturating_sub(1));
+    let selected_recipe = shown.get(state.selected).copied();
+
+    // Split the area: the three columns, the search line, and the message area
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
             Constraint::Min(1),    // Main content
+            Constraint::Length(1), // Search line
             Constraint::Length(3), // For the message area
         ])
         .split(inner);
 
     let main_area = chunks[0];
-    let message_area = chunks[1];
+    let search_area = chunks[1];
+    let message_area = chunks[2];
+    let search_line = app
+        .panels
+        .crafting
+        .search
+        .hint(|c, a| app.core.config_manager.get_printable_key_for_keybind(c, a));
+    f.render_widget(
+        Paragraph::new(Span::styled(search_line, Style::default().fg(Color::Gray))),
+        search_area,
+    );
 
     // Split main area into three columns
     let chunks = Layout::default()
@@ -52,16 +91,13 @@ pub fn render_crafting_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     let inventory_area = chunks[2];
 
     // Render recipes list
-    let recipes: Vec<ListItem> = app
-        .panels
-        .crafting
-        .recipe_handler
-        .get_recipes()
+    let all_recipes = app.panels.crafting.recipe_handler.get_recipes();
+    let mut recipes: Vec<ListItem> = shown
         .iter()
-        .enumerate()
-        .map(|(i, recipe)| {
+        .map(|&i| {
+            let recipe = &all_recipes[i];
             let can_craft = app.panels.crafting.recipe_handler.can_craft(i, &inventory);
-            let style = if i == app.panels.crafting.selected {
+            let style = if Some(i) == selected_recipe {
                 if can_craft {
                     Style::default().fg(Color::Green)
                 } else {
@@ -81,6 +117,17 @@ pub fn render_crafting_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
             ))
         })
         .collect();
+    if shown.is_empty() {
+        recipes.push(ListItem::new(Span::styled(
+            "No recipes match",
+            Style::default().fg(Color::DarkGray),
+        )));
+    }
+    let title = if shown.len() == total {
+        "Recipes".to_string()
+    } else {
+        format!("Recipes - showing {} of {total}", shown.len())
+    };
 
     let list = ratatui::widgets::List::new(recipes)
         .highlight_style(Style::default().add_modifier(ratatui::style::Modifier::BOLD))
@@ -88,11 +135,12 @@ pub fn render_crafting_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .title(Line::from("Recipes")),
+                .title(Line::from(title)),
         );
 
-    let recipe_count = app.panels.crafting.recipe_handler.get_recipes().len();
-    let mut recipe_state = ListState::default().with_selected(Some(app.panels.crafting.selected));
+    let recipe_count = shown.len();
+    let mut recipe_state =
+        ListState::default().with_selected(selected_recipe.map(|_| app.panels.crafting.selected));
     f.render_stateful_widget(list, list_area, &mut recipe_state);
     let first = recipe_state.offset();
     app.ui.click_targets.rows(
@@ -103,18 +151,14 @@ pub fn render_crafting_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     );
 
     // Render recipe details
-    if let Some(recipe) = app
-        .panels
-        .crafting
-        .recipe_handler
-        .get_recipes()
-        .get(app.panels.crafting.selected)
+    if let Some((index, recipe)) =
+        selected_recipe.map(|i| (i, &app.panels.crafting.recipe_handler.get_recipes()[i]))
     {
         let can_craft = app
             .panels
             .crafting
             .recipe_handler
-            .can_craft(app.panels.crafting.selected, &inventory);
+            .can_craft(index, &inventory);
         let mut details = vec![
             Line::from(vec![
                 Span::styled("Recipe Name: ", Style::default().fg(Color::Yellow)),

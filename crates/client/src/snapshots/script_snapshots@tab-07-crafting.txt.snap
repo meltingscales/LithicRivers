@@ -18,8 +18,8 @@ input_file: scripts/snapshots/tab-07-crafting.txt
 ││  * Wooden Conveyor           ││                                ││                              ││
 ││  * Burner Generator          ││                                ││                              ││
 ││  * Power Pole                ││                                ││                              ││
-││  * Chest                     ││                                ││                              ││
 │└──────────────────────────────┘└────────────────────────────────┘└──────────────────────────────┘│
+│s: search                                                                                         │
 │                                                                                                  │
 │                                                                                                  │
 │                                                                                                  │

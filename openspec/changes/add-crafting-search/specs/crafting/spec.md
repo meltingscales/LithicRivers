@@ -7,7 +7,7 @@ The Crafting tab SHALL filter its recipe list by a case-insensitive search over 
 
 #### Scenario: Search for planks
 - **WHEN** the player searches the Crafting tab for "plank"
-- **THEN** the list shows the Wooden Plank recipe and the recipes that use wooden planks, and no others
+- **THEN** the list shows the Wooden Plank recipe and every recipe that uses wooden planks, and each recipe shown mentions planks in its name, its result's name or description, or its ingredients
 
 #### Scenario: Craft from a filtered list
 - **WHEN** the filter shows three recipes and the player selects the second and crafts

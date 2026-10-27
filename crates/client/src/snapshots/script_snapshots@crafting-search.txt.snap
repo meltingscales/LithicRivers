@@ -1,0 +1,37 @@
+---
+source: crates/client/src/snapshot_tests.rs
+expression: "String::from_utf8(out).unwrap()"
+input_file: scripts/snapshots/crafting-search.txt
+---
+=== screen crafting-search ===
+                                            LithicRivers
+┌Crafting──────────────────────────────────────────────────────────────────────────────────────────┐
+│┌Recipes - showing 10 of 23────┐┌Recipe Details──────────────────┐┌Inventory─────────────────────┐│
+││> * Wooden Plank              ││Recipe Name: Wooden Planks      ││* Acorn: x1                   ││
+││  * Plank Block               ││Result: 3x Wooden Plank         ││* Log: x3                     ││
+││  * Stick                     ││                                ││* Nail: x10                   ││
+││  * Wooden Conveyor           ││Ingredients:                    ││* Scrap Electronics: x3       ││
+││  * Burner Generator          ││  * 1x Log (have 3)             ││* Stick: x2                   ││
+││  * Chest                     ││* raw material                  ││* String: x2                  ││
+││  * Auto-Planter              ││                                ││* Torch: x3                   ││
+││  * Extractor                 ││                                ││                              ││
+││  * Vertical Conveyor         ││                                ││                              ││
+││  * Stairs                    ││                                ││                              ││
+││                              ││                                ││                              ││
+│└──────────────────────────────┘└────────────────────────────────┘└──────────────────────────────┘│
+│Search: plank   (s edit, ESCAPE clear)                                                            │
+│                                                                                                  │
+│                                                                                                  │
+│                                                                                                  │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
+│[0] Loading structure 'sapiencorp-bunker.lrstructure' at (10, 10, 1) for chunk (0, 0, 1)          │
+│[0] Quest marker added: SapienCorp Bunker                                                         │
+│[0] Player moved to bunker spawn at (11, 11, -19)                                                 │
+│[0] Loading structure 'sapiencorp-factory.lrstructure' at (200, 1609, 1) for chunk (3, 25, 1)     │
+│[0] Quest marker added: SapienCorp Factory                                                        │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===
