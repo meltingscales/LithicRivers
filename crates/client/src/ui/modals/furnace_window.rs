@@ -98,10 +98,7 @@ pub(crate) fn render_furnace_window(f: &mut Frame, app: &App) {
         .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
         .split(rows[0]);
 
-    let slot_index = slots
-        .iter()
-        .position(|&s| s == window.slot)
-        .unwrap_or(0);
+    let slot_index = slots.iter().position(|&s| s == window.slot).unwrap_or(0);
     let mut slot_state = ListState::default();
     slot_state.select(Some(slot_index));
     let slots_title = if electric {

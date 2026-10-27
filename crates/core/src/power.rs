@@ -11,11 +11,11 @@ use hecs::{Entity, World};
 use serde::{Deserialize, Serialize};
 
 use crate::components::{Inventory, ItemKind, Position};
-pub use crate::factory::STEPS_PER_FACTORY_SECOND;
 use crate::factory::FactoryKind;
+pub use crate::factory::STEPS_PER_FACTORY_SECOND;
 use crate::resources::Resources;
 
-/// A burner generator's most output, in watts (joules per game second).
+/// A burner generator's most output, in watts (joules per factory second).
 pub const BURNER_MAX_W: u64 = 90_000;
 /// Fuel item stacks a burner generator holds.
 pub const BURNER_FUEL_SLOTS: usize = 4;

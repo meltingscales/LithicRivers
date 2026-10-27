@@ -703,7 +703,13 @@ mod tests {
         let mut game = world.build();
         for handle in [slime, dog] {
             let entity = game.entity(handle);
-            apply_damage(&mut game.game.world, &mut game.game.res, entity, 10_000, "a test");
+            apply_damage(
+                &mut game.game.world,
+                &mut game.game.res,
+                entity,
+                10_000,
+                "a test",
+            );
             assert!(!game.game.world.contains(entity));
         }
     }

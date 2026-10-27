@@ -138,9 +138,16 @@ mod tests {
         assert_eq!(wreck_markers(&runner), 0);
 
         // A second death, whose marker is deleted by hand
-        runner.chain(&["cheat kill_player", "key ui.MENU_ACTIVATE", "key ui.MENU_NEXT 2"]);
+        runner.chain(&[
+            "cheat kill_player",
+            "key ui.MENU_ACTIVATE",
+            "key ui.MENU_NEXT 2",
+        ]);
         runner.chain(&["rawkey DOWN", "rawkey DOWN", "expect-text \"Wreck 2\""]);
-        runner.chain(&["key global_map.DELETE_MARKER", "key global_map.CONFIRM_DELETE"]);
+        runner.chain(&[
+            "key global_map.DELETE_MARKER",
+            "key global_map.CONFIRM_DELETE",
+        ]);
         assert_eq!(wreck_markers(&runner), 0);
         let wreck_items: u32 = runner
             .app

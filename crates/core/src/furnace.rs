@@ -823,7 +823,10 @@ mod tests {
         let state = furnace(&g, f);
         assert_eq!((state.progress, state.lit, state.output), (0, false, None));
         // Fuel isn't power: it has no fuel slot
-        assert!(!factory::takes(FactoryKind::ElectricFurnace, ItemKind::Biochar));
+        assert!(!factory::takes(
+            FactoryKind::ElectricFurnace,
+            ItemKind::Biochar
+        ));
         assert!(factory::takes(FactoryKind::ElectricFurnace, ItemKind::Log));
     }
 

@@ -29,11 +29,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Error>>
         return Ok(true);
     }
 
-    if app
-        .ui
-        .keybinds
-        .matches("global_map", "DELETE_MARKER", &key)
-    {
+    if app.ui.keybinds.matches("global_map", "DELETE_MARKER", &key) {
         if let Some(index) = selected_marker(app) {
             if app.core.game.res.quest_markers[index].marker_type == QuestMarkerType::Death {
                 app.panels.global_map.confirm_delete = Some(index);

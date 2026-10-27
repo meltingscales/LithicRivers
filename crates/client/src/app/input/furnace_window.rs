@@ -31,10 +31,7 @@ pub fn handle_furnace_window_input(app: &mut App, key: KeyCode) -> bool {
     )
     .len();
     let slots = Slot::for_kind(window.kind);
-    let slot_index = slots
-        .iter()
-        .position(|&s| s == window.slot)
-        .unwrap_or(0);
+    let slot_index = slots.iter().position(|&s| s == window.slot).unwrap_or(0);
     if keys.matches("movement", "MOVE_WEST", &key) || keys.matches("movement", "MOVE_EAST", &key) {
         window.player_focus = !window.player_focus;
     } else if keys.matches("movement", "MOVE_NORTH", &key) {
