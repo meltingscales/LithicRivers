@@ -6,13 +6,13 @@ use serde::{Deserialize, Serialize};
 
 use crate::components::{BlocksMovement, Inventory, ItemKind, Player, Position};
 use crate::factory::{
-    insert_from, BeltSlot, Facing, FactoryBlock, FactoryKind, BELT_STEPS_PER_TILE,
+    insert_from, BeltSlot, Facing, FactoryBlock, FactoryKind, BELT_RIDE_STEPS_PER_TILE,
 };
 use crate::furnace::{Furnace, Slot};
 use crate::resources::Resources;
 use crate::tiles::TileKind;
 
-/// Factory steps between an extractor's moves (one game second).
+/// Factory steps between an extractor's moves (one factory second).
 pub const EXTRACTOR_STEPS: u8 = 5;
 
 /// An extractor or filter extractor. A plain extractor never has a filter; a filter
@@ -199,7 +199,7 @@ pub fn walkable(res: &mut Resources, world: &World, pos: Position) -> bool {
 }
 
 /// After the belts move: a player standing on a belt is carried one tile along it every
-/// `BELT_STEPS_PER_TILE` steps, if the next tile is walkable and nothing blocks it.
+/// `BELT_RIDE_STEPS_PER_TILE` steps, if the next tile is walkable and nothing blocks it.
 pub fn carry_player(world: &mut World, res: &mut Resources) {
     let Some((player, pos)) = world
         .query::<&Position>()
@@ -227,7 +227,7 @@ pub fn carry_player(world: &mut World, res: &mut Resources) {
         return;
     };
     res.belt_ride_steps += 1;
-    if res.belt_ride_steps < BELT_STEPS_PER_TILE {
+    if res.belt_ride_steps < BELT_RIDE_STEPS_PER_TILE {
         return;
     }
     let next = step_from(pos, facing);
@@ -534,14 +534,16 @@ mod tests {
     }
 
     #[test]
-    fn a_belt_carries_the_player_two_tiles_a_second() {
+    fn a_belt_carries_the_player_a_tile_every_step() {
         let mut t = rider();
         for x in 1..=3 {
             put(&mut t.game, FactoryKind::Belt, at(x, 0), Facing::East);
         }
         let p = t.game.get_player_entity().unwrap();
         *t.game.world.get::<&mut Position>(p).unwrap() = at(1, 0);
-        steps(&mut t.game, 5);
+        steps(&mut t.game, 1);
+        assert_eq!(t.player_pos(), at(2, 0));
+        steps(&mut t.game, 1);
         assert_eq!(t.player_pos(), at(3, 0));
     }
 

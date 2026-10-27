@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::components::{Inventory, ItemKind, Position};
 use crate::factory::{FactoryBlock, FactoryKind};
-use crate::power::{PowerConsumer, STEPS_PER_SECOND};
+use crate::power::{PowerConsumer, STEPS_PER_FACTORY_SECOND};
 use crate::resources::Resources;
 use crate::tiles::TileKind;
 
@@ -29,7 +29,7 @@ pub const MACHINE_SLOTS: usize = 4;
 /// generator (90 kW) gives, so power planning matters.
 pub const PLANTER_W: u64 = 60_000;
 pub const HARVESTER_W: u64 = 180_000;
-/// Game seconds per action at full power.
+/// Factory seconds per action at full power.
 pub const PLANT_SECONDS: u64 = 4;
 pub const CHOP_SECONDS: u64 = 6;
 
@@ -54,7 +54,7 @@ pub fn action_cost(kind: FactoryKind) -> u64 {
         FactoryKind::AutoHarvester => CHOP_SECONDS,
         _ => PLANT_SECONDS,
     };
-    seconds * STEPS_PER_SECOND * 1000
+    seconds * STEPS_PER_FACTORY_SECOND * 1000
 }
 
 fn held(world: &World, machine: Entity) -> u32 {
@@ -310,9 +310,10 @@ mod tests {
             .sum()
     }
 
+    /// Pass `n` factory seconds.
     fn seconds(game: &mut TestGame, n: u64) {
         game.game.res.player_state.intent =
-            PlayerIntent::movement(0, 0, 0, n * crate::factory::TICKS_PER_SECOND);
+            PlayerIntent::movement(0, 0, 0, n * crate::factory::FACTORY_SECOND_TICKS);
         game.tick();
     }
 

@@ -26,6 +26,6 @@ key movement.MOVE_EAST
 key movement.MOVE_NORTH
 key ui.MENU_ACTIVATE 2
 expect-text "Stored Log"
-tick 40
+tick 120
 expect-text "smelting"
 screen furnace-window

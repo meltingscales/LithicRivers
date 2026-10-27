@@ -14,7 +14,7 @@ key title.SELECT
 rawkey ENTER
 rawkey ENTER
 key ui.MENU_PREV
-key action.PASS_TIME 2
+key action.PASS_TIME 4
 cheat tp 26 -6 0
 key action.LOOK_TOGGLE
 key movement.MOVE_NORTH

@@ -7,10 +7,10 @@ input_file: scripts/snapshots/debug-world-showcase.txt
                                             LithicRivers
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌MODES─────────────────┐
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  ------ - - -- - FOG │
-vvvvvvvvvvvvvvvvvvvvvvvvvvCvvv>>>>CvvvC→>>CvvvvvCvvvvvvvvvvvvvGτvvvvvvvv>▲>C└──────────────────────┘
+vvvvvvvvvvvvvvvvvvvvvvvvvvCvvv>>||CvvvC→>|CvvvvvCvvvvvvvvvvvvvGvvvvvvvvv>▲|C└──────────────────────┘
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv^vvvvv>>F>CvvvG+vvvvvvvv/vvv┌Inventory─────────────┐
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv>>╬>Cvvvvvvvvvvvvvvpvv,vvvvvvv│Nail x10              │
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv↑vvvvvvvvvv│Acorn x1              │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv>>╬>Cvvvvvvvvvvvvvvpvvtvvvvvvv│Nail x10              │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv|vvvvvvvvvvvvvvvv↑vvvvvvvvvv│Acorn x1              │
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvCvvvvvvvvvvvvvvvvCHvvvvvvvvv│Log x3                │
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvtvvttvvvvvvv┌Help (h)──────────────┐
