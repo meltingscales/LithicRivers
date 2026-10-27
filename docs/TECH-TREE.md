@@ -19,10 +19,10 @@ Hands and the starting kit. Trees give logs and acorns. Rock gives stone, scrap 
 Turn the forest into a machine: farm trees, move items on belts, burn wood for power, smelt wood into denser fuel.
 - `add-tree-farming` (archived): planting and growth.
 - `add-conveyor-belts` (archived): belts and how blocks hand items to them.
-- `add-power-grid`: burner generators, poles, networks.
-- `add-crude-furnace`: unpowered smelting, biochar.
-- `add-tree-automation`: auto-planters and auto-harvesters.
-- `add-electric-furnace`: powered smelting.
+- `add-power-grid` (archived): burner generators, poles, networks.
+- `add-crude-furnace` (archived): unpowered smelting, biochar.
+- `add-tree-automation` (archived): auto-planters and auto-harvesters.
+- `add-electric-furnace` (archived): powered smelting.
 - `add-view-modes`: views for belts, power and more.
 
 ### 2. Molten metal (planned)

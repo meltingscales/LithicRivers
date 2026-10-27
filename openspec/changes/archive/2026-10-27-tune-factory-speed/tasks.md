@@ -9,4 +9,4 @@
 
 - [x] 2.1 Re-time scripts that ticked less than a step or waited on saplings (`factory-furnace-window`, `factory-electric-furnace-window`, `look-at-sapling`, the factory demo) and review the showcase snapshot diffs; verify `cargo test --workspace`
 - [x] 2.2 Verify `just code-clippy` passes
-- [ ] 2.3 User check that factories feel well paced in the live client
+- [x] 2.3 User check that factories feel well paced in the live client
