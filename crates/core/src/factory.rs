@@ -15,8 +15,14 @@ use crate::tiles::TileKind;
 
 /// Game ticks per game second.
 pub const TICKS_PER_SECOND: u64 = 100;
-/// Game ticks per factory step (five steps per game second).
-pub const FACTORY_STEP_TICKS: u64 = 20;
+/// Game ticks per factory second, the unit block rates and power figures are measured in.
+/// Factories run at a third of game speed (one factory second is three game seconds), so
+/// they don't outpace a player whose every step takes two game seconds.
+pub const FACTORY_SECOND_TICKS: u64 = 3 * TICKS_PER_SECOND;
+/// Factory steps per factory second.
+pub const STEPS_PER_FACTORY_SECOND: u64 = 5;
+/// Game ticks per factory step.
+pub const FACTORY_STEP_TICKS: u64 = FACTORY_SECOND_TICKS / STEPS_PER_FACTORY_SECOND;
 /// Item stacks a chest holds.
 pub const CHEST_SLOTS: usize = 16;
 
@@ -575,8 +581,11 @@ pub fn run_due_steps(world: &mut World, res: &mut Resources) {
 #[cfg(any(test, feature = "test-support"))]
 pub const TEST_CONSUMER_W: u64 = 45_000;
 
-/// Steps an item spends on a belt before it moves on (half a game second).
+/// Steps an item spends on a belt before it moves on (under half a factory second).
 pub const BELT_STEPS_PER_TILE: u8 = 2;
+/// Steps a player rides on a belt before it carries them a tile: every step, so belts stay
+/// quick to walk on (about 1.7 tiles per game second).
+pub const BELT_RIDE_STEPS_PER_TILE: u8 = 1;
 
 /// What a belt carries: at most one item, and how many steps it has been on this belt.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]

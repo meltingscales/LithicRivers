@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::components::{ItemKind, ItemStack, Position, SpriteRef};
 use crate::factory::{Facing, FactoryBlock, FactoryKind};
-use crate::power::{fuel_energy, PowerConsumer, STEPS_PER_SECOND};
+use crate::power::{fuel_energy, PowerConsumer, STEPS_PER_FACTORY_SECOND};
 use crate::resources::Resources;
 
 /// Items a furnace slot holds.
@@ -40,7 +40,7 @@ pub enum Energy {
 }
 
 /// One row of the smelting table: `input_count` of `input` become `output_count` of
-/// `output` after `seconds` game seconds of smelting.
+/// `output` after `seconds` factory seconds of smelting.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct SmeltingRecipe {
     pub input: ItemKind,
@@ -53,7 +53,7 @@ pub struct SmeltingRecipe {
 impl SmeltingRecipe {
     /// Factory steps one smelt takes at full speed.
     pub fn steps(&self) -> u64 {
-        self.seconds * STEPS_PER_SECOND
+        self.seconds * STEPS_PER_FACTORY_SECOND
     }
 }
 
@@ -451,7 +451,7 @@ pub fn step_furnaces(world: &mut World, res: &mut Resources) {
                 satisfaction_permille: consumer.satisfaction_permille,
             },
             Err(_) => Energy::Fuel {
-                step_j: CRUDE_FURNACE_W / STEPS_PER_SECOND,
+                step_j: CRUDE_FURNACE_W / STEPS_PER_FACTORY_SECOND,
             },
         };
         let (was_lit, lit, output) = {
@@ -486,7 +486,7 @@ pub fn step_furnaces(world: &mut World, res: &mut Resources) {
 mod tests {
     use super::*;
     use crate::components::{DroppedItem, Inventory};
-    use crate::factory::{self, FactoryKind, FACTORY_STEP_TICKS, TICKS_PER_SECOND};
+    use crate::factory::{self, FactoryKind, FACTORY_STEP_TICKS};
     use crate::intent::PlayerIntent;
     use crate::test_support::TestWorld;
     use crate::tiles::TileKind;
@@ -524,8 +524,9 @@ mod tests {
         game.tick();
     }
 
+    /// Pass `n` factory seconds.
     fn seconds(game: &mut Game, n: u64) {
-        steps(game, n * TICKS_PER_SECOND / FACTORY_STEP_TICKS);
+        steps(game, n * STEPS_PER_FACTORY_SECOND);
     }
 
     fn qty(slot: Option<ItemStack>) -> u32 {
@@ -593,7 +594,7 @@ mod tests {
         assert_eq!(state.output, Some(ItemStack::new(ItemKind::Biochar, 1)));
         assert_eq!(
             state.buffer_j,
-            2_000_000 - 20 * (CRUDE_FURNACE_W / STEPS_PER_SECOND)
+            2_000_000 - 20 * (CRUDE_FURNACE_W / STEPS_PER_FACTORY_SECOND)
         );
         steps(&mut g, 1);
         assert!(!furnace(&g, f).lit, "out of input");

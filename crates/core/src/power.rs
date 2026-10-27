@@ -11,11 +11,10 @@ use hecs::{Entity, World};
 use serde::{Deserialize, Serialize};
 
 use crate::components::{Inventory, ItemKind, Position};
-use crate::factory::{FactoryKind, FACTORY_STEP_TICKS, TICKS_PER_SECOND};
+pub use crate::factory::STEPS_PER_FACTORY_SECOND;
+use crate::factory::FactoryKind;
 use crate::resources::Resources;
 
-/// Factory steps per game second.
-pub const STEPS_PER_SECOND: u64 = TICKS_PER_SECOND / FACTORY_STEP_TICKS;
 /// A burner generator's most output, in watts (joules per game second).
 pub const BURNER_MAX_W: u64 = 90_000;
 /// Fuel item stacks a burner generator holds.
@@ -236,7 +235,7 @@ pub fn rebuild(world: &World) -> PowerNetworks {
 /// Joules a generator can give this step: up to its maximum, from its buffer plus the next
 /// fuel item it would have to start.
 fn available_j(world: &World, generator: Entity) -> u64 {
-    let max_step = BURNER_MAX_W / STEPS_PER_SECOND;
+    let max_step = BURNER_MAX_W / STEPS_PER_FACTORY_SECOND;
     let buffer = world.get::<&Generator>(generator).map_or(0, |g| g.buffer_j);
     let next = world
         .get::<&Inventory>(generator)
@@ -283,7 +282,7 @@ pub fn step_power(world: &mut World, res: &mut Resources) {
             .iter()
             .filter_map(|&c| world.get::<&PowerConsumer>(c).ok().map(|c| *c))
             .filter(|c| c.active)
-            .map(|c| c.demand_w / STEPS_PER_SECOND)
+            .map(|c| c.demand_w / STEPS_PER_FACTORY_SECOND)
             .sum();
         let available: Vec<u64> = network
             .generators
@@ -322,8 +321,8 @@ pub fn step_power(world: &mut World, res: &mut Resources) {
                 consumer.satisfaction_permille = if consumer.active { satisfaction } else { 0 };
             }
         }
-        network.supply_w = supplied * STEPS_PER_SECOND;
-        network.demand_w = demand_j * STEPS_PER_SECOND;
+        network.supply_w = supplied * STEPS_PER_FACTORY_SECOND;
+        network.demand_w = demand_j * STEPS_PER_FACTORY_SECOND;
     }
     res.power.networks = networks;
 }
@@ -384,10 +383,15 @@ mod tests {
         items + game.world.get::<&Generator>(generator).unwrap().buffer_j
     }
 
+    /// Pass `seconds` factory seconds, one at a time.
     fn pass_seconds(game: &mut Game, seconds: u64) {
         for _ in 0..seconds {
-            game.res.player_state.intent =
-                crate::intent::PlayerIntent::movement(0, 0, 0, TICKS_PER_SECOND);
+            game.res.player_state.intent = crate::intent::PlayerIntent::movement(
+                0,
+                0,
+                0,
+                crate::factory::FACTORY_SECOND_TICKS,
+            );
             game.tick();
         }
     }

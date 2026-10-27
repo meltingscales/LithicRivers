@@ -13,7 +13,7 @@ key action.INTERACT
 key ui.MENU_ACTIVATE
 expect-text "Electric Furnace facing east - smelting"
 expect-text "power 100%"
-# Two game seconds: halfway through a log
-tick 200
-expect-text "smelting 50%"
+# Two factory seconds (six game seconds) on: half a log further
+tick 600
+expect-text "smelting 80%"
 screen furnace-window

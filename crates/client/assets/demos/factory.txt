@@ -25,40 +25,40 @@ key ui.MENU_ACTIVATE
 wait 2500
 key ui.CLOSE_HELP_MENU
 # The electric furnace line: chest, extractor, long belts, furnace, long belts, chest.
-# Half a game second a beat, so each log and biochar steps one tile at a time.
+# Two factory steps a beat, so each log and biochar steps one tile at a time.
 cheat tp 46 -5 0
-tick 50
-tick 50
-tick 50
-tick 50
-tick 50
-tick 50
-tick 50
-tick 50
-tick 50
-tick 50
-tick 50
-tick 50
-tick 50
-tick 50
-tick 50
-tick 50
+tick 120
+tick 120
+tick 120
+tick 120
+tick 120
+tick 120
+tick 120
+tick 120
+tick 120
+tick 120
+tick 120
+tick 120
+tick 120
+tick 120
+tick 120
+tick 120
 # Choices: Open electric furnace (N), then the belts beside it
 key action.INTERACT
 key ui.MENU_ACTIVATE
-tick 50
-tick 50
-tick 50
-tick 50
-tick 50
-tick 50
+tick 120
+tick 120
+tick 120
+tick 120
+tick 120
+tick 120
 key ui.CLOSE_HELP_MENU
-tick 50
-tick 50
-tick 50
-tick 50
-tick 50
-tick 50
-tick 50
-tick 50
+tick 120
+tick 120
+tick 120
+tick 120
+tick 120
+tick 120
+tick 120
+tick 120
 screen
