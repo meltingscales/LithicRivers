@@ -66,8 +66,7 @@ fn render_map_panel(f: &mut Frame, app: &mut App, area: Rect) {
 
     // Get selected marker for arrow drawing
     // Index 0 is the "unselect" option, so actual markers start at index 1
-    let selected_marker =
-        selected_marker(app).and_then(|i| app.core.game.res.quest_markers.get(i));
+    let selected_marker = selected_marker(app).and_then(|i| app.core.game.res.quest_markers.get(i));
 
     let selected_marker_chunk = selected_marker.map(|marker| {
         (

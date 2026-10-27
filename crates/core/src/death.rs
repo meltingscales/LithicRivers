@@ -2,11 +2,11 @@
 //! the body itself, and the robot can respawn at the bunker with the default body and the
 //! starting kit. (A stand-in until a real backup body is designed.)
 
+use crate::components::{itemkind_name, ItemStack};
 use crate::components::{
     BattleDelay, Dead, EntityKind, GameEntity, Inventory, Position, SpriteRef, Wreck,
 };
 use crate::model::body::Body;
-use crate::components::{itemkind_name, ItemStack};
 use crate::resources::{QuestMarker, QuestMarkerType, Resources};
 use hecs::{Entity, World};
 
@@ -288,7 +288,12 @@ mod tests {
         let mut t = dying_game();
         let player = t.game.get_player_entity().unwrap();
         let game = &mut t.game;
-        player_died(&mut game.world, &mut game.res, player, "destroyed by a dog".into());
+        player_died(
+            &mut game.world,
+            &mut game.res,
+            player,
+            "destroyed by a dog".into(),
+        );
         assert_eq!(
             death_markers(&t.game.res),
             vec![(
@@ -300,7 +305,12 @@ mod tests {
 
         // A second death with nothing carried gets the next number
         t.game.respawn();
-        t.game.world.get::<&mut Inventory>(player).unwrap().slots.clear();
+        t.game
+            .world
+            .get::<&mut Inventory>(player)
+            .unwrap()
+            .slots
+            .clear();
         let game = &mut t.game;
         player_died(&mut game.world, &mut game.res, player, "shut down".into());
         t.tick();

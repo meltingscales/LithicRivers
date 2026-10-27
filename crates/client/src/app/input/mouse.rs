@@ -341,7 +341,8 @@ fn click_target(app: &mut App, target: crate::ui::click_targets::ClickTarget, bu
         }
         T::FurnaceSlot(i) => {
             if let Some(window) = &mut app.panels.furnace_window {
-                if let Some(&slot) = lithicrivers_core::furnace::Slot::for_kind(window.kind).get(i) {
+                if let Some(&slot) = lithicrivers_core::furnace::Slot::for_kind(window.kind).get(i)
+                {
                     window.slot = slot;
                 }
                 window.player_focus = false;

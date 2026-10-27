@@ -507,7 +507,10 @@ mod art_tests {
         for kind in FactoryKind::iter().filter(|k| k.item() == Some(item)) {
             for facing in [Facing::North, Facing::East, Facing::South, Facing::West] {
                 let mut sprites = vec![kind.sprite(facing)];
-                if matches!(kind, FactoryKind::CrudeFurnace | FactoryKind::ElectricFurnace) {
+                if matches!(
+                    kind,
+                    FactoryKind::CrudeFurnace | FactoryKind::ElectricFurnace
+                ) {
                     sprites.push(lithicrivers_core::furnace::sprite(kind, facing, true));
                 }
                 refs.extend(sprites.into_iter().map(|s| (s.category, s.name)));
