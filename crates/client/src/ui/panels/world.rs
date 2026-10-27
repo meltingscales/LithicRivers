@@ -12,6 +12,9 @@ use ratatui::{
 use std::collections::HashMap;
 
 /// Convert a color to grayscale for fog of war rendering
+/// How bright remembered surface tiles are at night, in thousandths.
+const NIGHT_MEMORY_LIGHT: u16 = 350;
+
 /// Darken an RGB color to `light` thousandths of its brightness.
 fn dim(color: Color, light: u16) -> Color {
     match color {
@@ -172,15 +175,18 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
         HashMap::new()
     };
 
-    // Dawn and dusk dim the surface between full light and 45%; night uses fog of war instead
-    let surface_light: u16 = {
+    // Dawn and dusk dim the surface between full light and 45%. At night the surface uses fog
+    // of war, and what the robot remembers there is drawn dark, so night looks like night
+    let (surface_light, remembered_light): (u16, u16) = {
         use lithicrivers_core::game_time::DayPhase;
         let time = &app.core.game.res.time;
         match time.phase() {
             DayPhase::Dawn | DayPhase::Dusk if app.ui.view_z >= 0 => {
-                (450 + 550 * time.daylight_permille() / 1000) as u16
+                let light = (450 + 550 * time.daylight_permille() / 1000) as u16;
+                (light, light)
             }
-            _ => 1000,
+            DayPhase::Night if app.ui.view_z >= 0 => (1000, NIGHT_MEMORY_LIGHT),
+            _ => (1000, 1000),
         }
     };
     for row in 0..target_rows {
@@ -264,7 +270,7 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
 
                 // Apply grayscale for visited but not illuminated tiles
                 if fog_state == FogState::Visited {
-                    color = to_grayscale(color);
+                    color = dim(to_grayscale(color), remembered_light);
                 }
                 color = dim(color, surface_light);
 
@@ -291,7 +297,7 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
 
                 // Apply grayscale for visited but not illuminated tiles
                 if fog_state == FogState::Visited {
-                    color = to_grayscale(color);
+                    color = dim(to_grayscale(color), remembered_light);
                 }
                 color = dim(color, surface_light);
 
@@ -586,4 +592,42 @@ fn wire_cells(
         }
     }
     cells
+}
+
+#[cfg(test)]
+mod night_tests {
+    use crate::headless::chain_commands;
+    use ratatui::style::Color;
+
+    /// The brightest channel of the cell `dx` columns from the player at 100x30.
+    fn brightness(runner: &mut crate::headless::Runner, dx: i32) -> u8 {
+        let (col, row) = ((38 + dx) as u16, 10);
+        match runner.buffer().get(col, row).fg {
+            Color::Rgb(r, g, b) => r.max(g).max(b),
+            other => panic!("expected an RGB tile color, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn remembered_surface_tiles_are_dark_at_night() {
+        // Walk three tiles east, so the start is remembered but out of the light
+        let walk = ["key movement.MOVE_EAST 3"];
+        let mut day = chain_commands(&["skip-splash", "key ui.MENU_PREV", "cheat tp 0 0 0"]);
+        day.chain(&walk);
+        let mut night = chain_commands(&[
+            "skip-splash",
+            "key ui.MENU_PREV",
+            "cheat tp 0 0 0",
+            "cheat set_time 23:00",
+            "key movement.WAIT",
+        ]);
+        night.chain(&walk);
+        let (day_tile, night_tile) = (brightness(&mut day, -3), brightness(&mut night, -3));
+        assert!(
+            night_tile * 2 < day_tile,
+            "remembered at night {night_tile}, by day {day_tile}"
+        );
+        // Within the light, night looks like day
+        assert_eq!(brightness(&mut night, 1), brightness(&mut day, 1));
+    }
 }

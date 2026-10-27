@@ -145,8 +145,8 @@ first quest and associated dungeons
     - [x] **Block placement with inventory consumption implemented**
 - [x] Simple crafting system
   - [x] 3 starter recipes (stick, plank, torch) with deterministic outputs
-- [ ] Day/night cycle
-  - [ ] Full cycle length ~10–20 minutes with visual cue
+- [x] Day/night cycle
+  - [x] **15-minute day, dark surface nights with fog of war, a clock in the MODES panel**
 - [ ] Basic survival mechanics (damage, repair, body parts)
   - [ ] Body panel shows part states; player can incur and repair at least 1 damage type
 - [x] NPC interactions and conversations just like the python version
@@ -244,9 +244,9 @@ Non-code work from the old TODO.md.
    - Body panel shows part states; player can incur and repair at least 1 damage type
    - This is essential for the core survival loop
 
-2. **Day/night cycle**
-   - Full cycle length ~10–20 minutes with visual cue
-   - Affects gameplay rhythm and difficulty
+2. **~~Day/night cycle~~** ✅ **COMPLETED**
+   - ~~Full cycle length ~10–20 minutes with visual cue~~
+   - ✅ **15-minute day; surface nights use fog of war; dogs are bolder at night**
 
 3. **~~NPC interactions and conversations~~** ✅ **COMPLETED**
    - ~~Port from Python version for quest/story content~~

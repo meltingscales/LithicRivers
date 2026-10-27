@@ -1,0 +1,12 @@
+# The empty cheat console lists every command, scrolling within its window: the list stops
+# at the window's border and says how to scroll for more.
+seed 12345
+size 100x30
+skip-splash
+key ui.OPEN_COMMAND_MENU
+expect-text "set_time hh:mm"
+expect-text "more commands below"
+screen help-top
+key ui.CHEAT_CONSOLE_SCROLL_DOWN 20
+expect-text "toggle_tutorial"
+screen help-bottom
