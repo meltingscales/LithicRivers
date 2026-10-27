@@ -5,7 +5,7 @@ input_file: scripts/snapshots/stairs-ghost.txt
 ---
 === screen ghost-below ===
                                             LithicRivers
-                                                                            ┌MODES─────────────────┐
+                                                                            ┌MODES ☼ 08:12─────────┐
                                                                             │  ------ - - -- - FOG │
                                                                             └──────────────────────┘
                                                                             ┌Inventory─────────────┐
@@ -37,7 +37,7 @@ input_file: scripts/snapshots/stairs-ghost.txt
 === end screen ===
 === screen no-ghost ===
                                             LithicRivers
-                                                                            ┌MODES─────────────────┐
+                                                                            ┌MODES ☼ 08:12─────────┐
                                                                             │  ------ - - -- - FOG │
                                                                             └──────────────────────┘
                                                                             ┌Inventory─────────────┐

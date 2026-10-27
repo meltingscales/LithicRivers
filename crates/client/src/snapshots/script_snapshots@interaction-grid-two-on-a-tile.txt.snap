@@ -5,7 +5,7 @@ input_file: scripts/snapshots/interaction-grid-two-on-a-tile.txt
 ---
 === screen first-press ===
                                             LithicRivers
-##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,,         ┌MODES─────────────────┐
+##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,,         ┌MODES ☼ 08:06─────────┐
 ###vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#######,,       │  ------ - - -- - FOG │
 ####vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#     #,,,,     └──────────────────────┘
 #####vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#     #,,,,,,,  ┌Inventory─────────────┐
@@ -37,7 +37,7 @@ input_file: scripts/snapshots/interaction-grid-two-on-a-tile.txt
 === end screen ===
 === screen second-press ===
                                             LithicRivers
-##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,,         ┌MODES─────────────────┐
+##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,,         ┌MODES ☼ 08:06─────────┐
 ###vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#######,,       │  ------ - - -- - FOG │
 ####vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#     #,,,,     └──────────────────────┘
 #####vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#     #,,,,,,,  ┌Inventory─────────────┐
@@ -69,7 +69,7 @@ input_file: scripts/snapshots/interaction-grid-two-on-a-tile.txt
 === end screen ===
 === screen corpse ===
                                             LithicRivers
-##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,,         ┌MODES─────────────────┐
+##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,,         ┌MODES ☼ 08:06─────────┐
 ###vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#######,,       │  ------ - - -- - FOG │
 ####vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#     #,,,,     └──────────────────────┘
 #####vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#     #,,,,,,,  ┌Inventory─────────────┐

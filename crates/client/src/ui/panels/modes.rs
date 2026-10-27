@@ -9,6 +9,22 @@ use ratatui::{
     Frame,
 };
 
+/// The time of day for the panel title: a sun by day, a star at night, colored by phase.
+fn clock(app: &App) -> Span<'static> {
+    use lithicrivers_core::game_time::DayPhase;
+    let time = &app.core.game.res.time;
+    let (hour, minute) = time.clock();
+    let (glyph, color) = match time.phase() {
+        DayPhase::Day => ('☼', Color::Yellow),
+        DayPhase::Dawn | DayPhase::Dusk => ('☼', Color::Rgb(230, 126, 34)),
+        DayPhase::Night => ('*', Color::LightBlue),
+    };
+    Span::styled(
+        format!("{glyph} {hour:02}:{minute:02}"),
+        Style::default().fg(color),
+    )
+}
+
 pub fn render_modes_panel(f: &mut Frame, app: &mut App, area: Rect) {
     let mut lines: Vec<Line> = Vec::new();
 
@@ -111,7 +127,7 @@ pub fn render_modes_panel(f: &mut Frame, app: &mut App, area: Rect) {
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .title(Line::from("MODES"))
+                .title(Line::from(vec![Span::raw("MODES "), clock(app)]))
                 .style(Style::default().fg(Color::White)),
         );
     f.render_widget(content, area);

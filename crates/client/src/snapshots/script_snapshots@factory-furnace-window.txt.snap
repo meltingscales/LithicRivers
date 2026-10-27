@@ -5,7 +5,7 @@ input_file: scripts/snapshots/factory-furnace-window.txt
 ---
 === screen furnace-window ===
                                             LithicRivers
-#####vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,          ┌MODES─────────────────┐
+#####vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,          ┌MODES ☼ 08:01─────────┐
 ######vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,         │  ------ - - -- - FOG │
 ######vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#vvvvvvvvvvvvvvvvv,,,        └──────────────────────┘
 #######vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,        ┌Inventory─────────────┐

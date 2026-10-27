@@ -5,7 +5,7 @@ input_file: scripts/snapshots/debug-world-showcase.txt
 ---
 === screen showcase ===
                                             LithicRivers
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌MODES─────────────────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌MODES ☼ 08:16─────────┐
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  ------ - - -- - FOG │
 vvvvvvvvvvvvvvvvvvvvvvvvvvCvvv>>||CvvvC→>|CvvvvvCvvvvvvvvvvvvvGvvvvvvvvv>▲|C└──────────────────────┘
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv^vvvvv>>F>CvvvG+vvvvvvvv/vvv┌Inventory─────────────┐
