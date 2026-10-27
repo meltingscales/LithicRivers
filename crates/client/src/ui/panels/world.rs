@@ -12,6 +12,17 @@ use ratatui::{
 use std::collections::HashMap;
 
 /// Convert a color to grayscale for fog of war rendering
+/// Darken an RGB color to `light` thousandths of its brightness.
+fn dim(color: Color, light: u16) -> Color {
+    match color {
+        Color::Rgb(r, g, b) if light < 1000 => {
+            let scale = |c: u8| (c as u32 * light as u32 / 1000) as u8;
+            Color::Rgb(scale(r), scale(g), scale(b))
+        }
+        other => other,
+    }
+}
+
 fn to_grayscale(color: Color) -> Color {
     match color {
         Color::Rgb(r, g, b) => {
@@ -161,6 +172,17 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
         HashMap::new()
     };
 
+    // Dawn and dusk dim the surface between full light and 45%; night uses fog of war instead
+    let surface_light: u16 = {
+        use lithicrivers_core::game_time::DayPhase;
+        let time = &app.core.game.res.time;
+        match time.phase() {
+            DayPhase::Dawn | DayPhase::Dusk if app.ui.view_z >= 0 => {
+                (450 + 550 * time.daylight_permille() / 1000) as u16
+            }
+            _ => 1000,
+        }
+    };
     for row in 0..target_rows {
         let mut spans = Vec::with_capacity(target_cols);
         for col in 0..target_cols {
@@ -244,6 +266,7 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
                 if fog_state == FogState::Visited {
                     color = to_grayscale(color);
                 }
+                color = dim(color, surface_light);
 
                 spans.push(Span::styled(
                     sprite_char.to_string(),
@@ -270,6 +293,7 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
                 if fog_state == FogState::Visited {
                     color = to_grayscale(color);
                 }
+                color = dim(color, surface_light);
 
                 spans.push(Span::styled(
                     sprite_char.to_string(),

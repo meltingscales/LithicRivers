@@ -5,7 +5,7 @@ input_file: scripts/snapshots/factory-vertical-conveyor.txt
 ---
 === screen look-up ===
                                             LithicRivers
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌MODES─────────────────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌MODES ☼ 08:00─────────┐
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  ------ L - -- - FOG │
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Look at───────────────┐
@@ -47,7 +47,7 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└�
 === end screen ===
 === screen look-down ===
                                             LithicRivers
-                                                                            ┌MODES─────────────────┐
+                                                                            ┌MODES ☼ 08:12─────────┐
                                                                             │  ------ L - -- - FOG │
                                                                             └──────────────────────┘
                                                                             ┌Look at───────────────┐

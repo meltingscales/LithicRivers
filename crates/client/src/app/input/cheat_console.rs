@@ -43,6 +43,11 @@ impl CommandRegistry {
                 handler: handle_toggle_fogofwar_command,
             },
             Command {
+                name: "set_time",
+                description: "set_time hh:mm - Skip forward to the next time the clock reads hh:mm",
+                handler: handle_set_time_command,
+            },
+            Command {
                 name: "toggle_tutorial",
                 description: "toggle_tutorial - Toggle tutorial panel visibility",
                 handler: handle_toggle_tutorial_command,
@@ -327,6 +332,26 @@ fn handle_spawn_enemy_command(app: &mut App, parts: &[&str]) -> Result<(), Box<d
         pos.y,
         pos.z
     ));
+    Ok(())
+}
+
+/// Skip forward to the next moment the clock reads `hh:mm`, never backward, so tick-based
+/// timers stay in order. Factories and plants catch up on the next tick.
+fn handle_set_time_command(app: &mut App, parts: &[&str]) -> Result<(), Box<dyn Error>> {
+    let usage = "Usage: set_time hh:mm (00:00 to 23:59)";
+    let (hour, minute) = parts
+        .get(1)
+        .and_then(|t| t.split_once(':'))
+        .and_then(|(h, m)| Some((h.parse::<u64>().ok()?, m.parse::<u64>().ok()?)))
+        .filter(|&(h, m)| h < 24 && m < 60)
+        .ok_or(usage)?;
+    let time = &mut app.core.game.res.time;
+    time.tick += time.ticks_until(hour, minute);
+    let (h, m) = time.clock();
+    app.core
+        .game
+        .res
+        .log(format!("The time is now {h:02}:{m:02}"));
     Ok(())
 }
 
@@ -895,5 +920,40 @@ mod suggestion_tests {
             panic!("still open after picking");
         };
         assert_eq!(input, &format!("giveitem {last}"));
+    }
+}
+
+#[cfg(test)]
+mod set_time_tests {
+    use crate::headless::{chain_commands, parse_script};
+
+    #[test]
+    fn set_time_skips_forward_to_the_next_matching_time() {
+        let mut runner = chain_commands(&["skip-splash", "cheat set_time 00:00"]);
+        let time = &runner.app.core.game.res.time;
+        assert_eq!(time.clock(), (0, 0));
+        assert!(time.is_night());
+        let midnight = time.tick;
+        assert!(midnight > 0, "forward from 08:00, never back");
+        runner.chain(&[
+            "expect-text \"The time is now 00:00\"",
+            "cheat set_time 12:30",
+        ]);
+        let time = &runner.app.core.game.res.time;
+        assert_eq!(time.clock(), (12, 30));
+        assert!(time.tick > midnight);
+    }
+
+    #[test]
+    fn set_time_refuses_a_bad_time() {
+        let mut runner = chain_commands(&["skip-splash"]);
+        let before = runner.app.core.game.res.time.tick;
+        for bad in ["25:99", "noon", "12"] {
+            let script = parse_script(&format!("cheat set_time {bad}")).unwrap();
+            let report = runner.run_steps(&script.steps);
+            let error = report.error.unwrap_or_default();
+            assert!(error.contains("Usage: set_time hh:mm"), "{bad}: {error}");
+            assert_eq!(runner.app.core.game.res.time.tick, before);
+        }
     }
 }

@@ -1,0 +1,19 @@
+# The day and night cycle on the surface: the MODES panel clock at noon, dusk and midnight,
+# and at midnight fog of war on the surface, lit only within the robot's light radius.
+seed 12345
+size 100x30
+skip-splash
+key ui.MENU_PREV
+cheat tp 0 0 0
+cheat set_time 12:00
+key movement.WAIT
+expect-text "MODES ☼ 12:0"
+screen noon
+cheat set_time 20:00
+key movement.WAIT
+expect-text "MODES ☼ 20:0"
+screen dusk
+cheat set_time 00:00
+key movement.WAIT
+expect-text "MODES * 00:0"
+screen midnight

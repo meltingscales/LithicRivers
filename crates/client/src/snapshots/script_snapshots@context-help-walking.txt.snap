@@ -5,7 +5,7 @@ input_file: scripts/snapshots/context-help-walking.txt
 ---
 === screen walking ===
                                             LithicRivers
-##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,,         ┌MODES─────────────────┐
+##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,,         ┌MODES ☼ 08:00─────────┐
 ###vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#######,,       │  ------ - - -- - FOG │
 ####vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#     #,,,,     └──────────────────────┘
 #####vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#     #,,,,,,,  ┌Inventory─────────────┐

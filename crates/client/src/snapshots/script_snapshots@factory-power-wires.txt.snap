@@ -5,7 +5,7 @@ input_file: scripts/snapshots/factory-power-wires.txt
 ---
 === screen wires-on ===
                                             LithicRivers
-###########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,    ┌MODES─────────────────┐
+###########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,    ┌MODES ☼ 08:44─────────┐
 ###########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#vvvvvvvvvvvvvvvvv,,,   │  ------ - - -- - FOG │
 ############vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,   └──────────────────────┘
 ############vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,  ┌Inventory─────────────┐
@@ -37,7 +37,7 @@ input_file: scripts/snapshots/factory-power-wires.txt
 === end screen ===
 === screen wires-off ===
                                             LithicRivers
-###########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,    ┌MODES─────────────────┐
+###########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,    ┌MODES ☼ 08:44─────────┐
 ###########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#vvvvvvvvvvvvvvvvv,,,   │  ------ - - -- - FOG │
 ############vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,   └──────────────────────┘
 ############vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,  ┌Inventory─────────────┐

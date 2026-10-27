@@ -10,6 +10,11 @@ use crate::systems::ecs_utils::{
 use hecs::World;
 
 // Feral dogs with A* pathfinding that chase the player intelligently
+/// How far a feral dog notices the player by day, in tiles.
+pub const DOG_NOTICE_DAY: i64 = 15;
+/// How far a feral dog notices the player at night: they hunt bolder in the dark.
+pub const DOG_NOTICE_NIGHT: i64 = 22;
+
 pub fn feral_dog_system(world: &mut World, res: &mut Resources) {
     // Get player position if available
     let player_pos = match get_player_position(world) {
@@ -54,9 +59,13 @@ pub fn feral_dog_system(world: &mut World, res: &mut Resources) {
         let dy = player_pos.y - dog_pos.y;
         let distance_sq = dx * dx + dy * dy;
 
-        // Only chase if player is within 15 tiles (increased range for smarter dogs)
-        if distance_sq > 225 {
-            // 15^2
+        // Only chase a player they notice: farther away at night
+        let notice = if res.time.is_night() {
+            DOG_NOTICE_NIGHT
+        } else {
+            DOG_NOTICE_DAY
+        };
+        if distance_sq > notice * notice {
             tracing::info!(
                 "Dog at {:?} too far from player (distance_sq: {})",
                 dog_pos,
@@ -557,5 +566,32 @@ pub fn generate_enemy_action(world: &mut World, res: &mut Resources, enemy_entit
                        enemy_entity, queue.actions.len(), queue.current_action.is_some());
     } else {
         tracing::error!(target: "combat", "Failed to get mutable ActionQueue for enemy {:?}", enemy_entity);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::components::Position;
+    use crate::intent::PlayerIntent;
+    use crate::test_support::TestWorld;
+    use crate::tiles::TileKind;
+
+    /// Where a feral dog 20 tiles east of the player is after a few turns at `hour`:00.
+    fn dog_after_turns(hour: u64) -> Position {
+        let mut world = TestWorld::new(7).fill((-5, -3, 0), (30, 3, 0), TileKind::Grass);
+        let dog = world.feral_dog(20, 0, 0);
+        let mut game = world.build();
+        game.game.res.time.tick = game.game.res.time.ticks_until(hour, 0);
+        for _ in 0..3 {
+            game.game.res.player_state.intent = PlayerIntent::movement(0, 0, 0, 200);
+            game.tick();
+        }
+        game.pos(dog).unwrap()
+    }
+
+    #[test]
+    fn dogs_notice_the_player_from_farther_away_at_night() {
+        assert_eq!(dog_after_turns(12).x, 20, "at noon 20 tiles is too far");
+        assert!(dog_after_turns(0).x < 20, "at midnight the dog gives chase");
     }
 }

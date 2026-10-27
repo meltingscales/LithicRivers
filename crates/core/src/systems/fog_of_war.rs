@@ -159,8 +159,8 @@ pub fn get_fog_state(
     tile_y: i64,
     tile_z: i64,
 ) -> FogState {
-    // Disable fog of war at surface level and above (Z >= 0)
-    if tile_z >= 0 {
+    // The surface (Z >= 0) is lit except at night; underground is always dark
+    if tile_z >= 0 && !resources.time.is_night() {
         return FogState::Illuminated;
     }
 
@@ -528,6 +528,46 @@ mod tests {
         assert_eq!(
             get_fog_state(&world, &resources, 100, 100, -5),
             FogState::Unvisited
+        );
+    }
+
+    #[test]
+    fn night_darkens_the_surface_but_not_the_underground() {
+        let (mut world, player) = create_test_world_with_player();
+        let mut resources = create_mock_resources();
+        let at_surface = |world: &mut World| {
+            *world.get::<&mut Position>(player).unwrap() = Position { x: 10, y: 10, z: 0 };
+        };
+        at_surface(&mut world);
+        let noon = resources.time.ticks_until(12, 0);
+        resources.time.tick = noon;
+        assert_eq!(
+            get_fog_state(&world, &resources, 100, 100, 0),
+            FogState::Illuminated
+        );
+        let underground_at_noon = get_fog_state(&world, &resources, 10, 30, -1);
+
+        // Midnight: only the light radius (2 tiles without a torch) is lit
+        resources.time.tick = noon + resources.time.ticks_until(0, 0);
+        assert!(resources.time.is_night());
+        assert_eq!(
+            get_fog_state(&world, &resources, 12, 10, 0),
+            FogState::Illuminated
+        );
+        assert_eq!(
+            get_fog_state(&world, &resources, 13, 10, 0),
+            FogState::Unvisited
+        );
+        update_fog_of_war(&mut world, &resources);
+        *world.get::<&mut Position>(player).unwrap() = Position { x: 20, y: 10, z: 0 };
+        assert_eq!(
+            get_fog_state(&world, &resources, 11, 10, 0),
+            FogState::Visited,
+            "seen tiles are remembered in grayscale"
+        );
+        assert_eq!(
+            get_fog_state(&world, &resources, 10, 30, -1),
+            underground_at_noon
         );
     }
 

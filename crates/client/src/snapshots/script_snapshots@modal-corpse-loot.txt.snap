@@ -5,7 +5,7 @@ input_file: scripts/snapshots/modal-corpse-loot.txt
 ---
 === screen corpse-loot ===
                                             LithicRivers
-##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,,         ┌MODES─────────────────┐
+##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,,         ┌MODES ☼ 08:00─────────┐
 ###vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#######,,       │  ------ - - -- - FOG │
 ####vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#     #,,,,     └──────────────────────┘
 #####vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#     #,,,,,,,  ┌Inventory─────────────┐
