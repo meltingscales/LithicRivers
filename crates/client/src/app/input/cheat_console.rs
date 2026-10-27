@@ -16,6 +16,9 @@ pub struct Command {
 }
 
 /// Registry of all available commands
+/// Commands the console's help list shows at once; it scrolls through the rest.
+pub const HELP_COMMAND_ROWS: usize = 5;
+
 pub struct CommandRegistry {
     commands: HashMap<&'static str, Command>,
 }
@@ -806,7 +809,7 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Error>>
                         // Only scroll when showing all commands (no input/autocomplete)
                         let registry = get_command_registry();
                         let commands = registry.get_command_descriptions();
-                        let max_scroll = commands.len().saturating_sub(5); // Show max 5 commands at a time
+                        let max_scroll = commands.len().saturating_sub(HELP_COMMAND_ROWS);
                         let new_scroll_offset = (*scroll_offset + 1).min(max_scroll);
                         app.panels.cheat_console = CheatConsoleState::Open {
                             input: input.clone(),

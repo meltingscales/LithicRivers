@@ -25,13 +25,8 @@ pub(crate) fn render_cheat_console_modal(f: &mut Frame, app: &mut App) {
         scroll_offset,
     } = &app.panels.cheat_console
     {
-        // Centered, 60% wide; taller while it lists suggestions
-        let height = if autocomplete_suggestions.is_empty() {
-            25
-        } else {
-            60
-        };
-        let area = centered_rect(60, height, f.size());
+        // Centered, 60% wide and tall enough for the suggestions or the command list
+        let area = centered_rect(60, 60, f.size());
 
         // Clear the background
         f.render_widget(Clear, area);
@@ -127,8 +122,7 @@ pub(crate) fn render_cheat_console_modal(f: &mut Frame, app: &mut App) {
             let commands = registry.get_command_descriptions();
             let mut lines = vec![Line::from("Available commands:")];
 
-            // Show 5 commands at a time (expanded visual size)
-            let max_visible_commands = 5;
+            let max_visible_commands = app::input::cheat_console::HELP_COMMAND_ROWS;
             let total_commands = commands.len();
             let start_index = *scroll_offset;
             let end_index = (start_index + max_visible_commands).min(total_commands);
@@ -171,16 +165,16 @@ pub(crate) fn render_cheat_console_modal(f: &mut Frame, app: &mut App) {
             .style(Style::default().fg(Color::Gray))
             .alignment(Alignment::Center);
 
-        let help_height = if !autocomplete_suggestions.is_empty() {
-            0
-        } else {
-            6
-        }; // 1 line for title + 5 commands
+        // Between the input and the controls line, never past the window's border
         let help_area = Rect {
             x: inner.x,
             y: inner.y + 3,
             width: inner.width,
-            height: help_height,
+            height: if autocomplete_suggestions.is_empty() {
+                inner.height.saturating_sub(4)
+            } else {
+                0
+            },
         };
         f.render_widget(help_paragraph, help_area);
 

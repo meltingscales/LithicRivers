@@ -22,6 +22,7 @@
 
 ### Light on the surface
 - By day, the surface is fully lit as today. At night, fog of war on the surface works as underground.
+- At night, remembered surface tiles are drawn in grayscale at 35% brightness, so a remembered field reads as dark rather than gray daylight.
 - Dawn and dusk are drawn, not simulated: the client darkens remembered and unlit colors by a factor that eases between day and night, and fog of war switches on at the start of night.
 - The light radius doesn't change with the phase. The torch is how the player pushes back the night.
 
