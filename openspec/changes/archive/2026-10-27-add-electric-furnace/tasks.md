@@ -9,7 +9,7 @@
 
 - [x] 2.1 Glyph and window variant without a fuel slot, showing power satisfaction; verify a snapshot
 - [x] 2.2 Add the recipe (includes a crude furnace); verify the crafting reachability test passes
-- [ ] 2.3 Verify `just code-clippy`, `cargo test --workspace` and PR checks pass; user check
+- [x] 2.3 Verify `just code-clippy`, `cargo test --workspace` and PR checks pass; user check
 
 ## 3. Showcase and demo
 
