@@ -36,7 +36,7 @@ A grid of 3x3 cells, each 5 columns by 2 rows, with the keyed list to its right:
 
 - The key in each cell is the printable key for that direction's keybind (so `8` with the defaults).
 - The glyph is the 1x sprite of the entity or factory block the first choice there acts on, in its sprite color. A cell with no choice shows its key dimmed and nothing else.
-- The selected cell has a yellow border and its rows in the list are bold yellow. The list is in the existing order (nearest kinds first), with each row's key in brackets instead of the compass letter.
+- The selected cell's key and glyph are drawn black on yellow; the selected row is bold yellow and the other rows on that tile are yellow. The list is in the existing order (nearest kinds first), with each row's key in brackets instead of the compass letter.
 - The grid is 19 columns wide, so the modal fits at 80 columns. Below 40 columns of modal it falls back to the list alone.
 
 ### Keys

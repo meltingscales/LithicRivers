@@ -83,6 +83,8 @@ Demo mode: Watch Demo on the title screen plays the scenario scripts in `crates/
 
 Debug worlds: a script creates one from the title screen. With Developer mode on (the default), World type is the row after Developer mode, and `title.RIGHT` steps through Normal, Void, Ore test, Dog arena and Factory showcase: two `rawkey ENTER`, `key title.SELECT 2`, `key title.DOWN 4`, `key title.RIGHT <n>`, `key title.DOWN 2`, `key title.SELECT`, then two `rawkey ENTER` to skip the boot intro. See `scripts/snapshots/debug-world-showcase.txt`. In Rust tests, use `Game::new_with_settings(seed, settings)` with `settings.world_type` set.
 
+When Interact finds more than one choice, the Choose Interaction menu shows a 3x3 grid of the tiles around the player: a movement key (`key movement.MOVE_WEST`, or `key movement.WAIT` for the player's own tile) runs that tile's choice, pressing it again moves through a tile's several choices, and `key ui.MENU_UP` / `key ui.MENU_DOWN` walk the whole list (`scripts/snapshots/interaction-grid-two-on-a-tile.txt`).
+
 To set up a fight, spawn the enemy instead of relying on where the starting world places creatures: `cheat spawn_enemy feral_dog` then `key movement.WAIT` (feral dogs chase the player, so combat starts on that turn).
 
 In Rust tests, build a run from a list of steps with `headless::chain_commands(&["skip-splash", "cheat tp 0 0 0"])` (seed 12345, 100x30) and continue it with `runner.chain(&["key movement.WAIT"])`; both fail the test with the step's error.

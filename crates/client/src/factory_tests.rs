@@ -313,16 +313,12 @@ fn belt_line_carries_logs_into_a_chest() {
         "key movement.MOVE_SOUTH 2",
         "key ui.MENU_PREV 5",
         "key action.INTERACT",
-        "expect-text \"Put Log on belt (N)\"",
+        "expect-text \"[8] Put Log on belt\"",
     ]);
-    // Three times: choose the belt to the north in the menu, let the log ride, interact again
+    // Three times: pick the belt to the north in the grid, let the log ride, interact again
     for _ in 0..3 {
-        let north = choice_index(&runner, Position { x: 0, y: -1, z: 0 });
-        if north > 0 {
-            runner.chain(&[&format!("key movement.MOVE_SOUTH {north}")]);
-        }
         runner.chain(&[
-            "key ui.MENU_ACTIVATE",
+            "key movement.MOVE_NORTH",
             "key action.PASS_TIME",
             "key action.INTERACT",
         ]);
@@ -367,7 +363,7 @@ fn generator_window_lists_only_fuel() {
     let generator = choice_index(&runner, Position { x: -1, y: 0, z: 0 });
     // Inventory: Nail, Acorn, Log, Stick, Torch, String, Scrap Electronics, Stone; fuel: Log, Stick
     runner.chain(&[
-        &format!("key movement.MOVE_SOUTH {generator}"),
+        &format!("key ui.MENU_DOWN {generator}"),
         "key ui.MENU_ACTIVATE",
         "expect-text \"Burner Generator - network\"",
         "expect-text \"Showing fuel: 2 of 8\"",
@@ -386,7 +382,7 @@ fn power_pole_shows_its_network() {
     let mut runner = chain_commands(SMALL_GRID);
     let pole = choice_index(&runner, Position { x: -1, y: -1, z: 0 });
     runner.chain(&[
-        &format!("key movement.MOVE_SOUTH {pole}"),
+        &format!("key ui.MENU_DOWN {pole}"),
         "key ui.MENU_ACTIVATE",
         "expect-text \"Power Network\"",
         "expect-text \"Poles: 1   Generators: 1   Machines: 0\"",

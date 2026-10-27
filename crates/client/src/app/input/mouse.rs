@@ -270,6 +270,9 @@ fn click_target(app: &mut App, target: crate::ui::click_targets::ClickTarget, bu
             }
             activate(app);
         }
+        T::InteractionCell(offset) => {
+            crate::app::input::multi_action::choose_direction(app, offset);
+        }
         T::DialogueChoice(i) => {
             if let NPCInteractionState::InDialogue {
                 selected_choice, ..
@@ -1118,6 +1121,61 @@ mod tests {
             runner.app.panels.corpse_looting,
             CorpseLootingState::LootingCorpse { .. }
         ));
+    }
+
+    /// Two chests, west and east, and the Choose Interaction grid open.
+    fn two_chests_menu() -> Runner {
+        let mut runner = chain_commands(WITH_CHEST);
+        runner.chain(&[
+            "key build.PLACE_WEST",
+            "key build.PLACE_EAST",
+            "key build.TOGGLE_BREAK_PLACE_MODE 2",
+            "key action.INTERACT",
+            "expect-text \"Choose Interaction\"",
+        ]);
+        runner
+    }
+
+    fn opened_container(runner: &Runner) -> Option<Position> {
+        match runner.app.panels.corpse_looting {
+            CorpseLootingState::LootingCorpse { entity, .. } => runner
+                .app
+                .core
+                .game
+                .world
+                .get::<&Position>(entity)
+                .ok()
+                .map(|p| *p),
+            _ => None,
+        }
+    }
+
+    #[test]
+    fn clicking_a_grid_cell_picks_that_tile() {
+        let mut runner = two_chests_menu();
+        let player = crate::app::input::multi_action::player_position(&runner.app).unwrap();
+        click_on(&mut runner, ClickTarget::InteractionCell((-1, 0)), "left");
+        assert_eq!(
+            opened_container(&runner),
+            Some(Position {
+                x: player.x - 1,
+                ..player
+            })
+        );
+    }
+
+    #[test]
+    fn the_menu_keys_walk_the_list() {
+        let mut runner = two_chests_menu();
+        let second = match &runner.app.panels.multi_action_select {
+            crate::app_state::MultiActionSelectState::SelectingAction {
+                available_actions, ..
+            } => available_actions[1].position(),
+            crate::app_state::MultiActionSelectState::None => panic!("the menu is open"),
+        };
+        runner.chain(&["key ui.MENU_DOWN 2", "key ui.MENU_UP", "key ui.MENU_DOWN"]);
+        runner.chain(&["key ui.MENU_ACTIVATE"]);
+        assert_eq!(opened_container(&runner), Some(second));
     }
 
     #[test]

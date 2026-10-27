@@ -6,10 +6,10 @@ key ui.MENU_PREV
 cheat tp 27 0 0
 beat 500
 key action.PASS_TIME 3
-# Choices: Inspect power pole (W), Open auto-planter (SE)
+# Interact, then west: the power pole (the auto-planter is south-east)
 cheat tp 26 -6 0
 key action.INTERACT
-key ui.MENU_ACTIVATE
+key movement.MOVE_WEST
 wait 2500
 key ui.CLOSE_HELP_MENU
 cheat tp 27 0 0

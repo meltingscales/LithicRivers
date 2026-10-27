@@ -71,6 +71,8 @@ pub fn default_config() -> ConfigRoot {
             "CLOSE_HELP_MENU": ["ESCAPE"],
             "OPEN_COMMAND_MENU": ["/"],
             "MENU_ACTIVATE": ["ENTER", "SPACE"],
+            "MENU_UP": ["UP"],
+            "MENU_DOWN": ["DOWN"],
             "MENU_PREV": ["LEFT"],
             "MENU_NEXT": ["RIGHT"],
             "CREDITS_SCROLL_UP": ["UP"],

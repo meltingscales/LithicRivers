@@ -1,0 +1,22 @@
+# Choose Interaction with two choices on one tile: a nail dropped on the corpse's tile east
+# of the player. The first east press selects the nail (listed first), the second the
+# corpse, and Enter loots it.
+seed 12345
+size 100x30
+skip-splash
+key ui.MENU_PREV
+# Onto the corpse Game::new leaves at (18, 21, 0), drop a nail there, then step west
+cheat tp 18 21 0
+key ui.MENU_NEXT 5
+key inventory.DROP_ITEM
+key ui.MENU_PREV 5
+key movement.MOVE_WEST
+key action.INTERACT
+expect-text "Choose Interaction"
+key movement.MOVE_EAST
+screen first-press
+key movement.MOVE_EAST
+screen second-press
+key ui.MENU_ACTIVATE
+expect-text "Corpse"
+screen corpse

@@ -512,14 +512,36 @@ impl InteractionType {
         }
     }
 
-    /// The menu label, ending with the compass direction from the player (" (NE)") or
-    /// " (here)" on the player's own tile, so same-named choices can be told apart.
-    pub fn display_name_with_context(
-        &self,
-        world: &hecs::World,
-        player_pos: Option<Position>,
-    ) -> String {
-        let name = match self {
+    /// The entity it acts on (doors are tiles, not entities).
+    pub fn entity(&self) -> Option<hecs::Entity> {
+        match self {
+            InteractionType::PickupItem { entity, .. }
+            | InteractionType::LootCorpse { entity, .. }
+            | InteractionType::TalkToNPC { entity, .. }
+            | InteractionType::OpenChest { entity, .. }
+            | InteractionType::OpenGenerator { entity, .. }
+            | InteractionType::OpenMachine { entity, .. }
+            | InteractionType::OpenFurnace { entity, .. }
+            | InteractionType::SetFilter { entity, .. }
+            | InteractionType::InspectPole { entity, .. }
+            | InteractionType::LoadBelt { entity, .. } => Some(*entity),
+            InteractionType::OpenCloseDoor { .. } => None,
+        }
+    }
+
+    /// Which neighboring tile it is on, as (dx, dy) from `player`: (0, 0) for the player's
+    /// own tile.
+    pub fn offset_from(&self, player: Position) -> (i64, i64) {
+        let position = self.position();
+        (
+            (position.x - player.x).signum(),
+            (position.y - player.y).signum(),
+        )
+    }
+
+    /// The menu label.
+    pub fn label(&self, world: &hecs::World) -> String {
+        match self {
             InteractionType::PickupItem { item_name, .. } => format!("Pick up {}", item_name),
             InteractionType::LootCorpse { entity, .. } => {
                 // Try to get inventory to count items
@@ -545,26 +567,7 @@ impl InteractionType {
             ),
             InteractionType::OpenCloseDoor { is_open: true, .. } => "Close door".to_string(),
             InteractionType::OpenCloseDoor { is_open: false, .. } => "Open door".to_string(),
-        };
-        let Some(player) = player_pos else {
-            return name;
-        };
-        let position = self.position();
-        let direction = match (
-            (position.x - player.x).signum(),
-            (position.y - player.y).signum(),
-        ) {
-            (0, -1) => "N",
-            (1, -1) => "NE",
-            (1, 0) => "E",
-            (1, 1) => "SE",
-            (0, 1) => "S",
-            (-1, 1) => "SW",
-            (-1, 0) => "W",
-            (-1, -1) => "NW",
-            _ => "here",
-        };
-        format!("{name} ({direction})")
+        }
     }
 
     pub fn icon(&self) -> &'static str {
@@ -598,6 +601,8 @@ pub enum MultiActionSelectState {
     SelectingAction {
         available_actions: Vec<InteractionType>,
         selected_action: usize,
+        /// The grid direction last picked, so picking it again moves to its next choice
+        picked: Option<(i64, i64)>,
     },
 }
 

@@ -1,6 +1,7 @@
 # Bug: the "Choose interaction" menu didn't say where each choice is, so with two
-# similar things nearby you couldn't tell which one you'd use. Each choice now ends with
-# its direction from the player.
+# similar things nearby you couldn't tell which one you'd use. The menu is now a 3x3 grid
+# of the tiles around the player, and each choice in the list starts with the key for
+# its direction.
 seed 12345
 size 100x30
 skip-splash
@@ -16,6 +17,13 @@ key ui.MENU_ACTIVATE
 key build.PLACE_WEST
 key build.TOGGLE_BREAK_PLACE_MODE 2
 key action.INTERACT
-expect-text "Loot corpse (2 items) (E)"
-expect-text "Open chest (W)"
+expect-text "[6] Loot corpse (2 items)"
+expect-text "[4] Open chest"
+expect-text "Direction keys: pick a tile"
 screen choose-interaction
+# Nothing north: the menu stays open
+key movement.MOVE_NORTH
+expect-text "Nothing there"
+# West opens the chest at once
+key movement.MOVE_WEST
+expect-text "Opened chest"

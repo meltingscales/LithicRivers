@@ -26,9 +26,9 @@ key build.TOGGLE_BREAK_PLACE_MODE 2
 key ui.MENU_NEXT 5
 key movement.MOVE_SOUTH 2
 key ui.MENU_PREV 5
+# Interact, then northwest: the first belt
 key action.INTERACT
-key movement.MOVE_SOUTH
-key ui.MENU_ACTIVATE
+key movement.MOVE_NORTHWEST
 wait 800
 key movement.WAIT 6
 wait 1000

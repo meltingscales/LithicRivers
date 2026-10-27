@@ -367,6 +367,7 @@ fn handle_interaction(app: &mut App) {
             app.panels.multi_action_select = MultiActionSelectState::SelectingAction {
                 available_actions,
                 selected_action: 0,
+                picked: None,
             };
             app.core.game.res.log("Choose interaction:");
         }
