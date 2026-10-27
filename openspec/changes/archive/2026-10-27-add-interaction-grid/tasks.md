@@ -13,4 +13,4 @@
 
 - [x] 3.1 Update the help text and `AGENTS.md` where they mention the Choose Interaction keys
 - [x] 3.2 Verify `just code-clippy`, `cargo test --workspace` and PR checks pass
-- [ ] 3.3 User check that choosing by direction feels natural in the live client
+- [x] 3.3 User check that choosing by direction feels natural in the live client
