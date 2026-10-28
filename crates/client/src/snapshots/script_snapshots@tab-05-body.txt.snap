@@ -6,23 +6,23 @@ input_file: scripts/snapshots/tab-05-body.txt
 === screen body ===
                                             LithicRivers
 ┌Body──────────────────────┐┌Parts─────────────────────────────────────────────────────────────────┐
-│      ███                 ││           Head: Functional (100)                                     │
+│      ███                 ││>          Head: Functional (100)                                     │
 │     █████                ││          Torso: Functional (100)                                     │
 │      ███                 ││    Fusion Core: Damaged (21)                                         │
 │   █  ███  █              ││       Left Arm: Missing (0)                                          │
 │  █  █████  █             ││      Right Arm: Functional (100)                                     │
 │ █   █████   █            ││       Left Leg: Functional (100)                                     │
 │     █████                ││      Right Leg: Damaged (43)                                         │
-│     █████                ││                                                                      │
-│     ██ ██                ││Effects:                                                              │
+│     █████                ││Fits the Head:                                                        │
+│     ██ ██                ││  (nothing in the inventory)                                          │
+│     █   █                ││                                                                      │
+│     █   █                ││Effects:                                                              │
 │     █   █                ││  Right Leg damaged: walking 2x slower                                │
-│     █   █                ││  Left Arm missing: mining 2x slower, melee -40%                      │
-│     █   █                ││  Fusion Core damaged: energy recovers 2x slower                      │
-│    █     █               ││                                                                      │
-│                          ││                                                                      │
+│    █     █               ││  Left Arm missing: mining 2x slower, melee -40%                      │
+│                          ││  Fusion Core damaged: energy recovers 2x slower                      │
 └──────────────────────────┘└──────────────────────────────────────────────────────────────────────┘
 ┌Controls──────────────────────────────────────────────────────────────────────────────────────────┐
-│                                            [R] Repair                                            │
+│                                      [R] Repair   [u] Remove                                     │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
 │[0] Loading structure 'sapiencorp-bunker.lrstructure' at (10, 10, 1) for chunk (0, 0, 1)          │

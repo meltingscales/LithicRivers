@@ -154,6 +154,7 @@ pub struct PanelStates {
     pub dialogue_tree: DialogueTree,
     #[allow(dead_code)]
     pub body_repair: BodyRepairState,
+    pub body: BodyPanelState,
     pub cheat_console: CheatConsoleState,
     pub global_map: GlobalMapPanelState,
     pub tutorial_selection: TutorialSelectionState,
@@ -163,6 +164,16 @@ pub struct PanelStates {
 /// Inventory panel state
 pub struct InventoryPanelState {
     pub selected: usize,
+}
+
+/// Body tab state: the selected part, and the fitting item being chosen when several fit
+#[derive(Debug, Clone, Default)]
+pub struct BodyPanelState {
+    /// Index into `model::body::PART_ORDER`
+    pub selected_part: usize,
+    /// Up and Down pick among the fitting items instead of the parts
+    pub choosing_item: bool,
+    pub selected_item: usize,
 }
 
 /// Crafting panel state

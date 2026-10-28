@@ -41,6 +41,12 @@ fn menus() -> Vec<Menu> {
             sideways: true,
         },
         Menu {
+            name: "body parts",
+            setup: &["skip-splash", "key ui.MENU_NEXT 3"],
+            window: false,
+            sideways: false,
+        },
+        Menu {
             name: "crafting list",
             setup: &["skip-splash", "key ui.MENU_NEXT 5"],
             window: false,

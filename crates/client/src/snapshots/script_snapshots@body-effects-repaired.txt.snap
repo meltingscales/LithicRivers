@@ -38,23 +38,23 @@ input_file: scripts/snapshots/body-effects-repaired.txt
 === screen body ===
                                             LithicRivers
 ┌Body──────────────────────┐┌Parts─────────────────────────────────────────────────────────────────┐
-│      ███                 ││           Head: Functional (100)                                     │
+│      ███                 ││>          Head: Functional (100)                                     │
 │     █████                ││          Torso: Functional (100)                                     │
 │      ███                 ││    Fusion Core: Functional (100)                                     │
 │   █  ███  █              ││       Left Arm: Missing (0)                                          │
 │  █  █████  █             ││      Right Arm: Functional (100)                                     │
 │ █   █████   █            ││       Left Leg: Functional (100)                                     │
 │     █████                ││      Right Leg: Functional (100)                                     │
-│     █████                ││                                                                      │
-│     ██ ██                ││Effects:                                                              │
+│     █████                ││Fits the Head:                                                        │
+│     ██ ██                ││  (nothing in the inventory)                                          │
+│     █   █                ││                                                                      │
+│     █   █                ││Effects:                                                              │
 │     █   █                ││  Left Arm missing: mining 2x slower, melee -40%                      │
-│     █   █                ││                                                                      │
-│     █   █                ││                                                                      │
 │    █     █               ││                                                                      │
 │                          ││                                                                      │
 └──────────────────────────┘└──────────────────────────────────────────────────────────────────────┘
 ┌Controls──────────────────────────────────────────────────────────────────────────────────────────┐
-│                                            [R] Repair                                            │
+│                                      [R] Repair   [u] Remove                                     │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
 │[0] Loading structure 'sapiencorp-factory.lrstructure' at (200, 1609, 1) for chunk (3, 25, 1)     │

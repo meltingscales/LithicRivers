@@ -208,6 +208,7 @@ impl App {
                     .clone()
             },
             body_repair: BodyRepairState::default(),
+            body: Default::default(),
             cheat_console: CheatConsoleState::default(),
             global_map: GlobalMapPanelState::default(),
             tutorial_selection: TutorialSelectionState::default(),

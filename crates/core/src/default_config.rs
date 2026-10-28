@@ -29,7 +29,8 @@ pub fn default_config() -> ConfigRoot {
             "CLEAR_MOVE_QUEUE": ["c"], // Clear queued moves in combat
         },
         "body": {
-            "INSTALL_PART": ["i"], // Body tab: install a replacement part into a missing one
+            "INSTALL_PART": ["i"], // Body tab: install a fitting part into the selected one (swapping it)
+            "REMOVE_PART": ["u"],  // Body tab: take the selected part out
         },
         "build": {
             "TOGGLE_BREAK_PLACE_MODE": ["`"], // Cycle movement/break/place/rotate mode

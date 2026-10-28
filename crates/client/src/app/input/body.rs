@@ -3,6 +3,83 @@ use crate::{App, MenuTab};
 use crossterm::event::KeyCode;
 use std::error::Error;
 
+use lithicrivers_core::model::body::PART_ORDER;
+
+/// The selected part and what fits it.
+fn selection(
+    app: &App,
+) -> (
+    lithicrivers_core::model::body::BodyPartType,
+    Vec<(lithicrivers_core::components::ItemKind, u32)>,
+) {
+    let part = PART_ORDER[app.panels.body.selected_part.min(PART_ORDER.len() - 1)];
+    (part, app.core.game.fitting_items(part))
+}
+
+/// Install the `index`-th fitting item into the selected part (swapping out what's there).
+pub(crate) fn install_fitting(app: &mut App, index: usize) {
+    let (part, fitting) = selection(app);
+    app.panels.body.choosing_item = false;
+    if let Some(&(item, _)) = fitting.get(index) {
+        let _ = app.core.game.install_part_into(part, item);
+    }
+}
+
+/// The Body tab's own keys: move between parts (or fitting items), install and remove.
+fn handle_part_keys(app: &mut App, key: &KeyCode) -> bool {
+    let keys = &app.ui.keybinds;
+    let (part, fitting) = selection(app);
+    let body = &mut app.panels.body;
+    if body.choosing_item {
+        if keys.menu_up(key) {
+            body.selected_item = body.selected_item.saturating_sub(1);
+        } else if keys.menu_down(key) {
+            body.selected_item = (body.selected_item + 1).min(fitting.len().saturating_sub(1));
+        } else if keys.matches("ui", "MENU_ACTIVATE", key)
+            || keys.matches("body", "INSTALL_PART", key)
+        {
+            let index = body.selected_item;
+            install_fitting(app, index);
+        } else if keys.matches("ui", "CLOSE_HELP_MENU", key) {
+            body.choosing_item = false;
+        } else {
+            return false;
+        }
+        return true;
+    }
+    if keys.menu_up(key) {
+        body.selected_part = body.selected_part.saturating_sub(1);
+    } else if keys.menu_down(key) {
+        body.selected_part = (body.selected_part + 1).min(PART_ORDER.len() - 1);
+    } else if keys.matches("body", "INSTALL_PART", key) || keys.matches("ui", "MENU_ACTIVATE", key)
+    {
+        match fitting.len() {
+            0 => {
+                let name = app
+                    .core
+                    .game
+                    .get_player_component::<lithicrivers_core::model::body::Body>()
+                    .and_then(|b| b.parts.get(&part).map(|p| p.name.clone()))
+                    .unwrap_or_default();
+                app.core
+                    .game
+                    .res
+                    .log_yellow(format!("Nothing in the inventory fits the {name}"));
+            }
+            1 => install_fitting(app, 0),
+            _ => {
+                body.choosing_item = true;
+                body.selected_item = 0;
+            }
+        }
+    } else if keys.matches("body", "REMOVE_PART", key) {
+        let _ = app.core.game.remove_part(part);
+    } else {
+        return false;
+    }
+    true
+}
+
 /// Handle body tab input - returns true if input was handled
 pub fn handle_body_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Error>> {
     // Only handle input when on the body tab
@@ -10,23 +87,12 @@ pub fn handle_body_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Er
         return Ok(false);
     }
 
-    // Install a replacement part into a missing one
-    if app.ui.keybinds.matches("body", "INSTALL_PART", &key)
-        && matches!(
-            app.panels.body_repair,
-            crate::app_state::BodyRepairState::None
-        )
+    // Choose a part, then install, swap or remove it (not while the repair window is open)
+    if matches!(
+        app.panels.body_repair,
+        crate::app_state::BodyRepairState::None
+    ) && handle_part_keys(app, &key)
     {
-        match app.core.game.replacement_item() {
-            Some((item, _)) => {
-                let _ = app.core.game.install_part(item);
-            }
-            None => app
-                .core
-                .game
-                .res
-                .log_yellow("No replacement part to install"),
-        }
         return Ok(true);
     }
 
@@ -35,7 +101,8 @@ pub fn handle_body_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Er
         // Initialize repair state with first recipe and first available body part selected
         let available_repairs = (0..app.core.repair_handler.get_recipes().len()).collect();
 
-        // Get the first available (non-missing) body part to select by default
+        // The selected part if it can be repaired, else the first that can
+        let selected = PART_ORDER[app.panels.body.selected_part.min(PART_ORDER.len() - 1)];
         let initial_body_part = if let Some(player_entity) = app.core.game.get_player_entity() {
             if let Ok(body) = app
                 .core
@@ -43,20 +110,9 @@ pub fn handle_body_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Er
                 .world
                 .get::<&lithicrivers_core::model::body::Body>(player_entity)
             {
-                use lithicrivers_core::model::body::BodyPartType;
-                let part_order = [
-                    BodyPartType::Head,
-                    BodyPartType::Torso,
-                    BodyPartType::PowerSource,
-                    BodyPartType::LeftArm,
-                    BodyPartType::RightArm,
-                    BodyPartType::LeftLeg,
-                    BodyPartType::RightLeg,
-                ];
-
-                // Find first repairable part (not missing and not at max integrity)
-                part_order
-                    .iter()
+                // Repairable: not missing and not at max integrity
+                std::iter::once(&selected)
+                    .chain(PART_ORDER.iter())
                     .find(|&&part_type| {
                         body.parts
                             .get(&part_type)
@@ -256,4 +312,29 @@ pub fn handle_body_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Er
     }
 
     Ok(false)
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::app_state::BodyRepairState;
+    use crate::headless::chain_commands;
+    use lithicrivers_core::model::body::BodyPartType;
+
+    #[test]
+    fn repair_opens_on_the_selected_part() {
+        // The damaged right leg, seventh in the list
+        let runner = chain_commands(&[
+            "skip-splash",
+            "key ui.MENU_NEXT 3",
+            "key movement.MOVE_SOUTH 6",
+            "rawkey r",
+        ]);
+        assert!(matches!(
+            runner.app.panels.body_repair,
+            BodyRepairState::SelectingRepairAndPart {
+                selected_body_part: Some(BodyPartType::RightLeg),
+                ..
+            }
+        ));
+    }
 }

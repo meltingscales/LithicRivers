@@ -1,0 +1,31 @@
+# Swapping body parts in the Body tab: pick a part, see what fits it, install into a
+# missing arm, swap a working arm (the old one comes back), remove a damaged leg (it
+# comes out as scrap), and the torso refuses to come out.
+seed 12345
+size 100x30
+skip-splash
+cheat giveitem salvaged_arm 2
+key ui.MENU_NEXT 3
+# The Head is selected first; nothing fits it
+expect-text "(nothing in the inventory)"
+# The missing left arm is fourth in the list
+key movement.MOVE_SOUTH 3
+expect-text "Fits the Left Arm:"
+expect-text "[i] Install Salvaged SapienCorp Arm"
+screen left-arm-selected
+key body.INSTALL_PART
+expect-text "Installed the Salvaged SapienCorp Arm: Left Arm online"
+expect-text "Left Arm: Functional (70)"
+# Swap the working right arm: the old arm comes back
+key movement.MOVE_SOUTH
+key body.INSTALL_PART
+expect-text "Removed the Right Arm: got 1 Salvaged SapienCorp Arm"
+# The damaged right leg comes out as scrap
+key movement.MOVE_SOUTH 2
+key body.REMOVE_PART
+expect-text "Removed the Right Leg: got 1 Iron Scrap, 1 Scrap Electronics"
+screen leg-removed
+# The torso can't come out
+key movement.MOVE_NORTH 5
+key body.REMOVE_PART
+expect-text "can't be removed"

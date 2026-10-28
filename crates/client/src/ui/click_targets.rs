@@ -50,6 +50,10 @@ pub enum ClickTarget {
     TutorialRow(usize),
     /// The Crafting tab's craftable-only hint
     CraftableToggle,
+    /// A Body tab part (index into `PART_ORDER`)
+    BodyPart(usize),
+    /// An item that fits the selected Body tab part
+    BodyItem(usize),
 }
 
 /// The inside of a bordered box.

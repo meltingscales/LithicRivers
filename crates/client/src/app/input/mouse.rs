@@ -429,6 +429,21 @@ fn click_target(app: &mut App, target: crate::ui::click_targets::ClickTarget, bu
                 quests.selected_quest_index = index;
             }
         }
+        T::BodyPart(i) => {
+            let body = &mut app.panels.body;
+            body.choosing_item = false;
+            body.selected_part = i;
+        }
+        // An item fitting the selected part: the first click picks it, the second installs
+        T::BodyItem(i) => {
+            let body = &mut app.panels.body;
+            if body.choosing_item && body.selected_item == i {
+                crate::app::input::body::install_fitting(app, i);
+            } else {
+                body.choosing_item = true;
+                body.selected_item = i;
+            }
+        }
         T::CraftableToggle => {
             app.panels.crafting.craftable_only = !app.panels.crafting.craftable_only;
         }
@@ -1136,6 +1151,30 @@ pub(crate) mod tests {
             "left",
         );
         assert!(leg(&runner) > before);
+    }
+
+    #[test]
+    fn clicking_a_body_part_then_its_item_twice_installs_it() {
+        use lithicrivers_core::model::body::{Body, BodyPartState, BodyPartType};
+        let mut runner = chain_commands(&[
+            "skip-splash",
+            "cheat giveitem salvaged_arm",
+            "key ui.MENU_NEXT 3",
+        ]);
+        click_on(&mut runner, ClickTarget::BodyPart(3), "left");
+        assert_eq!(runner.app.panels.body.selected_part, 3);
+        click_on(&mut runner, ClickTarget::BodyItem(0), "left");
+        assert!(runner.app.panels.body.choosing_item);
+        click_on(&mut runner, ClickTarget::BodyItem(0), "left");
+        let arm = runner
+            .app
+            .core
+            .game
+            .get_player_component::<Body>()
+            .unwrap()
+            .parts[&BodyPartType::LeftArm]
+            .state;
+        assert_eq!(arm, BodyPartState::Functional);
     }
 
     #[test]

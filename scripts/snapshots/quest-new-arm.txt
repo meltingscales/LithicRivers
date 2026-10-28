@@ -45,6 +45,8 @@ cheat tp 206 1630 0
 key movement.WAIT
 expect-text "Quest objective completed: Find the salvaged arm"
 key ui.MENU_NEXT 4
+# Select the missing left arm (fourth in the list), then install
+key movement.MOVE_SOUTH 3
 key body.INSTALL_PART
 expect-text "Quest completed: A New Arm"
 screen installed

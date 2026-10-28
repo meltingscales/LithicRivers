@@ -557,33 +557,6 @@ impl Game {
         self.place_quest_chests();
     }
 
-    /// A replacement item in the player's inventory, preferring one that fits a missing
-    /// body part (so installing it works), with whether it does.
-    pub fn replacement_item(&self) -> Option<(ItemKind, bool)> {
-        use crate::model::body::{replacement_parts, BodyPartState};
-        let player = self.get_player_entity()?;
-        let inv = self.world.get::<&Inventory>(player).ok()?;
-        let body = self.world.get::<&Body>(player).ok()?;
-        let fits_missing = |item: ItemKind| {
-            replacement_parts(item).iter().any(|p| {
-                body.parts
-                    .get(p)
-                    .is_some_and(|bp| bp.state == BodyPartState::Missing)
-            })
-        };
-        let items: Vec<ItemKind> = inv
-            .slots
-            .iter()
-            .map(|s| s.kind)
-            .filter(|&k| !replacement_parts(k).is_empty())
-            .collect();
-        items
-            .iter()
-            .find(|&&k| fits_missing(k))
-            .map(|&k| (k, true))
-            .or_else(|| items.first().map(|&k| (k, false)))
-    }
-
     /// Install a replacement part from the player's inventory into a missing body part it
     /// fits, using the item up. Logs what happened; returns the part on success.
     pub fn install_part(
@@ -617,21 +590,7 @@ impl Game {
             Err(InstallError::DoesNotFit)
         };
         match result {
-            Ok(part) => {
-                if let Ok(mut inv) = self.world.get::<&mut Inventory>(player) {
-                    if let Some(stack) = inv.slots.iter_mut().find(|s| s.kind == item) {
-                        stack.qty -= 1;
-                    }
-                    inv.slots.retain(|s| s.qty > 0);
-                }
-                let part_name = self
-                    .get_player_component::<Body>()
-                    .and_then(|b| b.parts.get(&part).map(|p| p.name.clone()))
-                    .unwrap_or_default();
-                self.res
-                    .log_green(format!("Installed the {name}: {part_name} online"));
-                crate::quests::advance(&self.world, &mut self.res);
-            }
+            Ok(part) => self.finish_install(player, part, item),
             Err(InstallError::NotMissing) => {
                 self.res.log_yellow(format!(
                     "Nothing to install the {name} into: it isn't missing"
@@ -644,6 +603,143 @@ impl Game {
         result
     }
 
+    /// The player's inventory items that fit a body part, with their counts.
+    pub fn fitting_items(&self, part: crate::model::body::BodyPartType) -> Vec<(ItemKind, u32)> {
+        let Some(inv) = self.get_player_component::<Inventory>() else {
+            return Vec::new();
+        };
+        inv.slots
+            .iter()
+            .filter(|s| s.qty > 0 && crate::model::body::replacement_parts(s.kind).contains(&part))
+            .map(|s| (s.kind, s.qty))
+            .collect()
+    }
+
+    /// Use up one installed item, log it and let quests notice the part working again.
+    fn finish_install(
+        &mut self,
+        player: hecs::Entity,
+        part: crate::model::body::BodyPartType,
+        item: ItemKind,
+    ) {
+        if let Ok(mut inv) = self.world.get::<&mut Inventory>(player) {
+            if let Some(stack) = inv.slots.iter_mut().find(|s| s.kind == item) {
+                stack.qty -= 1;
+            }
+            inv.slots.retain(|s| s.qty > 0);
+        }
+        let name = crate::components::itemkind_name(item);
+        let part_name = self.player_part_name(part);
+        self.res
+            .log_green(format!("Installed the {name}: {part_name} online"));
+        crate::quests::advance(&self.world, &mut self.res);
+    }
+
+    fn player_part_name(&self, part: crate::model::body::BodyPartType) -> String {
+        self.get_player_component::<Body>()
+            .and_then(|b| b.parts.get(&part).map(|p| p.name.clone()))
+            .unwrap_or_else(|| format!("{part:?}"))
+    }
+
+    /// Put items in the player's inventory, or on the floor under them when it's full.
+    fn give_or_drop(&mut self, player: hecs::Entity, items: &[(ItemKind, u32)]) {
+        let pos = self.get_player_position();
+        for &(kind, qty) in items {
+            let fits = self.world.get::<&Inventory>(player).is_ok_and(|inv| {
+                inv.slots.iter().any(|s| s.kind == kind) || inv.slots.len() < inv.max_slots
+            });
+            if fits {
+                if let Ok(mut inv) = self.world.get::<&mut Inventory>(player) {
+                    inv.add(kind, qty);
+                }
+            } else if let Some(pos) = pos {
+                self.world.spawn((
+                    pos,
+                    DroppedItem { kind, qty },
+                    SpriteRef::new("items", crate::components::itemkind_sprite_name(kind)),
+                ));
+            }
+        }
+    }
+
+    /// Take a body part out, leaving it missing: a working part comes back as its item, a
+    /// damaged one as scrap. The torso and power source can't be removed.
+    pub fn remove_part(
+        &mut self,
+        part: crate::model::body::BodyPartType,
+    ) -> Result<Vec<(ItemKind, u32)>, crate::model::body::RemoveError> {
+        use crate::model::body::RemoveError;
+        let Some(player) = self.get_player_entity() else {
+            return Err(RemoveError::AlreadyMissing);
+        };
+        let part_name = self.player_part_name(part);
+        let result = match self.world.get::<&mut Body>(player) {
+            Ok(mut body) => body.remove(part),
+            Err(_) => Err(RemoveError::AlreadyMissing),
+        };
+        match &result {
+            Ok(items) => {
+                self.give_or_drop(player, items);
+                let got: Vec<String> = items
+                    .iter()
+                    .map(|&(k, q)| format!("{q} {}", crate::components::itemkind_name(k)))
+                    .collect();
+                self.res
+                    .log(format!("Removed the {part_name}: got {}", got.join(", ")));
+            }
+            Err(RemoveError::Locked) => self.res.log_yellow(format!(
+                "The {part_name} can't be removed: the robot can't run without it"
+            )),
+            Err(RemoveError::AlreadyMissing) => self
+                .res
+                .log_yellow(format!("The {part_name} is already missing")),
+        }
+        result
+    }
+
+    /// Install a replacement item into the chosen part. If the part isn't missing, it is
+    /// taken out first (as `remove_part` would), so this swaps parts.
+    pub fn install_part_into(
+        &mut self,
+        part: crate::model::body::BodyPartType,
+        item: ItemKind,
+    ) -> Result<(), crate::model::body::InstallError> {
+        use crate::model::body::{replacement_parts, BodyPartState, InstallError};
+        let name = crate::components::itemkind_name(item);
+        let Some(player) = self.get_player_entity() else {
+            return Err(InstallError::DoesNotFit);
+        };
+        let has_item = self
+            .world
+            .get::<&Inventory>(player)
+            .is_ok_and(|inv| inv.slots.iter().any(|s| s.kind == item && s.qty > 0));
+        if !has_item || !replacement_parts(item).contains(&part) {
+            let part_name = self.player_part_name(part);
+            self.res
+                .log_yellow(format!("The {name} doesn't fit the {part_name}"));
+            return Err(InstallError::DoesNotFit);
+        }
+        let present = self
+            .get_player_component::<Body>()
+            .and_then(|b| {
+                b.parts
+                    .get(&part)
+                    .map(|p| p.state != BodyPartState::Missing)
+            })
+            .unwrap_or(false);
+        if present && self.remove_part(part).is_err() {
+            return Err(InstallError::NotMissing);
+        }
+        let installed = match self.world.get::<&mut Body>(player) {
+            Ok(mut body) => body.install(part, item),
+            Err(_) => Err(InstallError::DoesNotFit),
+        };
+        if installed.is_ok() {
+            self.finish_install(player, part, item);
+        }
+        installed
+    }
+
     pub fn queue_player_move(&mut self, dx: i64, dy: i64) {
         // Calculate move cost using player's Body modifiers
         let cost = self.player_body_effects().walk_cost(200.0);
@@ -652,7 +748,6 @@ impl Game {
         self.res.player_state.intent = crate::intent::PlayerIntent::movement(dx, dy, 0, cost);
     }
 
-    /// Advance the game state by one tick using the system scheduler.
     /// Load the world around the player without passing time: generate the chunks around
     /// them with their pending structures, mark those chunks explored, place quest chests,
     /// and update fog of war. Every tick does this first; a teleport does it right away so
@@ -700,6 +795,7 @@ impl Game {
         crate::systems::fog_of_war::update_fog_of_war(&mut self.world, &self.res);
     }
 
+    /// Advance the game state by one tick using the system scheduler.
     pub fn tick(&mut self) -> GameTickResult {
         self.load_around_player();
 
@@ -1250,6 +1346,97 @@ mod tests {
         let found = facility.tile_positions(TileKind::TreasureQuest1, x, y, z, true);
         assert_eq!(found.len(), 1, "one quest-treasure tile in the facility");
         found[0]
+    }
+
+    fn count(game: &Game, kind: ItemKind) -> u32 {
+        let player = game.get_player_entity().unwrap();
+        game.world
+            .get::<&Inventory>(player)
+            .unwrap()
+            .slots
+            .iter()
+            .filter(|s| s.kind == kind)
+            .map(|s| s.qty)
+            .sum()
+    }
+
+    fn give(game: &mut Game, kind: ItemKind, qty: u32) {
+        let player = game.get_player_entity().unwrap();
+        game.world
+            .get::<&mut Inventory>(player)
+            .unwrap()
+            .add(kind, qty);
+    }
+
+    #[test]
+    fn swapping_a_working_arm_returns_the_old_one() {
+        use crate::model::body::BodyPartType;
+        let mut game = crate::test_support::TestWorld::new(3).build().game;
+        give(&mut game, ItemKind::SalvagedArm, 1);
+        assert_eq!(
+            game.install_part_into(BodyPartType::RightArm, ItemKind::SalvagedArm),
+            Ok(())
+        );
+        let arm = &game.get_player_component::<Body>().unwrap().parts[&BodyPartType::RightArm];
+        assert_eq!((arm.state, arm.integrity), (BodyPartState::Functional, 70));
+        // The old, working arm came back
+        assert_eq!(count(&game, ItemKind::SalvagedArm), 1);
+    }
+
+    #[test]
+    fn removing_parts_follows_the_rules() {
+        use crate::model::body::{BodyPartType, RemoveError};
+        let mut game = crate::test_support::TestWorld::new(3).build().game;
+        assert_eq!(
+            game.remove_part(BodyPartType::Torso),
+            Err(RemoveError::Locked)
+        );
+        assert_eq!(
+            game.remove_part(BodyPartType::LeftArm),
+            Err(RemoveError::AlreadyMissing)
+        );
+        // The damaged right leg comes out as scrap, not a part
+        let scrap = count(&game, ItemKind::IronScrap);
+        game.remove_part(BodyPartType::RightLeg).unwrap();
+        assert_eq!(count(&game, ItemKind::IronScrap), scrap + 1);
+        // A leg doesn't take an arm
+        give(&mut game, ItemKind::SalvagedArm, 1);
+        assert_eq!(
+            game.install_part_into(BodyPartType::RightLeg, ItemKind::SalvagedArm),
+            Err(crate::model::body::InstallError::DoesNotFit)
+        );
+    }
+
+    #[test]
+    fn a_removed_part_drops_when_the_inventory_is_full() {
+        use crate::model::body::BodyPartType;
+        let mut game = crate::test_support::TestWorld::new(3).build().game;
+        let player = game.get_player_entity().unwrap();
+        {
+            let mut inv = game.world.get::<&mut Inventory>(player).unwrap();
+            inv.slots.clear();
+            inv.max_slots = 0;
+        }
+        game.remove_part(BodyPartType::RightArm).unwrap();
+        let dropped = game
+            .world
+            .query::<&DroppedItem>()
+            .iter()
+            .any(|(_, d)| d.kind == ItemKind::SalvagedArm);
+        assert!(dropped);
+    }
+
+    #[test]
+    fn installing_into_the_chosen_arm_completes_the_arm_quest() {
+        use crate::model::body::BodyPartType;
+        let mut game = Game::new(12345);
+        game.res.start_quest(crate::quests::replace_arm(None));
+        give(&mut game, ItemKind::SalvagedArm, 1);
+        game.install_part_into(BodyPartType::LeftArm, ItemKind::SalvagedArm)
+            .unwrap();
+        assert!(game
+            .res
+            .is_quest_completed(crate::dialogue::QuestType::ReplaceArm));
     }
 
     #[test]

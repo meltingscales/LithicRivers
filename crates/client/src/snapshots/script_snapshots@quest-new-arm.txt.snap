@@ -105,20 +105,20 @@ input_file: scripts/snapshots/quest-new-arm.txt
 │      ███                 ││           Head: Functional (100)                                     │
 │     █████                ││          Torso: Functional (100)                                     │
 │      ███                 ││    Fusion Core: Damaged (21)                                         │
-│   █  ███  █              ││       Left Arm: Functional (70)                                      │
+│   █  ███  █              ││>      Left Arm: Functional (70)                                      │
 │  █  █████  █             ││      Right Arm: Functional (100)                                     │
 │ █   █████   █            ││       Left Leg: Functional (100)                                     │
 │     █████                ││      Right Leg: Damaged (43)                                         │
-│     █████                ││                                                                      │
-│     ██ ██                ││Effects:                                                              │
-│     █   █                ││  Right Leg damaged: walking 2x slower                                │
-│     █   █                ││  Fusion Core damaged: energy recovers 2x slower                      │
+│     █████                ││Fits the Left Arm:                                                    │
+│     ██ ██                ││  (nothing in the inventory)                                          │
 │     █   █                ││                                                                      │
-│    █     █               ││                                                                      │
+│     █   █                ││Effects:                                                              │
+│     █   █                ││  Right Leg damaged: walking 2x slower                                │
+│    █     █               ││  Fusion Core damaged: energy recovers 2x slower                      │
 │                          ││                                                                      │
 └──────────────────────────┘└──────────────────────────────────────────────────────────────────────┘
 ┌Controls──────────────────────────────────────────────────────────────────────────────────────────┐
-│                                            [R] Repair                                            │
+│                                      [R] Repair   [u] Remove                                     │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
 │[1201] Quest objective completed: Find the salvaged arm on the assembly line                      │
