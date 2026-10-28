@@ -116,3 +116,10 @@ The in-game cheat console SHALL be available only in worlds that allow cheats. I
 #### Scenario: Bad time
 - **WHEN** the player runs `set_time 25:99`
 - **THEN** nothing changes and the command fails with a message showing the expected format
+
+### Requirement: Keep inventory and keep body switches
+`keepinventory on|off` and `keepbody on|off` SHALL turn the matching death option on or off, save it with the world, and log the new state. Without an argument they SHALL report the current state.
+
+#### Scenario: Toggle
+- **WHEN** the player runs `keepinventory on`, saves and reloads the world
+- **THEN** keep inventory is still on
