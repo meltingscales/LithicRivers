@@ -119,6 +119,9 @@ pub fn default_config() -> ConfigRoot {
             "CONFIRM_DELETE": ["y"],             // Delete marker prompt: yes
             "CANCEL_DELETE": ["n", "ESCAPE"]     // Delete marker prompt: no
         },
+        "crafting": {
+            "TOGGLE_CRAFTABLE_ONLY": ["c"], // Crafting tab: list only what you can craft now
+        },
         "search": {
             "SEARCH": ["s"],              // Item Dictionary and Crafting: start typing a search
             "DELETE_CHAR": ["BACKSPACE"], // While searching: erase a character

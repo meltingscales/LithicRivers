@@ -21,6 +21,16 @@ pub fn handle_crafting_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dy
 
     // Get player inventory for crafting checks
     let inventory = get_player_inventory(app);
+    // List only what can be crafted now, or everything again
+    if app
+        .ui
+        .keybinds
+        .matches("crafting", "TOGGLE_CRAFTABLE_ONLY", &key)
+    {
+        app.panels.crafting.craftable_only = !app.panels.crafting.craftable_only;
+        return Ok(true);
+    }
+
     let shown = crate::ui::panels::crafting::filtered_recipes(app);
     let recipe_count = shown.len();
 
@@ -242,5 +252,144 @@ mod search_tests {
             .len();
         assert_eq!(shown_results(&mut runner).len(), all);
         assert!(runner.app.panels.crafting.search.text.is_empty());
+    }
+}
+
+#[cfg(test)]
+mod craftable_only_tests {
+    use crate::headless::{chain_commands, Runner};
+    use crate::ui::panels::crafting::filtered_recipes;
+    use crate::ui::panels::get_player_inventory;
+    use lithicrivers_core::components::{Inventory, ItemKind};
+
+    fn crafting_tab(steps: &[&str]) -> Runner {
+        let mut runner = chain_commands(&["skip-splash", "key ui.MENU_NEXT 5"]);
+        runner.chain(steps);
+        runner
+    }
+
+    fn results(runner: &mut Runner) -> Vec<ItemKind> {
+        let recipes = runner
+            .app
+            .panels
+            .crafting
+            .recipe_handler
+            .get_recipes()
+            .to_vec();
+        filtered_recipes(&mut runner.app)
+            .into_iter()
+            .map(|i| recipes[i].result)
+            .collect()
+    }
+
+    /// Every recipe the inventory can make now, in recipe order.
+    fn craftable(runner: &Runner) -> Vec<ItemKind> {
+        let inventory = get_player_inventory(&runner.app);
+        let handler = &runner.app.panels.crafting.recipe_handler;
+        handler
+            .get_recipes()
+            .iter()
+            .enumerate()
+            .filter(|&(i, _)| handler.can_craft(i, &inventory))
+            .map(|(_, r)| r.result)
+            .collect()
+    }
+
+    #[test]
+    fn the_toggle_lists_only_what_the_starting_kit_can_make() {
+        let mut runner = crafting_tab(&[]);
+        let everything = results(&mut runner);
+        runner.chain(&["key crafting.TOGGLE_CRAFTABLE_ONLY"]);
+        let shown = results(&mut runner);
+        assert_eq!(shown, craftable(&runner));
+        assert!(
+            !shown.is_empty() && shown.len() < everything.len(),
+            "{shown:?}"
+        );
+        runner.chain(&["key crafting.TOGGLE_CRAFTABLE_ONLY"]);
+        assert_eq!(results(&mut runner), everything);
+    }
+
+    #[test]
+    fn crafting_updates_the_filtered_list() {
+        // The starting kit has 3 logs: crafting planks three times uses them up
+        let mut runner = crafting_tab(&["key crafting.TOGGLE_CRAFTABLE_ONLY"]);
+        assert!(results(&mut runner).contains(&ItemKind::WoodenPlank));
+        for _ in 0..3 {
+            let planks = results(&mut runner)
+                .iter()
+                .position(|&r| r == ItemKind::WoodenPlank)
+                .expect("planks still craftable");
+            runner.app.panels.crafting.selected = planks;
+            runner.chain(&["key ui.MENU_ACTIVATE"]);
+        }
+        let shown = results(&mut runner);
+        assert!(!shown.contains(&ItemKind::WoodenPlank), "{shown:?}");
+        assert_eq!(shown, craftable(&runner));
+        let player = runner.app.core.game.get_player_entity().unwrap();
+        let logs = runner
+            .app
+            .core
+            .game
+            .world
+            .get::<&Inventory>(player)
+            .unwrap()
+            .slots
+            .iter()
+            .any(|s| s.kind == ItemKind::Log && s.qty > 0);
+        assert!(!logs);
+    }
+
+    #[test]
+    fn search_and_craftable_only_combine() {
+        let mut runner = crafting_tab(&[
+            "key crafting.TOGGLE_CRAFTABLE_ONLY",
+            "key search.SEARCH",
+            "type \"plank\"",
+            "key search.END_SEARCH",
+        ]);
+        let shown = results(&mut runner);
+        let craftable = craftable(&runner);
+        assert!(shown.iter().all(|r| craftable.contains(r)), "{shown:?}");
+        assert!(shown.contains(&ItemKind::WoodenPlank), "{shown:?}");
+    }
+
+    #[test]
+    fn the_selection_stays_on_the_same_recipe() {
+        let mut runner = crafting_tab(&[]);
+        let all = results(&mut runner);
+        let target = *craftable(&runner).last().unwrap();
+        let position = all.iter().position(|&r| r == target).unwrap();
+        runner.app.panels.crafting.selected = position;
+        results(&mut runner);
+        runner.chain(&["key crafting.TOGGLE_CRAFTABLE_ONLY"]);
+        let shown = results(&mut runner);
+        assert_eq!(shown[runner.app.panels.crafting.selected], target);
+    }
+
+    #[test]
+    fn an_empty_inventory_says_nothing_is_craftable_and_the_hint_clicks() {
+        let mut runner = crafting_tab(&["key crafting.TOGGLE_CRAFTABLE_ONLY"]);
+        let player = runner.app.core.game.get_player_entity().unwrap();
+        runner
+            .app
+            .core
+            .game
+            .world
+            .get::<&mut Inventory>(player)
+            .unwrap()
+            .slots
+            .clear();
+        let screen = runner.screen_text();
+        assert!(screen.contains("Nothing craftable yet"), "{screen}");
+        assert!(screen.contains("c: show all recipes"), "{screen}");
+
+        // Clicking the hint turns the filter off again
+        let (col, row) = crate::app::input::mouse::tests::target_cell(
+            &mut runner,
+            crate::ui::click_targets::ClickTarget::CraftableToggle,
+        );
+        runner.chain(&[&format!("click {col} {row} left")]);
+        assert!(!runner.app.panels.crafting.craftable_only);
     }
 }

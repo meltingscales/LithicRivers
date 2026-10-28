@@ -172,6 +172,11 @@ pub struct CraftingPanelState {
     pub selected: usize,
     pub search: crate::app::input::search::SearchBox,
     pub message: Option<(String, u8)>, // (message, timer)
+    /// List only the recipes the inventory can make now (saved with the world)
+    pub craftable_only: bool,
+    /// The list as last shown (indices into all recipes), so when it changes the
+    /// selection stays on the same recipe, or the nearest one still listed
+    pub last_shown: Vec<usize>,
 }
 
 /// Credits panel state

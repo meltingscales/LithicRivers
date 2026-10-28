@@ -19,7 +19,7 @@ input_file: scripts/snapshots/crafting-search.txt
 ││  * Stairs                    ││                                ││                              ││
 ││                              ││                                ││                              ││
 │└──────────────────────────────┘└────────────────────────────────┘└──────────────────────────────┘│
-│Search: plank   (s edit, ESCAPE clear)                                                            │
+│Search: plank   (s edit, ESCAPE clear)   c: craftable only (off)                                  │
 │                                                                                                  │
 │                                                                                                  │
 │                                                                                                  │

@@ -19,7 +19,7 @@ input_file: scripts/snapshots/crafting-chest-tree.txt
 ││  * Power Pole                ││                                ││                              ││
 ││> * Chest                     ││                                ││                              ││
 │└──────────────────────────────┘└────────────────────────────────┘└──────────────────────────────┘│
-│s: search                                                                                         │
+│s: search   c: craftable only (off)                                                               │
 │                                                                                                  │
 │                                                                                                  │
 │                                                                                                  │

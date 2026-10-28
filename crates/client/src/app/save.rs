@@ -14,6 +14,9 @@ struct ClientSave {
     tutorial_step: usize,
     completed_tutorials: Vec<String>,
     hotbar: [Option<ItemKind>; 12],
+    /// The Crafting tab lists only what can be crafted now
+    #[serde(default)]
+    craftable_only: bool,
 }
 
 impl App {
@@ -23,6 +26,7 @@ impl App {
             tutorial_step: self.ui.tutorial_system.current_step_index,
             completed_tutorials: self.ui.tutorial_system.completed_tutorials.clone(),
             hotbar: self.panels.build.hotbar_assignments,
+            craftable_only: self.panels.crafting.craftable_only,
         }
     }
 
@@ -62,6 +66,7 @@ impl App {
             self.ui.tutorial_system.current_step_index = client.tutorial_step;
             self.ui.tutorial_system.completed_tutorials = client.completed_tutorials;
             self.panels.build.hotbar_assignments = client.hotbar;
+            self.panels.crafting.craftable_only = client.craftable_only;
         }
         // The combat panel follows the loaded game
         let in_combat = self.core.game.res.player_state.combat_active;
