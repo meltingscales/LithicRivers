@@ -1,0 +1,11 @@
+# The Item panel wraps a description longer than the panel instead of cutting it off,
+# and still shows every key below it.
+seed 12345
+size 100x30
+skip-splash
+key ui.MENU_NEXT 4
+# Scrap Electronics, the seventh item in the starting kit
+key movement.MOVE_SOUTH 6
+expect-text "They look burnt."
+expect-text "x=destroy"
+screen
