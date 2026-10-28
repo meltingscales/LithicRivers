@@ -1,0 +1,11 @@
+# The move queue holds three moves behind the current one; more are refused.
+seed 12345
+size 100x30
+skip-splash
+key ui.MENU_PREV
+cheat tp -15 0 0
+cheat spawn_enemy feral_dog
+key movement.WAIT
+key ui.MENU_ACTIVATE 6
+expect-text "Move queue full (3 moves)!"
+screen

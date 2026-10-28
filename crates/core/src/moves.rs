@@ -293,13 +293,26 @@ pub struct ActionQueue {
     pub current_action: Option<QueuedAction>,
 }
 
+/// Actions that can wait behind the current one.
+pub const MAX_QUEUED_ACTIONS: usize = 3;
+
 impl ActionQueue {
     pub fn new() -> Self {
         Self::default()
     }
 
-    pub fn queue_action(&mut self, action: QueuedAction) {
+    /// Whether no more actions can wait behind the current one.
+    pub fn is_full(&self) -> bool {
+        self.actions.len() >= MAX_QUEUED_ACTIONS
+    }
+
+    /// Queue an action behind the current one; returns false (dropping it) when full.
+    pub fn queue_action(&mut self, action: QueuedAction) -> bool {
+        if self.is_full() {
+            return false;
+        }
         self.actions.push_back(action);
+        true
     }
 
     pub fn start_next_action(&mut self) -> Option<QueuedAction> {
@@ -575,6 +588,31 @@ mod tests {
         assert!(started.is_some());
         assert!(queue.current_action.is_some());
         assert_eq!(queue.actions.len(), 0);
+    }
+
+    #[test]
+    fn the_queue_holds_at_most_max_queued_actions() {
+        let mut queue = ActionQueue::new();
+        let action = QueuedAction {
+            entity: Entity::DANGLING,
+            action: CombatAction::PlayerMove {
+                move_data: Move::melee(),
+                target_entity: None,
+                target_position: None,
+            },
+            execution_time_ticks: 5,
+            remaining_time_ticks: 5,
+        };
+        for _ in 0..MAX_QUEUED_ACTIONS {
+            assert!(queue.queue_action(action.clone()));
+        }
+        assert!(queue.is_full());
+        assert!(!queue.queue_action(action.clone()));
+        assert_eq!(queue.actions.len(), MAX_QUEUED_ACTIONS);
+
+        // Starting the next action frees a slot
+        queue.start_next_action();
+        assert!(queue.queue_action(action));
     }
 
     #[test]
