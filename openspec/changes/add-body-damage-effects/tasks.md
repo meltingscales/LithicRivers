@@ -14,5 +14,5 @@
 
 ## 3. Checks
 
-- [ ] 3.1 Verify `just code-clippy`, `cargo test --workspace` and PR checks pass
+- [x] 3.1 Verify `just code-clippy`, `cargo test --workspace` and PR checks pass
 - [ ] 3.2 User check that damage is felt but not frustrating, especially the starting body
