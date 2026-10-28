@@ -36,6 +36,34 @@ pub fn structures_list() -> Vec<String> {
     existing_structures.to_vec()
 }
 
+/// The layers of a `shape_layers.txt`: split on `~~~~~` lines, trimmed, with Windows line
+/// endings (a checkout with `core.autocrlf`) turned into plain newlines.
+pub fn parse_layers(text: &str) -> Vec<String> {
+    text.replace("\r\n", "\n")
+        .split("~~~~~")
+        .map(|layer| layer.trim().to_string())
+        .filter(|layer| !layer.is_empty())
+        .collect()
+}
+
+/// A text file from the embedded assets, e.g. "structures/small_temple.lrstructure/plan.toml".
+pub fn embedded_text(path: &str) -> Option<String> {
+    EmbeddedAssets::get(path).map(|f| String::from_utf8_lossy(&f.data).into_owned())
+}
+
+/// Every structure folder in the embedded assets, e.g. "small_temple.lrstructure".
+pub fn embedded_structure_names() -> Vec<String> {
+    let mut names: Vec<String> = EmbeddedAssets::iter()
+        .filter_map(|path| {
+            let rest = path.strip_prefix("structures/")?;
+            let (folder, file) = rest.split_once('/')?;
+            (file == "shape_layers.txt").then(|| folder.to_string())
+        })
+        .collect();
+    names.sort();
+    names
+}
+
 /// Should this block spawn an entity?
 pub fn block_will_spawn_entity(tile_kind: TileKind) -> bool {
     match tile_kind {
@@ -117,11 +145,7 @@ impl StructureDefinition {
             Cow::Owned(v) => String::from_utf8(v).expect("shape_layers not UTF-8"),
         };
 
-        let layers: Vec<String> = shape_content
-            .split("~~~~~")
-            .map(|layer| layer.trim().to_string())
-            .filter(|layer| !layer.is_empty())
-            .collect();
+        let layers = parse_layers(&shape_content);
 
         let blocks: HashMap<String, String> =
             serde_json::from_value(data["blocks"].clone()).expect("blocks must be a map");
@@ -183,11 +207,7 @@ impl StructureDefinition {
         }
         let shape_content =
             fs::read_to_string(&shape_file).expect("Failed to read shape_layers.txt");
-        let layers: Vec<String> = shape_content
-            .split("~~~~~")
-            .map(|layer| layer.trim().to_string())
-            .filter(|layer| !layer.is_empty())
-            .collect();
+        let layers = parse_layers(&shape_content);
 
         let blocks: HashMap<String, String> =
             serde_json::from_value(data["blocks"].clone()).expect("blocks must be a map");

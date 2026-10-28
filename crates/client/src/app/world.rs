@@ -45,6 +45,31 @@ impl App {
         self.splash.state = SplashState::MainUI;
     }
 
+    /// The script and demo `world` step: a debug world type, or a structure preview.
+    pub(crate) fn start_default_world_choice(&mut self, choice: &crate::headless::WorldChoice) {
+        use crate::headless::WorldChoice;
+        match choice {
+            WorldChoice::Type(t) => self.start_default_world_of_type(*t),
+            WorldChoice::Structure(name) => {
+                let settings = WorldSettings::defaults(&self.core.game.res.config);
+                // The name was checked when the script was read
+                match Game::new_structure_preview(self.default_seed, settings, name) {
+                    Ok(game) => {
+                        self.core.game = game;
+                        self.reset_for_game();
+                        let now = self.clock.unix_seconds();
+                        self.current_world = Some(CurrentWorld {
+                            folder: None,
+                            meta: WorldMeta::new(name, self.default_seed, settings, now),
+                        });
+                        self.splash.state = SplashState::MainUI;
+                    }
+                    Err(e) => self.core.game.res.log_red(e),
+                }
+            }
+        }
+    }
+
     /// Load a saved world from its folder and show the main UI.
     pub(crate) fn load_world(&mut self, folder: PathBuf) -> anyhow::Result<()> {
         let meta = worlds::read_meta(&folder)?;

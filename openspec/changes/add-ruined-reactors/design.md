@@ -2,7 +2,7 @@
 
 ## Context
 
-- **Structures** are `.lrstructure` files under `crates/client/assets/structures` (via the Voxel Builder importer), queued as `PendingStructure`s and applied when their chunk is first ensured. A ruin queued in one chunk is placed whole across chunk edges.
+- **Structures** are `.lrstructure` files under `crates/client/assets/structures` (plans or hand-written layers, see `docs/STRUCTURES.md`), queued as `PendingStructure`s and applied when their chunk is first ensured. A ruin queued in one chunk is placed whole across chunk edges.
 - **Mining drops** come from `crafting::mining_drop` (from `add-crafting-tree`), and raw sources are derived from it.
 - **Power** comes from `add-power-grid`: generators supply energy into networks of poles, and consumers draw a fraction.
 - **Iron ingots** come from `add-ore-spouts`.

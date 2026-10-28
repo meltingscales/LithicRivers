@@ -29,6 +29,13 @@ pub const EXIT_OK: i32 = 0;
 pub const EXIT_SCRIPT_ERROR: i32 = 1;
 pub const EXIT_EXPECT_FAILED: i32 = 2;
 
+/// What a `world` step starts: a debug world type, or `structure:<name>`.
+#[derive(Debug, Clone, PartialEq)]
+pub enum WorldChoice {
+    Type(lithicrivers_core::resources::WorldType),
+    Structure(String),
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum Step {
     SkipSplash,
@@ -51,7 +58,7 @@ pub enum Step {
     SaveReload,
     Quit,
     /// Start a new world of this type with the run's seed and cheats on, like `skip-splash`
-    World(lithicrivers_core::resources::WorldType),
+    World(WorldChoice),
     /// Demo pacing: steps after it play one every this many ms in the demo; no-op in scripts
     Beat(u64),
     /// A mouse event at a screen cell: `click`, `scroll` or `move`
@@ -85,7 +92,8 @@ impl std::fmt::Display for Step {
             Step::ExpectText(text) => write!(f, "expect-text \"{text}\""),
             Step::SaveReload => write!(f, "save-reload"),
             Step::Quit => write!(f, "quit"),
-            Step::World(t) => write!(f, "world {}", t.slug()),
+            Step::World(WorldChoice::Type(t)) => write!(f, "world {}", t.slug()),
+            Step::World(WorldChoice::Structure(name)) => write!(f, "world structure:{name}"),
             Step::Beat(ms) => write!(f, "beat {ms}"),
             Step::Mouse(m) => {
                 use crate::app::input::mouse::{MouseButton, MouseKind};
@@ -307,10 +315,16 @@ pub fn parse_script(text: &str) -> Result<Script, ScriptError> {
             }
             "world" => {
                 expect_args(1)?;
-                let t = lithicrivers_core::resources::WorldType::from_slug(args[0]).ok_or_else(
-                    || err(line, format!("world: unknown type '{}' (normal, void, ore-test, dog-arena, factory-showcase)", args[0])),
-                )?;
-                Step::World(t)
+                if let Some(name) = args[0].strip_prefix("structure:") {
+                    lithicrivers_core::structure_lint::find_structure(name)
+                        .map_err(|e| err(line, format!("world: {e}")))?;
+                    Step::World(WorldChoice::Structure(name.to_string()))
+                } else {
+                    let t = lithicrivers_core::resources::WorldType::from_slug(args[0]).ok_or_else(
+                        || err(line, format!("world: unknown type '{}' (normal, void, ore-test, dog-arena, factory-showcase, structure:<name>)", args[0])),
+                    )?;
+                    Step::World(WorldChoice::Type(t))
+                }
             }
             "tick" => match args.len() {
                 0 => Step::Tick(1),
@@ -540,8 +554,8 @@ impl Runner {
                 self.app.start_default_world();
                 self.frame();
             }
-            Step::World(t) => {
-                self.app.start_default_world_of_type(*t);
+            Step::World(choice) => {
+                self.app.start_default_world_choice(choice);
                 self.frame();
             }
             Step::Beat(_) => {}
@@ -944,6 +958,22 @@ mod tests {
     }
 
     // --- 1.3 / 2.2: frame step under a fake clock -------------------------------
+
+    #[test]
+    fn world_structure_takes_a_known_structure_name() {
+        let script = parse_script("world structure:small_temple").unwrap();
+        assert_eq!(
+            script.steps[0].step,
+            Step::World(WorldChoice::Structure("small_temple".to_string()))
+        );
+        let unknown = parse_script("world structure:castle")
+            .unwrap_err()
+            .to_string();
+        assert!(
+            unknown.contains("unknown structure 'castle'; structures: giant_corpse"),
+            "{unknown}"
+        );
+    }
 
     #[test]
     fn headless_app_steps_without_audio_or_terminal() {

@@ -87,39 +87,39 @@ copy-config-data-linux:
     bash scripts/copy-config-data.sh
 
 # Build the project
-build-windows: code-fmt util-voxelbuilder-import clean-windows git-data copy-config-data-windows
+build-windows: code-fmt util-structure-build clean-windows git-data copy-config-data-windows
     cargo --version
     # Build only the stable targets to keep `just build` green
     cargo build -p lithicrivers-core {{build_flags}}
     cargo build -p lithicrivers-client --bin lithicrivers-client {{build_flags}}
 
 # Build the project
-build-linux: code-fmt util-voxelbuilder-import clean-linux git-data copy-config-data-linux
+build-linux: code-fmt util-structure-build clean-linux git-data copy-config-data-linux
     cargo --version
     # Build only the stable targets to keep `just build` green
     cargo build -p lithicrivers-core {{build_flags}}
     cargo build -p lithicrivers-client --bin lithicrivers-client {{build_flags}}
 
 # Build the project in release mode
-build-release-windows: code-fmt util-voxelbuilder-import-release clean-windows git-data copy-config-data-windows build-demos-release
+build-release-windows: code-fmt util-structure-build clean-windows git-data copy-config-data-windows build-demos-release
     cargo --version
     cargo build -p lithicrivers-core --release {{build_flags}}
     cargo build -p lithicrivers-client --bin lithicrivers-client --release {{build_flags}}
 
 # Build the project in release mode
-build-release-linux: code-fmt util-voxelbuilder-import-release clean-linux git-data copy-config-data-linux build-demos-release
+build-release-linux: code-fmt util-structure-build clean-linux git-data copy-config-data-linux build-demos-release
     cargo --version
     cargo build -p lithicrivers-core --release {{build_flags}}
     cargo build -p lithicrivers-client --bin lithicrivers-client --release {{build_flags}}
 
 # Build in release mode without cleaning first
-build-release-no-clean-windows: code-fmt util-voxelbuilder-import-release git-data copy-config-data-windows build-demos-release
+build-release-no-clean-windows: code-fmt util-structure-build git-data copy-config-data-windows build-demos-release
     cargo --version
     cargo build -p lithicrivers-core --release {{build_flags}}
     cargo build -p lithicrivers-client --bin lithicrivers-client --release {{build_flags}}
 
 # Build in release mode without cleaning first
-build-release-no-clean-linux: code-fmt util-voxelbuilder-import-release git-data copy-config-data-linux build-demos-release
+build-release-no-clean-linux: code-fmt util-structure-build git-data copy-config-data-linux build-demos-release
     cargo --version
     cargo build -p lithicrivers-core --release {{build_flags}}
     cargo build -p lithicrivers-client --bin lithicrivers-client --release {{build_flags}}
@@ -157,7 +157,7 @@ stage-artifacts-release-windows: clean-artifacts-windows build-release-windows b
     powershell.exe scripts/stage-artifacts-release.ps1
 
 # Optional: build demo binaries (may require ratatui API updates)
-build-demos: code-fmt util-voxelbuilder-import
+build-demos: code-fmt util-structure-build
     cargo build -p lithicrivers-client --bin demo_inventory {{build_flags}}
     cargo build -p lithicrivers-client --bin demo_crafting {{build_flags}}
     cargo build -p lithicrivers-client --bin demo_body {{build_flags}}
@@ -168,11 +168,10 @@ build-demos: code-fmt util-voxelbuilder-import
     cargo build -p lithicrivers-client --bin demo_dungeon_generation {{build_flags}}
     cargo build -p lithicrivers-client --bin demo_corpse_looting {{build_flags}}
     cargo build -p lithicrivers-client --bin demo_dialogue_interactions {{build_flags}}
-    cargo build -p lithicrivers-client --bin utility_voxelbuilder_importer {{build_flags}}
     cargo build -p lithicrivers-client --bin utility_sprite_demo {{build_flags}}
 
 # Optional: build demo binaries (release)
-build-demos-release: code-fmt util-voxelbuilder-import
+build-demos-release: code-fmt util-structure-build
     cargo build -p lithicrivers-client --bin demo_inventory --release {{build_flags}}
     cargo build -p lithicrivers-client --bin demo_crafting --release {{build_flags}}
     cargo build -p lithicrivers-client --bin demo_body --release {{build_flags}}
@@ -184,7 +183,6 @@ build-demos-release: code-fmt util-voxelbuilder-import
     cargo build -p lithicrivers-client --bin demo_corpse_looting --release {{build_flags}}
     cargo build -p lithicrivers-client --bin demo_dialogue_interactions --release {{build_flags}}
     cargo build -p lithicrivers-client --bin utility_sprite_demo --release {{build_flags}}
-    cargo build -p lithicrivers-client --bin utility_voxelbuilder_importer --release {{build_flags}}
 
 # Run the client
 client-windows: build-windows
@@ -250,21 +248,13 @@ demo-dialogue-interactions:
 util-sprite-demo:
     cargo run -p lithicrivers-client --bin utility_sprite_demo
 
-# Import Voxel Builder JSON files to LithicRivers .lrstructure format
-util-voxelbuilder-import:
-    @echo "🧊 Running Voxel Builder Structure Importer..."
-    cargo run -p lithicrivers-client --bin utility_voxelbuilder_importer
+# Compile every structure's plan.toml into its shape_layers.txt (see docs/STRUCTURES.md)
+util-structure-build:
+    cargo run -q -p lithicrivers-core --bin structure_build
 
-# Import Voxel Builder JSON files (release build of the importer)
-util-voxelbuilder-import-release:
-    @echo "🧊 Running Voxel Builder Structure Importer..."
-    cargo run -p lithicrivers-client --bin utility_voxelbuilder_importer --release
-
-# Print how to make structures with the Voxel Builder website
-util-voxelbuilder-import-site:
-    @echo "Visit https://nimadez.github.io/voxel-builder/ to create voxel models."
-    @echo "Export as JSON format and add to input_output_map in utility_voxelbuilder_importer.rs."
-    @echo "Then run 'just util-voxelbuilder-import' to import the structure."
+# Print a structure layer by layer with its legend and lint warnings, e.g. small_temple
+util-structure-preview name:
+    cargo run -q -p lithicrivers-core --bin structure_preview -- {{name}}
 
 # Follow today's game log
 util-monitor-logs:

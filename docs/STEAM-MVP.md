@@ -24,13 +24,12 @@
 
 **Why This Change**: Eliminates the 10-mile walking simulator problem while creating immediate engagement through atmospheric underground escape sequence. The vertical progression teaches z-level mechanics naturally.
 
-## VoxelBuilder Quest Location Design - Abandoned SapienCorp Factory
+## Quest Location Design - Abandoned SapienCorp Factory
 **Priority**: HIGH - First quest location implementation
 
 first quest and associated dungeons
 
-- use VoxelBuilder (https://nimadez.github.io/voxel-builder/) to design a multi-level dungeon that is the first quest
-- use the existing `utility_voxelbuilder_importer.rs` to convert VoxelBuilder JSON exports to .lrstructure format
+- design a multi-level dungeon that is the first quest as a structure (see `docs/STRUCTURES.md`)
 - add a Stairs block that you must use to traverse up/down in the world
 - add randomly generated loot that you can use to replace your Arm that's guaranteed to spawn in a specific chest near the assembly line
 
@@ -49,8 +48,8 @@ first quest and associated dungeons
 - **Total**: ~60x47 tiles across 3 levels with stairs connecting each level
 
 **Implementation Plan**:
-1. **VoxelBuilder Design**: Create the 3-level SapienCorp factory structure in VoxelBuilder
-2. (DONE) **Import Pipeline**: Use existing `utility_voxelbuilder_importer.rs` to convert to .lrstructure format
+1. (DONE) **Structure**: the SapienCorp factory's levels (`sapiencorp-factory.lrstructure`, hand-written layers since the VoxelBuilder import was retired)
+2. (DONE) **Authoring tools**: structure plans, the lint test and the preview (`docs/STRUCTURES.md`)
 3. **Quest Integration**: Connect the location to first major quest narrative
 4. (DONE) **Stairs Implementation**: Add Stairs block for vertical traversal between levels
 5. **Environmental Storytelling**: Place lore elements and visual clues about SapienCorp's downfall

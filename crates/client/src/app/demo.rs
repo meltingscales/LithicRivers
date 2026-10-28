@@ -205,8 +205,8 @@ impl App {
                 self.start_default_world();
                 false
             }
-            Step::World(t) => {
-                self.start_default_world_of_type(*t);
+            Step::World(choice) => {
+                self.start_default_world_choice(choice);
                 false
             }
             Step::Key {
