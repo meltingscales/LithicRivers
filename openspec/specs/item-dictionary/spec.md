@@ -13,7 +13,7 @@ The Item Dictionary tab SHALL list every item with its 1x sprite, its name and a
 - **THEN** it appears in the Item Dictionary without other changes
 
 ### Requirement: Search
-The tab SHALL filter the list by a case-insensitive search over item names and descriptions.
+The tab SHALL filter the list by a case-insensitive search over item names and descriptions, using the shared search keybinds (`search.SEARCH`, `search.DELETE_CHAR`, `search.END_SEARCH`) that the Crafting tab also uses.
 
 #### Scenario: Search for fuel
 - **WHEN** the player searches for "burn"

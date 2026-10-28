@@ -19,4 +19,4 @@
 
 - [x] 4.1 `docs/STRUCTURES.md` with the format, primitives, conventions and the AI prompt workflow, linked from AGENTS.md
 - [x] 4.2 Verify `just code-clippy`, `cargo test --workspace` and PR checks pass
-- [ ] 4.3 User check: make a small structure with an AI from a prompt using the guide
+- [x] 4.3 User check: make a small structure with an AI from a prompt using the guide

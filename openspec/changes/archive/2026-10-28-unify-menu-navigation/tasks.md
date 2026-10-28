@@ -13,5 +13,5 @@
 
 ## 3. Checks
 
-- [ ] 3.1 Verify `just code-clippy`, `cargo test --workspace` and PR checks pass
-- [ ] 3.2 User check: menus feel the same with the numpad, the arrow keys and the mouse
+- [x] 3.1 Verify `just code-clippy`, `cargo test --workspace` and PR checks pass
+- [x] 3.2 User check: menus feel the same with the numpad, the arrow keys and the mouse

@@ -54,3 +54,10 @@ A Factory showcase world SHALL build, on flat ground near spawn, a set of workin
 #### Scenario: Examples run
 - **WHEN** a Factory showcase world passes 60 game seconds
 - **THEN** every example with an input source has made progress (items moved or produced)
+
+### Requirement: Structure debug world
+A `structure:<name>` debug world SHALL place the named structure at the origin of a flat world with fog of war off, and an unknown name SHALL fail with a message listing the structures.
+
+#### Scenario: Unknown structure
+- **WHEN** a script starts `world structure:castle`
+- **THEN** the script fails with a message listing the available structures
