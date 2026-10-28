@@ -13,8 +13,6 @@ input_file: scripts/snapshots/tab-06-inventory.txt
 │      █                   ││Torch x3                                                              │
 │      ▀                   ││String x2                                                             │
 │                          ││Scrap Electronics x3                                                  │
-│                          ││                                                                      │
-│                          ││                                                                      │
 │Nail (x10)                ││                                                                      │
 │                          ││                                                                      │
 │A metal nail.             ││                                                                      │
@@ -23,6 +21,8 @@ input_file: scripts/snapshots/tab-06-inventory.txt
 │  g=drop                  ││                                                                      │
 │  .=duplicate             ││                                                                      │
 │  x=destroy               ││                                                                      │
+│                          ││                                                                      │
+│                          ││                                                                      │
 └──────────────────────────┘└──────────────────────────────────────────────────────────────────────┘
 ┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
 │[0] Loading structure 'sapiencorp-bunker.lrstructure' at (10, 10, 1) for chunk (0, 0, 1)          │
