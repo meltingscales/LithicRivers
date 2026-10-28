@@ -445,6 +445,12 @@ pub enum InteractionType {
         entity: hecs::Entity,
         position: Position,
     },
+    /// Clear away an empty corpse or wreck
+    ClearCorpse {
+        entity: hecs::Entity,
+        position: Position,
+        wreck: bool,
+    },
     TalkToNPC {
         entity: hecs::Entity,
         npc_name: String,
@@ -500,6 +506,7 @@ impl InteractionType {
         match self {
             InteractionType::PickupItem { position, .. }
             | InteractionType::LootCorpse { position, .. }
+            | InteractionType::ClearCorpse { position, .. }
             | InteractionType::TalkToNPC { position, .. }
             | InteractionType::OpenCloseDoor { position, .. }
             | InteractionType::OpenChest { position, .. }
@@ -517,6 +524,7 @@ impl InteractionType {
         match self {
             InteractionType::PickupItem { entity, .. }
             | InteractionType::LootCorpse { entity, .. }
+            | InteractionType::ClearCorpse { entity, .. }
             | InteractionType::TalkToNPC { entity, .. }
             | InteractionType::OpenChest { entity, .. }
             | InteractionType::OpenGenerator { entity, .. }
@@ -554,6 +562,12 @@ impl InteractionType {
                     "Loot corpse".to_string()
                 }
             }
+            InteractionType::ClearCorpse { wreck: true, .. } => {
+                "Clear away empty wreck".to_string()
+            }
+            InteractionType::ClearCorpse { wreck: false, .. } => {
+                "Clear away empty corpse".to_string()
+            }
             InteractionType::TalkToNPC { npc_name, .. } => format!("Talk to {}", npc_name),
             InteractionType::OpenChest { .. } => "Open chest".to_string(),
             InteractionType::OpenGenerator { .. } => "Fuel generator".to_string(),
@@ -574,6 +588,7 @@ impl InteractionType {
         match self {
             InteractionType::PickupItem { .. } => "^", // Up arrow for pickup
             InteractionType::LootCorpse { .. } => "x", // x for corpse looting
+            InteractionType::ClearCorpse { .. } => "-", // nothing left
             InteractionType::TalkToNPC { .. } => "t",  // t for talking
             InteractionType::OpenChest { .. } => "c",  // c for chest
             InteractionType::OpenGenerator { .. } => "G",

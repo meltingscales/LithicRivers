@@ -1,5 +1,5 @@
 # Bug: interacting with a corpse you've already emptied opened the loot window.
-# It should say the corpse is empty instead.
+# Now an empty corpse isn't looted: interacting clears it away.
 seed 12345
 size 100x30
 skip-splash
@@ -11,5 +11,5 @@ expect-text "Looting Corpse"
 key ui.MENU_ACTIVATE 3
 key ui.CLOSE_HELP_MENU
 key action.INTERACT
-expect-text "The corpse is empty"
+expect-text "You clear away the empty corpse."
 state empty-corpse

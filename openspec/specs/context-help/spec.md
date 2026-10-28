@@ -34,7 +34,7 @@ When something the player can interact with is adjacent, the panel SHALL show th
 
 #### Scenario: Next to an empty corpse
 - **WHEN** the player stands next to a corpse with no items and nothing else nearby
-- **THEN** the panel shows no loot action
+- **THEN** the panel shows no loot action, only the interact key with "clear corpse" (or "clear wreck" for the player's wreck), which removes it
 
 ### Requirement: Toggle
 The `ui.TOGGLE_CONTEXT_HELP` keybind (default `h`) SHALL show or hide the panel. When hidden, the sidebar SHALL still show a one-line hint naming the toggle key. The choice SHALL be stored in the config file (`ui.SHOW_CONTEXT_HELP`, default on) so it persists across launches; headless runs SHALL NOT write the config file.
