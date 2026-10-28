@@ -13,7 +13,7 @@ input_file: scripts/snapshots/factory-filter-picker.txt
 ########vvvvvvvvvvvvvvvvvvvvvv│  (no filter)                         │      │Acorn x1              │
 ########vvvvvvvvvvvvvvvvvvvvvv│  Log                                 │,     │Log x3                │
 #########vvvvvvvvvvvvvvvvvvvvv│  Wooden Plank                        │,     └──────────────────────┘
-#########vvvvvvvvvvvvvvvvvvvvv│* Acorn                               │,,    ┌Help (h)──────────────┐
+#########vvvvvvvvvvvvvvvvvvvvv│* Acorn                               │,,    ┌Help (h) ! Damaged────┐
 ##########vvvvvvvvvvvvvvvvvvvv│  Stick                               │,,,   │Move:                 │
 ###########vvvvvvvvvvvvvvvvvvv│  Nail                                │,,,,  │  7 8 9               │
 ###########vvvvvvvvvvvvvvvvvvv│  Stone                               │v,,t  │  4 5 6               │

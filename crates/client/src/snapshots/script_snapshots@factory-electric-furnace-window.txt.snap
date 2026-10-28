@@ -13,7 +13,7 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│N
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Acorn x1              │
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Log x3                │
 vvCvvvvvvvvvvvvvGvvvvvvvvv>▲|CvvvvvGv+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
-vv^vvvvv>>F>CvvvG+vvvvvvvv/vvvvvvC→>|>E>>>>Cvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Help (h)──────────────┐
+vv^vvvvv>>F>CvvvG+vvvvvvvv/vvvvvvC→>|>E>>>>Cvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Help (h) ! Damaged────┐
 >>╬>Cvvvvvvvvvvvvvvpvvtvvvvvvvvvvvvvvv@vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Move:                 │
 vv|vvvvvvvvvvvvvvvv↑vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  7 8 9               │
 vvCvvvvvvvvvvvvvvvvCHvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  4 5 6               │
@@ -45,7 +45,7 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│N
 vvvvvvvvvvvvvvv┌─────────── Electric Furnace facing east - smelting 80% ────────────┐              │
 vvvvvvvvvvvvvvv│┌ Slots - power 100% ────────────┐┌ Showing smeltables: 3 of 7 ────┐│              │
 vvCvvvvvvvvvvvv││Input: 4 x Log                  ││ 1 x Acorn                      ││──────────────┘
-vv^vvvvv>>F>Cvv││Output:(empty)                  ││ 3 x Log                        ││──────────────┐
+vv^vvvvv>>F>Cvv││Output:(empty)                  ││ 3 x Log                        ││ ! Damaged────┐
 >>╬>Cvvvvvvvvvv││                                ││ 2 x Stick                      ││              │
 vvvvvvvvvvvvvvv││                                ││                                ││              │
 vvCvvvvvvvvvvvv││                                ││                                ││              │

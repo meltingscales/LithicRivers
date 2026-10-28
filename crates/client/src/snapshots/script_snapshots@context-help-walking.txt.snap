@@ -13,7 +13,7 @@ input_file: scripts/snapshots/context-help-walking.txt
 #######vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#     #vv,,,,,,,│Acorn x1              │
 ########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#     #vvvv,,,,,│Log x3                │
 #########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv|vvvvvvvvvvvvvvvvvvv#######vvvvvv,,,└──────────────────────┘
-##########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Help (h)──────────────┐
+##########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Help (h) ! Damaged────┐
 ###########vvvvvvvvvvvvvvvvvvvvvvvvvvv@%vv|vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Move:                 │
 #############vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  7 8 9               │
 ##############vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  4 5 6               │

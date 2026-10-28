@@ -13,7 +13,7 @@ input_file: scripts/snapshots/factory-tree-farm.txt
 ###############┌────────────── Auto-Planter - working 80%, power 100% ──────────────┐              │
 ###############│┌ Acorns (16/16) ────────────────┐┌ Showing acorns: 0 of 5 ────────┐│              │
 ###############││16 x Acorn                      ││                                ││──────────────┘
-###############││                                ││                                ││──────────────┐
+###############││                                ││                                ││ ! Damaged────┐
 ###############││                                ││                                ││              │
 ###############││                                ││                                ││              │
 ###############││                                ││                                ││              │
@@ -45,7 +45,7 @@ input_file: scripts/snapshots/factory-tree-farm.txt
 #########################vvvvvvvvvvttpH>>Cvvvvvvvvvvvtttvvvtvvvvvvvvvvvvvvvv│Stick x2              │
 ##########################vvvvvvvvvttttvvvvvvvvvvvvvvtvtttttvvvvvvvvvvvvvvvv│Torch x3              │
 ##########################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvtttvvvvvvvvvvvvvvvv└──────────────────────┘
-###########################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvttvvvvvvvvvvvvvvvvvv┌Help (h)──────────────┐
+###########################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvttvvvvvvvvvvvvvvvvvv┌Help (h) ! Damaged────┐
 ###########################vvvvvvvvvvv@vvvvvvvvvvvvvvvvvtttvvvvvvvvvvvvvvvvv│Move:                 │
 ############################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  7 8 9               │
 #############################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  4 5 6               │

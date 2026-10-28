@@ -83,6 +83,15 @@ fn interaction_label(action: &InteractionType) -> String {
     }
 }
 
+/// Whether any body damage effect applies (the Body tab lists them), shown as a warning
+/// in the panel's title so it never pushes keys out of the panel.
+fn body_damaged(app: &App) -> bool {
+    app.core
+        .game
+        .get_player_component::<lithicrivers_core::model::body::Body>()
+        .is_some_and(|body| !body.describe_effects().is_empty())
+}
+
 /// The panel's lines for the current situation, most specific first: look mode, then
 /// break or place mode, then walking with what interact would do nearby.
 pub fn context_help_lines(app: &App) -> Vec<String> {
@@ -192,15 +201,22 @@ pub fn render_context_help(f: &mut Frame, app: &App, area: Rect) {
         .into_iter()
         .map(Line::from)
         .collect();
+    let mut title = vec![Span::raw(format!("Help ({toggle})"))];
+    if body_damaged(app) {
+        title.push(Span::styled(
+            " ! Damaged",
+            Style::default().fg(Color::Yellow),
+        ));
+    }
     let block = Block::default()
         .borders(Borders::ALL)
-        .title(Line::from(format!("Help ({toggle})")));
+        .title(Line::from(title));
     f.render_widget(Paragraph::new(lines).block(block), area);
 }
 
 #[cfg(test)]
 mod tests {
-    use super::context_help_lines;
+    use super::{body_damaged, context_help_lines};
     use crate::app_state::BuildMode;
     use crate::headless::chain_commands;
 
@@ -216,6 +232,32 @@ mod tests {
         for text in ["q: mine", "v: look", "`: build mode", "f: interact"] {
             assert!(has(&lines, text), "{text}: {lines:?}");
         }
+    }
+
+    #[test]
+    fn the_damaged_starting_body_is_flagged_in_the_title() {
+        let mut runner = chain_commands(&["skip-splash", "key ui.MENU_PREV"]);
+        assert!(runner.screen_text().contains("Help (h) ! Damaged"));
+    }
+
+    #[test]
+    fn a_whole_body_shows_no_damage_warning() {
+        let runner = chain_commands(&["skip-splash", "cheat tp 0 0 0"]);
+        let player = runner.app.core.game.get_player_entity().unwrap();
+        for part in runner
+            .app
+            .core
+            .game
+            .world
+            .get::<&mut lithicrivers_core::model::body::Body>(player)
+            .unwrap()
+            .parts
+            .values_mut()
+        {
+            part.integrity = 100;
+            part.update_state_from_integrity();
+        }
+        assert!(!body_damaged(&runner.app));
     }
 
     #[test]

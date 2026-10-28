@@ -491,12 +491,7 @@ impl Game {
 
     pub fn queue_player_move(&mut self, dx: i64, dy: i64) {
         // Calculate move cost using player's Body modifiers
-        let mult: f64 = self
-            .get_player_component::<Body>()
-            .map(|body| body.walk_speed_modifier())
-            .unwrap_or(1.0);
-        let base: f64 = 200.0;
-        let cost = (base / mult.max(0.01)).round().max(1.0) as u64;
+        let cost = self.player_body_effects().walk_cost(200.0);
 
         // Set movement intent with cost
         self.res.player_state.intent = crate::intent::PlayerIntent::movement(dx, dy, 0, cost);
@@ -572,30 +567,35 @@ impl Game {
         build_render_view(&self.world, &self.res)
     }
 
-    pub fn queue_mine(&mut self) {
-        // Set an action cost similar to moving; could use Body modifiers later
-        let mult: f64 = self
-            .get_player_component::<Body>()
-            .map(|body| body.walk_speed_modifier())
-            .unwrap_or(1.0);
-        let base: f64 = 300.0; // slightly slower than a normal move
-        let cost = (base / mult.max(0.01)).round().max(1.0) as u64;
+    /// The player's body effects, or none if the player has no body.
+    pub fn player_body_effects(&self) -> crate::model::body::BodyEffects {
+        self.get_player_component::<Body>()
+            .map(|body| body.effects())
+            .unwrap_or_default()
+    }
 
-        // Set mining intent with cost
-        self.res.player_state.intent = crate::intent::PlayerIntent::mine(cost);
+    /// The mining cost from the player's arms (slightly slower than a normal move), or
+    /// None with a message when no arm works.
+    fn mine_cost(&mut self) -> Option<u64> {
+        let effects = self.player_body_effects();
+        if !effects.has_working_arm {
+            self.res.player_state.intent.clear();
+            self.res.log("No working arm to mine with".to_string());
+            return None;
+        }
+        Some(effects.mine_cost(300.0))
+    }
+
+    pub fn queue_mine(&mut self) {
+        if let Some(cost) = self.mine_cost() {
+            self.res.player_state.intent = crate::intent::PlayerIntent::mine(cost);
+        }
     }
 
     pub fn queue_mine_at(&mut self, x: i64, y: i64, z: i64) {
-        // Set an action cost similar to moving; could use Body modifiers later
-        let mult: f64 = self
-            .get_player_component::<Body>()
-            .map(|body| body.walk_speed_modifier())
-            .unwrap_or(1.0);
-        let base: f64 = 300.0; // slightly slower than a normal move
-        let cost = (base / mult.max(0.01)).round().max(1.0);
-
-        // Set mining intent with cost at specific coordinates
-        self.res.player_state.intent = crate::intent::PlayerIntent::mine_at(x, y, z, cost as u64);
+        if let Some(cost) = self.mine_cost() {
+            self.res.player_state.intent = crate::intent::PlayerIntent::mine_at(x, y, z, cost);
+        }
     }
 
     // Convenience save/load wrappers
@@ -615,15 +615,10 @@ impl Game {
     /// Queue a vertical movement for the player by dz levels.
     pub fn queue_player_move_z(&mut self, dz: i64) {
         // Use same base cost as lateral movement for now
-        let mult: f64 = self
-            .get_player_component::<Body>()
-            .map(|body| body.walk_speed_modifier())
-            .unwrap_or(1.0);
-        let base: f64 = 200.0;
-        let cost = (base / mult.max(0.01)).round().max(1.0);
+        let cost = self.player_body_effects().walk_cost(200.0);
 
         // Set vertical movement intent
-        self.res.player_state.intent = crate::intent::PlayerIntent::movement(0, 0, dz, cost as u64);
+        self.res.player_state.intent = crate::intent::PlayerIntent::movement(0, 0, dz, cost);
     }
 
     // ECS Helper Functions - Replace direct player_entity access
@@ -961,6 +956,50 @@ impl Game {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::model::body::{BodyPartState, BodyPartType};
+
+    /// The tick cost of mining east, with the player's body parts set to the given states.
+    fn mine_cost_with(states: &[(BodyPartType, BodyPartState)]) -> Option<u64> {
+        let mut game = crate::test_support::TestWorld::new(3).build();
+        {
+            let mut body = game.game.get_player_component_mut::<Body>().unwrap();
+            for part in body.parts.values_mut() {
+                part.state = BodyPartState::Functional;
+            }
+            for &(part, state) in states {
+                body.parts.get_mut(&part).unwrap().state = state;
+            }
+        }
+        game.act(crate::intent::PlayerAction::MineAt { x: 1, y: 0, z: 0 });
+        let intent = &game.game.res.player_state.intent;
+        intent.has_action().then(|| intent.cost())
+    }
+
+    #[test]
+    fn mining_follows_the_arms_not_the_legs() {
+        assert_eq!(mine_cost_with(&[]), Some(300));
+        assert_eq!(
+            mine_cost_with(&[(BodyPartType::RightLeg, BodyPartState::Damaged)]),
+            Some(300)
+        );
+        assert_eq!(
+            mine_cost_with(&[(BodyPartType::LeftArm, BodyPartState::Missing)]),
+            Some(600)
+        );
+        assert_eq!(
+            mine_cost_with(&[(BodyPartType::LeftArm, BodyPartState::Damaged)]),
+            Some(450)
+        );
+    }
+
+    #[test]
+    fn no_arms_means_no_mining() {
+        let armless = [
+            (BodyPartType::LeftArm, BodyPartState::Missing),
+            (BodyPartType::RightArm, BodyPartState::Missing),
+        ];
+        assert_eq!(mine_cost_with(&armless), None);
+    }
 
     /// Every entity's kind, position and key state, sorted, for golden comparisons.
     fn entity_signature(game: &Game) -> Vec<String> {

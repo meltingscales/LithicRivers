@@ -13,7 +13,7 @@ input_file: scripts/snapshots/blueprint-paste-preview.txt
                                                                             │Acorn x1              │
                                                                             │Log x3                │
                                     vvvvv                                   └──────────────────────┘
-                                    v>>>v                                   ┌Help (h)──────────────┐
+                                    v>>>v                                   ┌Help (h) ! Damaged────┐
                                     vv>>>                                   │Paste, cursor:        │
                                     vvvvC                                   │  q w e               │
                                     vvvvv                                   │  a s d               │
@@ -45,7 +45,7 @@ input_file: scripts/snapshots/blueprint-paste-preview.txt
                                                                             │Acorn x1              │
                                                                             │Log x3                │
                                     vvvvv                                   └──────────────────────┘
-                                    v>>>v                                   ┌Help (h)──────────────┐
+                                    v>>>v                                   ┌Help (h) ! Damaged────┐
                                     vv@Cv                                   │Paste, cursor:        │
                                     vvvvv                                   │  q w e               │
                                     v>>>v                                   │  a s d               │
@@ -77,7 +77,7 @@ input_file: scripts/snapshots/blueprint-paste-preview.txt
                ┌──────────────────────────── Blueprints ────────────────────────────┐              │
                │Blueprint 1  3x2: 1 Chest, 3 Wooden Conveyor                        │              │
                │                                                                    │──────────────┘
-               │                                                                    │──────────────┐
+               │                                                                    │ ! Damaged────┐
                │                                                                    │ursor:        │
                │                                                                    │              │
                │                                                                    │              │

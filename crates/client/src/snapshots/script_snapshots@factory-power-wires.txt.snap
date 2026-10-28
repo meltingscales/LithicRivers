@@ -13,7 +13,7 @@ input_file: scripts/snapshots/factory-power-wires.txt
 #############vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,│Acorn x1              │
 ##############vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,│Log x3                │
 ##############vvvvvvvvvvvvvvvvvvvvvvvvvv──+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,└──────────────────────┘
-###############vvvvvvvvvvvvvvvvvvvvvv+─╱vvGtttvvvtvvvvvvvvvvvvvvvvvvvvvvvvv,┌Help (h)──────────────┐
+###############vvvvvvvvvvvvvvvvvvvvvv+─╱vvGtttvvvtvvvvvvvvvvvvvvvvvvvvvvvvv,┌Help (h) ! Damaged────┐
 ################vvvvvvvvvvvvvvvvvvvvvv@vvvvtvtttttvvvvvvvvvvvvvvvvvvvvvvvvv,│Move:                 │
 ################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvtttvvvvvvvvvvvvvvvvvvvvvvvvvv│  7 8 9               │
 #################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvttvvvvvvvvvvvvvvvvvvvvvvvvvvvt│  4 5 6               │
@@ -45,7 +45,7 @@ input_file: scripts/snapshots/factory-power-wires.txt
 #############vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,│Acorn x1              │
 ##############vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,│Log x3                │
 ##############vvvvvvvvvvvvvvvvvvvvvvvvvvvv+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,└──────────────────────┘
-###############vvvvvvvvvvvvvvvvvvvvvv+vvvvGtttvvvtvvvvvvvvvvvvvvvvvvvvvvvvv,┌Help (h)──────────────┐
+###############vvvvvvvvvvvvvvvvvvvvvv+vvvvGtttvvvtvvvvvvvvvvvvvvvvvvvvvvvvv,┌Help (h) ! Damaged────┐
 ################vvvvvvvvvvvvvvvvvvvvvv@vvvvtvtttttvvvvvvvvvvvvvvvvvvvvvvvvv,│Move:                 │
 ################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvtttvvvvvvvvvvvvvvvvvvvvvvvvvv│  7 8 9               │
 #################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvttvvvvvvvvvvvvvvvvvvvvvvvvvvvt│  4 5 6               │

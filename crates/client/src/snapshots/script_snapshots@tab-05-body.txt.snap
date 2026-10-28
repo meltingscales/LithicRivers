@@ -14,10 +14,10 @@ input_file: scripts/snapshots/tab-05-body.txt
 │ █   █████   █            ││       Left Leg: Functional (100)                                     │
 │     █████                ││      Right Leg: Damaged (43)                                         │
 │     █████                ││                                                                      │
-│     ██ ██                ││                                                                      │
-│     █   █                ││                                                                      │
-│     █   █                ││                                                                      │
-│     █   █                ││                                                                      │
+│     ██ ██                ││Effects:                                                              │
+│     █   █                ││  Right Leg damaged: walking 2x slower                                │
+│     █   █                ││  Left Arm missing: mining 2x slower, melee -40%                      │
+│     █   █                ││  Fusion Core damaged: energy recovers 2x slower                      │
 │    █     █               ││                                                                      │
 │                          ││                                                                      │
 └──────────────────────────┘└──────────────────────────────────────────────────────────────────────┘

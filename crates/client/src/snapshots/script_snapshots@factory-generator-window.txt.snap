@@ -13,7 +13,7 @@ input_file: scripts/snapshots/factory-generator-window.txt
 ########vvvvvvv┌─────────────── Burner Generator - network 0 / 0 kW ────────────────┐              │
 ########vvvvvvv│┌ Fuel (1/4) - 0 kJ left ────────┐┌ Showing fuel: 2 of 7 ──────────┐│              │
 #########vvvvvv││ 1 x Log                        ││ 2 x Log                        ││──────────────┘
-#########vvvvvv││                                ││ 2 x Stick                      ││──────────────┐
+#########vvvvvv││                                ││ 2 x Stick                      ││ ! Damaged────┐
 ##########vvvvv││                                ││                                ││              │
 ###########vvvv││                                ││                                ││              │
 ###########vvvv││                                ││                                ││              │

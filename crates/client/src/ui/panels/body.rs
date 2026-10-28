@@ -44,6 +44,18 @@ pub fn render_body_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
                     Style::default().fg(color),
                 )));
             }
+            // What the damage does, in plain words
+            let effects = body.describe_effects();
+            if !effects.is_empty() {
+                list_lines.push(Line::from(""));
+                list_lines.push(Line::from("Effects:"));
+                for effect in effects {
+                    list_lines.push(Line::from(Span::styled(
+                        format!("  {effect}"),
+                        Style::default().fg(Color::Yellow),
+                    )));
+                }
+            }
             // Build ASCII from borrowed body
             ascii_lines_opt = Some(build_body_ascii(&body));
         }

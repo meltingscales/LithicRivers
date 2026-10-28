@@ -3,6 +3,7 @@ use crate::components::{
     BattleDelay, Combat, Dead, Energy, EntityKind, FeralDog, GameEntity, Inventory, Position,
     SpriteRef, Stunned,
 };
+use crate::model::body::Body;
 use crate::moves::{ActionQueue, CombatAction, Move, MoveType, QueuedAction};
 use crate::resources::Resources;
 use crate::systems::ecs_utils::{get_player_entity, is_player_entity};
@@ -29,9 +30,37 @@ pub fn battle_delay_timer_system(world: &mut World, _res: &mut Resources) {
     }
 }
 
+/// Combat ticks per point of energy the player recovers with a working power source.
+pub const ENERGY_REGEN_INTERVAL_TICKS: u64 = 2;
+
+/// In combat the player recovers a point of energy every few ticks, more slowly with a
+/// damaged power source.
+fn combat_energy_regen(world: &mut World, res: &Resources) {
+    if !res.player_state.combat_active {
+        return;
+    }
+    let Some(player) = get_player_entity(world) else {
+        return;
+    };
+    let factor = world
+        .get::<&Body>(player)
+        .map(|body| body.effects().energy_regen_factor)
+        .unwrap_or(1.0);
+    let interval = (ENERGY_REGEN_INTERVAL_TICKS as f64 / factor)
+        .round()
+        .max(1.0) as u64;
+    if res.time.tick.is_multiple_of(interval) {
+        if let Ok(mut energy) = world.get::<&mut Energy>(player) {
+            energy.restore(1);
+        }
+    }
+}
+
 /// System to process action queues and execute completed actions
 pub fn action_queue_system(world: &mut World, res: &mut Resources) {
     const DELTA_TICKS: u64 = 1; // Each game tick advances by 1
+
+    combat_energy_regen(world, res);
 
     let mut entities_with_queues = Vec::new();
 
@@ -206,6 +235,16 @@ pub fn execute_player_move(
         Err(_) => return,
     };
 
+    let effects = world
+        .get::<&Body>(player_entity)
+        .map(|body| body.effects())
+        .unwrap_or_default();
+    if move_data.move_type == MoveType::Melee && !effects.has_working_arm {
+        res.events
+            .combat_event("No working arm to swing with!", res.time.tick);
+        return;
+    }
+
     // Update player components
     let energy_consumed = {
         if let Ok(mut energy) = world.get::<&mut Energy>(player_entity) {
@@ -230,7 +269,8 @@ pub fn execute_player_move(
     match move_data.move_type {
         MoveType::Melee => {
             if let Some(target) = target_entity {
-                apply_damage(world, res, target, move_data.damage, "melee attack");
+                let damage = effects.melee_damage(move_data.damage);
+                apply_damage(world, res, target, damage, "melee attack");
             }
         }
         MoveType::Fireball => {
@@ -712,5 +752,88 @@ mod tests {
             );
             assert!(!game.game.world.contains(entity));
         }
+    }
+
+    /// The dog's health after one player move, with the player's arms in the given states.
+    fn dog_health_after(
+        move_data: Move,
+        arms: [crate::model::body::BodyPartState; 2],
+    ) -> (u32, u32) {
+        use crate::model::body::BodyPartType;
+        let mut world = TestWorld::new(3);
+        let dog = world.feral_dog(1, 0, 0);
+        let mut game = world.build();
+        let player = game.game.get_player_entity().unwrap();
+        {
+            let mut body = game.game.world.get::<&mut Body>(player).unwrap();
+            for (part, state) in [BodyPartType::LeftArm, BodyPartType::RightArm]
+                .into_iter()
+                .zip(arms)
+            {
+                body.parts.get_mut(&part).unwrap().state = state;
+            }
+        }
+        let before = game.health(dog).unwrap();
+        let target = game.entity(dog);
+        execute_player_move(
+            &mut game.game.world,
+            &mut game.game.res,
+            player,
+            &move_data,
+            Some(target),
+            None,
+        );
+        (before, game.health(dog).unwrap())
+    }
+
+    #[test]
+    fn melee_damage_follows_the_arms() {
+        use crate::model::body::BodyPartState::*;
+        let (before, after) = dog_health_after(Move::melee(), [Functional, Functional]);
+        assert_eq!(before - after, 10);
+        let (before, after) = dog_health_after(Move::melee(), [Missing, Functional]);
+        assert_eq!(before - after, 6);
+        let (before, after) = dog_health_after(Move::melee(), [Damaged, Damaged]);
+        assert_eq!(before - after, 5);
+    }
+
+    /// Energy recovered over 20 combat ticks, starting from empty.
+    fn energy_regained(power: crate::model::body::BodyPartState, in_combat: bool) -> u32 {
+        use crate::model::body::BodyPartType;
+        let mut game = TestWorld::new(3).build();
+        let player = game.game.get_player_entity().unwrap();
+        game.game
+            .world
+            .get::<&mut Body>(player)
+            .unwrap()
+            .parts
+            .get_mut(&BodyPartType::PowerSource)
+            .unwrap()
+            .state = power;
+        game.game.world.get::<&mut Energy>(player).unwrap().current = 0;
+        game.game.res.player_state.combat_active = in_combat;
+        for _ in 0..20 {
+            game.game.res.time.tick += 1;
+            combat_energy_regen(&mut game.game.world, &game.game.res);
+        }
+        let energy = game.game.world.get::<&Energy>(player).unwrap().current;
+        energy
+    }
+
+    #[test]
+    fn a_damaged_power_source_halves_combat_energy_recovery() {
+        use crate::model::body::BodyPartState::*;
+        assert_eq!(energy_regained(Functional, true), 10);
+        assert_eq!(energy_regained(Damaged, true), 5);
+        assert_eq!(energy_regained(Functional, false), 0);
+    }
+
+    #[test]
+    fn no_arms_means_no_melee_but_tackle_still_works() {
+        use crate::model::body::BodyPartState::*;
+        let (before, after) = dog_health_after(Move::melee(), [Missing, Missing]);
+        assert_eq!(before, after);
+        let (before, after) = dog_health_after(Move::tackle(), [Missing, Missing]);
+        assert_eq!(before - after, Move::tackle().damage);
     }
 }

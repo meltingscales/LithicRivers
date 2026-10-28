@@ -13,7 +13,7 @@ input_file: scripts/snapshots/mouse-hover-ghost.txt
 #######################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Acorn x1              │
 ########################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Log x3                │
 ########################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
-#########################vvvvvvvvvvvvv@Cvvvvvvvvvvvvvtttvvvtvvvvvvvvvvvvvvvv┌Help (h)──────────────┐
+#########################vvvvvvvvvvvvv@Cvvvvvvvvvvvvvtttvvvtvvvvvvvvvvvvvvvv┌Help (h) ! Damaged────┐
 ##########################vvvvvvvvvvvvvvvvvvvvvvvvvvvtvtttttvvvvvvvvvvvvvvvv│Place mode, direction:│
 ##########################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvtttvvvvvvvvvvvvvvvv│  q w e               │
 ###########################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvttvvvvvvvvvvvvvvvvvv│  a s d               │

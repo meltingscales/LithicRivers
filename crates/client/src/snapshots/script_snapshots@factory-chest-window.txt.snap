@@ -13,7 +13,7 @@ input_file: scripts/snapshots/factory-chest-window.txt
 ########vvvvvvv┌────────────────────────────── Chest ───────────────────────────────┐              │
 ########vvvvvvv│┌ Chest Items (1/16) ────────────┐┌ Your Items ────────────────────┐│              │
 #########vvvvvv││ 2 x Nail                       ││ 8 x Nail                       ││──────────────┘
-#########vvvvvv││                                ││ 1 x Acorn                      ││──────────────┐
+#########vvvvvv││                                ││ 1 x Acorn                      ││ ! Damaged────┐
 ##########vvvvv││                                ││ 3 x Log                        ││              │
 ###########vvvv││                                ││ 2 x Stick                      ││              │
 ###########vvvv││                                ││ 3 x Torch                      ││              │

@@ -25,7 +25,11 @@ Walking SHALL take twice as long with the weaker leg damaged, four times with on
 - **THEN** the robot can still move, at an eighth of normal speed
 
 ### Requirement: Head and power source
-A damaged head SHALL shrink the light radius by one tile, and a missing head SHALL leave a radius of one. A damaged power source SHALL halve energy recovery in combat.
+A damaged head SHALL shrink the light radius by one tile, and a missing head SHALL leave a radius of one. In combat the robot SHALL recover energy over time, and a damaged power source SHALL halve that recovery.
+
+#### Scenario: Damaged power source in combat
+- **WHEN** the power source is damaged and combat lasts 20 ticks
+- **THEN** the robot recovers 5 energy instead of 10
 
 #### Scenario: Damaged head with a torch
 - **WHEN** the head is damaged and a torch is lit
