@@ -36,6 +36,16 @@ pub fn structures_list() -> Vec<String> {
     existing_structures.to_vec()
 }
 
+/// The layers of a `shape_layers.txt`: split on `~~~~~` lines, trimmed, with Windows line
+/// endings (a checkout with `core.autocrlf`) turned into plain newlines.
+pub fn parse_layers(text: &str) -> Vec<String> {
+    text.replace("\r\n", "\n")
+        .split("~~~~~")
+        .map(|layer| layer.trim().to_string())
+        .filter(|layer| !layer.is_empty())
+        .collect()
+}
+
 /// A text file from the embedded assets, e.g. "structures/small_temple.lrstructure/plan.toml".
 pub fn embedded_text(path: &str) -> Option<String> {
     EmbeddedAssets::get(path).map(|f| String::from_utf8_lossy(&f.data).into_owned())
@@ -135,11 +145,7 @@ impl StructureDefinition {
             Cow::Owned(v) => String::from_utf8(v).expect("shape_layers not UTF-8"),
         };
 
-        let layers: Vec<String> = shape_content
-            .split("~~~~~")
-            .map(|layer| layer.trim().to_string())
-            .filter(|layer| !layer.is_empty())
-            .collect();
+        let layers = parse_layers(&shape_content);
 
         let blocks: HashMap<String, String> =
             serde_json::from_value(data["blocks"].clone()).expect("blocks must be a map");
@@ -201,11 +207,7 @@ impl StructureDefinition {
         }
         let shape_content =
             fs::read_to_string(&shape_file).expect("Failed to read shape_layers.txt");
-        let layers: Vec<String> = shape_content
-            .split("~~~~~")
-            .map(|layer| layer.trim().to_string())
-            .filter(|layer| !layer.is_empty())
-            .collect();
+        let layers = parse_layers(&shape_content);
 
         let blocks: HashMap<String, String> =
             serde_json::from_value(data["blocks"].clone()).expect("blocks must be a map");

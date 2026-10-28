@@ -259,12 +259,7 @@ pub fn build_folder(dir: &std::path::Path) -> Result<bool, String> {
         .map_err(|e| format!("{folder}/plan.toml: {e}"))?;
     let mut wrote = false;
 
-    let current: Vec<String> = read("shape_layers.txt")
-        .unwrap_or_default()
-        .split("~~~~~")
-        .map(|l| l.trim().to_string())
-        .filter(|l| !l.is_empty())
-        .collect();
+    let current = crate::structure::parse_layers(&read("shape_layers.txt").unwrap_or_default());
     if current != layers {
         std::fs::write(dir.join("shape_layers.txt"), layers_file(&layers))
             .map_err(|e| format!("{folder}/shape_layers.txt: {e}"))?;
@@ -384,6 +379,20 @@ to_layer = 1
         // A second build changes nothing
         assert_eq!(build_folder(&dir), Ok(false));
         std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn windows_line_endings_read_the_same() {
+        let unix = "XX\nXX\n~~~~~\n..\n..\n";
+        let windows = unix.replace('\n', "\r\n");
+        assert_eq!(
+            crate::structure::parse_layers(&windows),
+            crate::structure::parse_layers(unix)
+        );
+        assert_eq!(
+            crate::structure::parse_layers(unix),
+            vec!["XX\nXX", "..\n.."]
+        );
     }
 
     #[test]
