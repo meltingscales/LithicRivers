@@ -13,7 +13,7 @@ The user wants quad, hexa and octa-armed builds: robots with four, six or eight 
   - A robot gets a multi-arm body by waking in an advanced vat built with one (`add-backup-bodies`). A living robot doesn't swap torsos.
 - **What extra arms do:**
   - one weapon slot each
-  - mining and melee use the two best working arms (`add-body-damage-effects`), so extra arms don't stack mining speed, but losing two arms hurts less
+  - mining and melee use the two best working arms (`body-damage-effects` spec), so extra arms don't stack mining speed, but losing two arms hurts less
 - **Display:**
   - The Body tab lists every arm slot.
   - The body art shows the extra arms.

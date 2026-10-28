@@ -86,17 +86,9 @@ first quest and associated dungeons
 
 **Why This Matters**: The tutorial quest is the first thing new players experience. It must work flawlessly - players should be able to accept it, track progress, deliver items, and see completion. Without this, the Steam MVP fails at the first hurdle.
 
-## TODO: Survival Mechanics Implementation
-**Priority**: HIGH - Essential for core survival gameplay loop
+## (DONE) Survival Mechanics Implementation
 
-**Implementation Plan**:
-1. **Damage System**: Combat affects specific body parts with varying damage types (physical/mechanical)
-2. **Body Panel Integration**: Visual indicators showing part condition in existing UI
-3. **Repair Mechanics**: Use crafted items or rest to restore damaged parts
-4. **Resource Management**: Create meaningful trade-offs between combat risk and repair costs
-5. **Gameplay Impact**: At least one damage type with clear mechanical consequences
-
-**Why This Matters**: Completes the survival loop - explore → combat → damage → repair → explore. Currently combat has no lasting consequences, making it feel disconnected from the crafting/resource systems.
+The survival loop works: explore, fight, take damage, repair. Combat damages specific body parts, the Body tab shows each part's condition, the repair modal turns crafted items into repairs, and every part's damage has a clear effect (`body-damage-effects` spec): legs slow walking, arms slow mining and soften melee, the head dims the light, and a damaged power source slows combat energy recovery. Damage types (physical, electrical) were left out.
 
 ## ugly combat UI
 
