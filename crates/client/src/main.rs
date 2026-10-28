@@ -15,6 +15,8 @@ mod farming_tests;
 mod headless;
 mod mcp;
 #[cfg(test)]
+mod menu_navigation_tests;
+#[cfg(test)]
 mod save_reload_tests;
 #[cfg(test)]
 mod snapshot_tests;

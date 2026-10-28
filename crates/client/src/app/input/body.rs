@@ -101,7 +101,7 @@ pub fn handle_body_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Er
         }
 
         // Handle navigation
-        if app.ui.keybinds.matches("movement", "MOVE_NORTH", &key) {
+        if app.ui.keybinds.menu_up(&key) {
             let recipe_count = app.core.repair_handler.get_recipes().len();
             if recipe_count > 0 {
                 repair_idx = if repair_idx == 0 {
@@ -110,12 +110,12 @@ pub fn handle_body_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Er
                     repair_idx - 1
                 };
             }
-        } else if app.ui.keybinds.matches("movement", "MOVE_SOUTH", &key) {
+        } else if app.ui.keybinds.menu_down(&key) {
             let recipe_count = app.core.repair_handler.get_recipes().len();
             if recipe_count > 0 {
                 repair_idx = (repair_idx + 1) % recipe_count;
             }
-        } else if app.ui.keybinds.matches("movement", "MOVE_WEST", &key) {
+        } else if app.ui.keybinds.menu_left(&key) {
             // Previous body part
             use lithicrivers_core::model::body::BodyPartType;
             let parts = [
@@ -140,7 +140,7 @@ pub fn handle_body_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Er
             } else {
                 part_selection = Some(parts[parts.len() - 1]);
             }
-        } else if app.ui.keybinds.matches("movement", "MOVE_EAST", &key) {
+        } else if app.ui.keybinds.menu_right(&key) {
             // Next body part
             use lithicrivers_core::model::body::BodyPartType;
             let parts = [

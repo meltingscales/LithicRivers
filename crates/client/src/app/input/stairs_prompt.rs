@@ -76,14 +76,10 @@ pub fn handle_stairs_prompt_input(app: &mut App, key: KeyCode) -> bool {
     let keys = &app.ui.keybinds;
     if keys.matches("ui", "CLOSE_HELP_MENU", &key) {
         app.panels.stairs_prompt = None;
-    } else if keys.matches("movement", "MOVE_NORTH", &key)
-        || keys.matches("ui", "CREDITS_SCROLL_UP", &key)
-    {
+    } else if keys.menu_up(&key) {
         prompt.selected = 0;
         app.panels.stairs_prompt = Some(prompt);
-    } else if keys.matches("movement", "MOVE_SOUTH", &key)
-        || keys.matches("ui", "CREDITS_SCROLL_DOWN", &key)
-    {
+    } else if keys.menu_down(&key) {
         prompt.selected = 1;
         app.panels.stairs_prompt = Some(prompt);
     } else if keys.matches("ui", "MENU_ACTIVATE", &key) {

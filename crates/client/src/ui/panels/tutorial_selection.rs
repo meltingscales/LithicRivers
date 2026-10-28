@@ -37,6 +37,9 @@ pub fn render_tutorial_selection_modal(f: &mut Frame, app: &mut crate::App) {
 
         let inner = modal_block.inner(popup_area);
         f.render_widget(modal_block, popup_area);
+        app.ui
+            .click_targets
+            .push(popup_area, crate::ui::click_targets::ClickTarget::ModalArea);
 
         // Split the inner area into sections
         let chunks = Layout::default()
@@ -63,6 +66,7 @@ pub fn render_tutorial_selection_modal(f: &mut Frame, app: &mut crate::App) {
 
         // Get tutorials grouped by category (but we need to track indices for selection)
         let mut tutorial_index = 0;
+        let mut rows = Vec::new();
         let categories = crate::tutorialsystem::TutorialDatabase::get_tutorials_by_category();
 
         for (category, tutorials) in &categories {
@@ -104,6 +108,7 @@ pub fn render_tutorial_selection_modal(f: &mut Frame, app: &mut crate::App) {
                     ));
                 }
 
+                rows.push((list_items.len(), tutorial_index));
                 list_items.push(ListItem::new(Line::from(spans)));
 
                 // Show description if selected
@@ -123,6 +128,14 @@ pub fn render_tutorial_selection_modal(f: &mut Frame, app: &mut crate::App) {
 
         let list = List::new(list_items).style(Style::default().fg(Color::White));
         f.render_widget(list, chunks[1]);
+        for (line, index) in rows {
+            if line < chunks[1].height as usize {
+                app.ui.click_targets.push(
+                    Rect::new(chunks[1].x, chunks[1].y + line as u16, chunks[1].width, 1),
+                    crate::ui::click_targets::ClickTarget::TutorialRow(index),
+                );
+            }
+        }
 
         // Controls
         let controls = vec![Line::from(vec![

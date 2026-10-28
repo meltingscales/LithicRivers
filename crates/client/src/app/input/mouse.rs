@@ -390,6 +390,63 @@ fn click_target(app: &mut App, target: crate::ui::click_targets::ClickTarget, bu
             app.core.game.res.blueprints.selected = i;
             activate(app);
         }
+        // These select first; clicking the selected row again does what Enter does
+        T::RepairRecipe(i) => {
+            if let BodyRepairState::SelectingRepairAndPart {
+                selected_repair, ..
+            } = &mut app.panels.body_repair
+            {
+                if *selected_repair == i {
+                    activate(app);
+                } else {
+                    *selected_repair = i;
+                }
+            }
+        }
+        T::RepairPart(part) => {
+            if let BodyRepairState::SelectingRepairAndPart {
+                selected_body_part, ..
+            } = &mut app.panels.body_repair
+            {
+                if *selected_body_part == Some(part) {
+                    activate(app);
+                } else {
+                    *selected_body_part = Some(part);
+                }
+            }
+        }
+        T::QuestRow { completed, index } => {
+            let section = if completed {
+                QuestSection::Completed
+            } else {
+                QuestSection::Active
+            };
+            let quests = &mut app.panels.quests;
+            if quests.selected_section == section && quests.selected_quest_index == index {
+                activate(app);
+            } else {
+                quests.selected_section = section;
+                quests.selected_quest_index = index;
+            }
+        }
+        T::InventoryRow(i) => {
+            if app.panels.inventory.selected == i {
+                activate(app);
+            } else {
+                app.panels.inventory.selected = i;
+            }
+        }
+        T::TutorialRow(i) => {
+            if let TutorialSelectionState::SelectingTutorial { selected_tutorial } =
+                &mut app.panels.tutorial_selection
+            {
+                if *selected_tutorial == i {
+                    activate(app);
+                } else {
+                    *selected_tutorial = i;
+                }
+            }
+        }
     }
 }
 
@@ -1027,6 +1084,97 @@ mod tests {
             player_count(&runner, recipe.result),
             before + recipe.quantity
         );
+    }
+
+    #[test]
+    fn clicking_the_repair_window_selects_then_repairs() {
+        use crate::app_state::BodyRepairState;
+        use lithicrivers_core::model::body::{Body, BodyPartType};
+        let mut runner = chain_commands(&["skip-splash", "key ui.MENU_NEXT 3", "rawkey r"]);
+        click_on(
+            &mut runner,
+            ClickTarget::RepairPart(BodyPartType::RightLeg),
+            "left",
+        );
+        assert!(matches!(
+            runner.app.panels.body_repair,
+            BodyRepairState::SelectingRepairAndPart {
+                selected_body_part: Some(BodyPartType::RightLeg),
+                ..
+            }
+        ));
+        // With the recipe's ingredients, clicking the selected part repairs it
+        let recipe = runner.app.core.repair_handler.get_recipes()[0];
+        let leg = |runner: &Runner| {
+            runner
+                .app
+                .core
+                .game
+                .get_player_component::<Body>()
+                .unwrap()
+                .parts[&BodyPartType::RightLeg]
+                .integrity
+        };
+        let before = leg(&runner);
+        {
+            let game = &mut runner.app.core.game;
+            let player = game.get_player_entity().unwrap();
+            let mut inv = game
+                .world
+                .get::<&mut lithicrivers_core::components::Inventory>(player)
+                .unwrap();
+            for &(kind, qty) in recipe.ingredients {
+                inv.add(kind, qty);
+            }
+        }
+        click_on(
+            &mut runner,
+            ClickTarget::RepairPart(BodyPartType::RightLeg),
+            "left",
+        );
+        assert!(leg(&runner) > before);
+    }
+
+    #[test]
+    fn clicking_quest_inventory_and_tutorial_rows_selects_them() {
+        let mut runner = chain_commands(&["skip-splash", "key ui.MENU_NEXT 2"]);
+        for quest in [
+            lithicrivers_core::quests::replace_arm(None),
+            lithicrivers_core::dialogue::ActiveQuest::new(
+                lithicrivers_core::dialogue::QuestType::RepairBrokenAndroid,
+                "Repair the Broken Android".to_string(),
+                String::new(),
+                vec![],
+                None,
+            ),
+        ] {
+            runner.app.core.game.res.start_quest(quest);
+        }
+        let row = ClickTarget::QuestRow {
+            completed: false,
+            index: 1,
+        };
+        click_on(&mut runner, row, "left");
+        assert_eq!(runner.app.panels.quests.selected_quest_index, 1);
+
+        let mut runner = chain_commands(&["skip-splash", "key ui.MENU_NEXT 4"]);
+        click_on(&mut runner, ClickTarget::InventoryRow(2), "left");
+        assert_eq!(runner.app.panels.inventory.selected, 2);
+
+        let mut runner = chain_commands(&["skip-splash", "key ui.TUTORIAL_SELECT"]);
+        let tutorials = crate::tutorialsystem::TutorialDatabase::get_available_tutorials();
+        if tutorials.len() > 1 {
+            click_on(&mut runner, ClickTarget::TutorialRow(1), "left");
+            assert!(matches!(
+                runner.app.panels.tutorial_selection,
+                crate::app_state::TutorialSelectionState::SelectingTutorial {
+                    selected_tutorial: 1
+                }
+            ));
+        } else {
+            let (c, r) = target_cell(&mut runner, ClickTarget::TutorialRow(0));
+            assert!(c > 0 && r > 0);
+        }
     }
 
     #[test]

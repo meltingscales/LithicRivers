@@ -270,13 +270,9 @@ pub fn handle_blueprint_window_input(app: &mut App, key_code: KeyCode) -> bool {
     if keys.matches("ui", "CLOSE_HELP_MENU", &key_code) {
         app.panels.blueprint_window = None;
         return true;
-    } else if keys.matches("movement", "MOVE_NORTH", &key_code)
-        || keys.matches("ui", "CREDITS_SCROLL_UP", &key_code)
-    {
+    } else if keys.menu_up(&key_code) {
         library.selected = library.selected.saturating_sub(1);
-    } else if keys.matches("movement", "MOVE_SOUTH", &key_code)
-        || keys.matches("ui", "CREDITS_SCROLL_DOWN", &key_code)
-    {
+    } else if keys.menu_down(&key_code) {
         library.selected = (library.selected + 1).min(count.saturating_sub(1));
     } else if keys.matches("ui", "MENU_ACTIVATE", &key_code) {
         app.panels.blueprint_window = None;

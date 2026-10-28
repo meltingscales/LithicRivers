@@ -10,8 +10,8 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Error>>
     }
 
     match key {
-        // Up arrow - previous quest
-        KeyCode::Up => {
+        // Up - previous quest
+        k if app.ui.keybinds.menu_up(&k) => {
             let quest_count = match app.panels.quests.selected_section {
                 QuestSection::Active => app
                     .core
@@ -40,8 +40,8 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Error>>
             }
             Ok(true)
         }
-        // Down arrow - next quest
-        KeyCode::Down => {
+        // Down - next quest
+        k if app.ui.keybinds.menu_down(&k) => {
             let quest_count = match app.panels.quests.selected_section {
                 QuestSection::Active => app
                     .core

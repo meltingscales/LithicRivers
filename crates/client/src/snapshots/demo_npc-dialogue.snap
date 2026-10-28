@@ -6,15 +6,15 @@ expression: "String::from_utf8(out).unwrap()"
                                             LithicRivers
 ┌Active Quests───────────────────────────────────┐┌Completed Quests────────────────────────────────┐
 │► [ ] Repair the Broken Android                 ││(No completed quests)                           │
-│Find a lab-grown diamond and scrap electronics  ││                                                │
-│to repair the broken SapienCorp android         ││                                                │
-│[ ] Find a lab-grown diamond                    ││                                                │
-│[✓] Find scrap electronics                      ││                                                │
-│[ ] Return to the broken android                ││                                                │
+│    Find a lab-grown diamond and scrap          ││                                                │
+│    electronics to repair the broken SapienCorp ││                                                │
+│    android                                     ││                                                │
+│    [ ] Find a lab-grown diamond                ││                                                │
+│    [✓] Find scrap electronics                  ││                                                │
+│    [ ] Return to the broken android            ││                                                │
 │                                                ││                                                │
 │─────────────────────────                       ││                                                │
 │↑/↓ Select   Tab: Switch                        ││                                                │
-│                                                ││                                                │
 │                                                ││                                                │
 │                                                ││                                                │
 │                                                ││                                                │

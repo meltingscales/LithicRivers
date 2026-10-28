@@ -45,8 +45,8 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Error>>
     }
 
     match key {
-        // Up arrow or numpad 8 - previous marker
-        KeyCode::Up | KeyCode::Char('8') => {
+        // Up - previous marker
+        k if app.ui.keybinds.menu_up(&k) => {
             let marker_count = app.core.game.res.quest_markers.len();
             // Total list items = marker_count + 1 (for unselect option at index 0)
             let total_list_items = marker_count + 1;
@@ -59,8 +59,8 @@ pub fn handle_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Error>>
             }
             Ok(true)
         }
-        // Down arrow or numpad 2 - next marker
-        KeyCode::Down | KeyCode::Char('2') => {
+        // Down - next marker
+        k if app.ui.keybinds.menu_down(&k) => {
             let marker_count = app.core.game.res.quest_markers.len();
             // Total list items = marker_count + 1 (for unselect option at index 0)
             let total_list_items = marker_count + 1;

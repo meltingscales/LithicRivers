@@ -31,7 +31,7 @@ pub fn handle_npc_interaction_input(app: &mut App, key: KeyCode) -> Result<bool,
             return Ok(true);
         }
 
-        if app.ui.keybinds.matches("movement", "MOVE_NORTH", &key) {
+        if app.ui.keybinds.menu_up(&key) {
             app.panels.npc_interaction = crate::app_state::NPCInteractionState::SelectingNPC {
                 adjacent_npcs: npcs_clone.clone(),
                 selected_npc: selected.saturating_sub(1),
@@ -39,7 +39,7 @@ pub fn handle_npc_interaction_input(app: &mut App, key: KeyCode) -> Result<bool,
             return Ok(true);
         }
 
-        if app.ui.keybinds.matches("movement", "MOVE_SOUTH", &key) {
+        if app.ui.keybinds.menu_down(&key) {
             app.panels.npc_interaction = crate::app_state::NPCInteractionState::SelectingNPC {
                 adjacent_npcs: npcs_clone.clone(),
                 selected_npc: (selected + 1).min(npcs_clone.len().saturating_sub(1)),
@@ -89,11 +89,11 @@ pub fn handle_npc_interaction_input(app: &mut App, key: KeyCode) -> Result<bool,
         }
 
         // Handle dialogue navigation using the new engine
-        if app.ui.keybinds.matches("movement", "MOVE_NORTH", &key) {
+        if app.ui.keybinds.menu_up(&key) {
             choice = choice.saturating_sub(1);
         }
 
-        if app.ui.keybinds.matches("movement", "MOVE_SOUTH", &key) {
+        if app.ui.keybinds.menu_down(&key) {
             // Get the current dialogue node to check how many filtered choices are available
             if let Some(ref current_node_id) = conversation.current_node_id {
                 if let Some(node) = app.panels.dialogue_tree.get_node(current_node_id) {
