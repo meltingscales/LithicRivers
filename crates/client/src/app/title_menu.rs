@@ -106,6 +106,16 @@ impl TitleMenuState {
 }
 
 impl CreateWorldForm {
+    /// The name the world will get: the typed name ("New World" if blank), numbered if
+    /// another world already has it.
+    pub fn world_name(&self, worlds: &[WorldEntry]) -> String {
+        let typed = match self.name.trim() {
+            "" => "New World",
+            name => name,
+        };
+        worlds::unique_world_name(worlds, typed)
+    }
+
     fn new(developer_mode: bool) -> Self {
         Self {
             name: "New World".to_string(),
@@ -362,10 +372,7 @@ impl App {
     /// Create the world described by the form, save it, and play the boot intro.
     fn create_world_from_form(&mut self) {
         let form = &self.title.create;
-        let name = match form.name.trim() {
-            "" => "New World".to_string(),
-            name => name.to_string(),
-        };
+        let name = form.world_name(&self.title.worlds);
         let seed = worlds::parse_seed(&form.seed, self.clock.unix_seconds());
         let settings = form.settings;
         self.start_world(&name, seed, settings);
