@@ -343,6 +343,9 @@ fn teleport_player(app: &mut App, new_position: Position) {
             *pos = new_position;
         }
     }
+    // Load the new place now (chunks, structures, explored map, fog of war), not on the
+    // first step there
+    app.core.game.load_around_player();
     // Update UI viewport and look cursor to follow player
     app.ui.view_x = new_position.x;
     app.ui.view_y = new_position.y;
@@ -946,6 +949,39 @@ mod tests {
         assert_eq!(
             parse_position(&["~5", "~", "0"], P),
             Ok(Position { x: 15, y: 10, z: 0 })
+        );
+    }
+
+    #[test]
+    fn teleporting_loads_the_new_place_before_the_first_step() {
+        use lithicrivers_core::systems::fog_of_war::is_tile_visited;
+        let mut runner = crate::headless::chain_commands(&["skip-splash", "key ui.MENU_PREV"]);
+        let tick = runner.app.core.game.res.time.tick;
+        let (x, y, z): (i64, i64, i64) = (700, 700, -5);
+        let chunk = (
+            x.div_euclid(lithicrivers_core::world::CHUNK_SIZE),
+            y.div_euclid(lithicrivers_core::world::CHUNK_SIZE),
+            z,
+        );
+        assert!(!runner
+            .app
+            .core
+            .game
+            .res
+            .is_chunk_explored(chunk.0, chunk.1, chunk.2));
+        runner.chain(&[&format!("cheat tp {x} {y} {z}")]);
+
+        let game = &runner.app.core.game;
+        assert_eq!(game.res.time.tick, tick, "teleporting passes no time");
+        assert!(game.res.is_chunk_explored(chunk.0, chunk.1, chunk.2));
+        assert!(is_tile_visited(&game.world, x, y, z));
+        assert_eq!(
+            (
+                runner.app.ui.view_x,
+                runner.app.ui.view_y,
+                runner.app.ui.view_z
+            ),
+            (x, y, z)
         );
     }
 

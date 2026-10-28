@@ -653,8 +653,11 @@ impl Game {
     }
 
     /// Advance the game state by one tick using the system scheduler.
-    pub fn tick(&mut self) -> GameTickResult {
-        // Check for pending structures around the player before running systems
+    /// Load the world around the player without passing time: generate the chunks around
+    /// them with their pending structures, mark those chunks explored, place quest chests,
+    /// and update fog of war. Every tick does this first; a teleport does it right away so
+    /// the new place is complete before the player's first step.
+    pub fn load_around_player(&mut self) {
         if let Some(player_pos) = self.get_player_position() {
             let chunk_x = player_pos.x.div_euclid(crate::world::CHUNK_SIZE);
             let chunk_y = player_pos.y.div_euclid(crate::world::CHUNK_SIZE);
@@ -694,6 +697,11 @@ impl Game {
         }
 
         self.place_quest_chests();
+        crate::systems::fog_of_war::update_fog_of_war(&mut self.world, &self.res);
+    }
+
+    pub fn tick(&mut self) -> GameTickResult {
+        self.load_around_player();
 
         // Increment tick based on pending action cost
         let inc = self.res.player_state.intent.cost().max(1);
