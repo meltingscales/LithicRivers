@@ -300,16 +300,8 @@ fn simulate_dialogue_interaction(
             .iter()
             .enumerate()
             .filter(|(_, choice)| {
-                // Check quest requirements
-                if let Some(required_quest) = &choice.requires_quest_active {
-                    if !res.is_quest_active(*required_quest) {
-                        return false;
-                    }
-                }
-                if let Some(required_quest) = &choice.requires_quest_complete {
-                    if !res.is_quest_completed(*required_quest) {
-                        return false;
-                    }
+                if !res.quest_requirements_met(choice) {
+                    return false;
                 }
 
                 // Check item requirements
@@ -336,6 +328,8 @@ fn simulate_dialogue_interaction(
                                         });
                                         has_diamond && has_electronics
                                     }
+                                    // Completes on its own, not by handing items over
+                                    crate::dialogue::QuestType::ReplaceArm => false,
                                 }
                             } else {
                                 false

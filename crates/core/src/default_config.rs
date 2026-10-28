@@ -28,6 +28,9 @@ pub fn default_config() -> ConfigRoot {
         "combat": {
             "CLEAR_MOVE_QUEUE": ["c"], // Clear queued moves in combat
         },
+        "body": {
+            "INSTALL_PART": ["i"], // Body tab: install a replacement part into a missing one
+        },
         "build": {
             "TOGGLE_BREAK_PLACE_MODE": ["`"], // Cycle movement/break/place/rotate mode
             "ROTATE_PLACEMENT": ["r"], // Place mode: turn the next factory block clockwise; Blueprint mode: turn the paste

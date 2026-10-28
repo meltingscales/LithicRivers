@@ -4,6 +4,15 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
 pub enum QuestType {
     RepairBrokenAndroid,
+    ReplaceArm,
+}
+
+impl QuestType {
+    /// Quests whose objectives the game checks each tick, in order (`quests::advance`),
+    /// instead of completing fetch objectives as items come in.
+    pub fn ordered(self) -> bool {
+        matches!(self, QuestType::ReplaceArm)
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -47,6 +56,10 @@ pub enum QuestObjectiveType {
         x: i64,
         y: i64,
         z: i64,
+    },
+    /// The body part works again (it isn't missing)
+    InstallPart {
+        part: crate::model::body::BodyPartType,
     },
 }
 
@@ -95,6 +108,7 @@ pub enum DialogueNodeID {
     WhereAreWe,
     OverrideModelNumber,
     CompleteQuest,
+    NewArm,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -10,20 +10,7 @@ fn filter_choices_by_quest_requirements<'a>(
     choices
         .iter()
         .enumerate()
-        .filter(|(_, choice)| {
-            // Check quest requirements
-            if let Some(required_quest) = &choice.requires_quest_active {
-                if !resources.is_quest_active(*required_quest) {
-                    return false;
-                }
-            }
-            if let Some(required_quest) = &choice.requires_quest_complete {
-                if !resources.is_quest_completed(*required_quest) {
-                    return false;
-                }
-            }
-            true
-        })
+        .filter(|(_, choice)| resources.quest_requirements_met(choice))
         .collect()
 }
 
@@ -226,6 +213,11 @@ pub fn handle_npc_interaction_input(app: &mut App, key: KeyCode) -> Result<bool,
                                                 marker_type: lithicrivers_core::resources::QuestMarkerType::FetchQuest,
                                             });
                                         }
+                                    }
+                                    lithicrivers_core::dialogue::QuestType::ReplaceArm => {
+                                        app.core.game.res.start_quest(
+                                            lithicrivers_core::quests::replace_arm(Some(entity)),
+                                        );
                                     }
                                 }
                             } else {

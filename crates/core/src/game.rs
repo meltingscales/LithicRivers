@@ -7,11 +7,19 @@ use crate::model::body::Body;
 use crate::resources::Resources;
 use crate::spawn_utils;
 use crate::system_scheduler::SystemScheduler;
+use crate::tiles::TileKind;
 use crate::view::{build_render_view, RenderView};
 
 use hecs::World;
 
 use bitflags::bitflags;
+
+/// The SapienCorp facility of the arm quest: its structure, and where it is placed (its
+/// top-left corner, buried with its top layer at z), about a mile from the bunker.
+pub const FACILITY_STRUCTURE: &str = "sapiencorp-factory.lrstructure";
+pub const FACILITY_POS: (i64, i64, i64) = (200, 1609, 1);
+/// The facility's quest marker, removed when the arm quest is done.
+pub const FACILITY_MARKER: &str = "SapienCorp Factory";
 
 pub struct Game {
     pub world: World,
@@ -228,14 +236,12 @@ impl Game {
         new_game.move_entity_relative_to_player::<QuestTutorialBrokenAndroid>(2, 0, 0);
 
         // Queue the 2nd quest structure for lazy loading
-        let q2x = 200; // a little offset so it's not straight
-        let q2y = 1609; //exactly 1 mile in meters
-        let q2z = 1;
+        let (q2x, q2y, q2z) = FACILITY_POS;
         new_game
             .res
             .pending_structures
             .push(crate::resources::PendingStructure {
-                name: "sapiencorp-factory.lrstructure".to_string(),
+                name: FACILITY_STRUCTURE.to_string(),
                 x: q2x,
                 y: q2y,
                 z: q2z,
@@ -248,7 +254,7 @@ impl Game {
         new_game
             .res
             .add_quest_marker(crate::resources::QuestMarker {
-                name: "SapienCorp Factory".to_string(),
+                name: FACILITY_MARKER.to_string(),
                 description: "Get a new arm!".to_string(),
                 x: q2x,
                 y: q2y,
@@ -362,6 +368,7 @@ impl Game {
             world_z,
             bury_structure,
         );
+        self.place_quest_chests();
         info!(target: "game", "Quest structure '{}' loaded successfully", structure_name);
     }
 
@@ -489,6 +496,154 @@ impl Game {
         }
     }
 
+    /// Turn quest-treasure tiles that structures placed into quest chests holding a
+    /// Salvaged SapienCorp Arm, each position once per world.
+    pub fn place_quest_chests(&mut self) {
+        for (x, y, z) in std::mem::take(&mut self.res.world_state.world.quest_treasures) {
+            if !self.res.quest_chests_placed.insert((x, y, z)) {
+                continue;
+            }
+            let pos = Position { x, y, z };
+            let placed = crate::factory::place(
+                &mut self.world,
+                &mut self.res,
+                crate::factory::FactoryKind::Chest,
+                pos,
+                crate::factory::Facing::North,
+            );
+            match placed {
+                Ok(chest) => {
+                    let _ = self
+                        .world
+                        .insert_one(chest, SpriteRef::new("factory", "quest_chest"));
+                    if let Ok(mut inv) = self.world.get::<&mut Inventory>(chest) {
+                        inv.add(ItemKind::SalvagedArm, 1);
+                    }
+                }
+                // Something already stands there: leave the arm on the floor instead
+                Err(_) => {
+                    self.world.spawn((
+                        pos,
+                        DroppedItem {
+                            kind: ItemKind::SalvagedArm,
+                            qty: 1,
+                        },
+                        SpriteRef::new("items", "salvaged_arm"),
+                    ));
+                }
+            }
+        }
+    }
+
+    /// A save from before quest chests has the facility placed but no arm chest: place
+    /// it once, where the facility's quest-treasure tile is.
+    pub(crate) fn place_quest_chests_for_old_save(&mut self) {
+        let (x, y, z) = FACILITY_POS;
+        if !self.res.quest_chests_placed.is_empty()
+            || !self.is_structure_generated(FACILITY_STRUCTURE, x, y, z)
+        {
+            return;
+        }
+        let facility =
+            crate::structure::StructureDefinition::load_from_embedded(FACILITY_STRUCTURE);
+        let treasures = facility.tile_positions(TileKind::TreasureQuest1, x, y, z, true);
+        for &(tx, ty, tz) in &treasures {
+            self.res
+                .world_state
+                .world
+                .set_tile_cached(tx, ty, tz, TileKind::Air);
+        }
+        self.res.world_state.world.quest_treasures.extend(treasures);
+        self.place_quest_chests();
+    }
+
+    /// A replacement item in the player's inventory, preferring one that fits a missing
+    /// body part (so installing it works), with whether it does.
+    pub fn replacement_item(&self) -> Option<(ItemKind, bool)> {
+        use crate::model::body::{replacement_parts, BodyPartState};
+        let player = self.get_player_entity()?;
+        let inv = self.world.get::<&Inventory>(player).ok()?;
+        let body = self.world.get::<&Body>(player).ok()?;
+        let fits_missing = |item: ItemKind| {
+            replacement_parts(item).iter().any(|p| {
+                body.parts
+                    .get(p)
+                    .is_some_and(|bp| bp.state == BodyPartState::Missing)
+            })
+        };
+        let items: Vec<ItemKind> = inv
+            .slots
+            .iter()
+            .map(|s| s.kind)
+            .filter(|&k| !replacement_parts(k).is_empty())
+            .collect();
+        items
+            .iter()
+            .find(|&&k| fits_missing(k))
+            .map(|&k| (k, true))
+            .or_else(|| items.first().map(|&k| (k, false)))
+    }
+
+    /// Install a replacement part from the player's inventory into a missing body part it
+    /// fits, using the item up. Logs what happened; returns the part on success.
+    pub fn install_part(
+        &mut self,
+        item: ItemKind,
+    ) -> Result<crate::model::body::BodyPartType, crate::model::body::InstallError> {
+        use crate::model::body::{replacement_parts, InstallError};
+        let name = crate::components::itemkind_name(item);
+        let Some(player) = self.get_player_entity() else {
+            return Err(InstallError::DoesNotFit);
+        };
+        let has_item = self
+            .world
+            .get::<&Inventory>(player)
+            .is_ok_and(|inv| inv.slots.iter().any(|s| s.kind == item && s.qty > 0));
+        let result = if !has_item {
+            Err(InstallError::DoesNotFit)
+        } else if let Ok(mut body) = self.world.get::<&mut Body>(player) {
+            // The first part it fits that is missing, else the first it fits at all
+            let parts = replacement_parts(item);
+            let missing = parts.iter().copied().find(|p| {
+                body.parts
+                    .get(p)
+                    .is_some_and(|bp| bp.state == crate::model::body::BodyPartState::Missing)
+            });
+            match missing.or(parts.first().copied()) {
+                Some(part) => body.install(part, item).map(|()| part),
+                None => Err(InstallError::DoesNotFit),
+            }
+        } else {
+            Err(InstallError::DoesNotFit)
+        };
+        match result {
+            Ok(part) => {
+                if let Ok(mut inv) = self.world.get::<&mut Inventory>(player) {
+                    if let Some(stack) = inv.slots.iter_mut().find(|s| s.kind == item) {
+                        stack.qty -= 1;
+                    }
+                    inv.slots.retain(|s| s.qty > 0);
+                }
+                let part_name = self
+                    .get_player_component::<Body>()
+                    .and_then(|b| b.parts.get(&part).map(|p| p.name.clone()))
+                    .unwrap_or_default();
+                self.res
+                    .log_green(format!("Installed the {name}: {part_name} online"));
+                crate::quests::advance(&self.world, &mut self.res);
+            }
+            Err(InstallError::NotMissing) => {
+                self.res.log_yellow(format!(
+                    "Nothing to install the {name} into: it isn't missing"
+                ));
+            }
+            Err(InstallError::DoesNotFit) => {
+                self.res.log_yellow(format!("Can't install the {name}"));
+            }
+        }
+        result
+    }
+
     pub fn queue_player_move(&mut self, dx: i64, dy: i64) {
         // Calculate move cost using player's Body modifiers
         let cost = self.player_body_effects().walk_cost(200.0);
@@ -538,6 +693,8 @@ impl Game {
             }
         }
 
+        self.place_quest_chests();
+
         // Increment tick based on pending action cost
         let inc = self.res.player_state.intent.cost().max(1);
         self.res.time.tick = self.res.time.tick.saturating_add(inc);
@@ -547,6 +704,7 @@ impl Game {
             .scheduler
             .run_all_systems(&mut self.world, &mut self.res);
         crate::factory::run_due_steps(&mut self.world, &mut self.res);
+        crate::quests::advance(&self.world, &mut self.res);
         crate::death::prune_death_markers(&self.world, &mut self.res);
 
         let mut result = GameTickResult::NoAction;
@@ -1056,6 +1214,159 @@ mod tests {
     /// Locks down what `Game::new` spawns (after its first tick) so refactors can't change
     /// the starting world. If a change is intentional, regenerate the golden file from the
     /// "actual" lines this test prints.
+    /// Every Salvaged SapienCorp Arm in the world: in inventories, chests or on the floor.
+    fn arms(game: &Game) -> u32 {
+        let held: u32 = game
+            .world
+            .query::<&Inventory>()
+            .iter()
+            .flat_map(|(_, inv)| inv.slots.clone())
+            .filter(|s| s.kind == ItemKind::SalvagedArm)
+            .map(|s| s.qty)
+            .sum();
+        let dropped: u32 = game
+            .world
+            .query::<&DroppedItem>()
+            .iter()
+            .filter(|(_, d)| d.kind == ItemKind::SalvagedArm)
+            .map(|(_, d)| d.qty)
+            .sum();
+        held + dropped
+    }
+
+    /// Where the facility's arm chest is.
+    fn arm_chest_pos() -> (i64, i64, i64) {
+        let (x, y, z) = FACILITY_POS;
+        let facility =
+            crate::structure::StructureDefinition::load_from_embedded(FACILITY_STRUCTURE);
+        let found = facility.tile_positions(TileKind::TreasureQuest1, x, y, z, true);
+        assert_eq!(found.len(), 1, "one quest-treasure tile in the facility");
+        found[0]
+    }
+
+    #[test]
+    fn a_new_world_has_one_arm_chest_in_the_facility() {
+        let game = Game::new(12345);
+        assert_eq!(arms(&game), 1);
+        let (x, y, z) = arm_chest_pos();
+        let chest = game.res.factory_index[&Position { x, y, z }];
+        let inv = game.world.get::<&Inventory>(chest).unwrap();
+        assert_eq!(inv.slots[0].kind, ItemKind::SalvagedArm);
+    }
+
+    #[test]
+    fn leaving_and_coming_back_leaves_one_arm() {
+        let mut game = Game::new(12345);
+        let (x, y, z) = arm_chest_pos();
+        for (tx, ty, tz) in [(x, y + 2, z), (0, 0, 0), (x, y + 2, z)] {
+            if let Some(mut pos) = game.get_player_component_mut::<Position>() {
+                *pos = Position {
+                    x: tx,
+                    y: ty,
+                    z: tz,
+                };
+            }
+            game.tick();
+        }
+        // A structure placing the same tile again adds nothing
+        game.res.world_state.world.quest_treasures.push((x, y, z));
+        game.place_quest_chests();
+        assert_eq!(arms(&game), 1);
+    }
+
+    #[test]
+    fn a_save_from_before_quest_chests_gets_the_arm_once() {
+        let mut game = Game::new(12345);
+        let (x, y, z) = arm_chest_pos();
+        // Make it look like an old save: no chest, nothing recorded
+        let chest = game.res.factory_index[&Position { x, y, z }];
+        game.world.despawn(chest).unwrap();
+        game.res.factory_index.remove(&Position { x, y, z });
+        game.res
+            .world_state
+            .world
+            .set_tile_cached(x, y, z, TileKind::Air);
+        game.res.quest_chests_placed.clear();
+        assert_eq!(arms(&game), 0);
+
+        for _ in 0..2 {
+            let saved = crate::save_load::save_to_string(&game, &serde_json::Value::Null).unwrap();
+            crate::save_load::load_from_str(&mut game, &saved).unwrap();
+            assert_eq!(arms(&game), 1);
+        }
+    }
+
+    #[test]
+    fn the_arm_chest_is_reachable_from_the_facility_entrance() {
+        use std::collections::{HashSet, VecDeque};
+        let facility =
+            crate::structure::StructureDefinition::load_from_embedded(FACILITY_STRUCTURE);
+        let grid: Vec<Vec<Vec<char>>> = facility
+            .layers
+            .iter()
+            .map(|l| l.lines().map(|r| r.chars().collect()).collect())
+            .collect();
+        let at = |l: usize, x: usize, y: usize| {
+            grid.get(l)
+                .and_then(|g| g.get(y))
+                .and_then(|r| r.get(x))
+                .copied()
+                .unwrap_or('#')
+        };
+        // Walls and the untouched world around the facility block the way
+        let open = |c: char| c != '#' && c != '.';
+
+        // The entrance: the door on the facility's outer edge, at the surface
+        let top = grid.len() - 1;
+        let entrance = (0..=top)
+            .rev()
+            .flat_map(|l| {
+                grid[l].iter().enumerate().flat_map(move |(y, r)| {
+                    r.iter()
+                        .enumerate()
+                        .filter(|(_, c)| **c == 'D')
+                        .map(move |(x, _)| (l, x, y))
+                })
+            })
+            .find(|&(l, x, y)| at(l, x + 1, y) == '.')
+            .expect("a door to the outside");
+
+        let mut seen = HashSet::from([entrance]);
+        let mut queue = VecDeque::from([entrance]);
+        let mut reached = false;
+        while let Some((l, x, y)) = queue.pop_front() {
+            if at(l, x, y) == '1' {
+                reached = true;
+                break;
+            }
+            let mut next = vec![(l, x + 1, y), (l, x, y + 1)];
+            if x > 0 {
+                next.push((l, x - 1, y));
+            }
+            if y > 0 {
+                next.push((l, x, y - 1));
+            }
+            // Stairs lead to the stairs on the level above or below
+            if at(l, x, y) == '>' {
+                if at(l + 1, x, y) == '>' {
+                    next.push((l + 1, x, y));
+                }
+                if l > 0 && at(l - 1, x, y) == '>' {
+                    next.push((l - 1, x, y));
+                }
+            }
+            for n in next {
+                if open(at(n.0, n.1, n.2)) && seen.insert(n) {
+                    queue.push_back(n);
+                }
+            }
+        }
+        assert!(
+            reached,
+            "no way from the entrance {entrance:?} to the arm chest"
+        );
+    }
+
     #[test]
     fn game_new_matches_golden_entities() {
         let game = Game::new(12345);

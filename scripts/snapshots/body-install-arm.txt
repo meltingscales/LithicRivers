@@ -1,0 +1,17 @@
+# Installing a replacement part: with a Salvaged SapienCorp Arm in the inventory the
+# Body tab offers to install it into the missing left arm, which then works at 70.
+seed 12345
+size 100x30
+skip-splash
+cheat giveitem salvaged_arm
+key ui.MENU_NEXT 3
+expect-text "[i] Install Salvaged SapienCorp Arm"
+screen offered
+key body.INSTALL_PART
+expect-text "Installed the Salvaged SapienCorp Arm: Left Arm online"
+expect-text "Left Arm: Functional (70)"
+screen installed
+# A second arm has nowhere to go
+cheat giveitem salvaged_arm
+key body.INSTALL_PART
+expect-text "it isn't missing"

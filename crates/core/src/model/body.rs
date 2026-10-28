@@ -1,3 +1,4 @@
+use crate::components::ItemKind;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -69,6 +70,44 @@ impl BodyPart {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Body {
     pub parts: HashMap<BodyPartType, BodyPart>,
+}
+
+/// Integrity of a freshly installed replacement part: Functional, with room to repair.
+pub const INSTALLED_PART_INTEGRITY: i64 = 70;
+
+/// The body parts a replacement item can be installed into; empty for other items.
+pub fn replacement_parts(item: ItemKind) -> &'static [BodyPartType] {
+    match item {
+        ItemKind::SalvagedArm => &[BodyPartType::LeftArm, BodyPartType::RightArm],
+        _ => &[],
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum InstallError {
+    /// The part is there already; only a missing part takes a replacement.
+    NotMissing,
+    /// The item isn't a replacement for this part.
+    DoesNotFit,
+}
+
+impl Body {
+    /// Install a replacement item into a missing part, making it Functional at
+    /// `INSTALLED_PART_INTEGRITY`. The caller uses up the item on success.
+    pub fn install(&mut self, part: BodyPartType, item: ItemKind) -> Result<(), InstallError> {
+        if !replacement_parts(item).contains(&part) {
+            return Err(InstallError::DoesNotFit);
+        }
+        let Some(target) = self.parts.get_mut(&part) else {
+            return Err(InstallError::DoesNotFit);
+        };
+        if target.state != BodyPartState::Missing {
+            return Err(InstallError::NotMissing);
+        }
+        target.integrity = INSTALLED_PART_INTEGRITY;
+        target.update_state_from_integrity();
+        Ok(())
+    }
 }
 
 /// Walking time with the weaker leg damaged, one leg missing, or both missing.
@@ -503,6 +542,52 @@ mod tests {
                 "Fusion Core damaged: energy recovers 2x slower",
             ]
         );
+    }
+
+    #[test]
+    fn a_salvaged_arm_installs_into_the_missing_arm_only() {
+        let mut body = Body::default();
+        assert_eq!(
+            body.install(LeftLeg, ItemKind::SalvagedArm),
+            Err(InstallError::DoesNotFit)
+        );
+        assert_eq!(
+            body.install(LeftArm, ItemKind::Log),
+            Err(InstallError::DoesNotFit)
+        );
+        assert_eq!(
+            body.install(RightArm, ItemKind::SalvagedArm),
+            Err(InstallError::NotMissing)
+        );
+
+        assert_eq!(body.install(LeftArm, ItemKind::SalvagedArm), Ok(()));
+        let arm = &body.parts[&LeftArm];
+        assert_eq!((arm.state, arm.integrity), (Functional, 70));
+        assert_eq!(
+            body.install(LeftArm, ItemKind::SalvagedArm),
+            Err(InstallError::NotMissing)
+        );
+        assert_eq!(body.effects().mine_factor, 1.0);
+    }
+
+    #[test]
+    fn an_installed_arm_can_be_repaired() {
+        use crate::recipe_handler::RepairRecipeHandler;
+        let mut body = Body::default();
+        body.install(LeftArm, ItemKind::SalvagedArm).unwrap();
+        let repairs = RepairRecipeHandler::new();
+        let recipe = (0..repairs.get_recipes().len())
+            .find(|&i| repairs.can_repair_part(i, LeftArm, body.parts[&LeftArm].state))
+            .expect("a repair recipe for the arm");
+        let mut inventory: HashMap<ItemKind, u32> = repairs.get_recipes()[recipe]
+            .ingredients
+            .iter()
+            .copied()
+            .collect();
+        let integrity = repairs
+            .apply_repair(recipe, &mut inventory, body.parts[&LeftArm].integrity)
+            .unwrap();
+        assert!(integrity > INSTALLED_PART_INTEGRITY);
     }
 
     #[test]

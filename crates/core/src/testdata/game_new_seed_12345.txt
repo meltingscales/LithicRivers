@@ -23,6 +23,7 @@
  (206,1626,-6) item=ScrapElectronicsx10
  (206,1627,-6) item=ScrapElectronicsx10
  (206,1628,-6) item=ScrapElectronicsx10
+ (208,1610,-6) inv=[SalvagedArmx1]
  (208,1617,-6) item=Diamondx10
  (208,1618,-6) item=ScrapElectronicsx10
  (208,1622,-6) item=Diamondx10

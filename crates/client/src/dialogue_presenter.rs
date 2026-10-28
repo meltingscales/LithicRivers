@@ -381,16 +381,8 @@ impl DialoguePresenter {
                 .iter()
                 .enumerate()
                 .filter(|(_, choice)| {
-                    // Check quest requirements
-                    if let Some(required_quest) = &choice.requires_quest_active {
-                        if !resources.is_quest_active(*required_quest) {
-                            return false;
-                        }
-                    }
-                    if let Some(required_quest) = &choice.requires_quest_complete {
-                        if !resources.is_quest_completed(*required_quest) {
-                            return false;
-                        }
+                    if !resources.quest_requirements_met(choice) {
+                        return false;
                     }
 
                     // Check item requirements
@@ -412,6 +404,8 @@ impl DialoguePresenter {
                                                 });
                                                 has_diamond && has_electronics
                                             }
+                                            // Completes on its own, not by handing items over
+                                            lithicrivers_core::dialogue::QuestType::ReplaceArm => false,
                                         }
                                     } else {
                                         false

@@ -194,6 +194,9 @@ pub struct Resources {
     /// Chunks whose creature spawns have been rolled, so each is rolled once
     #[serde(default)]
     pub spawn_rolled_chunks: std::collections::BTreeSet<(i64, i64, i64)>,
+    /// Where quest chests have been placed, so each is placed once per world
+    #[serde(default)]
+    pub quest_chests_placed: std::collections::BTreeSet<(i64, i64, i64)>,
 }
 
 impl Resources {
@@ -219,6 +222,7 @@ impl Resources {
             belt_ride_steps: 0,
             blueprints: Default::default(),
             spawn_rolled_chunks: Default::default(),
+            quest_chests_placed: Default::default(),
         }
     }
 
@@ -326,6 +330,7 @@ impl Resources {
             // For now, we'll remove FetchQuest markers when RepairBrokenAndroid completes
             match quest_type {
                 QuestType::RepairBrokenAndroid => marker.marker_type != QuestMarkerType::FetchQuest,
+                QuestType::ReplaceArm => marker.name != crate::game::FACILITY_MARKER,
             }
         });
     }
@@ -335,6 +340,25 @@ impl Resources {
         self.active_quests
             .iter()
             .any(|q| q.quest_type == quest_type && q.state == crate::dialogue::QuestState::Active)
+    }
+
+    /// Whether a quest was ever started (active, completed or failed).
+    pub fn has_quest(&self, quest_type: QuestType) -> bool {
+        self.active_quests
+            .iter()
+            .any(|q| q.quest_type == quest_type)
+    }
+
+    /// Whether a dialogue choice's quest requirements hold: the quests it needs active or
+    /// completed are, and the quest it unlocks hasn't been started yet.
+    pub fn quest_requirements_met(&self, choice: &crate::dialogue::DialogueChoice) -> bool {
+        choice
+            .requires_quest_active
+            .is_none_or(|q| self.is_quest_active(q))
+            && choice
+                .requires_quest_complete
+                .is_none_or(|q| self.is_quest_completed(q))
+            && choice.unlocks_quest.is_none_or(|q| !self.has_quest(q))
     }
 
     /// Check if a quest is completed
@@ -367,7 +391,8 @@ impl Resources {
         let mut completed_quests = Vec::new();
 
         for quest in self.active_quests.iter_mut() {
-            if quest.state != crate::dialogue::QuestState::Active {
+            // Ordered quests advance in `quests::advance`
+            if quest.state != crate::dialogue::QuestState::Active || quest.quest_type.ordered() {
                 continue;
             }
 

@@ -274,6 +274,10 @@ pub struct GameWorld {
     chunks: HashMap<(i64, i64, i64), Chunk>,
     // Guard against re-entrant structure placement triggering recursive generation
     structure_placement_depth: u32,
+    /// Quest-treasure tiles placed by structures, waiting for the game to turn them into
+    /// quest chests (`Game::place_quest_chests`)
+    #[serde(skip)]
+    pub quest_treasures: Vec<(i64, i64, i64)>,
 }
 
 impl GameWorld {
@@ -284,6 +288,7 @@ impl GameWorld {
             world_type: crate::resources::WorldType::Normal,
             chunks: HashMap::new(),
             structure_placement_depth: 0,
+            quest_treasures: Vec::new(),
         }
     }
 

@@ -979,6 +979,25 @@ e<
      ║      
    ▄▄█▄▄    
             
+=== factory/quest_chest  #6FB3C8  A sealed parts locker from the old assembly line; its status light still blinks
+-- 1x
+C
+-- 2x
+[*
+=]
+-- 3x
+[=]
+[*]
+[=]
+-- art 0
+            
+ ▄▄▄▄▄▄▄▄▄▄ 
+ █▓▓▓▓▓▓▓▓█ 
+ █══════*═█ 
+ █▓▓▓▓▓▓▓▓█ 
+ █▒▒▒▒▒▒▒▒█ 
+ ▀▀▀▀▀▀▀▀▀▀ 
+            
 === factory/vertical_conveyor_down  #9C6B30  A wooden shaft that lets one item at a time down to the layer below
 -- 1x
 ▼
@@ -1553,6 +1572,25 @@ ppp
   ▀▓▓▒▒▓▓▀  
             
             
+            
+=== items/salvaged_arm  #8FB8A8  A plated SapienCorp arm, pulled off the line before it was ever switched on
+-- 1x
+/
+-- 2x
+o\
+ /
+-- 3x
+o\ 
+ ▓\
+  <
+-- art 0
+            
+  ▄▄▄       
+ ▐███▌      
+  ▀▓▓o▄     
+     ▀▓▓▄   
+       ▀▓█▄ 
+         ▀▀<
             
 === items/scrap_electronics  #00FF00  Electronic components. They look burnt.
 -- 1x

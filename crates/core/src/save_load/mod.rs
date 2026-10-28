@@ -180,6 +180,7 @@ impl SaveOwned {
         game.world = self.entities;
         game.res = self.resources;
         game.res.factory_index = crate::factory::rebuild_index(&game.world);
+        game.place_quest_chests_for_old_save();
         Ok(LoadedSave {
             client: self.client,
             viewport: None,
@@ -223,6 +224,7 @@ pub fn load_from_str(game: &mut crate::Game, json: &str) -> Result<LoadedSave> {
             .apply(game),
         v4::VERSION => {
             let viewport = v4::load_json_str(game, json)?;
+            game.place_quest_chests_for_old_save();
             game.res.log("Save upgraded from version 4");
             Ok(LoadedSave {
                 client: serde_json::Value::Null,

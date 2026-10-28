@@ -27,6 +27,7 @@ pub mod pathfinding;
 pub mod plants;
 pub mod player_state;
 pub mod power;
+pub mod quests;
 pub mod recipe_handler;
 pub mod resources;
 pub mod save_load;

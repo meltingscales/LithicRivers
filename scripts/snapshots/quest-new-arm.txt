@@ -1,0 +1,52 @@
+# The arm quest from the android to the install. The repaired android offers "A New
+# Arm"; teleports stand in for the mile-long walk and the fight through the facility.
+seed 12345
+size 100x30
+skip-splash
+key ui.MENU_PREV
+# Repair the android: Can I help? > What do you need? > I'll find them
+key movement.MOVE_EAST
+key action.INTERACT
+key movement.MOVE_SOUTH 2
+key ui.MENU_ACTIVATE 3
+cheat giveitem diamond
+cheat giveitem scrap_electronics
+# [Give items] is the sixth choice, then "You're welcome!"
+key action.INTERACT
+key movement.MOVE_SOUTH 5
+key ui.MENU_ACTIVATE 2
+expect-text "Quest completed: Repair the Broken Android"
+# The repaired android knows where to find an arm: the sixth choice again
+key action.INTERACT
+key movement.MOVE_SOUTH 5
+key ui.MENU_ACTIVATE
+expect-text "SapienCorp built that model"
+screen offer
+key ui.MENU_ACTIVATE
+expect-text "Quest started: A New Arm"
+# Walk to the facility's entrance
+cheat tp 206 1630 0
+key movement.WAIT
+expect-text "Quest objective completed: Reach the SapienCorp facility"
+key ui.MENU_NEXT 3
+expect-text "A New Arm"
+screen quest-active
+key ui.MENU_PREV 3
+# The parts locker on the assembly line, three levels down
+cheat tp 208 1611 -6
+key action.INTERACT
+screen locker
+# The window opens on the locker's side: take the arm
+key ui.MENU_ACTIVATE
+key ui.CLOSE_HELP_MENU
+# Back out past the locker's guard dog; objectives are checked each tick
+cheat tp 206 1630 0
+key movement.WAIT
+expect-text "Quest objective completed: Find the salvaged arm"
+key ui.MENU_NEXT 4
+key body.INSTALL_PART
+expect-text "Quest completed: A New Arm"
+screen installed
+key ui.MENU_PREV
+expect-text "Two hands again, user!"
+screen quests
