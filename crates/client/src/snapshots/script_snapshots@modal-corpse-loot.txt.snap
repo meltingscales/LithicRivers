@@ -13,7 +13,7 @@ input_file: scripts/snapshots/modal-corpse-loot.txt
 #######vvvvvvvv┌────────────────────────── Looting Corpse ──────────────────────────┐              │
 ########vvvvvvv│┌ Corpse Items ──────────────────┐┌ Your Items ────────────────────┐│              │
 #########vvvvvv││ 1 x Leather                    ││10 x Nail                       ││──────────────┘
-##########vvvvv││ 2 x Meat                       ││ 1 x Acorn                      ││──────────────┐
+##########vvvvv││ 2 x Meat                       ││ 1 x Acorn                      ││ ! Damaged────┐
 ###########vvvv││                                ││ 3 x Log                        ││              │
 #############vv││                                ││ 2 x Stick                      ││              │
 ##############v││                                ││ 3 x Torch                      ││              │

@@ -64,15 +64,6 @@ impl BodyPart {
             _ => BodyPartState::Enhanced,
         };
     }
-
-    pub fn get_walk_speed_modifier(&self) -> f64 {
-        match self.state {
-            BodyPartState::Missing => 0.0,
-            BodyPartState::Damaged => self.walk_speed_modifier * 0.5,
-            BodyPartState::Functional => self.walk_speed_modifier,
-            BodyPartState::Enhanced => self.walk_speed_modifier * 1.5,
-        }
-    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -80,39 +71,241 @@ pub struct Body {
     pub parts: HashMap<BodyPartType, BodyPart>,
 }
 
+/// Walking time with the weaker leg damaged, one leg missing, or both missing.
+pub const LEG_DAMAGED_WALK: f64 = 2.0;
+pub const LEG_MISSING_WALK: f64 = 4.0;
+pub const LEGS_MISSING_WALK: f64 = 8.0;
+/// Walking time with the weaker leg enhanced (1.5 times as fast).
+pub const LEG_ENHANCED_WALK: f64 = 1.0 / 1.5;
+/// Mining time and melee damage per damaged arm, and for one missing arm.
+pub const ARM_DAMAGED_MINE: f64 = 1.5;
+pub const ARM_DAMAGED_MELEE: f64 = 0.75;
+pub const ARM_MISSING_MINE: f64 = 2.0;
+pub const ARM_MISSING_MELEE: f64 = 0.6;
+/// Light radius lost with a damaged head, and the radius left with no head.
+pub const HEAD_DAMAGED_LIGHT_PENALTY: u32 = 1;
+pub const HEAD_MISSING_LIGHT_RADIUS: u32 = 1;
+/// Combat energy recovery with a damaged power source.
+pub const POWER_DAMAGED_ENERGY_REGEN: f64 = 0.5;
+
+/// What the body's part states do to the robot. Factors multiply the time an action
+/// takes (walking, mining) or what it gives (melee damage, energy recovery).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct BodyEffects {
+    pub walk_factor: f64,
+    pub mine_factor: f64,
+    pub melee_factor: f64,
+    /// False with both arms missing: no mining, breaking or melee.
+    pub has_working_arm: bool,
+    pub head: BodyPartState,
+    pub energy_regen_factor: f64,
+}
+
+impl Default for BodyEffects {
+    /// No effects: a whole body.
+    fn default() -> Self {
+        Self {
+            walk_factor: 1.0,
+            mine_factor: 1.0,
+            melee_factor: 1.0,
+            has_working_arm: true,
+            head: BodyPartState::Functional,
+            energy_regen_factor: 1.0,
+        }
+    }
+}
+
+impl BodyEffects {
+    /// The light radius a source of `base` tiles gives with this head, never below 1.
+    pub fn light_radius(&self, base: u32) -> u32 {
+        match self.head {
+            BodyPartState::Missing => HEAD_MISSING_LIGHT_RADIUS,
+            BodyPartState::Damaged => base.saturating_sub(HEAD_DAMAGED_LIGHT_PENALTY).max(1),
+            _ => base.max(1),
+        }
+    }
+
+    /// `base` ticks of walking, at least 1.
+    pub fn walk_cost(&self, base: f64) -> u64 {
+        (base * self.walk_factor).round().max(1.0) as u64
+    }
+
+    /// `base` ticks of mining or breaking, at least 1.
+    pub fn mine_cost(&self, base: f64) -> u64 {
+        (base * self.mine_factor).round().max(1.0) as u64
+    }
+
+    /// Melee damage from a move's `base`, rounded down and at least 1, or 0 without arms.
+    pub fn melee_damage(&self, base: u32) -> u32 {
+        if !self.has_working_arm {
+            return 0;
+        }
+        ((base as f64 * self.melee_factor).floor() as u32).max(1)
+    }
+}
+
+/// "2x", "1.5x", "2.25x".
+fn times(factor: f64) -> String {
+    format!("{}x", (factor * 100.0).round() / 100.0)
+}
+
+/// "-40%".
+fn less(factor: f64) -> String {
+    format!("-{}%", ((1.0 - factor) * 100.0).round())
+}
+
+const LEGS: [BodyPartType; 2] = [BodyPartType::LeftLeg, BodyPartType::RightLeg];
+const ARMS: [BodyPartType; 2] = [BodyPartType::LeftArm, BodyPartType::RightArm];
+
+fn leg_walk(state: BodyPartState) -> f64 {
+    match state {
+        BodyPartState::Missing => LEG_MISSING_WALK,
+        BodyPartState::Damaged => LEG_DAMAGED_WALK,
+        BodyPartState::Functional => 1.0,
+        BodyPartState::Enhanced => LEG_ENHANCED_WALK,
+    }
+}
+
+/// An arm's mining time and melee damage factors.
+fn arm_factors(state: BodyPartState) -> (f64, f64) {
+    match state {
+        BodyPartState::Missing => (ARM_MISSING_MINE, ARM_MISSING_MELEE),
+        BodyPartState::Damaged => (ARM_DAMAGED_MINE, ARM_DAMAGED_MELEE),
+        _ => (1.0, 1.0),
+    }
+}
+
+fn state_word(state: BodyPartState) -> &'static str {
+    match state {
+        BodyPartState::Missing => "missing",
+        BodyPartState::Damaged => "damaged",
+        BodyPartState::Functional => "functional",
+        BodyPartState::Enhanced => "enhanced",
+    }
+}
+
 impl Body {
-    pub fn walk_speed_modifier(&self) -> f64 {
-        // Focus on legs primarily; take the minimum of left/right leg modifiers to represent weakest link.
-        let left = self
-            .parts
-            .get(&BodyPartType::LeftLeg)
-            .map(|p| p.get_walk_speed_modifier())
-            .unwrap_or(0.0);
-        let right = self
-            .parts
-            .get(&BodyPartType::RightLeg)
-            .map(|p| p.get_walk_speed_modifier())
-            .unwrap_or(0.0);
-        let legs = left.min(right);
-        if legs > 0.0 {
-            legs
+    fn state(&self, part: BodyPartType) -> BodyPartState {
+        self.parts
+            .get(&part)
+            .map_or(BodyPartState::Missing, |p| p.state)
+    }
+
+    fn part_name(&self, part: BodyPartType) -> String {
+        self.parts
+            .get(&part)
+            .map_or_else(|| format!("{part:?}"), |p| p.name.clone())
+    }
+
+    /// The leg that sets the walking pace.
+    fn weaker_leg(&self) -> BodyPartType {
+        let [left, right] = LEGS;
+        if leg_walk(self.state(right)) > leg_walk(self.state(left)) {
+            right
         } else {
-            // If legs unusable, fall back to average of all positive modifiers (still may be 0)
-            let mut sum = 0.0f64;
-            let mut count = 0u64;
-            for p in self.parts.values() {
-                let m = p.get_walk_speed_modifier();
-                if m > 0.0 {
-                    sum += m;
-                    count += 1;
-                }
-            }
-            if count > 0 {
-                sum / count as f64
-            } else {
-                0.0
+            left
+        }
+    }
+
+    /// The effects of every part's state, computed in one place.
+    pub fn effects(&self) -> BodyEffects {
+        // Legs: the weaker leg sets the pace; walking never becomes impossible.
+        let walk_factor = if LEGS
+            .iter()
+            .all(|&l| self.state(l) == BodyPartState::Missing)
+        {
+            LEGS_MISSING_WALK
+        } else {
+            leg_walk(self.state(self.weaker_leg()))
+        };
+
+        // Arms: each damaged arm and one missing arm slow mining and soften melee.
+        let has_working_arm = ARMS
+            .iter()
+            .any(|&a| self.state(a) != BodyPartState::Missing);
+        let (mut mine_factor, mut melee_factor) = (1.0, 1.0);
+        if has_working_arm {
+            for arm in ARMS {
+                let (mine, melee) = arm_factors(self.state(arm));
+                mine_factor *= mine;
+                melee_factor *= melee;
             }
         }
+
+        let energy_regen_factor = if self.state(BodyPartType::PowerSource) == BodyPartState::Damaged
+        {
+            POWER_DAMAGED_ENERGY_REGEN
+        } else {
+            1.0
+        };
+
+        BodyEffects {
+            walk_factor,
+            mine_factor,
+            melee_factor,
+            has_working_arm,
+            head: self.state(BodyPartType::Head),
+            energy_regen_factor,
+        }
+    }
+
+    /// One plain line per active damage effect, naming the part, for the Body tab.
+    pub fn describe_effects(&self) -> Vec<String> {
+        let effects = self.effects();
+        let mut lines = Vec::new();
+
+        if effects.walk_factor > 1.0 {
+            let who = if LEGS
+                .iter()
+                .all(|&l| self.state(l) == BodyPartState::Missing)
+            {
+                "Both legs missing".to_string()
+            } else {
+                let leg = self.weaker_leg();
+                format!("{} {}", self.part_name(leg), state_word(self.state(leg)))
+            };
+            lines.push(format!(
+                "{who}: walking {} slower",
+                times(effects.walk_factor)
+            ));
+        }
+
+        if effects.has_working_arm {
+            for arm in ARMS {
+                let (mine, melee) = arm_factors(self.state(arm));
+                if mine > 1.0 {
+                    lines.push(format!(
+                        "{} {}: mining {} slower, melee {}",
+                        self.part_name(arm),
+                        state_word(self.state(arm)),
+                        times(mine),
+                        less(melee)
+                    ));
+                }
+            }
+        } else {
+            lines.push("Both arms missing: no mining or melee".to_string());
+        }
+
+        let head = self.part_name(BodyPartType::Head);
+        match effects.head {
+            BodyPartState::Damaged => lines.push(format!(
+                "{head} damaged: light radius -{HEAD_DAMAGED_LIGHT_PENALTY}"
+            )),
+            BodyPartState::Missing => lines.push(format!(
+                "{head} missing: light radius {HEAD_MISSING_LIGHT_RADIUS}"
+            )),
+            _ => {}
+        }
+
+        if effects.energy_regen_factor < 1.0 {
+            lines.push(format!(
+                "{} damaged: energy recovers {} slower",
+                self.part_name(BodyPartType::PowerSource),
+                times(1.0 / effects.energy_regen_factor)
+            ));
+        }
+        lines
     }
 }
 
@@ -192,5 +385,142 @@ impl Default for Body {
             "Torque feedback mismatch detected",
         );
         Body { parts }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use BodyPartState::*;
+    use BodyPartType::*;
+
+    /// A whole body with the given parts set to other states.
+    fn body(states: &[(BodyPartType, BodyPartState)]) -> Body {
+        let mut body = Body::default();
+        for part in body.parts.values_mut() {
+            part.state = Functional;
+        }
+        for &(part, state) in states {
+            body.parts.get_mut(&part).unwrap().state = state;
+        }
+        body
+    }
+
+    #[test]
+    fn a_whole_body_has_no_effects() {
+        assert_eq!(body(&[]).effects(), BodyEffects::default());
+        assert!(body(&[]).describe_effects().is_empty());
+    }
+
+    #[test]
+    fn legs_follow_the_weaker_leg() {
+        let walk = |states: &[(BodyPartType, BodyPartState)]| body(states).effects().walk_factor;
+        assert_eq!(walk(&[(RightLeg, Damaged)]), 2.0);
+        assert_eq!(walk(&[(LeftLeg, Missing)]), 4.0);
+        assert_eq!(walk(&[(LeftLeg, Missing), (RightLeg, Damaged)]), 4.0);
+        assert_eq!(walk(&[(LeftLeg, Missing), (RightLeg, Missing)]), 8.0);
+        assert_eq!(walk(&[(LeftLeg, Enhanced)]), 1.0);
+        assert_eq!(
+            walk(&[(LeftLeg, Enhanced), (RightLeg, Enhanced)]),
+            1.0 / 1.5
+        );
+    }
+
+    #[test]
+    fn walking_costs_stay_as_before_for_damaged_and_enhanced_legs() {
+        // Before: 200 / 0.5 for a damaged leg, 200 / 1.5 for two enhanced legs
+        assert_eq!(body(&[(RightLeg, Damaged)]).effects().walk_cost(200.0), 400);
+        let enhanced = body(&[(LeftLeg, Enhanced), (RightLeg, Enhanced)]);
+        assert_eq!(enhanced.effects().walk_cost(200.0), 133);
+    }
+
+    #[test]
+    fn a_damaged_leg_does_not_slow_mining() {
+        let effects = body(&[(RightLeg, Damaged)]).effects();
+        assert_eq!(effects.mine_factor, 1.0);
+        assert_eq!(effects.mine_cost(300.0), 300);
+    }
+
+    #[test]
+    fn arms_slow_mining_and_soften_melee() {
+        let arms = |states: &[(BodyPartType, BodyPartState)]| {
+            let e = body(states).effects();
+            (e.mine_factor, e.melee_factor, e.has_working_arm)
+        };
+        assert_eq!(arms(&[(LeftArm, Damaged)]), (1.5, 0.75, true));
+        assert_eq!(
+            arms(&[(LeftArm, Damaged), (RightArm, Damaged)]),
+            (2.25, 0.5625, true)
+        );
+        assert_eq!(arms(&[(LeftArm, Missing)]), (2.0, 0.6, true));
+        assert_eq!(
+            arms(&[(LeftArm, Missing), (RightArm, Damaged)]),
+            (3.0, 0.6 * 0.75, true)
+        );
+        assert_eq!(arms(&[(RightArm, Enhanced)]), (1.0, 1.0, true));
+        assert!(!arms(&[(LeftArm, Missing), (RightArm, Missing)]).2);
+    }
+
+    #[test]
+    fn melee_damage_rounds_down_and_needs_an_arm() {
+        assert_eq!(body(&[(LeftArm, Missing)]).effects().melee_damage(10), 6);
+        assert_eq!(body(&[(LeftArm, Damaged)]).effects().melee_damage(10), 7);
+        assert_eq!(body(&[(LeftArm, Missing)]).effects().melee_damage(1), 1);
+        let armless = body(&[(LeftArm, Missing), (RightArm, Missing)]);
+        assert_eq!(armless.effects().melee_damage(10), 0);
+    }
+
+    #[test]
+    fn the_head_dims_the_light() {
+        let damaged = body(&[(Head, Damaged)]).effects();
+        assert_eq!(damaged.light_radius(8), 7);
+        assert_eq!(damaged.light_radius(2), 1);
+        assert_eq!(damaged.light_radius(1), 1);
+        let missing = body(&[(Head, Missing)]).effects();
+        assert_eq!(missing.light_radius(8), 1);
+        assert_eq!(body(&[(Head, Enhanced)]).effects().light_radius(8), 8);
+    }
+
+    #[test]
+    fn a_damaged_power_source_halves_energy_recovery() {
+        let effects = body(&[(PowerSource, Damaged)]).effects();
+        assert_eq!(effects.energy_regen_factor, 0.5);
+        assert_eq!(body(&[(Torso, Damaged)]).effects(), BodyEffects::default());
+    }
+
+    #[test]
+    fn the_starting_body_lists_its_arm_and_leg_effects() {
+        let body = Body::default();
+        let effects = body.effects();
+        assert_eq!(effects.walk_factor, 2.0);
+        assert_eq!(effects.mine_factor, 2.0);
+        assert_eq!(effects.melee_factor, 0.6);
+        assert_eq!(
+            body.describe_effects(),
+            vec![
+                "Right Leg damaged: walking 2x slower",
+                "Left Arm missing: mining 2x slower, melee -40%",
+                "Fusion Core damaged: energy recovers 2x slower",
+            ]
+        );
+    }
+
+    #[test]
+    fn missing_limbs_are_described() {
+        let all = body(&[
+            (LeftLeg, Missing),
+            (RightLeg, Missing),
+            (LeftArm, Missing),
+            (RightArm, Missing),
+            (Head, Missing),
+        ]);
+        assert_eq!(
+            all.describe_effects(),
+            vec![
+                "Both legs missing: walking 8x slower",
+                "Both arms missing: no mining or melee",
+                "Head missing: light radius 1",
+            ]
+        );
     }
 }

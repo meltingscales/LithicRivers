@@ -13,7 +13,7 @@ input_file: scripts/snapshots/interaction-grid-two-on-a-tile.txt
 #######vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#     #vv,,,,,,,│Acorn x1              │
 ########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#     #vvvv,,,,,│Log x3                │
 #########vvvvvvvvvvv┌─────────────────── Choose Interaction ───────────────────┐───────────────────┘
-##########vvvvvvvvvv│ ┌─────┬─────┬─────┐                                      │p (h)──────────────┐
+##########vvvvvvvvvv│ ┌─────┬─────┬─────┐                                      │p (h) ! Damaged────┐
 ###########vvvvvvvvv│ │  7  │  8  │  9  │  [6] Pick up Nail                    │e:                 │
 #############vvvvvvv│ │     │     │     │  [6] Loot corpse (2 items)           │ 8 9               │
 ##############vvvvvv│ ├─────┼─────┼─────┤                                      │ 5 6               │
@@ -45,7 +45,7 @@ input_file: scripts/snapshots/interaction-grid-two-on-a-tile.txt
 #######vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#     #vv,,,,,,,│Acorn x1              │
 ########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#     #vvvv,,,,,│Log x3                │
 #########vvvvvvvvvvv┌─────────────────── Choose Interaction ───────────────────┐───────────────────┘
-##########vvvvvvvvvv│ ┌─────┬─────┬─────┐                                      │p (h)──────────────┐
+##########vvvvvvvvvv│ ┌─────┬─────┬─────┐                                      │p (h) ! Damaged────┐
 ###########vvvvvvvvv│ │  7  │  8  │  9  │  [6] Pick up Nail                    │e:                 │
 #############vvvvvvv│ │     │     │     │  [6] Loot corpse (2 items)           │ 8 9               │
 ##############vvvvvv│ ├─────┼─────┼─────┤                                      │ 5 6               │
@@ -77,7 +77,7 @@ input_file: scripts/snapshots/interaction-grid-two-on-a-tile.txt
 #######vvvvvvvv┌────────────────────────── Looting Corpse ──────────────────────────┐              │
 ########vvvvvvv│┌ Corpse Items ──────────────────┐┌ Your Items ────────────────────┐│              │
 #########vvvvvv││ 1 x Leather                    ││ 9 x Nail                       ││──────────────┘
-##########vvvvv││ 2 x Meat                       ││ 1 x Acorn                      ││──────────────┐
+##########vvvvv││ 2 x Meat                       ││ 1 x Acorn                      ││ ! Damaged────┐
 ###########vvvv││                                ││ 3 x Log                        ││              │
 #############vv││                                ││ 2 x Stick                      ││              │
 ##############v││                                ││ 3 x Torch                      ││              │

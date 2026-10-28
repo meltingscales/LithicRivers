@@ -1,4 +1,5 @@
 use crate::components::{FogOfWar, LightSource, Player, Position};
+use crate::model::body::Body;
 use crate::resources::Resources;
 use hecs::World;
 
@@ -68,15 +69,28 @@ fn has_line_of_sight(
     true
 }
 
+/// The radius a light source reaches, dimmed by a damaged or missing head.
+pub fn light_radius(light_source: &LightSource, body: Option<&Body>) -> u32 {
+    body.map(|b| b.effects())
+        .unwrap_or_default()
+        .light_radius(light_source.radius)
+}
+
 /// Update fog of war for the player based on their current position and light radius with line-of-sight
 pub fn update_fog_of_war(world: &mut World, resources: &Resources) {
     // Find the player entity with fog of war, light source, and position
-    for (_entity, (fog_of_war, light_source, position, _player)) in world
-        .query::<(&mut FogOfWar, &LightSource, &Position, &Player)>()
+    for (_entity, (fog_of_war, light_source, position, _player, body)) in world
+        .query::<(
+            &mut FogOfWar,
+            &LightSource,
+            &Position,
+            &Player,
+            Option<&Body>,
+        )>()
         .iter()
     {
         // Mark all tiles within light radius as visited
-        let radius = light_source.radius as i64;
+        let radius = light_radius(light_source, body) as i64;
 
         for dx in -radius..=radius {
             for dy in -radius..=radius {
@@ -108,10 +122,11 @@ pub fn is_tile_illuminated(
     tile_z: i64,
 ) -> bool {
     // Find the player entity with light source and position
-    for (_entity, (light_source, position, _player)) in
-        world.query::<(&LightSource, &Position, &Player)>().iter()
+    for (_entity, (light_source, position, _player, body)) in world
+        .query::<(&LightSource, &Position, &Player, Option<&Body>)>()
+        .iter()
     {
-        let radius = light_source.radius as i64;
+        let radius = light_radius(light_source, body) as i64;
         let dx = tile_x - position.x;
         let dy = tile_y - position.y;
         let dz = tile_z - position.z;
@@ -318,6 +333,49 @@ mod tests {
         // Tiles never visited should remain unvisited
         assert_eq!(
             get_fog_state(&world, &resources, 5, 5, -1),
+            FogState::Unvisited
+        );
+    }
+
+    #[test]
+    fn a_damaged_head_dims_the_light_with_and_without_a_torch() {
+        use crate::model::body::{BodyPartState, BodyPartType};
+        let (mut world, player_entity) = create_test_world_with_player();
+        let resources = create_mock_resources();
+        let mut body = Body::default();
+        body.parts.get_mut(&BodyPartType::Head).unwrap().state = BodyPartState::Damaged;
+        world.insert_one(player_entity, body).unwrap();
+
+        // Without a torch the radius of 2 drops to 1
+        assert_eq!(
+            get_fog_state(&world, &resources, 11, 10, -1),
+            FogState::Illuminated
+        );
+        assert_eq!(
+            get_fog_state(&world, &resources, 12, 10, -1),
+            FogState::Unvisited
+        );
+
+        // With a torch the radius of 8 drops to 7
+        world
+            .get::<&mut LightSource>(player_entity)
+            .unwrap()
+            .set_torch_equipped(true);
+        assert_eq!(
+            get_fog_state(&world, &resources, 17, 10, -1),
+            FogState::Illuminated
+        );
+        assert_ne!(
+            get_fog_state(&world, &resources, 18, 10, -1),
+            FogState::Illuminated
+        );
+
+        // With no head only the radius of 1 is left
+        let mut body = world.get::<&mut Body>(player_entity).unwrap();
+        body.parts.get_mut(&BodyPartType::Head).unwrap().state = BodyPartState::Missing;
+        drop(body);
+        assert_eq!(
+            get_fog_state(&world, &resources, 12, 10, -1),
             FogState::Unvisited
         );
     }

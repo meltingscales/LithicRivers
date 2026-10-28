@@ -634,7 +634,7 @@ mod scenario_tests {
             after.parts[&BodyPartType::LeftArm].state,
             BodyPartState::Missing
         );
-        assert_eq!(after.walk_speed_modifier(), before.walk_speed_modifier());
+        assert_eq!(after.effects(), before.effects());
     }
 
     #[test]

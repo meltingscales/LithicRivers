@@ -13,7 +13,7 @@ input_file: scripts/snapshots/modal-npc-dialogue.txt
 ????  │  █▀░▀▀▀█   │ am... ...SapienCorp maintenance    │   █▀▀▀▀█   │  ????│Acorn x1              │
 ????  │  █ o  ◙█ * │ unit. My work task is ... welding  │   █ ◘ ─█▌  │  ????│Log x3                │
 ????  │  ▀█▄≈≈▄█▀  │ ... today. How can I assist you... │  ▄█▄▄▄▄█▄  │  ????└──────────────────────┘
-????  │  ▐█▒▓▒▓█▀▀ │ ... ... to■ay?  (You gaze at the   │ ▐█▓▒▒▒▒▓█▌ │  ????┌Help (h)──────────────┐
+????  │  ▐█▒▓▒▓█▀▀ │ ... ... to■ay?  (You gaze at the   │ ▐█▓▒▒▒▒▓█▌ │  ????┌Help (h) ! Damaged────┐
 ????  │   █▓▒▓█    │ rusty, flickering lump of metal on │  ▀█▓▓▓▓█▀  │  ????│Move:                 │
 ????  │   ▐▌  ▐▌   │ the floor. You wonder how it's     │   ▐▌  ▐▌   │  ????│  7 8 9               │
 ????  │            │ still running. These construction  │            │  ????│  4 5 6               │

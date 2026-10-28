@@ -13,7 +13,7 @@ input_file: scripts/snapshots/factory-belt-line.txt
 ########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,      │Acorn x1              │
 ########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,     │Log x2                │
 #########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,     └──────────────────────┘
-#########vvvvvvvvvvvvvvvvvvvvvvvvvvvv|>Cvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,    ┌Help (h)──────────────┐
+#########vvvvvvvvvvvvvvvvvvvvvvvvvvvv|>Cvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,    ┌Help (h) ! Damaged────┐
 ##########vvvvvvvvvvvvvvvvvvvvvvvvvvvv@ttvvvtvvvvvvvvvvvvvvvvvvvvvvvvv,,,   │Move:                 │
 ###########vvvvvvvvvvvvvvvvvvvvvvvvvvvtvtttttvvvvvvvvvvvvvvvvvvvvvvvvv,,,,  │  7 8 9               │
 ###########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvtttvvvvvvvvvvvvvvvvvvvvvvvvvv,,t  │  4 5 6               │
