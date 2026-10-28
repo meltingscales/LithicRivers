@@ -48,6 +48,14 @@ impl BodyPart {
         self.update_state_from_integrity();
     }
 
+    /// Bring a part that isn't missing back to full integrity; enhanced parts stay enhanced.
+    pub fn repair_fully(&mut self) {
+        if self.state != BodyPartState::Missing {
+            self.integrity = self.integrity.max(100);
+            self.update_state_from_integrity();
+        }
+    }
+
     pub fn update_state_from_integrity(&mut self) {
         self.state = match self.integrity {
             0 => BodyPartState::Missing,

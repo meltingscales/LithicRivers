@@ -129,6 +129,12 @@ pub struct WorldSettings {
     /// Worlds saved before world types existed are Normal
     #[serde(default)]
     pub world_type: WorldType,
+    /// Dying keeps everything the robot carried (the `keepinventory` cheat)
+    #[serde(default)]
+    pub keep_inventory: bool,
+    /// Respawning restores the body the robot died with (the `keepbody` cheat)
+    #[serde(default)]
+    pub keep_body: bool,
 }
 
 impl WorldSettings {
@@ -140,6 +146,8 @@ impl WorldSettings {
             developer_mode: config.developer_mode,
             show_tutorial: true,
             world_type: WorldType::Normal,
+            keep_inventory: false,
+            keep_body: false,
         }
     }
 }
@@ -446,6 +454,8 @@ mod tests {
             developer_mode: false,
             show_tutorial: false,
             world_type: super::WorldType::Normal,
+            keep_inventory: false,
+            keep_body: false,
         };
         let game = TestWorld::new(1).settings(settings).build().game;
         assert!(!game.res.world_settings.developer_mode);

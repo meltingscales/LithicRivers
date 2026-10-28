@@ -66,6 +66,16 @@ impl CommandRegistry {
                 handler: handle_kill_player_command,
             },
             Command {
+                name: "keepinventory",
+                description: "keepinventory [on|off] - Keep everything you carry when you die",
+                handler: handle_keepinventory_command,
+            },
+            Command {
+                name: "keepbody",
+                description: "keepbody [on|off] - Respawn in your old body, repaired",
+                handler: handle_keepbody_command,
+            },
+            Command {
                 name: "spawn_enemy",
                 description:
                     "spawn_enemy <kind> [x y z] - Spawn an enemy (default ~2 ~ ~, ~ = relative to player)",
@@ -394,6 +404,32 @@ fn handle_kill_player_command(app: &mut App, _parts: &[&str]) -> Result<(), Box<
         "self-destruct command".to_string(),
     );
     Ok(())
+}
+
+fn handle_keepinventory_command(app: &mut App, parts: &[&str]) -> Result<(), Box<dyn Error>> {
+    let settings = &mut app.core.game.res.world_settings;
+    let state = switch(&mut settings.keep_inventory, parts, "keepinventory")?;
+    app.core.game.res.log(format!("Keep inventory: {state}"));
+    Ok(())
+}
+
+fn handle_keepbody_command(app: &mut App, parts: &[&str]) -> Result<(), Box<dyn Error>> {
+    let settings = &mut app.core.game.res.world_settings;
+    let state = switch(&mut settings.keep_body, parts, "keepbody")?;
+    app.core.game.res.log(format!("Keep body: {state}"));
+    Ok(())
+}
+
+/// Set an on/off world setting from `parts[1]` (or leave it, without an argument) and
+/// return its state as "on" or "off".
+fn switch(setting: &mut bool, parts: &[&str], name: &str) -> Result<&'static str, String> {
+    match parts.get(1).copied() {
+        None => {}
+        Some("on") => *setting = true,
+        Some("off") => *setting = false,
+        Some(_) => return Err(format!("Usage: {name} [on|off]")),
+    }
+    Ok(if *setting { "on" } else { "off" })
 }
 
 fn handle_toggle_tutorial_command(app: &mut App, _parts: &[&str]) -> Result<(), Box<dyn Error>> {

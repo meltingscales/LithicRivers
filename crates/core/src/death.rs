@@ -20,10 +20,15 @@ pub fn player_died(world: &mut World, res: &mut Resources, player: Entity, cause
     let Ok(pos) = world.get::<&Position>(player).map(|p| *p) else {
         return;
     };
-    let slots = world
-        .get::<&mut Inventory>(player)
-        .map(|mut inv| std::mem::take(&mut inv.slots))
-        .unwrap_or_default();
+    let keep_inventory = res.world_settings.keep_inventory;
+    let slots = if keep_inventory {
+        Vec::new()
+    } else {
+        world
+            .get::<&mut Inventory>(player)
+            .map(|mut inv| std::mem::take(&mut inv.slots))
+            .unwrap_or_default()
+    };
     let description = wreck_description(&cause, &slots);
     let body = world.get::<&Body>(player).map(|b| (*b).clone()).ok();
     let mut builder = hecs::EntityBuilder::new();
@@ -51,9 +56,11 @@ pub fn player_died(world: &mut World, res: &mut Resources, player: Entity, cause
         z: pos.z,
         marker_type: QuestMarkerType::Death,
     });
-    res.log_red(format!(
-        "Your body was destroyed: {cause}. It lies here with everything you carried."
-    ));
+    res.log_red(if keep_inventory {
+        format!("Your body was destroyed: {cause}. You keep everything you carried.")
+    } else {
+        format!("Your body was destroyed: {cause}. It lies here with everything you carried.")
+    });
     res.player_state.death_cause = Some(cause);
 }
 
@@ -111,7 +118,8 @@ pub fn is_dead(world: &World, player: Entity) -> bool {
 
 impl crate::Game {
     /// Bring a dead player back at the respawn point with the default body and the starting
-    /// kit. Returns where, or `None` if the player isn't dead.
+    /// kit, or with the repaired old body and the carried items when the world keeps them.
+    /// Returns where, or `None` if the player isn't dead.
     pub fn respawn(&mut self) -> Option<Position> {
         let player = self.get_player_entity()?;
         if !is_dead(&self.world, player) {
@@ -128,18 +136,31 @@ impl crate::Game {
             .get::<&Inventory>(player)
             .map(|inv| inv.auto_pickup)
             .unwrap_or(self.res.config.auto_pickup_enabled);
+        let settings = self.res.world_settings;
+        let body = match self.world.get::<&Body>(player) {
+            Ok(old) if settings.keep_body => {
+                let mut body = (*old).clone();
+                body.parts.values_mut().for_each(|p| p.repair_fully());
+                body
+            }
+            _ => Body::default(),
+        };
         let _ = self.world.remove_one::<Dead>(player);
         let _ = self.world.remove_one::<crate::moves::ActionQueue>(player);
         let _ = self.world.insert(
             player,
             (
                 point,
-                Body::default(),
-                crate::game::starting_inventory(auto_pickup),
+                body,
                 // Whatever waits at the respawn point can't attack at once
                 BattleDelay::new(1000),
             ),
         );
+        if !settings.keep_inventory {
+            let _ = self
+                .world
+                .insert_one(player, crate::game::starting_inventory(auto_pickup));
+        }
         if let Ok(mut energy) = self.world.get::<&mut crate::components::Energy>(player) {
             energy.current = energy.max;
         }
@@ -155,7 +176,7 @@ impl crate::Game {
 mod tests {
     use super::*;
     use crate::components::ItemKind;
-    use crate::model::body::BodyPartType;
+    use crate::model::body::{BodyPartState, BodyPartType};
     use crate::test_support::TestWorld;
     use crate::tiles::TileKind;
 
@@ -325,6 +346,59 @@ mod tests {
         }
         t.tick();
         assert!(death_markers(&t.game.res).is_empty());
+    }
+
+    #[test]
+    fn keep_inventory_keeps_what_was_carried_and_leaves_an_empty_wreck() {
+        let mut t = dying_game();
+        t.game.res.world_settings.keep_inventory = true;
+        let player = t.game.get_player_entity().unwrap();
+        let game = &mut t.game;
+        player_died(&mut game.world, &mut game.res, player, "shut down".into());
+        let w = wrecks(&t.game.world);
+        assert_eq!(w.len(), 1, "the wreck still marks the place");
+        assert!(w[0].1.is_empty(), "the wreck is empty");
+        t.game.respawn();
+        assert_eq!(
+            t.player_inventory(),
+            vec![(ItemKind::Log, 3), (ItemKind::Stone, 7)],
+            "no starting kit on top"
+        );
+    }
+
+    #[test]
+    fn keep_body_repairs_the_old_body_and_a_missing_arm_stays_missing() {
+        let mut t = dying_game();
+        t.game.res.world_settings.keep_body = true;
+        let player = t.game.get_player_entity().unwrap();
+        {
+            let mut body = t.game.world.get::<&mut Body>(player).unwrap();
+            body.parts
+                .get_mut(&BodyPartType::LeftLeg)
+                .unwrap()
+                .receive_damage(70, false);
+            body.parts
+                .get_mut(&BodyPartType::RightArm)
+                .unwrap()
+                .receive_damage(200, true);
+        }
+        let game = &mut t.game;
+        player_died(&mut game.world, &mut game.res, player, "shut down".into());
+        t.game.respawn();
+        let body = t.game.world.get::<&Body>(player).unwrap();
+        let leg = &body.parts[&BodyPartType::LeftLeg];
+        assert_eq!((leg.state, leg.integrity), (BodyPartState::Functional, 100));
+        assert_eq!(
+            body.parts[&BodyPartType::RightArm].state,
+            BodyPartState::Missing
+        );
+        // The default body's missing left arm stays missing too
+        assert_eq!(
+            body.parts[&BodyPartType::LeftArm].state,
+            BodyPartState::Missing
+        );
+        let core = &body.parts[&BodyPartType::PowerSource];
+        assert_eq!(core.integrity, 100, "damaged parts come back whole");
     }
 
     #[test]

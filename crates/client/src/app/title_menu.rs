@@ -115,6 +115,8 @@ impl CreateWorldForm {
                 developer_mode,
                 show_tutorial: true,
                 world_type: WorldType::Normal,
+                keep_inventory: false,
+                keep_body: false,
             },
             field: 0,
         }

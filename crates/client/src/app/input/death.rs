@@ -53,7 +53,7 @@ fn choose(app: &mut App) {
 
 #[cfg(test)]
 mod tests {
-    use crate::headless::Runner;
+    use crate::headless::{chain_commands, Runner};
     use crate::ui::click_targets::ClickTarget;
     use lithicrivers_core::components::{Inventory, ItemKind, Position, Wreck};
     use lithicrivers_core::resources::QuestMarkerType;
@@ -160,6 +160,34 @@ mod tests {
             .map(|(_, inv)| inv.slots.iter().map(|s| s.qty).sum::<u32>())
             .sum();
         assert!(wreck_items > 0, "the wreck keeps its items");
+    }
+
+    #[test]
+    fn keep_inventory_and_keep_body_survive_a_reload_and_apply_on_death() {
+        let mut runner = chain_commands(&["skip-splash", "cheat keepinventory"]);
+        runner.chain(&["expect-text \"Keep inventory: off\""]);
+        runner.chain(&[
+            "cheat keepinventory on",
+            "cheat keepbody on",
+            "save-reload",
+            "cheat keepbody",
+            "expect-text \"Keep body: on\"",
+        ]);
+        let settings = runner.app.core.game.res.world_settings;
+        assert!(settings.keep_inventory && settings.keep_body);
+        let before = held(&runner, ItemKind::Torch);
+        assert!(before > 0, "the starting kit has torches");
+        runner.chain(&["cheat kill_player", "key ui.MENU_ACTIVATE"]);
+        assert_eq!(held(&runner, ItemKind::Torch), before);
+
+        runner.chain(&[
+            "cheat keepinventory off",
+            "expect-text \"Keep inventory: off\"",
+        ]);
+        assert!(!runner.app.core.game.res.world_settings.keep_inventory);
+        let script = crate::headless::parse_script("cheat keepbody maybe").unwrap();
+        let error = runner.run_steps(&script.steps).error.unwrap_or_default();
+        assert!(error.contains("Usage: keepbody [on|off]"), "{error}");
     }
 
     #[test]
