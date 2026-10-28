@@ -83,7 +83,16 @@ pub fn render_body_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     f.render_widget(list_para, chunks[1]);
 
     // Bottom: controls
-    let controls_text = "[R] Repair";
+    let mut controls_text = "[R] Repair".to_string();
+    if let Some((item, true)) = app.core.game.replacement_item() {
+        controls_text.push_str(&format!(
+            "   [{}] Install {}",
+            app.core
+                .config_manager
+                .get_printable_key_for_keybind("body", "INSTALL_PART"),
+            lithicrivers_core::components::itemkind_name(item)
+        ));
+    }
     let controls_para = Paragraph::new(controls_text)
         .alignment(Alignment::Center)
         .block(

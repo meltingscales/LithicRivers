@@ -10,6 +10,26 @@ pub fn handle_body_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Er
         return Ok(false);
     }
 
+    // Install a replacement part into a missing one
+    if app.ui.keybinds.matches("body", "INSTALL_PART", &key)
+        && matches!(
+            app.panels.body_repair,
+            crate::app_state::BodyRepairState::None
+        )
+    {
+        match app.core.game.replacement_item() {
+            Some((item, _)) => {
+                let _ = app.core.game.install_part(item);
+            }
+            None => app
+                .core
+                .game
+                .res
+                .log_yellow("No replacement part to install"),
+        }
+        return Ok(true);
+    }
+
     // Handle R key to open repair modal
     if key == KeyCode::Char('r') || key == KeyCode::Char('R') {
         // Initialize repair state with first recipe and first available body part selected

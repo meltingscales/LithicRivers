@@ -251,7 +251,7 @@ fn start_npc_dialogue(
             res.log(format!("First time meeting {}!", npc_name));
         }
 
-        dialogue.current_dialogue_id = Some(DialogueNodeID::Start); // Start with greeting
+        dialogue.current_dialogue_id = Some(res.opening_dialogue_node()); // Start with greeting
         true
     } else {
         res.log(format!("Warning: {} has no dialogue component.", npc_name));
@@ -300,16 +300,8 @@ fn simulate_dialogue_interaction(
             .iter()
             .enumerate()
             .filter(|(_, choice)| {
-                // Check quest requirements
-                if let Some(required_quest) = &choice.requires_quest_active {
-                    if !res.is_quest_active(*required_quest) {
-                        return false;
-                    }
-                }
-                if let Some(required_quest) = &choice.requires_quest_complete {
-                    if !res.is_quest_completed(*required_quest) {
-                        return false;
-                    }
+                if !res.quest_requirements_met(choice) {
+                    return false;
                 }
 
                 // Check item requirements
@@ -336,6 +328,8 @@ fn simulate_dialogue_interaction(
                                         });
                                         has_diamond && has_electronics
                                     }
+                                    // Completes on its own, not by handing items over
+                                    crate::dialogue::QuestType::ReplaceArm => false,
                                 }
                             } else {
                                 false

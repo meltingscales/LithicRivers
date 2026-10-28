@@ -1,0 +1,165 @@
+---
+source: crates/client/src/snapshot_tests.rs
+expression: "String::from_utf8(out).unwrap()"
+input_file: scripts/snapshots/quest-new-arm.txt
+---
+=== screen offer ===
+                                            LithicRivers
+????????????????????????????????????????????????????????????????????????????┌MODES ☼ 08:06─────────┐
+????????????????????????????????????????????????????????????????????????????│  ------ - - -- - FOG │
+????                                                                    ????└──────────────────────┘
+????  ┌────────────┐ > SC-M4X7: "Your left arm...       ┌────────────┐  ????┌Inventory─────────────┐
+????  │   ▄▄▄▄▄    │ SapienCorp built that model at the │    ▄▄▄▄    │  ????│Nail x10              │
+????  │  █▀░▀▀▀█   │ assembly facility, about a mile    │   █▀▀▀▀█   │  ????│Acorn x1              │
+????  │  █ o  o█ * │ north of here. The line shut down  │   █ ◘ ─█▌  │  ????│Log x3                │
+????  │  ▀█▄‿‿▄█▀  │ mid-shift. There should still be a │  ▄█▄▄▄▄█▄  │  ????└──────────────────────┘
+????  │  ▐█▒▓▒▓█▀▀ │ salvaged arm in a parts locker by  │ ▐█▓▒▒▒▒▓█▌ │  ????┌Help (h) ! Damaged────┐
+????  │   █▓▒▓█    │ the line. Watch out: the dogs got  │  ▀█▓▓▓▓█▀  │  ????│Move:                 │
+????  │   ▐▌  ▐▌   │ in after the staff left. Bring it  │   ▐▌  ▐▌   │  ????│  7 8 9               │
+????  │            │ back attached, user!"              │            │  ????│  4 5 6               │
+????  └────────────┘                                    └────────────┘  ????│  1 2 3               │
+????                 > 1.  [ACCEPT QUEST] I'll go and                   ????│q: mine               │
+???? │                                                                │ ????│v: look               │
+???? ╰─Up/Down: Select Choice | Enter: Choose | Esc: End Conversation─╯ ????│`: build mode         │
+????                                                                    ????│f: talk to Broken Sapi│
+????????????????????????????????????????????????????????????????????????????│                      │
+????????????????????????????????????????????????????????????????????????????└──────────────────────┘
+┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
+│[401] Used 1 Scrap Electronics.                                                                   │
+│[401] Quest completed: Repair the Broken Android                                                  │
+│[401] You feel Friendly.                                                                          │
+│[401] Conversation ended                                                                          │
+│[401] Started conversation with Broken SapienCorp Android                                         │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===
+=== screen quest-active ===
+                                            LithicRivers
+┌Active Quests───────────────────────────────────┐┌Completed Quests────────────────────────────────┐
+│► [ ] A New Arm                                 ││[✓] Repair the Broken Android                   │
+│SapienCorp built arms like yours at the facility││                                                │
+│a mile north. Find a salvaged one and install   ││                                                │
+│it.                                             ││                                                │
+│[✓] Reach the SapienCorp facility               ││                                                │
+│[ ] Find the salvaged arm on the assembly line  ││                                                │
+│[ ] Install the arm (Body tab)                  ││                                                │
+│                                                ││                                                │
+│─────────────────────────                       ││                                                │
+│↑/↓ Select   Tab: Switch                        ││                                                │
+│                                                ││                                                │
+│                                                ││                                                │
+│                                                ││                                                │
+│                                                ││                                                │
+│                                                ││                                                │
+│                                                ││                                                │
+│                                                ││                                                │
+└────────────────────────────────────────────────┘└────────────────────────────────────────────────┘
+┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
+│[401] Quest started: A New Arm                                                                    │
+│[401] You feel Friendly.                                                                          │
+│[401] Conversation ended                                                                          │
+│[401] Teleported to (207, 1632, 0)                                                                │
+│[801] Quest objective completed: Reach the SapienCorp facility                                    │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===
+=== screen locker ===
+                                            LithicRivers
+????????????????????????????????????????????????????????????????????????????┌MODES ☼ 08:12─────────┐
+????????????????????????????????????????????????????????????????????????????│  ------ - - -- - FOG │
+????????????????????????????????????????????????????????????????????????????└──────────────────────┘
+????????????????????????????????????????????????????????????????????????????┌Inventory─────────────┐
+????????????????????????????????????????????????????????????????????????????│Nail x10              │
+???????????????┌────────────────────────────── Chest ───────────────────────────────┐              │
+???????????????│┌ Chest Items (1/16) ────────────┐┌ Your Items ────────────────────┐│              │
+???????????????││ 1 x Salvaged SapienCorp Arm    ││10 x Nail                       ││──────────────┘
+???????????????││                                ││ 1 x Acorn                      ││ ! Damaged────┐
+???????????????││                                ││ 3 x Log                        ││              │
+???????????????││                                ││ 2 x Stick                      ││              │
+???????????????││                                ││ 3 x Torch                      ││              │
+???????????????││                                ││ 2 x String                     ││              │
+???????????????││                                ││ 3 x Scrap Electronics          ││              │
+???????????????││                                ││                                ││              │
+???????????????││                                ││                                ││ mode         │
+???????????????││                                ││                                ││chest         │
+???????????????││                                ││                                ││              │
+???????????????││                                ││                                ││──────────────┘
+┌Messages──────││                                ││                                ││──────────────┐
+│[401] Conversa││                                ││                                ││              │
+│[401] Teleport│└────←→ Panel | ↑↓ Select | Enter Move | a Take All | Esc Close────┘│              │
+│[801] Quest ob└────────────────────────────────────────────────────────────────────┘              │
+│[801] Teleported to (209, 1610, -6)                                                               │
+│[801] Opened chest                                                                                │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===
+=== screen installed ===
+                                            LithicRivers
+┌Body──────────────────────┐┌Parts─────────────────────────────────────────────────────────────────┐
+│      ███                 ││           Head: Functional (100)                                     │
+│     █████                ││          Torso: Functional (100)                                     │
+│      ███                 ││    Fusion Core: Damaged (21)                                         │
+│   █  ███  █              ││       Left Arm: Functional (70)                                      │
+│  █  █████  █             ││      Right Arm: Functional (100)                                     │
+│ █   █████   █            ││       Left Leg: Functional (100)                                     │
+│     █████                ││      Right Leg: Damaged (43)                                         │
+│     █████                ││                                                                      │
+│     ██ ██                ││Effects:                                                              │
+│     █   █                ││  Right Leg damaged: walking 2x slower                                │
+│     █   █                ││  Fusion Core damaged: energy recovers 2x slower                      │
+│     █   █                ││                                                                      │
+│    █     █               ││                                                                      │
+│                          ││                                                                      │
+└──────────────────────────┘└──────────────────────────────────────────────────────────────────────┘
+┌Controls──────────────────────────────────────────────────────────────────────────────────────────┐
+│                                            [R] Repair                                            │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
+│[1201] Quest objective completed: Find the salvaged arm on the assembly line                      │
+│[1201] Installed the Salvaged SapienCorp Arm: Left Arm online                                     │
+│[1201] Quest objective completed: Install the arm (Body tab)                                      │
+│[1201] Quest completed: A New Arm                                                                 │
+│[1201] SC-M4X7 on the radio: "Arm signal detected. Two hands again, user!"                        │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===
+=== screen quests ===
+                                            LithicRivers
+┌Active Quests───────────────────────────────────┐┌Completed Quests────────────────────────────────┐
+│(No active quests)                              ││[✓] Repair the Broken Android                   │
+│─────────────────────────                       ││                                                │
+│↑/↓ Select   Tab: Switch                        ││[✓] A New Arm                                   │
+│                                                ││                                                │
+│                                                ││                                                │
+│                                                ││                                                │
+│                                                ││                                                │
+│                                                ││                                                │
+│                                                ││                                                │
+│                                                ││                                                │
+│                                                ││                                                │
+│                                                ││                                                │
+│                                                ││                                                │
+│                                                ││                                                │
+│                                                ││                                                │
+│                                                ││                                                │
+│                                                ││                                                │
+└────────────────────────────────────────────────┘└────────────────────────────────────────────────┘
+┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
+│[1201] Quest objective completed: Find the salvaged arm on the assembly line                      │
+│[1201] Installed the Salvaged SapienCorp Arm: Left Arm online                                     │
+│[1201] Quest objective completed: Install the arm (Body tab)                                      │
+│[1201] Quest completed: A New Arm                                                                 │
+│[1201] SC-M4X7 on the radio: "Arm signal detected. Two hands again, user!"                        │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===

@@ -73,6 +73,7 @@ pub fn block_will_spawn_entity(tile_kind: TileKind) -> bool {
         TileKind::EnemySpawn => true,
         TileKind::ScrapCommon => true,
         TileKind::ScrapRare => true,
+        TileKind::TreasureQuest1 => true,
         _ => false,
     }
 }
@@ -114,6 +115,10 @@ pub fn spawn_entity_for_block(
         TileKind::ScrapRare => {
             spawn_utils::world_spawn_scraprare(ecs_world, block_x, block_y, block_z, game_world);
         }
+        TileKind::TreasureQuest1 => {
+            // The game turns it into the quest chest, once per world
+            game_world.quest_treasures.push((block_x, block_y, block_z));
+        }
         _ => {
             panic!("Unknown tile kind for entity spawning {:?}", tile_kind);
         }
@@ -121,6 +126,35 @@ pub fn spawn_entity_for_block(
 }
 
 impl StructureDefinition {
+    /// Where the structure's tiles of one kind land when it is placed with its top-left
+    /// corner at (x, y) and, buried, its top layer at z (else its bottom layer at z).
+    pub fn tile_positions(
+        &self,
+        tile: TileKind,
+        x: i64,
+        y: i64,
+        z: i64,
+        bury: bool,
+    ) -> Vec<(i64, i64, i64)> {
+        let top = self.layers.len() as i64 - 1;
+        let mut found = Vec::new();
+        for (li, layer) in self.layers.iter().enumerate() {
+            let tz = if bury {
+                z - (top - li as i64)
+            } else {
+                z + li as i64
+            };
+            for (ly, line) in layer.lines().enumerate() {
+                for (lx, ch) in line.chars().enumerate() {
+                    if self.get_tile_for_symbol(&ch.to_string()) == Some(tile) {
+                        found.push((x + lx as i64, y + ly as i64, tz));
+                    }
+                }
+            }
+        }
+        found
+    }
+
     /// Load from embedded assets (panics on failure). `structure_name` is the
     /// folder name such as "starter_ship.lrstructure" under assets/structures/.
     pub fn load_from_embedded(structure_name: &str) -> Self {

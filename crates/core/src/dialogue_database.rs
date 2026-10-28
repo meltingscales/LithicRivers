@@ -324,6 +324,72 @@ impl DialogueDatabase {
             shop_item: None,
         });
 
+        // Once repaired, conversations open here instead of at Start
+        tree.add_node(DialogueNode {
+            id: DialogueNodeID::Repaired,
+            speaker: "SC-M4X7".to_string(),
+            text: "SapienCorp maintenance unit SC-M4X7, fully operational, thanks to you, user! Memory core stable, welding arm steady. What can I do for you?".to_string(),
+            text_effects: vec![],
+            mood: NPCMood::Happy,
+            choices: vec![
+                DialogueChoice {
+                    text: "Do you know where I could find a new arm?".to_string(),
+                    leads_to: Some(DialogueNodeID::NewArm),
+                    requires_item: None,
+                    npc_mood_change: Some(NPCMood::Happy),
+                    player_mood_change: Some(NPCMood::Neutral),
+                    unlocks_quest: None,
+                    requires_quest_active: None,
+                    requires_quest_complete: None,
+                },
+                DialogueChoice {
+                    text: "Just checking on you. Goodbye!".to_string(),
+                    leads_to: None,
+                    requires_item: None,
+                    npc_mood_change: Some(NPCMood::Happy),
+                    player_mood_change: Some(NPCMood::Happy),
+                    unlocks_quest: None,
+                    requires_quest_active: None,
+                    requires_quest_complete: None,
+                },
+            ],
+            auto_continue: false,
+            shop_item: None,
+        });
+
+        // The second quest, offered once the android is repaired
+        tree.add_node(DialogueNode {
+            id: DialogueNodeID::NewArm,
+            speaker: "SC-M4X7".to_string(),
+            text: "Your left arm... SapienCorp built that model at the assembly facility, about a mile north of here. The line shut down mid-shift. There should still be a salvaged arm in a parts locker by the line. Watch out: the dogs got in after the staff left. Bring it back attached, user!".to_string(),
+            text_effects: vec![],
+            mood: NPCMood::Happy,
+            choices: vec![
+                DialogueChoice {
+                    text: "I'll go and find it.".to_string(),
+                    leads_to: None,
+                    requires_item: None,
+                    npc_mood_change: Some(NPCMood::Happy),
+                    player_mood_change: Some(NPCMood::Happy),
+                    unlocks_quest: Some(QuestType::ReplaceArm),
+                    requires_quest_active: None,
+                    requires_quest_complete: None,
+                },
+                DialogueChoice {
+                    text: "Thanks, I'll keep it in mind.".to_string(),
+                    leads_to: None,
+                    requires_item: None,
+                    npc_mood_change: None,
+                    player_mood_change: None,
+                    unlocks_quest: None,
+                    requires_quest_active: None,
+                    requires_quest_complete: None,
+                },
+            ],
+            auto_continue: false,
+            shop_item: None,
+        });
+
         tree
     }
 }

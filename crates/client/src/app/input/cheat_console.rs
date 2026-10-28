@@ -36,6 +36,11 @@ impl CommandRegistry {
                 handler: handle_tp_command,
             },
             Command {
+                name: "tp_quest",
+                description: "tp_quest [android|facility|locker] - Teleport to a quest spot (none = the next one)",
+                handler: handle_tp_quest_command,
+            },
+            Command {
                 name: "noclip_toggle",
                 description: "noclip_toggle - Toggle noclip mode",
                 handler: handle_noclip_toggle_command,
@@ -254,6 +259,15 @@ fn update_autocomplete(input: &str) -> (Vec<String>, Option<usize>) {
                 .collect();
             return (matches, None);
         }
+        "tp_quest" if parts.len() == 1 || (parts.len() == 2 && !input.ends_with(' ')) => {
+            let prefix = parts.get(1).copied().unwrap_or("");
+            let matches = lithicrivers_core::quests::TP_QUEST_TARGETS
+                .into_iter()
+                .filter(|t| t.starts_with(prefix))
+                .map(|t| format!("tp_quest {t}"))
+                .collect();
+            return (matches, None);
+        }
         "tp" if parts.len() < 4 => {
             // For tp command, we could suggest coordinate patterns
             let coord_suggestions = vec!["0 0 0", "10 10 0", "100 100 0"];
@@ -303,6 +317,27 @@ fn handle_tp_command(app: &mut App, parts: &[&str]) -> Result<(), Box<dyn Error>
     let player = player_position(app)?;
     let new_position =
         parse_position(&parts[1..], player).map_err(|e| format!("Usage: tp x y z - {e}"))?;
+    teleport_player(app, new_position);
+    Ok(())
+}
+
+fn handle_tp_quest_command(app: &mut App, parts: &[&str]) -> Result<(), Box<dyn Error>> {
+    let game = &mut app.core.game;
+    let pos = lithicrivers_core::quests::tp_quest_target(
+        &game.world,
+        &mut game.res,
+        parts.get(1).copied(),
+    )?;
+    teleport_player(app, pos);
+    app.core
+        .game
+        .res
+        .log(format!("Teleported to ({}, {}, {})", pos.x, pos.y, pos.z));
+    Ok(())
+}
+
+/// Move the player, with the view and look cursor following.
+fn teleport_player(app: &mut App, new_position: Position) {
     if let Some(player_entity) = app.core.game.get_player_entity() {
         if let Ok(mut pos) = app.core.game.world.get::<&mut Position>(player_entity) {
             *pos = new_position;
@@ -313,7 +348,6 @@ fn handle_tp_command(app: &mut App, parts: &[&str]) -> Result<(), Box<dyn Error>
     app.ui.view_y = new_position.y;
     app.ui.view_z = new_position.z;
     app.panels.look.cursor = new_position;
-    Ok(())
 }
 
 fn handle_spawn_enemy_command(app: &mut App, parts: &[&str]) -> Result<(), Box<dyn Error>> {
