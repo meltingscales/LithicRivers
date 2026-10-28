@@ -1,6 +1,6 @@
 //! Saving and loading the whole session: the core game plus the client state that affects
-//! play (view position, tutorial progress, hotbar). Transient UI such as open modals is not
-//! saved.
+//! play (view position, zoom, tutorial progress, hotbar, build mode, the Crafting filter).
+//! Transient UI such as open modals is not saved.
 
 use crate::App;
 use lithicrivers_core::components::ItemKind;
@@ -17,6 +17,21 @@ struct ClientSave {
     /// The Crafting tab lists only what can be crafted now
     #[serde(default)]
     craftable_only: bool,
+    /// Zoom
+    #[serde(default)]
+    scale: crate::sprite_loader::Scale,
+    /// Build mode and the build tool's choices
+    #[serde(default)]
+    build_mode: crate::app_state::BuildMode,
+    #[serde(default)]
+    hotbar_slot: usize,
+    #[serde(default)]
+    placement_facing: lithicrivers_core::factory::Facing,
+    #[serde(default)]
+    stairs_down: bool,
+    /// Blueprint mode's cursor, corner and turn, so a reload mid-blueprint carries on
+    #[serde(default)]
+    blueprint: crate::app_state::BlueprintTool,
 }
 
 impl App {
@@ -27,6 +42,12 @@ impl App {
             completed_tutorials: self.ui.tutorial_system.completed_tutorials.clone(),
             hotbar: self.panels.build.hotbar_assignments,
             craftable_only: self.panels.crafting.craftable_only,
+            scale: self.ui.scale,
+            build_mode: self.panels.build.mode,
+            hotbar_slot: self.panels.build.selected_hotbar_slot,
+            placement_facing: self.panels.build.placement_facing,
+            stairs_down: self.panels.build.stairs_down,
+            blueprint: self.panels.build.blueprint.clone(),
         }
     }
 
@@ -67,6 +88,12 @@ impl App {
             self.ui.tutorial_system.completed_tutorials = client.completed_tutorials;
             self.panels.build.hotbar_assignments = client.hotbar;
             self.panels.crafting.craftable_only = client.craftable_only;
+            self.ui.scale = client.scale;
+            self.panels.build.mode = client.build_mode;
+            self.panels.build.selected_hotbar_slot = client.hotbar_slot.min(11);
+            self.panels.build.placement_facing = client.placement_facing;
+            self.panels.build.stairs_down = client.stairs_down;
+            self.panels.build.blueprint = client.blueprint;
         }
         // The combat panel follows the loaded game
         let in_combat = self.core.game.res.player_state.combat_active;
