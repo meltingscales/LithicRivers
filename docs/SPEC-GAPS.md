@@ -93,7 +93,7 @@ These came up in the docs but need no new change:
 | Ore spouts, ruined reactors, nuclear tier | `add-ore-spouts`, `add-ruined-reactors`, `nuclear-slime` spec |
 | Lithic Rivers depth, caves and deposits | `worldgen-depth` spec |
 | Factorio-style hotbar, building that isn't annoying | `mouse-input`, `blueprints` and the factory specs |
-| Player death, day/night cycle, the arm quest, body damage effects | `player-death` spec, `day-night-cycle` spec, `add-arm-replacement-quest`, `add-body-damage-effects` |
+| Player death, day/night cycle, the arm quest, body damage effects | `player-death` and `death-options` specs, `day-night-cycle` spec, `add-arm-replacement-quest`, `add-body-damage-effects` |
 | Title screen, world list and load game | `title-menu`, `world-saves` |
 | Fluids | `add-ore-spouts` (fluids spec) |
 | Missing-materials tracker | `crafting` spec |
