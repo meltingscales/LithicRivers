@@ -41,3 +41,33 @@ Selecting a recipe in the Crafting panel SHALL show its ingredients as a tree do
 #### Scenario: View the chest tree
 - **WHEN** the player selects the chest recipe
 - **THEN** the panel shows planks (from logs) and nails (from iron scrap) with needed and owned counts
+
+### Requirement: Craftable-only filter
+The Crafting tab SHALL have a toggle, by key and by clicking its hint, that lists only the recipes whose ingredients are all in the inventory. It SHALL combine with the search filter, update as the inventory changes, show its state in the list title, and be saved with the world.
+
+#### Scenario: Starting kit
+- **WHEN** a new game's Crafting tab has craftable-only turned on
+- **THEN** only the recipes the starting kit can make are listed, and the title reads "Recipes (craftable only)"
+
+#### Scenario: Crafting changes the list
+- **WHEN** craftable-only is on and crafting uses up the last ingredients of another listed recipe
+- **THEN** that recipe disappears from the list
+
+#### Scenario: Nothing to craft
+- **WHEN** craftable-only is on and nothing can be crafted
+- **THEN** the list says "Nothing craftable yet" and names the key that shows all recipes
+
+### Requirement: Recipe search
+The Crafting tab SHALL filter its recipe list by a case-insensitive search over each recipe's name, its result item's name and description, and its ingredients' names, using the same search keys and behavior as the Item Dictionary. The list SHALL say how many recipes are shown, and crafting and the ingredient tree SHALL act on the selected shown recipe.
+
+#### Scenario: Search for planks
+- **WHEN** the player searches the Crafting tab for "plank"
+- **THEN** the list shows the Wooden Plank recipe and every recipe that uses wooden planks, and each recipe shown mentions planks in its name, its result's name or description, or its ingredients
+
+#### Scenario: Craft from a filtered list
+- **WHEN** the filter shows three recipes and the player selects the second and crafts
+- **THEN** the second shown recipe is crafted
+
+#### Scenario: Clear the search
+- **WHEN** a filter is kept and the player presses Escape
+- **THEN** every recipe is listed again

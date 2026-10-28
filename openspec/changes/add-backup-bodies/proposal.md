@@ -6,7 +6,7 @@
 
 ## What Changes
 
-- **Craftable body parts** in crude, standard and advanced grades: a head, torso, fusion core (power source), arms and legs, each with a recipe from its tier. They install into missing parts of the living robot too (`add-arm-replacement-quest`'s install action).
+- **Craftable body parts** in crude, standard and advanced grades: a head, torso, fusion core (power source), arms and legs, each with a recipe from its tier. They install into missing parts of the living robot too (the `arm-replacement-quest` spec's install action).
 - **Robot Resurrection Vats in three tiers** (decided by the user):
   - **Crude vat (starter):** cheap, early-game materials, no power needed. It holds a body of crude parts: weak, every part starting Damaged, and only the default layout (two arms, two legs). Better than the junker, and reachable before the factory gets going.
   - **Standard vat (mid-game):** needs power, and holds a body of standard parts that wake Functional.
@@ -40,7 +40,7 @@
 - **Showcase:** a powered vat with a full spare body.
 - **Depends on:**
   - `add-player-death`
-  - `add-arm-replacement-quest`'s install action
+  - the `arm-replacement-quest` spec's install action
   - the power grid
 
 ## Decided

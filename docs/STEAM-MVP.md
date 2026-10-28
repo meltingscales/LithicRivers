@@ -50,7 +50,7 @@ first quest and associated dungeons
 **Implementation Plan**:
 1. (DONE) **Structure**: the SapienCorp factory's levels (`sapiencorp-factory.lrstructure`, hand-written layers since the VoxelBuilder import was retired)
 2. (DONE) **Authoring tools**: structure plans, the lint test and the preview (`docs/STRUCTURES.md`)
-3. **Quest Integration**: Connect the location to first major quest narrative
+3. (DONE) **Quest Integration**: the broken android sends the robot to the factory for a new arm (`arm-replacement-quest` spec)
 4. (DONE) **Stairs Implementation**: Add Stairs block for vertical traversal between levels
 5. **Environmental Storytelling**: Place lore elements and visual clues about SapienCorp's downfall
 

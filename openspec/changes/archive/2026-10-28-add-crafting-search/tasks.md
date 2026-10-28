@@ -13,4 +13,4 @@
 
 - [x] 3.1 Update `AGENTS.md` (Item Dictionary and search keys) and the help text if it names the search key
 - [x] 3.2 Verify `cargo fmt`, `just code-clippy`, `cargo test --workspace` and PR checks pass
-- [ ] 3.3 User check that searching recipes feels the same as searching items
+- [x] 3.3 User check that searching recipes feels the same as searching items
