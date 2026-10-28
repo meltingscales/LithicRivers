@@ -284,21 +284,19 @@ fn render_action_queue(f: &mut Frame, area: Rect, app: &mut crate::App) {
 
             // Show queued actions
             lines.push(Line::from(""));
-            lines.push(Line::from("Queue:".bold()));
+            lines.push(Line::from(
+                format!(
+                    "Queue ({}/{}):",
+                    queue.actions.len(),
+                    lithicrivers_core::moves::MAX_QUEUED_ACTIONS
+                )
+                .bold(),
+            ));
 
             if queue.actions.is_empty() {
                 lines.push(Line::from("* No actions queued"));
             } else {
-                for (i, action) in queue.actions.iter().enumerate() {
-                    if i >= 3 {
-                        // Limit display to first 3 queued actions
-                        lines.push(Line::from(format!(
-                            "* ... and {} more",
-                            queue.actions.len() - 3
-                        )));
-                        break;
-                    }
-
+                for action in &queue.actions {
                     let action_text = match &action.action {
                         lithicrivers_core::moves::CombatAction::PlayerMove {
                             move_data,

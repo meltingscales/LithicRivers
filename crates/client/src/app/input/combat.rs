@@ -130,6 +130,20 @@ pub fn handle_combat_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn 
             let available_moves = lithicrivers_core::moves::get_available_moves();
             if let Some(selected_move) = available_moves.get(current_move) {
                 // Check if player can use this move considering pending energy consumption
+                let queue_full = app
+                    .core
+                    .game
+                    .world
+                    .get::<&lithicrivers_core::moves::ActionQueue>(player_entity)
+                    .is_ok_and(|queue| queue.is_full());
+                if queue_full {
+                    app.core.game.res.log(format!(
+                        "Move queue full ({} moves)!",
+                        lithicrivers_core::moves::MAX_QUEUED_ACTIONS
+                    ));
+                    return Ok(true);
+                }
+
                 let can_use = if let Ok(energy) =
                     app.core
                         .game
