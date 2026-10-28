@@ -8,5 +8,5 @@
 
 ## 2. Checks
 
-- [ ] 2.1 Verify `just code-clippy`, `cargo test --workspace` and PR checks pass
+- [x] 2.1 Verify `just code-clippy`, `cargo test --workspace` and PR checks pass
 - [ ] 2.2 User check: the toggle is easy to find and the filtered list feels right while crafting
