@@ -14,5 +14,5 @@
 
 ## 3. Checks
 
-- [ ] 3.1 Verify `just code-clippy`, `cargo test --workspace` and PR checks pass
+- [x] 3.1 Verify `just code-clippy`, `cargo test --workspace` and PR checks pass
 - [ ] 3.2 User check that the quest reads well and the walk to the facility is worth it
