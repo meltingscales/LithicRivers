@@ -277,3 +277,28 @@ fn zoom_and_build_settings_survive_a_load() {
         original.app.panels.build.blueprint
     );
 }
+
+#[test]
+fn a_swapped_part_survives_a_load() {
+    use lithicrivers_core::components::ItemKind;
+    use lithicrivers_core::model::body::{Body, BodyPartType};
+    let original = chain_commands(&[
+        "skip-splash",
+        "cheat giveitem salvaged_arm",
+        "key ui.MENU_NEXT 3",
+        // The right arm, fifth in the list: swap it for the salvaged one
+        "key movement.MOVE_SOUTH 4",
+        "key body.INSTALL_PART",
+    ]);
+    let loaded = fresh_runner_with(&original.app.save_to_string().unwrap());
+    let game = &loaded.app.core.game;
+    let arm = &game.get_player_component::<Body>().unwrap().parts[&BodyPartType::RightArm];
+    assert_eq!(arm.integrity, 70);
+    let held = game
+        .get_player_component::<lithicrivers_core::components::Inventory>()
+        .unwrap()
+        .slots
+        .iter()
+        .any(|s| s.kind == ItemKind::SalvagedArm);
+    assert!(held, "the old arm came back and was saved");
+}

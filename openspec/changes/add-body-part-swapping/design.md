@@ -22,7 +22,8 @@ The torso and power source can't be removed; the remove key says why.
 
 ### Selection
 - The Body tab keeps `selected_part`. Up and Down move it, a click selects it, and the fitting-items list follows it.
-- With items listed, Left and Right move between the part list and the items, as in item windows.
+- Left and Right keep switching tabs (the Body tab is a tab list, per `menu-navigation`). Install uses the only fitting item directly; with several, Enter on the part moves Up and Down into the item list, Enter installs the chosen item, and Escape goes back to the parts. Clicking an item selects it, and clicking it again installs it.
+- Remove is `body.REMOVE_PART`, default `u` (uninstall).
 - Opening repair (`R`) preselects the selected part.
 
 ### Game logic in core

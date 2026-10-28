@@ -72,6 +72,17 @@ pub struct Body {
     pub parts: HashMap<BodyPartType, BodyPart>,
 }
 
+/// Body parts in the order the Body tab and the repair window list them.
+pub const PART_ORDER: [BodyPartType; 7] = [
+    BodyPartType::Head,
+    BodyPartType::Torso,
+    BodyPartType::PowerSource,
+    BodyPartType::LeftArm,
+    BodyPartType::RightArm,
+    BodyPartType::LeftLeg,
+    BodyPartType::RightLeg,
+];
+
 /// Integrity of a freshly installed replacement part: Functional, with room to repair.
 pub const INSTALLED_PART_INTEGRITY: i64 = 70;
 
@@ -81,6 +92,30 @@ pub fn replacement_parts(item: ItemKind) -> &'static [BodyPartType] {
         ItemKind::SalvagedArm => &[BodyPartType::LeftArm, BodyPartType::RightArm],
         _ => &[],
     }
+}
+
+/// The item a working part comes out as, if it has one (others come out as scrap).
+pub fn part_item(part: BodyPartType) -> Option<ItemKind> {
+    match part {
+        BodyPartType::LeftArm | BodyPartType::RightArm => Some(ItemKind::SalvagedArm),
+        _ => None,
+    }
+}
+
+/// What a damaged part, or a part with no item of its own, comes out as.
+pub const REMOVED_PART_SCRAP: [(ItemKind, u32); 2] =
+    [(ItemKind::IronScrap, 1), (ItemKind::ScrapElectronics, 1)];
+
+/// Parts the robot can't live without, so they can't be taken out.
+pub fn is_locked(part: BodyPartType) -> bool {
+    matches!(part, BodyPartType::Torso | BodyPartType::PowerSource)
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RemoveError {
+    /// The torso or the power source: losing either kills the robot.
+    Locked,
+    AlreadyMissing,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -107,6 +142,31 @@ impl Body {
         target.integrity = INSTALLED_PART_INTEGRITY;
         target.update_state_from_integrity();
         Ok(())
+    }
+
+    /// Take a part out, leaving it missing. A Functional or Enhanced part with an item
+    /// comes out as that item; a Damaged part (or one without an item) as scrap, so
+    /// removing and reinstalling never repairs it.
+    pub fn remove(&mut self, part: BodyPartType) -> Result<Vec<(ItemKind, u32)>, RemoveError> {
+        if is_locked(part) {
+            return Err(RemoveError::Locked);
+        }
+        let Some(target) = self.parts.get_mut(&part) else {
+            return Err(RemoveError::AlreadyMissing);
+        };
+        if target.state == BodyPartState::Missing {
+            return Err(RemoveError::AlreadyMissing);
+        }
+        let working = matches!(
+            target.state,
+            BodyPartState::Functional | BodyPartState::Enhanced
+        );
+        target.integrity = 0;
+        target.state = BodyPartState::Missing;
+        Ok(match part_item(part) {
+            Some(item) if working => vec![(item, 1)],
+            _ => REMOVED_PART_SCRAP.to_vec(),
+        })
     }
 }
 
@@ -588,6 +648,32 @@ mod tests {
             .apply_repair(recipe, &mut inventory, body.parts[&LeftArm].integrity)
             .unwrap();
         assert!(integrity > INSTALLED_PART_INTEGRITY);
+    }
+
+    #[test]
+    fn removing_a_working_arm_returns_it_and_a_damaged_part_returns_scrap() {
+        let mut body = Body::default();
+        assert_eq!(body.remove(RightArm), Ok(vec![(ItemKind::SalvagedArm, 1)]));
+        assert_eq!(body.parts[&RightArm].state, Missing);
+        // The starting right leg is Damaged, and legs have no item yet
+        assert_eq!(body.remove(RightLeg), Ok(REMOVED_PART_SCRAP.to_vec()));
+        // A damaged arm comes out as scrap too
+        body.install(RightArm, ItemKind::SalvagedArm).unwrap();
+        body.parts.get_mut(&RightArm).unwrap().integrity = 30;
+        body.parts
+            .get_mut(&RightArm)
+            .unwrap()
+            .update_state_from_integrity();
+        assert_eq!(body.remove(RightArm), Ok(REMOVED_PART_SCRAP.to_vec()));
+    }
+
+    #[test]
+    fn the_torso_and_power_source_are_locked_and_missing_parts_stay_missing() {
+        let mut body = Body::default();
+        assert_eq!(body.remove(Torso), Err(RemoveError::Locked));
+        assert_eq!(body.remove(PowerSource), Err(RemoveError::Locked));
+        assert_eq!(body.remove(LeftArm), Err(RemoveError::AlreadyMissing));
+        assert_eq!(body.parts[&Torso].state, Functional);
     }
 
     #[test]

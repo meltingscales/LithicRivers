@@ -1,67 +1,67 @@
 ---
 source: crates/client/src/snapshot_tests.rs
 expression: "String::from_utf8(out).unwrap()"
-input_file: scripts/snapshots/body-install-arm.txt
+input_file: scripts/snapshots/body-part-swapping.txt
 ---
-=== screen offered ===
+=== screen left-arm-selected ===
                                             LithicRivers
 ┌Body──────────────────────┐┌Parts─────────────────────────────────────────────────────────────────┐
 │      ███                 ││           Head: Functional (100)                                     │
 │     █████                ││          Torso: Functional (100)                                     │
 │      ███                 ││    Fusion Core: Damaged (21)                                         │
-│   █  ███  █              ││       Left Arm: Missing (0)                                          │
+│   █  ███  █              ││>      Left Arm: Missing (0)                                          │
 │  █  █████  █             ││      Right Arm: Functional (100)                                     │
 │ █   █████   █            ││       Left Leg: Functional (100)                                     │
 │     █████                ││      Right Leg: Damaged (43)                                         │
-│     █████                ││                                                                      │
-│     ██ ██                ││Effects:                                                              │
+│     █████                ││Fits the Left Arm:                                                    │
+│     ██ ██                ││  Salvaged SapienCorp Arm x2                                          │
+│     █   █                ││                                                                      │
+│     █   █                ││Effects:                                                              │
 │     █   █                ││  Right Leg damaged: walking 2x slower                                │
-│     █   █                ││  Left Arm missing: mining 2x slower, melee -40%                      │
-│     █   █                ││  Fusion Core damaged: energy recovers 2x slower                      │
-│    █     █               ││                                                                      │
-│                          ││                                                                      │
+│    █     █               ││  Left Arm missing: mining 2x slower, melee -40%                      │
+│                          ││  Fusion Core damaged: energy recovers 2x slower                      │
 └──────────────────────────┘└──────────────────────────────────────────────────────────────────────┘
 ┌Controls──────────────────────────────────────────────────────────────────────────────────────────┐
-│                         [R] Repair   [i] Install Salvaged SapienCorp Arm                         │
+│                   [R] Repair   [i] Install Salvaged SapienCorp Arm   [u] Remove                  │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
 │[0] Quest marker added: SapienCorp Bunker                                                         │
 │[0] Player moved to bunker spawn at (11, 11, -19)                                                 │
 │[0] Loading structure 'sapiencorp-factory.lrstructure' at (200, 1609, 1) for chunk (3, 25, 1)     │
 │[0] Quest marker added: SapienCorp Factory                                                        │
-│[1] Added 1 Salvaged SapienCorp Arm to inventory                                                  │
+│[1] Added 2 Salvaged SapienCorp Arm to inventory                                                  │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
 │ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 === end screen ===
-=== screen installed ===
+=== screen leg-removed ===
                                             LithicRivers
 ┌Body──────────────────────┐┌Parts─────────────────────────────────────────────────────────────────┐
 │      ███                 ││           Head: Functional (100)                                     │
 │     █████                ││          Torso: Functional (100)                                     │
 │      ███                 ││    Fusion Core: Damaged (21)                                         │
 │   █  ███  █              ││       Left Arm: Functional (70)                                      │
-│  █  █████  █             ││      Right Arm: Functional (100)                                     │
+│  █  █████  █             ││      Right Arm: Functional (70)                                      │
 │ █   █████   █            ││       Left Leg: Functional (100)                                     │
-│     █████                ││      Right Leg: Damaged (43)                                         │
-│     █████                ││                                                                      │
-│     ██ ██                ││Effects:                                                              │
-│     █   █                ││  Right Leg damaged: walking 2x slower                                │
-│     █   █                ││  Fusion Core damaged: energy recovers 2x slower                      │
+│     █████                ││>     Right Leg: Missing (0)                                          │
+│     █████                ││Fits the Right Leg:                                                   │
+│     ██ ██                ││  (nothing in the inventory)                                          │
 │     █   █                ││                                                                      │
-│    █     █               ││                                                                      │
+│     █   █                ││Effects:                                                              │
+│     █   █                ││  Right Leg missing: walking 4x slower                                │
+│    █     █               ││  Fusion Core damaged: energy recovers 2x slower                      │
 │                          ││                                                                      │
 └──────────────────────────┘└──────────────────────────────────────────────────────────────────────┘
 ┌Controls──────────────────────────────────────────────────────────────────────────────────────────┐
-│                                            [R] Repair                                            │
+│                                      [R] Repair   [u] Remove                                     │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
-│[0] Player moved to bunker spawn at (11, 11, -19)                                                 │
-│[0] Loading structure 'sapiencorp-factory.lrstructure' at (200, 1609, 1) for chunk (3, 25, 1)     │
-│[0] Quest marker added: SapienCorp Factory                                                        │
-│[1] Added 1 Salvaged SapienCorp Arm to inventory                                                  │
+│[1] Added 2 Salvaged SapienCorp Arm to inventory                                                  │
 │[1] Installed the Salvaged SapienCorp Arm: Left Arm online                                        │
+│[1] Removed the Right Arm: got 1 Salvaged SapienCorp Arm                                          │
+│[1] Installed the Salvaged SapienCorp Arm: Right Arm online                                       │
+│[1] Removed the Right Leg: got 1 Iron Scrap, 1 Scrap Electronics                                  │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
 │ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
