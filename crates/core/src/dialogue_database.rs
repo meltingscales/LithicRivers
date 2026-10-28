@@ -109,16 +109,6 @@ impl DialogueDatabase {
                     requires_quest_complete: None,
                 },
                 DialogueChoice {
-                    text: "Do you know where I could find a new arm?".to_string(),
-                    leads_to: Some(DialogueNodeID::NewArm),
-                    requires_item: None,
-                    npc_mood_change: Some(NPCMood::Happy),
-                    player_mood_change: Some(NPCMood::Neutral),
-                    unlocks_quest: None,
-                    requires_quest_active: None,
-                    requires_quest_complete: Some(QuestType::RepairBrokenAndroid),
-                },
-                DialogueChoice {
                     text: "[Give items] I have the diamond and scrap electronics you need.".to_string(),
                     leads_to: Some(DialogueNodeID::CompleteQuest),
                     requires_item: Some("Diamond".to_string()),
@@ -325,6 +315,39 @@ impl DialogueDatabase {
                     requires_item: None,
                     npc_mood_change: Some(NPCMood::Neutral),
                     player_mood_change: Some(NPCMood::Neutral),
+                    unlocks_quest: None,
+                    requires_quest_active: None,
+                    requires_quest_complete: None,
+                },
+            ],
+            auto_continue: false,
+            shop_item: None,
+        });
+
+        // Once repaired, conversations open here instead of at Start
+        tree.add_node(DialogueNode {
+            id: DialogueNodeID::Repaired,
+            speaker: "SC-M4X7".to_string(),
+            text: "SapienCorp maintenance unit SC-M4X7, fully operational, thanks to you, user! Memory core stable, welding arm steady. What can I do for you?".to_string(),
+            text_effects: vec![],
+            mood: NPCMood::Happy,
+            choices: vec![
+                DialogueChoice {
+                    text: "Do you know where I could find a new arm?".to_string(),
+                    leads_to: Some(DialogueNodeID::NewArm),
+                    requires_item: None,
+                    npc_mood_change: Some(NPCMood::Happy),
+                    player_mood_change: Some(NPCMood::Neutral),
+                    unlocks_quest: None,
+                    requires_quest_active: None,
+                    requires_quest_complete: None,
+                },
+                DialogueChoice {
+                    text: "Just checking on you. Goodbye!".to_string(),
+                    leads_to: None,
+                    requires_item: None,
+                    npc_mood_change: Some(NPCMood::Happy),
+                    player_mood_change: Some(NPCMood::Happy),
                     unlocks_quest: None,
                     requires_quest_active: None,
                     requires_quest_complete: None,

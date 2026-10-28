@@ -16,9 +16,9 @@ key action.INTERACT
 key movement.MOVE_SOUTH 5
 key ui.MENU_ACTIVATE 2
 expect-text "Quest completed: Repair the Broken Android"
-# The repaired android knows where to find an arm: the sixth choice again
+# The repaired android greets you as itself and asks about the arm first
 key action.INTERACT
-key movement.MOVE_SOUTH 5
+expect-text "fully operational"
 key ui.MENU_ACTIVATE
 expect-text "SapienCorp built that model"
 screen offer

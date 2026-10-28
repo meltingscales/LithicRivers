@@ -251,7 +251,7 @@ fn start_npc_dialogue(
             res.log(format!("First time meeting {}!", npc_name));
         }
 
-        dialogue.current_dialogue_id = Some(DialogueNodeID::Start); // Start with greeting
+        dialogue.current_dialogue_id = Some(res.opening_dialogue_node()); // Start with greeting
         true
     } else {
         res.log(format!("Warning: {} has no dialogue component.", npc_name));

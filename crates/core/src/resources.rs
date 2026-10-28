@@ -342,6 +342,16 @@ impl Resources {
             .any(|q| q.quest_type == quest_type && q.state == crate::dialogue::QuestState::Active)
     }
 
+    /// Where a conversation with the broken android opens: its glitchy greeting until
+    /// its repair quest is done, then its repaired self.
+    pub fn opening_dialogue_node(&self) -> crate::dialogue::DialogueNodeID {
+        if self.is_quest_completed(QuestType::RepairBrokenAndroid) {
+            crate::dialogue::DialogueNodeID::Repaired
+        } else {
+            crate::dialogue::DialogueNodeID::Start
+        }
+    }
+
     /// Whether a quest was ever started (active, completed or failed).
     pub fn has_quest(&self, quest_type: QuestType) -> bool {
         self.active_quests

@@ -109,6 +109,8 @@ pub enum DialogueNodeID {
     OverrideModelNumber,
     CompleteQuest,
     NewArm,
+    /// The repaired android's greeting, in place of `Start`
+    Repaired,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

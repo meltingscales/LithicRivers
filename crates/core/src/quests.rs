@@ -323,10 +323,25 @@ mod tests {
         let asks = |c: &crate::dialogue::DialogueChoice| c.leads_to == Some(DialogueNodeID::NewArm);
         let accepts =
             |c: &crate::dialogue::DialogueChoice| c.unlocks_quest == Some(QuestType::ReplaceArm);
+        // Before the repair: the glitchy greeting, with the repair offer and no arm talk
+        assert_eq!(game.res.opening_dialogue_node(), DialogueNodeID::Start);
         assert!(!offered(&game, DialogueNodeID::Start, asks));
 
+        // After it: the repaired greeting, which asks about the arm first
         finish_repair_quest(&mut game);
-        assert!(offered(&game, DialogueNodeID::Start, asks));
+        assert_eq!(game.res.opening_dialogue_node(), DialogueNodeID::Repaired);
+        let db = DialogueDatabase::new();
+        let repaired = db
+            .get_tree("broken_android_tutorial")
+            .unwrap()
+            .get_node(&DialogueNodeID::Repaired)
+            .unwrap();
+        assert!(asks(&repaired.choices[0]));
+        assert!(repaired
+            .choices
+            .iter()
+            .all(|c| c.unlocks_quest != Some(QuestType::RepairBrokenAndroid)
+                && c.leads_to != Some(DialogueNodeID::CanIHelp)));
         assert!(offered(&game, DialogueNodeID::NewArm, accepts));
 
         game.res.start_quest(replace_arm(None));

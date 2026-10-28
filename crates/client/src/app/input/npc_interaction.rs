@@ -54,7 +54,7 @@ pub fn handle_npc_interaction_input(app: &mut App, key: KeyCode) -> Result<bool,
 
                 // Start conversation at the beginning of the dialogue tree
                 let conversation = crate::app_state::ConversationState {
-                    current_node_id: Some(lithicrivers_core::dialogue::DialogueNodeID::Start),
+                    current_node_id: Some(app.core.game.res.opening_dialogue_node()),
                     player_mood: crate::app_state::NPCMood::Neutral,
                 };
                 app.panels.npc_interaction = crate::app_state::NPCInteractionState::InDialogue {
