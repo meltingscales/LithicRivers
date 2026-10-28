@@ -142,7 +142,7 @@ Also, if you need to convert a key into a printable version, please use code lik
 
 - See `docs/INSPIRATION.md` for inspiration. For factory, crafting and tech-tree work the main references are Minecraft (with GregTech, Tekkit, Big Dig and Create), Factorio and Caves of Qud; for combat and feel, ULTRAKILL, CICADAMATA and Downwell. Borrow mechanics, not content: blocks, materials and lore should be unique to LithicRivers.
 
-- Multiblock structures (the bunker, the facility, ships, temples) live in `crates/client/assets/structures/`. Write new ones as a `plan.toml` and check them with `just util-structure-preview <name>`; `docs/STRUCTURES.md` has the format and an AI prompt workflow.
+- Multiblock structures (the bunker, the facility, ships, temples) live in `crates/client/assets/structures/`. Write new ones as a `plan.toml` and check them with `just util-structure-preview <name>`; `docs/STRUCTURES.md` has the format and an AI prompt workflow, and the `author-structure` skill walks an agent through it.
 
 - This game renders using ASCII text. For how sprites and art should look (Caves of Qud, Metroid and CICADAMATA), follow `docs/ART-DIRECTION.md` when you add or change any sprite, art or item description.
 
