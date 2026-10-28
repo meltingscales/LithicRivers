@@ -25,9 +25,7 @@ pub fn handle_combat_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn 
     let max_moves = get_available_moves().len();
     const VISIBLE_MOVES: usize = 4; // Number of moves visible at once
 
-    if app.ui.keybinds.matches("movement", "MOVE_NORTH", &key)
-        || app.ui.keybinds.matches("movement", "MOVE_UP", &key)
-    {
+    if app.ui.keybinds.menu_up(&key) || app.ui.keybinds.matches("movement", "MOVE_UP", &key) {
         let new_move = find_previous_usable_move(app, current_move, max_moves);
         current_move = new_move;
         // Scroll up if needed
@@ -51,9 +49,7 @@ pub fn handle_combat_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn 
         }
         return Ok(true);
     }
-    if app.ui.keybinds.matches("movement", "MOVE_SOUTH", &key)
-        || app.ui.keybinds.matches("movement", "MOVE_DOWN", &key)
-    {
+    if app.ui.keybinds.menu_down(&key) || app.ui.keybinds.matches("movement", "MOVE_DOWN", &key) {
         let new_move = find_next_usable_move(app, current_move, max_moves);
         current_move = new_move;
         // Scroll down if needed
@@ -81,7 +77,7 @@ pub fn handle_combat_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn 
     // Enemy/target selection (Left/Right) - get actual enemy count
     let enemy_count = get_combat_enemy_count(&mut app.core.game);
     if enemy_count > 0 {
-        if app.ui.keybinds.matches("movement", "MOVE_WEST", &key) {
+        if app.ui.keybinds.menu_left(&key) {
             current_enemy = if current_enemy == 0 {
                 enemy_count - 1
             } else {
@@ -98,7 +94,7 @@ pub fn handle_combat_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn 
             }
             return Ok(true);
         }
-        if app.ui.keybinds.matches("movement", "MOVE_EAST", &key) {
+        if app.ui.keybinds.menu_right(&key) {
             current_enemy = (current_enemy + 1) % enemy_count;
 
             // Update combat state

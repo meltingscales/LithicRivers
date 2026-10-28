@@ -32,9 +32,7 @@ pub fn handle_inventory_input(app: &mut App, key: KeyCode) -> Result<bool, Box<d
     }
 
     // Navigation: Up/Down or North/South to move selection
-    if app.ui.keybinds.matches("ui", "CREDITS_SCROLL_UP", &key)
-        || app.ui.keybinds.matches("movement", "MOVE_NORTH", &key)
-    {
+    if app.ui.keybinds.menu_up(&key) {
         if let Some(e) = app.core.game.get_player_entity() {
             if let Ok(inv) = app.core.game.world.get::<&InvComp>(e) {
                 if !inv.slots.is_empty() {
@@ -49,9 +47,7 @@ pub fn handle_inventory_input(app: &mut App, key: KeyCode) -> Result<bool, Box<d
         return Ok(true);
     }
 
-    if app.ui.keybinds.matches("ui", "CREDITS_SCROLL_DOWN", &key)
-        || app.ui.keybinds.matches("movement", "MOVE_SOUTH", &key)
-    {
+    if app.ui.keybinds.menu_down(&key) {
         if let Some(e) = app.core.game.get_player_entity() {
             if let Ok(inv) = app.core.game.world.get::<&InvComp>(e) {
                 if !inv.slots.is_empty() {

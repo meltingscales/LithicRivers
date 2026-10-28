@@ -24,12 +24,9 @@ pub fn handle_filter_picker_input(app: &mut App, key: KeyCode) -> bool {
         app.panels.filter_picker = None;
         return true;
     }
-    if keys.matches("movement", "MOVE_NORTH", &key) || keys.matches("ui", "CREDITS_SCROLL_UP", &key)
-    {
+    if keys.menu_up(&key) {
         picker.selected = picker.selected.saturating_sub(1);
-    } else if keys.matches("movement", "MOVE_SOUTH", &key)
-        || keys.matches("ui", "CREDITS_SCROLL_DOWN", &key)
-    {
+    } else if keys.menu_down(&key) {
         picker.selected = (picker.selected + 1).min(rows.len() - 1);
     } else if keys.matches("ui", "MENU_ACTIVATE", &key) || key == KeyCode::Enter {
         let filter = rows[picker.selected];

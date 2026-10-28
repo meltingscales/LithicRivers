@@ -153,6 +153,17 @@ pub fn render_inventory_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
             .title(Line::from("Inventory")),
     );
     f.render_widget(list_para, chunks[1]);
+    let slots = app
+        .core
+        .game
+        .get_player_component::<lithicrivers_core::components::Inventory>()
+        .map_or(0, |inv| inv.slots.len());
+    app.ui.click_targets.rows(
+        crate::ui::click_targets::inset(chunks[1]),
+        0,
+        slots,
+        crate::ui::click_targets::ClickTarget::InventoryRow,
+    );
 }
 
 pub fn get_player_inventory(app: &crate::App) -> HashMap<ItemKind, u32> {

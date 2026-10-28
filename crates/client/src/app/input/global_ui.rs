@@ -32,11 +32,14 @@ pub fn handle_global_ui_input(app: &mut App, key: KeyCode) -> Result<bool, Box<d
     // Credits scroll
     if app.ui.current_tab == MenuTab::Credits {
         let max_scroll = get_max_credits_scroll(app);
-        if app.ui.keybinds.matches("ui", "CREDITS_SCROLL_UP", &key) {
+        if app.ui.keybinds.matches("ui", "CREDITS_SCROLL_UP", &key) || app.ui.keybinds.menu_up(&key)
+        {
             app.panels.credits.scroll = app.panels.credits.scroll.saturating_sub(1);
             return Ok(true);
         }
-        if app.ui.keybinds.matches("ui", "CREDITS_SCROLL_DOWN", &key) {
+        if app.ui.keybinds.matches("ui", "CREDITS_SCROLL_DOWN", &key)
+            || app.ui.keybinds.menu_down(&key)
+        {
             app.panels.credits.scroll =
                 (app.panels.credits.scroll.saturating_add(1)).min(max_scroll);
             return Ok(true);
@@ -46,25 +49,13 @@ pub fn handle_global_ui_input(app: &mut App, key: KeyCode) -> Result<bool, Box<d
     // Help scroll
     if app.ui.current_tab == MenuTab::Help {
         let max_scroll = get_max_help_scroll(app);
-        if app.ui.keybinds.matches("ui", "HELP_SCROLL_UP", &key) {
+        if app.ui.keybinds.menu_up(&key) {
             app.panels.help.scroll = app.panels.help.scroll.saturating_sub(1);
             return Ok(true);
         }
-        if app.ui.keybinds.matches("ui", "HELP_SCROLL_DOWN", &key) {
+        if app.ui.keybinds.menu_down(&key) {
             app.panels.help.scroll = (app.panels.help.scroll.saturating_add(1)).min(max_scroll);
             return Ok(true);
-        }
-        // Fallback to arrow keys for help scrolling
-        match key {
-            KeyCode::Up => {
-                app.panels.help.scroll = app.panels.help.scroll.saturating_sub(1);
-                return Ok(true);
-            }
-            KeyCode::Down => {
-                app.panels.help.scroll = (app.panels.help.scroll.saturating_add(1)).min(max_scroll);
-                return Ok(true);
-            }
-            _ => {}
         }
     }
 

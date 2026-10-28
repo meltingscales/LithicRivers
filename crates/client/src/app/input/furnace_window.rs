@@ -32,15 +32,15 @@ pub fn handle_furnace_window_input(app: &mut App, key: KeyCode) -> bool {
     .len();
     let slots = Slot::for_kind(window.kind);
     let slot_index = slots.iter().position(|&s| s == window.slot).unwrap_or(0);
-    if keys.matches("movement", "MOVE_WEST", &key) || keys.matches("movement", "MOVE_EAST", &key) {
+    if keys.menu_left(&key) || keys.menu_right(&key) {
         window.player_focus = !window.player_focus;
-    } else if keys.matches("movement", "MOVE_NORTH", &key) {
+    } else if keys.menu_up(&key) {
         if window.player_focus {
             window.player_item = window.player_item.saturating_sub(1);
         } else {
             window.slot = slots[slot_index.saturating_sub(1)];
         }
-    } else if keys.matches("movement", "MOVE_SOUTH", &key) {
+    } else if keys.menu_down(&key) {
         if window.player_focus {
             window.player_item = (window.player_item + 1).min(player_items.saturating_sub(1));
         } else {

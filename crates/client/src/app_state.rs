@@ -410,6 +410,24 @@ impl Keybinds {
         false
     }
 
+    /// Menu navigation, the same in every menu, list and window: the numpad movement keys
+    /// and the arrow keys (`ui.MENU_UP` / `MENU_DOWN` / `MENU_PREV` / `MENU_NEXT`).
+    pub fn menu_up(&self, key: &KeyCode) -> bool {
+        self.matches("movement", "MOVE_NORTH", key) || self.matches("ui", "MENU_UP", key)
+    }
+
+    pub fn menu_down(&self, key: &KeyCode) -> bool {
+        self.matches("movement", "MOVE_SOUTH", key) || self.matches("ui", "MENU_DOWN", key)
+    }
+
+    pub fn menu_left(&self, key: &KeyCode) -> bool {
+        self.matches("movement", "MOVE_WEST", key) || self.matches("ui", "MENU_PREV", key)
+    }
+
+    pub fn menu_right(&self, key: &KeyCode) -> bool {
+        self.matches("movement", "MOVE_EAST", key) || self.matches("ui", "MENU_NEXT", key)
+    }
+
     pub fn matches_movement(&self, key: &KeyCode) -> bool {
         self.matches("movement", "MOVE_NORTH", key)
             || self.matches("movement", "MOVE_SOUTH", key)

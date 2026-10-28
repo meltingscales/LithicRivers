@@ -24,6 +24,44 @@ pub fn render_quests_panel(f: &mut Frame, app: &App, area: Rect) {
     render_completed_quests_panel(f, app, chunks[1]);
 }
 
+/// Greedy word wrap to `width` columns, so each quest's rows (and click areas) are known.
+fn wrap(text: &str, width: usize) -> Vec<String> {
+    let width = width.max(1);
+    let mut lines = vec![String::new()];
+    for word in text.split_whitespace() {
+        let line = lines.last_mut().expect("a line");
+        if line.is_empty() {
+            line.push_str(word);
+        } else if line.chars().count() + 1 + word.chars().count() <= width {
+            line.push(' ');
+            line.push_str(word);
+        } else {
+            lines.push(word.to_string());
+        }
+    }
+    lines
+}
+
+/// Record a click area on the quest title at `line` of the panel's text.
+fn record_title(app: &App, area: Rect, line: usize, completed: bool, index: usize) {
+    let inner = crate::ui::click_targets::inset(area);
+    if line < inner.height as usize {
+        app.ui.click_targets.push(
+            Rect::new(inner.x, inner.y + line as u16, inner.width, 1),
+            crate::ui::click_targets::ClickTarget::QuestRow { completed, index },
+        );
+    }
+}
+
+/// Indented, wrapped text for the panel.
+fn push_wrapped(text: &mut String, line: &str, indent: &str, width: usize) {
+    for part in wrap(line, width.saturating_sub(indent.len())) {
+        text.push_str(indent);
+        text.push_str(&part);
+        text.push('\n');
+    }
+}
+
 fn render_active_quests_panel(f: &mut Frame, app: &App, area: Rect) {
     let active_quests: Vec<_> = app
         .core
@@ -35,6 +73,7 @@ fn render_active_quests_panel(f: &mut Frame, app: &App, area: Rect) {
         .collect();
 
     let mut quest_text = String::new();
+    let width = crate::ui::click_targets::inset(area).width as usize;
 
     if active_quests.is_empty() {
         quest_text.push_str("(No active quests)\n");
@@ -45,13 +84,15 @@ fn render_active_quests_panel(f: &mut Frame, app: &App, area: Rect) {
                 && i == app.panels.quests.selected_quest_index;
             let selection_marker = if is_selected { "►" } else { " " };
 
+            record_title(app, area, quest_text.lines().count(), false, i);
             quest_text.push_str(&format!("{} [ ] {}\n", selection_marker, quest.name));
             if is_selected {
-                quest_text.push_str(&format!("    {}\n", quest.description));
+                push_wrapped(&mut quest_text, &quest.description, "    ", width);
                 // Show objectives for selected quest
                 for objective in quest.objectives.iter() {
                     let status = if objective.completed { "✓" } else { " " };
-                    quest_text.push_str(&format!("    [{}] {}\n", status, objective.description));
+                    let line = format!("[{}] {}", status, objective.description);
+                    push_wrapped(&mut quest_text, &line, "    ", width);
                 }
             }
             quest_text.push('\n');
@@ -73,14 +114,12 @@ fn render_active_quests_panel(f: &mut Frame, app: &App, area: Rect) {
         Style::default()
     };
 
-    let active_panel = Paragraph::new(quest_text)
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .title("Active Quests")
-                .border_style(border_style),
-        )
-        .wrap(ratatui::widgets::Wrap { trim: true });
+    let active_panel = Paragraph::new(quest_text).block(
+        Block::default()
+            .borders(Borders::ALL)
+            .title("Active Quests")
+            .border_style(border_style),
+    );
 
     f.render_widget(active_panel, area);
 }
@@ -96,6 +135,7 @@ fn render_completed_quests_panel(f: &mut Frame, app: &App, area: Rect) {
         .collect();
 
     let mut quest_text = String::new();
+    let width = crate::ui::click_targets::inset(area).width as usize;
 
     if completed_quests.is_empty() {
         quest_text.push_str("(No completed quests)\n");
@@ -106,9 +146,10 @@ fn render_completed_quests_panel(f: &mut Frame, app: &App, area: Rect) {
                 && i == app.panels.quests.selected_quest_index;
             let selection_marker = if is_selected { "►" } else { " " };
 
+            record_title(app, area, quest_text.lines().count(), true, i);
             quest_text.push_str(&format!("{} [✓] {}\n", selection_marker, quest.name));
             if is_selected {
-                quest_text.push_str(&format!("    {}\n", quest.description));
+                push_wrapped(&mut quest_text, &quest.description, "    ", width);
             }
             quest_text.push('\n');
         }
@@ -129,14 +170,12 @@ fn render_completed_quests_panel(f: &mut Frame, app: &App, area: Rect) {
         Style::default()
     };
 
-    let completed_panel = Paragraph::new(quest_text)
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .title("Completed Quests")
-                .border_style(border_style),
-        )
-        .wrap(ratatui::widgets::Wrap { trim: true });
+    let completed_panel = Paragraph::new(quest_text).block(
+        Block::default()
+            .borders(Borders::ALL)
+            .title("Completed Quests")
+            .border_style(border_style),
+    );
 
     f.render_widget(completed_panel, area);
 }

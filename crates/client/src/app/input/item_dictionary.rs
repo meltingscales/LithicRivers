@@ -18,12 +18,9 @@ pub fn handle_item_dictionary_input(app: &mut App, key: KeyCode) -> bool {
         }
         return true;
     }
-    if keys.matches("ui", "CREDITS_SCROLL_UP", &key) || keys.matches("movement", "MOVE_NORTH", &key)
-    {
+    if keys.menu_up(&key) {
         state.selected = state.selected.saturating_sub(1);
-    } else if keys.matches("ui", "CREDITS_SCROLL_DOWN", &key)
-        || keys.matches("movement", "MOVE_SOUTH", &key)
-    {
+    } else if keys.menu_down(&key) {
         state.selected = (state.selected + 1).min(count.saturating_sub(1));
     } else {
         return false;

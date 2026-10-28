@@ -21,10 +21,10 @@ pub fn handle_hotbar_assignment_input(app: &mut App, key: KeyCode) -> Result<boo
             return Ok(true);
         }
 
-        if app.ui.keybinds.matches("movement", "MOVE_NORTH", &key) {
+        if app.ui.keybinds.menu_up(&key) {
             selected = selected.saturating_sub(1);
         }
-        if app.ui.keybinds.matches("movement", "MOVE_SOUTH", &key) {
+        if app.ui.keybinds.menu_down(&key) {
             // Total options = blocks.len() + 1 (for "Clear slot")
             let total_options = blocks.len() + 1;
             if selected < total_options.saturating_sub(1) {

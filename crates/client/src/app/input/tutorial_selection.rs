@@ -32,7 +32,7 @@ pub fn handle_tutorial_selection_input(
             return Ok(true);
         }
 
-        if app.ui.keybinds.matches("ui", "CREDITS_SCROLL_UP", &key) {
+        if app.ui.keybinds.menu_up(&key) {
             // UP - Previous tutorial
             if *selected_tutorial > 0 {
                 *selected_tutorial -= 1;
@@ -42,7 +42,7 @@ pub fn handle_tutorial_selection_input(
             return Ok(true);
         }
 
-        if app.ui.keybinds.matches("ui", "CREDITS_SCROLL_DOWN", &key) {
+        if app.ui.keybinds.menu_down(&key) {
             // DOWN - Next tutorial
             *selected_tutorial = (*selected_tutorial + 1) % available_tutorials.len();
             return Ok(true);

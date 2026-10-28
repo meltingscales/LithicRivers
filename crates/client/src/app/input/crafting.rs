@@ -25,9 +25,7 @@ pub fn handle_crafting_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dy
     let recipe_count = shown.len();
 
     // Navigation: Up/Down or North/South to move selection
-    if app.ui.keybinds.matches("ui", "CREDITS_SCROLL_UP", &key)
-        || app.ui.keybinds.matches("movement", "MOVE_NORTH", &key)
-    {
+    if app.ui.keybinds.menu_up(&key) {
         if recipe_count > 0 {
             if app.panels.crafting.selected == 0 {
                 app.panels.crafting.selected = recipe_count - 1;
@@ -38,9 +36,7 @@ pub fn handle_crafting_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dy
         return Ok(true);
     }
 
-    if app.ui.keybinds.matches("ui", "CREDITS_SCROLL_DOWN", &key)
-        || app.ui.keybinds.matches("movement", "MOVE_SOUTH", &key)
-    {
+    if app.ui.keybinds.menu_down(&key) {
         if recipe_count > 0 {
             app.panels.crafting.selected = (app.panels.crafting.selected + 1) % recipe_count;
         }
@@ -127,9 +123,9 @@ pub fn handle_crafting_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dy
         return Ok(true);
     }
 
-    // Don't process movement keys in crafting panel
-    Ok(app.ui.keybinds.matches("movement", "MOVE_NORTH", &key)
-        || app.ui.keybinds.matches("movement", "MOVE_SOUTH", &key)
+    // Don't process movement keys in crafting panel (the arrow keys still switch tabs)
+    Ok(app.ui.keybinds.menu_up(&key)
+        || app.ui.keybinds.menu_down(&key)
         || app.ui.keybinds.matches("movement", "MOVE_WEST", &key)
         || app.ui.keybinds.matches("movement", "MOVE_EAST", &key)
         || app.ui.keybinds.matches("movement", "MOVE_NORTHWEST", &key)

@@ -24,6 +24,9 @@ pub fn render_repair_modal(f: &mut Frame, app: &mut crate::App, area: Rect) {
 
     let inner = modal_block.inner(area);
     f.render_widget(modal_block, area);
+    app.ui
+        .click_targets
+        .push(area, crate::ui::click_targets::ClickTarget::ModalArea);
 
     // Get player's inventory and body
     let inventory = get_player_inventory(app);
@@ -81,7 +84,13 @@ pub fn render_repair_modal(f: &mut Frame, app: &mut crate::App, area: Rect) {
     render_repair_recipe_details(f, details_area, app, selected_repair, &inventory);
 
     // Render body parts list
-    render_body_parts_list(f, body_parts_area, &player_body, selected_body_part);
+    let listed = render_body_parts_list(f, body_parts_area, &player_body, selected_body_part);
+    app.ui.click_targets.rows(
+        crate::ui::click_targets::inset(body_parts_area),
+        0,
+        listed.len(),
+        |i| crate::ui::click_targets::ClickTarget::RepairPart(listed[i]),
+    );
 
     // Render controls
     let controls_text =
@@ -131,6 +140,12 @@ fn render_repair_recipes_list(f: &mut Frame, area: Rect, app: &crate::App, selec
         .highlight_style(Style::default().add_modifier(Modifier::BOLD));
 
     f.render_widget(list, area);
+    app.ui.click_targets.rows(
+        crate::ui::click_targets::inset(area),
+        0,
+        recipes.len(),
+        crate::ui::click_targets::ClickTarget::RepairRecipe,
+    );
 }
 
 fn render_repair_recipe_details(
@@ -215,8 +230,9 @@ fn render_body_parts_list(
     area: Rect,
     body: &Option<Body>,
     selected_part: Option<BodyPartType>,
-) {
+) -> Vec<BodyPartType> {
     let mut lines = vec![];
+    let mut listed = Vec::new();
 
     if let Some(body) = body {
         // Get parts in a consistent order
@@ -232,6 +248,7 @@ fn render_body_parts_list(
 
         for part_type in part_order {
             if let Some(part) = body.parts.get(&part_type) {
+                listed.push(part_type);
                 let is_selected = selected_part == Some(part_type);
                 let can_repair = part.state != BodyPartState::Missing && part.integrity < 100;
 
@@ -275,4 +292,5 @@ fn render_body_parts_list(
         .alignment(Alignment::Left);
 
     f.render_widget(paragraph, area);
+    listed
 }

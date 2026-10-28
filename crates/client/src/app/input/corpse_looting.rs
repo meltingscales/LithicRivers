@@ -80,7 +80,7 @@ pub fn handle_corpse_looting_input(app: &mut App, key: KeyCode) -> Result<bool, 
             return Ok(true);
         }
 
-        if app.ui.keybinds.matches("movement", "MOVE_NORTH", &key) {
+        if app.ui.keybinds.menu_up(&key) {
             app.panels.corpse_looting = crate::app_state::CorpseLootingState::SelectingCorpse {
                 adjacent_entities: entities_clone.clone(),
                 selected_corpse: selected.saturating_sub(1),
@@ -88,7 +88,7 @@ pub fn handle_corpse_looting_input(app: &mut App, key: KeyCode) -> Result<bool, 
             return Ok(true);
         }
 
-        if app.ui.keybinds.matches("movement", "MOVE_SOUTH", &key) {
+        if app.ui.keybinds.menu_down(&key) {
             app.panels.corpse_looting = crate::app_state::CorpseLootingState::SelectingCorpse {
                 adjacent_entities: entities_clone.clone(),
                 selected_corpse: (selected + 1).min(entities_clone.len().saturating_sub(1)),
@@ -131,13 +131,11 @@ pub fn handle_corpse_looting_input(app: &mut App, key: KeyCode) -> Result<bool, 
             return Ok(true);
         }
 
-        if app.ui.keybinds.matches("movement", "MOVE_WEST", &key)
-            || app.ui.keybinds.matches("movement", "MOVE_EAST", &key)
-        {
+        if app.ui.keybinds.menu_left(&key) || app.ui.keybinds.menu_right(&key) {
             panel_focus = !panel_focus;
         }
 
-        if app.ui.keybinds.matches("movement", "MOVE_NORTH", &key) {
+        if app.ui.keybinds.menu_up(&key) {
             if panel_focus {
                 loot_item = loot_item.saturating_sub(1);
             } else {
@@ -145,7 +143,7 @@ pub fn handle_corpse_looting_input(app: &mut App, key: KeyCode) -> Result<bool, 
             }
         }
 
-        if app.ui.keybinds.matches("movement", "MOVE_SOUTH", &key) {
+        if app.ui.keybinds.menu_down(&key) {
             if panel_focus {
                 if let Ok(inv) = app
                     .core

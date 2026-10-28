@@ -23,12 +23,9 @@ pub fn handle_death_input(app: &mut App, key: KeyCode) -> bool {
         return false;
     }
     let keys = &app.ui.keybinds;
-    if keys.matches("movement", "MOVE_NORTH", &key) || keys.matches("ui", "CREDITS_SCROLL_UP", &key)
-    {
+    if keys.menu_up(&key) {
         app.panels.death_choice = 0;
-    } else if keys.matches("movement", "MOVE_SOUTH", &key)
-        || keys.matches("ui", "CREDITS_SCROLL_DOWN", &key)
-    {
+    } else if keys.menu_down(&key) {
         app.panels.death_choice = 1;
     } else if keys.matches("ui", "MENU_ACTIVATE", &key) {
         choose(app);

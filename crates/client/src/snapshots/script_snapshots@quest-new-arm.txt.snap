@@ -38,17 +38,17 @@ input_file: scripts/snapshots/quest-new-arm.txt
 === screen quest-active ===
                                             LithicRivers
 ┌Active Quests───────────────────────────────────┐┌Completed Quests────────────────────────────────┐
-│► [ ] A New Arm                                 ││[✓] Repair the Broken Android                   │
-│SapienCorp built arms like yours at the facility││                                                │
-│a mile north. Find a salvaged one and install   ││                                                │
-│it.                                             ││                                                │
-│[✓] Reach the SapienCorp facility               ││                                                │
-│[ ] Find the salvaged arm on the assembly line  ││                                                │
-│[ ] Install the arm (Body tab)                  ││                                                │
+│► [ ] A New Arm                                 ││  [✓] Repair the Broken Android                 │
+│    SapienCorp built arms like yours at the     ││                                                │
+│    facility a mile north. Find a salvaged one  ││                                                │
+│    and install it.                             ││                                                │
+│    [✓] Reach the SapienCorp facility           ││                                                │
+│    [ ] Find the salvaged arm on the assembly   ││                                                │
+│    line                                        ││                                                │
+│    [ ] Install the arm (Body tab)              ││                                                │
 │                                                ││                                                │
 │─────────────────────────                       ││                                                │
 │↑/↓ Select   Tab: Switch                        ││                                                │
-│                                                ││                                                │
 │                                                ││                                                │
 │                                                ││                                                │
 │                                                ││                                                │
@@ -134,9 +134,9 @@ input_file: scripts/snapshots/quest-new-arm.txt
 === screen quests ===
                                             LithicRivers
 ┌Active Quests───────────────────────────────────┐┌Completed Quests────────────────────────────────┐
-│(No active quests)                              ││[✓] Repair the Broken Android                   │
+│(No active quests)                              ││  [✓] Repair the Broken Android                 │
 │─────────────────────────                       ││                                                │
-│↑/↓ Select   Tab: Switch                        ││[✓] A New Arm                                   │
+│↑/↓ Select   Tab: Switch                        ││  [✓] A New Arm                                 │
 │                                                ││                                                │
 │                                                ││                                                │
 │                                                ││                                                │

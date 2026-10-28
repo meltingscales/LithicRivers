@@ -39,6 +39,15 @@ pub enum ClickTarget {
     BlueprintRow(usize),
     StairsChoice(usize),
     DeathChoice(usize),
+    RepairRecipe(usize),
+    RepairPart(lithicrivers_core::model::body::BodyPartType),
+    /// A quest's title row, in the Completed panel or the Active one
+    QuestRow {
+        completed: bool,
+        index: usize,
+    },
+    InventoryRow(usize),
+    TutorialRow(usize),
 }
 
 /// The inside of a bordered box.
