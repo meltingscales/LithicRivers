@@ -1,0 +1,9 @@
+# The structure debug world: small_temple at the origin on flat ground, fog of war off.
+# Layer 0 is at z = 0; the view keys show the layers above it.
+seed 12345
+size 100x30
+world structure:small_temple
+key ui.MENU_PREV
+screen layer-0
+key movement.MOVE_UP
+screen layer-1

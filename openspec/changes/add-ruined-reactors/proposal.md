@@ -35,5 +35,5 @@ LithicRivers is set in the wreckage of an older, more advanced world. Ruined nuc
   - Ruin structures as `.lrstructure` files, placed through the existing pending-structure path, so the chunks a machine generates match the chunks a player walks into.
   - A `Thermoelectric { source }` generator component, plus new items, recipes and save registration.
 - **Client:** tile and block sprites; a generator window showing the heat source and output.
-- **Assets:** ruin layouts made with the Voxel Builder importer (`just util-voxelbuilder-import`).
+- **Assets:** ruin layouts written as structure plans (`docs/STRUCTURES.md`).
 - **Dependencies:** `add-power-grid` (generators and networks); `add-ore-spouts` (iron ingots for the recipe); `add-crafting-tree` (drop table, reachability test).

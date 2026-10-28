@@ -57,6 +57,31 @@ impl Game {
     }
 }
 
+/// Where the `structure:<name>` debug world puts the player: beside the structure, which
+/// stands with its top-left corner at the origin.
+pub const STRUCTURE_PREVIEW_PLAYER: Position = Position { x: -2, y: -2, z: 0 };
+
+impl Game {
+    /// The `structure:<name>` debug world: flat ground (the factory showcase's terrain,
+    /// without its builds) with the structure's bottom layer at the origin and the layers
+    /// above it going up, and fog of war off.
+    pub fn new_structure_preview(
+        seed: u64,
+        mut settings: WorldSettings,
+        name: &str,
+    ) -> Result<Self, String> {
+        let folder = crate::structure_lint::find_structure(name)?;
+        let mut game = Game::new_empty(seed, STRUCTURE_PREVIEW_PLAYER);
+        settings.world_type = WorldType::FactoryShowcase;
+        game.res.world_state.world.world_type = settings.world_type;
+        game.load_quest_structure(&folder, 0, 0, 0, false);
+        game.res.player_state.fog_of_war_enabled = false;
+        game.tick();
+        game.res.world_settings = settings;
+        Ok(game)
+    }
+}
+
 fn set_tile(game: &mut Game, pos: Position, tile: TileKind) {
     game.res
         .world_state

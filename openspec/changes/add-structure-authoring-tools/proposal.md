@@ -10,14 +10,16 @@ VoxelBuilder is made for people with a mouse. The user wants to sketch structure
 - Big structures are hundreds of lines of grid.
 - Nothing checks a structure before it's placed in a world, so a typo shows up as a broken room in play.
 - An AI has no way to see the result without playing.
-- Hand edits to the bunker and facility are overwritten by the importer on the next build.
+- Hand edits to the bunker and facility are overwritten by the importer on the next build. This already happened: the arm quest's locker tile in the facility was wiped by a build.
+- The user no longer wants to open the VoxelBuilder editor at all.
 
 ## What Changes
 
 - **Structure plans:** a `plan.toml` in a `.lrstructure` folder describes a structure with a few primitives instead of every tile:
   - **Shapes:** `room` (walls, floor, door positions), `corridor` (from, to, width), `stairs` (a column spanning layers), `fill` (a box of one block), and `put` (one block or spawn point).
   - **Settings:** the layer count, a size and a legend.
-  - `just util-structure-build` compiles every plan into `shape_layers.txt`, as the VoxelBuilder importer does for its JSON. A structure has either a plan, a VoxelBuilder JSON, or a hand-written `shape_layers.txt`, never two at once.
+  - `just util-structure-build` compiles every plan into `shape_layers.txt`. A structure has either a plan or a hand-written `shape_layers.txt`, never both.
+- **Retire the VoxelBuilder import:** remove `utility_voxelbuilder_importer`, its `just` recipes and the two `.voxelbuilder.json` sources (the bunker and the facility). Their checked-in `shape_layers.txt` become the hand-edited source, so builds stop overwriting them.
 - **A preview an AI can read:** `just util-structure-preview <name>` prints each layer as text with the legend, sizes and any warnings. A headless `world structure:<name>` debug world places the structure at the origin, so `just client-blind` can show it in the real renderer.
 - **A lint test that runs with `cargo test`:**
   - every structure's layers are rectangles of one size
@@ -41,5 +43,5 @@ VoxelBuilder is made for people with a mouse. The user wants to sketch structure
   - `StructureDefinition` loading unchanged.
   - The lint as a test over every embedded structure.
 - **Client:** the `structure:<name>` debug world, and the preview binary.
-- **Tools:** `just util-structure-build` and `just util-structure-preview`, and the build recipes run the plan compiler next to the VoxelBuilder importer.
+- **Tools:** `just util-structure-build` and `just util-structure-preview`; the build recipes run the plan compiler instead of the VoxelBuilder importer, which is removed with its JSON sources.
 - **Docs:** `docs/STRUCTURES.md`.
