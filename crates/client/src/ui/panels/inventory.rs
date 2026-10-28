@@ -103,7 +103,8 @@ pub fn render_inventory_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
         // Art
         if let Some(block) = sd.art12x8_sprites.first() {
             let color = parse_hex_color(&sd.color);
-            for row in block.split('\n') {
+            // Blank rows below the art would push the keys off a short panel
+            for row in block.trim_end().split('\n') {
                 let sp = match color {
                     Some(c) => Span::styled(row.to_string(), Style::default().fg(c)),
                     None => Span::raw(row.to_string()),
@@ -142,7 +143,10 @@ pub fn render_inventory_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     } else {
         left_lines.push(Line::from(Span::raw("Select an item")));
     }
-    let left_para = Paragraph::new(left_lines).alignment(Alignment::Left);
+    // Wrap long descriptions; trim: false keeps the art's leading spaces
+    let left_para = Paragraph::new(left_lines)
+        .alignment(Alignment::Left)
+        .wrap(ratatui::widgets::Wrap { trim: false });
     f.render_widget(left_para, left_inner);
     f.render_widget(left_block, chunks[0]);
 
