@@ -197,8 +197,9 @@ pub struct LookPanelState {
 }
 
 /// Build mode states: Movement -> Break -> Place -> Rotate
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, serde::Serialize, serde::Deserialize)]
 pub enum BuildMode {
+    #[default]
     Movement,
     Break,
     Place,
@@ -246,7 +247,7 @@ pub struct BuildPanelState {
 }
 
 /// Blueprint mode: a cursor that marks corners when copying and anchors the paste.
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct BlueprintTool {
     /// The cursor's offset from the player: the paste's top-left corner, or the next corner
     pub cursor: (i64, i64),

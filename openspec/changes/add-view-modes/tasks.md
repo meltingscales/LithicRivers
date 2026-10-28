@@ -9,6 +9,7 @@
 
 - [ ] 2.1 Power view: supply outlines, consumer colors, generator fuel marker, blinking wires; verify snapshots with a powered, a partly powered and an unpowered machine (after `add-power-grid` and `add-tree-automation`)
 - [ ] 2.2 Logistics view: belt arrows and items, fill indicators, machine status; verify snapshots with a running line and a stuck harvester (after `add-conveyor-belts` and `add-tree-automation`)
+- [ ] 2.3 Save the view mode in `ClientSave` with `#[serde(default)]`; verify a save-reload test
 
 ## 3. Checks
 

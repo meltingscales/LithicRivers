@@ -245,3 +245,35 @@ fn the_craftable_only_filter_survives_a_load() {
     let old = fresh_runner_with(&save.to_string());
     assert!(!old.app.panels.crafting.craftable_only);
 }
+
+#[test]
+fn zoom_and_build_settings_survive_a_load() {
+    use crate::app_state::BuildMode;
+    use crate::sprite_loader::Scale;
+    use lithicrivers_core::factory::Facing;
+    let mut original = chain_commands(&["skip-splash", "key ui.MENU_PREV"]);
+    original.app.ui.scale = Scale::Large;
+    original.app.panels.build.mode = BuildMode::Place;
+    original.app.panels.build.selected_hotbar_slot = 5;
+    original.app.panels.build.placement_facing = Facing::West;
+    original.app.panels.build.stairs_down = true;
+
+    let loaded = fresh_runner_with(&original.app.save_to_string().unwrap());
+    assert_eq!(loaded.app.ui.scale, Scale::Large);
+    let build = &loaded.app.panels.build;
+    assert_eq!(build.mode, BuildMode::Place);
+    assert_eq!(build.selected_hotbar_slot, 5);
+    assert_eq!(build.placement_facing, Facing::West);
+    assert!(build.stairs_down);
+
+    // Blueprint mode comes back with its cursor and turn
+    original.app.panels.build.mode = BuildMode::Blueprint;
+    original.app.panels.build.blueprint.cursor = (3, -2);
+    original.app.panels.build.blueprint.rotation = 1;
+    let loaded = fresh_runner_with(&original.app.save_to_string().unwrap());
+    assert_eq!(loaded.app.panels.build.mode, BuildMode::Blueprint);
+    assert_eq!(
+        loaded.app.panels.build.blueprint,
+        original.app.panels.build.blueprint
+    );
+}

@@ -22,9 +22,10 @@ fn normalize_line_endings(text: String) -> String {
 #[folder = "assets/"]
 struct EmbeddedAssets;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, serde::Serialize, Deserialize)]
 pub enum Scale {
-    Small,  // 1x1
+    #[default]
+    Small, // 1x1
     Medium, // 2x2
     Large,  // 3x3
 }

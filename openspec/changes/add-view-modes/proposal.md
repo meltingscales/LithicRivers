@@ -25,5 +25,6 @@ Once a base has belts, machines, poles and wires, plus creatures roaming around,
 ## Impact
 
 - Client: `ViewMode` in UI state, a render filter in the world view, legend in the MODES panel, keybinds `view.NEXT_VIEW_MODE` / `view.PREVIOUS_VIEW_MODE`.
+- Saves: the current view mode is saved with the world in `ClientSave` (like zoom and build mode), so a loaded game reopens in the same view.
 - Headless: state dump field, snapshot scripts per mode.
 - Depends on `add-power-grid` (power view), `add-conveyor-belts` and `add-tree-automation` (logistics view); the enemies view only needs existing creatures, so it can ship first.
