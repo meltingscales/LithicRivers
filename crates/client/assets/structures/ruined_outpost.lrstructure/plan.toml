@@ -1,0 +1,134 @@
+# A collapsed SapienCorp outpost: a broken-walled ground floor with rubble and a guard
+# dog, and stairs down to an intact cellar holding the good loot.
+# Compiled into shape_layers.txt by `just util-structure-build`; edit this, not that.
+layers = 2
+width = 15
+height = 11
+
+[legend]
+"#" = "rock"
+" " = "air"
+"." = "existing_worldgen"
+"D" = "door"
+">" = "stairs"
+"X" = "iron_scrap"
+"s" = "scrap_common"
+"S" = "scrap_rare"
+"t" = "treasure_common"
+"T" = "treasure_rare"
+"E" = "enemy_spawn"
+
+# --- Layer 0: the cellar, cut into solid rock ---
+[[shape]]
+kind = "fill"
+layer = 0
+x = 0
+y = 0
+w = 15
+h = 11
+block = "#"
+
+[[shape]]
+kind = "room"
+layer = 0
+x = 1
+y = 1
+w = 8
+h = 6
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 7
+y = 2
+block = "T"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 2
+y = 5
+block = "S"
+
+# --- Layer 1: the ruined ground floor ---
+[[shape]]
+kind = "room"
+layer = 1
+x = 1
+y = 1
+w = 13
+h = 9
+doors = [[7, 9]]
+
+# Collapsed stretches of wall open onto the world outside
+[[shape]]
+kind = "fill"
+layer = 1
+x = 13
+y = 3
+w = 1
+h = 3
+block = "."
+
+[[shape]]
+kind = "fill"
+layer = 1
+x = 4
+y = 1
+w = 3
+h = 1
+block = "."
+
+# Rubble where the wall came down
+[[shape]]
+kind = "fill"
+layer = 1
+x = 11
+y = 3
+w = 2
+h = 3
+block = "X"
+
+[[shape]]
+kind = "put"
+layer = 1
+x = 5
+y = 2
+block = "X"
+
+# Loose scrap, a crate of supplies, and the dog that moved in
+[[shape]]
+kind = "put"
+layer = 1
+x = 9
+y = 7
+block = "s"
+
+[[shape]]
+kind = "put"
+layer = 1
+x = 2
+y = 7
+block = "s"
+
+[[shape]]
+kind = "put"
+layer = 1
+x = 12
+y = 2
+block = "t"
+
+[[shape]]
+kind = "put"
+layer = 1
+x = 8
+y = 5
+block = "E"
+
+# The way down
+[[shape]]
+kind = "stairs"
+x = 3
+y = 3
+from_layer = 0
+to_layer = 1
