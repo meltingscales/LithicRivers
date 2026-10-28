@@ -1,0 +1,29 @@
+# Creating a second world with a taken name warns, shows the numbered name it will get,
+# and still creates it; the world list then tells the two apart.
+seed 12345
+size 100x30
+rawkey ENTER
+rawkey ENTER
+key title.SELECT
+key title.SELECT
+key title.DOWN 6
+key title.SELECT
+rawkey ENTER
+rawkey ENTER
+key ui.MENU_NEXT 7
+key ui.SAVE_AND_QUIT_TO_TITLE
+key title.SELECT
+# Create New World again with the default name
+key title.DOWN
+key title.SELECT
+expect-text "already exists: this one will be"
+screen warning
+key title.DOWN 6
+key title.SELECT
+rawkey ENTER
+rawkey ENTER
+key ui.MENU_NEXT 7
+key ui.SAVE_AND_QUIT_TO_TITLE
+key title.SELECT
+expect-text "New World (2)"
+screen world-list

@@ -221,6 +221,19 @@ fn render_create(f: &mut Frame, app: &App, area: Rect) {
     let mut lines = vec![Line::from("")];
     lines.extend(menu_lines(&rows, form.field));
     lines.push(Line::from(""));
+    // A taken name is allowed, but the new world gets a number so the list tells them apart
+    let typed = match form.name.trim() {
+        "" => "New World",
+        name => name,
+    };
+    let name = form.world_name(&app.title.worlds);
+    if name != typed {
+        let shown = typed;
+        lines.push(Line::from(Span::styled(
+            format!("A world named \"{shown}\" already exists: this one will be \"{name}\"."),
+            Style::default().fg(Color::Yellow),
+        )));
+    }
     lines.push(Line::from(Span::styled(
         "Leave the seed blank for a random world; any text works as a seed.",
         Style::default().fg(Color::DarkGray),

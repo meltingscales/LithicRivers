@@ -84,6 +84,25 @@ pub fn folder_name_for(saves: &Path, name: &str) -> String {
     candidate
 }
 
+/// `name`, or `name (2)`, `name (3)`, ... if another world already has it (ignoring case),
+/// so worlds in the list never share a name.
+pub fn unique_world_name(worlds: &[WorldEntry], name: &str) -> String {
+    let taken = |candidate: &str| {
+        worlds.iter().any(|w| {
+            w.meta
+                .as_ref()
+                .is_some_and(|m| m.name.eq_ignore_ascii_case(candidate))
+        })
+    };
+    let mut candidate = name.to_string();
+    let mut n = 2;
+    while taken(&candidate) {
+        candidate = format!("{name} ({n})");
+        n += 1;
+    }
+    candidate
+}
+
 pub fn read_meta(folder: &Path) -> Result<WorldMeta> {
     let path = folder.join(META_FILE);
     let text = std::fs::read_to_string(&path).with_context(|| format!("read {path:?}"))?;
@@ -175,6 +194,18 @@ mod tests {
             create_world_folder(saves, &WorldMeta::new(name, 1, SETTINGS, last_played)).unwrap();
         std::fs::write(folder.join(SAVE_FILE), "{}").unwrap();
         folder
+    }
+
+    #[test]
+    fn a_taken_name_gets_the_next_number() {
+        let saves = temp_saves("unique-names");
+        make_world(&saves, "My World", 1);
+        make_world(&saves, "my world (2)", 2);
+        let worlds = list_worlds(&saves);
+        assert_eq!(unique_world_name(&worlds, "Fresh"), "Fresh");
+        assert_eq!(unique_world_name(&worlds, "My World"), "My World (3)");
+        assert_eq!(unique_world_name(&worlds, "MY WORLD"), "MY WORLD (3)");
+        std::fs::remove_dir_all(&saves).unwrap();
     }
 
     #[test]
