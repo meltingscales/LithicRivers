@@ -223,3 +223,25 @@ fn hotbar_assignments_survive_a_load() {
         original.app.panels.build.hotbar_assignments
     );
 }
+
+#[test]
+fn the_craftable_only_filter_survives_a_load() {
+    let original = chain_commands(&[
+        "skip-splash",
+        "key ui.MENU_NEXT 5",
+        "key crafting.TOGGLE_CRAFTABLE_ONLY",
+    ]);
+    assert!(original.app.panels.crafting.craftable_only);
+    let loaded = fresh_runner_with(&original.app.save_to_string().unwrap());
+    assert!(loaded.app.panels.crafting.craftable_only);
+
+    // A save from before the filter loads with it off
+    let mut save: serde_json::Value =
+        serde_json::from_str(&original.app.save_to_string().unwrap()).unwrap();
+    save["client"]
+        .as_object_mut()
+        .unwrap()
+        .remove("craftable_only");
+    let old = fresh_runner_with(&save.to_string());
+    assert!(!old.app.panels.crafting.craftable_only);
+}

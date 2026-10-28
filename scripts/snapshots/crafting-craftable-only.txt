@@ -1,0 +1,11 @@
+# The Crafting tab's craftable-only toggle: from the starting kit, only the recipes it can
+# make are listed, and the title and hint say the filter is on.
+seed 12345
+size 100x30
+skip-splash
+key ui.MENU_NEXT 5
+expect-text "c: craftable only (off)"
+key crafting.TOGGLE_CRAFTABLE_ONLY
+expect-text "Recipes (craftable only)"
+expect-text "c: craftable only (on)"
+screen

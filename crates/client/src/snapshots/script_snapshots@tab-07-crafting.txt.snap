@@ -19,7 +19,7 @@ input_file: scripts/snapshots/tab-07-crafting.txt
 ││  * Burner Generator          ││                                ││                              ││
 ││  * Power Pole                ││                                ││                              ││
 │└──────────────────────────────┘└────────────────────────────────┘└──────────────────────────────┘│
-│s: search                                                                                         │
+│s: search   c: craftable only (off)                                                               │
 │                                                                                                  │
 │                                                                                                  │
 │                                                                                                  │

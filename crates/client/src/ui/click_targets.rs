@@ -48,6 +48,8 @@ pub enum ClickTarget {
     },
     InventoryRow(usize),
     TutorialRow(usize),
+    /// The Crafting tab's craftable-only hint
+    CraftableToggle,
 }
 
 /// The inside of a bordered box.

@@ -429,6 +429,9 @@ fn click_target(app: &mut App, target: crate::ui::click_targets::ClickTarget, bu
                 quests.selected_quest_index = index;
             }
         }
+        T::CraftableToggle => {
+            app.panels.crafting.craftable_only = !app.panels.crafting.craftable_only;
+        }
         T::InventoryRow(i) => {
             if app.panels.inventory.selected == i {
                 activate(app);
@@ -645,7 +648,7 @@ fn pick_block(app: &mut App, tile: Position) {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use super::*;
     use crate::headless::{chain_commands, Runner};
     use crate::ui::click_targets::ClickTarget;
@@ -884,7 +887,7 @@ mod tests {
     }
 
     /// The screen cell where `target` was drawn on the last frame.
-    fn target_cell(runner: &mut Runner, target: ClickTarget) -> (u16, u16) {
+    pub(crate) fn target_cell(runner: &mut Runner, target: ClickTarget) -> (u16, u16) {
         let screen = runner.screen_text();
         let rows = screen.lines().count() as u16;
         let cols = screen.lines().map(|l| l.chars().count()).max().unwrap_or(0) as u16;

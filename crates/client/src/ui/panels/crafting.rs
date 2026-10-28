@@ -11,22 +11,42 @@ use ratatui::{
 /// The recipes the tab lists right now, as indices into the recipe list: those whose name,
 /// result (name or description) or an ingredient matches the search.
 pub fn filtered_recipes(app: &mut crate::App) -> Vec<usize> {
-    let search = &app.panels.crafting.search;
+    let inventory = get_player_inventory(app);
+    let crafting = &mut app.panels.crafting;
     let loader = &mut app.core.sprite_loader;
-    app.panels
-        .crafting
+    let shown: Vec<usize> = crafting
         .recipe_handler
         .get_recipes()
         .iter()
         .enumerate()
-        .filter(|(_, recipe)| {
+        .filter(|&(i, recipe)| {
+            if crafting.craftable_only && !crafting.recipe_handler.can_craft(i, &inventory) {
+                return false;
+            }
             let description = super::item_dictionary::description(loader, recipe.result);
             let mut haystacks = vec![recipe.name, itemkind_name(recipe.result), &description];
             haystacks.extend(recipe.ingredients.iter().map(|&(i, _)| itemkind_name(i)));
-            search.matches(haystacks)
+            crafting.search.matches(haystacks)
         })
         .map(|(i, _)| i)
-        .collect()
+        .collect();
+    keep_selection(crafting, &shown);
+    shown
+}
+
+/// Keep the selection on the same recipe when the list changes (the search, the
+/// craftable-only filter or the inventory), or on the nearest one still shown.
+fn keep_selection(crafting: &mut crate::app_state::CraftingPanelState, shown: &[usize]) {
+    if crafting.last_shown != shown {
+        if let Some(&recipe) = crafting.last_shown.get(crafting.selected) {
+            crafting.selected = shown
+                .iter()
+                .position(|&i| i >= recipe)
+                .unwrap_or(shown.len().saturating_sub(1));
+        }
+        crafting.last_shown = shown.to_vec();
+    }
+    crafting.selected = crafting.selected.min(shown.len().saturating_sub(1));
 }
 
 pub fn render_crafting_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
@@ -71,10 +91,41 @@ pub fn render_crafting_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
         .crafting
         .search
         .hint(|c, a| app.core.config_manager.get_printable_key_for_keybind(c, a));
+    // The craftable-only toggle's hint follows the search hint, and is clickable
+    let toggle_key = app
+        .core
+        .config_manager
+        .get_printable_key_for_keybind("crafting", "TOGGLE_CRAFTABLE_ONLY");
+    let craftable_only = app.panels.crafting.craftable_only;
+    let toggle_hint = format!(
+        "{toggle_key}: craftable only ({})",
+        if craftable_only { "on" } else { "off" }
+    );
+    let gap = "   ";
+    let toggle_x = search_area.x + (search_line.chars().count() + gap.len()) as u16;
     f.render_widget(
-        Paragraph::new(Span::styled(search_line, Style::default().fg(Color::Gray))),
+        Paragraph::new(Line::from(vec![
+            Span::styled(search_line, Style::default().fg(Color::Gray)),
+            Span::raw(gap),
+            Span::styled(
+                toggle_hint.clone(),
+                Style::default().fg(if craftable_only {
+                    Color::Yellow
+                } else {
+                    Color::Gray
+                }),
+            ),
+        ])),
         search_area,
     );
+    let toggle_width = (toggle_hint.chars().count() as u16)
+        .min((search_area.x + search_area.width).saturating_sub(toggle_x));
+    if toggle_width > 0 {
+        app.ui.click_targets.push(
+            Rect::new(toggle_x, search_area.y, toggle_width, 1),
+            crate::ui::click_targets::ClickTarget::CraftableToggle,
+        );
+    }
 
     // Split main area into three columns
     let chunks = Layout::default()
@@ -118,12 +169,25 @@ pub fn render_crafting_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
         })
         .collect();
     if shown.is_empty() {
-        recipes.push(ListItem::new(Span::styled(
-            "No recipes match",
-            Style::default().fg(Color::DarkGray),
-        )));
+        let empty = if craftable_only && app.panels.crafting.search.text.is_empty() {
+            vec![
+                "Nothing craftable yet".to_string(),
+                format!("{toggle_key}: show all recipes"),
+            ]
+        } else {
+            vec!["No recipes match".to_string()]
+        };
+        let gray = Style::default().fg(Color::DarkGray);
+        recipes.push(ListItem::new(
+            empty
+                .into_iter()
+                .map(|l| Line::from(Span::styled(l, gray)))
+                .collect::<Vec<_>>(),
+        ));
     }
-    let title = if shown.len() == total {
+    let title = if craftable_only {
+        "Recipes (craftable only)".to_string()
+    } else if shown.len() == total {
         "Recipes".to_string()
     } else {
         format!("Recipes - showing {} of {total}", shown.len())

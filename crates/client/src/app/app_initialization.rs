@@ -183,6 +183,8 @@ impl App {
                 selected: 0,
                 search: Default::default(),
                 message: None,
+                craftable_only: false,
+                last_shown: Vec::new(),
             },
             credits: CreditsPanelState {
                 text: credits_text,
