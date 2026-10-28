@@ -141,6 +141,77 @@ pub fn advance(world: &World, res: &mut Resources) {
     }
 }
 
+/// Places the `tp_quest` cheat can take the player, for debugging quests.
+pub const TP_QUEST_TARGETS: [&str; 3] = ["android", "facility", "locker"];
+
+/// A walkable tile next to `pos` (east, west, south, north), or `pos` itself.
+fn beside(res: &mut Resources, pos: (i64, i64, i64)) -> Position {
+    let (x, y, z) = pos;
+    [(1, 0), (-1, 0), (0, 1), (0, -1)]
+        .into_iter()
+        .map(|(dx, dy)| (x + dx, y + dy))
+        .find(|&(nx, ny)| {
+            res.world_state
+                .world
+                .get_tile_cached(nx, ny, z)
+                .is_passable()
+        })
+        .map_or(Position { x, y, z }, |(x, y)| Position { x, y, z })
+}
+
+/// Where `tp_quest <target>` goes: beside the broken android, outside the facility's
+/// door, or beside the arm locker. With no target, wherever the arm quest needs the
+/// player next (the android before the quest is accepted).
+pub fn tp_quest_target(
+    world: &World,
+    res: &mut Resources,
+    target: Option<&str>,
+) -> Result<Position, String> {
+    let target = match target {
+        Some(t) => t,
+        None => match res.get_active_quest(QuestType::ReplaceArm) {
+            None => "android",
+            Some(quest) if quest.state != QuestState::Active => {
+                return Err("A New Arm is already done".to_string())
+            }
+            Some(quest) => match quest.objectives.iter().position(|o| !o.completed) {
+                Some(0) => "facility",
+                Some(1) => "locker",
+                _ => {
+                    return Err("Nothing to walk to: install the arm from the Body tab".to_string())
+                }
+            },
+        },
+    };
+    match target {
+        "android" => {
+            let (_, pos) = world
+                .query::<(&crate::components::QuestTutorialBrokenAndroid, &Position)>()
+                .iter()
+                .next()
+                .map(|(e, (_, p))| (e, *p))
+                .ok_or("No broken android in this world")?;
+            Ok(beside(res, (pos.x, pos.y, pos.z)))
+        }
+        "facility" => {
+            let (x, y, z) = FACILITY_ENTRANCE;
+            Ok(beside(res, (x, y, z)))
+        }
+        "locker" => {
+            let chest = *res
+                .quest_chests_placed
+                .iter()
+                .next()
+                .ok_or("The arm locker hasn't been placed yet")?;
+            Ok(beside(res, chest))
+        }
+        other => Err(format!(
+            "unknown quest target '{other}'; targets: {}",
+            TP_QUEST_TARGETS.join(", ")
+        )),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -213,6 +284,37 @@ mod tests {
             .iter()
             .filter(|c| pick(c))
             .any(|c| game.res.quest_requirements_met(c))
+    }
+
+    #[test]
+    fn tp_quest_follows_the_arm_quest() {
+        let mut game = Game::new(12345);
+        let target = |game: &mut Game, name| tp_quest_target(&game.world, &mut game.res, name);
+
+        // Before the quest: the android
+        let android = target(&mut game, None).unwrap();
+        assert_eq!(target(&mut game, Some("android")), Ok(android));
+
+        game.res.start_quest(replace_arm(None));
+        let facility = target(&mut game, None).unwrap();
+        let (x, y, z) = FACILITY_ENTRANCE;
+        assert_eq!(facility.z, z);
+        assert!((facility.x - x).abs() <= 1 && (facility.y - y).abs() <= 1);
+
+        teleport(&mut game, (facility.x, facility.y, facility.z));
+        game.tick();
+        let locker = target(&mut game, None).unwrap();
+        let chest = *game.res.quest_chests_placed.iter().next().unwrap();
+        assert_eq!(locker.z, chest.2);
+        assert_eq!((locker.x - chest.0).abs() + (locker.y - chest.1).abs(), 1);
+        assert!(game
+            .res
+            .world_state
+            .world
+            .get_tile_cached(locker.x, locker.y, locker.z)
+            .is_passable());
+
+        assert!(target(&mut game, Some("moon")).is_err());
     }
 
     #[test]

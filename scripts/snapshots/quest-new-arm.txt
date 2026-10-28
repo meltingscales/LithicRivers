@@ -24,16 +24,17 @@ expect-text "SapienCorp built that model"
 screen offer
 key ui.MENU_ACTIVATE
 expect-text "Quest started: A New Arm"
-# Walk to the facility's entrance
-cheat tp 206 1630 0
+# Walk to the facility's entrance (tp_quest goes to the quest's next spot)
+cheat tp_quest
 key movement.WAIT
 expect-text "Quest objective completed: Reach the SapienCorp facility"
 key ui.MENU_NEXT 3
 expect-text "A New Arm"
 screen quest-active
 key ui.MENU_PREV 3
-# The parts locker on the assembly line, three levels down
-cheat tp 208 1611 -6
+# The parts locker on the assembly line, seven levels down
+cheat tp_quest
+expect-text "Teleported to (209, 1610, -6)"
 key action.INTERACT
 screen locker
 # The window opens on the locker's side: take the arm
