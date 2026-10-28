@@ -21,18 +21,9 @@ pub fn handle_world_action_input(app: &mut App, key: KeyCode) -> Result<bool, Bo
         return Ok(true);
     }
 
-    // Debug F key specifically
-    if key == KeyCode::Char('f') || key == KeyCode::Char('F') {
-        tracing::info!(target: "game", "Checking F key against INTERACT keybind");
-        let matches = app.ui.keybinds.matches("action", "INTERACT", &key);
-        tracing::info!(target: "game", "F key matches INTERACT: {}", matches);
-    }
-
     // Interaction handling
     if app.ui.keybinds.matches("action", "INTERACT", &key) {
-        tracing::info!(target: "game", "F key matched INTERACT action, calling handle_interaction");
         handle_interaction(app);
-        tracing::info!(target: "game", "handle_interaction completed");
         return Ok(true);
     }
 
@@ -380,13 +371,11 @@ pub fn execute_interaction_action(app: &mut App, action: &crate::app_state::Inte
     use crate::app_state::{CorpseLootingState, InteractionType, NPCInteractionState};
 
     match action {
-        InteractionType::PickupItem { .. } => {
-            tracing::info!(target: "tutorial", "=== PICKUP ITEM ACTION TRIGGERED ===");
-            // Use core system for item pickup
-            app.core.game.res.player_state.intent =
-                lithicrivers_core::intent::PlayerIntent::interact(100);
+        InteractionType::PickupItem { position, .. } => {
+            app.core
+                .game
+                .queue_pick_up_at(position.x, position.y, position.z);
             let tick_result = app.core.game.tick();
-            tracing::info!(target: "tutorial", "Item pickup completed");
 
             // Check tutorial progression for inventory changes after pickup
             if let Some(player_entity) = app.core.game.get_player_entity() {

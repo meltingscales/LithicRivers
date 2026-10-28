@@ -16,10 +16,8 @@ pub enum PlayerAction {
     Mine,
     /// Mine at specific coordinates
     MineAt { x: i64, y: i64, z: i64 },
-    /// Interact with nearby objects (items, corpses, NPCs)
-    Interact,
-    /// Interact with specific target
-    InteractWith { target_id: Option<usize> },
+    /// Pick up the dropped items on a tile next to the player (or under them)
+    PickUpAt { x: i64, y: i64, z: i64 },
 }
 
 impl PlayerIntent {
@@ -47,18 +45,10 @@ impl PlayerIntent {
         }
     }
 
-    /// Create an interact intent
-    pub fn interact(cost: u64) -> Self {
+    /// Create an intent to pick up the items on a tile
+    pub fn pick_up_at(x: i64, y: i64, z: i64, cost: u64) -> Self {
         Self {
-            action: Some(PlayerAction::Interact),
-            tick_cost: cost,
-        }
-    }
-
-    /// Create an interact intent with specific target
-    pub fn interact_with(target_id: Option<usize>, cost: u64) -> Self {
-        Self {
-            action: Some(PlayerAction::InteractWith { target_id }),
+            action: Some(PlayerAction::PickUpAt { x, y, z }),
             tick_cost: cost,
         }
     }

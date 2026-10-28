@@ -860,6 +860,11 @@ impl Game {
         }
     }
 
+    /// Queue picking up the dropped items on a tile next to the player.
+    pub fn queue_pick_up_at(&mut self, x: i64, y: i64, z: i64) {
+        self.res.player_state.intent = crate::intent::PlayerIntent::pick_up_at(x, y, z, 100);
+    }
+
     // Convenience save/load wrappers
     pub fn save_json<P: AsRef<std::path::Path>>(&self, path: P) -> anyhow::Result<()> {
         crate::save_load::save_to_file(self, path, &serde_json::Value::Null)

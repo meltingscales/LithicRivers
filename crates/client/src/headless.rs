@@ -1236,6 +1236,14 @@ mod smoke_tests {
         let code = run_script(script, 0, Overrides::default(), &mut out, &mut err_out);
         assert_eq!(code, EXIT_OK, "{}", String::from_utf8_lossy(&err_out));
     }
+
+    #[test]
+    fn interacting_next_to_an_item_picks_it_up() {
+        let script = include_str!("../../../scripts/agent/bugs/pick-up-adjacent-item.txt");
+        let (mut out, mut err_out) = (Vec::new(), Vec::new());
+        let code = run_script(script, 0, Overrides::default(), &mut out, &mut err_out);
+        assert_eq!(code, EXIT_OK, "{}", String::from_utf8_lossy(&err_out));
+    }
 }
 
 #[cfg(test)]

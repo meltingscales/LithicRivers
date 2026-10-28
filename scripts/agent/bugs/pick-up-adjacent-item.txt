@@ -1,0 +1,16 @@
+# Bug: pressing interact next to a dropped item did nothing, though the context help
+# offered "pick up". Now it picks the item up.
+seed 12345
+size 100x30
+skip-splash
+key ui.MENU_PREV
+# Drop a nail at (0, 0, 0), then step west so it's next to the player
+cheat tp 0 0 0
+key ui.MENU_NEXT 5
+key inventory.DROP_ITEM
+key ui.MENU_PREV 5
+key movement.MOVE_WEST
+expect-text "pick up Nail"
+key action.INTERACT
+expect-text "Picked up 1 items"
+state picked-up
