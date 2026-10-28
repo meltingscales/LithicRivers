@@ -96,7 +96,7 @@ The other shapes:
 
 - `just util-structure-build`: compile every `plan.toml`. The build recipes run it, and it only writes files that would change.
 - `just util-structure-preview <name>`: print a structure layer by layer with its legend, size and anything the lint finds.
-- In a headless script, `world structure:<name>` starts a flat world with the structure at the origin (layer 0 at z = 0) and fog of war off. `scripts/snapshots/structure-preview.txt` shows one.
+- In a headless script, `world structure:<name>` starts a flat world with the structure at the origin (layer 0 at z = 0) and fog of war off. In look mode (`action.LOOK_TOGGLE`), `movement.MOVE_UP` and `MOVE_DOWN` move the view between layers. `scripts/snapshots/structure-preview.txt` shows one.
 
 ## Checks
 
@@ -112,5 +112,5 @@ The other shapes:
 1. Describe the structure in the prompt: its purpose, rough size, levels, what connects them, and what it should hold (enemies, loot, quest tiles). Point the AI at this file.
 2. Ask for a `plan.toml` in a new `crates/client/assets/structures/<name>.lrstructure/` folder. Use `put` and `fill` for details the shapes don't cover.
 3. Run `just util-structure-build`, then `just util-structure-preview <name>`, and read the layers and problems back. Iterate on the plan until the preview reads right and shows no problems.
-4. Look at it in the real renderer with a script: `world structure:<name>`, `key ui.MENU_PREV`, `screen`, and `key movement.MOVE_UP` to step up a layer.
+4. Look at it in the real renderer with a script: `world structure:<name>`, `key ui.MENU_PREV`, `screen`, then `key action.LOOK_TOGGLE` and `key movement.MOVE_UP` to view the next layer up (the player can only climb on stairs, but look mode moves the view).
 5. Run `cargo test`, then place the structure from code (a `PendingStructure`, as `Game::new` does for the facility) or add it to `structure::structures_list()` for random placement.
