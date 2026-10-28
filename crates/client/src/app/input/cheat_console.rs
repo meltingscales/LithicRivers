@@ -243,6 +243,17 @@ fn update_autocomplete(input: &str) -> (Vec<String>, Option<usize>) {
                 .collect();
             return (matches, None);
         }
+        "keepinventory" | "keepbody"
+            if parts.len() == 1 || (parts.len() == 2 && !input.ends_with(' ')) =>
+        {
+            let prefix = parts.get(1).copied().unwrap_or("");
+            let matches = ["on", "off"]
+                .into_iter()
+                .filter(|state| state.starts_with(prefix))
+                .map(|state| format!("{command_name} {state}"))
+                .collect();
+            return (matches, None);
+        }
         "tp" if parts.len() < 4 => {
             // For tp command, we could suggest coordinate patterns
             let coord_suggestions = vec!["0 0 0", "10 10 0", "100 100 0"];
@@ -910,6 +921,19 @@ mod tests {
         assert!(parse_position(&["1", "2"], P).is_err());
         assert!(parse_position(&["1", "2", "3", "4"], P).is_err());
         assert!(parse_position(&["1", "two", "3"], P).is_err());
+    }
+
+    #[test]
+    fn switches_suggest_on_and_off() {
+        assert_eq!(
+            update_autocomplete("keepbody ").0,
+            vec!["keepbody on", "keepbody off"]
+        );
+        assert_eq!(
+            update_autocomplete("keepinventory of").0,
+            vec!["keepinventory off"]
+        );
+        assert!(update_autocomplete("keepbody on ").0.is_empty());
     }
 
     #[test]

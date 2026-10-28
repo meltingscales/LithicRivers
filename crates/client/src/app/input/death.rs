@@ -163,6 +163,22 @@ mod tests {
     }
 
     #[test]
+    fn an_empty_wreck_can_be_cleared_away() {
+        let wreck_count =
+            |runner: &Runner| runner.app.core.game.world.query::<&Wreck>().iter().count();
+        let mut runner = dead();
+        runner.chain(&["key ui.MENU_ACTIVATE", "cheat tp 1 0 0"]);
+        runner.chain(&["key action.INTERACT", "key ui.TAKE_ALL"]);
+        runner.chain(&["key ui.CLOSE_HELP_MENU"]);
+        assert_eq!(wreck_count(&runner), 1, "looting leaves the empty wreck");
+        runner.chain(&[
+            "key action.INTERACT",
+            "expect-text \"You clear away the empty wreck.\"",
+        ]);
+        assert_eq!(wreck_count(&runner), 0);
+    }
+
+    #[test]
     fn keep_inventory_and_keep_body_survive_a_reload_and_apply_on_death() {
         let mut runner = chain_commands(&["skip-splash", "cheat keepinventory"]);
         runner.chain(&["expect-text \"Keep inventory: off\""]);

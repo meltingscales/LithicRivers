@@ -65,6 +65,8 @@ fn interaction_label(action: &InteractionType) -> String {
     match action {
         InteractionType::PickupItem { item_name, .. } => format!("pick up {item_name}"),
         InteractionType::LootCorpse { .. } => "loot corpse".to_string(),
+        InteractionType::ClearCorpse { wreck: true, .. } => "clear wreck".to_string(),
+        InteractionType::ClearCorpse { wreck: false, .. } => "clear corpse".to_string(),
         InteractionType::TalkToNPC { npc_name, .. } => format!("talk to {npc_name}"),
         InteractionType::OpenChest { .. } => "open chest".to_string(),
         InteractionType::OpenGenerator { .. } => "fuel generator".to_string(),
@@ -242,7 +244,7 @@ mod tests {
     }
 
     #[test]
-    fn nearby_corpse_shows_loot_until_it_is_empty() {
+    fn nearby_corpse_shows_loot_until_it_is_empty_then_clear() {
         // Next to the corpse Game::new leaves at (18, 21, 0)
         let mut runner = chain_commands(&["skip-splash", "cheat tp 17 21 0"]);
         assert!(has(&context_help_lines(&runner.app), "f: loot corpse"));
@@ -255,7 +257,7 @@ mod tests {
         ]);
         let lines = context_help_lines(&runner.app);
         assert!(!has(&lines, "loot corpse"), "{lines:?}");
-        assert!(has(&lines, "f: interact"), "{lines:?}");
+        assert!(has(&lines, "f: clear corpse"), "{lines:?}");
     }
 
     #[test]

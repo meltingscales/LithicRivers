@@ -89,11 +89,9 @@ pub fn handle_world_action_input(app: &mut App, key: KeyCode) -> Result<bool, Bo
     Ok(false)
 }
 
-/// What pressing interact would do now: every interaction adjacent to the player, and
-/// whether an empty corpse is nearby (it has nothing to loot, so it isn't an action).
+/// What pressing interact would do now: every interaction adjacent to the player.
 pub struct NearbyInteractions {
     pub actions: Vec<crate::app_state::InteractionType>,
-    pub empty_corpse_nearby: bool,
 }
 
 /// Find the interactions adjacent to the player. Used by the interact key and the context
@@ -129,28 +127,36 @@ pub fn nearby_interactions(app: &App) -> Option<NearbyInteractions> {
         }
     }
 
-    // Find nearby corpses; empty ones have nothing to loot
-    let mut empty_corpse_nearby = false;
-    for (entity, (pos, entity_kind, inv)) in app
+    // Find nearby corpses: loot the full ones, clear away the empty ones
+    for (entity, (pos, entity_kind, inv, wreck)) in app
         .core
         .game
         .world
-        .query::<(&Position, &EntityKind, &Inventory)>()
+        .query::<(
+            &Position,
+            &EntityKind,
+            &Inventory,
+            Option<&lithicrivers_core::components::Wreck>,
+        )>()
         .iter()
     {
-        if *entity_kind == EntityKind::Corpse {
-            let dx = (pos.x - player_pos.x).abs();
-            let dy = (pos.y - player_pos.y).abs();
-            let dz = (pos.z - player_pos.z).abs();
-
-            if dx <= 1 && dy <= 1 && dz == 0 && inv.slots.is_empty() {
-                empty_corpse_nearby = true;
-            } else if dx <= 1 && dy <= 1 && dz == 0 {
-                available_actions.push(InteractionType::LootCorpse {
-                    entity,
-                    position: *pos,
-                });
-            }
+        let adjacent = (pos.x - player_pos.x).abs() <= 1
+            && (pos.y - player_pos.y).abs() <= 1
+            && pos.z == player_pos.z;
+        if *entity_kind != EntityKind::Corpse || !adjacent {
+            continue;
+        }
+        if inv.slots.is_empty() {
+            available_actions.push(InteractionType::ClearCorpse {
+                entity,
+                position: *pos,
+                wreck: wreck.is_some(),
+            });
+        } else {
+            available_actions.push(InteractionType::LootCorpse {
+                entity,
+                position: *pos,
+            });
         }
     }
 
@@ -329,7 +335,6 @@ pub fn nearby_interactions(app: &App) -> Option<NearbyInteractions> {
 
     Some(NearbyInteractions {
         actions: available_actions,
-        empty_corpse_nearby,
     })
 }
 
@@ -340,7 +345,6 @@ fn handle_interaction(app: &mut App) {
 
     let Some(NearbyInteractions {
         actions: available_actions,
-        empty_corpse_nearby,
     }) = nearby_interactions(app)
     else {
         app.core.game.res.log("Cannot find player position");
@@ -350,9 +354,6 @@ fn handle_interaction(app: &mut App) {
     tracing::info!(target: "game", "Found {} total interactions nearby", available_actions.len());
 
     match available_actions.len() {
-        0 if empty_corpse_nearby => {
-            app.core.game.res.log("The corpse is empty.");
-        }
         0 => {
             app.core.game.res.log("Nothing to interact with nearby.");
         }
@@ -414,6 +415,14 @@ pub fn execute_interaction_action(app: &mut App, action: &crate::app_state::Inte
                 loot_panel_focus: true,
             };
             app.core.game.res.log("Started looting corpse");
+        }
+        InteractionType::ClearCorpse { entity, wreck, .. } => {
+            let _ = app.core.game.world.despawn(*entity);
+            let what = if *wreck { "wreck" } else { "corpse" };
+            app.core
+                .game
+                .res
+                .log(format!("You clear away the empty {what}."));
         }
         InteractionType::LoadBelt { entity, item, .. } => {
             let Some(player) = app.core.game.get_player_entity() else {
