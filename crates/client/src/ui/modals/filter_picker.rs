@@ -36,7 +36,7 @@ pub(crate) fn render_filter_picker(f: &mut Frame, app: &App) {
         })
         .collect();
     let key = |c, a| app.core.config_manager.get_printable_key_for_keybind(c, a);
-    let area = centered_rect(40, 70, f.size());
+    let area = centered_rect(40, 70, f.area());
     f.render_widget(Clear, area);
     app.ui
         .click_targets

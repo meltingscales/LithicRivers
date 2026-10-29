@@ -336,7 +336,7 @@ fn render_title(f: &mut Frame, app: &App, area: Rect) {
 
 /// Draw the current title-menu screen. Returns false if the state isn't a title screen.
 pub(crate) fn render_title_menu(f: &mut Frame, app: &App) -> bool {
-    let area = f.size();
+    let area = f.area();
     match app.splash.state {
         SplashState::Title => render_title(f, app, area),
         SplashState::WorldList => render_world_list(f, app, area),

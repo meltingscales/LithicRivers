@@ -1438,7 +1438,8 @@ pub(crate) mod tests {
     fn underlined(runner: &mut Runner, (col, row): (u16, u16)) -> bool {
         runner
             .buffer()
-            .get(col, row)
+            .cell((col, row))
+            .unwrap()
             .modifier
             .contains(ratatui::style::Modifier::UNDERLINED)
     }

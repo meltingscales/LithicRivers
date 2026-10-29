@@ -56,7 +56,7 @@ fn render_corpse_selection_modal(
     };
 
     // Create modal area (centered, 50% width, 40% height)
-    let area = centered_rect(50, 40, f.size());
+    let area = centered_rect(50, 40, f.area());
 
     // Clear the background
     f.render_widget(Clear, area);
@@ -246,7 +246,7 @@ fn render_corpse_loot_modal(
     };
 
     // Create modal area (centered, 70% width, 60% height)
-    let area = centered_rect(70, 60, f.size());
+    let area = centered_rect(70, 60, f.area());
 
     // Clear the background
     f.render_widget(Clear, area);

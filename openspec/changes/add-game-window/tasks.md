@@ -2,7 +2,7 @@
 
 ## 1. ratatui 0.30
 
-- [ ] 1.1 Upgrade `ratatui` to 0.30 and `crossterm` to 0.29 in the client and core, fixing every API change; verify `just code-clippy`, `cargo test --workspace`, and that snapshots are unchanged or each change is reviewed and explained
+- [x] 1.1 Upgrade `ratatui` to 0.30 and `crossterm` to 0.29 in the client and core, fixing every API change; verify `just code-clippy`, `cargo test --workspace`, and that snapshots are unchanged or each change is reviewed and explained
 
 ## 2. Window frontend
 

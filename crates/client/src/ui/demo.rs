@@ -27,7 +27,7 @@ pub(crate) fn render_demo_overlay(f: &mut Frame, app: &App) {
     let Some(demo) = &app.demo else {
         return;
     };
-    let area = f.size();
+    let area = f.area();
     let now = app.clock.now();
     let elapsed = now.saturating_duration_since(demo.started).as_millis();
     let red = Style::default()

@@ -256,7 +256,10 @@ fn step(app: &mut App) {
     app.on_tick();
 }
 
-fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<(), Box<dyn Error>> {
+fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<(), Box<dyn Error>>
+where
+    B::Error: 'static,
+{
     loop {
         step(app);
 

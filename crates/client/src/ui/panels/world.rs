@@ -599,7 +599,7 @@ mod night_tests {
     /// The brightest channel of the cell `dx` columns from the player at 100x30.
     fn brightness(runner: &mut crate::headless::Runner, dx: i32) -> u8 {
         let (col, row) = ((38 + dx) as u16, 10);
-        match runner.buffer().get(col, row).fg {
+        match runner.buffer()[(col, row)].fg {
             Color::Rgb(r, g, b) => r.max(g).max(b),
             other => panic!("expected an RGB tile color, got {other:?}"),
         }

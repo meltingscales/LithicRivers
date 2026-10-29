@@ -529,7 +529,7 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn run_app<B: Backend>(terminal: &mut Terminal<B>) -> io::Result<()> {
+fn run_app<B: Backend<Error = io::Error>>(terminal: &mut Terminal<B>) -> io::Result<()> {
     let mut app = App::new();
 
     loop {
@@ -801,7 +801,7 @@ fn render_enemy_info(f: &mut Frame, enemy: &Enemy, area: Rect, is_selected: bool
 }
 
 fn ui(f: &mut Frame, app: &mut App) {
-    let size = f.size();
+    let size = f.area();
 
     // Outer frame
     let block = Block::default()
@@ -815,7 +815,7 @@ fn ui(f: &mut Frame, app: &mut App) {
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([Constraint::Percentage(75), Constraint::Percentage(25)])
-        .split(f.size());
+        .split(f.area());
 
     let left_chunks = Layout::default()
         .direction(Direction::Vertical)

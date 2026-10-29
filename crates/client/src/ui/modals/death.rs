@@ -43,7 +43,7 @@ pub(crate) fn render_death_screen(f: &mut Frame, app: &App) {
         };
         lines.push(Line::styled(format!("  {choice}  "), style));
     }
-    let area = centered_rect(56, 40, f.size());
+    let area = centered_rect(56, 40, f.area());
     let area = Rect {
         height: area.height.min(lines.len() as u16 + 4),
         ..area

@@ -19,7 +19,7 @@ pub fn render_tutorial_selection_modal(f: &mut Frame, app: &mut crate::App) {
         }
 
         // Create modal area (centered, 70% width, 60% height)
-        let popup_area = centered_rect(70, 60, f.size());
+        let popup_area = centered_rect(70, 60, f.area());
 
         // Clear the area first
         f.render_widget(Clear, popup_area);

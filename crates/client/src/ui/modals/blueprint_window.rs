@@ -58,7 +58,7 @@ pub(crate) fn render_blueprint_window(f: &mut Frame, app: &App) {
             key("ui", "CLOSE_HELP_MENU")
         )
     };
-    let area = centered_rect(70, 60, f.size());
+    let area = centered_rect(70, 60, f.area());
     f.render_widget(Clear, area);
     app.ui
         .click_targets

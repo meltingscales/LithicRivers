@@ -24,7 +24,7 @@ pub(crate) fn render_splash(f: &mut Frame, app: &mut App) -> bool {
                 .block(Block::default().borders(Borders::NONE));
 
             // Center the logo in the middle of the screen
-            let area = centered_rect(50, 50, f.size());
+            let area = centered_rect(50, 50, f.area());
             f.render_widget(logo_paragraph, area);
             return true;
         }
@@ -35,7 +35,7 @@ pub(crate) fn render_splash(f: &mut Frame, app: &mut App) -> bool {
                 .block(Block::default().borders(Borders::NONE));
 
             // Center the title in the middle of the screen
-            let area = centered_rect(70, 70, f.size());
+            let area = centered_rect(70, 70, f.area());
             f.render_widget(title_paragraph, area);
             return true;
         }
@@ -49,18 +49,18 @@ pub(crate) fn render_splash(f: &mut Frame, app: &mut App) -> bool {
                 .border_style(Style::default().fg(Color::LightBlue));
 
             // Inner and centered content area with padding
-            let inner = block.inner(Rect::new(0, 0, f.size().width, f.size().height));
+            let inner = block.inner(Rect::new(0, 0, f.area().width, f.area().height));
             let area = centered_rect(80, 60, inner);
 
             // Clear content area before drawing
             f.render_widget(Clear, area);
 
             // Calculate available height for text (accounting for borders and padding)
-            let inner_area = area.inner(&Margin {
+            let inner_area = area.inner(Margin {
                 horizontal: 2,
                 vertical: 2,
             });
-            let text_area = inner_area.inner(&Margin {
+            let text_area = inner_area.inner(Margin {
                 horizontal: 1,
                 vertical: 1,
             });

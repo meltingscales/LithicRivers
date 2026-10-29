@@ -47,7 +47,7 @@ fn render_block_picker_modal(
     };
 
     // Create modal area (centered, 50% width, 40% height)
-    let area = centered_rect(50, 40, f.size());
+    let area = centered_rect(50, 40, f.area());
 
     // Clear the background
     f.render_widget(Clear, area);
