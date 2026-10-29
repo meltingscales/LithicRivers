@@ -1,35 +1,50 @@
-# Building a belt line
-# In Place mode the robot lays wooden conveyors and a chest from the hotbar, turns the next
-# block with Rotate, and puts a log on the belt to watch it ride into the chest.
+# Building a belt loop
+# In Place mode the robot lays eight wooden conveyors in a ring around itself, turning each
+# side with Rotate, drops logs on the belts, and zooms in to watch them circle forever.
 skip-splash
 key ui.MENU_PREV
 cheat tp -15 0 0
-cheat giveitem wooden_conveyor 4
-cheat giveitem chest
+cheat giveitem wooden_conveyor 8
+cheat giveitem log 4
 key build.TOGGLE_BREAK_PLACE_MODE 2
-# Picker: Clear slot, Acorn, Wooden Conveyor, Chest
+# Picker: Clear slot, Acorn, Wooden Conveyor
 key hotbar.HOTBAR_SLOT_1 2
 key movement.MOVE_SOUTH 2
 key ui.MENU_ACTIVATE
-key hotbar.HOTBAR_SLOT_2 2
-key movement.MOVE_SOUTH 3
-key ui.MENU_ACTIVATE
-key hotbar.HOTBAR_SLOT_1
-beat 400
+beat 300
+# A clockwise ring: the west side runs north, the top east, the east side south, the bottom west
+key build.PLACE_SOUTHWEST
+key build.PLACE_WEST
 key build.ROTATE_PLACEMENT
 key build.PLACE_NORTHWEST
 key build.PLACE_NORTH
-key hotbar.HOTBAR_SLOT_2
+key build.ROTATE_PLACEMENT
 key build.PLACE_NORTHEAST
+key build.PLACE_EAST
+key build.ROTATE_PLACEMENT
+key build.PLACE_SOUTHEAST
+key build.PLACE_SOUTH
 key build.TOGGLE_BREAK_PLACE_MODE 2
-# Select logs in the inventory (Nail, Acorn, Log) and put one on the first belt
+# Select logs in the inventory (Nail, Acorn, Log) and put one on four belts
 key ui.MENU_NEXT 5
 key movement.MOVE_SOUTH 2
 key ui.MENU_PREV 5
-# Interact, then northwest: the first belt
 key action.INTERACT
 key movement.MOVE_NORTHWEST
-wait 800
-key movement.WAIT 6
+key action.INTERACT
+key movement.MOVE_NORTHEAST
+key action.INTERACT
+key movement.MOVE_SOUTHEAST
+key action.INTERACT
+key movement.MOVE_SOUTHWEST
+# Zoom in on the loop
+key scale.SCALE_UP 2
+wait 400
+key movement.WAIT 3
+key movement.WAIT 3
+key movement.WAIT 3
+key movement.WAIT 3
+key movement.WAIT 3
+key movement.WAIT 3
 wait 1000
 screen

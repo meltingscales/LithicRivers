@@ -2,7 +2,7 @@
 source: crates/client/src/app/demo.rs
 expression: "String::from_utf8(out).unwrap()"
 ---
-=== screen 28 ===
+=== screen 30 ===
                                             LithicRivers
 ┌ Item Dictionary ─────────────────────────────────────────────────────────────────────────────────┐
 │┌ Items (2) ─────────────────────┐┌──────────────────────────────────────────────────────────────┐│

@@ -81,6 +81,11 @@ impl CommandRegistry {
                 handler: handle_keepbody_command,
             },
             Command {
+                name: "set_tile",
+                description: "set_tile x y z <tile> - Replace a tile, e.g. set_tile ~1 ~ ~ tree (~ = relative to player)",
+                handler: handle_set_tile_command,
+            },
+            Command {
                 name: "spawn_enemy",
                 description:
                     "spawn_enemy <kind> [x y z] - Spawn an enemy (default ~2 ~ ~, ~ = relative to player)",
@@ -351,6 +356,36 @@ fn teleport_player(app: &mut App, new_position: Position) {
     app.ui.view_y = new_position.y;
     app.ui.view_z = new_position.z;
     app.panels.look.cursor = new_position;
+}
+
+fn handle_set_tile_command(app: &mut App, parts: &[&str]) -> Result<(), Box<dyn Error>> {
+    use lithicrivers_core::tile_registry::TileKind;
+    let usage = || {
+        format!(
+            "Usage: set_tile x y z <tile>; tiles: {}",
+            TileKind::all_keys().join(", ")
+        )
+    };
+    let [_, x, y, z, name] = parts else {
+        return Err(usage().into());
+    };
+    let tile =
+        TileKind::from_key(name).ok_or_else(|| format!("unknown tile '{name}' - {}", usage()))?;
+    let player = player_position(app)?;
+    let pos = parse_position(&[x, y, z], player).map_err(|e| format!("{} - {e}", usage()))?;
+    let game = &mut app.core.game;
+    game.res
+        .world_state
+        .world
+        .set_tile_cached(pos.x, pos.y, pos.z, tile);
+    game.res.log(format!(
+        "Set ({}, {}, {}) to {}",
+        pos.x,
+        pos.y,
+        pos.z,
+        tile.display_name()
+    ));
+    Ok(())
 }
 
 fn handle_spawn_enemy_command(app: &mut App, parts: &[&str]) -> Result<(), Box<dyn Error>> {

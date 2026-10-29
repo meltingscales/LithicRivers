@@ -1345,6 +1345,21 @@ mod cheat_tests {
         runner.app.core.game.get_player_position().unwrap()
     }
 
+    #[test]
+    fn set_tile_places_a_tile_relative_to_the_player() {
+        use lithicrivers_core::tile_registry::TileKind;
+        let mut runner = chain_commands(&[
+            "skip-splash",
+            "cheat tp 0 0 0",
+            "cheat set_tile ~1 ~ ~ tree",
+        ]);
+        let world = &mut runner.app.core.game.res.world_state.world;
+        assert_eq!(world.get_tile_at_z(1, 0, 0), TileKind::Tree);
+        let (code, _, err) = run("skip-splash\ncheat set_tile 0 0 0 nonsense\n");
+        assert_eq!(code, EXIT_SCRIPT_ERROR);
+        assert!(err.contains("unknown tile 'nonsense'"), "{err}");
+    }
+
     fn dogs(runner: &Runner) -> Vec<Position> {
         let mut dogs: Vec<Position> = runner
             .app
