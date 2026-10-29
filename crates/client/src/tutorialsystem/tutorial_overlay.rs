@@ -25,7 +25,7 @@ impl TutorialOverlay {
         frame.render_widget(Clear, panel_area);
 
         // Create tutorial content
-        let title_text = format!("📚 Tutorial: {}", step.title);
+        let title_text = format!("Tutorial: {}", step.title);
         let instruction_text = step.instruction.clone();
 
         let content = format!("{}\n{}", title_text, instruction_text);

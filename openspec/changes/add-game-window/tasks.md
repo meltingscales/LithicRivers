@@ -6,8 +6,8 @@
 
 ## 2. Window frontend
 
-- [ ] 2.1 Add `ratatui-wgpu`, `winit` and `futures-lite`, the bundled fonts with their licenses, and the font coverage test over sprites, art and UI strings; verify `cargo test` (the coverage test passes and names any missing character when one is removed)
-- [ ] 2.2 The input translation module (keys with repeat, named keys, text characters, mouse cells, buttons, wheel and Shift); verify unit tests with synthetic events for each mapping
+- [x] 2.1 Add `ratatui-wgpu`, `winit` and `futures-lite`, the bundled fonts with their licenses, and the font coverage test over sprites, art and UI strings; verify `cargo test` (the coverage test passes and names any missing character when one is removed)
+- [x] 2.2 The input translation module (keys with repeat, named keys, text characters, mouse cells, buttons, wheel and Shift); verify unit tests with synthetic events for each mapping
 - [ ] 2.3 The window frontend: event loop, backend setup, step and redraw pacing, quit on close, the `--terminal` flag and the frontend choice in `main.rs`, and the terminal fallback when no GPU backend can be created; verify `cargo build`, `just client-blind scripts/agent/smoke.txt`, and snapshot tests unchanged
 - [ ] 2.4 Resizing, text size steps, fullscreen, the `window.*` keybinds in `default_config.rs`, and the saved settings; verify unit tests for the grid size from pixels and for text size limits
 

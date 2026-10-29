@@ -7,7 +7,7 @@ The game only runs inside a terminal emulator, so what a Steam player sees depen
 ## What Changes
 
 - **Upgrade ratatui** from 0.26 to 0.30 and **crossterm** from 0.27 to 0.29, in the client and core. Every window backend needs ratatui 0.30. This is a prerequisite with no visible change, and snapshots must stay the same or be reviewed.
-- **A game window by default.** The client opens its own window (winit) and draws the same ratatui screen on the GPU with `ratatui-wgpu`, using a bundled monospace font plus a fallback font for symbols. The user decided: option B, ratatui-wgpu on winit rather than egui.
+- **A game window by default.** The client opens its own window (winit) and draws the same ratatui screen on the GPU with `ratatui-wgpu`, using a bundled monospace font (DejaVu Sans Mono). The user decided: option B, ratatui-wgpu on winit rather than egui.
 - **Input unchanged.** Window key presses become the same crossterm `KeyCode`s, and mouse clicks, scrolls and moves become screen cells, so keybinds, menus and mouse handling work as before.
 - **Resizing and text size.**
   - Resizing the window recomputes the columns and rows.
@@ -33,7 +33,7 @@ The game only runs inside a terminal emulator, so what a Steam player sees depen
 ## Impact
 
 - **Dependencies:** `ratatui` 0.30, `crossterm` 0.29, `ratatui-wgpu` 0.6 (wgpu 30), `winit` 0.30, and a blocking executor for the backend's async builder (`futures-lite`, as its examples use). This is the main dependency cost. It replaces the terminal emulator as a runtime requirement.
-- **Assets:** two font files under `crates/client/assets/fonts/` with their licenses.
+- **Assets:** one font file under `crates/client/assets/fonts/` with its license.
 - **Client:** `main.rs` (frontend choice), a new window module (event loop, input translation, backend setup), every ratatui 0.30 API change across the UI, `default_config.rs` keybinds and settings, the Options screen.
 - **Core:** the crossterm bump in `keycode_mapping.rs`.
 - **Packaging:** the `windows_subsystem` attribute, the launcher script, and CI system packages for winit and wgpu on Linux if the build needs any.

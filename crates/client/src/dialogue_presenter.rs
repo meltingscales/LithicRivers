@@ -169,10 +169,10 @@ impl DialoguePresenter {
     fn apply_text_corruption(text: &str, effect: &TextEffect, time_ms: u64) -> String {
         match effect {
             TextEffect::Glitch => {
-                // Minecraft-style mystical glyphs
+                // Alien-looking glyphs, all in the window's bundled font
                 let glitch_chars = [
-                    'ᚴ', 'ᛖ', 'ᚱ', 'ᛈ', 'ᚲ', 'ᛚ', 'ᚢ', 'ᛏ', 'ᛒ', 'ᚦ', 'ᚠ', 'ᚨ', 'ᚱ', 'ᚲ', 'ᚷ', 'ᚹ',
-                    'ᚺ', 'ᚾ', 'ᛁ', 'ᛃ', 'ᛇ', 'ᛈ', 'ᛉ', 'ᛊ', 'ᛏ', 'ᛒ', 'ᛖ', 'ᛗ', 'ᛚ', 'ᛜ', 'ᛟ', 'ᛞ',
+                    'ϙ', 'ϛ', 'ϝ', 'ϟ', 'ϡ', 'Ξ', 'Ψ', 'Ω', 'ψ', 'ξ', 'ζ', 'λ', 'Ж', 'Я', 'Ю', 'Ѣ',
+                    'Ѳ', '∆', '∇', '∂', '∑', '∏', '∫', '⊕', '⊗', '⊘', '⍟', '⍜', 'Σ', 'Φ', 'Γ', 'Θ',
                 ];
                 let mut result = String::new();
                 let corruption_rate = 0.4; // 40% of characters get corrupted

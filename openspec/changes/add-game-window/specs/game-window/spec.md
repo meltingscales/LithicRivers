@@ -22,7 +22,7 @@ Running the client without `--terminal`, `--script`, `--bench` or `--mcp` SHALL 
 - **THEN** the game exits as if Quit were chosen
 
 ### Requirement: Bundled fonts
-The window SHALL draw text with fonts shipped with the game: a monospace font, plus a fallback font for characters the first one lacks. It SHALL NOT depend on fonts installed on the system. Every character the game can draw (sprites, UI text, box drawing, art) SHALL be covered by one of the bundled fonts.
+The window SHALL draw text with a monospace font shipped with the game, and SHALL NOT depend on fonts installed on the system. Every character the game can draw (sprites, UI text, box drawing, art, dialogue effects) SHALL be covered by the bundled fonts, and no bundled font SHALL make the screen cells narrower than the main font.
 
 #### Scenario: Coverage
 - **WHEN** the font coverage test runs
