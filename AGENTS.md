@@ -140,6 +140,8 @@ Also, if you need to convert a key into a printable version, please use code lik
 
 - All randomly-generated choices, actions, damage, loot, worldgen, etc - should be fully deterministic and based on world seed and world tick. This means that this game should be fully TAS-able for any specific initial seed (and version of game code). Always use the seed and any permutation (when appropriate) of XYZ coordinate, biome, or other seeded randomness to generate anything "random".
 
+- Lore is uncovered slowly. The player learns what really happened (what caused the SapienCorp reactor explosion and the nuclear holocaust that followed) piece by piece, through quests, ruins, dialogue and item descriptions. Nothing explains it up front, and the endgame goal stays hidden until the player has done many quests. See `docs/QUESTS.md`.
+
 - See `docs/INSPIRATION.md` for inspiration. For factory, crafting and tech-tree work the main references are Minecraft (with GregTech, Tekkit, Big Dig and Create), Factorio and Caves of Qud; for combat and feel, ULTRAKILL, CICADAMATA and Downwell. Borrow mechanics, not content: blocks, materials and lore should be unique to LithicRivers.
 
 - Multiblock structures (the bunker, the facility, ships, temples) live in `crates/client/assets/structures/`. Write new ones as a `plan.toml` and check them with `just util-structure-preview <name>`; `docs/STRUCTURES.md` has the format and an AI prompt workflow, and the `author-structure` skill walks an agent through it.
