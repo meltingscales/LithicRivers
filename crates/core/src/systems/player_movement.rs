@@ -114,15 +114,13 @@ pub fn move_player_system(world: &mut World, res: &mut Resources) {
                         }
                     }
                 }
-                PlayerAction::Interact => {
-                    // Handle interaction with nearby entities
-                    // Note: interaction_system function is not included as it's not directly depended upon
-                    // by the move_player_system logic flow
-                }
-                PlayerAction::InteractWith { target_id: _ } => {
-                    // Handle interaction with specific target
-                    // Note: interaction_with_target_system function is not included as it's not directly depended upon
-                    // by the move_player_system logic flow
+                PlayerAction::PickUpAt { x, y, z } => {
+                    let Ok(ppos) = world.get::<&Position>(player_e).map(|p| *p) else {
+                        return;
+                    };
+                    if (x - ppos.x).abs() <= 1 && (y - ppos.y).abs() <= 1 && z == ppos.z {
+                        pick_up_items_at(world, res, player_e, Position { x, y, z });
+                    }
                 }
                 _ => {
                     // Other actions handled by different systems
@@ -236,46 +234,34 @@ pub fn pickup_system(world: &mut World, res: &mut Resources) {
     // If Item Auto Pickup is toggled OFF, skip
     if let Ok(inv) = world.get::<&Inventory>(player_e) {
         if !inv.auto_pickup {
-            // info!("ItemAutoPickup is toggled off, skipping pickup system");
             return;
         }
     }
 
-    // Get player position and immediately drop the borrow
-    let (px, py, pz) = {
-        let Ok(ppos) = world.get::<&Position>(player_e) else {
-            return;
-        };
-        (ppos.x, ppos.y, ppos.z)
+    let Ok(ppos) = world.get::<&Position>(player_e).map(|p| *p) else {
+        return;
     };
+    pick_up_items_at(world, res, player_e, ppos);
+}
 
-    // Collect item entities to pick up
+/// Move every DroppedItem on `pos` into the player's inventory.
+fn pick_up_items_at(world: &mut World, res: &mut Resources, player_e: hecs::Entity, pos: Position) {
     let mut pickups: Vec<hecs::Entity> = Vec::new();
     let mut items: Vec<DroppedItem> = Vec::new();
-
-    // First pass: collect items and their entities
     for (e, (ipos, di)) in world.query::<(&Position, &DroppedItem)>().iter() {
-        if ipos.x == px && ipos.y == py && ipos.z == pz {
+        if *ipos == pos {
             pickups.push(e);
             items.push(*di);
         }
     }
-
-    // Early return if nothing to pick up
     if pickups.is_empty() {
         return;
     }
 
-    // Process inventory updates using safe component access
     let mut comp_access = ComponentAccess::new(world, res);
     if let Ok(()) = comp_access.modify_inventory(player_e, |inv| {
-        let mut total = 0u32;
         for di in &items {
             inv.add(di.kind, di.qty);
-            total += di.qty;
-        }
-        if total > 0 {
-            // This will be handled outside the closure
         }
     }) {
         let total: u32 = items.iter().map(|di| di.qty).sum();
@@ -347,6 +333,34 @@ mod tests {
         let game = walk_onto_logs(true);
         assert_eq!(game.player_inventory(), vec![(ItemKind::Log, 4)]);
         assert!(game.items_at(1, 0, 0).is_empty());
+    }
+
+    #[test]
+    fn picking_up_an_adjacent_item_takes_it() {
+        let mut game = walk_onto_logs(false);
+        game.act(PlayerAction::Move {
+            dx: -1,
+            dy: 0,
+            dz: 0,
+        });
+        game.tick();
+        game.act(PlayerAction::PickUpAt { x: 1, y: 0, z: 0 });
+        game.tick();
+        assert_eq!(game.player_inventory(), vec![(ItemKind::Log, 4)]);
+        assert!(game.items_at(1, 0, 0).is_empty());
+    }
+
+    #[test]
+    fn picking_up_out_of_reach_does_nothing() {
+        let mut world = TestWorld::new(3)
+            .fill((-3, -3, 0), (3, 3, 0), TileKind::Grass)
+            .inventory(&[]);
+        world.item(2, 0, 0, ItemKind::Log, 4);
+        let mut game = world.build();
+        game.act(PlayerAction::PickUpAt { x: 2, y: 0, z: 0 });
+        game.tick();
+        assert!(game.player_inventory().is_empty());
+        assert_eq!(game.items_at(2, 0, 0), vec![(ItemKind::Log, 4)]);
     }
 
     #[test]

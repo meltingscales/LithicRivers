@@ -15,7 +15,7 @@ use crate::components::{
     itemkind_sprite_name, DroppedItem, Health, Inventory, ItemKind, Player, Position, SpriteRef,
 };
 use crate::game::{Game, GameTickResult};
-use crate::intent::{PlayerAction, PlayerIntent};
+use crate::intent::PlayerAction;
 use crate::resources::WorldSettings;
 use crate::spawn_utils;
 use crate::tiles::TileKind;
@@ -205,12 +205,7 @@ impl TestGame {
             PlayerAction::Move { dz, .. } => self.game.queue_player_move_z(dz),
             PlayerAction::Mine => self.game.queue_mine(),
             PlayerAction::MineAt { x, y, z } => self.game.queue_mine_at(x, y, z),
-            PlayerAction::Interact | PlayerAction::InteractWith { .. } => {
-                self.game.res.player_state.intent = PlayerIntent {
-                    action: Some(action),
-                    tick_cost: 100,
-                }
-            }
+            PlayerAction::PickUpAt { x, y, z } => self.game.queue_pick_up_at(x, y, z),
         }
     }
 
