@@ -99,7 +99,7 @@ The survival loop works: explore, fight, take damage, repair. Combat damages spe
 
 ## (DONE) launching
 
-The game opens its own window with a bundled font (`add-game-window`), so it no longer depends on whichever terminal emulator Steam finds. The launcher just starts the game, Windows builds open no console, and `--terminal` keeps the old way. Still to check by hand: Windows (whether the fast keystrokes bug is gone) and a Steam Deck in Gaming Mode.
+The game opens its own window with a bundled font (`add-game-window`), so it no longer depends on whichever terminal emulator Steam finds. The launcher just starts the game, Windows builds open no console, and `--terminal` keeps the old way. Linux checked by hand. Windows (including whether the fast keystrokes bug is gone) and the Steam Deck have a manual checklist in the `check-windows-and-deck` change.
 
 ## Small temp list
 

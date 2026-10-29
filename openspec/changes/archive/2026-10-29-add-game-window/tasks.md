@@ -21,6 +21,5 @@
 
 ## 4. User checks
 
-- [ ] 4.1 User check: the game opens in its own window on Linux, looks right, resizes, the Display buttons change text size (with no leftover text) and fullscreen, and docked, floating and hidden all work
-- [ ] 4.2 User check: on Windows, only the game window opens, and keystrokes are no longer consumed too fast
-- [ ] 4.3 User check: on a Steam Deck in Gaming Mode, the game starts and fills the screen
+- [x] 4.1 User check: the game opens in its own window on Linux, looks right, resizes, the Display buttons change text size (with no leftover text) and fullscreen, and docked, floating and hidden all work
+- Windows and Steam Deck checks (formerly 4.2 and 4.3) moved to `check-windows-and-deck`, which the user will run by hand later.
