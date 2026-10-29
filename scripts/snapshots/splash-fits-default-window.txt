@@ -1,0 +1,8 @@
+# The logo and game-title splash screens fit, uncut, in the 95 columns the game gets beside
+# the docked Display panel at the default window size
+seed 12345
+size 95x36
+expect-text "KKK    O   O  N N N   I     X"
+screen logo
+rawkey ENTER
+screen game-title

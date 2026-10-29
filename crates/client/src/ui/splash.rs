@@ -3,13 +3,24 @@
 use crate::ui::centered_rect;
 use crate::{App, SplashState};
 use ratatui::{
-    layout::{Alignment, Margin, Rect},
+    layout::{Alignment, Constraint, Margin, Rect},
     style::{Color, Style},
     symbols::border,
     text::{Line, Span},
     widgets::{Block, Borders, Clear, Paragraph, Wrap},
     Frame,
 };
+
+/// A box exactly as big as some text, centered in an area (and no bigger than the area),
+/// so splash art is never cut off while the screen is large enough to hold it.
+fn text_rect(text: &str, area: Rect) -> Rect {
+    let width = text.lines().map(|l| Line::from(l).width()).max().unwrap_or(0) as u16;
+    let height = text.lines().count() as u16;
+    area.centered(
+        Constraint::Length(width.min(area.width)),
+        Constraint::Length(height.min(area.height)),
+    )
+}
 
 /// Draw the current splash screen, if one is showing. Returns true when it drew one.
 pub(crate) fn render_splash(f: &mut Frame, app: &mut App) -> bool {
@@ -23,8 +34,7 @@ pub(crate) fn render_splash(f: &mut Frame, app: &mut App) -> bool {
                 .alignment(Alignment::Center)
                 .block(Block::default().borders(Borders::NONE));
 
-            // Center the logo in the middle of the screen
-            let area = centered_rect(50, 50, f.area());
+            let area = text_rect(&app.splash.logo_text, f.area());
             f.render_widget(logo_paragraph, area);
             return true;
         }
@@ -34,8 +44,7 @@ pub(crate) fn render_splash(f: &mut Frame, app: &mut App) -> bool {
                 .alignment(Alignment::Center)
                 .block(Block::default().borders(Borders::NONE));
 
-            // Center the title in the middle of the screen
-            let area = centered_rect(70, 70, f.area());
+            let area = text_rect(&app.splash.game_title_text, f.area());
             f.render_widget(title_paragraph, area);
             return true;
         }
