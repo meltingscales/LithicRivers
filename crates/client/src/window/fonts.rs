@@ -123,3 +123,57 @@ mod tests {
         assert!(w > 0 && w < h, "{w}x{h}");
     }
 }
+
+/// The renderer's glyph cache holds roughly this many glyphs (by glyph, font and bold,
+/// italic, underline and strikethrough; not color) in one draw. Drawing more garbles the
+/// screen, so busy screens must stay well below it.
+#[cfg(test)]
+pub const GLYPH_CACHE_LIMIT: usize = 3750;
+
+#[cfg(test)]
+mod glyph_cache_tests {
+    use super::GLYPH_CACHE_LIMIT;
+    use ratatui::style::Modifier;
+    use std::collections::HashSet;
+
+    /// The distinct glyph-cache entries a screen would need: each symbol with the
+    /// modifiers the renderer caches separately.
+    fn cache_entries(runner: &mut crate::headless::Runner) -> usize {
+        let cached =
+            Modifier::BOLD | Modifier::ITALIC | Modifier::UNDERLINED | Modifier::CROSSED_OUT;
+        let buf = runner.buffer().clone();
+        buf.content()
+            .iter()
+            .map(|c| (c.symbol().to_string(), c.modifier.intersection(cached)))
+            .collect::<HashSet<_>>()
+            .len()
+    }
+
+    /// The busiest screens at the largest common window size stay far below the limit.
+    #[test]
+    fn busy_screens_fit_the_glyph_cache() {
+        let setups: &[&[&str]] = &[
+            &["size 240x80", "world factory-showcase", "key ui.MENU_PREV"],
+            &[
+                "size 240x80",
+                "skip-splash",
+                "cheat givecraftingcomponents electric_furnace 5 raw",
+                "key ui.MENU_NEXT 4",
+            ],
+            &["size 240x80", "skip-splash", "key ui.MENU_NEXT 5"],
+            &["size 240x80", "skip-splash", "key ui.MENU_NEXT 6"],
+        ];
+        for steps in setups {
+            let text = steps.join("\n");
+            let script = crate::headless::parse_script(&text).unwrap();
+            let mut runner = crate::headless::Runner::new(0, script.size.unwrap());
+            let report = runner.run_steps(&script.steps);
+            assert!(report.error.is_none(), "{steps:?}: {:?}", report.error);
+            let entries = cache_entries(&mut runner);
+            assert!(
+                entries * 4 < GLYPH_CACHE_LIMIT,
+                "{steps:?} needs {entries} glyph cache entries (limit {GLYPH_CACHE_LIMIT})"
+            );
+        }
+    }
+}

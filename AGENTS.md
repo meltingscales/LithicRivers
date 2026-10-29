@@ -11,7 +11,9 @@ You should use `rustup` to run `cargo` and other tools.
 
 Please avoid running `cargo clean`. It takes a long time to rebuild rust modules.
 
-Never run the interactive client (`just client-linux` / `just client-windows`) or any other TUI: your terminal can't display it. To see the running game, use the headless client (below). If something can only be judged by a human looking at the real TUI, ask me to run `just client-linux`.
+Never run the interactive client (`just client-linux` / `just client-windows`) or any other TUI: it opens the game window (or, with `--terminal`, takes over the terminal), and you can't see either. To see the running game, use the headless client (below). If something can only be judged by a human looking at the real game, ask me to run `just client-linux`.
+
+The client opens its own window by default: winit plus `ratatui-wgpu`, drawing the same ratatui screen on the GPU with the bundled DejaVu Sans Mono (`crates/client/src/window/`), with a small Display window beside it for text size and fullscreen. `--terminal` runs it in the terminal as before. Headless runs, MCP and snapshots always draw to an in-memory `TestBackend`, so they don't depend on the frontend. Every character the game draws must be in the bundled font (`bundled_fonts_cover_every_drawn_character` names any that aren't), so avoid emoji and rare symbols in sprites and UI text.
 
 ## Demos
 
