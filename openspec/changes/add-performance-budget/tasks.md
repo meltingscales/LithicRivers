@@ -2,9 +2,9 @@
 
 ## 1. Measure
 
-- [ ] 1.1 Add the four scenario scripts in `scripts/bench/` (`size 80x24`, setup before the first `beat`) and a test that runs each one headless; verify `cargo test --workspace` and `just client-blind scripts/bench/<name>.txt` for each
-- [ ] 1.2 Add the `--bench <script>...` mode: time update and draw per frame after the first `beat`, print the report table (median, 95th percentile, worst, budget, CPU and build profile), exit 1 when over budget; verify a unit test for the report and exit status with fake timings, and that snapshot tests still pass unchanged
-- [ ] 1.3 Add `just util-bench` (release build over `scripts/bench/*.txt`); verify it prints the table, and record the baseline and the machine in `docs/STEAM-MVP.md`
+- [x] 1.1 Add the four scenario scripts in `scripts/bench/` (`size 80x24`, setup before the first `beat`) and a test that runs each one headless; verify `cargo test --workspace` and `just client-blind scripts/bench/<name>.txt` for each
+- [x] 1.2 Add the `--bench <script>...` mode: time update and draw per frame after the first `beat`, print the report table (median, 95th percentile, worst, budget, CPU and build profile), exit 1 when over budget; verify a unit test for the report and exit status with fake timings, and that snapshot tests still pass unchanged
+- [x] 1.3 Add `just util-bench` (release build over `scripts/bench/*.txt`); verify it prints the table, and record the baseline and the machine in `docs/STEAM-MVP.md`
 
 ## 2. Profile
 

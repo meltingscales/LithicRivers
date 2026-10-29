@@ -174,6 +174,7 @@ The survival loop works: explore, fight, take damage, repair. Combat damages spe
 - [ ] Performance optimizations for target hardware
   - [ ] Profiling budget: ~60 FPS at 80x24; ≤16 ms tick under normal load
   - [ ] Identify top 2 hotspots and add targeted optimizations
+  - **Baseline (2026-10-28, `just util-bench`, release build, AMD Ryzen AI Max+ 395):** every scenario within budget. Worst tick / worst frame in ms: deep-underground 10.32 / 0.64, factory-busy 1.07 / 0.30, night-pass-time 2.12 / 0.52, surface-walk 7.46 / 0.52. Medians are 0.1 to 1 ms; the worst ticks are one-off spikes when the player reaches new chunks, and those are the ones a slower CPU (the Steam Deck) would push over 16 ms.
 
 ## Steam Integration
 - [ ] Steamworks SDK integration

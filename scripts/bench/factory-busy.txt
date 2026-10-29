@@ -1,0 +1,11 @@
+# Benchmark: the factory showcase world with its machines, belts and power running.
+# Steps before the first `beat` are setup and aren't timed.
+seed 12345
+size 80x24
+world factory-showcase
+key ui.MENU_PREV
+beat 0
+key action.PASS_TIME 40
+key movement.MOVE_EAST 20
+expect-text "LithicRivers"
+state end

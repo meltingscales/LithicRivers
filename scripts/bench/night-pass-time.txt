@@ -1,0 +1,12 @@
+# Benchmark: let time pass through a surface night (fog of war, creatures moving).
+# Steps before the first `beat` are setup and aren't timed.
+seed 12345
+size 80x24
+skip-splash
+key ui.MENU_PREV
+cheat tp 0 -300 0
+cheat set_time 21:00
+beat 0
+key action.PASS_TIME 40
+expect-text "LithicRivers"
+state end

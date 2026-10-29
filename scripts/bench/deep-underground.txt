@@ -1,0 +1,17 @@
+# Benchmark: move and mine through the Lithic Rivers caverns in the deep.
+# Steps before the first `beat` are setup and aren't timed.
+seed 12345
+size 80x24
+skip-splash
+key ui.MENU_PREV
+cheat noclip_toggle
+cheat tp 500 0 -20
+beat 0
+key movement.MOVE_EAST 100
+key movement.MOVE_SOUTH 50
+key action.MINE
+key build.PLACE_EAST
+key build.PLACE_NORTH
+key build.PLACE_WEST
+expect-text "LithicRivers"
+state end

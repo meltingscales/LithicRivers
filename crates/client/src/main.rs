@@ -5,6 +5,7 @@ use crossterm::{
 };
 mod app;
 mod app_state;
+mod bench;
 mod boot_message;
 mod clock;
 mod dialogue_presenter;
@@ -118,11 +119,13 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-/// Handle `--script <path> [--seed <u64>] [--size <cols>x<rows>]` and `--mcp`.
+/// Handle `--script <path> [--seed <u64>] [--size <cols>x<rows>]`, `--bench <script>...`
+/// and `--mcp`.
 /// Returns the exit status if a headless mode ran, or `None` to start the interactive client.
 fn run_headless_from_args(default_seed: u64) -> Result<Option<i32>, Box<dyn Error>> {
     let mut args = std::env::args().skip(1);
     let mut script_path = None;
+    let mut bench_paths: Vec<String> = Vec::new();
     let mut mcp = false;
     let mut overrides = headless::Overrides::default();
     while let Some(arg) = args.next() {
@@ -130,6 +133,10 @@ fn run_headless_from_args(default_seed: u64) -> Result<Option<i32>, Box<dyn Erro
         match arg.as_str() {
             "--script" => script_path = Some(value()?),
             "--mcp" => mcp = true,
+            "--bench" => {
+                bench_paths.push(value()?);
+                bench_paths.extend(args.by_ref());
+            }
             "--seed" => overrides.seed = Some(value()?.parse()?),
             "--size" => {
                 let v = value()?;
@@ -138,6 +145,17 @@ fn run_headless_from_args(default_seed: u64) -> Result<Option<i32>, Box<dyn Erro
             }
             other => return Err(format!("unknown argument '{other}'").into()),
         }
+    }
+    if !bench_paths.is_empty() {
+        if mcp || script_path.is_some() || overrides.seed.is_some() || overrides.size.is_some() {
+            return Err("--bench takes only scenario script paths".into());
+        }
+        let code = bench::run(
+            &bench_paths,
+            &mut io::stdout().lock(),
+            &mut io::stderr().lock(),
+        );
+        return Ok(Some(code));
     }
     if mcp {
         if script_path.is_some() || overrides.size.is_some() {
