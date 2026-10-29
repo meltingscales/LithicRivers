@@ -450,6 +450,9 @@ pub struct Runner {
 pub struct FrameTimes {
     pub recording: bool,
     pub frames: Vec<FrameSample>,
+    /// Keep each timed frame's screen too, to replay it through the window's renderer
+    pub keep_screens: bool,
+    pub screens: Vec<ratatui::buffer::Buffer>,
 }
 
 /// One frame's timings.
@@ -526,6 +529,9 @@ impl Runner {
         if let (Some((start, tick)), Some(stepping), Some(drawing), Some(bench)) =
             (start, stepping, drawing, self.bench.as_mut())
         {
+            if bench.keep_screens {
+                bench.screens.push(self.terminal.backend().buffer().clone());
+            }
             bench.frames.push(FrameSample {
                 input: stepping - start,
                 step: drawing - stepping,
