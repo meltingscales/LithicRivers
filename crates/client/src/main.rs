@@ -1,3 +1,6 @@
+// On Windows the game opens its own window, so it needs no console window
+#![cfg_attr(all(windows, not(test)), windows_subsystem = "windows")]
+
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyEventKind},
     execute,
@@ -58,6 +61,9 @@ use crate::{
 };
 
 fn main() -> Result<(), Box<dyn Error>> {
+    #[cfg(windows)]
+    attach_parent_console();
+
     // Load configuration to determine logging and seed before starting app
     let config = lithicrivers_core::game_config::GameConfig::new();
     let log_level = config
@@ -102,7 +108,9 @@ fn main() -> Result<(), Box<dyn Error>> {
             Err(e) => {
                 tracing::error!(target: "game", "game window unavailable: {e}");
                 if !io::stdin().is_terminal() {
-                    eprintln!("LithicRivers couldn't open its window: {e}");
+                    show_error(&format!(
+                        "LithicRivers couldn't open its window: {e}\n\nYou can start it from a terminal with --terminal instead."
+                    ));
                     std::process::exit(1);
                 }
                 eprintln!("LithicRivers couldn't open its window ({e}); using this terminal.");
@@ -141,6 +149,48 @@ fn main() -> Result<(), Box<dyn Error>> {
     }
 
     Ok(())
+}
+
+/// Built as a window app, the Windows client has no console of its own. Terminal and
+/// headless runs started from a console use that console instead.
+#[cfg(windows)]
+fn attach_parent_console() {
+    let wants_console = std::env::args()
+        .skip(1)
+        .any(|a| matches!(a.as_str(), "--terminal" | "--script" | "--bench" | "--mcp"));
+    if wants_console {
+        // Fails harmlessly when there is no parent console (or output is piped)
+        unsafe {
+            winapi::um::wincon::AttachConsole(winapi::um::wincon::ATTACH_PARENT_PROCESS);
+        }
+    }
+}
+
+/// Tell the player something went wrong where they will see it: a message box on
+/// Windows, where a window app has no console, and standard error elsewhere.
+fn show_error(message: &str) {
+    tracing::error!(target: "game", "{message}");
+    #[cfg(windows)]
+    {
+        use std::os::windows::ffi::OsStrExt;
+        let wide = |s: &str| {
+            std::ffi::OsStr::new(s)
+                .encode_wide()
+                .chain(std::iter::once(0))
+                .collect::<Vec<u16>>()
+        };
+        let (text, title) = (wide(message), wide("LithicRivers"));
+        unsafe {
+            winapi::um::winuser::MessageBoxW(
+                std::ptr::null_mut(),
+                text.as_ptr(),
+                title.as_ptr(),
+                winapi::um::winuser::MB_OK | winapi::um::winuser::MB_ICONERROR,
+            );
+        }
+    }
+    #[cfg(not(windows))]
+    eprintln!("{message}");
 }
 
 /// How the client was asked to run.

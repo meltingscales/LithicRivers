@@ -41,7 +41,7 @@ lithicrivers-core = { path = "../core", features = ["test-support"] }
 insta = { version = "1", features = ["filters", "glob"] }
 
 [target.'cfg(windows)'.dependencies]
-winapi = { version = "0.3", features = ["winuser"] }
+winapi = { version = "0.3", features = ["winuser", "wincon"] }
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"
