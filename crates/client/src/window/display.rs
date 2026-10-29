@@ -2,9 +2,11 @@
 //! size and fullscreen (`game-window` spec).
 
 use super::settings::WindowSettings;
+use ratatui::buffer::Buffer;
+use ratatui::layout::Rect;
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span};
-use ratatui::widgets::Paragraph;
+use ratatui::widgets::{Paragraph, Widget};
 use ratatui::Frame;
 
 /// The Display window's size in cells.
@@ -60,7 +62,14 @@ pub fn press(button: Button, settings: &mut WindowSettings) {
     }
 }
 
+/// Draw the panel filling a frame (the floating window).
 pub fn draw(f: &mut Frame, settings: &WindowSettings) {
+    let area = f.area();
+    render(area, f.buffer_mut(), settings);
+}
+
+/// Draw the panel into an area; `button_at` takes cells relative to its top left.
+pub fn render(area: Rect, buf: &mut Buffer, settings: &WindowSettings) {
     let button = Style::default()
         .fg(Color::Rgb(255, 210, 120))
         .add_modifier(Modifier::BOLD);
@@ -80,7 +89,7 @@ pub fn draw(f: &mut Frame, settings: &WindowSettings) {
             Span::styled(fullscreen_label(settings), button),
         ]),
     ];
-    f.render_widget(Paragraph::new(lines), f.area());
+    Paragraph::new(lines).render(area, buf);
 }
 
 #[cfg(test)]

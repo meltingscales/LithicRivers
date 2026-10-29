@@ -11,8 +11,8 @@ The game only runs inside a terminal emulator, so what a Steam player sees depen
 - **Input unchanged.** Window key presses become the same crossterm `KeyCode`s, and mouse clicks, scrolls and moves become screen cells, so keybinds, menus and mouse handling work as before.
 - **Resizing and text size.**
   - Resizing the window recomputes the columns and rows.
-  - A small separate **Display window** next to the game has buttons to make the text bigger or smaller and toggle fullscreen. The user decided: a second window rather than keybinds or an in-game panel.
-  - Options gains Text size, Fullscreen and Display window rows, saved to the config file. They are also the fallback where the Display window can't be seen, such as the Steam Deck.
+  - A **Display panel** has buttons to make the text bigger or smaller and toggle fullscreen. It's docked along the game window's edge by default, or floats as a small separate window, or is hidden (decided by the user).
+  - Options gains Text size, Fullscreen and Display rows, saved to the config file.
 - **Terminal mode kept:** `--terminal` runs the game in the current terminal exactly as today, for players who prefer it.
 - **Launching:**
   - Windows builds open no console window, unless started with `--terminal`.
@@ -34,7 +34,7 @@ The game only runs inside a terminal emulator, so what a Steam player sees depen
 
 - **Dependencies:** `ratatui` 0.30, `crossterm` 0.29, `ratatui-wgpu` 0.6 (wgpu 30), `winit` 0.30, and a blocking executor for the backend's async builder (`futures-lite`, as its examples use). This is the main dependency cost. It replaces the terminal emulator as a runtime requirement.
 - **Assets:** one font file under `crates/client/assets/fonts/` with its license.
-- **Client:** `main.rs` (frontend choice), a new window module (event loop for the game and Display windows, input translation, backend setup), every ratatui 0.30 API change across the UI, `default_config.rs` settings, the Options screen.
+- **Client:** `main.rs` (frontend choice), a new window module (event loop for the game window, the docked panel and the floating Display window, input translation, backend setup), every ratatui 0.30 API change across the UI, `default_config.rs` settings, the Options screen.
 - **Core:** the crossterm bump in `keycode_mapping.rs`.
 - **Packaging:** the `windows_subsystem` attribute, the launcher script, and CI system packages for winit and wgpu on Linux if the build needs any.
 - **Docs:** AGENTS.md (window versus `--terminal`), `docs/STEAM-MVP.md` (the launching section).

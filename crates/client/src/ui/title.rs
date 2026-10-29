@@ -287,7 +287,7 @@ fn render_options(f: &mut Frame, app: &App, area: Rect) {
         format!(
             "{}: {}",
             OPTIONS_ROWS[4],
-            window_value(on_off(window.show_display, "shown", "hidden"))
+            window_value(window.display.name().to_string())
         ),
         OPTIONS_ROWS[5].to_string(),
     ];

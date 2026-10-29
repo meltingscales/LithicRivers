@@ -9,13 +9,52 @@ pub const MAX_FONT_PX: u32 = 32;
 pub const FONT_PX_STEP: u32 = 2;
 pub const DEFAULT_FONT_PX: u32 = 18;
 
+/// Where the Display panel (text size and fullscreen buttons) is shown.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DisplayMode {
+    /// A strip along the right edge of the game window
+    Docked,
+    /// A small separate window
+    Floating,
+    Hidden,
+}
+
+impl DisplayMode {
+    pub fn name(self) -> &'static str {
+        match self {
+            DisplayMode::Docked => "docked",
+            DisplayMode::Floating => "floating",
+            DisplayMode::Hidden => "hidden",
+        }
+    }
+
+    fn from_name(name: &str) -> Option<Self> {
+        [Self::Docked, Self::Floating, Self::Hidden]
+            .into_iter()
+            .find(|m| m.name() == name)
+    }
+
+    /// The next mode in Options order, wrapping around.
+    pub fn next(self) -> Self {
+        match self {
+            DisplayMode::Docked => DisplayMode::Floating,
+            DisplayMode::Floating => DisplayMode::Hidden,
+            DisplayMode::Hidden => DisplayMode::Docked,
+        }
+    }
+
+    pub fn previous(self) -> Self {
+        self.next().next()
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct WindowSettings {
     /// Text height in pixels
     pub font_px: u32,
     pub fullscreen: bool,
-    /// Whether the Display window should be open
-    pub show_display: bool,
+    /// Where the Display panel is shown
+    pub display: DisplayMode,
     /// Whether the game is running in its own window (false in terminal and headless runs)
     pub active: bool,
 }
@@ -25,7 +64,7 @@ impl Default for WindowSettings {
         Self {
             font_px: DEFAULT_FONT_PX,
             fullscreen: false,
-            show_display: true,
+            display: DisplayMode::Docked,
             active: false,
         }
     }
@@ -43,9 +82,9 @@ impl WindowSettings {
             fullscreen: get("WINDOW_FULLSCREEN")
                 .and_then(|v| v.as_bool())
                 .unwrap_or(defaults.fullscreen),
-            show_display: get("WINDOW_SHOW_DISPLAY")
-                .and_then(|v| v.as_bool())
-                .unwrap_or(defaults.show_display),
+            display: get("WINDOW_DISPLAY")
+                .and_then(|v| v.as_str().and_then(DisplayMode::from_name))
+                .unwrap_or(defaults.display),
             active: false,
         }
     }
@@ -66,7 +105,7 @@ pub fn change(app: &mut App, f: impl FnOnce(&mut WindowSettings)) {
     let ui = &mut app.core.config_manager.data.settings["ui"];
     ui["WINDOW_FONT_PX"] = serde_json::json!(settings.font_px);
     ui["WINDOW_FULLSCREEN"] = serde_json::json!(settings.fullscreen);
-    ui["WINDOW_SHOW_DISPLAY"] = serde_json::json!(settings.show_display);
+    ui["WINDOW_DISPLAY"] = serde_json::json!(settings.display.name());
     if app.persist_config {
         if let Err(e) = app.core.config_manager.save() {
             tracing::warn!(target: "game", "could not save config: {e:#}");
@@ -94,17 +133,27 @@ mod tests {
     }
 
     #[test]
+    fn display_modes_cycle_both_ways() {
+        let mut mode = DisplayMode::Docked;
+        for _ in 0..3 {
+            mode = mode.next();
+        }
+        assert_eq!(mode, DisplayMode::Docked);
+        assert_eq!(DisplayMode::Docked.previous(), DisplayMode::Hidden);
+    }
+
+    #[test]
     fn settings_round_trip_through_the_config() {
         let mut runner = crate::headless::chain_commands(&["skip-splash"]);
         change(&mut runner.app, |w| {
             w.bigger();
             w.fullscreen = true;
-            w.show_display = false;
+            w.display = DisplayMode::Floating;
         });
         let loaded = WindowSettings::from_config(&runner.app.core.config_manager);
         assert_eq!(loaded.font_px, DEFAULT_FONT_PX + FONT_PX_STEP);
         assert!(loaded.fullscreen);
-        assert!(!loaded.show_display);
+        assert_eq!(loaded.display, DisplayMode::Floating);
         assert!(!loaded.active, "being in a window is never saved");
     }
 }

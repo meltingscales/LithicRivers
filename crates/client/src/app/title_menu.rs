@@ -44,7 +44,7 @@ pub const OPTIONS_ROWS: [&str; 6] = [
     "Sound volume",
     "Text size",
     "Fullscreen",
-    "Display window",
+    "Display",
     "Back",
 ];
 /// The first Options row that only applies in the game window, and the last
@@ -450,7 +450,8 @@ impl App {
             2 if left => change(self, |w| w.smaller()),
             2 if right => change(self, |w| w.bigger()),
             3 if left || right || select => change(self, |w| w.fullscreen = !w.fullscreen),
-            4 if left || right || select => change(self, |w| w.show_display = !w.show_display),
+            4 if left => change(self, |w| w.display = w.display.previous()),
+            4 if right || select => change(self, |w| w.display = w.display.next()),
             _ => {}
         }
     }
@@ -819,7 +820,7 @@ mod tests {
 
     #[test]
     fn options_change_window_settings_in_the_game_window() {
-        use crate::window::settings::DEFAULT_FONT_PX;
+        use crate::window::settings::{DisplayMode, DEFAULT_FONT_PX};
         let mut runner =
             chain_commands(&[TO_TITLE, &["key title.DOWN 2", "key title.SELECT"]].concat());
         // Headless runs are like terminal mode: the window rows do nothing
@@ -836,13 +837,13 @@ mod tests {
         runner.chain(&["key title.DOWN", "key title.SELECT"]);
         assert!(runner.app.ui.window.fullscreen);
         runner.chain(&["key title.DOWN", "key title.LEFT"]);
-        assert!(!runner.app.ui.window.show_display);
-        assert!(runner.screen_text().contains("Display window: hidden"));
+        assert_eq!(runner.app.ui.window.display, DisplayMode::Hidden);
+        assert!(runner.screen_text().contains("Display: hidden"));
         let saved =
             crate::window::settings::WindowSettings::from_config(&runner.app.core.config_manager);
         assert_eq!(
-            (saved.font_px, saved.fullscreen, saved.show_display),
-            (DEFAULT_FONT_PX + 2, true, false)
+            (saved.font_px, saved.fullscreen, saved.display),
+            (DEFAULT_FONT_PX + 2, true, DisplayMode::Hidden)
         );
     }
 }

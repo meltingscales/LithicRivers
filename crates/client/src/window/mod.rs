@@ -8,9 +8,13 @@ pub mod input;
 pub mod settings;
 
 use crate::app::client_app::App;
+use ratatui::backend::TestBackend;
+use ratatui::layout::Rect;
 use ratatui::style::Color;
+use ratatui::widgets::{Block, Borders, Widget};
 use ratatui::Terminal;
 use ratatui_wgpu::{Builder, Dimensions, Font, Fonts, WgpuBackend};
+use settings::DisplayMode;
 use std::num::NonZeroU32;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -28,6 +32,23 @@ const FRAME: Duration = Duration::from_millis(16);
 /// Colors for text and background the UI leaves at the terminal default.
 const DEFAULT_FG: Color = Color::Rgb(204, 204, 204);
 const DEFAULT_BG: Color = Color::Rgb(0, 0, 0);
+
+/// The fewest columns the game keeps when the Display panel is docked beside it; a
+/// narrower window shows no docked panel.
+const MIN_GAME_COLS: u16 = 40;
+
+/// Split a screen into the game's area (top left, so game coordinates are unchanged) and
+/// the docked Display strip along the right edge, or `None` if the screen is too narrow.
+fn dock_split(area: Rect) -> Option<(Rect, Rect)> {
+    let dock_cols = display::COLS + 1; // one column for the separator
+    (area.width >= MIN_GAME_COLS + dock_cols).then(|| {
+        let game_cols = area.width - dock_cols;
+        (
+            Rect::new(0, 0, game_cols, area.height),
+            Rect::new(game_cols, 0, dock_cols, area.height),
+        )
+    })
+}
 
 /// One window and the terminal drawn into it.
 struct Surface {
@@ -107,6 +128,8 @@ pub fn run(app: &mut App) -> Result<(), String> {
         app,
         game: None,
         display: None,
+        docked_screen: None,
+        dock_panel: None,
         fullscreen: false,
         modifiers: ModifiersState::empty(),
         pointer_cell: None,
@@ -124,7 +147,13 @@ pub fn run(app: &mut App) -> Result<(), String> {
 struct WindowApp<'a> {
     app: &'a mut App,
     game: Option<Surface>,
+    /// The floating Display window
     display: Option<Surface>,
+    /// In-memory screen the game draws into when the Display panel is docked, copied
+    /// into the left of the game window
+    docked_screen: Option<Terminal<TestBackend>>,
+    /// Where the docked panel's buttons were drawn last frame, for clicks
+    dock_panel: Option<Rect>,
     /// Whether the game window is fullscreen now
     fullscreen: bool,
     modifiers: ModifiersState,
@@ -168,7 +197,7 @@ impl WindowApp<'_> {
             Err(e) => {
                 // The game works without it; Options can change the same settings
                 tracing::warn!(target: "game", "display window unavailable: {e}");
-                self.app.ui.window.show_display = false;
+                self.app.ui.window.display = DisplayMode::Hidden;
             }
         }
     }
@@ -186,11 +215,21 @@ impl WindowApp<'_> {
                 self.fullscreen = settings.fullscreen;
             }
         }
-        match (settings.show_display, self.display.is_some()) {
+        match (
+            settings.display == DisplayMode::Floating,
+            self.display.is_some(),
+        ) {
             (true, false) => self.open_display(event_loop),
             (false, true) => self.display = None,
             _ => {}
         }
+    }
+
+    /// A game window cell inside the docked panel, as a cell relative to the panel.
+    fn in_dock(&self, (col, row): (u16, u16)) -> Option<(u16, u16)> {
+        let panel = self.dock_panel?;
+        let dock_left = panel.x.saturating_sub(1); // include the separator column
+        (col >= dock_left).then(|| (col.saturating_sub(panel.x), row.saturating_sub(panel.y)))
     }
 
     fn shift(&self) -> bool {
@@ -205,8 +244,48 @@ impl WindowApp<'_> {
             WindowEvent::CloseRequested => self.app.core.should_quit = true,
             WindowEvent::Resized(size) => game.resize(size),
             WindowEvent::RedrawRequested => {
+                let settings = self.app.ui.window;
+                let area = game.terminal.size().map(Rect::from).unwrap_or_default();
+                let split = (settings.display == DisplayMode::Docked)
+                    .then(|| dock_split(area))
+                    .flatten();
                 let app = &mut *self.app;
-                if let Err(e) = game.terminal.draw(|f| crate::ui(f, app)) {
+                let result = match split {
+                    None => {
+                        self.dock_panel = None;
+                        game.terminal.draw(|f| crate::ui(f, app)).map(|_| ())
+                    }
+                    Some((game_area, dock)) => {
+                        let screen = self.docked_screen.get_or_insert_with(|| {
+                            Terminal::new(TestBackend::new(game_area.width, game_area.height))
+                                .expect("in-memory screen")
+                        });
+                        if screen.size().ok() != Some(game_area.as_size()) {
+                            screen
+                                .backend_mut()
+                                .resize(game_area.width, game_area.height);
+                            let _ = screen.autoresize();
+                        }
+                        let _ = screen.draw(|f| crate::ui(f, app));
+                        let drawn = screen.backend().buffer();
+                        let separator = Block::default().borders(Borders::LEFT);
+                        let panel = separator.inner(dock);
+                        self.dock_panel = Some(panel);
+                        game.terminal
+                            .draw(|f| {
+                                let buf = f.buffer_mut();
+                                for y in 0..game_area.height {
+                                    for x in 0..game_area.width {
+                                        buf[(x, y)] = drawn[(x, y)].clone();
+                                    }
+                                }
+                                separator.render(dock, buf);
+                                display::render(panel, buf, &settings);
+                            })
+                            .map(|_| ())
+                    }
+                };
+                if let Err(e) = result {
                     tracing::warn!(target: "game", "window draw failed: {e}");
                 }
             }
@@ -222,6 +301,9 @@ impl WindowApp<'_> {
             WindowEvent::CursorMoved { position, .. } => {
                 game.pointer = (position.x, position.y);
                 let cell = game.cell();
+                if self.in_dock(cell).is_some() {
+                    return;
+                }
                 if self.pointer_cell != Some(cell) {
                     self.pointer_cell = Some(cell);
                     let shift = self.shift();
@@ -234,6 +316,15 @@ impl WindowApp<'_> {
                 ..
             } => {
                 let cell = game.cell();
+                if let Some((col, row)) = self.in_dock(cell) {
+                    let settings = self.app.ui.window;
+                    if button == winit::event::MouseButton::Left {
+                        if let Some(button) = display::button_at(col, row, &settings) {
+                            settings::change(self.app, |w| display::press(button, w));
+                        }
+                    }
+                    return;
+                }
                 if let Some(click) = input::click(button, cell, self.shift()) {
                     crate::handle_mouse_event(self.app, click);
                 }
@@ -246,6 +337,9 @@ impl WindowApp<'_> {
                     }
                 };
                 let cell = game.cell();
+                if self.in_dock(cell).is_some() {
+                    return;
+                }
                 for scroll in input::scrolls(lines, cell, self.shift()) {
                     crate::handle_mouse_event(self.app, scroll);
                 }
@@ -260,7 +354,7 @@ impl WindowApp<'_> {
         };
         match event {
             WindowEvent::CloseRequested => {
-                settings::change(self.app, |w| w.show_display = false);
+                settings::change(self.app, |w| w.display = DisplayMode::Hidden);
             }
             WindowEvent::Resized(size) => display.resize(size),
             WindowEvent::RedrawRequested => {
@@ -297,7 +391,7 @@ impl ApplicationHandler for WindowApp<'_> {
             event_loop.exit();
             return;
         }
-        if self.app.ui.window.show_display {
+        if self.app.ui.window.display == DisplayMode::Floating {
             self.open_display(event_loop);
         }
     }
@@ -327,5 +421,20 @@ impl ApplicationHandler for WindowApp<'_> {
             surface.window.request_redraw();
         }
         event_loop.set_control_flow(ControlFlow::WaitUntil(Instant::now() + FRAME));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn docking_keeps_the_game_at_the_top_left() {
+        let (game, dock) = dock_split(Rect::new(0, 0, 120, 36)).unwrap();
+        assert_eq!(game, Rect::new(0, 0, 120 - display::COLS - 1, 36));
+        assert_eq!(dock.x, game.width);
+        assert_eq!(dock.width, display::COLS + 1);
+        // Too narrow: no docked panel, the game keeps the whole window
+        assert!(dock_split(Rect::new(0, 0, MIN_GAME_COLS + display::COLS, 36)).is_none());
     }
 }

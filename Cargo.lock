@@ -2920,7 +2920,7 @@ dependencies = [
 [[package]]
 name = "ratatui-wgpu"
 version = "0.6.0"
-source = "git+https://github.com/meltingscales/ratatui-wgpu?rev=db1c903a4416ad80ac82454f3e00aae3c4c44551#db1c903a4416ad80ac82454f3e00aae3c4c44551"
+source = "git+https://github.com/meltingscales/ratatui-wgpu?rev=ee9391ec0a671e195e79070bca596cd56fc1703a#ee9391ec0a671e195e79070bca596cd56fc1703a"
 dependencies = [
  "ahash",
  "bitvec",

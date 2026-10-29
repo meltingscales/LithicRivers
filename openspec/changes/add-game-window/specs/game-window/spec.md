@@ -50,26 +50,37 @@ The game window SHALL fit as many columns and rows as its size and the text size
 - **WHEN** the player makes the text bigger twice, quits, and starts the game again
 - **THEN** the game window opens with the bigger text
 
-### Requirement: Display window
-Alongside the game window, the client SHALL open a small separate Display window with buttons to make the text smaller, make it bigger, and turn fullscreen on or off, showing the current text size. Clicking a button SHALL apply the change to the game window on the next frame and save it. In terminal mode there SHALL be no Display window.
+### Requirement: Display panel
+The game window SHALL offer a Display panel with buttons to make the text smaller, make it bigger, and turn fullscreen on or off, showing the current text size. Clicking a button SHALL apply the change on the next frame and save it. In terminal mode there SHALL be no Display panel.
 
-#### Scenario: Bigger text from the Display window
-- **WHEN** the player clicks the bigger-text button in the Display window
-- **THEN** the game window's text gets one step bigger and the Display window shows the new size
+#### Scenario: Bigger text from the Display panel
+- **WHEN** the player clicks the bigger-text button
+- **THEN** the game window's text gets one step bigger, the panel shows the new size, and the screen shows no leftover text from the old size
 
-#### Scenario: Fullscreen from the Display window
+#### Scenario: Fullscreen from the Display panel
 - **WHEN** the player clicks the fullscreen button while the game window is windowed
 - **THEN** the game window goes fullscreen, and clicking it again returns it to a window
 
-### Requirement: Display window lifecycle
-The Display window SHALL ask to stay above other windows where the platform allows it. Closing it SHALL close only the Display window, and Options SHALL offer a way to show it again. Closing the game window SHALL close both.
+### Requirement: Display panel placement
+The Display panel SHALL be docked, floating or hidden, chosen in Options and saved. Docked, the default, is a strip along the right edge of the game window, with the game keeping the rest; a game window too narrow for both SHALL show no docked panel.
 
-#### Scenario: Reopening the Display window
-- **WHEN** the player has closed the Display window and turns it back on in Options
-- **THEN** the Display window opens again
+#### Scenario: Docked by default
+- **WHEN** a player starts the game for the first time
+- **THEN** the Display panel is docked along the right edge of the game window, and clicks on the rest of the window reach the game as before
+
+#### Scenario: Floating
+- **WHEN** the player chooses floating in Options
+- **THEN** the docked strip disappears and the Display panel opens as a separate window
+
+### Requirement: Floating Display window
+A floating Display panel SHALL be a small separate window that asks to stay above other windows where the platform allows it. Closing it SHALL hide the panel. Closing the game window SHALL close both.
+
+#### Scenario: Closing the floating window
+- **WHEN** the player closes the floating Display window
+- **THEN** the Display setting becomes hidden, and Options can bring it back
 
 #### Scenario: Closing the game window
-- **WHEN** the player closes the game window while the Display window is open
+- **WHEN** the player closes the game window while the floating Display window is open
 - **THEN** both windows close and the game exits
 
 ### Requirement: No console window on Windows
