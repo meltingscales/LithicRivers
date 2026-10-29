@@ -4,6 +4,8 @@
 skip-splash
 key ui.MENU_PREV
 cheat tp 0 0 0
+# A tree east of the robot whatever the world seed grew there
+cheat set_tile ~1 ~ ~ tree
 beat 300
 key build.TOGGLE_BREAK_PLACE_MODE
 key build.BREAK_EAST
