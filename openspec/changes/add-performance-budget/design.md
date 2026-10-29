@@ -44,6 +44,12 @@
 
 The two that cost the most across the scenarios get fixed, and the profile that shows each is summarized in the PR.
 
+**What the profiles showed (2026-10-28).** These are shares of the samples taken during the timed key presses, with `just util-profile` on each scenario:
+1. `load_around_player` → `ensure_chunk_with_pending_structures`: 40% (surface-walk), 58% (night-pass-time) and 42% (factory-busy) of timed work. It ran the full 27-chunk check, with about five `tracing::info!` lines per chunk, on every tick, even when the player stood still. Once every chunk around the player is generated and explored, the check changes nothing. The fix remembers the chunk last loaded around (`Resources::loaded_around_chunk`, not saved) and skips the loop until the player enters another chunk.
+2. Fog of war while drawing: `get_fog_state` → `is_tile_illuminated` / `is_tile_visited`: 28% (surface-walk), 18% (night-pass-time). Each drawn cell ran two hecs queries for the player's light, position, body and fog memory. The fix gathers those once per frame.
+
+Recording at `perf_event_paranoid` 2 needs `-e cycles:u --user-callchains`. DWARF unwinding gave only one frame there, so the profiling build uses frame pointers and `--call-graph fp`.
+
 ## Risks / Trade-offs
 
 - [Machine-dependent numbers] → The report prints the build profile and CPU model. The baseline in `docs/STEAM-MVP.md` names the machine. The budget is checked on the developer's machine, and the Steam Deck stays a manual QA item.

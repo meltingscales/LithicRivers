@@ -39,7 +39,6 @@ fn bresenham_line(start_x: i64, start_y: i64, end_x: i64, end_y: i64) -> Vec<(i6
 
 /// Check if a tile blocks light using line-of-sight raycasting
 fn has_line_of_sight(
-    _world: &World,
     resources: &Resources,
     from_x: i64,
     from_y: i64,
@@ -102,13 +101,95 @@ pub fn update_fog_of_war(world: &mut World, resources: &Resources) {
                     let tile_z = position.z;
 
                     // Check line-of-sight before marking as visited
-                    if has_line_of_sight(
-                        world, resources, position.x, position.y, tile_x, tile_y, tile_z,
-                    ) {
+                    if has_line_of_sight(resources, position.x, position.y, tile_x, tile_y, tile_z)
+                    {
                         fog_of_war.mark_visited(tile_x, tile_y, tile_z);
                     }
                 }
             }
+        }
+    }
+}
+
+#[cfg(any(test, feature = "test-support"))]
+thread_local! {
+    /// How many fog lookups were built on this thread.
+    static FOG_LOOKUPS_BUILT: std::cell::Cell<u64> = const { std::cell::Cell::new(0) };
+}
+
+/// How many fog lookups have been built on this thread, so tests can check that drawing a
+/// frame builds one rather than one per tile.
+#[cfg(any(test, feature = "test-support"))]
+pub fn fog_lookups_built() -> u64 {
+    FOG_LOOKUPS_BUILT.with(|n| n.get())
+}
+
+/// What fog of war needs to know about the player, gathered once so many tiles (a whole
+/// frame) can be checked without querying the world for each one.
+pub struct FogLookup<'a> {
+    /// The player's position and light radius, if they carry a light
+    light: Option<(Position, i64)>,
+    /// The tiles the player has seen
+    memory: Option<hecs::Ref<'a, FogOfWar>>,
+}
+
+impl<'a> FogLookup<'a> {
+    pub fn new(world: &'a World) -> Self {
+        #[cfg(any(test, feature = "test-support"))]
+        FOG_LOOKUPS_BUILT.with(|n| n.set(n.get() + 1));
+        let light = world
+            .query::<(&LightSource, &Position, &Player, Option<&Body>)>()
+            .iter()
+            .next()
+            .map(|(_, (light, pos, _, body))| (*pos, light_radius(light, body) as i64));
+        let memory = world
+            .query::<(&FogOfWar, &Player)>()
+            .iter()
+            .next()
+            .map(|(entity, _)| entity)
+            .and_then(|entity| world.get::<&FogOfWar>(entity).ok());
+        Self { light, memory }
+    }
+
+    /// Whether the player's light reaches a tile, with line of sight.
+    pub fn is_illuminated(
+        &self,
+        resources: &Resources,
+        tile_x: i64,
+        tile_y: i64,
+        tile_z: i64,
+    ) -> bool {
+        let Some((position, radius)) = self.light else {
+            return false;
+        };
+        // Only illuminate tiles on the same Z level
+        if tile_z != position.z {
+            return false;
+        }
+        // Check if tile is within light radius using circular distance
+        let (dx, dy) = (tile_x - position.x, tile_y - position.y);
+        dx * dx + dy * dy <= radius * radius
+            && has_line_of_sight(resources, position.x, position.y, tile_x, tile_y, tile_z)
+    }
+
+    /// Whether the player has seen a tile.
+    pub fn is_visited(&self, tile_x: i64, tile_y: i64, tile_z: i64) -> bool {
+        self.memory
+            .as_ref()
+            .is_some_and(|fog| fog.is_visited(tile_x, tile_y, tile_z))
+    }
+
+    /// The fog of war state for a tile.
+    pub fn state(&self, resources: &Resources, tile_x: i64, tile_y: i64, tile_z: i64) -> FogState {
+        // The surface (Z >= 0) is lit except at night; underground is always dark
+        if (tile_z >= 0 && !resources.time.is_night())
+            || self.is_illuminated(resources, tile_x, tile_y, tile_z)
+        {
+            FogState::Illuminated
+        } else if self.is_visited(tile_x, tile_y, tile_z) {
+            FogState::Visited
+        } else {
+            FogState::Unvisited
         }
     }
 }
@@ -121,37 +202,11 @@ pub fn is_tile_illuminated(
     tile_y: i64,
     tile_z: i64,
 ) -> bool {
-    // Find the player entity with light source and position
-    for (_entity, (light_source, position, _player, body)) in world
-        .query::<(&LightSource, &Position, &Player, Option<&Body>)>()
-        .iter()
-    {
-        let radius = light_radius(light_source, body) as i64;
-        let dx = tile_x - position.x;
-        let dy = tile_y - position.y;
-        let dz = tile_z - position.z;
-
-        // Only illuminate tiles on the same Z level
-        if dz != 0 {
-            return false;
-        }
-
-        // Check if tile is within light radius using circular distance
-        let distance_sq = dx * dx + dy * dy;
-        if distance_sq <= radius * radius {
-            // Check line-of-sight from player to tile
-            return has_line_of_sight(
-                world, resources, position.x, position.y, tile_x, tile_y, tile_z,
-            );
-        }
-    }
-
-    false
+    FogLookup::new(world).is_illuminated(resources, tile_x, tile_y, tile_z)
 }
 
 /// Check if a tile has been visited by the player
 pub fn is_tile_visited(world: &World, tile_x: i64, tile_y: i64, tile_z: i64) -> bool {
-    // Find the player entity with fog of war
     world
         .query::<(&FogOfWar, &Player)>()
         .iter()
@@ -167,6 +222,7 @@ pub enum FogState {
     Illuminated, // Normal colors
 }
 
+/// The fog of war state for one tile. To check many tiles, build a `FogLookup` once.
 pub fn get_fog_state(
     world: &World,
     resources: &Resources,
@@ -174,21 +230,7 @@ pub fn get_fog_state(
     tile_y: i64,
     tile_z: i64,
 ) -> FogState {
-    // The surface (Z >= 0) is lit except at night; underground is always dark
-    if tile_z >= 0 && !resources.time.is_night() {
-        return FogState::Illuminated;
-    }
-
-    let illuminated = is_tile_illuminated(world, resources, tile_x, tile_y, tile_z);
-    let visited = is_tile_visited(world, tile_x, tile_y, tile_z);
-
-    if illuminated {
-        FogState::Illuminated
-    } else if visited {
-        FogState::Visited
-    } else {
-        FogState::Unvisited
-    }
+    FogLookup::new(world).state(resources, tile_x, tile_y, tile_z)
 }
 
 #[cfg(test)]

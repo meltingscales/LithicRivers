@@ -30,6 +30,11 @@ lto = false
 codegen-units = 256
 overflow-checks = false
 
+# Release with debug symbols, for `just util-profile`
+[profile.profiling]
+inherits = "release"
+debug = true
+
 # Build dependencies in dev at higher optimization for better runtime perf
 [profile.dev.package."*"]
 opt-level = 3

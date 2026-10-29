@@ -256,6 +256,11 @@ util-structure-build:
 util-structure-preview name:
     cargo run -q -p lithicrivers-core --bin structure_preview -- {{name}}
 
+# Safe for AI agents. Exit status: 0 within budget, 1 over budget or a script error.
+# Time the scripts/bench scenarios on a release build against the 16 ms tick and frame budget.
+util-bench:
+    cargo run -q --release -p lithicrivers-client --bin lithicrivers-client -- --bench scripts/bench/*.txt
+
 # Follow today's game log
 util-monitor-logs:
     @echo "Monitoring logs..."
@@ -322,27 +327,35 @@ renderdoc:
     renderdoccmd capture -- cargo run -p lithicrivers-client --release
 
 # --------------------
-# Profiling (Flamegraph)
+# Profiling (Linux, perf)
 # --------------------
 
-# Install tooling required for cargo-flamegraph
-profile-setup:
-    cargo install flamegraph --version 0.6.5 --locked
+# Install the flamegraph tools util-profile needs (perf itself comes from your distro)
+util-profile-setup:
     cargo install inferno --locked
-    echo "Make sure 'perf' is installed. You may just want to compile it from source."
-    sudo sysctl kernel.perf_event_paranoid=1
-    sudo sysctl kernel.kptr_restrict=0
+    @echo "Also install perf from your distro (for example 'sudo pacman -S perf' or 'sudo apt install linux-tools-generic')."
 
-# Run the client under cargo-flamegraph. Interact, then quit with 'q'.
-profile-client-windows: clean-windows build-windows
-    perf record -F 500 --call-graph fp -- target/debug/lithicrivers-client
-    @echo "Flamegraph written to flamegraph.svg (and perf.data)."
+# Writes flamegraph.svg and profile.linux-perf.txt (open it at https://speedscope.app/).
+# Profile one headless script (e.g. scripts/bench/surface-walk.txt) on an optimized build.
+util-profile script:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if ! command -v perf >/dev/null; then
+        echo "perf is not installed. Install your distro's perf package (for example 'sudo pacman -S perf' or 'sudo apt install linux-tools-generic')."
+        exit 1
+    fi
+    for tool in inferno-collapse-perf inferno-flamegraph; do
+        command -v "$tool" >/dev/null || { echo "$tool is missing. Run 'just util-profile-setup'."; exit 1; }
+    done
+    paranoid=$(cat /proc/sys/kernel/perf_event_paranoid)
+    if [ "$paranoid" -gt 2 ]; then
+        echo "kernel.perf_event_paranoid is $paranoid; profiling needs 2 or lower. Run 'sudo sysctl kernel.perf_event_paranoid=2'."
+        exit 1
+    fi
+    # Frame pointers give perf whole call stacks, even when perf_event_paranoid is 2
+    RUSTFLAGS="-C force-frame-pointers=yes" cargo build -q --profile profiling -p lithicrivers-client --bin lithicrivers-client
+    perf record -q -e cycles:u --user-callchains -F 999 --call-graph fp -o perf.data -- target/profiling/lithicrivers-client --script {{script}} > /dev/null
     perf script -i perf.data > profile.linux-perf.txt
-    @echo "You can upload profile.linux-perf.txt to https://speedscope.app/"
-
-# Run the client under cargo-flamegraph. Interact, then quit with 'q'.
-profile-client-linux: clean-linux build-linux
-    perf record -F 500 --call-graph fp -- target/debug/lithicrivers-client
-    @echo "Flamegraph written to flamegraph.svg (and perf.data)."
-    perf script -i perf.data > profile.linux-perf.txt
-    @echo "You can upload profile.linux-perf.txt to https://speedscope.app/"
+    inferno-collapse-perf profile.linux-perf.txt | inferno-flamegraph > flamegraph.svg
+    echo "Flamegraph: flamegraph.svg"
+    echo "speedscope.app file: profile.linux-perf.txt"

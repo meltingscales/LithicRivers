@@ -171,9 +171,12 @@ The survival loop works: explore, fight, take damage, repair. Combat damages spe
   - [x] **Colored message log system with red NumLock warnings**
   - [x] Volume sliders (music/sfx)
     - [x] **Music and sound volume on the title screen's Options**
-- [ ] Performance optimizations for target hardware
-  - [ ] Profiling budget: ~60 FPS at 80x24; ≤16 ms tick under normal load
-  - [ ] Identify top 2 hotspots and add targeted optimizations
+- [ ] Performance optimizations for target hardware (still to check on a Steam Deck)
+  - [x] Profiling budget: ~60 FPS at 80x24; ≤16 ms tick under normal load (`just util-bench`, `performance-budget` spec)
+  - [x] Identify top 2 hotspots and add targeted optimizations: reloading the chunks around the player every tick, and querying fog of war for every drawn tile
+  - **Baseline (2026-10-28, `just util-bench`, release build, AMD Ryzen AI Max+ 395):** every scenario within budget. Worst tick / worst frame in ms: deep-underground 10.32 / 0.64, factory-busy 1.07 / 0.30, night-pass-time 2.12 / 0.52, surface-walk 7.46 / 0.52. Medians are 0.1 to 1 ms; the worst ticks are one-off spikes when the player reaches new chunks, and those are the ones a slower CPU (the Steam Deck) would push over 16 ms.
+  - **After the two fixes (same machine):** worst tick / worst frame in ms: deep-underground 10.34 / 0.19, factory-busy 0.37 / 0.20, night-pass-time 1.43 / 0.19, surface-walk 7.34 / 0.25. Median ticks dropped 3 to 5 times (factory-busy 1.03 to 0.34 ms, night-pass-time 0.86 to 0.16 ms) and median frames about 3 times (0.48 to 0.13 ms deep underground).
+  - **What remains:** generating new chunks when the player walks into them (worldgen noise in `generate_surface` / `generate_underground` / `place_deposits`) causes the worst ticks, 7 to 10 ms here. That is within budget on this machine but could pass 16 ms on a CPU about twice as slow. If a Steam Deck run shows that, it needs its own change, for example generating chunks ahead of the player or across several ticks.
 
 ## Steam Integration
 - [ ] Steamworks SDK integration
@@ -244,9 +247,8 @@ Non-code work from the old TODO.md.
    - ✅ **Full dialogue system with portraits and emotional states implemented**
 
 ### MEDIUM PRIORITY (Polish & Performance)
-4. **Performance optimizations**
-   - Profiling budget: ~60 FPS at 80x24; ≤16 ms tick under normal load
-   - Identify and fix top 2 hotspots
+4. **~~Performance optimizations~~** ✅ **COMPLETED** (Steam Deck check still open)
+   - ✅ **`just util-bench` checks a 16 ms tick and frame budget; the top two hotspots are fixed**
 
 5. **~~Volume sliders (music/sfx)~~** ✅ **COMPLETED**
    - ✅ **Music and sound volume on the title screen's Options**

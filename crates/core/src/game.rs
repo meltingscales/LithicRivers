@@ -37,6 +37,19 @@ bitflags! {
     }
 }
 
+#[cfg(any(test, feature = "test-support"))]
+thread_local! {
+    /// How many times the chunks around the player were loaded on this thread.
+    static CHUNK_NEIGHBORHOOD_LOADS: std::cell::Cell<u64> = const { std::cell::Cell::new(0) };
+}
+
+/// How many times the chunks around the player have been loaded on this thread, so tests
+/// can check that standing still loads nothing.
+#[cfg(any(test, feature = "test-support"))]
+pub fn chunk_neighborhood_loads() -> u64 {
+    CHUNK_NEIGHBORHOOD_LOADS.with(|n| n.get())
+}
+
 /// The kit a new robot carries: a new game's, and a respawned body's.
 pub fn starting_inventory(auto_pickup: bool) -> Inventory {
     let mut inv = Inventory {
@@ -757,42 +770,34 @@ impl Game {
             let chunk_x = player_pos.x.div_euclid(crate::world::CHUNK_SIZE);
             let chunk_y = player_pos.y.div_euclid(crate::world::CHUNK_SIZE);
             let chunk_z = player_pos.z.div_euclid(crate::world::CHUNK_SIZE_Z);
-            tracing::info!(target: "game", "Player at world pos ({}, {}, {}) -> chunk ({}, {}, {})",
-                player_pos.x, player_pos.y, player_pos.z, chunk_x, chunk_y, chunk_z);
-
-            // Mark the player's current chunk as explored
-            self.res.mark_chunk_explored(chunk_x, chunk_y, chunk_z);
-
-            // Check a small radius around the player's chunk
-            for dx in -1..=1 {
-                for dy in -1..=1 {
-                    for dz in -1..=1 {
-                        let target_chunk_x = chunk_x + dx;
-                        let target_chunk_y = chunk_y + dy;
-                        let target_chunk_z = chunk_z + dz;
-                        tracing::info!(target: "game", "Processing chunk ({}, {}, {}) in 3x3x3 around player",
-                            target_chunk_x, target_chunk_y, target_chunk_z);
-                        self.ensure_chunk_with_pending_structures(
-                            target_chunk_x,
-                            target_chunk_y,
-                            target_chunk_z,
-                        );
-
-                        // Mark nearby chunks as explored if they're close enough
-                        if dx.abs() <= 1 && dy.abs() <= 1 && dz.abs() <= 1 {
-                            self.res.mark_chunk_explored(
-                                target_chunk_x,
-                                target_chunk_y,
-                                target_chunk_z,
-                            );
-                        }
-                    }
-                }
+            // Still in the chunk loaded last time: its neighbors are all generated and
+            // explored already, so there is nothing to load
+            if self.res.loaded_around_chunk != Some((chunk_x, chunk_y, chunk_z)) {
+                self.load_chunks_around(chunk_x, chunk_y, chunk_z);
+                self.res.loaded_around_chunk = Some((chunk_x, chunk_y, chunk_z));
             }
         }
 
         self.place_quest_chests();
         crate::systems::fog_of_war::update_fog_of_war(&mut self.world, &self.res);
+    }
+
+    /// Generate and explore the 3x3x3 chunks around a chunk, loading pending structures.
+    fn load_chunks_around(&mut self, chunk_x: i64, chunk_y: i64, chunk_z: i64) {
+        #[cfg(any(test, feature = "test-support"))]
+        CHUNK_NEIGHBORHOOD_LOADS.with(|n| n.set(n.get() + 1));
+        tracing::info!(target: "game", "Loading the chunks around chunk ({}, {}, {})",
+            chunk_x, chunk_y, chunk_z);
+
+        for dx in -1..=1 {
+            for dy in -1..=1 {
+                for dz in -1..=1 {
+                    let (cx, cy, cz) = (chunk_x + dx, chunk_y + dy, chunk_z + dz);
+                    self.ensure_chunk_with_pending_structures(cx, cy, cz);
+                    self.res.mark_chunk_explored(cx, cy, cz);
+                }
+            }
+        }
     }
 
     /// Advance the game state by one tick using the system scheduler.
@@ -1306,6 +1311,35 @@ mod tests {
         }
         sig.sort();
         sig
+    }
+
+    /// Performance guard: standing still must not reload the chunks around the player
+    /// every tick, but walking into a new chunk must.
+    #[test]
+    fn chunks_around_the_player_load_only_on_entering_a_chunk() {
+        use crate::intent::PlayerAction;
+        use crate::test_support::TestWorld;
+        let mut game = TestWorld::new(3)
+            .player_at(63, 0, 0)
+            .fill((62, -1, 0), (65, 1, 0), TileKind::Grass)
+            .build();
+        let before = chunk_neighborhood_loads();
+        game.ticks(100);
+        assert_eq!(chunk_neighborhood_loads() - before, 1, "standing still");
+
+        game.act(PlayerAction::Move {
+            dx: 1,
+            dy: 0,
+            dz: 0,
+        });
+        game.ticks(2); // the move, then the next tick loads around the new chunk
+        assert_eq!(game.player_pos().x, 64);
+        assert_eq!(
+            chunk_neighborhood_loads() - before,
+            2,
+            "entering chunk (1, 0, 0)"
+        );
+        assert!(game.game.res.world_state.world.has_chunk(2, 0, 0));
     }
 
     #[test]

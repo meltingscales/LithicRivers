@@ -441,6 +441,28 @@ pub struct Runner {
     pub app: App,
     terminal: Terminal<TestBackend>,
     _saves: TempSaves,
+    /// Frame timings for `--bench`; `None` in every other run, so nothing reads real time
+    pub bench: Option<FrameTimes>,
+}
+
+/// Real time spent on each frame once a benchmark scenario's first `beat` has run.
+#[derive(Debug, Default)]
+pub struct FrameTimes {
+    pub recording: bool,
+    pub frames: Vec<FrameSample>,
+}
+
+/// One frame's timings.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct FrameSample {
+    /// Handling the frame's input (zero for frames without one), where world actions tick
+    pub input: Duration,
+    /// The client step, where combat ticks
+    pub step: Duration,
+    /// Drawing the screen
+    pub draw: Duration,
+    /// Whether the game tick advanced during the frame
+    pub ticked: bool,
 }
 
 /// A new, empty saves folder for one run, removed when the run ends.
@@ -475,6 +497,7 @@ impl Runner {
             app,
             terminal,
             _saves: saves,
+            bench: None,
         };
         runner.frame();
         runner
@@ -482,8 +505,34 @@ impl Runner {
 
     /// One iteration of the interactive loop without input: update, then draw.
     fn frame(&mut self) {
+        let start = self.bench_start();
+        self.finish_frame(start);
+    }
+
+    /// The real time and game tick at the start of a frame, only while a benchmark records.
+    fn bench_start(&self) -> Option<(std::time::Instant, u64)> {
+        self.bench
+            .as_ref()
+            .filter(|b| b.recording)
+            .map(|_| (std::time::Instant::now(), self.app.core.game.res.time.tick))
+    }
+
+    /// Step and draw, recording the frame's timings if the benchmark is recording.
+    fn finish_frame(&mut self, start: Option<(std::time::Instant, u64)>) {
+        let stepping = start.map(|_| std::time::Instant::now());
         step(&mut self.app);
+        let drawing = start.map(|_| std::time::Instant::now());
         self.draw();
+        if let (Some((start, tick)), Some(stepping), Some(drawing), Some(bench)) =
+            (start, stepping, drawing, self.bench.as_mut())
+        {
+            bench.frames.push(FrameSample {
+                input: stepping - start,
+                step: drawing - stepping,
+                draw: drawing.elapsed(),
+                ticked: self.app.core.game.res.time.tick != tick,
+            });
+        }
     }
 
     fn draw(&mut self) {
@@ -495,9 +544,10 @@ impl Runner {
 
     /// Feed one key press the way the interactive loop does, then run a frame.
     fn press(&mut self, line: usize, code: KeyCode) -> Result<(), StepFailure> {
+        let start = self.bench_start();
         handle_input(&mut self.app, code)
             .map_err(|e| StepFailure::Error(err(line, format!("input error: {e}"))))?;
-        self.frame();
+        self.finish_frame(start);
         Ok(())
     }
 
@@ -558,7 +608,11 @@ impl Runner {
                 self.app.start_default_world_choice(choice);
                 self.frame();
             }
-            Step::Beat(_) => {}
+            Step::Beat(_) => {
+                if let Some(bench) = self.bench.as_mut() {
+                    bench.recording = true;
+                }
+            }
             Step::Mouse(input) => {
                 crate::app::input::mouse::handle_mouse(&mut self.app, *input);
                 self.frame();

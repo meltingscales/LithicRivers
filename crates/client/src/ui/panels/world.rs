@@ -189,6 +189,9 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
             _ => (1000, 1000),
         }
     };
+    use lithicrivers_core::systems::fog_of_war::{FogLookup, FogState};
+    // The world's fog memory and the player's light, read once for the whole frame
+    let fog = FogLookup::new(&app.core.game.world);
     for row in 0..target_rows {
         let mut spans = Vec::with_capacity(target_cols);
         for col in 0..target_cols {
@@ -210,14 +213,7 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
                 .get_tile_at_z(world_x, world_y, world_z);
 
             // Check fog of war state for this tile
-            use lithicrivers_core::systems::fog_of_war::{get_fog_state, FogState};
-            let fog_state = get_fog_state(
-                &app.core.game.world,
-                &app.core.game.res,
-                world_x,
-                world_y,
-                world_z,
-            );
+            let fog_state = fog.state(&app.core.game.res, world_x, world_y, world_z);
 
             // If unvisited and fog of war is enabled, render as very dark grey '?'
             if fog_state == FogState::Unvisited && app.core.game.res.player_state.fog_of_war_enabled
@@ -309,6 +305,7 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
         }
         lines.push(Line::from(spans));
     }
+    drop(fog);
 
     climb_overlay(app, area, &mut lines);
     hover_overlay(app, area, &mut lines);
@@ -629,5 +626,17 @@ mod night_tests {
         );
         // Within the light, night looks like day
         assert_eq!(brightness(&mut night, 1), brightness(&mut day, 1));
+    }
+
+    /// Performance guard: drawing the world builds one fog lookup for the whole frame,
+    /// not one per tile.
+    #[test]
+    fn a_frame_reads_fog_of_war_once() {
+        use lithicrivers_core::systems::fog_of_war::fog_lookups_built;
+        // Underground, where every tile needs its fog state
+        let mut runner = chain_commands(&["skip-splash", "key ui.MENU_PREV"]);
+        let before = fog_lookups_built();
+        runner.screen_text();
+        assert_eq!(fog_lookups_built() - before, 1);
     }
 }

@@ -1,0 +1,12 @@
+# Benchmark: walk 200 steps east across the starting surface, exploring new chunks.
+# Steps before the first `beat` are setup and aren't timed.
+seed 12345
+size 80x24
+skip-splash
+key ui.MENU_PREV
+cheat noclip_toggle
+cheat tp 0 -300 0
+beat 0
+key movement.MOVE_EAST 200
+expect-text "LithicRivers"
+state end
