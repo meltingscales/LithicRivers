@@ -108,6 +108,10 @@ For open-ended exploration ("play the crafting flow and look for bugs"), the rep
 - A bug found over MCP is not reproduced until you call `export_script`, save the result under `scripts/agent/bugs/`, and confirm `just client-blind` shows the bug. Add a test that runs it, as the existing bug scripts do.
 - The first launch builds the client, which can be slow; run `cargo build -p lithicrivers-client` first if the MCP connection times out.
 
+### Performance
+
+The budget is 16 ms per tick and per frame at 80x24 on a release build (`performance-budget` spec). `just util-bench` runs the scenario scripts in `scripts/bench/` headless and prints median, 95th percentile and worst tick and frame times, exiting 1 when one goes over. Steps before a scenario's first `beat` are setup and aren't timed, and only key presses, mouse events, waits and cheats after it are timed (`tick` steps aren't). `just util-profile <script>` profiles a script with perf on an optimized build with frame pointers and writes `flamegraph.svg` and `profile.linux-perf.txt` (open it at https://speedscope.app/); `just util-profile-setup` installs inferno. A hotspot fix gets a test that counts the work it removed (see `chunk_neighborhood_loads` and `fog_lookups_built`), never a timing assertion.
+
 ## Saves
 
 A save holds every entity with every component, all of `Resources` except the config, and the client's play state (view, tutorial progress, hotbar). To keep it complete:

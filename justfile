@@ -352,8 +352,9 @@ util-profile script:
         echo "kernel.perf_event_paranoid is $paranoid; profiling needs 2 or lower. Run 'sudo sysctl kernel.perf_event_paranoid=2'."
         exit 1
     fi
-    cargo build -q --profile profiling -p lithicrivers-client --bin lithicrivers-client
-    perf record -q -F 999 --call-graph dwarf -o perf.data -- target/profiling/lithicrivers-client --script {{script}} > /dev/null
+    # Frame pointers give perf whole call stacks, even when perf_event_paranoid is 2
+    RUSTFLAGS="-C force-frame-pointers=yes" cargo build -q --profile profiling -p lithicrivers-client --bin lithicrivers-client
+    perf record -q -e cycles:u --user-callchains -F 999 --call-graph fp -o perf.data -- target/profiling/lithicrivers-client --script {{script}} > /dev/null
     perf script -i perf.data > profile.linux-perf.txt
     inferno-collapse-perf profile.linux-perf.txt | inferno-flamegraph > flamegraph.svg
     echo "Flamegraph: flamegraph.svg"

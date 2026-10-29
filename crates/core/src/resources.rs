@@ -180,6 +180,10 @@ pub struct Resources {
     /// Factory blocks by position; rebuilt from the entities on load
     #[serde(skip)]
     pub factory_index: crate::factory::FactoryIndex,
+    /// The chunk the player stood in when the chunks around it were last loaded; rebuilt
+    /// on load. Every chunk around it is generated, so loading them again would do nothing
+    #[serde(skip)]
+    pub loaded_around_chunk: Option<(i64, i64, i64)>,
     #[serde(default)]
     pub factory_clock: crate::factory::FactoryClock,
     /// Power networks; rebuilt from the factory blocks when dirty
@@ -217,6 +221,7 @@ impl Resources {
             active_quests: Vec::new(),
             explored_chunks: HashMap::new(),
             factory_index: HashMap::new(),
+            loaded_around_chunk: None,
             factory_clock: crate::factory::FactoryClock::default(),
             power: crate::power::PowerNetworks::default(),
             belt_ride_steps: 0,
