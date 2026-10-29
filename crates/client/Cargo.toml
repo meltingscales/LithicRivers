@@ -6,8 +6,13 @@ authors.workspace = true
 license.workspace = true
 
 [dependencies]
-ratatui = { version = "0.26", features = ["unstable-rendered-line-info"] }
-crossterm = "0.27"
+ratatui = { version = "0.30", features = ["unstable-rendered-line-info"] }
+crossterm = "0.29"
+# Fork exposing the headless surface for the window-render benchmark; see design.md
+ratatui-wgpu = { git = "https://github.com/meltingscales/ratatui-wgpu", rev = "ee9391ec0a671e195e79070bca596cd56fc1703a" }
+winit = "0.30"
+futures-lite = "2"
+ttf-parser = "0.25"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 anyhow = { workspace = true }
@@ -37,7 +42,7 @@ lithicrivers-core = { path = "../core", features = ["test-support"] }
 insta = { version = "1", features = ["filters", "glob"] }
 
 [target.'cfg(windows)'.dependencies]
-winapi = { version = "0.3", features = ["winuser"] }
+winapi = { version = "0.3", features = ["winuser", "wincon"] }
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"

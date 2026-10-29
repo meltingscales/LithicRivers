@@ -97,11 +97,9 @@ The survival loop works: explore, fight, take damage, repair. Combat damages spe
   - remove "z" char
   - rework it with Kaya
 
-## launching
+## (DONE) launching
 
-- find out how x-terminal-emulator works on Ubuntu
-  - why is it tiny if steam launches it with crap font?
-  - why does it look great when using gnome terminal?
+The game opens its own window with a bundled font (`add-game-window`), so it no longer depends on whichever terminal emulator Steam finds. The launcher just starts the game, Windows builds open no console, and `--terminal` keeps the old way. Still to check by hand: Windows (whether the fast keystrokes bug is gone) and a Steam Deck in Gaming Mode.
 
 ## Small temp list
 

@@ -86,13 +86,25 @@ impl ScenarioResult {
 
 /// Run one scenario script and collect its frame timings.
 pub fn run_scenario(name: &str, text: &str) -> Result<ScenarioResult, String> {
+    run_scenario_frames(name, text, false).map(|(result, _)| result)
+}
+
+/// Run a scenario, also returning each timed frame's screen when asked.
+fn run_scenario_frames(
+    name: &str,
+    text: &str,
+    keep_screens: bool,
+) -> Result<(ScenarioResult, Vec<ratatui::buffer::Buffer>), String> {
     let script = parse_script(text).map_err(|e| format!("{name}: script error: {e}"))?;
     let mut runner = Runner::new(
         script.seed.unwrap_or(0),
         script.size.unwrap_or(DEFAULT_SIZE),
     );
     validate(&script, &runner.app).map_err(|e| format!("{name}: script error: {e}"))?;
-    runner.bench = Some(FrameTimes::default());
+    runner.bench = Some(FrameTimes {
+        keep_screens,
+        ..Default::default()
+    });
     let report = runner.run_steps(&script.steps);
     if report.status != EXIT_OK {
         return Err(format!(
@@ -100,11 +112,71 @@ pub fn run_scenario(name: &str, text: &str) -> Result<ScenarioResult, String> {
             report.error.unwrap_or_else(|| "script failed".into())
         ));
     }
-    let samples = runner.bench.take().unwrap_or_default().frames;
-    if samples.is_empty() {
+    let times = runner.bench.take().unwrap_or_default();
+    if times.frames.is_empty() {
         return Err(format!("{name}: no timed frames (is there a `beat` step?)"));
     }
-    Ok(ScenarioResult::from_samples(name, &samples))
+    Ok((
+        ScenarioResult::from_samples(name, &times.frames),
+        times.screens,
+    ))
+}
+
+/// The scenario whose frames `window-render` replays through the GPU renderer.
+pub const WINDOW_RENDER_SOURCE: &str = "surface-walk";
+/// The window-render scenario's screen size in cells.
+const WINDOW_RENDER_SIZE: (u16, u16) = (80, 24);
+
+/// `window-render`: the source scenario's frames drawn by the game window's renderer
+/// into an offscreen texture, each frame timed until the GPU has finished it. `Ok(None)`
+/// when no GPU adapter is available, as on CI runners.
+pub fn window_render(text: &str) -> Result<Option<ScenarioResult>, String> {
+    use crate::window::{fonts, settings::DEFAULT_FONT_PX};
+    use ratatui_wgpu::{Builder, Dimensions, Font};
+    use std::num::NonZeroU32;
+
+    let (_, screens) = run_scenario_frames(WINDOW_RENDER_SOURCE, text, true)?;
+    let (cell_w, cell_h) = fonts::cell_size(DEFAULT_FONT_PX);
+    let (cols, rows) = WINDOW_RENDER_SIZE;
+    let size = |cells: u16, px: u32| NonZeroU32::new(cells as u32 * px).expect("nonzero");
+    let backend = futures_lite::future::block_on(
+        Builder::<ratatui_wgpu::shaders::DefaultPostProcessor>::from_font(
+            Font::new(fonts::MONO).expect("bundled font parses"),
+        )
+        .with_font_size_px(DEFAULT_FONT_PX)
+        .with_width_and_height(Dimensions {
+            width: size(cols, cell_w),
+            height: size(rows, cell_h),
+        })
+        .build_headless(),
+    );
+    let Ok(backend) = backend else {
+        return Ok(None);
+    };
+    let mut terminal = ratatui::Terminal::new(backend).map_err(|e| e.to_string())?;
+    let mut samples = Vec::with_capacity(screens.len());
+    for screen in &screens {
+        let start = std::time::Instant::now();
+        terminal
+            .draw(|f| {
+                let buf = f.buffer_mut();
+                for y in 0..rows.min(screen.area.height) {
+                    for x in 0..cols.min(screen.area.width) {
+                        buf[(x, y)] = screen[(x, y)].clone();
+                    }
+                }
+            })
+            .map_err(|e| e.to_string())?;
+        terminal.backend().wait_for_gpu();
+        samples.push(FrameSample {
+            draw: start.elapsed(),
+            ..Default::default()
+        });
+    }
+    Ok(Some(ScenarioResult::from_samples(
+        "window-render",
+        &samples,
+    )))
 }
 
 fn ms(d: Duration) -> String {
@@ -186,7 +258,23 @@ pub fn run(paths: &[String], out: &mut impl Write, err_out: &mut impl Write) -> 
             }
         }
     }
+    let mut skipped = String::new();
+    let source = paths.iter().find(|p| {
+        std::path::Path::new(p).file_stem().and_then(|s| s.to_str()) == Some(WINDOW_RENDER_SOURCE)
+    });
+    if let Some(path) = source {
+        let text = std::fs::read_to_string(path).map_err(|e| e.to_string());
+        match text.and_then(|t| window_render(&t)) {
+            Ok(Some(r)) => results.push(r),
+            Ok(None) => skipped = "window-render: skipped, no GPU adapter\n".to_string(),
+            Err(e) => {
+                let _ = writeln!(err_out, "window-render: {e}");
+                return EXIT_SCRIPT_ERROR;
+            }
+        }
+    }
     let _ = out.write_all(report(&results).as_bytes());
+    let _ = out.write_all(skipped.as_bytes());
     exit_status(&results)
 }
 
@@ -229,6 +317,19 @@ mod tests {
         assert!(table.contains("surface-walk"));
         assert!(table.contains("Budget: 16 ms"));
         assert!(table.contains(" ok"));
+    }
+
+    /// The window renderer draws the source scenario's frames offscreen, or reports that
+    /// there is no GPU adapter; either way without failing.
+    #[test]
+    fn window_render_runs_or_skips() {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join(format!("../../scripts/bench/{WINDOW_RENDER_SOURCE}.txt"));
+        let text = std::fs::read_to_string(path).unwrap();
+        match window_render(&text).unwrap() {
+            Some(r) => assert!(r.frames.count > 0 && r.ticks.count == 0),
+            None => eprintln!("no GPU adapter: window-render skipped"),
+        }
     }
 
     /// Every benchmark scenario must stay a valid script with timed frames.

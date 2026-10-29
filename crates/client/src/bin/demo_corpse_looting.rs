@@ -406,7 +406,10 @@ fn main() -> io::Result<()> {
     Ok(())
 }
 
-fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<()> {
+fn run_app<B: Backend<Error = io::Error>>(
+    terminal: &mut Terminal<B>,
+    mut app: App,
+) -> io::Result<()> {
     loop {
         terminal.draw(|f| ui(f, &app))?;
 
@@ -497,7 +500,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<(
 }
 
 fn ui(f: &mut Frame, app: &App) {
-    let size = f.size();
+    let size = f.area();
 
     // Create main layout
     let chunks = Layout::default()
@@ -593,7 +596,7 @@ fn render_world_map(f: &mut Frame, app: &App, area: Rect) {
         height: 1,
     };
 
-    if hint_area.y < f.size().height {
+    if hint_area.y < f.area().height {
         let hint_widget = Paragraph::new(hint).style(Style::default().fg(Color::Yellow));
         f.render_widget(hint_widget, hint_area);
     }
@@ -686,7 +689,7 @@ fn render_instructions(f: &mut Frame, app: &App, area: Rect) {
 
 fn render_corpse_selection_modal(f: &mut Frame, app: &App, adjacent_corpses: &[usize]) {
     // Create modal area (centered, 50% width, 40% height)
-    let area = centered_rect(50, 40, f.size());
+    let area = centered_rect(50, 40, f.area());
 
     // Clear the background
     f.render_widget(Clear, area);
@@ -748,7 +751,7 @@ fn render_loot_modal(f: &mut Frame, app: &App, corpse_idx: usize) {
     let corpse = &app.corpses[corpse_idx];
 
     // Create modal area (centered, 70% width, 60% height)
-    let area = centered_rect(70, 60, f.size());
+    let area = centered_rect(70, 60, f.area());
 
     // Clear the background
     f.render_widget(Clear, area);

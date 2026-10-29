@@ -80,7 +80,7 @@ fn render_action_selection_modal(
         widgets::{Clear, List, ListItem},
     };
 
-    let screen = f.size();
+    let screen = f.area();
     let width = (screen.width * 6 / 10).max(50).min(screen.width);
     let height = (GRID_HEIGHT + 4).min(screen.height);
     let area = Rect {

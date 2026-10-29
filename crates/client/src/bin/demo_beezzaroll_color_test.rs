@@ -46,7 +46,7 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn run_app<B: Backend>(terminal: &mut Terminal<B>) -> io::Result<()> {
+fn run_app<B: Backend<Error = io::Error>>(terminal: &mut Terminal<B>) -> io::Result<()> {
     loop {
         terminal.draw(ui)?;
 
@@ -66,7 +66,7 @@ fn ui(frame: &mut Frame) {
         Constraint::Length(17),
         Constraint::Length(2),
     ])
-    .split(frame.size());
+    .split(frame.area());
 
     render_named_colors(frame, layout[0]);
     render_indexed_colors(frame, layout[1]);
@@ -224,7 +224,7 @@ fn title_block(title: String) -> Block<'static> {
         .borders(Borders::TOP)
         .title_alignment(Alignment::Center)
         .border_style(Style::new().dark_gray())
-        .title_style(Style::new().reset())
+        .title_style(Style::reset())
         .title(Line::from(title))
 }
 

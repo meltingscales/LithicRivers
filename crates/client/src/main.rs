@@ -1,3 +1,6 @@
+// On Windows the game opens its own window, so it needs no console window
+#![cfg_attr(all(windows, not(test)), windows_subsystem = "windows")]
+
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyEventKind},
     execute,
@@ -23,6 +26,7 @@ mod save_reload_tests;
 mod snapshot_tests;
 mod tutorialsystem;
 mod ui;
+mod window;
 mod worlds;
 
 use ratatui::{
@@ -30,7 +34,11 @@ use ratatui::{
     Terminal,
 };
 use rust_embed::RustEmbed;
-use std::{error::Error, io, time::Duration};
+use std::{
+    error::Error,
+    io::{self, IsTerminal},
+    time::Duration,
+};
 use tracing_subscriber::EnvFilter;
 
 // Tracing file appender for log file output
@@ -53,6 +61,9 @@ use crate::{
 };
 
 fn main() -> Result<(), Box<dyn Error>> {
+    #[cfg(windows)]
+    attach_parent_console();
+
     // Load configuration to determine logging and seed before starting app
     let config = lithicrivers_core::game_config::GameConfig::new();
     let log_level = config
@@ -80,8 +91,31 @@ fn main() -> Result<(), Box<dyn Error>> {
     }
 
     // Headless scripted run: no terminal, no audio, fake clock
-    if let Some(code) = run_headless_from_args(seed_val)? {
-        std::process::exit(code);
+    let terminal_mode = match run_headless_from_args(seed_val)? {
+        Launch::Exit(code) => std::process::exit(code),
+        Launch::Interactive { terminal } => terminal,
+    };
+
+    let mut app = App::new_with_seed(seed_val);
+
+    // The game's own window, unless the player asked for the terminal
+    if !terminal_mode {
+        match window::run(&mut app) {
+            Ok(()) => {
+                log_shutdown(&mut app);
+                return Ok(());
+            }
+            Err(e) => {
+                tracing::error!(target: "game", "game window unavailable: {e}");
+                if !io::stdin().is_terminal() {
+                    show_error(&format!(
+                        "LithicRivers couldn't open its window: {e}\n\nYou can start it from a terminal with --terminal instead."
+                    ));
+                    std::process::exit(1);
+                }
+                eprintln!("LithicRivers couldn't open its window ({e}); using this terminal.");
+            }
+        }
     }
 
     // Ensure we restore the terminal if a panic occurs
@@ -99,8 +133,6 @@ fn main() -> Result<(), Box<dyn Error>> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    // Create app and run it
-    let mut app = App::new_with_seed(seed_val);
     let res = run_app(&mut terminal, &mut app);
 
     // Restore terminal
@@ -119,20 +151,71 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-/// Handle `--script <path> [--seed <u64>] [--size <cols>x<rows>]`, `--bench <script>...`
-/// and `--mcp`.
-/// Returns the exit status if a headless mode ran, or `None` to start the interactive client.
-fn run_headless_from_args(default_seed: u64) -> Result<Option<i32>, Box<dyn Error>> {
+/// Built as a window app, the Windows client has no console of its own. Terminal and
+/// headless runs started from a console use that console instead.
+#[cfg(windows)]
+fn attach_parent_console() {
+    let wants_console = std::env::args()
+        .skip(1)
+        .any(|a| matches!(a.as_str(), "--terminal" | "--script" | "--bench" | "--mcp"));
+    if wants_console {
+        // Fails harmlessly when there is no parent console (or output is piped)
+        unsafe {
+            winapi::um::wincon::AttachConsole(winapi::um::wincon::ATTACH_PARENT_PROCESS);
+        }
+    }
+}
+
+/// Tell the player something went wrong where they will see it: a message box on
+/// Windows, where a window app has no console, and standard error elsewhere.
+fn show_error(message: &str) {
+    tracing::error!(target: "game", "{message}");
+    #[cfg(windows)]
+    {
+        use std::os::windows::ffi::OsStrExt;
+        let wide = |s: &str| {
+            std::ffi::OsStr::new(s)
+                .encode_wide()
+                .chain(std::iter::once(0))
+                .collect::<Vec<u16>>()
+        };
+        let (text, title) = (wide(message), wide("LithicRivers"));
+        unsafe {
+            winapi::um::winuser::MessageBoxW(
+                std::ptr::null_mut(),
+                text.as_ptr(),
+                title.as_ptr(),
+                winapi::um::winuser::MB_OK | winapi::um::winuser::MB_ICONERROR,
+            );
+        }
+    }
+    #[cfg(not(windows))]
+    eprintln!("{message}");
+}
+
+/// How the client was asked to run.
+enum Launch {
+    /// A headless mode ran; exit with this status
+    Exit(i32),
+    /// Start the interactive client, in the terminal or in the game window
+    Interactive { terminal: bool },
+}
+
+/// Handle `--script <path> [--seed <u64>] [--size <cols>x<rows>]`, `--bench <script>...`,
+/// `--mcp` and `--terminal`.
+fn run_headless_from_args(default_seed: u64) -> Result<Launch, Box<dyn Error>> {
     let mut args = std::env::args().skip(1);
     let mut script_path = None;
     let mut bench_paths: Vec<String> = Vec::new();
     let mut mcp = false;
+    let mut terminal = false;
     let mut overrides = headless::Overrides::default();
     while let Some(arg) = args.next() {
         let mut value = || args.next().ok_or_else(|| format!("{arg} expects a value"));
         match arg.as_str() {
             "--script" => script_path = Some(value()?),
             "--mcp" => mcp = true,
+            "--terminal" => terminal = true,
             "--bench" => {
                 bench_paths.push(value()?);
                 bench_paths.extend(args.by_ref());
@@ -155,20 +238,20 @@ fn run_headless_from_args(default_seed: u64) -> Result<Option<i32>, Box<dyn Erro
             &mut io::stdout().lock(),
             &mut io::stderr().lock(),
         );
-        return Ok(Some(code));
+        return Ok(Launch::Exit(code));
     }
     if mcp {
         if script_path.is_some() || overrides.size.is_some() {
             return Err("--mcp can't be combined with --script or --size".into());
         }
         mcp::serve_stdio(overrides.seed.unwrap_or(default_seed))?;
-        return Ok(Some(0));
+        return Ok(Launch::Exit(0));
     }
     let Some(path) = script_path else {
         if overrides.seed.is_some() || overrides.size.is_some() {
             return Err("--seed and --size require --script".into());
         }
-        return Ok(None);
+        return Ok(Launch::Interactive { terminal });
     };
     let text = std::fs::read_to_string(&path).map_err(|e| format!("cannot read {path}: {e}"))?;
     let code = headless::run_script(
@@ -178,7 +261,7 @@ fn run_headless_from_args(default_seed: u64) -> Result<Option<i32>, Box<dyn Erro
         &mut io::stdout().lock(),
         &mut io::stderr().lock(),
     );
-    Ok(Some(code))
+    Ok(Launch::Exit(code))
 }
 
 /// A crossterm mouse event as the game's `MouseInput` (button releases and drags are
@@ -256,7 +339,10 @@ fn step(app: &mut App) {
     app.on_tick();
 }
 
-fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<(), Box<dyn Error>> {
+fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<(), Box<dyn Error>>
+where
+    B::Error: 'static,
+{
     loop {
         step(app);
 
@@ -270,27 +356,8 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<(), 
                     }
                 }
                 Event::Mouse(me) => {
-                    if let crossterm::event::MouseEventKind::ScrollDown = me.kind {
-                        // Scroll down (move view down, which means increase scroll position)
-                        if let SplashState::BootMessage = app.splash.state {
-                            let total_lines = app.splash.boot_display_text.lines().count() as u16;
-                            let visible_lines = 20; // Approximate visible lines
-                            if app.splash.boot_scroll + visible_lines < total_lines {
-                                app.splash.boot_scroll = app.splash.boot_scroll.saturating_add(3);
-                                // Scroll 3 lines at a time
-                            }
-                        }
-                    } else if let crossterm::event::MouseEventKind::ScrollUp = me.kind {
-                        // Scroll up (move view up, which means decrease scroll position)
-                        if let SplashState::BootMessage = app.splash.state {
-                            app.splash.boot_scroll = app.splash.boot_scroll.saturating_sub(3);
-                            // Scroll 3 lines at a time
-                        }
-                    }
-                    if !matches!(app.splash.state, SplashState::BootMessage) {
-                        if let Some(input) = mouse_input(&me) {
-                            app::input::mouse::handle_mouse(app, input);
-                        }
+                    if let Some(input) = mouse_input(&me) {
+                        handle_mouse_event(app, input);
                     }
                 }
                 _ => {}
@@ -298,17 +365,44 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<(), 
         }
 
         if app.core.should_quit {
-            app.core.game.res.log("Shutting down...");
-            tracing::info!(
-                target: "game",
-                "shutdown tick={} view_z={} seed={}",
-                app.core.game.res.time.tick,
-                app.ui.view_z,
-                app.core.game.res.world_state.seed
-            );
+            log_shutdown(app);
             return Ok(());
         }
     }
+}
+
+/// A mouse event from either frontend: on the boot log the wheel scrolls the log,
+/// anywhere else the game handles it.
+fn handle_mouse_event(app: &mut App, input: app::input::mouse::MouseInput) {
+    use app::input::mouse::MouseKind;
+    if let SplashState::BootMessage = app.splash.state {
+        match input.kind {
+            MouseKind::ScrollDown => {
+                let total_lines = app.splash.boot_display_text.lines().count() as u16;
+                let visible_lines = 20; // Approximate visible lines
+                if app.splash.boot_scroll + visible_lines < total_lines {
+                    app.splash.boot_scroll = app.splash.boot_scroll.saturating_add(3);
+                }
+            }
+            MouseKind::ScrollUp => {
+                app.splash.boot_scroll = app.splash.boot_scroll.saturating_sub(3);
+            }
+            _ => {}
+        }
+        return;
+    }
+    app::input::mouse::handle_mouse(app, input);
+}
+
+fn log_shutdown(app: &mut App) {
+    app.core.game.res.log("Shutting down...");
+    tracing::info!(
+        target: "game",
+        "shutdown tick={} view_z={} seed={}",
+        app.core.game.res.time.tick,
+        app.ui.view_z,
+        app.core.game.res.world_state.seed
+    );
 }
 
 // Helper function to get player's inventory as a HashMap

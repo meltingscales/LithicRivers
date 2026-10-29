@@ -14,12 +14,12 @@ input_file: scripts/snapshots/options.txt
                │                                                                    │
                │                        > Music volume: 55% <                       │
                │                          Sound volume: 35%                         │
+               │                 Text size: only in the game window                 │
+               │                 Fullscreen: only in the game window                │
+               │                  Display: only in the game window                  │
                │                                Back                                │
                │                                                                    │
                │    UP/DOWN move   ENTER select   ESCAPE back   LEFT/RIGHT change   │
-               │                                                                    │
-               │                                                                    │
-               │                                                                    │
                │                                                                    │
                │                                                                    │
                │                                                                    │

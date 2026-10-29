@@ -46,11 +46,11 @@ fn hover_rows(f: &mut Frame, app: &App) {
     let Some((rect, _)) = app.ui.click_targets.hit(col, row) else {
         return;
     };
-    let area = rect.intersection(f.size());
+    let area = rect.intersection(f.area());
     let buf = f.buffer_mut();
     for y in area.y..area.y + area.height {
         for x in area.x..area.x + area.width {
-            let cell = buf.get_mut(x, y);
+            let cell = &mut buf[(x, y)];
             cell.set_style(
                 cell.style()
                     .add_modifier(ratatui::style::Modifier::UNDERLINED),
@@ -89,7 +89,7 @@ fn ui_main(f: &mut Frame, app: &mut App) {
                 Constraint::Length(7), // Message log
                 Constraint::Length(3), // Bottom menu bar (needs 3 for borders + content)
             ])
-            .split(f.size())
+            .split(f.area())
     } else {
         Layout::default()
             .direction(Direction::Vertical)
@@ -100,7 +100,7 @@ fn ui_main(f: &mut Frame, app: &mut App) {
                 Constraint::Length(7), // Message log
                 Constraint::Length(3), // Bottom menu bar (needs 3 for borders + content)
             ])
-            .split(f.size())
+            .split(f.area())
     };
 
     // Title
@@ -243,7 +243,7 @@ fn ui_main(f: &mut Frame, app: &mut App) {
         app.panels.body_repair,
         crate::app_state::BodyRepairState::SelectingRepairAndPart { .. }
     ) {
-        let modal_area = centered_rect(75, 65, f.size());
+        let modal_area = centered_rect(75, 65, f.area());
         render_repair_modal(f, app, modal_area);
     }
 
@@ -343,7 +343,7 @@ fn calculate_game_viewport_area(f: &Frame, app: &App) -> Rect {
                 Constraint::Length(7), // Message log
                 Constraint::Length(3), // Bottom menu bar
             ])
-            .split(f.size())
+            .split(f.area())
     } else {
         Layout::default()
             .direction(Direction::Vertical)
@@ -354,7 +354,7 @@ fn calculate_game_viewport_area(f: &Frame, app: &App) -> Rect {
                 Constraint::Length(7), // Message log
                 Constraint::Length(3), // Bottom menu bar
             ])
-            .split(f.size())
+            .split(f.area())
     };
 
     // Calculate game view area based on current tab and combat state

@@ -65,6 +65,8 @@ pub struct UiState {
     pub tutorial_visible: bool, // Controls if tutorial tab is shown in bottom menu
     /// Whether the World page shows the context help panel (`ui.SHOW_CONTEXT_HELP`)
     pub show_context_help: bool,
+    /// The game window's text size and fullscreen choice (`ui.WINDOW_*`)
+    pub window: crate::window::settings::WindowSettings,
     // UI-owned viewport state - what the player is currently viewing
     pub view_x: i64,
     pub view_y: i64,

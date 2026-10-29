@@ -502,7 +502,7 @@ pub(crate) fn render_delete_prompt(f: &mut Frame, app: &App) {
             key("CANCEL_DELETE")
         )),
     ];
-    let area = crate::ui::centered_rect(50, 30, f.size());
+    let area = crate::ui::centered_rect(50, 30, f.area());
     let area = Rect {
         height: area.height.min(lines.len() as u16 + 2),
         ..area

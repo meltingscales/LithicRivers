@@ -62,7 +62,7 @@ fn main() -> io::Result<()> {
     let mut terminal = Terminal::new(backend)?;
 
     // Create app and run it
-    let size = terminal.size()?;
+    let size: Rect = terminal.size()?.into();
     let mut app = App::new(size);
     let res = run_app(&mut terminal, &mut app);
 
@@ -78,7 +78,10 @@ fn main() -> io::Result<()> {
     Ok(())
 }
 
-fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<()> {
+fn run_app<B: Backend<Error = io::Error>>(
+    terminal: &mut Terminal<B>,
+    app: &mut App,
+) -> io::Result<()> {
     loop {
         terminal.draw(|f| ui(f, app))?;
 
@@ -96,7 +99,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                     }
                 }
                 Event::Resize(_, _) => {
-                    let size = terminal.size()?;
+                    let size: Rect = terminal.size()?.into();
                     app.on_resize(size);
                 }
                 _ => {}
@@ -112,7 +115,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
 }
 
 fn ui(f: &mut Frame, app: &App) {
-    let size = f.size();
+    let size = f.area();
     let block = Block::default()
         .borders(Borders::ALL)
         .border_set(border::THICK)

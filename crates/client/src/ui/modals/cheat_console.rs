@@ -26,7 +26,7 @@ pub(crate) fn render_cheat_console_modal(f: &mut Frame, app: &mut App) {
     } = &app.panels.cheat_console
     {
         // Centered, 60% wide and tall enough for the suggestions or the command list
-        let area = centered_rect(60, 60, f.size());
+        let area = centered_rect(60, 60, f.area());
 
         // Clear the background
         f.render_widget(Clear, area);

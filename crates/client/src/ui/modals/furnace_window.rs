@@ -75,7 +75,7 @@ pub(crate) fn render_furnace_window(f: &mut Frame, app: &App) {
         })
         .collect();
 
-    let area = centered_rect(70, 60, f.size());
+    let area = centered_rect(70, 60, f.area());
     f.render_widget(Clear, area);
     let outer = Block::default()
         .borders(Borders::ALL)

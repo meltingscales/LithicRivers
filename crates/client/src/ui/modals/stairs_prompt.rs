@@ -34,7 +34,7 @@ pub(crate) fn render_stairs_prompt(f: &mut Frame, app: &App) {
         };
         lines.push(Line::styled(format!("  {choice}  "), style));
     }
-    let area = centered_rect(50, 30, f.size());
+    let area = centered_rect(50, 30, f.area());
     let area = Rect {
         height: area.height.min(lines.len() as u16 + 2),
         ..area

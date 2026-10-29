@@ -41,7 +41,7 @@ pub(crate) fn render_power_info_modal(f: &mut Frame, app: &App) {
         ),
         Style::default().fg(Color::DarkGray),
     )));
-    let area = centered_rect(50, 30, f.size());
+    let area = centered_rect(50, 30, f.area());
     f.render_widget(Clear, area);
     app.ui
         .click_targets
