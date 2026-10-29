@@ -262,10 +262,34 @@ fn render_create(f: &mut Frame, app: &App, area: Rect) {
 
 fn render_options(f: &mut Frame, app: &App, area: Rect) {
     let percent = |key: &str| (app.volume_setting(key) * 100.0).round() as u32;
+    let window = app.ui.window;
+    let on_off = |on: bool, yes: &str, no: &str| if on { yes } else { no }.to_string();
+    let window_value = |value: String| {
+        if window.active {
+            value
+        } else {
+            "only in the game window".to_string()
+        }
+    };
     let rows = vec![
         format!("{}: {}%", OPTIONS_ROWS[0], percent("MUSIC_VOLUME")),
         format!("{}: {}%", OPTIONS_ROWS[1], percent("SFX_VOLUME")),
-        OPTIONS_ROWS[2].to_string(),
+        format!(
+            "{}: {}",
+            OPTIONS_ROWS[2],
+            window_value(format!("{}px", window.font_px))
+        ),
+        format!(
+            "{}: {}",
+            OPTIONS_ROWS[3],
+            window_value(on_off(window.fullscreen, "on", "off"))
+        ),
+        format!(
+            "{}: {}",
+            OPTIONS_ROWS[4],
+            window_value(on_off(window.show_display, "shown", "hidden"))
+        ),
+        OPTIONS_ROWS[5].to_string(),
     ];
     let mut lines = vec![Line::from("")];
     lines.extend(menu_lines(&rows, app.title.options_selected));

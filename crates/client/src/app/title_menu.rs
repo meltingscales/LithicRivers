@@ -39,7 +39,16 @@ impl CreateField {
         }
     }
 }
-pub const OPTIONS_ROWS: [&str; 3] = ["Music volume", "Sound volume", "Back"];
+pub const OPTIONS_ROWS: [&str; 6] = [
+    "Music volume",
+    "Sound volume",
+    "Text size",
+    "Fullscreen",
+    "Display window",
+    "Back",
+];
+/// The first Options row that only applies in the game window, and the last
+const WINDOW_ROWS: std::ops::RangeInclusive<usize> = 2..=4;
 const VOLUME_STEP: f64 = 0.05;
 const MAX_TEXT_LEN: usize = 32;
 
@@ -400,9 +409,14 @@ impl App {
             self.title.options_selected = row;
             return;
         }
-        let back = self.matches("BACK", &key) || (row == 2 && self.matches("SELECT", &key));
+        let back = self.matches("BACK", &key)
+            || (row == OPTIONS_ROWS.len() - 1 && self.matches("SELECT", &key));
         if back {
             self.show_title();
+            return;
+        }
+        if WINDOW_ROWS.contains(&row) {
+            self.change_window_option(row, &key);
             return;
         }
         let delta = if self.matches("LEFT", &key) {
@@ -421,6 +435,24 @@ impl App {
         // Round so repeated steps land on exact percentages
         let volume = (volume * 100.0).round() / 100.0;
         self.set_volume_setting(setting, volume);
+    }
+
+    /// Text size, Fullscreen or Display window: the side keys step or flip it, and Select
+    /// flips a toggle. Nothing changes in terminal mode, where the terminal decides.
+    fn change_window_option(&mut self, row: usize, key: &KeyCode) {
+        if !self.ui.window.active {
+            return;
+        }
+        let (left, right) = (self.matches("LEFT", key), self.matches("RIGHT", key));
+        let select = self.matches("SELECT", key);
+        use crate::window::settings::change;
+        match row {
+            2 if left => change(self, |w| w.smaller()),
+            2 if right => change(self, |w| w.bigger()),
+            3 if left || right || select => change(self, |w| w.fullscreen = !w.fullscreen),
+            4 if left || right || select => change(self, |w| w.show_display = !w.show_display),
+            _ => {}
+        }
     }
 
     /// A volume from the config's `audio` settings, 0.0 to 1.0.
@@ -783,5 +815,34 @@ mod tests {
         assert!(runner.app.volume_setting("SFX_VOLUME") > 0.35);
         runner.chain(&["key title.BACK"]);
         assert_eq!(runner.app.splash.state, SplashState::Title);
+    }
+
+    #[test]
+    fn options_change_window_settings_in_the_game_window() {
+        use crate::window::settings::DEFAULT_FONT_PX;
+        let mut runner =
+            chain_commands(&[TO_TITLE, &["key title.DOWN 2", "key title.SELECT"]].concat());
+        // Headless runs are like terminal mode: the window rows do nothing
+        runner.chain(&["key title.DOWN 2", "key title.RIGHT"]);
+        assert_eq!(runner.app.ui.window.font_px, DEFAULT_FONT_PX);
+        assert!(runner
+            .screen_text()
+            .contains("Text size: only in the game window"));
+
+        runner.app.ui.window.active = true;
+        runner.chain(&["key title.RIGHT"]);
+        assert_eq!(runner.app.ui.window.font_px, DEFAULT_FONT_PX + 2);
+        assert!(runner.screen_text().contains("Text size: 20px"));
+        runner.chain(&["key title.DOWN", "key title.SELECT"]);
+        assert!(runner.app.ui.window.fullscreen);
+        runner.chain(&["key title.DOWN", "key title.LEFT"]);
+        assert!(!runner.app.ui.window.show_display);
+        assert!(runner.screen_text().contains("Display window: hidden"));
+        let saved =
+            crate::window::settings::WindowSettings::from_config(&runner.app.core.config_manager);
+        assert_eq!(
+            (saved.font_px, saved.fullscreen, saved.show_display),
+            (DEFAULT_FONT_PX + 2, true, false)
+        );
     }
 }
