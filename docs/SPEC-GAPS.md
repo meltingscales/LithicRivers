@@ -11,7 +11,6 @@ To act on one, ask for it by its suggested change name ("propose add-day-night-c
 | Idea | Source | Today | Suggested change |
 |---|---|---|---|
 | **Steamworks:** achievements, cloud saves and the overlay. | STEAM-MVP.md, TODO.md | Missing | `add-steamworks` |
-| **Performance budget:** about 60 FPS at 80x24 and at most 16 ms per tick; profile and fix the top two hotspots, with a benchmark that guards them. Bring back speedscope profiling for the Rust build. | STEAM-MVP.md | Missing | `add-performance-budget` |
 | **Combat panel cleanup:** too much spacing, emojis and a stray "z" character. | STEAM-MVP.md ("ugly combat UI") | Missing | `polish-combat-panel` |
 | **Sound effects** beyond music, for actions other than mining. | STEAM-MVP.md | Partly | `add-sound-effects` |
 | **Controller support and Steam Deck** checks. | TODO.md | Missing | `add-controller-support` |
