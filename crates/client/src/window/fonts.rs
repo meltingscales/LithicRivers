@@ -9,6 +9,7 @@ pub const MONO: &[u8] = include_bytes!("../../assets/fonts/DejaVuSansMono.ttf");
 pub const ALL: &[&[u8]] = &[MONO];
 
 /// Whether some bundled font has a glyph for `c`.
+#[cfg(test)]
 pub fn covers(c: char) -> bool {
     ALL.iter().any(|data| {
         ttf_parser::Face::parse(data, 0)

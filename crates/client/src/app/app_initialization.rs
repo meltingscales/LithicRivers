@@ -104,6 +104,7 @@ impl App {
             .get_setting("ui", "SHOW_CONTEXT_HELP")
             .and_then(|v| v.as_bool())
             .unwrap_or(true);
+        let window = crate::window::settings::WindowSettings::from_config(&config_manager);
 
         let repair_handler = RepairRecipeHandler::new();
         let saves_dir = config_manager
@@ -132,6 +133,7 @@ impl App {
                 tutorial_system: TutorialDatabase::create_tutorial_system_with_basics(),
                 tutorial_visible: true, // Tutorial tab is visible by default
                 show_context_help,
+                window,
                 view_x: 0,
                 view_y: 0,
                 view_z: 0,
