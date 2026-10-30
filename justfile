@@ -266,6 +266,17 @@ util-monitor-logs:
     @echo "Monitoring logs..."
     @tail -f LithicRivers.log.`date +%Y-%m-%d`
 
+# Writes android/app/build/outputs/apk/<profile>/. Needs the Android SDK and NDK, cargo-ndk, and both rustup targets.
+# Build the Android APK: profile is debug (debug key) or release (signed from LITHICRIVERS_KEYSTORE*)
+build-android profile="debug":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    sdk="${ANDROID_HOME:-$HOME/Android/Sdk}"
+    export ANDROID_NDK_HOME="${ANDROID_NDK_HOME:-$(ls -d "$sdk"/ndk/* | sort -V | tail -1)}"
+    if [ "{{profile}}" = release ]; then cargo_flag=--release; task=assembleRelease; else cargo_flag=; task=assembleDebug; fi
+    cargo ndk -t arm64-v8a -t x86_64 -o android/app/src/main/jniLibs rustc -p lithicrivers-client --lib --crate-type cdylib $cargo_flag
+    cd android && ./gradlew "$task"
+
 # Safe for AI agents and CI. Exit status: 0 ok, 1 script error, 2 failed expect-text.
 # Run the client headless against a script: no terminal, no audio, fake clock.
 client-blind script:

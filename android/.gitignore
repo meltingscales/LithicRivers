@@ -1,0 +1,6 @@
+.gradle/
+build/
+app/build/
+local.properties
+# Built by `just build-android`
+app/src/main/jniLibs/

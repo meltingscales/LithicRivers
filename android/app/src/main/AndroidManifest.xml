@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-feature android:name="android.hardware.vulkan.version" android:version="0x400003" android:required="true" />
+
+    <application
+        android:label="LithicRivers"
+        android:theme="@style/Theme.LithicRivers"
+        android:hasCode="true">
+        <activity
+            android:name="com.google.androidgamesdk.GameActivity"
+            android:exported="true"
+            android:screenOrientation="sensorLandscape"
+            android:configChanges="orientation|screenSize|screenLayout|keyboard|keyboardHidden|navigation|uiMode|density">
+            <!-- The Rust library GameActivity loads: liblithicrivers_client.so -->
+            <meta-data android:name="android.app.lib_name" android:value="lithicrivers_client" />
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>
