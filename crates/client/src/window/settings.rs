@@ -114,14 +114,14 @@ impl WindowSettings {
     }
 }
 
-/// The game area a phone's first text size leaves above the touch pad, in cells.
+/// The screen a phone's first text size leaves the game, in cells.
 const MOBILE_GAME_COLS: u32 = 80;
-const MOBILE_GAME_ROWS: u32 = 20;
+const MOBILE_GAME_ROWS: u32 = 30;
 
 /// The text size a phone or tablet starts with: the largest that still leaves the game
-/// 80x20 cells above the touch pad.
+/// 80x30 cells (the touch pad floats over them).
 pub fn mobile_font_px((width, height): (u32, u32)) -> u32 {
-    let rows = MOBILE_GAME_ROWS + super::touch::PAD_ROWS as u32;
+    let rows = MOBILE_GAME_ROWS;
     (MIN_FONT_PX..=MAX_FONT_PX)
         .rev()
         .step_by(FONT_PX_STEP as usize)
@@ -218,9 +218,9 @@ mod tests {
         assert_eq!(px, 36);
         let (w, h) = super::super::fonts::cell_size(px);
         assert!(2400 / w >= MOBILE_GAME_COLS);
-        assert!(1080 / h >= MOBILE_GAME_ROWS + super::super::touch::PAD_ROWS as u32);
+        assert!(1080 / h >= MOBILE_GAME_ROWS);
         assert!(
-            1080 / (h + FONT_PX_STEP) < MOBILE_GAME_ROWS + super::super::touch::PAD_ROWS as u32,
+            1080 / (h + FONT_PX_STEP) < MOBILE_GAME_ROWS,
             "the next size won't fit"
         );
         // A big tablet gets the largest size; a tiny screen the smallest

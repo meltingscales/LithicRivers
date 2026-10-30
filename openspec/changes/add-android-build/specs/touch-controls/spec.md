@@ -7,7 +7,7 @@ Playing without a keyboard: on-screen controls that send the same keys as the ke
 ## ADDED Requirements
 
 ### Requirement: On-screen controls
-On mobile builds (phones and tablets), the game window SHALL show an on-screen pad with the eight movement directions and wait, and buttons for Interact, Mine, Build mode, the previous and next menu tab, and Escape. Pressing one SHALL send the key bound to that action, so keybinds and every screen work as with a keyboard. The pad SHALL be shown by default on mobile, and an Options setting SHALL show or hide it and be saved.
+On mobile builds (phones and tablets), the game window SHALL show an on-screen pad, floating over the bottom of the game with the game showing through dimmed, with the eight movement directions and wait, and buttons for Interact, Mine, Build mode, the previous and next menu tab, and Escape. Pressing one SHALL send the key bound to that action, so keybinds and every screen work as with a keyboard. The pad SHALL be shown by default on mobile, and an Options setting SHALL show or hide it and be saved.
 
 #### Scenario: Moving with the pad
 - **WHEN** the player taps the pad's east arrow
@@ -19,7 +19,7 @@ On mobile builds (phones and tablets), the game window SHALL show an on-screen p
 
 #### Scenario: Hiding the pad
 - **WHEN** the player hides the on-screen controls in Options
-- **THEN** the pad disappears, the game uses the freed space, and the choice persists
+- **THEN** the pad disappears from over the game, and the choice persists
 
 ### Requirement: Touch on mobile only
 Desktop builds assume a keyboard: they SHALL NOT show the pad or take touch input, whatever the setting says.

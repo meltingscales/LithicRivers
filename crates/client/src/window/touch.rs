@@ -1,8 +1,8 @@
 //! On-screen controls and touch input for phones and tablets (`touch-controls` spec).
 //! Desktop builds never use any of this: a keyboard is assumed there.
 //!
-//! The pad sits along the bottom of the game window: movement on the left, a few action
-//! buttons on the right. Each button sends the key bound to an action, so rebinding
+//! The pad floats over the bottom of the game, see-through: movement on the left, a few
+//! action buttons on the right. Each button sends the key bound to an action, so rebinding
 //! works and every screen behaves as with a keyboard. Touches elsewhere are taps (a left
 //! click) or drags (scroll steps).
 
@@ -13,6 +13,7 @@ use crossterm::event::KeyCode;
 use ratatui::buffer::Buffer;
 use ratatui::layout::{Alignment, Rect};
 use ratatui::style::{Color, Modifier, Style};
+use ratatui::text::Span;
 use ratatui::widgets::{Block, Paragraph, Widget};
 
 /// One button's size in cells: big enough for a thumb at the default text size.
@@ -20,8 +21,8 @@ pub const BUTTON_COLS: u16 = 7;
 pub const BUTTON_ROWS: u16 = 3;
 /// The pad's height: three rows of buttons.
 pub const PAD_ROWS: u16 = BUTTON_ROWS * 3;
-/// The fewest rows the game keeps above the pad; a shorter window shows no pad.
-const MIN_GAME_ROWS: u16 = 16;
+/// The shortest screen that shows the pad: it never covers more than half.
+const MIN_SCREEN_ROWS: u16 = PAD_ROWS * 2;
 /// The narrowest pad: movement and actions, each three buttons wide, and a gap.
 const MIN_PAD_COLS: u16 = BUTTON_COLS * 6 + 2;
 
@@ -68,16 +69,11 @@ const ACTIONS: [[(&str, Press); 3]; 2] = [
     ],
 ];
 
-/// Split a screen into the game's area (top left, so game coordinates are unchanged) and
-/// the pad along the bottom, or `None` if the screen is too small for both.
-pub fn split(area: Rect) -> Option<(Rect, Rect)> {
-    (area.height >= MIN_GAME_ROWS + PAD_ROWS && area.width >= MIN_PAD_COLS).then(|| {
-        let game_rows = area.height - PAD_ROWS;
-        (
-            Rect::new(area.x, area.y, area.width, game_rows),
-            Rect::new(area.x, area.y + game_rows, area.width, PAD_ROWS),
-        )
-    })
+/// Where the pad floats over a screen: its bottom rows, or `None` if the screen is too
+/// small to keep most of the game visible.
+pub fn pad_area(area: Rect) -> Option<Rect> {
+    (area.height >= MIN_SCREEN_ROWS && area.width >= MIN_PAD_COLS)
+        .then(|| Rect::new(area.x, area.bottom() - PAD_ROWS, area.width, PAD_ROWS))
 }
 
 /// The buttons in a pad area: the movement grid at the left edge, the actions at the
@@ -152,19 +148,27 @@ fn key_label(code: KeyCode) -> String {
     label.chars().take(5).collect()
 }
 
-/// Draw the pad's buttons, each boxed with its bound key in the top border.
+/// Draw the pad's buttons over the game, each boxed with its bound key in the top border.
+/// The game shows through, dimmed, everywhere but the border and the name.
 pub fn render(buttons: &[PadButton], buf: &mut Buffer, app: &App) {
     let border = Style::default().fg(Color::Rgb(110, 110, 110));
     let name = Style::default()
         .fg(Color::Rgb(255, 210, 120))
         .add_modifier(Modifier::BOLD);
     for button in buttons {
+        for y in button.rect.top()..button.rect.bottom() {
+            for x in button.rect.left()..button.rect.right() {
+                if let Some(cell) = buf.cell_mut((x, y)) {
+                    cell.modifier.insert(Modifier::DIM);
+                }
+            }
+        }
         let mut block = Block::bordered().border_style(border);
         if let Some(code) = key_code(app, button.press).filter(|_| button.press != Press::Escape) {
             block = block.title(key_label(code));
         }
-        Paragraph::new(button.name)
-            .style(name)
+        // Style only the name, so the game around it keeps its own colors
+        Paragraph::new(Span::styled(button.name, name))
             .alignment(Alignment::Center)
             .block(block)
             .render(button.rect, buf);
@@ -243,12 +247,36 @@ mod tests {
     use crate::app::input::mouse::{MouseButton, MouseKind};
 
     #[test]
-    fn the_pad_fits_below_the_game_or_not_at_all() {
-        let (game, pad) = split(Rect::new(0, 0, 120, 40)).unwrap();
-        assert_eq!(game, Rect::new(0, 0, 120, 40 - PAD_ROWS));
+    fn the_pad_floats_over_the_bottom_rows_or_not_at_all() {
+        let pad = pad_area(Rect::new(0, 0, 120, 40)).unwrap();
         assert_eq!(pad, Rect::new(0, 40 - PAD_ROWS, 120, PAD_ROWS));
-        assert!(split(Rect::new(0, 0, 120, MIN_GAME_ROWS + PAD_ROWS - 1)).is_none());
-        assert!(split(Rect::new(0, 0, MIN_PAD_COLS - 1, 40)).is_none());
+        assert!(pad_area(Rect::new(0, 0, 120, MIN_SCREEN_ROWS - 1)).is_none());
+        assert!(pad_area(Rect::new(0, 0, MIN_PAD_COLS - 1, 40)).is_none());
+    }
+
+    #[test]
+    fn the_game_shows_through_the_buttons_dimmed() {
+        let runner = crate::headless::chain_commands(&["skip-splash"]);
+        let area = Rect::new(0, 0, 80, PAD_ROWS);
+        let mut buf = Buffer::empty(area);
+        for y in 0..area.height {
+            for x in 0..area.width {
+                buf[(x, y)].set_symbol("v");
+            }
+        }
+        let buttons = layout(area);
+        render(&buttons, &mut buf, &runner.app);
+        let east = buttons.iter().find(|b| b.name == "→").unwrap().rect;
+        // Inside the box, beside the one-character name: the game, dimmed
+        let beside = &buf[(east.x + 1, east.y + 1)];
+        assert_eq!(beside.symbol(), "v");
+        assert!(beside.modifier.contains(Modifier::DIM));
+        assert_eq!(beside.fg, Color::Reset, "keeps the game's color");
+        assert_eq!(buf[(east.x + 3, east.y + 1)].symbol(), "→");
+        // Between the movement grid and the actions, untouched
+        let between = &buf[(40, 4)];
+        assert_eq!(between.symbol(), "v");
+        assert!(!between.modifier.contains(Modifier::DIM));
     }
 
     #[test]

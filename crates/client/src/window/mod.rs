@@ -52,7 +52,7 @@ fn dock_split(area: Rect) -> Option<(Rect, Rect)> {
 }
 
 /// Where things go in the game window: the game at the top left, the docked Display
-/// panel along the right edge, and the touch pad along the bottom of the game's column.
+/// panel along the right edge, and the touch pad floating over the bottom of the game.
 #[derive(Debug, PartialEq, Eq)]
 struct Layout {
     game: Rect,
@@ -68,15 +68,15 @@ fn layout(area: Rect, settings: &settings::WindowSettings) -> Layout {
         Some((column, dock)) => (column, Some(dock)),
         None => (area, None),
     };
-    let (game, pad) = match settings
+    let pad = settings
         .shows_touch_controls()
-        .then(|| touch::split(column))
-        .flatten()
-    {
-        Some((game, pad)) => (game, Some(pad)),
-        None => (column, None),
-    };
-    Layout { game, dock, pad }
+        .then(|| touch::pad_area(column))
+        .flatten();
+    Layout {
+        game: column,
+        dock,
+        pad,
+    }
 }
 
 /// Android's soft keyboard types into GameActivity's own text field instead of sending
@@ -357,10 +357,16 @@ impl WindowApp<'_> {
                     pad,
                 } = layout(area, &settings);
                 let app = &mut *self.app;
+                self.pad_buttons = pad.map(touch::layout).unwrap_or_default();
                 let result = if game_area == area {
                     self.dock_panel = None;
-                    self.pad_buttons.clear();
-                    game.terminal.draw(|f| crate::ui(f, app)).map(|_| ())
+                    let pad_buttons = &self.pad_buttons;
+                    game.terminal
+                        .draw(|f| {
+                            crate::ui(f, app);
+                            touch::render(pad_buttons, f.buffer_mut(), app);
+                        })
+                        .map(|_| ())
                 } else {
                     let screen = self.game_screen.get_or_insert_with(|| {
                         Terminal::new(TestBackend::new(game_area.width, game_area.height))
@@ -376,7 +382,6 @@ impl WindowApp<'_> {
                     let drawn = screen.backend().buffer();
                     let separator = Block::default().borders(Borders::LEFT);
                     self.dock_panel = dock.map(|dock| separator.inner(dock));
-                    self.pad_buttons = pad.map(touch::layout).unwrap_or_default();
                     let (dock_panel, pad_buttons) = (self.dock_panel, &self.pad_buttons);
                     game.terminal
                         .draw(|f| {
@@ -626,14 +631,13 @@ mod tests {
         );
         settings.mobile = true;
         let shown = layout(area, &settings);
-        assert_eq!(shown.game, Rect::new(0, 0, 120, 40 - touch::PAD_ROWS));
+        assert_eq!(shown.game, area, "the pad floats over the game");
         assert_eq!(shown.pad.unwrap().y, 40 - touch::PAD_ROWS);
         // Docked too: the pad spans the game's column, not the panel
         settings.display = DisplayMode::Docked;
         let both = layout(area, &settings);
         assert_eq!(both.pad.unwrap().width, both.dock.unwrap().x);
         assert_eq!(both.game.width, both.dock.unwrap().x);
-        // Hidden in Options: the game takes the space back
         settings.touch_controls = false;
         assert_eq!(layout(area, &settings).pad, None);
     }
