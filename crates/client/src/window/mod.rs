@@ -381,6 +381,16 @@ impl WindowApp<'_> {
 }
 
 impl ApplicationHandler for WindowApp<'_> {
+    /// The app went to the background (on Android, it may be closed there without
+    /// warning, and its surfaces are destroyed): save, and drop the surfaces. `resumed`
+    /// opens them again.
+    fn suspended(&mut self, _event_loop: &ActiveEventLoop) {
+        self.app.save_on_suspend();
+        self.game = None;
+        self.display = None;
+        self.dock_panel = None;
+    }
+
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
         if self.game.is_some() {
             return;

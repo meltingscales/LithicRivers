@@ -64,6 +64,7 @@ The pad shows when the device reports a touch screen, and Options gains "Touch c
 - [The ratatui-wgpu fork on Android's Vulkan drivers] → The emulator smoke run and a real device both draw the title screen before the rest of the work.
 - [A crossterm dependency in core, `keycode_mapping`] → It's only types on Android, and crossterm builds for Android targets. The terminal frontend (`--terminal`) is compiled out there.
 - [Losing progress when Android kills the app] → The world saves on every suspend, and the test drives the suspend path headlessly through the same save function.
+- [GameActivity may still finish the activity on Back] → winit delivers Back as `BrowserBack`, which becomes Escape. If GameActivity's default back handling also closes the app, the fix is a small Java subclass that overrides `onBackPressed`. That's checked on a device in 4.2.
 - [I can't run a phone here] → Pure functions (touch layout, tap and drag, the storage root) are unit-tested, the build runs in CI, and playing on a device is a user check.
 
 ## Migration Plan

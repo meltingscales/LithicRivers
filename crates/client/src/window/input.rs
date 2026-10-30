@@ -11,7 +11,8 @@ pub fn key_code(key: &Key, text: Option<&str>, shift: bool) -> Option<KeyCode> {
     let code = match key {
         Key::Named(named) => match named {
             NamedKey::Enter => KeyCode::Enter,
-            NamedKey::Escape => KeyCode::Esc,
+            // Android's Back button arrives as BrowserBack
+            NamedKey::Escape | NamedKey::BrowserBack => KeyCode::Esc,
             NamedKey::Tab if shift => KeyCode::BackTab,
             NamedKey::Tab => KeyCode::Tab,
             NamedKey::Backspace => KeyCode::Backspace,
@@ -137,6 +138,11 @@ mod tests {
             Some(KeyCode::BackTab)
         );
         assert_eq!(key_code(&Key::Named(NamedKey::Shift), None, true), None);
+        assert_eq!(
+            key_code(&Key::Named(NamedKey::BrowserBack), None, false),
+            Some(KeyCode::Esc),
+            "Android's Back button acts as Escape"
+        );
     }
 
     #[test]
