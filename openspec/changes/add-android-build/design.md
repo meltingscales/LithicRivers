@@ -27,6 +27,8 @@
 
 `main.rs` becomes a few lines calling `run_desktop`. The Android `cdylib` entry (`android_main`) lives in the same library behind `cfg(target_os = "android")`. We considered a separate `crates/android` crate, but it can't depend on a binary crate, and duplicating the module tree would be worse. The split moves code without changing it, so snapshots and the `save_reload_anywhere` test prove nothing changed.
 
+**No `cdylib` in `Cargo.toml`.** The desktop build would also make a `.so`/`.dll`, and on Windows its `.pdb` would collide with the binary's. Instead, `cargo ndk ... rustc --lib --crate-type cdylib` asks for the shared library only when building for Android.
+
 **GameActivity through winit, hosted by a small Gradle project.** winit's `android-game-activity` feature gives soft-keyboard text input (IME), which the text fields need. NativeActivity has no IME. GameActivity needs its Java AAR, so `android/` holds a minimal Gradle project:
 - one activity;
 - a landscape-only manifest;
@@ -58,7 +60,7 @@ The pad shows when the device reports a touch screen, and Options gains "Touch c
 
 ## Risks / Trade-offs
 
-- [cpal's oboe backend needs the NDK C++ toolchain and can fail to build] → The first task builds the library with audio on. If oboe fails, audio is turned off on Android behind a feature, with a follow-up change, rather than blocking the build.
+- [cpal's oboe backend needs the NDK C++ toolchain and can fail to build] → The first task builds the library with audio on. If oboe fails, audio is turned off on Android behind a feature, with a follow-up change, rather than blocking the build. *Outcome (task 2.1):* with NDK 28, the library builds for `arm64-v8a` and `x86_64` with audio on. cpal links Android's OpenSL ES, so no feature flag was needed. The `.so` exports `android_main` and `GameActivity_onCreate` and needs only system libraries (`liblog`, `libandroid`, `libOpenSLES`, libc).
 - [The ratatui-wgpu fork on Android's Vulkan drivers] → The emulator smoke run and a real device both draw the title screen before the rest of the work.
 - [A crossterm dependency in core, `keycode_mapping`] → It's only types on Android, and crossterm builds for Android targets. The terminal frontend (`--terminal`) is compiled out there.
 - [Losing progress when Android kills the app] → The world saves on every suspend, and the test drives the suspend path headlessly through the same save function.

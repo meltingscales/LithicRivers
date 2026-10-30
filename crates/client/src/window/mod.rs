@@ -121,8 +121,7 @@ impl Surface {
 
 /// Run the game in its own window until it quits. Fails without having shown anything
 /// if no window or GPU renderer can be created, so the caller can fall back.
-pub fn run(app: &mut App) -> Result<(), String> {
-    let event_loop = EventLoop::new().map_err(|e| format!("cannot open a window: {e}"))?;
+pub fn run(app: &mut App, event_loop: EventLoop<()>) -> Result<(), String> {
     app.ui.window.active = true;
     let mut handler = WindowApp {
         app,

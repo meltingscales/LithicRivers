@@ -66,34 +66,7 @@ pub fn run_desktop() -> Result<(), Box<dyn Error>> {
     #[cfg(windows)]
     attach_parent_console();
 
-    // Load configuration to determine logging and seed before starting app
-    let config = lithicrivers_core::game_config::GameConfig::new();
-    let log_level = config
-        .get_setting("game", "LOGGINGLEVEL")
-        .and_then(|v| v.as_str())
-        .unwrap_or_else(|| panic!("LOGGINGLEVEL must be set in config"));
-    let seed_val: u64 = config
-        .get_setting("game", "DEFAULT_SEED")
-        .and_then(|v| v.as_u64())
-        .unwrap_or_else(|| panic!("DEFAULT_SEED must be set in config"));
-
-    // Initialize tracing to write logs to LithicRivers.log (rotated daily)
-    {
-        let file_appender = _tracing_appender_hidden::rolling::daily(
-            lithicrivers_core::config::data_path("."),
-            "LithicRivers.log",
-        );
-        let (non_blocking, _guard) = _tracing_appender_hidden::non_blocking(file_appender);
-        let filter = EnvFilter::try_from_default_env()
-            .unwrap_or_else(|_| EnvFilter::new(log_level.to_lowercase()));
-        tracing_subscriber::fmt()
-            .with_env_filter(filter)
-            .with_writer(non_blocking)
-            .with_ansi(false)
-            .init();
-        // Keep _guard alive for program lifetime to ensure logs flush properly
-        let _ = Box::leak(Box::new(_guard));
-    }
+    let seed_val = init_logging_and_seed();
 
     // Headless scripted run: no terminal, no audio, fake clock
     let terminal_mode = match run_headless_from_args(seed_val)? {
@@ -105,7 +78,9 @@ pub fn run_desktop() -> Result<(), Box<dyn Error>> {
 
     // The game's own window, unless the player asked for the terminal
     if !terminal_mode {
-        match window::run(&mut app) {
+        let event_loop =
+            winit::event_loop::EventLoop::new().map_err(|e| format!("cannot open a window: {e}"));
+        match event_loop.and_then(|event_loop| window::run(&mut app, event_loop)) {
             Ok(()) => {
                 log_shutdown(&mut app);
                 return Ok(());
@@ -154,6 +129,59 @@ pub fn run_desktop() -> Result<(), Box<dyn Error>> {
     }
 
     Ok(())
+}
+
+/// Read the config's logging level and default seed, and start writing logs to
+/// `LithicRivers.log` (rotated daily) in the data folder. Returns the default seed.
+fn init_logging_and_seed() -> u64 {
+    let config = lithicrivers_core::game_config::GameConfig::new();
+    let log_level = config
+        .get_setting("game", "LOGGINGLEVEL")
+        .and_then(|v| v.as_str())
+        .unwrap_or_else(|| panic!("LOGGINGLEVEL must be set in config"));
+    let seed_val: u64 = config
+        .get_setting("game", "DEFAULT_SEED")
+        .and_then(|v| v.as_u64())
+        .unwrap_or_else(|| panic!("DEFAULT_SEED must be set in config"));
+    let file_appender = _tracing_appender_hidden::rolling::daily(
+        lithicrivers_core::config::data_path("."),
+        "LithicRivers.log",
+    );
+    let (non_blocking, guard) = _tracing_appender_hidden::non_blocking(file_appender);
+    let filter = EnvFilter::try_from_default_env()
+        .unwrap_or_else(|_| EnvFilter::new(log_level.to_lowercase()));
+    let _ = tracing_subscriber::fmt()
+        .with_env_filter(filter)
+        .with_writer(non_blocking)
+        .with_ansi(false)
+        .try_init();
+    // Keep the guard alive for the program's lifetime so logs flush
+    let _ = Box::leak(Box::new(guard));
+    seed_val
+}
+
+/// Android's entry point: the game in its window, with every file in the app's storage.
+#[cfg(target_os = "android")]
+#[unsafe(no_mangle)]
+fn android_main(android_app: winit::platform::android::activity::AndroidApp) {
+    use winit::platform::android::EventLoopBuilderExtAndroid;
+    if let Some(dir) = android_app.internal_data_path() {
+        lithicrivers_core::config::set_base_dir(dir);
+    }
+    let seed = init_logging_and_seed();
+    let mut app = App::new_with_seed(seed);
+    let event_loop = winit::event_loop::EventLoop::builder()
+        .with_android_app(android_app)
+        .build();
+    match event_loop {
+        Ok(event_loop) => {
+            if let Err(e) = window::run(&mut app, event_loop) {
+                tracing::error!(target: "game", "game window failed: {e}");
+            }
+        }
+        Err(e) => tracing::error!(target: "game", "cannot start the event loop: {e}"),
+    }
+    log_shutdown(&mut app);
 }
 
 /// Built as a window app, the Windows client has no console of its own. Terminal and
