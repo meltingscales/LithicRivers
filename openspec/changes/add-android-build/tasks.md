@@ -9,7 +9,7 @@
 
 - [x] 2.1 The `cdylib` target with `android_main`, winit's `android-game-activity`, and the internal data path as the base folder; verify `cargo ndk -t arm64-v8a build -p lithicrivers-client` succeeds (with audio, or audio behind a feature with the reason recorded in design.md)
 - [x] 2.2 The `android/` Gradle project (GameActivity, landscape manifest, debug signing) and `just build-android`; verify the recipe produces an APK that installs and draws the title screen on the emulator (`adb install`, plus a screenshot)
-- [ ] 2.3 An Android job in `release.yml` that builds the APK on each release tag and attaches it to the GitHub Release as `lithicrivers-<version>.apk` (a `github-release-android` job like the macOS one), with release signing from secrets when present; verify the workflow on a branch run
+- [x] 2.3 An Android job in `release.yml` that builds the APK on each release tag and attaches it to the GitHub Release as `lithicrivers-<version>.apk` (a `github-release-android` job like the macOS one), with release signing from secrets when present; verify the workflow on a branch run
 - [x] 2.4 Lifecycle: save on suspend, surface recreated on resume, Back as Escape; verify a headless test of the suspend save path and a unit test for the Back mapping
 
 ## 3. Touch controls
