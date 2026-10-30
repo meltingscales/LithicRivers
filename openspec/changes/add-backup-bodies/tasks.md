@@ -17,5 +17,5 @@
 
 ## 3. Checks
 
-- [ ] 3.1 Verify `just code-clippy`, `cargo test --workspace` and PR checks pass
+- [x] 3.1 Verify `just code-clippy`, `cargo test --workspace` and PR checks pass
 - [ ] 3.2 User check that preparing a vat feels worth it and the flyover looks good
