@@ -289,7 +289,16 @@ fn render_options(f: &mut Frame, app: &App, area: Rect) {
             OPTIONS_ROWS[4],
             window_value(window.display.name().to_string())
         ),
-        OPTIONS_ROWS[5].to_string(),
+        format!(
+            "{}: {}",
+            OPTIONS_ROWS[5],
+            if window.mobile {
+                on_off(window.touch_controls, "shown", "hidden")
+            } else {
+                "only on mobile".to_string()
+            }
+        ),
+        OPTIONS_ROWS[6].to_string(),
     ];
     let mut lines = vec![Line::from("")];
     lines.extend(menu_lines(&rows, app.title.options_selected));

@@ -6,6 +6,7 @@ pub mod display;
 pub mod fonts;
 pub mod input;
 pub mod settings;
+pub mod touch;
 
 use crate::app::client_app::App;
 use ratatui::backend::TestBackend;
@@ -20,7 +21,7 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 use winit::application::ApplicationHandler;
 use winit::dpi::PhysicalSize;
-use winit::event::{ElementState, MouseScrollDelta, WindowEvent};
+use winit::event::{ElementState, MouseScrollDelta, TouchPhase, WindowEvent};
 use winit::event_loop::{ActiveEventLoop, ControlFlow, EventLoop};
 use winit::keyboard::ModifiersState;
 use winit::window::{Fullscreen, Window, WindowAttributes, WindowId, WindowLevel};
@@ -48,6 +49,34 @@ fn dock_split(area: Rect) -> Option<(Rect, Rect)> {
             Rect::new(game_cols, 0, dock_cols, area.height),
         )
     })
+}
+
+/// Where things go in the game window: the game at the top left, the docked Display
+/// panel along the right edge, and the touch pad along the bottom of the game's column.
+#[derive(Debug, PartialEq, Eq)]
+struct Layout {
+    game: Rect,
+    dock: Option<Rect>,
+    pad: Option<Rect>,
+}
+
+fn layout(area: Rect, settings: &settings::WindowSettings) -> Layout {
+    let (column, dock) = match (settings.display == DisplayMode::Docked)
+        .then(|| dock_split(area))
+        .flatten()
+    {
+        Some((column, dock)) => (column, Some(dock)),
+        None => (area, None),
+    };
+    let (game, pad) = match settings
+        .shows_touch_controls()
+        .then(|| touch::split(column))
+        .flatten()
+    {
+        Some((game, pad)) => (game, Some(pad)),
+        None => (column, None),
+    };
+    Layout { game, dock, pad }
 }
 
 /// One window and the terminal drawn into it.
@@ -95,11 +124,11 @@ impl Surface {
     }
 
     fn cell(&self) -> (u16, u16) {
-        input::cell_at(
-            self.pointer.0,
-            self.pointer.1,
-            fonts::cell_size(self.font_px),
-        )
+        self.cell_at(self.pointer)
+    }
+
+    fn cell_at(&self, (x, y): (f64, f64)) -> (u16, u16) {
+        input::cell_at(x, y, fonts::cell_size(self.font_px))
     }
 
     fn resize(&mut self, size: PhysicalSize<u32>) {
@@ -127,8 +156,10 @@ pub fn run(app: &mut App, event_loop: EventLoop<()>) -> Result<(), String> {
         app,
         game: None,
         display: None,
-        docked_screen: None,
+        game_screen: None,
         dock_panel: None,
+        pad_buttons: Vec::new(),
+        touches: touch::Touches::default(),
         fullscreen: false,
         modifiers: ModifiersState::empty(),
         pointer_cell: None,
@@ -148,11 +179,15 @@ struct WindowApp<'a> {
     game: Option<Surface>,
     /// The floating Display window
     display: Option<Surface>,
-    /// In-memory screen the game draws into when the Display panel is docked, copied
-    /// into the left of the game window
-    docked_screen: Option<Terminal<TestBackend>>,
+    /// In-memory screen the game draws into when the Display panel is docked or the
+    /// touch pad is shown, copied into the top left of the game window
+    game_screen: Option<Terminal<TestBackend>>,
     /// Where the docked panel's buttons were drawn last frame, for clicks
     dock_panel: Option<Rect>,
+    /// The touch pad's buttons as drawn last frame (empty when it isn't shown)
+    pad_buttons: Vec<touch::PadButton>,
+    /// Fingers on the screen outside the pad (mobile only)
+    touches: touch::Touches,
     /// Whether the game window is fullscreen now
     fullscreen: bool,
     modifiers: ModifiersState,
@@ -245,47 +280,83 @@ impl WindowApp<'_> {
             WindowEvent::RedrawRequested => {
                 let settings = self.app.ui.window;
                 let area = game.terminal.size().map(Rect::from).unwrap_or_default();
-                let split = (settings.display == DisplayMode::Docked)
-                    .then(|| dock_split(area))
-                    .flatten();
+                let Layout {
+                    game: game_area,
+                    dock,
+                    pad,
+                } = layout(area, &settings);
                 let app = &mut *self.app;
-                let result = match split {
-                    None => {
-                        self.dock_panel = None;
-                        game.terminal.draw(|f| crate::ui(f, app)).map(|_| ())
+                let result = if game_area == area {
+                    self.dock_panel = None;
+                    self.pad_buttons.clear();
+                    game.terminal.draw(|f| crate::ui(f, app)).map(|_| ())
+                } else {
+                    let screen = self.game_screen.get_or_insert_with(|| {
+                        Terminal::new(TestBackend::new(game_area.width, game_area.height))
+                            .expect("in-memory screen")
+                    });
+                    if screen.size().ok() != Some(game_area.as_size()) {
+                        screen
+                            .backend_mut()
+                            .resize(game_area.width, game_area.height);
+                        let _ = screen.autoresize();
                     }
-                    Some((game_area, dock)) => {
-                        let screen = self.docked_screen.get_or_insert_with(|| {
-                            Terminal::new(TestBackend::new(game_area.width, game_area.height))
-                                .expect("in-memory screen")
-                        });
-                        if screen.size().ok() != Some(game_area.as_size()) {
-                            screen
-                                .backend_mut()
-                                .resize(game_area.width, game_area.height);
-                            let _ = screen.autoresize();
-                        }
-                        let _ = screen.draw(|f| crate::ui(f, app));
-                        let drawn = screen.backend().buffer();
-                        let separator = Block::default().borders(Borders::LEFT);
-                        let panel = separator.inner(dock);
-                        self.dock_panel = Some(panel);
-                        game.terminal
-                            .draw(|f| {
-                                let buf = f.buffer_mut();
-                                for y in 0..game_area.height {
-                                    for x in 0..game_area.width {
-                                        buf[(x, y)] = drawn[(x, y)].clone();
-                                    }
+                    let _ = screen.draw(|f| crate::ui(f, app));
+                    let drawn = screen.backend().buffer();
+                    let separator = Block::default().borders(Borders::LEFT);
+                    self.dock_panel = dock.map(|dock| separator.inner(dock));
+                    self.pad_buttons = pad.map(touch::layout).unwrap_or_default();
+                    let (dock_panel, pad_buttons) = (self.dock_panel, &self.pad_buttons);
+                    game.terminal
+                        .draw(|f| {
+                            let buf = f.buffer_mut();
+                            for y in 0..game_area.height {
+                                for x in 0..game_area.width {
+                                    buf[(x, y)] = drawn[(x, y)].clone();
                                 }
+                            }
+                            if let (Some(dock), Some(panel)) = (dock, dock_panel) {
                                 separator.render(dock, buf);
                                 display::render(panel, buf, &settings);
-                            })
-                            .map(|_| ())
-                    }
+                            }
+                            touch::render(pad_buttons, buf, app);
+                        })
+                        .map(|_| ())
                 };
                 if let Err(e) = result {
                     tracing::warn!(target: "game", "window draw failed: {e}");
+                }
+            }
+            WindowEvent::Touch(touch) if self.app.ui.window.mobile => {
+                let cell = game.cell_at((touch.location.x, touch.location.y));
+                match touch.phase {
+                    TouchPhase::Started => {
+                        if let Some((col, row)) = self.in_dock(cell) {
+                            if let Some(button) = display::button_at(col, row, &self.app.ui.window)
+                            {
+                                settings::change(self.app, |w| display::press(button, w));
+                            }
+                        } else if let Some(press) = touch::button_at(&self.pad_buttons, cell) {
+                            if let Some(code) = touch::key_code(self.app, press) {
+                                if let Err(e) = crate::handle_input(self.app, code) {
+                                    tracing::warn!(target: "game", "input error: {e}");
+                                }
+                            }
+                        } else {
+                            self.touches.started(touch.id, cell);
+                        }
+                    }
+                    TouchPhase::Moved => {
+                        for scroll in self.touches.moved(touch.id, cell) {
+                            crate::handle_mouse_event(self.app, scroll);
+                        }
+                    }
+                    TouchPhase::Ended => {
+                        for event in self.touches.ended(touch.id) {
+                            crate::handle_mouse_event(self.app, event);
+                        }
+                    }
+                    TouchPhase::Cancelled => self.touches.cancelled(touch.id),
                 }
             }
             WindowEvent::KeyboardInput { event, .. } if event.state == ElementState::Pressed => {
@@ -389,6 +460,8 @@ impl ApplicationHandler for WindowApp<'_> {
         self.game = None;
         self.display = None;
         self.dock_panel = None;
+        self.pad_buttons.clear();
+        self.touches = touch::Touches::default();
     }
 
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
@@ -445,5 +518,36 @@ mod tests {
         assert_eq!(dock.width, display::COLS + 1);
         // Too narrow: no docked panel, the game keeps the whole window
         assert!(dock_split(Rect::new(0, 0, MIN_GAME_COLS + display::COLS, 36)).is_none());
+    }
+
+    #[test]
+    fn the_touch_pad_only_shows_on_mobile() {
+        let area = Rect::new(0, 0, 120, 40);
+        let mut settings = settings::WindowSettings {
+            active: true,
+            display: DisplayMode::Hidden,
+            ..Default::default()
+        };
+        assert_eq!(
+            layout(area, &settings),
+            Layout {
+                game: area,
+                dock: None,
+                pad: None
+            },
+            "desktop: the game keeps the whole window"
+        );
+        settings.mobile = true;
+        let shown = layout(area, &settings);
+        assert_eq!(shown.game, Rect::new(0, 0, 120, 40 - touch::PAD_ROWS));
+        assert_eq!(shown.pad.unwrap().y, 40 - touch::PAD_ROWS);
+        // Docked too: the pad spans the game's column, not the panel
+        settings.display = DisplayMode::Docked;
+        let both = layout(area, &settings);
+        assert_eq!(both.pad.unwrap().width, both.dock.unwrap().x);
+        assert_eq!(both.game.width, both.dock.unwrap().x);
+        // Hidden in Options: the game takes the space back
+        settings.touch_controls = false;
+        assert_eq!(layout(area, &settings).pad, None);
     }
 }

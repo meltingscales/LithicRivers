@@ -55,8 +55,13 @@ pub struct WindowSettings {
     pub fullscreen: bool,
     /// Where the Display panel is shown
     pub display: DisplayMode,
+    /// Whether the on-screen touch controls are wanted (only ever shown on mobile)
+    pub touch_controls: bool,
     /// Whether the game is running in its own window (false in terminal and headless runs)
     pub active: bool,
+    /// Whether this is a phone or tablet build; desktop builds assume a keyboard and
+    /// never show touch controls
+    pub mobile: bool,
 }
 
 impl Default for WindowSettings {
@@ -65,7 +70,9 @@ impl Default for WindowSettings {
             font_px: DEFAULT_FONT_PX,
             fullscreen: false,
             display: DisplayMode::Docked,
+            touch_controls: true,
             active: false,
+            mobile: false,
         }
     }
 }
@@ -85,8 +92,17 @@ impl WindowSettings {
             display: get("WINDOW_DISPLAY")
                 .and_then(|v| v.as_str().and_then(DisplayMode::from_name))
                 .unwrap_or(defaults.display),
+            touch_controls: get("TOUCH_CONTROLS")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(defaults.touch_controls),
             active: false,
+            mobile: false,
         }
+    }
+
+    /// Whether the game window draws the on-screen pad and takes touch input.
+    pub fn shows_touch_controls(&self) -> bool {
+        self.active && self.mobile && self.touch_controls
     }
 
     pub fn bigger(&mut self) {
@@ -106,6 +122,7 @@ pub fn change(app: &mut App, f: impl FnOnce(&mut WindowSettings)) {
     ui["WINDOW_FONT_PX"] = serde_json::json!(settings.font_px);
     ui["WINDOW_FULLSCREEN"] = serde_json::json!(settings.fullscreen);
     ui["WINDOW_DISPLAY"] = serde_json::json!(settings.display.name());
+    ui["TOUCH_CONTROLS"] = serde_json::json!(settings.touch_controls);
     if app.persist_config {
         if let Err(e) = app.core.config_manager.save() {
             tracing::warn!(target: "game", "could not save config: {e:#}");
@@ -149,11 +166,27 @@ mod tests {
             w.bigger();
             w.fullscreen = true;
             w.display = DisplayMode::Floating;
+            w.touch_controls = false;
         });
         let loaded = WindowSettings::from_config(&runner.app.core.config_manager);
         assert_eq!(loaded.font_px, DEFAULT_FONT_PX + FONT_PX_STEP);
         assert!(loaded.fullscreen);
         assert_eq!(loaded.display, DisplayMode::Floating);
+        assert!(!loaded.touch_controls);
         assert!(!loaded.active, "being in a window is never saved");
+        assert!(!loaded.mobile, "the platform is never saved");
+    }
+
+    #[test]
+    fn touch_controls_only_on_mobile() {
+        let mut s = WindowSettings {
+            active: true,
+            ..WindowSettings::default()
+        };
+        assert!(!s.shows_touch_controls(), "desktop assumes a keyboard");
+        s.mobile = true;
+        assert!(s.shows_touch_controls());
+        s.touch_controls = false;
+        assert!(!s.shows_touch_controls());
     }
 }

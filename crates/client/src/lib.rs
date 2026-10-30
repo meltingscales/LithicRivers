@@ -170,6 +170,7 @@ fn android_main(android_app: winit::platform::android::activity::AndroidApp) {
     }
     let seed = init_logging_and_seed();
     let mut app = App::new_with_seed(seed);
+    app.ui.window.mobile = true;
     let event_loop = winit::event_loop::EventLoop::builder()
         .with_android_app(android_app)
         .build();

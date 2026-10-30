@@ -39,16 +39,17 @@ impl CreateField {
         }
     }
 }
-pub const OPTIONS_ROWS: [&str; 6] = [
+pub const OPTIONS_ROWS: [&str; 7] = [
     "Music volume",
     "Sound volume",
     "Text size",
     "Fullscreen",
     "Display",
+    "Touch controls",
     "Back",
 ];
 /// The first Options row that only applies in the game window, and the last
-const WINDOW_ROWS: std::ops::RangeInclusive<usize> = 2..=4;
+const WINDOW_ROWS: std::ops::RangeInclusive<usize> = 2..=5;
 const VOLUME_STEP: f64 = 0.05;
 const MAX_TEXT_LEN: usize = 32;
 
@@ -437,8 +438,9 @@ impl App {
         self.set_volume_setting(setting, volume);
     }
 
-    /// Text size, Fullscreen or Display window: the side keys step or flip it, and Select
-    /// flips a toggle. Nothing changes in terminal mode, where the terminal decides.
+    /// Text size, Fullscreen, Display window or Touch controls: the side keys step or flip
+    /// it, and Select flips a toggle. Nothing changes in terminal mode, where the terminal
+    /// decides, and Touch controls only change on mobile.
     fn change_window_option(&mut self, row: usize, key: &KeyCode) {
         if !self.ui.window.active {
             return;
@@ -452,6 +454,9 @@ impl App {
             3 if left || right || select => change(self, |w| w.fullscreen = !w.fullscreen),
             4 if left => change(self, |w| w.display = w.display.previous()),
             4 if right || select => change(self, |w| w.display = w.display.next()),
+            5 if self.ui.window.mobile && (left || right || select) => {
+                change(self, |w| w.touch_controls = !w.touch_controls)
+            }
             _ => {}
         }
     }
@@ -845,5 +850,18 @@ mod tests {
             (saved.font_px, saved.fullscreen, saved.display),
             (DEFAULT_FONT_PX + 2, true, DisplayMode::Hidden)
         );
+        // Touch controls: only on mobile
+        runner.chain(&["key title.DOWN", "key title.RIGHT"]);
+        assert!(runner.app.ui.window.touch_controls);
+        assert!(runner
+            .screen_text()
+            .contains("Touch controls: only on mobile"));
+        runner.app.ui.window.mobile = true;
+        runner.chain(&["key title.RIGHT"]);
+        assert!(!runner.app.ui.window.touch_controls);
+        assert!(runner.screen_text().contains("Touch controls: hidden"));
+        let saved =
+            crate::window::settings::WindowSettings::from_config(&runner.app.core.config_manager);
+        assert!(!saved.touch_controls);
     }
 }

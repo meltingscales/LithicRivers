@@ -54,7 +54,7 @@ Desktop passes nothing and behaves as today.
 - **Taps and drags:** a tap (a touch that ends within one cell) is a left click on that cell. A drag past one cell becomes scroll steps.
 - **Soft keyboard:** shown with `set_ime_allowed(true)` while any text field takes typing. A small `App::typing()` check covers the title fields, search, the cheat console and blueprint naming. IME commits become `KeyCode::Char`s, and IME deletes become Backspace.
 
-The pad shows when the device reports a touch screen, and Options gains "Touch controls: auto / shown / hidden", saved under `ui.TOUCH_CONTROLS`.
+Touch is mobile-only: `android_main` sets a runtime `mobile` flag (never saved), and only then does the window draw the pad or read touch events. Desktop assumes a keyboard, even on a touch screen. Options gains "Touch controls: shown / hidden", saved under `ui.TOUCH_CONTROLS`, which reads "only on mobile" on desktop. The pad is laid out below the game, in the game's column when the Display panel is docked.
 
 **Landscape only, with the default text size raised on small screens.** On first launch on Android, the text size is chosen so the game area is at least 80 columns wide. The docked Display panel is off by default on phones (hidden), because the pad uses the space and Options still has Text size.
 
