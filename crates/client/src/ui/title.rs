@@ -289,7 +289,16 @@ fn render_options(f: &mut Frame, app: &App, area: Rect) {
             OPTIONS_ROWS[4],
             window_value(window.display.name().to_string())
         ),
-        OPTIONS_ROWS[5].to_string(),
+        format!(
+            "{}: {}",
+            OPTIONS_ROWS[5],
+            if window.mobile {
+                on_off(window.touch_controls, "shown", "hidden")
+            } else {
+                "only on mobile".to_string()
+            }
+        ),
+        OPTIONS_ROWS[6].to_string(),
     ];
     let mut lines = vec![Line::from("")];
     lines.extend(menu_lines(&rows, app.title.options_selected));
@@ -309,6 +318,11 @@ fn render_options(f: &mut Frame, app: &App, area: Rect) {
     f.render_widget(paragraph, rect);
     record_rows(app, rect, 1, OPTIONS_ROWS.len(), ClickTarget::OptionsRow);
 }
+
+/// Shown on phones and tablets: the game is built around a keyboard's numpad, and the
+/// touch pad covers only part of it.
+pub(crate) const KEYBOARD_RECOMMENDED: &str =
+    "Keyboard with numpad is recommended to play LithicRivers";
 
 fn render_title(f: &mut Frame, app: &App, area: Rect) {
     // Pad the art's lines to one width so centering keeps them aligned
@@ -336,6 +350,13 @@ fn render_title(f: &mut Frame, app: &App, area: Rect) {
         ),
         Style::default().fg(Color::DarkGray),
     )));
+    if app.ui.window.mobile {
+        lines.push(Line::from(""));
+        lines.push(Line::from(Span::styled(
+            KEYBOARD_RECOMMENDED,
+            Style::default().fg(Color::Cyan),
+        )));
+    }
     let height = (lines.len() as u16).min(area.height);
     let rect = Rect {
         y: area.y + (area.height - height) / 2,

@@ -5,7 +5,7 @@ use crate::app::client_app::App;
 use lithicrivers_core::config::ConfigManager;
 
 pub const MIN_FONT_PX: u32 = 12;
-pub const MAX_FONT_PX: u32 = 32;
+pub const MAX_FONT_PX: u32 = 48;
 pub const FONT_PX_STEP: u32 = 2;
 pub const DEFAULT_FONT_PX: u32 = 18;
 
@@ -55,8 +55,13 @@ pub struct WindowSettings {
     pub fullscreen: bool,
     /// Where the Display panel is shown
     pub display: DisplayMode,
+    /// Whether the on-screen touch controls are wanted (only ever shown on mobile)
+    pub touch_controls: bool,
     /// Whether the game is running in its own window (false in terminal and headless runs)
     pub active: bool,
+    /// Whether this is a phone or tablet build; desktop builds assume a keyboard and
+    /// never show touch controls
+    pub mobile: bool,
 }
 
 impl Default for WindowSettings {
@@ -65,7 +70,9 @@ impl Default for WindowSettings {
             font_px: DEFAULT_FONT_PX,
             fullscreen: false,
             display: DisplayMode::Docked,
+            touch_controls: true,
             active: false,
+            mobile: false,
         }
     }
 }
@@ -85,8 +92,17 @@ impl WindowSettings {
             display: get("WINDOW_DISPLAY")
                 .and_then(|v| v.as_str().and_then(DisplayMode::from_name))
                 .unwrap_or(defaults.display),
+            touch_controls: get("TOUCH_CONTROLS")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(defaults.touch_controls),
             active: false,
+            mobile: false,
         }
+    }
+
+    /// Whether the game window draws the on-screen pad and takes touch input.
+    pub fn shows_touch_controls(&self) -> bool {
+        self.active && self.mobile && self.touch_controls
     }
 
     pub fn bigger(&mut self) {
@@ -98,6 +114,40 @@ impl WindowSettings {
     }
 }
 
+/// The screen a phone's first text size leaves the game, in cells.
+const MOBILE_GAME_COLS: u32 = 80;
+const MOBILE_GAME_ROWS: u32 = 30;
+
+/// The text size a phone or tablet starts with: the largest that still leaves the game
+/// 80x30 cells (the touch pad floats over them).
+pub fn mobile_font_px((width, height): (u32, u32)) -> u32 {
+    let rows = MOBILE_GAME_ROWS;
+    (MIN_FONT_PX..=MAX_FONT_PX)
+        .rev()
+        .step_by(FONT_PX_STEP as usize)
+        .find(|&px| {
+            let (cell_w, cell_h) = super::fonts::cell_size(px);
+            width / cell_w >= MOBILE_GAME_COLS && height / cell_h >= rows
+        })
+        .unwrap_or(MIN_FONT_PX)
+}
+
+/// Whether the player has chosen a window setting (it's in the config file).
+pub fn chosen(app: &App, key: &str) -> bool {
+    app.core.config_manager.get_setting("ui", key).is_some()
+}
+
+/// Settings for a phone or tablet: touch controls, and no Display panel unless the
+/// player chose one (the pad needs the space, and Options has Text size). The text size
+/// is picked once the window's size is known (`mobile_font_px`).
+#[cfg_attr(not(target_os = "android"), allow(dead_code))]
+pub fn use_mobile_defaults(app: &mut App) {
+    app.ui.window.mobile = true;
+    if !chosen(app, "WINDOW_DISPLAY") {
+        app.ui.window.display = DisplayMode::Hidden;
+    }
+}
+
 /// Change the window settings and save them to the config file (outside headless runs).
 pub fn change(app: &mut App, f: impl FnOnce(&mut WindowSettings)) {
     f(&mut app.ui.window);
@@ -106,6 +156,7 @@ pub fn change(app: &mut App, f: impl FnOnce(&mut WindowSettings)) {
     ui["WINDOW_FONT_PX"] = serde_json::json!(settings.font_px);
     ui["WINDOW_FULLSCREEN"] = serde_json::json!(settings.fullscreen);
     ui["WINDOW_DISPLAY"] = serde_json::json!(settings.display.name());
+    ui["TOUCH_CONTROLS"] = serde_json::json!(settings.touch_controls);
     if app.persist_config {
         if let Err(e) = app.core.config_manager.save() {
             tracing::warn!(target: "game", "could not save config: {e:#}");
@@ -149,11 +200,57 @@ mod tests {
             w.bigger();
             w.fullscreen = true;
             w.display = DisplayMode::Floating;
+            w.touch_controls = false;
         });
         let loaded = WindowSettings::from_config(&runner.app.core.config_manager);
         assert_eq!(loaded.font_px, DEFAULT_FONT_PX + FONT_PX_STEP);
         assert!(loaded.fullscreen);
         assert_eq!(loaded.display, DisplayMode::Floating);
+        assert!(!loaded.touch_controls);
         assert!(!loaded.active, "being in a window is never saved");
+        assert!(!loaded.mobile, "the platform is never saved");
+    }
+
+    #[test]
+    fn phones_start_with_text_as_big_as_fits() {
+        // Pixel 8, landscape
+        let px = mobile_font_px((2400, 1080));
+        assert_eq!(px, 36);
+        let (w, h) = super::super::fonts::cell_size(px);
+        assert!(2400 / w >= MOBILE_GAME_COLS);
+        assert!(1080 / h >= MOBILE_GAME_ROWS);
+        assert!(
+            1080 / (h + FONT_PX_STEP) < MOBILE_GAME_ROWS,
+            "the next size won't fit"
+        );
+        // A big tablet gets the largest size; a tiny screen the smallest
+        assert_eq!(mobile_font_px((3840, 2160)), MAX_FONT_PX);
+        assert_eq!(mobile_font_px((320, 240)), MIN_FONT_PX);
+    }
+
+    #[test]
+    fn mobile_hides_the_display_panel_unless_chosen() {
+        let mut runner = crate::headless::chain_commands(&["skip-splash"]);
+        use_mobile_defaults(&mut runner.app);
+        assert!(runner.app.ui.window.mobile);
+        assert_eq!(runner.app.ui.window.display, DisplayMode::Hidden);
+        assert!(!chosen(&runner.app, "WINDOW_FONT_PX"));
+        change(&mut runner.app, |w| w.display = DisplayMode::Docked);
+        use_mobile_defaults(&mut runner.app);
+        assert_eq!(runner.app.ui.window.display, DisplayMode::Docked);
+        assert!(chosen(&runner.app, "WINDOW_FONT_PX"));
+    }
+
+    #[test]
+    fn touch_controls_only_on_mobile() {
+        let mut s = WindowSettings {
+            active: true,
+            ..WindowSettings::default()
+        };
+        assert!(!s.shows_touch_controls(), "desktop assumes a keyboard");
+        s.mobile = true;
+        assert!(s.shows_touch_controls());
+        s.touch_controls = false;
+        assert!(!s.shows_touch_controls());
     }
 }

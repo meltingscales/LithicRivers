@@ -44,6 +44,10 @@ insta = { version = "1", features = ["filters", "glob"] }
 [target.'cfg(windows)'.dependencies]
 winapi = { version = "0.3", features = ["winuser", "wincon"] }
 
+[target.'cfg(target_os = "android")'.dependencies]
+# GameActivity: the Android activity with soft-keyboard (IME) text input
+winit = { version = "0.30", features = ["android-game-activity"] }
+
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"
 

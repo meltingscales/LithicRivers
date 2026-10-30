@@ -109,6 +109,18 @@ impl App {
         self.save_to_file(&folder.join(worlds::SAVE_FILE).to_string_lossy())
     }
 
+    /// When the app goes to the background (Android may close it there without warning),
+    /// save the world being played, if any. Demos and the title screen have nothing to save.
+    pub(crate) fn save_on_suspend(&mut self) {
+        if self.current_world.is_none() || self.demo.is_some() {
+            return;
+        }
+        match self.save_world() {
+            Ok(()) => tracing::info!(target: "game", "saved the world before suspending"),
+            Err(e) => tracing::warn!(target: "game", "could not save before suspending: {e:#}"),
+        }
+    }
+
     /// Save, then leave the world for the title screen.
     pub(crate) fn save_and_quit_to_title(&mut self) -> anyhow::Result<()> {
         self.save_world()?;
@@ -168,5 +180,35 @@ mod tests {
         assert_eq!(game.res.world_settings, settings);
         assert_eq!(game.res.world_state.seed, 777);
         assert!(!runner.app.ui.tutorial_visible);
+    }
+
+    #[test]
+    fn suspending_saves_the_world_being_played() {
+        let mut runner = Runner::new(12345, (100, 30));
+        // On the title screen there is nothing to save
+        runner.app.save_on_suspend();
+        assert!(crate::worlds::list_worlds(&runner.app.saves_dir).is_empty());
+
+        runner.app.start_world(
+            "Suspended",
+            42,
+            WorldSettings {
+                cheats_allowed: false,
+                developer_mode: false,
+                show_tutorial: false,
+                world_type: lithicrivers_core::resources::WorldType::Normal,
+                keep_inventory: false,
+                keep_body: false,
+            },
+        );
+        runner.app.splash.state = crate::SplashState::MainUI;
+        runner.chain(&["key movement.MOVE_SOUTH", "tick 2"]);
+        let tick = runner.app.core.game.res.time.tick;
+        runner.app.save_on_suspend();
+
+        let worlds = crate::worlds::list_worlds(&runner.app.saves_dir);
+        assert_eq!(worlds.len(), 1);
+        runner.app.load_world(worlds[0].folder.clone()).unwrap();
+        assert_eq!(runner.app.core.game.res.time.tick, tick);
     }
 }

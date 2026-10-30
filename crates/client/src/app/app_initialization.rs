@@ -89,9 +89,9 @@ impl App {
         );
 
         // Determine absolute logging directory and concrete file name for today
-        let log_dir_abs = std::env::current_dir()
+        let log_dir_abs = lithicrivers_core::config::data_path(".")
+            .canonicalize()
             .ok()
-            .and_then(|p| p.canonicalize().ok())
             .map(|p| p.to_string_lossy().to_string())
             .unwrap_or_else(|| ".".to_string());
         let today = Local::now().format("%Y-%m-%d").to_string();
@@ -107,11 +107,12 @@ impl App {
         let window = crate::window::settings::WindowSettings::from_config(&config_manager);
 
         let repair_handler = RepairRecipeHandler::new();
-        let saves_dir = config_manager
-            .get_setting("game", "SAVES_FOLDER")
-            .and_then(|v| v.as_str())
-            .unwrap_or("lithicrivers-saves/saves")
-            .into();
+        let saves_dir = lithicrivers_core::config::data_path(
+            config_manager
+                .get_setting("game", "SAVES_FOLDER")
+                .and_then(|v| v.as_str())
+                .unwrap_or("lithicrivers-saves/saves"),
+        );
 
         let developer_mode = game.res.config.developer_mode;
         let mut app = App {

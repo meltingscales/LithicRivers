@@ -1,6 +1,6 @@
 # AI Instructions
 
-You are allowed to run `just build-linux` (or `just build-windows`), `just install`, and the `just demo-*` / `just util-*` recipes. This game uses ratatui for the UI.
+You are allowed to run `just build-linux` (or `just build-windows`), `just build-android`, `just install`, and the `just demo-*` / `just util-*` recipes. This game uses ratatui for the UI.
 
 If you're running NixOS, make sure to run `nix-shell` to get the right environment.
 
@@ -14,6 +14,12 @@ Please avoid running `cargo clean`. It takes a long time to rebuild rust modules
 Never run the interactive client (`just client-linux` / `just client-windows`) or any other TUI: it opens the game window (or, with `--terminal`, takes over the terminal), and you can't see either. To see the running game, use the headless client (below). If something can only be judged by a human looking at the real game, ask me to run `just client-linux`.
 
 The client opens its own window by default: winit plus `ratatui-wgpu`, drawing the same ratatui screen on the GPU with the bundled DejaVu Sans Mono (`crates/client/src/window/`), with a small Display window beside it for text size and fullscreen. `--terminal` runs it in the terminal as before. Headless runs, MCP and snapshots always draw to an in-memory `TestBackend`, so they don't depend on the frontend. Every character the game draws must be in the bundled font (`bundled_fonts_cover_every_drawn_character` names any that aren't), so avoid emoji and rare symbols in sprites and UI text.
+
+## Android
+
+The client is a library (`crates/client/src/lib.rs`): `main.rs` only calls `run_desktop()`, and on Android `android_main` runs the same game window under GameActivity, with config, saves and logs in the app's storage (`config::set_base_dir`). `just build-android [release]` builds the libraries with `cargo ndk` into `android/app/src/main/jniLibs` and the APK with the Gradle wrapper in `android/`; it needs the Android SDK and NDK (`ANDROID_HOME`, default `~/Android/Sdk`), `cargo-ndk`, and the `aarch64-linux-android` and `x86_64-linux-android` Rust targets. With a phone connected over USB, `adb install -r android/app/build/outputs/apk/release/app-release.apk` installs it and `adb exec-out screencap -p > shot.png` takes a screenshot (you can't see the phone otherwise). CI builds the APK in `.github/workflows/android-apk.yml` and attaches it to each GitHub Release.
+
+Phone-only behavior hangs off `app.ui.window.mobile`, which only `android_main` sets: the touch pad (`window/touch.rs`), the soft keyboard while `App::typing()` holds, the first-launch text size and the keyboard tip on the title screen. Desktop assumes a keyboard and never shows any of it. Headless runs are desktop, so test phone behavior by setting `runner.app.ui.window.mobile = true`.
 
 ## Demos
 

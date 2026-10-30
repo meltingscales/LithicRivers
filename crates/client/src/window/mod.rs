@@ -6,6 +6,7 @@ pub mod display;
 pub mod fonts;
 pub mod input;
 pub mod settings;
+pub mod touch;
 
 use crate::app::client_app::App;
 use ratatui::backend::TestBackend;
@@ -20,7 +21,7 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 use winit::application::ApplicationHandler;
 use winit::dpi::PhysicalSize;
-use winit::event::{ElementState, MouseScrollDelta, WindowEvent};
+use winit::event::{ElementState, MouseScrollDelta, TouchPhase, WindowEvent};
 use winit::event_loop::{ActiveEventLoop, ControlFlow, EventLoop};
 use winit::keyboard::ModifiersState;
 use winit::window::{Fullscreen, Window, WindowAttributes, WindowId, WindowLevel};
@@ -48,6 +49,78 @@ fn dock_split(area: Rect) -> Option<(Rect, Rect)> {
             Rect::new(game_cols, 0, dock_cols, area.height),
         )
     })
+}
+
+/// Where things go in the game window: the game at the top left, the docked Display
+/// panel along the right edge, and the touch pad floating over the bottom of the game.
+#[derive(Debug, PartialEq, Eq)]
+struct Layout {
+    game: Rect,
+    dock: Option<Rect>,
+    pad: Option<Rect>,
+}
+
+fn layout(area: Rect, settings: &settings::WindowSettings) -> Layout {
+    let (column, dock) = match (settings.display == DisplayMode::Docked)
+        .then(|| dock_split(area))
+        .flatten()
+    {
+        Some((column, dock)) => (column, Some(dock)),
+        None => (area, None),
+    };
+    let pad = settings
+        .shows_touch_controls()
+        .then(|| touch::pad_area(column))
+        .flatten();
+    Layout {
+        game: column,
+        dock,
+        pad,
+    }
+}
+
+/// Android's soft keyboard types into GameActivity's own text field instead of sending
+/// key presses (only Backspace and Enter arrive as keys), and winit doesn't pass that
+/// text on. So the game reads the field each frame, types what's there, and empties it.
+#[cfg(target_os = "android")]
+mod soft_keyboard {
+    use super::input;
+    use crossterm::event::KeyCode;
+    use winit::event_loop::ActiveEventLoop;
+    use winit::platform::android::activity::input::{ImeOptions, InputType, TextInputAction};
+    use winit::platform::android::ActiveEventLoopExtAndroid;
+
+    /// Plain letters with no suggestions, so the keyboard never holds a half-typed word
+    /// back, and never full screen.
+    pub fn configure(event_loop: &ActiveEventLoop) {
+        event_loop.android_app().set_ime_editor_info(
+            InputType::TYPE_CLASS_TEXT
+                | InputType::TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+                | InputType::TYPE_TEXT_FLAG_NO_SUGGESTIONS,
+            TextInputAction::Unspecified,
+            // In landscape, keep the keyboard below the game instead of full screen
+            ImeOptions::IME_FLAG_NO_FULLSCREEN,
+        );
+    }
+
+    pub fn take_text(event_loop: &ActiveEventLoop) -> Vec<KeyCode> {
+        let app = event_loop.android_app();
+        let state = app.text_input_state();
+        if state.text.is_empty() {
+            return Vec::new();
+        }
+        app.set_text_input_state(Default::default());
+        input::text_keys(&state.text)
+    }
+}
+
+#[cfg(not(target_os = "android"))]
+mod soft_keyboard {
+    pub fn take_text(
+        _event_loop: &winit::event_loop::ActiveEventLoop,
+    ) -> Vec<crossterm::event::KeyCode> {
+        Vec::new()
+    }
 }
 
 /// One window and the terminal drawn into it.
@@ -95,11 +168,11 @@ impl Surface {
     }
 
     fn cell(&self) -> (u16, u16) {
-        input::cell_at(
-            self.pointer.0,
-            self.pointer.1,
-            fonts::cell_size(self.font_px),
-        )
+        self.cell_at(self.pointer)
+    }
+
+    fn cell_at(&self, (x, y): (f64, f64)) -> (u16, u16) {
+        input::cell_at(x, y, fonts::cell_size(self.font_px))
     }
 
     fn resize(&mut self, size: PhysicalSize<u32>) {
@@ -121,15 +194,17 @@ impl Surface {
 
 /// Run the game in its own window until it quits. Fails without having shown anything
 /// if no window or GPU renderer can be created, so the caller can fall back.
-pub fn run(app: &mut App) -> Result<(), String> {
-    let event_loop = EventLoop::new().map_err(|e| format!("cannot open a window: {e}"))?;
+pub fn run(app: &mut App, event_loop: EventLoop<()>) -> Result<(), String> {
     app.ui.window.active = true;
     let mut handler = WindowApp {
         app,
         game: None,
         display: None,
-        docked_screen: None,
+        game_screen: None,
         dock_panel: None,
+        pad_buttons: Vec::new(),
+        touches: touch::Touches::default(),
+        soft_keyboard: false,
         fullscreen: false,
         modifiers: ModifiersState::empty(),
         pointer_cell: None,
@@ -149,11 +224,17 @@ struct WindowApp<'a> {
     game: Option<Surface>,
     /// The floating Display window
     display: Option<Surface>,
-    /// In-memory screen the game draws into when the Display panel is docked, copied
-    /// into the left of the game window
-    docked_screen: Option<Terminal<TestBackend>>,
+    /// In-memory screen the game draws into when the Display panel is docked or the
+    /// touch pad is shown, copied into the top left of the game window
+    game_screen: Option<Terminal<TestBackend>>,
     /// Where the docked panel's buttons were drawn last frame, for clicks
     dock_panel: Option<Rect>,
+    /// The touch pad's buttons as drawn last frame (empty when it isn't shown)
+    pad_buttons: Vec<touch::PadButton>,
+    /// Fingers on the screen outside the pad (mobile only)
+    touches: touch::Touches,
+    /// Whether the soft keyboard was asked for (mobile only)
+    soft_keyboard: bool,
     /// Whether the game window is fullscreen now
     fullscreen: bool,
     modifiers: ModifiersState,
@@ -225,6 +306,30 @@ impl WindowApp<'_> {
         }
     }
 
+    /// On mobile, open the soft keyboard while a text field takes typing, and close it
+    /// after.
+    fn update_soft_keyboard(&mut self, event_loop: &ActiveEventLoop) {
+        let wanted = self.app.ui.window.mobile && self.app.typing();
+        let Some(game) = self.game.as_ref() else {
+            return;
+        };
+        if wanted != self.soft_keyboard {
+            #[cfg(target_os = "android")]
+            if wanted {
+                soft_keyboard::configure(event_loop);
+            }
+            game.window.set_ime_allowed(wanted);
+            self.soft_keyboard = wanted;
+        }
+        if self.soft_keyboard {
+            for code in soft_keyboard::take_text(event_loop) {
+                if let Err(e) = crate::handle_input(self.app, code) {
+                    tracing::warn!(target: "game", "input error: {e}");
+                }
+            }
+        }
+    }
+
     /// A game window cell inside the docked panel, as a cell relative to the panel.
     fn in_dock(&self, (col, row): (u16, u16)) -> Option<(u16, u16)> {
         let panel = self.dock_panel?;
@@ -246,47 +351,95 @@ impl WindowApp<'_> {
             WindowEvent::RedrawRequested => {
                 let settings = self.app.ui.window;
                 let area = game.terminal.size().map(Rect::from).unwrap_or_default();
-                let split = (settings.display == DisplayMode::Docked)
-                    .then(|| dock_split(area))
-                    .flatten();
+                let Layout {
+                    game: game_area,
+                    dock,
+                    pad,
+                } = layout(area, &settings);
                 let app = &mut *self.app;
-                let result = match split {
-                    None => {
-                        self.dock_panel = None;
-                        game.terminal.draw(|f| crate::ui(f, app)).map(|_| ())
+                self.pad_buttons = pad.map(touch::layout).unwrap_or_default();
+                let result = if game_area == area {
+                    self.dock_panel = None;
+                    let pad_buttons = &self.pad_buttons;
+                    game.terminal
+                        .draw(|f| {
+                            crate::ui(f, app);
+                            touch::render(pad_buttons, f.buffer_mut(), app);
+                        })
+                        .map(|_| ())
+                } else {
+                    let screen = self.game_screen.get_or_insert_with(|| {
+                        Terminal::new(TestBackend::new(game_area.width, game_area.height))
+                            .expect("in-memory screen")
+                    });
+                    if screen.size().ok() != Some(game_area.as_size()) {
+                        screen
+                            .backend_mut()
+                            .resize(game_area.width, game_area.height);
+                        let _ = screen.autoresize();
                     }
-                    Some((game_area, dock)) => {
-                        let screen = self.docked_screen.get_or_insert_with(|| {
-                            Terminal::new(TestBackend::new(game_area.width, game_area.height))
-                                .expect("in-memory screen")
-                        });
-                        if screen.size().ok() != Some(game_area.as_size()) {
-                            screen
-                                .backend_mut()
-                                .resize(game_area.width, game_area.height);
-                            let _ = screen.autoresize();
-                        }
-                        let _ = screen.draw(|f| crate::ui(f, app));
-                        let drawn = screen.backend().buffer();
-                        let separator = Block::default().borders(Borders::LEFT);
-                        let panel = separator.inner(dock);
-                        self.dock_panel = Some(panel);
-                        game.terminal
-                            .draw(|f| {
-                                let buf = f.buffer_mut();
-                                for y in 0..game_area.height {
-                                    for x in 0..game_area.width {
-                                        buf[(x, y)] = drawn[(x, y)].clone();
-                                    }
+                    let _ = screen.draw(|f| crate::ui(f, app));
+                    let drawn = screen.backend().buffer();
+                    let separator = Block::default().borders(Borders::LEFT);
+                    self.dock_panel = dock.map(|dock| separator.inner(dock));
+                    let (dock_panel, pad_buttons) = (self.dock_panel, &self.pad_buttons);
+                    game.terminal
+                        .draw(|f| {
+                            let buf = f.buffer_mut();
+                            for y in 0..game_area.height {
+                                for x in 0..game_area.width {
+                                    buf[(x, y)] = drawn[(x, y)].clone();
                                 }
+                            }
+                            if let (Some(dock), Some(panel)) = (dock, dock_panel) {
                                 separator.render(dock, buf);
                                 display::render(panel, buf, &settings);
-                            })
-                            .map(|_| ())
-                    }
+                            }
+                            touch::render(pad_buttons, buf, app);
+                        })
+                        .map(|_| ())
                 };
                 if let Err(e) = result {
                     tracing::warn!(target: "game", "window draw failed: {e}");
+                }
+            }
+            WindowEvent::Ime(ime) => {
+                for code in input::ime_keys(&ime) {
+                    if let Err(e) = crate::handle_input(self.app, code) {
+                        tracing::warn!(target: "game", "input error: {e}");
+                    }
+                }
+            }
+            WindowEvent::Touch(touch) if self.app.ui.window.mobile => {
+                let cell = game.cell_at((touch.location.x, touch.location.y));
+                match touch.phase {
+                    TouchPhase::Started => {
+                        if let Some((col, row)) = self.in_dock(cell) {
+                            if let Some(button) = display::button_at(col, row, &self.app.ui.window)
+                            {
+                                settings::change(self.app, |w| display::press(button, w));
+                            }
+                        } else if let Some(press) = touch::button_at(&self.pad_buttons, cell) {
+                            if let Some(code) = touch::key_code(self.app, press) {
+                                if let Err(e) = crate::handle_input(self.app, code) {
+                                    tracing::warn!(target: "game", "input error: {e}");
+                                }
+                            }
+                        } else {
+                            self.touches.started(touch.id, cell);
+                        }
+                    }
+                    TouchPhase::Moved => {
+                        for scroll in self.touches.moved(touch.id, cell) {
+                            crate::handle_mouse_event(self.app, scroll);
+                        }
+                    }
+                    TouchPhase::Ended => {
+                        for event in self.touches.ended(touch.id) {
+                            crate::handle_mouse_event(self.app, event);
+                        }
+                    }
+                    TouchPhase::Cancelled => self.touches.cancelled(touch.id),
                 }
             }
             WindowEvent::KeyboardInput { event, .. } if event.state == ElementState::Pressed => {
@@ -382,6 +535,19 @@ impl WindowApp<'_> {
 }
 
 impl ApplicationHandler for WindowApp<'_> {
+    /// The app went to the background (on Android, it may be closed there without
+    /// warning, and its surfaces are destroyed): save, and drop the surfaces. `resumed`
+    /// opens them again.
+    fn suspended(&mut self, _event_loop: &ActiveEventLoop) {
+        self.app.save_on_suspend();
+        self.game = None;
+        self.display = None;
+        self.dock_panel = None;
+        self.pad_buttons.clear();
+        self.touches = touch::Touches::default();
+        self.soft_keyboard = false;
+    }
+
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
         if self.game.is_some() {
             return;
@@ -390,6 +556,13 @@ impl ApplicationHandler for WindowApp<'_> {
             self.error = Some(e);
             event_loop.exit();
             return;
+        }
+        if self.app.ui.window.mobile && !settings::chosen(self.app, "WINDOW_FONT_PX") {
+            if let Some(game) = &self.game {
+                let size = game.window.inner_size();
+                let px = settings::mobile_font_px((size.width, size.height));
+                settings::change(self.app, |w| w.font_px = px);
+            }
         }
         if self.app.ui.window.display == DisplayMode::Floating {
             self.open_display(event_loop);
@@ -417,6 +590,7 @@ impl ApplicationHandler for WindowApp<'_> {
             return;
         }
         self.apply_settings(event_loop);
+        self.update_soft_keyboard(event_loop);
         for surface in [&self.game, &self.display].into_iter().flatten() {
             surface.window.request_redraw();
         }
@@ -436,5 +610,35 @@ mod tests {
         assert_eq!(dock.width, display::COLS + 1);
         // Too narrow: no docked panel, the game keeps the whole window
         assert!(dock_split(Rect::new(0, 0, MIN_GAME_COLS + display::COLS, 36)).is_none());
+    }
+
+    #[test]
+    fn the_touch_pad_only_shows_on_mobile() {
+        let area = Rect::new(0, 0, 120, 40);
+        let mut settings = settings::WindowSettings {
+            active: true,
+            display: DisplayMode::Hidden,
+            ..Default::default()
+        };
+        assert_eq!(
+            layout(area, &settings),
+            Layout {
+                game: area,
+                dock: None,
+                pad: None
+            },
+            "desktop: the game keeps the whole window"
+        );
+        settings.mobile = true;
+        let shown = layout(area, &settings);
+        assert_eq!(shown.game, area, "the pad floats over the game");
+        assert_eq!(shown.pad.unwrap().y, 40 - touch::PAD_ROWS);
+        // Docked too: the pad spans the game's column, not the panel
+        settings.display = DisplayMode::Docked;
+        let both = layout(area, &settings);
+        assert_eq!(both.pad.unwrap().width, both.dock.unwrap().x);
+        assert_eq!(both.game.width, both.dock.unwrap().x);
+        settings.touch_controls = false;
+        assert_eq!(layout(area, &settings).pad, None);
     }
 }

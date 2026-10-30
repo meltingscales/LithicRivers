@@ -11,7 +11,8 @@ pub fn key_code(key: &Key, text: Option<&str>, shift: bool) -> Option<KeyCode> {
     let code = match key {
         Key::Named(named) => match named {
             NamedKey::Enter => KeyCode::Enter,
-            NamedKey::Escape => KeyCode::Esc,
+            // A keyboard's Back key; Android's Back gesture is sent as Escape by MainActivity
+            NamedKey::Escape | NamedKey::BrowserBack => KeyCode::Esc,
             NamedKey::Tab if shift => KeyCode::BackTab,
             NamedKey::Tab => KeyCode::Tab,
             NamedKey::Backspace => KeyCode::Backspace,
@@ -45,6 +46,13 @@ pub fn key_code(key: &Key, text: Option<&str>, shift: bool) -> Option<KeyCode> {
             let typed = text.unwrap_or(chars.as_str());
             let mut it = typed.chars();
             match (it.next(), it.next()) {
+                // Android reports some named keys as their control characters
+                (Some('\n' | '\r'), None) => KeyCode::Enter,
+                (Some('\t'), None) if shift => KeyCode::BackTab,
+                (Some('\t'), None) => KeyCode::Tab,
+                (Some('\u{8}'), None) => KeyCode::Backspace,
+                (Some('\u{1b}'), None) => KeyCode::Esc,
+                (Some('\u{7f}'), None) => KeyCode::Delete,
                 (Some(c), None) if !c.is_control() => KeyCode::Char(c),
                 _ => return None,
             }
@@ -52,6 +60,22 @@ pub fn key_code(key: &Key, text: Option<&str>, shift: bool) -> Option<KeyCode> {
         _ => return None,
     };
     Some(code)
+}
+
+/// The keys an input-method event types: each committed character, as if typed one by
+/// one (preedit text is still being composed, so it types nothing yet).
+pub fn ime_keys(ime: &winit::event::Ime) -> Vec<KeyCode> {
+    match ime {
+        winit::event::Ime::Commit(text) => text_keys(text),
+        _ => Vec::new(),
+    }
+}
+
+/// Text as the keys that type it, one per character.
+pub fn text_keys(text: &str) -> Vec<KeyCode> {
+    text.chars()
+        .filter_map(|c| key_code(&Key::Character(c.to_string().into()), None, false))
+        .collect()
 }
 
 /// The screen cell under a pointer position in pixels.
@@ -137,6 +161,11 @@ mod tests {
             Some(KeyCode::BackTab)
         );
         assert_eq!(key_code(&Key::Named(NamedKey::Shift), None, true), None);
+        assert_eq!(
+            key_code(&Key::Named(NamedKey::BrowserBack), None, false),
+            Some(KeyCode::Esc),
+            "Android's Back button acts as Escape"
+        );
     }
 
     #[test]
@@ -162,6 +191,46 @@ mod tests {
         // No text (Ctrl held): fall back to the key itself
         assert_eq!(key_code(&chr("q"), None, false), Some(KeyCode::Char('q')));
         assert_eq!(key_code(&chr("ab"), Some("ab"), false), None);
+    }
+
+    #[test]
+    fn control_characters_are_their_named_keys() {
+        // How Android's winit backend reports Enter, Tab, Escape and the rest
+        assert_eq!(
+            key_code(&chr("\n"), Some("\n"), false),
+            Some(KeyCode::Enter)
+        );
+        assert_eq!(key_code(&chr("\t"), Some("\t"), false), Some(KeyCode::Tab));
+        assert_eq!(
+            key_code(&chr("\t"), Some("\t"), true),
+            Some(KeyCode::BackTab)
+        );
+        assert_eq!(
+            key_code(&chr("\u{8}"), None, false),
+            Some(KeyCode::Backspace)
+        );
+        assert_eq!(key_code(&chr("\u{1b}"), None, false), Some(KeyCode::Esc));
+        assert_eq!(key_code(&chr("\u{7f}"), None, false), Some(KeyCode::Delete));
+        assert_eq!(key_code(&chr("\u{0}"), None, false), None);
+    }
+
+    #[test]
+    fn ime_commits_type_each_character() {
+        use winit::event::Ime;
+        assert_eq!(
+            ime_keys(&Ime::Commit("Rö k".into())),
+            vec![
+                KeyCode::Char('R'),
+                KeyCode::Char('ö'),
+                KeyCode::Char(' '),
+                KeyCode::Char('k')
+            ]
+        );
+        assert_eq!(
+            ime_keys(&Ime::Commit("a\n".into())),
+            vec![KeyCode::Char('a'), KeyCode::Enter]
+        );
+        assert!(ime_keys(&Ime::Preedit("ka".into(), None)).is_empty());
     }
 
     #[test]
