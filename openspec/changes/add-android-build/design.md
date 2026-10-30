@@ -1,0 +1,69 @@
+# Design
+
+## Context
+
+- The client is a binary crate: `main.rs` declares every module (`app`, `ui`, `window`, `headless`, ...) and holds `step`, `handle_input`, `handle_mouse_event` and the argument handling.
+- The game window (`crates/client/src/window/`) runs a winit `ApplicationHandler` that drives a `ratatui-wgpu` backend (our fork). Input is already translated at that edge: window key and mouse events become crossterm `KeyCode`s and screen cells.
+- `ConfigManager::resolve_config_path` roots the config at `<exe_dir>/config`. Logs go to `.`, and saves to the relative `lithicrivers-saves/...` from the config.
+- Assets are embedded with `rust-embed`, so the binary needs no asset files at runtime.
+- Audio is rodio on cpal. cpal 0.15 has an Android backend through oboe, which needs the NDK's C++ toolchain.
+
+## Goals / Non-Goals
+
+**Goals:**
+- One APK built by a recipe and by CI, running the unchanged game.
+- Playable with touch alone, with no game logic changed: the touch layer produces the same keys and clicks as a keyboard and mouse.
+
+**Non-Goals:**
+- The Play Store: an AAB bundle, the target-API upkeep, the listing and release keystore management. That's a later change.
+- Portrait layout, gamepads (`add-controller-support` in SPEC-GAPS), iOS.
+- Performance work beyond measuring: `just util-bench`'s numbers on a phone are recorded, and fixes go in their own change.
+
+## Decisions
+
+**Split the client into a library and a thin binary.** `lib.rs` declares the modules and exposes:
+- `run_desktop(args)`: today's `main` body;
+- the frontend functions (`step`, `handle_input`, `handle_mouse_event`, `ui`).
+
+`main.rs` becomes a few lines calling `run_desktop`. The Android `cdylib` entry (`android_main`) lives in the same library behind `cfg(target_os = "android")`. We considered a separate `crates/android` crate, but it can't depend on a binary crate, and duplicating the module tree would be worse. The split moves code without changing it, so snapshots and the `save_reload_anywhere` test prove nothing changed.
+
+**GameActivity through winit, hosted by a small Gradle project.** winit's `android-game-activity` feature gives soft-keyboard text input (IME), which the text fields need. NativeActivity has no IME. GameActivity needs its Java AAR, so `android/` holds a minimal Gradle project:
+- one activity;
+- a landscape-only manifest;
+- the debug signing config.
+
+`cargo-ndk` builds `liblithicrivers_client.so` for `arm64-v8a` and `x86_64` into `jniLibs`. `just build-android` runs `cargo ndk` and then `./gradlew assembleDebug` (or `assembleRelease` with a keystore from environment variables). We considered `xbuild` and `cargo-apk`. They're simpler, but `cargo-apk` is unmaintained, and neither makes the Play Store's AAB, which Gradle does once that later change needs it.
+
+**Storage root from the platform.** On Android, `android_main` reads `AndroidApp::internal_data_path()`, and the client passes it as the base folder for:
+- `ConfigManager` (a new optional base path, defaulting to today's executable folder);
+- the log appender;
+- the saves and snapshots folders, which stay relative to the base.
+
+Desktop passes nothing and behaves as today.
+
+**Lifecycle in the window module.**
+- **Suspended:** winit's `suspended` drops the GPU surface and saves the current world through the existing save path, reusing what Save and quit does.
+- **Resumed:** `resumed` recreates the surface (the window module already creates it lazily there), and the game continues.
+- **Back:** winit reports Back as a named key, which the input translation maps to `KeyCode::Esc`.
+
+**Touch layer next to the existing input translation.** It lives in `window::touch`, in pure, tested functions:
+- **On-screen pad:** laid out in cells along the bottom of the game area. Movement sits on the left (a 3x3 grid with wait in the middle) and buttons on the right (Interact, Mine, Build, ◀ tab, ▶ tab, Esc). Each button names a keybind (`movement.MOVE_EAST`, `action.INTERACT`, ...), and a press sends that keybind's first key through `handle_input`. Rebinding therefore just works, and the labels show the bound key.
+- **Space for the pad:** like the docked Display panel, the game draws into an in-memory screen sized to the rest of the window, so its coordinates don't change.
+- **Taps and drags:** a tap (a touch that ends within one cell) is a left click on that cell. A drag past one cell becomes scroll steps.
+- **Soft keyboard:** shown with `set_ime_allowed(true)` while any text field takes typing. A small `App::typing()` check covers the title fields, search, the cheat console and blueprint naming. IME commits become `KeyCode::Char`s, and IME deletes become Backspace.
+
+The pad shows when the device reports a touch screen, and Options gains "Touch controls: auto / shown / hidden", saved under `ui.TOUCH_CONTROLS`.
+
+**Landscape only, with the default text size raised on small screens.** On first launch on Android, the text size is chosen so the game area is at least 80 columns wide. The docked Display panel is off by default on phones (hidden), because the pad uses the space and Options still has Text size.
+
+## Risks / Trade-offs
+
+- [cpal's oboe backend needs the NDK C++ toolchain and can fail to build] → The first task builds the library with audio on. If oboe fails, audio is turned off on Android behind a feature, with a follow-up change, rather than blocking the build.
+- [The ratatui-wgpu fork on Android's Vulkan drivers] → The emulator smoke run and a real device both draw the title screen before the rest of the work.
+- [A crossterm dependency in core, `keycode_mapping`] → It's only types on Android, and crossterm builds for Android targets. The terminal frontend (`--terminal`) is compiled out there.
+- [Losing progress when Android kills the app] → The world saves on every suspend, and the test drives the suspend path headlessly through the same save function.
+- [I can't run a phone here] → Pure functions (touch layout, tap and drag, the storage root) are unit-tested, the build runs in CI, and playing on a device is a user check.
+
+## Migration Plan
+
+Desktop users see no change. The library split lands first, as its own commit with snapshots unchanged, before any Android code.
