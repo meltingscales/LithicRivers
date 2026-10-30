@@ -20,4 +20,4 @@
 ## 4. Checks
 
 - [x] 4.1 Update `docs/STEAM-MVP.md` (results, tick the performance items), and add the bench and profile recipes to AGENTS.md; verify `just code-clippy`, `cargo test --workspace` and PR checks pass
-- [ ] 4.2 User check: the game feels responsive in the interactive client on your machine (and on a Steam Deck, if one is available)
+- [x] 4.2 User check: the game feels responsive in the interactive client on your machine (and on a Steam Deck, if one is available)

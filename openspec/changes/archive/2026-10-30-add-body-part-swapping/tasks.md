@@ -13,4 +13,4 @@
 ## 3. Checks
 
 - [x] 3.1 Verify `just code-clippy`, `cargo test --workspace` and PR checks pass
-- [ ] 3.2 User check: picking, swapping and removing parts feels clear in the Body tab
+- [x] 3.2 User check: picking, swapping and removing parts feels clear in the Body tab
