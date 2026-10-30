@@ -13,9 +13,9 @@ The project SHALL build a signed Android APK of the game with one recipe, locall
 - **WHEN** a developer with the Android SDK and NDK runs the Android build recipe
 - **THEN** it produces a signed APK that installs with `adb install`
 
-#### Scenario: CI artifact
-- **WHEN** the release workflow runs
-- **THEN** it uploads the Android APK alongside the desktop builds
+#### Scenario: APK attached to each release
+- **WHEN** a release tag is pushed and the release workflow publishes the GitHub Release
+- **THEN** the release lists the Android APK (`lithicrivers-<version>.apk`) among its assets, beside the Windows, Linux and macOS builds
 
 ### Requirement: Files in the app's storage
 On Android, the game SHALL keep its config, saves, snapshots and logs in the app's internal data folder, and SHALL NOT depend on the executable's folder or the working folder.

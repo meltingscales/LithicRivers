@@ -182,6 +182,9 @@ fn android_main(android_app: winit::platform::android::activity::AndroidApp) {
         Err(e) => tracing::error!(target: "game", "cannot start the event loop: {e}"),
     }
     log_shutdown(&mut app);
+    // winit allows one event loop per process, so a later launch of the activity in this
+    // process could never draw. Ending the process makes the next launch start fresh.
+    std::process::exit(0);
 }
 
 /// Built as a window app, the Windows client has no console of its own. Terminal and

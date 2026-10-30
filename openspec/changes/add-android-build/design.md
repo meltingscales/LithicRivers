@@ -46,7 +46,7 @@ Desktop passes nothing and behaves as today.
 **Lifecycle in the window module.**
 - **Suspended:** winit's `suspended` drops the GPU surface and saves the current world through the existing save path, reusing what Save and quit does.
 - **Resumed:** `resumed` recreates the surface (the window module already creates it lazily there), and the game continues.
-- **Back:** winit reports Back as a named key, which the input translation maps to `KeyCode::Esc`.
+- **Back:** with target SDK 36, Back is a predictive-back gesture rather than a key event, so a `MainActivity` subclass of GameActivity registers a back callback that sends Escape to the game. Leaving the app is Home or Quit.
 
 **Touch layer next to the existing input translation.** It lives in `window::touch`, in pure, tested functions:
 - **On-screen pad:** laid out in cells along the bottom of the game area. Movement sits on the left (a 3x3 grid with wait in the middle) and buttons on the right (Interact, Mine, Build, ◀ tab, ▶ tab, Esc). Each button names a keybind (`movement.MOVE_EAST`, `action.INTERACT`, ...), and a press sends that keybind's first key through `handle_input`. Rebinding therefore just works, and the labels show the bound key.
@@ -64,7 +64,7 @@ The pad shows when the device reports a touch screen, and Options gains "Touch c
 - [The ratatui-wgpu fork on Android's Vulkan drivers] → The emulator smoke run and a real device both draw the title screen before the rest of the work.
 - [A crossterm dependency in core, `keycode_mapping`] → It's only types on Android, and crossterm builds for Android targets. The terminal frontend (`--terminal`) is compiled out there.
 - [Losing progress when Android kills the app] → The world saves on every suspend, and the test drives the suspend path headlessly through the same save function.
-- [GameActivity may still finish the activity on Back] → winit delivers Back as `BrowserBack`, which becomes Escape. If GameActivity's default back handling also closes the app, the fix is a small Java subclass that overrides `onBackPressed`. That's checked on a device in 4.2.
+- [GameActivity may still finish the activity on Back] → winit delivers Back as `BrowserBack`, which becomes Escape. If GameActivity's default back handling also closes the app, the fix is a small Java subclass that overrides `onBackPressed`. That's checked on a device in 4.2. *Outcome (task 2.2, Pixel 8):* GameActivity did finish on Back, and because winit allows one event loop per process, the next launch hung on the splash icon. `MainActivity` now turns Back into Escape, and `android_main` ends the process when the game loop returns. The device run also showed that winit on Android reports Enter, Tab and Escape as control characters (`"\n"`, `"\t"`, `"\u{1b}"`), which the input translation now maps to their keys.
 - [I can't run a phone here] → Pure functions (touch layout, tap and drag, the storage root) are unit-tested, the build runs in CI, and playing on a device is a user check.
 
 ## Migration Plan

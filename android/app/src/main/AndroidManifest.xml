@@ -8,7 +8,7 @@
         android:theme="@style/Theme.LithicRivers"
         android:hasCode="true">
         <activity
-            android:name="com.google.androidgamesdk.GameActivity"
+            android:name=".MainActivity"
             android:exported="true"
             android:screenOrientation="sensorLandscape"
             android:configChanges="orientation|screenSize|screenLayout|keyboard|keyboardHidden|navigation|uiMode|density">

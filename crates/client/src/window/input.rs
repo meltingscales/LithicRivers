@@ -11,7 +11,7 @@ pub fn key_code(key: &Key, text: Option<&str>, shift: bool) -> Option<KeyCode> {
     let code = match key {
         Key::Named(named) => match named {
             NamedKey::Enter => KeyCode::Enter,
-            // Android's Back button arrives as BrowserBack
+            // A keyboard's Back key; Android's Back gesture is sent as Escape by MainActivity
             NamedKey::Escape | NamedKey::BrowserBack => KeyCode::Esc,
             NamedKey::Tab if shift => KeyCode::BackTab,
             NamedKey::Tab => KeyCode::Tab,
@@ -46,6 +46,13 @@ pub fn key_code(key: &Key, text: Option<&str>, shift: bool) -> Option<KeyCode> {
             let typed = text.unwrap_or(chars.as_str());
             let mut it = typed.chars();
             match (it.next(), it.next()) {
+                // Android reports some named keys as their control characters
+                (Some('\n' | '\r'), None) => KeyCode::Enter,
+                (Some('\t'), None) if shift => KeyCode::BackTab,
+                (Some('\t'), None) => KeyCode::Tab,
+                (Some('\u{8}'), None) => KeyCode::Backspace,
+                (Some('\u{1b}'), None) => KeyCode::Esc,
+                (Some('\u{7f}'), None) => KeyCode::Delete,
                 (Some(c), None) if !c.is_control() => KeyCode::Char(c),
                 _ => return None,
             }
@@ -168,6 +175,27 @@ mod tests {
         // No text (Ctrl held): fall back to the key itself
         assert_eq!(key_code(&chr("q"), None, false), Some(KeyCode::Char('q')));
         assert_eq!(key_code(&chr("ab"), Some("ab"), false), None);
+    }
+
+    #[test]
+    fn control_characters_are_their_named_keys() {
+        // How Android's winit backend reports Enter, Tab, Escape and the rest
+        assert_eq!(
+            key_code(&chr("\n"), Some("\n"), false),
+            Some(KeyCode::Enter)
+        );
+        assert_eq!(key_code(&chr("\t"), Some("\t"), false), Some(KeyCode::Tab));
+        assert_eq!(
+            key_code(&chr("\t"), Some("\t"), true),
+            Some(KeyCode::BackTab)
+        );
+        assert_eq!(
+            key_code(&chr("\u{8}"), None, false),
+            Some(KeyCode::Backspace)
+        );
+        assert_eq!(key_code(&chr("\u{1b}"), None, false), Some(KeyCode::Esc));
+        assert_eq!(key_code(&chr("\u{7f}"), None, false), Some(KeyCode::Delete));
+        assert_eq!(key_code(&chr("\u{0}"), None, false), None);
     }
 
     #[test]
