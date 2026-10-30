@@ -1,0 +1,81 @@
+---
+source: crates/client/src/snapshot_tests.rs
+expression: "String::from_utf8(out).unwrap()"
+input_file: scripts/snapshots/splash-fits-default-window.txt
+---
+=== screen logo ===
+
+
+
+
+
+
+
+
+
+
+
+
+
+                ╔╯▫────╯  DDDD   RRR     AAA   K   K   OOO   N   N   I   X   X
+                ╰█⠿=====  D   D  R  R   A   A  K  K   O   O  NN  N   I    X X
+                ╔█⠿=====  D   D  RRRRR  AAAAA  KKK    O   O  N N N   I     X
+                ╰█⠿=====  D   D  R  R   A   A  K  K   O   O  N  NN   I    X X
+                ██⠿=====  DDDD   R   R  A   A  K   K   OOO   N   N   I   X   X
+
+                        SSSSY     Y  SSSSSSTTTTTTTEEEEE   M   M   SSSS
+                       S     Y   Y  S        T    E       MM MM  S
+                        SSS   Y Y    SSS     T    EEEE    M M M   SSS
+                           S   Y        S    T    E       M   M      S
+                       SSSS    YYYYSSSSS     T    EEEEEEEEM   MSSSSSS
+
+
+
+
+
+
+
+
+
+
+
+
+=== end screen ===
+=== screen game-title ===
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                  L      I   TTTTT  H   H  I   CCC
+                                  L      I     T    H   H  I  C   C
+                                  L      I     T    HHHHH  I  C
+                             ▓    L      I     T    H   H  I  C   C
+                          ░  ▓ █  LLLLL  I     T    H   H  I   CCC
+                        ▓ ░ ▓█░▓
+                        █░▓ ░▓▓█  RRR   I  V   V  EEEEE  RRRR   SSSSS
+                        ▓▓█░▓░▓█  R  R  I  V   V  E      R   R  S
+                                  RRRR  I  V   V  EEEE   RRRR    SSS
+                                  R R   I   V V   E      R R        S
+                                  R  R  I    V    EEEEE  R  R   SSSSS
+
+
+
+
+
+
+
+
+
+
+
+
+=== end screen ===
