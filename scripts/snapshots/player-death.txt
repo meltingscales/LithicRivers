@@ -1,5 +1,6 @@
-# Dying: the system-failure screen, the wreck holding what the robot carried, and
-# respawning at the bunker with the default body and the starting kit.
+# Dying: the system-failure screen, the wreck holding what the robot carried, the
+# Resurrect screen with only the junker body (no vats yet), and the flyover to the
+# SapienCorp HQ, where the robot wakes in the junker with the starting kit.
 seed 12345
 size 100x30
 skip-splash
@@ -14,5 +15,12 @@ screen dead
 key movement.MOVE_EAST
 expect-text "SYSTEM FAILURE"
 key ui.MENU_ACTIVATE
+expect-text "Junker body at the SapienCorp HQ"
+screen resurrect
+key ui.MENU_ACTIVATE
 expect-text "Backup systems online"
+screen flyover-start
+wait 1500
+screen flyover-middle
+wait 1500
 screen respawned

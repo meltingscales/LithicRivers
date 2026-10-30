@@ -10,7 +10,7 @@
 - **Robot Resurrection Vats in three tiers** (decided by the user):
   - **Crude vat (starter):** cheap, early-game materials, no power needed. It holds a body of crude parts: weak, every part starting Damaged, and only the default layout (two arms, two legs). Better than the junker, and reachable before the factory gets going.
   - **Standard vat (mid-game):** needs power, and holds a body of standard parts that wake Functional.
-  - **Advanced vat (end-game):** needs a lot of power, and supports complex bodies: more limb slots (four, six or eight arms, from `add-multi-arm-bodies`) and better parts.
+  - **Advanced vat (end-game):** needs a lot of power, and takes better parts that wake Enhanced. More limb slots (four, six or eight arms) come later with `add-multi-arm-bodies`, which this change doesn't wait for.
   - In every tier, a vat holds one spare body assembled from the parts put into its slots, and its window shows which parts are in and their state. A powered vat without power shows "dormant" and can't be chosen.
 - **The Resurrect screen** replaces the system-failure screen's respawn choice:
   - It lists every ready vat, with its spare body's parts, energy and distance, and the player picks one.
@@ -25,6 +25,7 @@
 
 ### Modified Capabilities
 - `player-death`: respawning chooses a vat or falls back to the junker body, instead of the default body at the bunker.
+- `death-options`: `keepbody` applies to the junker body; a vat always gives its spare body.
 
 ## Impact
 
@@ -45,4 +46,5 @@
 
 ## Decided
 
+- **Multi-arm deferred (the user's decision):** the advanced vat ships with the default two-arm layout; `add-multi-arm-bodies` adds multi-arm torsos to it.
 - **Tiers (the user's decision):** a crude starter vat, a mid-game standard vat, and an end-game advanced vat that supports complex bodies. Exact costs are set during implementation, aimed at those three points in the tech tree.

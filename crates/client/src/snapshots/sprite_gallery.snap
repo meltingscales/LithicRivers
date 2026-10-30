@@ -219,6 +219,25 @@ S
  ▐█▓▒▒▓▓▓█▌▄
   ▀▀▀▀▀▀▀▀▀ 
             
+=== factory/advanced_vat  #C9F7FF  A tall vat glowing from within, drinking power to keep its sleeper perfect
+-- 1x
+U
+-- 2x
+▐▌
+▀▀
+-- 3x
+▌o▐
+▌█▐
+▀▀▀
+-- art 0
+  ▄██████▄  
+ █▌ ░▓▓░ ▐█ 
+ █▌ ░oo░ ▐█ 
+ █▌░▒██▒░▐█ 
+ █▌ ░▌▐░ ▐█ 
+ █▌ ░▌▐░ ▐█ 
+ ▀████████▀ 
+   ▀▀  ▀▀   
 === factory/auto_harvester_east  #B45F06  Chops grown trees within 2 tiles and outputs the wood in front
 -- 1x
 H
@@ -656,6 +675,25 @@ f<
   █▓└──┘▓▓█ 
   ▀▀▀▀▀▀▀▀▀ 
             
+=== factory/crude_vat  #B07A4A  A barrel of brine and scrap wired to keep one spare body from rotting; it needs no power
+-- 1x
+U
+-- 2x
+▐▌
+▀▀
+-- 3x
+▌o▐
+▌█▐
+▀▀▀
+-- art 0
+  ▄██████▄  
+ █▌ ░▓▓░ ▐█ 
+ █▌ ░oo░ ▐█ 
+ █▌░▒██▒░▐█ 
+ █▌ ░▌▐░ ▐█ 
+ █▌ ░▌▐░ ▐█ 
+ ▀████████▀ 
+   ▀▀  ▀▀   
 === factory/electric_furnace_lit_east  #9FF2E0  A crude furnace rewired around a salvaged heating coil; it smelts on grid power and hums while it works
 -- 1x
 E
@@ -998,6 +1036,25 @@ C
  █▒▒▒▒▒▒▒▒█ 
  ▀▀▀▀▀▀▀▀▀▀ 
             
+=== factory/standard_vat  #7FD1B9  A SapienCorp resurrection vat with a cracked visor, kept warm by a trickle of power
+-- 1x
+U
+-- 2x
+▐▌
+▀▀
+-- 3x
+▌o▐
+▌█▐
+▀▀▀
+-- art 0
+  ▄██████▄  
+ █▌ ░▓▓░ ▐█ 
+ █▌ ░oo░ ▐█ 
+ █▌░▒██▒░▐█ 
+ █▌ ░▌▐░ ▐█ 
+ █▌ ░▌▐░ ▐█ 
+ ▀████████▀ 
+   ▀▀  ▀▀   
 === factory/vertical_conveyor_down  #9C6B30  A wooden shaft that lets one item at a time down to the layer below
 -- 1x
 ▼
@@ -1150,6 +1207,120 @@ ooo
     ▀▓▓▀    
             
             
+=== items/advanced_arm  #B8F2FF  A plasteel arm with a waste-fed motor in the elbow; it grips harder than it should
+-- 1x
+/
+-- 2x
+o\
+ /
+-- 3x
+o\ 
+ ▓\
+  <
+-- art 0
+            
+  ▄▄▄       
+ ▐███▌      
+  ▀▓▓o▄     
+     ▀▓▓▄   
+       ▀▓█▄ 
+         ▀▀<
+            
+=== items/advanced_fusion_core  #B8F2FF  A fusion core that glows through its own casing, hotter than SapienCorp ever dared
+-- 1x
+*
+-- 2x
+▓▓
+**
+-- 3x
+▄▓▄
+▓*▓
+▀▓▀
+-- art 0
+            
+    ▄██▄    
+  ▄█▓▒▒▓█▄  
+  █▒░**░▒█  
+  █▒░**░▒█  
+  ▀█▓▒▒▓█▀  
+    ▀██▀    
+            
+=== items/advanced_head  #B8F2FF  A cranial unit with a nuclear lamp behind the eyes, sharper than the original
+-- 1x
+0
+-- 2x
+▄▄
+█o
+-- 3x
+▄▄▄
+█o█
+▀█▀
+-- art 0
+            
+   ▄████▄   
+  █▓▓▓▓▓▓█  
+  █▓ o  o█  
+  █▓▓▓▓▓▓█  
+   ▀█▄▄█▀   
+    ▐██▌    
+            
+=== items/advanced_leg  #B8F2FF  A plasteel leg with a sprung, waste-fed knee that wants to run
+-- 1x
+L
+-- 2x
+▓▓
+▐▌
+-- 3x
+▐▓▌
+ ▓ 
+▄█▄
+-- art 0
+            
+   ▐███▌    
+    ▓▓▓     
+    ▐o▌     
+    ▓▓▓     
+    ▐▓▌     
+   ▄██▌▄▄   
+            
+=== items/advanced_torso  #B8F2FF  A plasteel chassis shot through with warm, humming conduits
+-- 1x
+H
+-- 2x
+██
+▀▀
+-- 3x
+▄█▄
+█▓█
+▀█▀
+-- art 0
+            
+ ▄▄██████▄▄ 
+ █▓▓▓▓▓▓▓▓█ 
+ ▀█▓┌──┐▓█▀ 
+  █▓│  │▓█  
+  █▓└──┘▓█  
+   ▀████▀   
+            
+=== items/advanced_vat  #96B9BF  A tall vat glowing from within, drinking power to keep its sleeper perfect
+-- 1x
+U
+-- 2x
+▐▌
+▀▀
+-- 3x
+▌o▐
+▌█▐
+▀▀▀
+-- art 0
+  ▄██████▄  
+ █▌ ░▓▓░ ▐█ 
+ █▌ ░oo░ ▐█ 
+ █▌░▒██▒░▐█ 
+ █▌ ░▌▐░ ▐█ 
+ █▌ ░▌▐░ ▐█ 
+ ▀████████▀ 
+   ▀▀  ▀▀   
 === items/auto_harvester  #B45F06  Chops grown trees within 2 tiles and outputs the wood in front
 -- 1x
 h
@@ -1264,6 +1435,25 @@ C
  ▀▀▀▀▀▀▀▀▀▀ 
             
             
+=== items/crude_arm  #A0673A  Sticks, string and scrap shaped like an arm; the fingers close if you ask nicely
+-- 1x
+/
+-- 2x
+o\
+ /
+-- 3x
+o\ 
+ ▓\
+  <
+-- art 0
+            
+  ▄▄▄       
+ ▐███▌      
+  ▀▓▓o▄     
+     ▀▓▓▄   
+       ▀▓█▄ 
+         ▀▀<
+            
 === items/crude_furnace  #6A523E  Burns fuel to smelt wood into biochar
 -- 1x
 f
@@ -1283,6 +1473,101 @@ fFf
  █▓▓└──┘▓█  
  ▀▀▀▀▀▀▀▀▀  
             
+=== items/crude_fusion_core  #A0673A  A sputtering core packed with stone and salvaged boards; it holds a charge, barely
+-- 1x
+*
+-- 2x
+▓▓
+**
+-- 3x
+▄▓▄
+▓*▓
+▀▓▀
+-- art 0
+            
+    ▄██▄    
+  ▄█▓▒▒▓█▄  
+  █▒░**░▒█  
+  █▒░**░▒█  
+  ▀█▓▒▒▓█▀  
+    ▀██▀    
+            
+=== items/crude_head  #A0673A  A cranial unit hammered out of scrap; its eyes see, mostly
+-- 1x
+0
+-- 2x
+▄▄
+█o
+-- 3x
+▄▄▄
+█o█
+▀█▀
+-- art 0
+            
+   ▄████▄   
+  █▓▓▓▓▓▓█  
+  █▓ o  o█  
+  █▓▓▓▓▓▓█  
+   ▀█▄▄█▀   
+    ▐██▌    
+            
+=== items/crude_leg  #A0673A  A stick-and-string leg that walks with a limp built in
+-- 1x
+L
+-- 2x
+▓▓
+▐▌
+-- 3x
+▐▓▌
+ ▓ 
+▄█▄
+-- art 0
+            
+   ▐███▌    
+    ▓▓▓     
+    ▐o▌     
+    ▓▓▓     
+    ▐▓▌     
+   ▄██▌▄▄   
+            
+=== items/crude_torso  #A0673A  Planks and iron bolted around an empty chest cavity, enough to hold a robot together
+-- 1x
+H
+-- 2x
+██
+▀▀
+-- 3x
+▄█▄
+█▓█
+▀█▀
+-- art 0
+            
+ ▄▄██████▄▄ 
+ █▓▓▓▓▓▓▓▓█ 
+ ▀█▓┌──┐▓█▀ 
+  █▓│  │▓█  
+  █▓└──┘▓█  
+   ▀████▀   
+            
+=== items/crude_vat  #845B37  A barrel of brine and scrap wired to keep one spare body from rotting; it needs no power
+-- 1x
+U
+-- 2x
+▐▌
+▀▀
+-- 3x
+▌o▐
+▌█▐
+▀▀▀
+-- art 0
+  ▄██████▄  
+ █▌ ░▓▓░ ▐█ 
+ █▌ ░oo░ ▐█ 
+ █▌░▒██▒░▐█ 
+ █▌ ░▌▐░ ▐█ 
+ █▌ ░▌▐░ ▐█ 
+ ▀████████▀ 
+   ▀▀  ▀▀   
 === items/diamond  #00FFFF  A precious diamond
 -- 1x
 d
@@ -1630,6 +1915,120 @@ eee
   ▄▄█▓▓▓▓▓  
   █▓▓▓▓▓▓▓  
             
+=== items/standard_arm  #8FB8A8  A plasteel arm with real servos, built to the old line's specification
+-- 1x
+/
+-- 2x
+o\
+ /
+-- 3x
+o\ 
+ ▓\
+  <
+-- art 0
+            
+  ▄▄▄       
+ ▐███▌      
+  ▀▓▓o▄     
+     ▀▓▓▄   
+       ▀▓█▄ 
+         ▀▀<
+            
+=== items/standard_fusion_core  #8FB8A8  A sealed fusion core fed by a pinch of nuclear waste
+-- 1x
+*
+-- 2x
+▓▓
+**
+-- 3x
+▄▓▄
+▓*▓
+▀▓▀
+-- art 0
+            
+    ▄██▄    
+  ▄█▓▒▒▓█▄  
+  █▒░**░▒█  
+  █▒░**░▒█  
+  ▀█▓▒▒▓█▀  
+    ▀██▀    
+            
+=== items/standard_head  #8FB8A8  A SapienCorp cranial unit, rebuilt from the plasteel of its own kind
+-- 1x
+0
+-- 2x
+▄▄
+█o
+-- 3x
+▄▄▄
+█o█
+▀█▀
+-- art 0
+            
+   ▄████▄   
+  █▓▓▓▓▓▓█  
+  █▓ o  o█  
+  █▓▓▓▓▓▓█  
+   ▀█▄▄█▀   
+    ▐██▌    
+            
+=== items/standard_leg  #8FB8A8  A plasteel leg with a sound knee joint and level footing
+-- 1x
+L
+-- 2x
+▓▓
+▐▌
+-- 3x
+▐▓▌
+ ▓ 
+▄█▄
+-- art 0
+            
+   ▐███▌    
+    ▓▓▓     
+    ▐o▌     
+    ▓▓▓     
+    ▐▓▌     
+   ▄██▌▄▄   
+            
+=== items/standard_torso  #8FB8A8  A plasteel chassis in the old SapienCorp pattern, ribs and all
+-- 1x
+H
+-- 2x
+██
+▀▀
+-- 3x
+▄█▄
+█▓█
+▀█▀
+-- art 0
+            
+ ▄▄██████▄▄ 
+ █▓▓▓▓▓▓▓▓█ 
+ ▀█▓┌──┐▓█▀ 
+  █▓│  │▓█  
+  █▓└──┘▓█  
+   ▀████▀   
+            
+=== items/standard_vat  #5F9C8A  A SapienCorp resurrection vat with a cracked visor, kept warm by a trickle of power
+-- 1x
+U
+-- 2x
+▐▌
+▀▀
+-- 3x
+▌o▐
+▌█▐
+▀▀▀
+-- art 0
+  ▄██████▄  
+ █▌ ░▓▓░ ▐█ 
+ █▌ ░oo░ ▐█ 
+ █▌░▒██▒░▐█ 
+ █▌ ░▌▐░ ▐█ 
+ █▌ ░▌▐░ ▐█ 
+ ▀████████▀ 
+   ▀▀  ▀▀   
 === items/stick  #964B00  A wooden stick.
 -- 1x
 /

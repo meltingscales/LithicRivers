@@ -21,6 +21,12 @@ pub fn dispatch(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
         return Ok(());
     }
 
+    // Any key skips the respawn flyover
+    if app.flyover.is_some() {
+        app.finish_flyover();
+        return Ok(());
+    }
+
     // While the robot is dead, only the system-failure screen takes keys
     if crate::app::input::death::handle_death_input(app, key) {
         return Ok(());

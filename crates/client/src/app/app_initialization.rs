@@ -157,6 +157,7 @@ impl App {
                 boot_complete: false,
             },
             last_combat_tick: None,
+            flyover: None,
             clock,
             default_seed: seed,
             saves_dir,
@@ -180,6 +181,7 @@ impl App {
             blueprint_window: None,
             stairs_prompt: None,
             death_choice: 0,
+            resurrect: None,
             inventory: InventoryPanelState { selected: 0 },
             crafting: CraftingPanelState {
                 recipe_handler: RecipeHandler::new(),
@@ -239,5 +241,6 @@ impl App {
         (self.ui.view_x, self.ui.view_y, self.ui.view_z) = (player.x, player.y, player.z);
         self.combat = CombatUiState::default();
         self.last_combat_tick = None;
+        self.flyover = None;
     }
 }

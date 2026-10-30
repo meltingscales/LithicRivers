@@ -191,13 +191,15 @@ pub fn nearby_interactions(app: &App) -> Option<NearbyInteractions> {
                     kind: block.kind,
                 })
             }
-            FactoryKind::AutoPlanter | FactoryKind::AutoHarvester => {
-                available_actions.push(InteractionType::OpenMachine {
-                    entity,
-                    position,
-                    kind: block.kind,
-                })
-            }
+            FactoryKind::AutoPlanter
+            | FactoryKind::AutoHarvester
+            | FactoryKind::CrudeVat
+            | FactoryKind::StandardVat
+            | FactoryKind::AdvancedVat => available_actions.push(InteractionType::OpenMachine {
+                entity,
+                position,
+                kind: block.kind,
+            }),
             _ => {}
         }
     }

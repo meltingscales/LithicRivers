@@ -145,7 +145,7 @@ pub fn advance(world: &World, res: &mut Resources) {
 pub const TP_QUEST_TARGETS: [&str; 3] = ["android", "facility", "locker"];
 
 /// A walkable tile next to `pos` (east, west, south, north), or `pos` itself.
-fn beside(res: &mut Resources, pos: (i64, i64, i64)) -> Position {
+pub(crate) fn beside(res: &mut Resources, pos: (i64, i64, i64)) -> Position {
     let (x, y, z) = pos;
     [(1, 0), (-1, 0), (0, 1), (0, -1)]
         .into_iter()

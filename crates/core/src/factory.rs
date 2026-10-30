@@ -105,6 +105,12 @@ pub enum FactoryKind {
     VerticalConveyorDown,
     /// Smelts on grid power instead of fuel; fed from its back and sides
     ElectricFurnace,
+    /// Holds a spare body of crude parts, with no power
+    CrudeVat,
+    /// Holds a spare body of crude or standard parts, on a trickle of power
+    StandardVat,
+    /// Holds a spare body of any grade, on a lot of power
+    AdvancedVat,
     /// A consumer that does nothing but draw power, for grid tests
     #[cfg(any(test, feature = "test-support"))]
     TestConsumer,
@@ -125,6 +131,9 @@ impl FactoryKind {
             ItemKind::AutoHarvester => Some(FactoryKind::AutoHarvester),
             ItemKind::CrudeFurnace => Some(FactoryKind::CrudeFurnace),
             ItemKind::ElectricFurnace => Some(FactoryKind::ElectricFurnace),
+            ItemKind::CrudeVat => Some(FactoryKind::CrudeVat),
+            ItemKind::StandardVat => Some(FactoryKind::StandardVat),
+            ItemKind::AdvancedVat => Some(FactoryKind::AdvancedVat),
             ItemKind::Extractor => Some(FactoryKind::Extractor),
             ItemKind::FilterExtractor => Some(FactoryKind::FilterExtractor),
             ItemKind::BeltRouter => Some(FactoryKind::BeltRouter),
@@ -144,6 +153,9 @@ impl FactoryKind {
             FactoryKind::AutoHarvester => Some(ItemKind::AutoHarvester),
             FactoryKind::CrudeFurnace => Some(ItemKind::CrudeFurnace),
             FactoryKind::ElectricFurnace => Some(ItemKind::ElectricFurnace),
+            FactoryKind::CrudeVat => Some(ItemKind::CrudeVat),
+            FactoryKind::StandardVat => Some(ItemKind::StandardVat),
+            FactoryKind::AdvancedVat => Some(ItemKind::AdvancedVat),
             FactoryKind::Extractor => Some(ItemKind::Extractor),
             FactoryKind::FilterExtractor => Some(ItemKind::FilterExtractor),
             FactoryKind::BeltRouter => Some(ItemKind::BeltRouter),
@@ -167,6 +179,9 @@ impl FactoryKind {
             FactoryKind::AutoHarvester => "auto-harvester",
             FactoryKind::CrudeFurnace => "crude furnace",
             FactoryKind::ElectricFurnace => "electric furnace",
+            FactoryKind::CrudeVat => "crude resurrection vat",
+            FactoryKind::StandardVat => "standard resurrection vat",
+            FactoryKind::AdvancedVat => "advanced resurrection vat",
             FactoryKind::Extractor => "extractor",
             FactoryKind::FilterExtractor => "filter extractor",
             FactoryKind::BeltRouter => "belt router",
@@ -192,6 +207,7 @@ impl FactoryKind {
             | FactoryKind::BeltRouter => true,
             FactoryKind::AutoPlanter => false,
             FactoryKind::BurnerGenerator | FactoryKind::PowerPole => false,
+            FactoryKind::CrudeVat | FactoryKind::StandardVat | FactoryKind::AdvancedVat => false,
             // Up or down instead of a facing: see `rotate`
             FactoryKind::VerticalConveyorUp | FactoryKind::VerticalConveyorDown => false,
             #[cfg(any(test, feature = "test-support"))]
@@ -241,6 +257,9 @@ impl FactoryKind {
                 SpriteRef::new("factory", &format!("belt_router_{}", facing.name()))
             }
             FactoryKind::VerticalConveyorUp => SpriteRef::new("factory", "vertical_conveyor_up"),
+            FactoryKind::CrudeVat => SpriteRef::new("factory", "crude_vat"),
+            FactoryKind::StandardVat => SpriteRef::new("factory", "standard_vat"),
+            FactoryKind::AdvancedVat => SpriteRef::new("factory", "advanced_vat"),
             FactoryKind::VerticalConveyorDown => {
                 SpriteRef::new("factory", "vertical_conveyor_down")
             }
@@ -345,6 +364,15 @@ pub fn place(
         }
         FactoryKind::Extractor | FactoryKind::FilterExtractor => {
             builder.add(crate::logistics::Extractor::default());
+        }
+        FactoryKind::CrudeVat | FactoryKind::StandardVat | FactoryKind::AdvancedVat => {
+            builder.add(Inventory {
+                max_slots: crate::vat::VAT_SLOTS,
+                ..Default::default()
+            });
+            if let Some(demand_w) = crate::vat::demand_w(kind) {
+                builder.add(crate::power::PowerConsumer::idle(demand_w));
+            }
         }
         FactoryKind::BeltRouter => {
             builder.add(crate::logistics::Router::default());
@@ -566,6 +594,7 @@ pub fn run_due_steps(world: &mut World, res: &mut Resources) {
         crate::plants::grow_saplings(world, res, step_tick);
         crate::machines::update_demand(world, res);
         crate::furnace::update_demand(world);
+        crate::vat::update_demand(world);
         crate::power::step_power(world, res);
         crate::machines::step_machines(world, res);
         crate::furnace::step_furnaces(world, res);
@@ -606,6 +635,9 @@ pub fn takes(kind: FactoryKind, item: ItemKind) -> bool {
                 || crate::furnace::smelting_recipe(item).is_some()
         }
         FactoryKind::ElectricFurnace => crate::furnace::smelting_recipe(item).is_some(),
+        FactoryKind::CrudeVat | FactoryKind::StandardVat | FactoryKind::AdvancedVat => {
+            crate::vat::takes(kind, item)
+        }
         FactoryKind::AutoHarvester | FactoryKind::Extractor | FactoryKind::FilterExtractor => false,
         _ => true,
     }
@@ -619,6 +651,9 @@ pub fn takes_label(kind: FactoryKind) -> Option<&'static str> {
         FactoryKind::AutoPlanter => Some("acorns"),
         FactoryKind::CrudeFurnace => Some("fuel/smeltables"),
         FactoryKind::ElectricFurnace => Some("smeltables"),
+        FactoryKind::CrudeVat => Some("crude body parts"),
+        FactoryKind::StandardVat => Some("crude/standard body parts"),
+        FactoryKind::AdvancedVat => Some("body parts"),
         FactoryKind::AutoHarvester | FactoryKind::Extractor | FactoryKind::FilterExtractor => {
             Some("nothing")
         }
@@ -660,6 +695,9 @@ pub fn accepts_from(
         FactoryKind::BurnerGenerator if crate::power::fuel_energy(item).is_none() => return false,
         FactoryKind::AutoPlanter | FactoryKind::AutoHarvester => {
             return crate::machines::accepts_input(world, target, block.kind, item)
+        }
+        FactoryKind::CrudeVat | FactoryKind::StandardVat | FactoryKind::AdvancedVat => {
+            return crate::vat::accepts(world, target, item)
         }
         _ => {}
     }

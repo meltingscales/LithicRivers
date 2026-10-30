@@ -6,8 +6,8 @@ expression: "String::from_utf8(out).unwrap()"
                                             LithicRivers
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌MODES ☼ 13:36─────────┐
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  ------ - - -- - FOG │
-vvv>>>>CvvvC→>>CvvvvvCvvvvvvvvvvvvvGτττττvvvv>▲>CvvvvvGv+vvvvvvvvvvvvvvvvvvv└──────────────────────┘
-vvvvvvvvvvvvvvvvvvvvv^vvvvv>>f>CvvvG+ττττvvvv/vvvvvvC→>>>E*>>>Cvvvvvvvvvvvvv┌Inventory─────────────┐
+vvv>>>>CvvvC→>>CvvvvvCvvvvvvvvvvvvvGτττττvvvv>▲>CvvvvvGv+vvvvvvvvvGG+Gvvvvvv└──────────────────────┘
+vvvvvvvvvvvvvvvvvvvvv^vvvvv>>f>CvvvG+ττττvvvv/vvvvvvC→>>>E*>>>CvvvUvUvUvvvvv┌Inventory─────────────┐
 vvvvvvvvvvvvvvvvvvv>>╬>Cvvvvvvvvvvvvττpvv,vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Nail x10              │
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv↑vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Acorn x1              │
 vvvvvvvvvvvvvvvvvvvvvCvvvvvvvvvvvvvvvvCHvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Log x3                │

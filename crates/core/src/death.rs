@@ -1,6 +1,6 @@
 //! The player's death: the old body is left as a wreck holding what the robot carried and
-//! the body itself, and the robot can respawn at the bunker with the default body and the
-//! starting kit. (A stand-in until a real backup body is designed.)
+//! the body itself, and the robot wakes again in a ready resurrection vat's spare body, or
+//! in a junker body at the SapienCorp HQ (see `crate::vat`).
 
 use crate::components::{itemkind_name, ItemStack};
 use crate::components::{
@@ -116,14 +116,36 @@ pub fn is_dead(world: &World, player: Entity) -> bool {
     world.get::<&Dead>(player).is_ok()
 }
 
+/// Where a dead robot wakes: in a ready vat's spare body, or in a junker body.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum WakeChoice {
+    Vat(Entity),
+    Junker,
+}
+
+/// The integrity of every part of a junker body: all of them Damaged.
+pub const JUNKER_INTEGRITY: i64 = 30;
+/// What the robot thinks on waking in a junker body.
+pub const JUNKER_THOUGHT: &str = "I should really make a vat...";
+
+/// The body the robot wakes in without a vat: every part there, every part Damaged.
+pub fn junker_body() -> Body {
+    let mut body = Body::default();
+    for part in body.parts.values_mut() {
+        part.integrity = JUNKER_INTEGRITY;
+        part.update_state_from_integrity();
+    }
+    body
+}
+
 impl crate::Game {
-    /// Bring a dead player back at the respawn point with the default body and the starting
-    /// kit, or with the repaired old body and the carried items when the world keeps them.
-    /// Returns where, or `None` if the player isn't dead.
-    pub fn respawn(&mut self) -> Option<Position> {
-        let player = self.get_player_entity()?;
-        if !is_dead(&self.world, player) {
-            return None;
+    /// Where a junker body waits: the SapienCorp HQ (the facility's entrance) in worlds
+    /// that have it, else the respawn point. Also says which of the two it is.
+    pub fn junker_place(&self) -> (Position, bool) {
+        let (fx, fy, fz) = crate::game::FACILITY_POS;
+        if self.is_structure_generated(crate::game::FACILITY_STRUCTURE, fx, fy, fz) {
+            let (x, y, z) = crate::quests::FACILITY_ENTRANCE;
+            return (Position { x, y, z }, true);
         }
         let [x, y, z] = self.res.config.default_player_position;
         let point = self
@@ -131,20 +153,89 @@ impl crate::Game {
             .player_state
             .respawn_point
             .unwrap_or(Position { x, y, z });
+        (point, false)
+    }
+
+    /// The tile the robot wakes on in a junker body: beside the HQ's door, or the respawn
+    /// point. Also says whether it is the HQ.
+    pub fn junker_point(&mut self) -> (Position, bool) {
+        let (place, at_hq) = self.junker_place();
+        if at_hq {
+            let point = crate::quests::beside(&mut self.res, (place.x, place.y, place.z));
+            return (point, true);
+        }
+        (place, false)
+    }
+
+    /// Bring a dead player back in a junker body (see `resurrect`).
+    pub fn respawn(&mut self) -> Option<Position> {
+        self.resurrect(WakeChoice::Junker)
+    }
+
+    /// Bring a dead player back where `choice` says, with the starting kit (or the carried
+    /// items when the world keeps them):
+    /// - in a ready vat, beside it, in its spare body, which empties the vat;
+    /// - in a junker body at `junker_point`, or in the repaired old body when the world
+    ///   keeps bodies.
+    ///
+    /// Returns where, or `None` if the player isn't dead or the vat isn't ready.
+    pub fn resurrect(&mut self, choice: WakeChoice) -> Option<Position> {
+        let player = self.get_player_entity()?;
+        if !is_dead(&self.world, player) {
+            return None;
+        }
+        let settings = self.res.world_settings;
+        let (point, body, message) = match choice {
+            WakeChoice::Vat(vat) => {
+                if crate::vat::status(&self.world, vat) != crate::vat::VatStatus::Ready {
+                    return None;
+                }
+                let vat_pos = *self.world.get::<&Position>(vat).ok()?;
+                let kind = self
+                    .world
+                    .get::<&crate::factory::FactoryBlock>(vat)
+                    .ok()?
+                    .kind;
+                let body = {
+                    let mut inv = self.world.get::<&mut Inventory>(vat).ok()?;
+                    let body = crate::vat::spare_body(&inv);
+                    inv.slots.clear();
+                    body
+                };
+                let point = crate::quests::beside(&mut self.res, (vat_pos.x, vat_pos.y, vat_pos.z));
+                (
+                    point,
+                    body,
+                    format!("Backup systems online. You wake in the {}.", kind.name()),
+                )
+            }
+            WakeChoice::Junker => {
+                let (point, at_hq) = self.junker_point();
+                let body = match self.world.get::<&Body>(player) {
+                    Ok(old) if settings.keep_body => {
+                        let mut body = (*old).clone();
+                        body.parts.values_mut().for_each(|p| p.repair_fully());
+                        body
+                    }
+                    _ => junker_body(),
+                };
+                let place = if at_hq {
+                    "the SapienCorp HQ"
+                } else {
+                    "the bunker"
+                };
+                (
+                    point,
+                    body,
+                    format!("Backup systems online. You come to in a junker body at {place}."),
+                )
+            }
+        };
         let auto_pickup = self
             .world
             .get::<&Inventory>(player)
             .map(|inv| inv.auto_pickup)
             .unwrap_or(self.res.config.auto_pickup_enabled);
-        let settings = self.res.world_settings;
-        let body = match self.world.get::<&Body>(player) {
-            Ok(old) if settings.keep_body => {
-                let mut body = (*old).clone();
-                body.parts.values_mut().for_each(|p| p.repair_fully());
-                body
-            }
-            _ => Body::default(),
-        };
         let _ = self.world.remove_one::<Dead>(player);
         let _ = self.world.remove_one::<crate::moves::ActionQueue>(player);
         let _ = self.world.insert(
@@ -152,7 +243,7 @@ impl crate::Game {
             (
                 point,
                 body,
-                // Whatever waits at the respawn point can't attack at once
+                // Whatever waits where the robot wakes can't attack at once
                 BattleDelay::new(1000),
             ),
         );
@@ -166,8 +257,10 @@ impl crate::Game {
         }
         self.res.player_state.death_cause = None;
         self.res.player_state.combat_active = false;
-        self.res
-            .log_green("Backup systems online. You come to at the bunker.");
+        self.res.log_green(message);
+        if choice == WakeChoice::Junker && !settings.keep_body {
+            self.res.log(JUNKER_THOUGHT);
+        }
         Some(point)
     }
 }
@@ -196,6 +289,14 @@ mod tests {
                 )
             })
             .collect()
+    }
+
+    fn logged(res: &Resources, text: &str) -> bool {
+        res.events
+            .get_message_log()
+            .messages
+            .iter()
+            .any(|m| m.text.contains(text))
     }
 
     fn dying_game() -> crate::test_support::TestGame {
@@ -243,11 +344,12 @@ mod tests {
     }
 
     #[test]
-    fn respawning_brings_back_the_default_body_and_kit_at_the_bunker() {
+    fn without_a_vat_the_robot_wakes_in_a_junker_body_with_the_kit() {
         let mut t = dying_game();
         let player = t.game.get_player_entity().unwrap();
         let game = &mut t.game;
         player_died(&mut game.world, &mut game.res, player, "shut down".into());
+        // No facility in this world, so the junker waits at the respawn point
         assert_eq!(t.game.respawn(), Some(Position { x: -3, y: -3, z: 0 }));
         assert_eq!(t.player_pos(), Position { x: -3, y: -3, z: 0 });
         assert!(!is_dead(&t.game.world, player));
@@ -259,11 +361,17 @@ mod tests {
             .collect();
         assert_eq!(t.player_inventory(), kit);
         let body = t.game.world.get::<&Body>(player).unwrap();
-        let default = Body::default();
-        for (part, p) in &default.parts {
-            assert_eq!(body.parts[part].state, p.state, "{part:?}");
+        assert_eq!(body.parts.len(), 7);
+        for part in body.parts.values() {
+            assert_eq!(
+                (part.state, part.integrity),
+                (BodyPartState::Damaged, JUNKER_INTEGRITY),
+                "{:?}",
+                part.part_type
+            );
         }
         drop(body);
+        assert!(logged(&t.game.res, JUNKER_THOUGHT));
         assert_eq!(
             wrecks(&t.game.world).len(),
             1,
@@ -278,6 +386,77 @@ mod tests {
         });
         t.tick();
         assert_eq!(t.player_pos(), Position { x: -2, y: -3, z: 0 });
+    }
+
+    #[test]
+    fn waking_in_a_vat_uses_up_its_body_beside_it() {
+        use crate::factory::{self, Facing, FactoryKind};
+        let mut t = dying_game();
+        let player = t.game.get_player_entity().unwrap();
+        let game = &mut t.game;
+        let at = Position { x: 4, y: -4, z: 0 };
+        let vat = factory::place(
+            &mut game.world,
+            &mut game.res,
+            FactoryKind::CrudeVat,
+            at,
+            Facing::North,
+        )
+        .unwrap();
+        for item in [
+            ItemKind::CrudeTorso,
+            ItemKind::CrudeFusionCore,
+            ItemKind::CrudeLeg,
+        ] {
+            assert!(factory::insert(&mut game.world, vat, item));
+        }
+        // Only the dead wake in vats
+        assert_eq!(t.game.resurrect(WakeChoice::Vat(vat)), None);
+        let game = &mut t.game;
+        player_died(&mut game.world, &mut game.res, player, "shut down".into());
+        assert_eq!(
+            t.game.resurrect(WakeChoice::Vat(vat)),
+            Some(Position { x: 5, y: -4, z: 0 }),
+            "on the free tile east of the vat"
+        );
+        let body = t.game.world.get::<&Body>(player).unwrap();
+        let state = |part| body.parts[&part].state;
+        assert_eq!(state(BodyPartType::Torso), BodyPartState::Damaged);
+        assert_eq!(state(BodyPartType::LeftLeg), BodyPartState::Damaged);
+        assert_eq!(state(BodyPartType::RightLeg), BodyPartState::Missing);
+        assert_eq!(state(BodyPartType::Head), BodyPartState::Missing);
+        drop(body);
+        assert!(t
+            .game
+            .world
+            .get::<&Inventory>(vat)
+            .unwrap()
+            .slots
+            .is_empty());
+        assert_eq!(
+            crate::vat::status(&t.game.world, vat),
+            crate::vat::VatStatus::Incomplete
+        );
+        // An empty vat can't be chosen
+        let game = &mut t.game;
+        player_died(&mut game.world, &mut game.res, player, "again".into());
+        assert_eq!(t.game.resurrect(WakeChoice::Vat(vat)), None);
+        assert!(is_dead(&t.game.world, player));
+    }
+
+    #[test]
+    fn the_junker_waits_at_the_sapiencorp_hq_in_a_normal_world() {
+        let mut game = crate::Game::new(12345);
+        let player = game.get_player_entity().unwrap();
+        player_died(&mut game.world, &mut game.res, player, "shut down".into());
+        let point = game.respawn().unwrap();
+        let (ex, ey, ez) = crate::quests::FACILITY_ENTRANCE;
+        assert_eq!(point.z, ez);
+        assert!(
+            (point.x - ex).abs() + (point.y - ey).abs() <= 1,
+            "{point:?}"
+        );
+        assert!(logged(&game.res, "junker body at the SapienCorp HQ"));
     }
 
     #[test]
