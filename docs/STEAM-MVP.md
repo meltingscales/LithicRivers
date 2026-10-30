@@ -223,6 +223,7 @@ Non-code work from the old TODO.md.
 - caseoh
 
 ## Post-MVP (After Release)
+- [ ] Android: the APK builds and sideloads (`add-android-build`, attached to each GitHub Release); the Play Store and a phone-first UI come after the Steam release
 - [ ] Multiplayer support
 - [ ] Advanced crafting system
 - [ ] More biomes and world features

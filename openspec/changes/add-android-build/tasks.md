@@ -22,5 +22,5 @@
 
 ## 4. Checks
 
-- [ ] 4.1 Docs: AGENTS.md (building for Android, the library split) and `docs/STEAM-MVP.md` (Android after the MVP); verify `just code-clippy`, `cargo test --workspace` and PR checks pass
+- [x] 4.1 Docs: AGENTS.md (building for Android, the library split) and `docs/STEAM-MVP.md` (Android after the MVP); verify `just code-clippy`, `cargo test --workspace` and PR checks pass
 - [ ] 4.2 User check: on an Android phone, the APK installs, the game plays with touch alone (moving, mining, building, menus, naming a world), and progress survives switching away and back
