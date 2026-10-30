@@ -35,6 +35,17 @@ When the app goes to the background, the game SHALL save the current world, and 
 - **WHEN** the player presses Back while a window or menu is open
 - **THEN** it closes as Escape would
 
+### Requirement: Keyboard recommendation
+On Android, the title screen SHALL show the line "Keyboard with numpad is recommended to play LithicRivers", because the game is designed around eight-way movement on the numpad and touch controls cover only part of it. Desktop builds SHALL NOT show it.
+
+#### Scenario: Title screen on a phone
+- **WHEN** the game reaches the title screen on Android
+- **THEN** the screen shows "Keyboard with numpad is recommended to play LithicRivers" below the menu
+
+#### Scenario: Title screen on desktop
+- **WHEN** the game reaches the title screen on Windows, Linux or macOS, or in a headless run
+- **THEN** the line is not shown
+
 ### Requirement: Desktop unchanged
 Splitting the client into a library and adding the Android target SHALL NOT change the desktop client, the terminal mode, headless runs, MCP or snapshot output.
 

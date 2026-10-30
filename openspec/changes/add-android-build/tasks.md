@@ -18,6 +18,7 @@
 - [ ] 3.2 Draw the pad beside the game (the game in an in-memory screen sized to the rest), shown by default on touch devices, with Options "Touch controls: auto / shown / hidden" saved; verify an Options snapshot and a test of the setting round trip
 - [ ] 3.3 The soft keyboard while a text field takes typing (`App::typing()`), with IME commits as typed keys and deletes as Backspace; verify unit tests for `typing()` in each text field and for the IME mapping
 - [ ] 3.4 First-launch text size for small screens and the Display panel hidden by default on phones; verify a unit test choosing the text size for a phone-sized window
+- [ ] 3.5 On Android, the title screen's "Keyboard with numpad is recommended to play LithicRivers" line (a flag set by `android_main`, so headless runs and snapshots stay as they are); verify a headless test that turns the flag on and checks the line, plus the device screenshot
 
 ## 4. Checks
 
