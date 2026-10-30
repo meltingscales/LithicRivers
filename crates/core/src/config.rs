@@ -5,6 +5,37 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
 
+/// Where every file the game keeps lives, when the platform decides it (Android's app
+/// storage). Unset on desktop, where the config sits next to the executable and saves
+/// and logs in the working folder.
+static BASE_DIR: std::sync::OnceLock<PathBuf> = std::sync::OnceLock::new();
+
+/// Root the config, saves and logs under `dir`. Call before anything reads the config;
+/// only the first call counts.
+pub fn set_base_dir(dir: PathBuf) {
+    let _ = BASE_DIR.set(dir);
+}
+
+/// A path the game keeps relative to the working folder (saves, logs), under the base
+/// folder when one is set.
+pub fn data_path(relative: impl AsRef<Path>) -> PathBuf {
+    resolve_in(BASE_DIR.get().map(PathBuf::as_path), relative.as_ref())
+}
+
+fn resolve_in(base: Option<&Path>, path: &Path) -> PathBuf {
+    match base {
+        Some(base) if path.is_relative() => base.join(path),
+        _ => path.to_path_buf(),
+    }
+}
+
+/// The config file inside the base folder if set, else next to the executable.
+fn config_file_in(base: Option<&Path>, exe_dir: &Path) -> PathBuf {
+    base.unwrap_or(exe_dir)
+        .join("config")
+        .join("lithicrivers-config.json")
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConfigRoot {
     pub keybinds: serde_json::Value,
@@ -78,8 +109,11 @@ impl ConfigManager {
             .ok()
             .and_then(|p| p.parent().map(|p| p.to_path_buf()))
             .unwrap_or_else(|| std::env::current_dir().unwrap_or_else(|_| PathBuf::from(".")));
-        let config_dir = exe_dir.join("config");
-        let file_path = config_dir.join("lithicrivers-config.json");
+        let file_path = config_file_in(BASE_DIR.get().map(PathBuf::as_path), &exe_dir);
+        let config_dir = file_path
+            .parent()
+            .map(Path::to_path_buf)
+            .unwrap_or_default();
         (file_path, config_dir)
     }
 
@@ -216,6 +250,40 @@ impl ConfigManager {
 impl Default for ConfigManager {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+#[cfg(test)]
+mod base_dir_tests {
+    use super::*;
+
+    #[test]
+    fn a_base_folder_roots_relative_paths() {
+        let base = Path::new("/data/app/files");
+        assert_eq!(
+            resolve_in(Some(base), Path::new("lithicrivers-saves/saves")),
+            base.join("lithicrivers-saves/saves")
+        );
+        assert_eq!(
+            resolve_in(Some(base), Path::new("/abs/saves")),
+            PathBuf::from("/abs/saves")
+        );
+        assert_eq!(
+            config_file_in(Some(base), Path::new("/opt/game")),
+            base.join("config/lithicrivers-config.json")
+        );
+    }
+
+    #[test]
+    fn no_base_folder_keeps_todays_paths() {
+        assert_eq!(
+            resolve_in(None, Path::new("lithicrivers-saves/saves")),
+            PathBuf::from("lithicrivers-saves/saves")
+        );
+        assert_eq!(
+            config_file_in(None, Path::new("/opt/game")),
+            PathBuf::from("/opt/game/config/lithicrivers-config.json")
+        );
     }
 }
 

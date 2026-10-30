@@ -79,7 +79,10 @@ pub fn run_desktop() -> Result<(), Box<dyn Error>> {
 
     // Initialize tracing to write logs to LithicRivers.log (rotated daily)
     {
-        let file_appender = _tracing_appender_hidden::rolling::daily(".", "LithicRivers.log");
+        let file_appender = _tracing_appender_hidden::rolling::daily(
+            lithicrivers_core::config::data_path("."),
+            "LithicRivers.log",
+        );
         let (non_blocking, _guard) = _tracing_appender_hidden::non_blocking(file_appender);
         let filter = EnvFilter::try_from_default_env()
             .unwrap_or_else(|_| EnvFilter::new(log_level.to_lowercase()));

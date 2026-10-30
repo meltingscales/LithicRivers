@@ -3,7 +3,7 @@
 ## 1. Library split
 
 - [x] 1.1 Move the client's modules behind `lib.rs` with `run_desktop`, keeping `main.rs` a thin entry; verify `just code-clippy`, `cargo test --workspace` with no snapshot changes, and `just client-blind scripts/agent/smoke.txt`
-- [ ] 1.2 An optional base folder for `ConfigManager`, the log appender, and the saves and snapshots folders (desktop passes none); verify unit tests that a base folder roots each path and that none keeps today's paths
+- [x] 1.2 An optional base folder for `ConfigManager`, the log appender, and the saves and snapshots folders (desktop passes none); verify unit tests that a base folder roots each path and that none keeps today's paths
 
 ## 2. Android build
 

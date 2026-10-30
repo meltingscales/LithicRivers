@@ -14,7 +14,11 @@ use ratatui::{
 /// A box exactly as big as some text, centered in an area (and no bigger than the area),
 /// so splash art is never cut off while the screen is large enough to hold it.
 fn text_rect(text: &str, area: Rect) -> Rect {
-    let width = text.lines().map(|l| Line::from(l).width()).max().unwrap_or(0) as u16;
+    let width = text
+        .lines()
+        .map(|l| Line::from(l).width())
+        .max()
+        .unwrap_or(0) as u16;
     let height = text.lines().count() as u16;
     area.centered(
         Constraint::Length(width.min(area.width)),
