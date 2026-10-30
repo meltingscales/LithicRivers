@@ -1,6 +1,7 @@
 ---
 # Release: runs when a version tag (v*) is pushed. Builds and tests Windows, Linux and macOS
-# in release mode, publishes the binaries as a GitHub Release, and uploads them to Steam
+# in release mode, builds the Android APK (android-apk.yml), publishes them all as a GitHub
+# Release, and uploads the desktop builds to Steam
 # with SteamPipe (app_build_unified.vdf sets the build live on the public branch).
 # Pull requests and pushes to release are checked by pr-checks.yml instead.
 name: "Release: build, test, GitHub Release and Steam upload"
@@ -130,6 +131,11 @@ jobs:
         with:
           name: lithicrivers-${{ github.ref_name }}-${{ github.sha }}-${{ matrix.os }}
           path: artifacts/lithicrivers-macos.zip
+
+  android:
+    name: Build the Android APK
+    uses: ./.github/workflows/android-apk.yml
+    secrets: inherit
 
   steam-upload:
     name: Upload to Steam (SteamPipe)
@@ -311,3 +317,24 @@ jobs:
           prerelease: true
           files: |
             artifacts/lithicrivers-macos.zip
+
+  github-release-android:
+    name: Upload the APK to the GitHub Release
+    needs: [android, github-release-ubuntu]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download the APK
+        uses: actions/download-artifact@v7
+        with:
+          name: lithicrivers-android
+          path: artifacts
+
+      - name: Upload to existing release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: LithicRivers Multiplatform ${{ github.ref_name }}
+          draft: false
+          prerelease: true
+          files: |
+            artifacts/lithicrivers-${{ github.ref_name }}.apk

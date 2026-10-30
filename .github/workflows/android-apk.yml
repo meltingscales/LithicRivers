@@ -1,0 +1,75 @@
+---
+# Android: builds the APK with `just build-android release` and uploads it as the
+# `lithicrivers-android` artifact. release.yml calls this on each version tag and attaches
+# the APK to the GitHub Release; pull requests that touch the Android project run it too.
+#
+# Release signing: set the secrets LITHICRIVERS_KEYSTORE_BASE64 (the keystore file,
+# base64-encoded), LITHICRIVERS_KEYSTORE_PASSWORD, LITHICRIVERS_KEY_ALIAS and
+# LITHICRIVERS_KEY_PASSWORD. Without them the APK is signed with the debug key, which is
+# fine for sideloading.
+name: "Android: build the APK"
+
+on:
+  workflow_call:
+  pull_request:
+    paths:
+      - "android/**"
+      - ".github/workflows/android-apk.yml"
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    env:
+      KEYSTORE_BASE64: ${{ secrets.LITHICRIVERS_KEYSTORE_BASE64 }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0 # need tags for versioning
+
+      - name: Set up Rust toolchain (nightly) with the Android targets
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          targets: aarch64-linux-android,x86_64-linux-android
+
+      - name: Set up Java for Gradle
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Cache cargo builds
+        uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+          key: android-nightly-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install just and cargo-ndk
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y just
+          cargo install cargo-ndk --locked
+
+      - name: Release keystore
+        if: env.KEYSTORE_BASE64 != ''
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
+          echo "LITHICRIVERS_KEYSTORE=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
+
+      - name: Build the APK
+        env:
+          LITHICRIVERS_KEYSTORE_PASSWORD: ${{ secrets.LITHICRIVERS_KEYSTORE_PASSWORD }}
+          LITHICRIVERS_KEY_ALIAS: ${{ secrets.LITHICRIVERS_KEY_ALIAS }}
+          LITHICRIVERS_KEY_PASSWORD: ${{ secrets.LITHICRIVERS_KEY_PASSWORD }}
+        run: just build-android release
+
+      - name: Name the APK after the version
+        run: |
+          version="${GITHUB_REF_NAME//\//-}"
+          cp android/app/build/outputs/apk/release/app-release.apk "lithicrivers-$version.apk"
+
+      - name: Upload the APK
+        uses: actions/upload-artifact@v6
+        with:
+          name: lithicrivers-android
+          path: lithicrivers-*.apk
