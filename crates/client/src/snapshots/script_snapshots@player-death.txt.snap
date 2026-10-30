@@ -20,7 +20,7 @@ input_file: scripts/snapshots/player-death.txt
 ############vvvvvvvvvv│  It lies where it fell, with everything you carried. │ 1 2 3               │
 ############vvvvvvvvvv│              The Global Map marks where.             │: mine               │
 #############vvvvvvvvv│                                                      │: look               │
-##############vvvvvvvv│                Respawn at the bunker                 │: build mode         │
+##############vvvvvvvv│                Choose where to wake                  │: build mode         │
 ###############vvvvvvv│               Save and quit to title                 │: loot corpse        │
 ###############vvvvvvv│                                                      │                     │
 ################vvvvvv│                                                      │─────────────────────┘
@@ -35,33 +35,129 @@ input_file: scripts/snapshots/player-death.txt
 │ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 === end screen ===
-=== screen respawned ===
+=== screen resurrect ===
                                             LithicRivers
-????????????????????????????????????????????????????????????????????????????┌MODES ☼ 08:00─────────┐
-????????????????????????????????????????????????????????????????????????????│  ------ - - -- - FOG │
-????????????????????????????????????????????????????????????????????????????└──────────────────────┘
-????????????????????????????????????????????????????????????????????????????┌Inventory─────────────┐
-????????????????????????????????????????????????????????????????????????????│Nail x10              │
-????????????????????????????????????????????????????????????????????????????│Acorn x1              │
-????????????????????????????????????????????????????????????????????????????│Log x3                │
-????????????????????????????????????????????????????????????????????????????└──────────────────────┘
-?????????????????????????????????????###????????????????????????????????????┌Help (h) ! Damaged────┐
-?????????????????????????????????????#@ N???????????????????????????????????│Move:                 │
-?????????????????????????????????????#  ????????????????????????????????????│  7 8 9               │
-?????????????????????????????????????? ?????????????????????????????????????│  4 5 6               │
-????????????????????????????????????????????????????????????????????????????│  1 2 3               │
-????????????????????????????????????????????????????????????????????????????│q: mine               │
-????????????????????????????????????????????????????????????????????????????│v: look               │
-????????????????????????????????????????????????????????????????????????????│`: build mode         │
-????????????????????????????????????????????????????????????????????????????│f: interact           │
-????????????????????????????????????????????????????????????????????????????│                      │
-????????????????????????????????????????????????????????????????????????????└──────────────────────┘
+#####vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,          ┌MODES ☼ 08:00─────────┐
+######vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,,         │  ------ - - -- - FOG │
+######vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#vvvvvvvvvvvvvvvvv,,,        └──────────────────────┘
+#######vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,        ┌Inventory─────────────┐
+#######vvv┌─────────────────────────────── Backup systems ───────────────────────────────┐         │
+########vv│RESURRECT                                                                     │         │
+########vv│Choose a body to wake in.                                                     │         │
+#########v│                                                                              │─────────┘
+#########v│ Junker body at the SapienCorp HQ, 1632 tiles                                 │maged────┐
+##########│   Every part damaged                                                         │         │
+##########└─────────────────────── ENTER: wake here  ESCAPE: back ───────────────────────┘         │
+###########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvtttvvvvvvvvvvvvvvvvvvvvvvvvvv,,t  │  4 5 6               │
+############vvvvvvvvvvvvvvvvvvvvvvvvvvvvvttvvvvvvvvvvvvvvvvvvvvvvvvvvvtvttt │  1 2 3               │
+############vvvvvvvvvvvvvvvvvvvvvvvvvvvvvtttvvvvvvvvvvvvvvvvvvvvvvvvvvttt,,t│q: mine               │
+#############vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvttt│v: look               │
+##############vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,,│`: build mode         │
+###############vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,│f: loot corpse        │
+###############vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│                      │
+################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
 ┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
+│[0] Player moved to bunker spawn at (11, 11, -19)                                                 │
 │[0] Loading structure 'sapiencorp-factory.lrstructure' at (200, 1609, 1) for chunk (3, 25, 1)     │
 │[0] Quest marker added: SapienCorp Factory                                                        │
 │[1] Added 2 Chest to inventory                                                                    │
 │[1] Your body was destroyed: self-destruct command. It lies here with everything you carried.     │
-│[1] Backup systems online. You come to at the bunker.                                             │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===
+=== screen flyover-start ===
+                                            LithicRivers
+|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/┌MODES ☼ 08:00─────────┐
+/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\│  ------ - - -- - FOG │
+|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/└──────────────────────┘
+/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\┌Inventory─────────────┐
+|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/│Nail x10              │
+/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\│Acorn x1              │
+|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/│Log x3                │
+/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\└──────────────────────┘
+|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/┌Help (h) ! Damaged────┐
+/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\&,/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\│Move:                 │
+|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/,&|||||/|/|/|||/|/|/|/|/|/|/|/|/|/|/|/│  7 8 9               │
+/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\│  4 5 6               │
+|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|||/|||||||||||/|/|/|/|/|/|/|/|/|/|/|/│  1 2 3               │
+/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\│q: mine               │
+|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|||||||/|/|/|/|/|/|/|/|/|/|/|/│v: look               │
+/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\│`: build mode         │
+|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|||||/|/|/|/|/|/|/|/|/|/|/|/|/|/│f: open door          │
+/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\│                      │
+|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|/|||||||/|/|/|/|/|/|/|/|/|/|/|/|/└──────────────────────┘
+┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
+│[0] Quest marker added: SapienCorp Factory                                                        │
+│[1] Added 2 Chest to inventory                                                                    │
+│[1] Your body was destroyed: self-destruct command. It lies here with everything you carried.     │
+│[1] Backup systems online. You come to in a junker body at the SapienCorp HQ.                     │
+│[1] I should really make a vat...                                                                 │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===
+=== screen flyover-middle ===
+                                            LithicRivers
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌MODES ☼ 08:00─────────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  ------ - - -- - FOG │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Inventory─────────────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Nail x10              │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Acorn x1              │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Log x3                │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Help (h) ! Damaged────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Move:                 │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  7 8 9               │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  4 5 6               │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  1 2 3               │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│q: mine               │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│v: look               │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│`: build mode         │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│f: open door          │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│                      │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
+┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
+│[0] Quest marker added: SapienCorp Factory                                                        │
+│[1] Added 2 Chest to inventory                                                                    │
+│[1] Your body was destroyed: self-destruct command. It lies here with everything you carried.     │
+│[1] Backup systems online. You come to in a junker body at the SapienCorp HQ.                     │
+│[1] I should really make a vat...                                                                 │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===
+=== screen respawned ===
+                                            LithicRivers
+|,.|,.|,.|,.|,.|,.|,.|,.|,.|,.|,.|,.|,.|,.|,.|,.|,.|,.|,.|,.|,.|,.|,.|,.|,.|┌MODES ☼ 08:00─────────┐
+.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.│  ------ - - -- - FOG │
+|\,|\,|\,|\,|\,|\,|\,|\,|\,|\,|\,|\,|\,|\,|\,|\,|\,|\,|\,|\,|\,|\,|\,|\,|\,|└──────────────────────┘
+|,.|,.|,.|,.|,.|,.|,.|,###############.|,.|,.|,.|,.|,.|,.|,.|,.|,.|,.|,.|,.|┌Inventory─────────────┐
+.\\.\\.\\.\\.\\.\\.\\.\###############\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.│Nail x10              │
+|\,|\,|\,|\,|\,|\,|\,|\###############,|\,|\,|\,|\,|\,|\,|\,|\,|\,|\,|\,|\,|│Acorn x1              │
+|,.|,.|,.|,.|,.|,.|,.|,###         ###.|,.|,.|,.|,.|,.|,.|,.|,.|,.|,.|,.|,.|│Log x3                │
+.\\.\\.\\.\\.\\.\\.\\.\###         ###\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.└──────────────────────┘
+|\,|\,|\,|\,|\,|\,|\,|\###         ###,|\,|\,|\,|\,|\,|\,|\,|\,|\,|\,|\,|\,|┌Help (h) ! Damaged────┐
+|,.|,.|,.|,.|,.|,.|,.|,###   ../   DDD_o_.|,.|,.|,.|,.|,.|,.|,.|,.|,.|,.|,.|│Move:                 │
+.\\.\\.\\.\\.\\.\\.\\.\###   .//   DDD/|\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.│  7 8 9               │
+|\,|\,|\,|\,|\,|\,|\,|\###   ///   DDD/_\,|\,|\,|\,|\,|\,|\,|\,|\,|\,|\,|\,|│  4 5 6               │
+|,.|,.|,.|,.|,.|,.|,.|,###         ###.|,.|,.|,.|,.|,.|,.|,.|,.|,.|,.|,.|,.|│  1 2 3               │
+.\\.\\.\\.\\.\\.\\.\\.\###         ###\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.│q: mine               │
+|\,|\,|\,|\,|\,|\,|\,|\###         ###,|\,|\,|\,|\,|\,|\,|\,|\,|\,|\,|\,|\,|│v: look               │
+|,.|,.|,.|,.|,.|,.|,.|,###############.|,.|,.|,.|,.|,.|,.|,.|,.|,.|,.|,.|,.|│`: build mode         │
+.\\.\\.\\.\\.\\.\\.\\.\###############\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.│f: open door          │
+|\,|\,|\,|\,|\,|\,|\,|\###############,|\,|\,|\,|\,|\,|\,|\,|\,|\,|\,|\,|\,|│                      │
+|,.|,.|,.|,.|,.|,.|,.|,.|,.|,.|,.|,.|,.|,.|,.|,.|,.|,.|,.|,.|,.|,.|,.|,.|,.|└──────────────────────┘
+┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
+│[0] Quest marker added: SapienCorp Factory                                                        │
+│[1] Added 2 Chest to inventory                                                                    │
+│[1] Your body was destroyed: self-destruct command. It lies here with everything you carried.     │
+│[1] Backup systems online. You come to in a junker body at the SapienCorp HQ.                     │
+│[1] I should really make a vat...                                                                 │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
 │ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│

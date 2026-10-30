@@ -336,6 +336,8 @@ pub fn is_grid_block(kind: FactoryKind) -> bool {
             | FactoryKind::AutoPlanter
             | FactoryKind::AutoHarvester
             | FactoryKind::ElectricFurnace
+            | FactoryKind::StandardVat
+            | FactoryKind::AdvancedVat
     ) || kind.is_test_consumer()
 }
 

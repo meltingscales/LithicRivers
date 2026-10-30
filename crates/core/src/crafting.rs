@@ -411,6 +411,17 @@ mod tests {
     }
 
     #[test]
+    fn every_body_part_is_craftable_from_raw_sources() {
+        let recipes = RecipeHandler::new();
+        let parts: Vec<ItemKind> = ItemKind::iter()
+            .filter(|&item| crate::model::body::crafted_part(item).is_some())
+            .collect();
+        assert_eq!(parts.len(), 15);
+        let problems = unobtainable(&parts, recipes.get_recipes(), &raw_sources());
+        assert!(problems.is_empty(), "{}", problems.join("\n"));
+    }
+
+    #[test]
     fn an_uncraftable_placeable_item_is_named() {
         let recipes = RecipeHandler::new();
         // Pretend the diamond became placeable without a recipe, and the chest lost nails

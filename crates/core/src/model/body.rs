@@ -13,6 +13,21 @@ pub enum BodyPartType {
     RightLeg,
 }
 
+impl BodyPartType {
+    /// The part's name as the Body tab shows it on a whole body.
+    pub fn label(self) -> &'static str {
+        match self {
+            BodyPartType::Head => "Head",
+            BodyPartType::Torso => "Torso",
+            BodyPartType::PowerSource => "Fusion Core",
+            BodyPartType::LeftArm => "Left Arm",
+            BodyPartType::RightArm => "Right Arm",
+            BodyPartType::LeftLeg => "Left Leg",
+            BodyPartType::RightLeg => "Right Leg",
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, Eq, PartialEq)]
 pub enum BodyPartState {
     Missing,
@@ -86,23 +101,89 @@ pub const PART_ORDER: [BodyPartType; 7] = [
 /// Integrity of a freshly installed replacement part: Functional, with room to repair.
 pub const INSTALLED_PART_INTEGRITY: i64 = 70;
 
+/// How well a crafted body part is made, which sets the state it starts in.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum PartGrade {
+    Crude,
+    Standard,
+    Advanced,
+}
+
+impl PartGrade {
+    /// A part of this grade starts Damaged, Functional or Enhanced.
+    pub fn integrity(self) -> i64 {
+        match self {
+            PartGrade::Crude => 40,
+            PartGrade::Standard => 100,
+            PartGrade::Advanced => 120,
+        }
+    }
+}
+
+const ARM_SLOTS: &[BodyPartType] = &[BodyPartType::LeftArm, BodyPartType::RightArm];
+const LEG_SLOTS: &[BodyPartType] = &[BodyPartType::LeftLeg, BodyPartType::RightLeg];
+
+/// A crafted body part item's grade and the parts it fits.
+pub fn crafted_part(item: ItemKind) -> Option<(PartGrade, &'static [BodyPartType])> {
+    use ItemKind::*;
+    use PartGrade::*;
+    Some(match item {
+        CrudeHead => (Crude, &[BodyPartType::Head]),
+        CrudeTorso => (Crude, &[BodyPartType::Torso]),
+        CrudeFusionCore => (Crude, &[BodyPartType::PowerSource]),
+        CrudeArm => (Crude, ARM_SLOTS),
+        CrudeLeg => (Crude, LEG_SLOTS),
+        StandardHead => (Standard, &[BodyPartType::Head]),
+        StandardTorso => (Standard, &[BodyPartType::Torso]),
+        StandardFusionCore => (Standard, &[BodyPartType::PowerSource]),
+        StandardArm => (Standard, ARM_SLOTS),
+        StandardLeg => (Standard, LEG_SLOTS),
+        AdvancedHead => (Advanced, &[BodyPartType::Head]),
+        AdvancedTorso => (Advanced, &[BodyPartType::Torso]),
+        AdvancedFusionCore => (Advanced, &[BodyPartType::PowerSource]),
+        AdvancedArm => (Advanced, ARM_SLOTS),
+        AdvancedLeg => (Advanced, LEG_SLOTS),
+        _ => return None,
+    })
+}
+
 /// The body parts a replacement item can be installed into; empty for other items.
 pub fn replacement_parts(item: ItemKind) -> &'static [BodyPartType] {
     match item {
-        ItemKind::SalvagedArm => &[BodyPartType::LeftArm, BodyPartType::RightArm],
-        _ => &[],
+        ItemKind::SalvagedArm => ARM_SLOTS,
+        _ => crafted_part(item).map_or(&[], |(_, parts)| parts),
     }
 }
 
-/// The item a working part comes out as, if it has one (others come out as scrap).
-pub fn part_item(part: BodyPartType) -> Option<ItemKind> {
-    match part {
-        BodyPartType::LeftArm | BodyPartType::RightArm => Some(ItemKind::SalvagedArm),
-        _ => None,
+/// The integrity a replacement item starts at once installed: its grade's for crafted
+/// parts, `INSTALLED_PART_INTEGRITY` for a salvaged arm.
+pub fn installed_integrity(item: ItemKind) -> i64 {
+    crafted_part(item).map_or(INSTALLED_PART_INTEGRITY, |(grade, _)| grade.integrity())
+}
+
+/// The crafted part item of `grade` for `part`.
+pub fn graded_item(part: BodyPartType, grade: PartGrade) -> ItemKind {
+    use strum::IntoEnumIterator;
+    ItemKind::iter()
+        .find(|&item| {
+            crafted_part(item).is_some_and(|(g, parts)| g == grade && parts.contains(&part))
+        })
+        .expect("every part has an item in every grade")
+}
+
+/// The item a working part comes out as: a Functional arm as a salvaged arm, other
+/// Functional parts as standard parts, and Enhanced parts as advanced parts. Damaged parts
+/// come out as scrap.
+pub fn part_item(part: BodyPartType, state: BodyPartState) -> Option<ItemKind> {
+    match state {
+        BodyPartState::Functional if ARM_SLOTS.contains(&part) => Some(ItemKind::SalvagedArm),
+        BodyPartState::Functional => Some(graded_item(part, PartGrade::Standard)),
+        BodyPartState::Enhanced => Some(graded_item(part, PartGrade::Advanced)),
+        BodyPartState::Damaged | BodyPartState::Missing => None,
     }
 }
 
-/// What a damaged part, or a part with no item of its own, comes out as.
+/// What a removed damaged part comes out as.
 pub const REMOVED_PART_SCRAP: [(ItemKind, u32); 2] =
     [(ItemKind::IronScrap, 1), (ItemKind::ScrapElectronics, 1)];
 
@@ -127,8 +208,8 @@ pub enum InstallError {
 }
 
 impl Body {
-    /// Install a replacement item into a missing part, making it Functional at
-    /// `INSTALLED_PART_INTEGRITY`. The caller uses up the item on success.
+    /// Install a replacement item into a missing part, at the item's
+    /// `installed_integrity`. The caller uses up the item on success.
     pub fn install(&mut self, part: BodyPartType, item: ItemKind) -> Result<(), InstallError> {
         if !replacement_parts(item).contains(&part) {
             return Err(InstallError::DoesNotFit);
@@ -139,14 +220,14 @@ impl Body {
         if target.state != BodyPartState::Missing {
             return Err(InstallError::NotMissing);
         }
-        target.integrity = INSTALLED_PART_INTEGRITY;
+        target.integrity = installed_integrity(item);
         target.update_state_from_integrity();
         Ok(())
     }
 
-    /// Take a part out, leaving it missing. A Functional or Enhanced part with an item
-    /// comes out as that item; a Damaged part (or one without an item) as scrap, so
-    /// removing and reinstalling never repairs it.
+    /// Take a part out, leaving it missing. A Functional or Enhanced part comes out as
+    /// its `part_item`; a Damaged part as scrap, so removing and reinstalling never
+    /// repairs it.
     pub fn remove(&mut self, part: BodyPartType) -> Result<Vec<(ItemKind, u32)>, RemoveError> {
         if is_locked(part) {
             return Err(RemoveError::Locked);
@@ -157,15 +238,12 @@ impl Body {
         if target.state == BodyPartState::Missing {
             return Err(RemoveError::AlreadyMissing);
         }
-        let working = matches!(
-            target.state,
-            BodyPartState::Functional | BodyPartState::Enhanced
-        );
+        let item = part_item(part, target.state);
         target.integrity = 0;
         target.state = BodyPartState::Missing;
-        Ok(match part_item(part) {
-            Some(item) if working => vec![(item, 1)],
-            _ => REMOVED_PART_SCRAP.to_vec(),
+        Ok(match item {
+            Some(item) => vec![(item, 1)],
+            None => REMOVED_PART_SCRAP.to_vec(),
         })
     }
 }
@@ -655,7 +733,7 @@ mod tests {
         let mut body = Body::default();
         assert_eq!(body.remove(RightArm), Ok(vec![(ItemKind::SalvagedArm, 1)]));
         assert_eq!(body.parts[&RightArm].state, Missing);
-        // The starting right leg is Damaged, and legs have no item yet
+        // The starting right leg is Damaged
         assert_eq!(body.remove(RightLeg), Ok(REMOVED_PART_SCRAP.to_vec()));
         // A damaged arm comes out as scrap too
         body.install(RightArm, ItemKind::SalvagedArm).unwrap();
@@ -674,6 +752,51 @@ mod tests {
         assert_eq!(body.remove(PowerSource), Err(RemoveError::Locked));
         assert_eq!(body.remove(LeftArm), Err(RemoveError::AlreadyMissing));
         assert_eq!(body.parts[&Torso].state, Functional);
+    }
+
+    #[test]
+    fn crafted_parts_install_at_their_grade() {
+        let mut body = Body::default();
+        body.install(LeftArm, ItemKind::CrudeArm).unwrap();
+        assert_eq!(body.parts[&LeftArm].state, Damaged);
+        body.remove(RightArm).unwrap();
+        body.install(RightArm, ItemKind::AdvancedArm).unwrap();
+        assert_eq!(
+            (body.parts[&RightArm].state, body.parts[&RightArm].integrity),
+            (Enhanced, 120)
+        );
+        assert_eq!(
+            body.install(Head, ItemKind::StandardLeg),
+            Err(InstallError::DoesNotFit)
+        );
+        assert_eq!(
+            replacement_parts(ItemKind::StandardLeg),
+            &[LeftLeg, RightLeg]
+        );
+        assert_eq!(replacement_parts(ItemKind::CrudeFusionCore), &[PowerSource]);
+    }
+
+    #[test]
+    fn working_parts_come_out_as_items_of_their_state() {
+        let mut body = Body::default();
+        // A Functional leg comes out as a standard leg, an Enhanced one as an advanced leg
+        assert_eq!(body.remove(LeftLeg), Ok(vec![(ItemKind::StandardLeg, 1)]));
+        body.install(LeftLeg, ItemKind::AdvancedLeg).unwrap();
+        assert_eq!(body.remove(LeftLeg), Ok(vec![(ItemKind::AdvancedLeg, 1)]));
+        assert_eq!(body.remove(Head), Ok(vec![(ItemKind::StandardHead, 1)]));
+        // A crude arm wakes Damaged, so it comes out as scrap
+        body.install(LeftArm, ItemKind::CrudeArm).unwrap();
+        assert_eq!(body.remove(LeftArm), Ok(REMOVED_PART_SCRAP.to_vec()));
+    }
+
+    #[test]
+    fn every_part_has_an_item_in_every_grade() {
+        for part in PART_ORDER {
+            for grade in [PartGrade::Crude, PartGrade::Standard, PartGrade::Advanced] {
+                let item = graded_item(part, grade);
+                assert!(replacement_parts(item).contains(&part), "{item:?}");
+            }
+        }
     }
 
     #[test]

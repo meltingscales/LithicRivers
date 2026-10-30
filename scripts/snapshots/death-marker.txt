@@ -6,11 +6,13 @@ skip-splash
 cheat tp 0 0 0
 cheat giveitem chest 2
 cheat suicide
-key ui.MENU_ACTIVATE
+key ui.MENU_ACTIVATE 2
+wait 3000
 expect-text "Backup systems online"
 key ui.MENU_NEXT 2
 expect-text "Wreck 1"
-# The wreck is the second marker from the bunker
+# The junker woke at the HQ, so the wreck is the third marker from there
+rawkey DOWN
 rawkey DOWN
 rawkey DOWN
 expect-text "Cause: self-destruct"

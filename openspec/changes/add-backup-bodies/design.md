@@ -26,7 +26,9 @@
 |---|---|---|---|---|
 | Crude vat | starter | none | crude parts (wake Damaged, at 40 integrity) | the default two arms, two legs |
 | Standard vat | mid-game | a trickle | crude or standard parts (standard wake Functional at 100) | the default layout |
-| Advanced vat | end-game | a lot | any grade, advanced parts wake Enhanced | four, six or eight arms (`add-multi-arm-bodies`) |
+| Advanced vat | end-game | a lot | any grade, advanced parts wake Enhanced | the default layout for now; four, six or eight arms come with `add-multi-arm-bodies` |
+
+**Multi-arm layouts deferred (the user's decision):** bodies can't have more than two arms until `add-multi-arm-bodies`, so the advanced vat ships with the default layout, and that change gives it multi-arm torsos.
 
 Recipes and power numbers are set in implementation and pinned by the reachability test and the power-balance examples.
 

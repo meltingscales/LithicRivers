@@ -176,6 +176,8 @@ fn render_corpse_loot_modal(
         .map(|b| b.kind);
     let is_chest = block.is_some();
     use lithicrivers_core::factory::FactoryKind;
+    // A vat lists the parts its spare body still lacks under the ones it has
+    let mut vat_missing: Vec<&str> = Vec::new();
     let (title, items_title) = match block {
         Some(FactoryKind::BurnerGenerator) => {
             let buffer_kj = app
@@ -233,6 +235,19 @@ fn render_corpse_loot_modal(
                     format!(" Output ({held}/{MACHINE_CAPACITY}) "),
                 )
             }
+        }
+        Some(
+            kind @ (FactoryKind::CrudeVat | FactoryKind::StandardVat | FactoryKind::AdvancedVat),
+        ) => {
+            use lithicrivers_core::vat;
+            let status = vat::status(&app.core.game.world, corpse_entity);
+            let missing = vat::missing_parts(&corpse_inv);
+            let parts = lithicrivers_core::model::body::PART_ORDER.len();
+            vat_missing = missing.iter().map(|p| p.label()).collect();
+            (
+                format!(" {} - {} ", title_case(kind.name()), status.label()),
+                format!(" Spare body ({}/{parts} parts) ", parts - missing.len()),
+            )
         }
         Some(_) => (
             " Chest ".to_string(),
@@ -301,6 +316,13 @@ fn render_corpse_loot_modal(
         })
         .collect();
 
+    let mut corpse_items = corpse_items;
+    corpse_items.extend(vat_missing.iter().map(|part| {
+        ListItem::new(Line::from(Span::styled(
+            format!("    {part} missing"),
+            Style::default().fg(Color::DarkGray),
+        )))
+    }));
     let container_rows = corpse_inv.slots.len();
     let corpse_list = List::new(corpse_items).block(corpse_block);
     f.render_widget(corpse_list, chunks[0]);
@@ -388,6 +410,18 @@ fn render_corpse_loot_modal(
 }
 
 /// The inside of a bordered box.
+/// "crude resurrection vat" -> "Crude Resurrection Vat".
+fn title_case(name: &str) -> String {
+    name.split(' ')
+        .map(|w| {
+            let mut c = w.chars();
+            c.next()
+                .map_or_else(String::new, |f| f.to_uppercase().chain(c).collect())
+        })
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
 fn inset(rect: Rect) -> Rect {
     Rect::new(
         rect.x + 1,

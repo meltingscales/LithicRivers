@@ -1,0 +1,35 @@
+# A crude resurrection vat: its window lists the parts put in and the ones still missing,
+# and after dying the Resurrect screen offers it, nearest first, above the junker body.
+seed 12345
+size 100x30
+skip-splash
+key ui.MENU_PREV
+cheat tp 0 0 0
+cheat giveitem crude_vat
+cheat giveitem crude_torso
+cheat giveitem crude_fusion_core
+cheat giveitem crude_leg 2
+cheat set_tile ~1 ~ ~ grass
+key build.TOGGLE_BREAK_PLACE_MODE 2
+key hotbar.HOTBAR_SLOT_1 2
+key movement.MOVE_SOUTH 2
+key ui.MENU_ACTIVATE
+key build.PLACE_EAST
+key action.INTERACT
+key ui.MENU_ACTIVATE 4
+expect-text "Crude Resurrection Vat - ready"
+expect-text "Head missing"
+screen vat-window
+key ui.CLOSE_HELP_MENU
+cheat tp ~-6 ~ ~
+cheat kill_player
+key ui.MENU_ACTIVATE
+expect-text "Crude resurrection vat at (1, 0, 0), 7 tiles"
+screen resurrect
+key ui.MENU_ACTIVATE
+key movement.WAIT
+expect-text "You wake in the crude resurrection vat"
+screen woke
+key ui.MENU_NEXT 4
+expect-text "Head"
+screen body

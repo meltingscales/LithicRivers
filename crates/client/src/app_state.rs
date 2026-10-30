@@ -143,6 +143,8 @@ pub struct PanelStates {
     pub stairs_prompt: Option<StairsPrompt>,
     /// The selected row of the system-failure screen (0 respawn, 1 quit)
     pub death_choice: usize,
+    /// The Resurrect screen's selected row while it is open: ready vats, then the junker
+    pub resurrect: Option<usize>,
     pub inventory: InventoryPanelState,
     pub crafting: CraftingPanelState,
     pub credits: CreditsPanelState,

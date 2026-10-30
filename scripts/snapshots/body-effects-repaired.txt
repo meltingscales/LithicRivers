@@ -1,4 +1,4 @@
-# Body effects after repairs: respawning with keepbody repairs every part that isn't
+# Body effects after repairs: waking in the junker with keepbody repairs every part that isn't
 # missing, so only the missing left arm's mining and melee effect is left.
 seed 12345
 size 100x30
@@ -6,7 +6,8 @@ skip-splash
 key ui.MENU_PREV
 cheat keepbody on
 cheat suicide
-key ui.MENU_ACTIVATE
+key ui.MENU_ACTIVATE 2
+wait 3000
 expect-text "Backup systems online"
 screen world
 key ui.MENU_NEXT 4

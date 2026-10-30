@@ -39,6 +39,8 @@ pub enum ClickTarget {
     BlueprintRow(usize),
     StairsChoice(usize),
     DeathChoice(usize),
+    /// A row of the Resurrect screen: a ready vat, or the junker after them
+    ResurrectChoice(usize),
     RepairRecipe(usize),
     RepairPart(lithicrivers_core::model::body::BodyPartType),
     /// A quest's title row, in the Completed panel or the Active one

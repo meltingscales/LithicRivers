@@ -68,6 +68,12 @@ pub const EXAMPLES: &[Example] = &[
         has_input: true,
         build: electric_furnace_line,
     },
+    Example {
+        name: "Resurrection vats: crude, standard and advanced",
+        size: (5, 2),
+        has_input: false,
+        build: resurrection_vats,
+    },
 ];
 
 /// The top-left corner of the first example; the rest follow eastward.
@@ -260,6 +266,37 @@ fn electric_furnace_line(game: &mut Game, o: Position) {
         Facing::East,
     );
     place(game, FactoryKind::Chest, at(o, 10, 1), Facing::North);
+}
+
+/// A spare body in each vat tier: a crude vat with no power, and standard and advanced vats
+/// on three generators.
+///
+/// ```text
+///   G G + G .      G generator, + pole
+///   c . s . a      c crude, s standard, a advanced vat
+/// ```
+fn resurrection_vats(game: &mut Game, o: Position) {
+    use crate::model::body::{graded_item, PartGrade, PART_ORDER};
+    for dx in [0, 1, 3] {
+        let generator = place(
+            game,
+            FactoryKind::BurnerGenerator,
+            at(o, dx, 0),
+            Facing::North,
+        );
+        fill(game, generator, &[(ItemKind::Biochar, 20)]);
+    }
+    place(game, FactoryKind::PowerPole, at(o, 2, 0), Facing::North);
+    for (dx, kind, grade) in [
+        (0, FactoryKind::CrudeVat, PartGrade::Crude),
+        (2, FactoryKind::StandardVat, PartGrade::Standard),
+        (4, FactoryKind::AdvancedVat, PartGrade::Advanced),
+    ] {
+        let vat = place(game, kind, at(o, dx, 1), Facing::North);
+        for part in PART_ORDER {
+            factory::insert(&mut game.world, vat, graded_item(part, grade));
+        }
+    }
 }
 
 /// A chest of logs, an extractor pulling them onto two belts, and a chest at the end.
