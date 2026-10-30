@@ -865,6 +865,16 @@ mod tests {
     }
 
     #[test]
+    fn mobile_title_recommends_a_keyboard() {
+        use crate::ui::title::KEYBOARD_RECOMMENDED;
+        let mut runner = chain_commands(TO_TITLE);
+        assert!(!runner.screen_text().contains(KEYBOARD_RECOMMENDED));
+        runner.app.ui.window.mobile = true;
+        runner.chain(&["wait 50"]);
+        assert!(runner.screen_text().contains(KEYBOARD_RECOMMENDED));
+    }
+
+    #[test]
     fn typing_holds_exactly_while_a_text_field_takes_keys() {
         let mut runner = chain_commands(TO_TITLE);
         assert!(!runner.app.typing());

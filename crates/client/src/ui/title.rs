@@ -319,6 +319,11 @@ fn render_options(f: &mut Frame, app: &App, area: Rect) {
     record_rows(app, rect, 1, OPTIONS_ROWS.len(), ClickTarget::OptionsRow);
 }
 
+/// Shown on phones and tablets: the game is built around a keyboard's numpad, and the
+/// touch pad covers only part of it.
+pub(crate) const KEYBOARD_RECOMMENDED: &str =
+    "Keyboard with numpad is recommended to play LithicRivers";
+
 fn render_title(f: &mut Frame, app: &App, area: Rect) {
     // Pad the art's lines to one width so centering keeps them aligned
     let art: Vec<&str> = app.splash.game_title_text.lines().collect();
@@ -345,6 +350,13 @@ fn render_title(f: &mut Frame, app: &App, area: Rect) {
         ),
         Style::default().fg(Color::DarkGray),
     )));
+    if app.ui.window.mobile {
+        lines.push(Line::from(""));
+        lines.push(Line::from(Span::styled(
+            KEYBOARD_RECOMMENDED,
+            Style::default().fg(Color::Cyan),
+        )));
+    }
     let height = (lines.len() as u16).min(area.height);
     let rect = Rect {
         y: area.y + (area.height - height) / 2,

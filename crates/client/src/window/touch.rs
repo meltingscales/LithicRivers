@@ -14,7 +14,7 @@ use ratatui::buffer::Buffer;
 use ratatui::layout::{Alignment, Rect};
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::Span;
-use ratatui::widgets::{Block, Paragraph, Widget};
+use ratatui::widgets::{Paragraph, Widget};
 
 /// One button's size in cells: big enough for a thumb at the default text size.
 pub const BUTTON_COLS: u16 = 7;
@@ -31,6 +31,7 @@ const MIN_PAD_COLS: u16 = BUTTON_COLS * 6 + 2;
 pub enum Press {
     /// The first key bound to `category.ACTION`
     Keybind(&'static str, &'static str),
+    Enter,
     Escape,
 }
 
@@ -106,6 +107,12 @@ pub fn layout(pad: Rect) -> Vec<PadButton> {
             });
         }
     }
+    // Accept the selected row, in any menu
+    buttons.push(PadButton {
+        rect: button(actions_x + BUTTON_COLS * 2, pad.y),
+        name: "Enter",
+        press: Press::Enter,
+    });
     buttons
 }
 
@@ -120,6 +127,7 @@ pub fn button_at(buttons: &[PadButton], (col, row): (u16, u16)) -> Option<Press>
 /// The key a button sends, as the keybinds stand now.
 pub fn key_code(app: &App, press: Press) -> Option<KeyCode> {
     match press {
+        Press::Enter => Some(KeyCode::Enter),
         Press::Escape => Some(KeyCode::Esc),
         Press::Keybind(category, action) => app
             .ui
@@ -148,30 +156,45 @@ fn key_label(code: KeyCode) -> String {
     label.chars().take(5).collect()
 }
 
-/// Draw the pad's buttons over the game, each boxed with its bound key in the top border.
-/// The game shows through, dimmed, everywhere but the border and the name.
+/// Draw the pad's buttons over the game: each a tinted patch, a cell smaller than its
+/// touch area so neighbors stay apart, with the name on top and the bound key in the
+/// corner. Everywhere else the game shows through, dimmed.
 pub fn render(buttons: &[PadButton], buf: &mut Buffer, app: &App) {
-    let border = Style::default().fg(Color::Rgb(110, 110, 110));
+    let tint = Color::Rgb(45, 45, 45);
     let name = Style::default()
         .fg(Color::Rgb(255, 210, 120))
-        .add_modifier(Modifier::BOLD);
+        .add_modifier(Modifier::BOLD)
+        .remove_modifier(Modifier::DIM);
+    let key = Style::default()
+        .fg(Color::Rgb(150, 150, 150))
+        .remove_modifier(Modifier::DIM);
     for button in buttons {
-        for y in button.rect.top()..button.rect.bottom() {
-            for x in button.rect.left()..button.rect.right() {
+        let patch = Rect {
+            width: button.rect.width - 1,
+            height: button.rect.height - 1,
+            ..button.rect
+        };
+        for y in patch.top()..patch.bottom() {
+            for x in patch.left()..patch.right() {
                 if let Some(cell) = buf.cell_mut((x, y)) {
+                    cell.bg = tint;
                     cell.modifier.insert(Modifier::DIM);
                 }
             }
         }
-        let mut block = Block::bordered().border_style(border);
-        if let Some(code) = key_code(app, button.press).filter(|_| button.press != Press::Escape) {
-            block = block.title(key_label(code));
-        }
-        // Style only the name, so the game around it keeps its own colors
+        let row = |offset: u16| Rect {
+            y: patch.y + offset,
+            height: 1,
+            ..patch
+        };
         Paragraph::new(Span::styled(button.name, name))
             .alignment(Alignment::Center)
-            .block(block)
-            .render(button.rect, buf);
+            .render(row(0), buf);
+        if let (Press::Keybind(..), Some(code)) = (button.press, key_code(app, button.press)) {
+            Paragraph::new(Span::styled(key_label(code), key))
+                .alignment(Alignment::Right)
+                .render(row(1), buf);
+        }
     }
 }
 
@@ -267,16 +290,32 @@ mod tests {
         let buttons = layout(area);
         render(&buttons, &mut buf, &runner.app);
         let east = buttons.iter().find(|b| b.name == "→").unwrap().rect;
-        // Inside the box, beside the one-character name: the game, dimmed
-        let beside = &buf[(east.x + 1, east.y + 1)];
+        // Beside the name and the key: the game, dimmed, on the tint
+        let beside = &buf[(east.x, east.y + 1)];
         assert_eq!(beside.symbol(), "v");
         assert!(beside.modifier.contains(Modifier::DIM));
         assert_eq!(beside.fg, Color::Reset, "keeps the game's color");
-        assert_eq!(buf[(east.x + 3, east.y + 1)].symbol(), "→");
-        // Between the movement grid and the actions, untouched
-        let between = &buf[(40, 4)];
-        assert_eq!(between.symbol(), "v");
-        assert!(!between.modifier.contains(Modifier::DIM));
+        let name_row: String = (east.x..east.right())
+            .map(|x| buf[(x, east.y)].symbol().to_string())
+            .collect();
+        assert_eq!(
+            name_row.matches('v').count(),
+            6,
+            "only the arrow covers the game: {name_row:?}"
+        );
+        let arrow = (east.x..east.right())
+            .find(|&x| buf[(x, east.y)].symbol() == "→")
+            .unwrap();
+        assert!(!buf[(arrow, east.y)].modifier.contains(Modifier::DIM));
+        // The gap around each patch, and between the groups: untouched
+        for cell in [
+            &buf[(east.right() - 1, east.y)],
+            &buf[(east.x, east.bottom() - 1)],
+            &buf[(40, 4)],
+        ] {
+            assert_eq!(cell.symbol(), "v");
+            assert!(!cell.modifier.contains(Modifier::DIM));
+        }
     }
 
     #[test]
@@ -284,7 +323,7 @@ mod tests {
         for (cols, rows) in [(MIN_PAD_COLS, PAD_ROWS), (80, PAD_ROWS), (200, PAD_ROWS)] {
             let pad = Rect::new(0, 30, cols, rows);
             let buttons = layout(pad);
-            assert_eq!(buttons.len(), 15);
+            assert_eq!(buttons.len(), 16);
             for (i, a) in buttons.iter().enumerate() {
                 assert_eq!(a.rect.intersection(pad), a.rect, "{} at {cols}", a.name);
                 for b in &buttons[i + 1..] {
@@ -309,9 +348,10 @@ mod tests {
             button_at(&buttons, (99, 30 + PAD_ROWS - 1)),
             Some(Press::Escape)
         );
-        // Between the two groups, and the empty top right
+        assert_eq!(button_at(&buttons, (99, 30)), Some(Press::Enter));
+        // Between the two groups, and above Use
         assert_eq!(button_at(&buttons, (50, 35)), None);
-        assert_eq!(button_at(&buttons, (99, 30)), None);
+        assert_eq!(button_at(&buttons, (100 - BUTTON_COLS * 3, 30)), None);
     }
 
     #[test]
@@ -329,10 +369,11 @@ mod tests {
         let mut buf = Buffer::empty(Rect::new(0, 0, 80, PAD_ROWS));
         render(&buttons, &mut buf, app);
         let use_button = buttons.iter().find(|b| b.name == "Use").unwrap().rect;
-        let top: String = (use_button.x..use_button.right())
-            .map(|x| buf[(x, use_button.y)].symbol().to_string())
+        let key_row: String = (use_button.x..use_button.right())
+            .map(|x| buf[(x, use_button.y + 1)].symbol().to_string())
             .collect();
-        assert!(top.contains('j'), "{top:?}");
+        assert!(key_row.contains('j'), "{key_row:?}");
+        assert_eq!(key_code(app, Press::Enter), Some(KeyCode::Enter));
     }
 
     #[test]
