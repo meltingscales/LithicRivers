@@ -79,6 +79,50 @@ fn layout(area: Rect, settings: &settings::WindowSettings) -> Layout {
     Layout { game, dock, pad }
 }
 
+/// Android's soft keyboard types into GameActivity's own text field instead of sending
+/// key presses (only Backspace and Enter arrive as keys), and winit doesn't pass that
+/// text on. So the game reads the field each frame, types what's there, and empties it.
+#[cfg(target_os = "android")]
+mod soft_keyboard {
+    use super::input;
+    use crossterm::event::KeyCode;
+    use winit::event_loop::ActiveEventLoop;
+    use winit::platform::android::activity::input::{ImeOptions, InputType, TextInputAction};
+    use winit::platform::android::ActiveEventLoopExtAndroid;
+
+    /// Plain letters with no suggestions, so the keyboard never holds a half-typed word
+    /// back, and never full screen.
+    pub fn configure(event_loop: &ActiveEventLoop) {
+        event_loop.android_app().set_ime_editor_info(
+            InputType::TYPE_CLASS_TEXT
+                | InputType::TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+                | InputType::TYPE_TEXT_FLAG_NO_SUGGESTIONS,
+            TextInputAction::Unspecified,
+            // In landscape, keep the keyboard below the game instead of full screen
+            ImeOptions::IME_FLAG_NO_FULLSCREEN,
+        );
+    }
+
+    pub fn take_text(event_loop: &ActiveEventLoop) -> Vec<KeyCode> {
+        let app = event_loop.android_app();
+        let state = app.text_input_state();
+        if state.text.is_empty() {
+            return Vec::new();
+        }
+        app.set_text_input_state(Default::default());
+        input::text_keys(&state.text)
+    }
+}
+
+#[cfg(not(target_os = "android"))]
+mod soft_keyboard {
+    pub fn take_text(
+        _event_loop: &winit::event_loop::ActiveEventLoop,
+    ) -> Vec<crossterm::event::KeyCode> {
+        Vec::new()
+    }
+}
+
 /// One window and the terminal drawn into it.
 struct Surface {
     window: Arc<Window>,
@@ -160,6 +204,7 @@ pub fn run(app: &mut App, event_loop: EventLoop<()>) -> Result<(), String> {
         dock_panel: None,
         pad_buttons: Vec::new(),
         touches: touch::Touches::default(),
+        soft_keyboard: false,
         fullscreen: false,
         modifiers: ModifiersState::empty(),
         pointer_cell: None,
@@ -188,6 +233,8 @@ struct WindowApp<'a> {
     pad_buttons: Vec<touch::PadButton>,
     /// Fingers on the screen outside the pad (mobile only)
     touches: touch::Touches,
+    /// Whether the soft keyboard was asked for (mobile only)
+    soft_keyboard: bool,
     /// Whether the game window is fullscreen now
     fullscreen: bool,
     modifiers: ModifiersState,
@@ -259,6 +306,30 @@ impl WindowApp<'_> {
         }
     }
 
+    /// On mobile, open the soft keyboard while a text field takes typing, and close it
+    /// after.
+    fn update_soft_keyboard(&mut self, event_loop: &ActiveEventLoop) {
+        let wanted = self.app.ui.window.mobile && self.app.typing();
+        let Some(game) = self.game.as_ref() else {
+            return;
+        };
+        if wanted != self.soft_keyboard {
+            #[cfg(target_os = "android")]
+            if wanted {
+                soft_keyboard::configure(event_loop);
+            }
+            game.window.set_ime_allowed(wanted);
+            self.soft_keyboard = wanted;
+        }
+        if self.soft_keyboard {
+            for code in soft_keyboard::take_text(event_loop) {
+                if let Err(e) = crate::handle_input(self.app, code) {
+                    tracing::warn!(target: "game", "input error: {e}");
+                }
+            }
+        }
+    }
+
     /// A game window cell inside the docked panel, as a cell relative to the panel.
     fn in_dock(&self, (col, row): (u16, u16)) -> Option<(u16, u16)> {
         let panel = self.dock_panel?;
@@ -325,6 +396,13 @@ impl WindowApp<'_> {
                 };
                 if let Err(e) = result {
                     tracing::warn!(target: "game", "window draw failed: {e}");
+                }
+            }
+            WindowEvent::Ime(ime) => {
+                for code in input::ime_keys(&ime) {
+                    if let Err(e) = crate::handle_input(self.app, code) {
+                        tracing::warn!(target: "game", "input error: {e}");
+                    }
                 }
             }
             WindowEvent::Touch(touch) if self.app.ui.window.mobile => {
@@ -462,6 +540,7 @@ impl ApplicationHandler for WindowApp<'_> {
         self.dock_panel = None;
         self.pad_buttons.clear();
         self.touches = touch::Touches::default();
+        self.soft_keyboard = false;
     }
 
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
@@ -472,6 +551,13 @@ impl ApplicationHandler for WindowApp<'_> {
             self.error = Some(e);
             event_loop.exit();
             return;
+        }
+        if self.app.ui.window.mobile && !settings::chosen(self.app, "WINDOW_FONT_PX") {
+            if let Some(game) = &self.game {
+                let size = game.window.inner_size();
+                let px = settings::mobile_font_px((size.width, size.height));
+                settings::change(self.app, |w| w.font_px = px);
+            }
         }
         if self.app.ui.window.display == DisplayMode::Floating {
             self.open_display(event_loop);
@@ -499,6 +585,7 @@ impl ApplicationHandler for WindowApp<'_> {
             return;
         }
         self.apply_settings(event_loop);
+        self.update_soft_keyboard(event_loop);
         for surface in [&self.game, &self.display].into_iter().flatten() {
             surface.window.request_redraw();
         }

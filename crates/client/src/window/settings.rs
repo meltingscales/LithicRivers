@@ -5,7 +5,7 @@ use crate::app::client_app::App;
 use lithicrivers_core::config::ConfigManager;
 
 pub const MIN_FONT_PX: u32 = 12;
-pub const MAX_FONT_PX: u32 = 32;
+pub const MAX_FONT_PX: u32 = 48;
 pub const FONT_PX_STEP: u32 = 2;
 pub const DEFAULT_FONT_PX: u32 = 18;
 
@@ -114,6 +114,40 @@ impl WindowSettings {
     }
 }
 
+/// The game area a phone's first text size leaves above the touch pad, in cells.
+const MOBILE_GAME_COLS: u32 = 80;
+const MOBILE_GAME_ROWS: u32 = 20;
+
+/// The text size a phone or tablet starts with: the largest that still leaves the game
+/// 80x20 cells above the touch pad.
+pub fn mobile_font_px((width, height): (u32, u32)) -> u32 {
+    let rows = MOBILE_GAME_ROWS + super::touch::PAD_ROWS as u32;
+    (MIN_FONT_PX..=MAX_FONT_PX)
+        .rev()
+        .step_by(FONT_PX_STEP as usize)
+        .find(|&px| {
+            let (cell_w, cell_h) = super::fonts::cell_size(px);
+            width / cell_w >= MOBILE_GAME_COLS && height / cell_h >= rows
+        })
+        .unwrap_or(MIN_FONT_PX)
+}
+
+/// Whether the player has chosen a window setting (it's in the config file).
+pub fn chosen(app: &App, key: &str) -> bool {
+    app.core.config_manager.get_setting("ui", key).is_some()
+}
+
+/// Settings for a phone or tablet: touch controls, and no Display panel unless the
+/// player chose one (the pad needs the space, and Options has Text size). The text size
+/// is picked once the window's size is known (`mobile_font_px`).
+#[cfg_attr(not(target_os = "android"), allow(dead_code))]
+pub fn use_mobile_defaults(app: &mut App) {
+    app.ui.window.mobile = true;
+    if !chosen(app, "WINDOW_DISPLAY") {
+        app.ui.window.display = DisplayMode::Hidden;
+    }
+}
+
 /// Change the window settings and save them to the config file (outside headless runs).
 pub fn change(app: &mut App, f: impl FnOnce(&mut WindowSettings)) {
     f(&mut app.ui.window);
@@ -175,6 +209,36 @@ mod tests {
         assert!(!loaded.touch_controls);
         assert!(!loaded.active, "being in a window is never saved");
         assert!(!loaded.mobile, "the platform is never saved");
+    }
+
+    #[test]
+    fn phones_start_with_text_as_big_as_fits() {
+        // Pixel 8, landscape
+        let px = mobile_font_px((2400, 1080));
+        assert_eq!(px, 36);
+        let (w, h) = super::super::fonts::cell_size(px);
+        assert!(2400 / w >= MOBILE_GAME_COLS);
+        assert!(1080 / h >= MOBILE_GAME_ROWS + super::super::touch::PAD_ROWS as u32);
+        assert!(
+            1080 / (h + FONT_PX_STEP) < MOBILE_GAME_ROWS + super::super::touch::PAD_ROWS as u32,
+            "the next size won't fit"
+        );
+        // A big tablet gets the largest size; a tiny screen the smallest
+        assert_eq!(mobile_font_px((3840, 2160)), MAX_FONT_PX);
+        assert_eq!(mobile_font_px((320, 240)), MIN_FONT_PX);
+    }
+
+    #[test]
+    fn mobile_hides_the_display_panel_unless_chosen() {
+        let mut runner = crate::headless::chain_commands(&["skip-splash"]);
+        use_mobile_defaults(&mut runner.app);
+        assert!(runner.app.ui.window.mobile);
+        assert_eq!(runner.app.ui.window.display, DisplayMode::Hidden);
+        assert!(!chosen(&runner.app, "WINDOW_FONT_PX"));
+        change(&mut runner.app, |w| w.display = DisplayMode::Docked);
+        use_mobile_defaults(&mut runner.app);
+        assert_eq!(runner.app.ui.window.display, DisplayMode::Docked);
+        assert!(chosen(&runner.app, "WINDOW_FONT_PX"));
     }
 
     #[test]

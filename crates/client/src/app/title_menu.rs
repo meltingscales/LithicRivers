@@ -185,8 +185,22 @@ impl App {
         self.splash.state = SplashState::WorldList;
     }
 
+    /// A title-screen key. Outside text fields, the movement keys also navigate and
+    /// Interact also selects, as in the game's other menus, so the touch pad works here.
     fn matches(&self, action: &str, key: &KeyCode) -> bool {
-        self.ui.keybinds.matches("title", action, key)
+        let keys = &self.ui.keybinds;
+        if keys.matches("title", action, key) {
+            return true;
+        }
+        let shared = match action {
+            "UP" => ("movement", "MOVE_NORTH"),
+            "DOWN" => ("movement", "MOVE_SOUTH"),
+            "LEFT" => ("movement", "MOVE_WEST"),
+            "RIGHT" => ("movement", "MOVE_EAST"),
+            "SELECT" => ("action", "INTERACT"),
+            _ => return false,
+        };
+        !self.typing() && keys.matches(shared.0, shared.1, key)
     }
 
     /// Up/down for a menu of `len` rows; returns true if the key moved the cursor.
@@ -354,6 +368,9 @@ impl App {
                 };
                 if erase {
                     text.pop();
+                } else if select {
+                    // Done with this field (a phone's keyboard covers the rows below)
+                    form.field += 1;
                 } else if let KeyCode::Char(c) = key {
                     if text.chars().count() < MAX_TEXT_LEN {
                         text.push(c);
@@ -821,6 +838,65 @@ mod tests {
         assert!(runner.app.volume_setting("SFX_VOLUME") > 0.35);
         runner.chain(&["key title.BACK"]);
         assert_eq!(runner.app.splash.state, SplashState::Title);
+    }
+
+    #[test]
+    fn movement_keys_and_interact_work_the_title_menus_outside_text_fields() {
+        let mut runner = chain_commands(TO_TITLE);
+        runner.chain(&["key movement.MOVE_SOUTH 2"]);
+        assert_eq!(runner.app.title.selected, 2);
+        runner.chain(&["key action.INTERACT"]);
+        assert_eq!(runner.app.splash.state, SplashState::Options);
+        let music = runner.app.volume_setting("MUSIC_VOLUME");
+        runner.chain(&["key movement.MOVE_EAST"]);
+        assert!(runner.app.volume_setting("MUSIC_VOLUME") > music);
+        // In the world name field, the same keys are typed
+        let mut runner = chain_commands(&[TO_TITLE, TO_CREATE].concat());
+        runner.app.title.create.name.clear();
+        runner.chain(&["key movement.MOVE_SOUTH", "key action.INTERACT"]);
+        assert_eq!(runner.app.title.create.field, 0);
+        assert_eq!(runner.app.title.create.name, "2f");
+        // Select leaves a text field for the next one
+        runner.chain(&["key title.SELECT"]);
+        assert_eq!(runner.app.title.create.field, 1);
+        runner.chain(&["key title.SELECT"]);
+        assert_eq!(runner.app.title.create.field, 2);
+        assert!(!runner.app.typing());
+    }
+
+    #[test]
+    fn typing_holds_exactly_while_a_text_field_takes_keys() {
+        let mut runner = chain_commands(TO_TITLE);
+        assert!(!runner.app.typing());
+        runner.chain(TO_CREATE);
+        assert!(runner.app.typing(), "world name");
+        runner.chain(&["key title.DOWN"]);
+        assert!(runner.app.typing(), "seed");
+        runner.chain(&["key title.DOWN"]);
+        assert!(!runner.app.typing(), "a toggle");
+        runner.app.splash.state = SplashState::RenameWorld;
+        assert!(runner.app.typing(), "renaming a world");
+
+        let mut runner = chain_commands(&["skip-splash"]);
+        assert!(!runner.app.typing());
+        runner.chain(&["key ui.OPEN_COMMAND_MENU"]);
+        assert!(runner.app.typing(), "cheat console");
+        runner.chain(&["rawkey ESCAPE"]);
+        assert!(!runner.app.typing());
+        runner.chain(&["key ui.MENU_NEXT 5", "key search.SEARCH"]);
+        assert!(runner.app.typing(), "crafting search");
+        runner.chain(&[
+            "key search.END_SEARCH",
+            "key ui.MENU_NEXT",
+            "key search.SEARCH",
+        ]);
+        assert!(runner.app.typing(), "item search");
+        runner.chain(&["key search.END_SEARCH"]);
+        assert!(!runner.app.typing());
+        runner.app.panels.blueprint_window = Some(crate::app_state::BlueprintWindow {
+            renaming: Some(String::new()),
+        });
+        assert!(runner.app.typing(), "renaming a blueprint");
     }
 
     #[test]

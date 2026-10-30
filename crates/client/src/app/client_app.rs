@@ -136,6 +136,31 @@ pub(crate) struct App {
 }
 
 impl App {
+    /// Whether a text field takes typed characters now: the world name and seed, renaming
+    /// a world, a search box, the cheat console or renaming a blueprint. The phone's soft
+    /// keyboard is open exactly while this holds.
+    pub(crate) fn typing(&self) -> bool {
+        use crate::app::title_menu::CreateField;
+        match self.splash.state {
+            SplashState::RenameWorld => true,
+            SplashState::CreateWorld => matches!(
+                self.title.create.fields().get(self.title.create.field),
+                Some(CreateField::Name | CreateField::Seed)
+            ),
+            SplashState::MainUI => {
+                let panels = &self.panels;
+                panels.cheat_console.is_open()
+                    || panels.item_dictionary.search.typing
+                    || panels.crafting.search.typing
+                    || panels
+                        .blueprint_window
+                        .as_ref()
+                        .is_some_and(|w| w.renaming.is_some())
+            }
+            _ => false,
+        }
+    }
+
     pub(crate) fn on_tick(&mut self) {
         // Handle splash screen timing
         if let Some(start_time) = self.splash.start_time {

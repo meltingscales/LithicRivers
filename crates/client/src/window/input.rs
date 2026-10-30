@@ -62,6 +62,22 @@ pub fn key_code(key: &Key, text: Option<&str>, shift: bool) -> Option<KeyCode> {
     Some(code)
 }
 
+/// The keys an input-method event types: each committed character, as if typed one by
+/// one (preedit text is still being composed, so it types nothing yet).
+pub fn ime_keys(ime: &winit::event::Ime) -> Vec<KeyCode> {
+    match ime {
+        winit::event::Ime::Commit(text) => text_keys(text),
+        _ => Vec::new(),
+    }
+}
+
+/// Text as the keys that type it, one per character.
+pub fn text_keys(text: &str) -> Vec<KeyCode> {
+    text.chars()
+        .filter_map(|c| key_code(&Key::Character(c.to_string().into()), None, false))
+        .collect()
+}
+
 /// The screen cell under a pointer position in pixels.
 pub fn cell_at(x: f64, y: f64, cell: (u32, u32)) -> (u16, u16) {
     let col = (x.max(0.0) / cell.0 as f64) as u64;
@@ -196,6 +212,25 @@ mod tests {
         assert_eq!(key_code(&chr("\u{1b}"), None, false), Some(KeyCode::Esc));
         assert_eq!(key_code(&chr("\u{7f}"), None, false), Some(KeyCode::Delete));
         assert_eq!(key_code(&chr("\u{0}"), None, false), None);
+    }
+
+    #[test]
+    fn ime_commits_type_each_character() {
+        use winit::event::Ime;
+        assert_eq!(
+            ime_keys(&Ime::Commit("Rö k".into())),
+            vec![
+                KeyCode::Char('R'),
+                KeyCode::Char('ö'),
+                KeyCode::Char(' '),
+                KeyCode::Char('k')
+            ]
+        );
+        assert_eq!(
+            ime_keys(&Ime::Commit("a\n".into())),
+            vec![KeyCode::Char('a'), KeyCode::Enter]
+        );
+        assert!(ime_keys(&Ime::Preedit("ka".into(), None)).is_empty());
     }
 
     #[test]
