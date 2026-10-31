@@ -9,11 +9,11 @@ input_file: scripts/snapshots/tab-07-crafting.txt
 │┌Recipes───────────────────────┐┌Recipe Details──────────────────┐┌Inventory─────────────────────┐│
 ││> * Wooden Plank              ││Recipe Name: Wooden Planks      ││* Acorn: x1                   ││
 ││  * Plank Block               ││Result: 3x Wooden Plank         ││* Log: x3                     ││
-││  * Stick                     ││                                ││* Nail: x10                   ││
-││  * Wooden Shavings           ││Ingredients:                    ││* Scrap Electronics: x3       ││
-││  * Wooden Shavings           ││  * 1x Log (have 3)             ││* Stick: x2                   ││
-││  * Torch                     ││* raw material                  ││* String: x2                  ││
-││  * Nail                      ││                                ││* Torch: x3                   ││
+││  * Stick                     ││A wooden plank.                 ││* Nail: x10                   ││
+││  * Wooden Shavings           ││                                ││* Scrap Electronics: x3       ││
+││  * Wooden Shavings           ││Ingredients:                    ││* Stick: x2                   ││
+││  * Torch                     ││  * 1x Log (have 3)             ││* String: x2                  ││
+││  * Nail                      ││* raw material                  ││* Torch: x3                   ││
 ││  * String                    ││                                ││                              ││
 ││  * Wooden Conveyor           ││                                ││                              ││
 ││  * Burner Generator          ││                                ││                              ││

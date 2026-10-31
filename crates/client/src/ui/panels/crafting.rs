@@ -225,6 +225,10 @@ pub fn render_crafting_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
             .crafting
             .recipe_handler
             .can_craft(index, &inventory);
+        let description = crate::ui::panels::item_dictionary::description(
+            &mut app.core.sprite_loader,
+            recipe.result,
+        );
         let mut details = vec![
             Line::from(vec![
                 Span::styled("Recipe Name: ", Style::default().fg(Color::Yellow)),
@@ -237,6 +241,12 @@ pub fn render_crafting_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
                     Style::default().fg(if can_craft { Color::Green } else { Color::Red }),
                 ),
             ]),
+            Line::from(Span::styled(
+                description,
+                Style::default()
+                    .fg(Color::Gray)
+                    .add_modifier(Modifier::ITALIC),
+            )),
             Line::from(""),
             Line::from(Span::styled(
                 "Ingredients:",

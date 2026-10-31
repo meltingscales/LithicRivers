@@ -9,11 +9,11 @@ input_file: scripts/snapshots/crafting-search.txt
 │┌Recipes - showing 13 of 41────┐┌Recipe Details──────────────────┐┌Inventory─────────────────────┐│
 ││> * Wooden Plank              ││Recipe Name: Wooden Planks      ││* Acorn: x1                   ││
 ││  * Plank Block               ││Result: 3x Wooden Plank         ││* Log: x3                     ││
-││  * Stick                     ││                                ││* Nail: x10                   ││
-││  * Wooden Conveyor           ││Ingredients:                    ││* Scrap Electronics: x3       ││
-││  * Burner Generator          ││  * 1x Log (have 3)             ││* Stick: x2                   ││
-││  * Chest                     ││* raw material                  ││* String: x2                  ││
-││  * Auto-Planter              ││                                ││* Torch: x3                   ││
+││  * Stick                     ││A wooden plank.                 ││* Nail: x10                   ││
+││  * Wooden Conveyor           ││                                ││* Scrap Electronics: x3       ││
+││  * Burner Generator          ││Ingredients:                    ││* Stick: x2                   ││
+││  * Chest                     ││  * 1x Log (have 3)             ││* String: x2                  ││
+││  * Auto-Planter              ││* raw material                  ││* Torch: x3                   ││
 ││  * Extractor                 ││                                ││                              ││
 ││  * Vertical Conveyor         ││                                ││                              ││
 ││  * Stairs                    ││                                ││                              ││

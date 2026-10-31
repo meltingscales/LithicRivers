@@ -9,11 +9,11 @@ input_file: scripts/snapshots/crafting-craftable-only.txt
 │┌Recipes (craftable only)──────┐┌Recipe Details──────────────────┐┌Inventory─────────────────────┐│
 ││> * Wooden Plank              ││Recipe Name: Wooden Planks      ││* Acorn: x1                   ││
 ││  * Wooden Shavings           ││Result: 3x Wooden Plank         ││* Log: x3                     ││
-││  * Wooden Shavings           ││                                ││* Nail: x10                   ││
-││  * Torch                     ││Ingredients:                    ││* Scrap Electronics: x3       ││
-││                              ││  * 1x Log (have 3)             ││* Stick: x2                   ││
-││                              ││* raw material                  ││* String: x2                  ││
-││                              ││                                ││* Torch: x3                   ││
+││  * Wooden Shavings           ││A wooden plank.                 ││* Nail: x10                   ││
+││  * Torch                     ││                                ││* Scrap Electronics: x3       ││
+││                              ││Ingredients:                    ││* Stick: x2                   ││
+││                              ││  * 1x Log (have 3)             ││* String: x2                  ││
+││                              ││* raw material                  ││* Torch: x3                   ││
 ││                              ││                                ││                              ││
 ││                              ││                                ││                              ││
 ││                              ││                                ││                              ││

@@ -9,15 +9,15 @@ input_file: scripts/snapshots/crafting-chest-tree.txt
 │┌Recipes───────────────────────┐┌Recipe Details──────────────────┐┌Inventory─────────────────────┐│
 ││  * Plank Block               ││Recipe Name: Chest              ││* Acorn: x1                   ││
 ││  * Stick                     ││Result: 1x Chest                ││* Log: x3                     ││
-││  * Wooden Shavings           ││                                ││* Nail: x10                   ││
-││  * Wooden Shavings           ││Ingredients:                    ││* Scrap Electronics: x3       ││
-││  * Torch                     ││  - 8x Wooden Plank (have 0)    ││* Stick: x2                   ││
-││  * Nail                      ││    * 3x Log (have 3)           ││* String: x2                  ││
-││  * String                    ││  - 4x Nail (have 10)           ││* Torch: x3                   ││
-││  * Wooden Conveyor           ││    * 1x Iron Scrap (have 0)    ││                              ││
-││  * Burner Generator          ││* raw material                  ││                              ││
-││  * Power Pole                ││                                ││                              ││
-││> * Chest                     ││                                ││                              ││
+││  * Wooden Shavings           ││A wooden chest; place it to     ││* Nail: x10                   ││
+││  * Wooden Shavings           ││store items                     ││* Scrap Electronics: x3       ││
+││  * Torch                     ││                                ││* Stick: x2                   ││
+││  * Nail                      ││Ingredients:                    ││* String: x2                  ││
+││  * String                    ││  - 8x Wooden Plank (have 0)    ││* Torch: x3                   ││
+││  * Wooden Conveyor           ││    * 3x Log (have 3)           ││                              ││
+││  * Burner Generator          ││  - 4x Nail (have 10)           ││                              ││
+││  * Power Pole                ││    * 1x Iron Scrap (have 0)    ││                              ││
+││> * Chest                     ││* raw material                  ││                              ││
 │└──────────────────────────────┘└────────────────────────────────┘└──────────────────────────────┘│
 │s: search   c: craftable only (off)                                                               │
 │                                                                                                  │
