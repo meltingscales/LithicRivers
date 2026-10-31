@@ -193,18 +193,19 @@ pub enum MoveEffect {
     EndCombat,
 }
 
-pub fn get_available_moves() -> Vec<Move> {
-    vec![
+/// The moves the combat menu offers: a robot's physical attacks and running away, plus
+/// the instant kill in worlds that allow cheats.
+pub fn get_available_moves(cheats_allowed: bool) -> Vec<Move> {
+    let mut moves = vec![
         Move::melee(),
-        Move::fireball(),
+        Move::power_strike(),
         Move::tackle(),
         Move::escape(),
-        Move::heal(),
-        Move::shield(),
-        Move::lightning_bolt(),
-        Move::power_strike(),
-        Move::debuginstantkill(),
-    ]
+    ];
+    if cheats_allowed {
+        moves.push(Move::debuginstantkill());
+    }
+    moves
 }
 
 /// Calculate distance for tackle push mechanics
@@ -507,14 +508,23 @@ mod tests {
 
     #[test]
     fn test_get_available_moves() {
-        let moves = get_available_moves();
-        assert_eq!(moves.len(), 9);
-
-        let move_types: Vec<MoveType> = moves.iter().map(|m| m.move_type).collect();
-        assert!(move_types.contains(&MoveType::Melee));
-        assert!(move_types.contains(&MoveType::Tackle));
-        assert!(move_types.contains(&MoveType::Fireball));
-        assert!(move_types.contains(&MoveType::Escape));
+        let types = |cheats| -> Vec<MoveType> {
+            get_available_moves(cheats)
+                .iter()
+                .map(|m| m.move_type)
+                .collect()
+        };
+        assert_eq!(
+            types(false),
+            vec![
+                MoveType::Melee,
+                MoveType::PowerStrike,
+                MoveType::Tackle,
+                MoveType::Escape
+            ]
+        );
+        assert_eq!(types(true).last(), Some(&MoveType::DebugInstantKill));
+        assert_eq!(types(true).len(), 5);
     }
 
     #[test]

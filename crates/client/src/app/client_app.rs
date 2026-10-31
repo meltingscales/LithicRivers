@@ -158,6 +158,8 @@ impl App {
                         .blueprint_window
                         .as_ref()
                         .is_some_and(|w| w.renaming.is_some())
+                    || (self.ui.current_tab == MenuTab::GlobalMap
+                        && panels.global_map.renaming.is_some())
             }
             _ => false,
         }

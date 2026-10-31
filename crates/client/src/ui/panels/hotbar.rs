@@ -1,5 +1,5 @@
 use crate::App;
-use lithicrivers_core::components::itemkind_sprite_name;
+use lithicrivers_core::components::{itemkind_sprite_name, ItemKind};
 use ratatui::{
     layout::{Alignment, Rect},
     style::{Color, Style},
@@ -35,23 +35,7 @@ pub fn render_hotbar_panel(f: &mut Frame, app: &mut App, area: Rect) {
 
         // Get assigned block content
         let content = if let Some(block_kind) = app.panels.build.hotbar_assignments[i] {
-            // Get the actual 1x1 sprite from SpriteLoader
-            let sprite_name = itemkind_sprite_name(block_kind);
-            // Parse category and name from sprite_name (format: "category/name")
-            if let Some(slash_pos) = sprite_name.find('/') {
-                let (category, name) = sprite_name.split_at(slash_pos);
-                let name = &name[1..]; // Remove the '/'
-                let sprite_data = app.core.sprite_loader.load_sprite(name, category);
-                // Get the first character from the 1x1 sprite (sprites[0])
-                let sprite_char = sprite_data
-                    .sprites
-                    .first()
-                    .and_then(|s| s.chars().next())
-                    .unwrap_or('?');
-                format!("[{}]", sprite_char)
-            } else {
-                "[?]".to_string() // Invalid sprite name format
-            }
+            format!("[{}]", item_glyph(app, block_kind))
         } else {
             "[ ]".to_string() // Empty slot
         };
@@ -108,4 +92,15 @@ fn placement_label(app: &crate::App) -> String {
         build.placement_facing.arrow(),
         build.placement_facing.name()
     )
+}
+
+/// An item's 1x1 glyph, from its sprite in the items category ('?' if it has none).
+pub(crate) fn item_glyph(app: &mut crate::App, kind: ItemKind) -> char {
+    app.core
+        .sprite_loader
+        .load_sprite(itemkind_sprite_name(kind), "items")
+        .sprites
+        .first()
+        .and_then(|s| s.chars().next())
+        .unwrap_or('?')
 }

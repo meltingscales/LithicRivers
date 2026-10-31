@@ -116,9 +116,14 @@ pub fn default_config() -> ConfigRoot {
             "END_RENAME": ["ENTER"]       // While renaming: keep the new name
         },
         "global_map": {
-            "DELETE_MARKER": ["x"],              // Global Map: delete the selected wreck marker
+            "DELETE_MARKER": ["x"],              // Global Map: delete the selected waypoint or wreck marker
             "CONFIRM_DELETE": ["y"],             // Delete marker prompt: yes
-            "CANCEL_DELETE": ["n", "ESCAPE"]     // Delete marker prompt: no
+            "CANCEL_DELETE": ["n", "ESCAPE"],    // Delete marker prompt: no
+            "ADD_WAYPOINT": ["w"],               // Global Map: add a waypoint where you stand
+            "RENAME_WAYPOINT": ["r"],            // Global Map: rename the selected waypoint
+            "MOVE_WAYPOINT": ["m"],              // Global Map: move the selected waypoint to where you stand
+            "DELETE_CHAR": ["BACKSPACE"],        // While renaming a waypoint: erase a character
+            "END_RENAME": ["ENTER"]              // While renaming a waypoint: keep the new name
         },
         "crafting": {
             "TOGGLE_CRAFTABLE_ONLY": ["c"], // Crafting tab: list only what you can craft now

@@ -1,0 +1,31 @@
+# Waypoints on the Global Map: add one where the player stands, rename it, move it, and
+# delete it after the yes/no prompt. Quest markers can't be deleted.
+seed 12345
+size 100x30
+skip-splash
+cheat tp 0 0 0
+key ui.MENU_NEXT
+expect-text "Global Map"
+key global_map.ADD_WAYPOINT
+expect-text "Added Waypoint 1 at (0, 0, 0)."
+key global_map.RENAME_WAYPOINT
+key global_map.DELETE_CHAR 10
+type "Iron field"
+screen renaming
+key global_map.END_RENAME
+expect-text "Renamed Waypoint 1 to Iron field."
+screen renamed
+cheat tp 5 3 0
+key global_map.MOVE_WAYPOINT
+expect-text "Moved Iron field to (5, 3, 0)."
+# The bunker marker is a quest marker
+key ui.MENU_DOWN
+key global_map.DELETE_MARKER
+expect-text "Quest markers can't be deleted."
+key ui.MENU_UP
+key global_map.DELETE_MARKER
+expect-text "Are you sure?"
+screen prompt
+key global_map.CONFIRM_DELETE
+expect-text "Deleted the marker for Iron field."
+screen deleted
