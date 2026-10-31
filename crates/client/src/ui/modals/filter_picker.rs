@@ -19,7 +19,7 @@ fn capitalize(s: &str) -> String {
 }
 
 pub(crate) fn render_filter_picker(f: &mut Frame, app: &App) {
-    let Some(picker) = app.panels.filter_picker else {
+    let Some(picker) = app.panels.filter_picker.as_ref() else {
         return;
     };
     let world = &app.core.game.world;
@@ -27,7 +27,9 @@ pub(crate) fn render_filter_picker(f: &mut Frame, app: &App) {
     let name = world
         .get::<&FactoryBlock>(picker.entity)
         .map_or("block", |b| b.kind.name());
-    let items: Vec<ListItem> = crate::app::input::filter_picker::rows()
+    let rows = crate::app::input::filter_picker::rows(&picker.search);
+    let row_count = rows.len();
+    let items: Vec<ListItem> = rows
         .into_iter()
         .map(|row| {
             let label = row.map_or("(no filter)", itemkind_name);
@@ -35,24 +37,31 @@ pub(crate) fn render_filter_picker(f: &mut Frame, app: &App) {
             ListItem::new(format!("{mark}{label}"))
         })
         .collect();
-    let key = |c, a| app.core.config_manager.get_printable_key_for_keybind(c, a);
-    let area = centered_rect(40, 70, f.area());
+    let key = |c: &str, a: &str| app.core.config_manager.get_printable_key_for_keybind(c, a);
+    // The search hint, plus how to set and close while no search is going on
+    let search = &picker.search;
+    let footer = if search.typing || !search.text.is_empty() {
+        format!(" {} ", search.hint(key))
+    } else {
+        format!(
+            " {}  {}: set  {}: close ",
+            search.hint(key),
+            key("ui", "MENU_ACTIVATE"),
+            key("ui", "CLOSE_HELP_MENU")
+        )
+    };
+    let area = centered_rect(50, 70, f.area());
     f.render_widget(Clear, area);
     app.ui
         .click_targets
         .push(area, crate::ui::click_targets::ClickTarget::ModalArea);
-    let row_count = crate::app::input::filter_picker::rows().len();
     let list = List::new(items)
         .block(
             Block::default()
                 .borders(Borders::ALL)
                 .title(format!(" {}: pick a filter ", capitalize(name)))
                 .title_alignment(Alignment::Center)
-                .title_bottom(format!(
-                    " {}: set  {}: close ",
-                    key("ui", "MENU_ACTIVATE"),
-                    key("ui", "CLOSE_HELP_MENU")
-                )),
+                .title_bottom(footer),
         )
         .style(Style::default().fg(Color::White))
         .highlight_style(Style::default().add_modifier(Modifier::REVERSED));

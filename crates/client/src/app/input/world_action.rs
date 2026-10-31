@@ -457,6 +457,7 @@ pub fn execute_interaction_action(app: &mut App, action: &crate::app_state::Inte
             app.panels.filter_picker = Some(crate::app_state::FilterPicker {
                 entity: *entity,
                 selected,
+                search: Default::default(),
             });
         }
         InteractionType::OpenFurnace { entity, kind, .. } => {

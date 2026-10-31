@@ -155,6 +155,10 @@ impl App {
                     || panels.item_dictionary.search.typing
                     || panels.crafting.search.typing
                     || panels
+                        .filter_picker
+                        .as_ref()
+                        .is_some_and(|p| p.search.typing)
+                    || panels
                         .blueprint_window
                         .as_ref()
                         .is_some_and(|w| w.renaming.is_some())

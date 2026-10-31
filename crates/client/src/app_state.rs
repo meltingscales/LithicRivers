@@ -124,11 +124,12 @@ pub struct ItemDictionaryState {
 }
 
 /// The filter picker of a filter extractor or belt router: row 0 is "no filter", then
-/// every item.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// every item the search matches.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FilterPicker {
     pub entity: hecs::Entity,
     pub selected: usize,
+    pub search: crate::app::input::search::SearchBox,
 }
 
 /// All UI panel-specific states grouped by functionality

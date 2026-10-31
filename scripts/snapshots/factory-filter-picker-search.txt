@@ -1,0 +1,37 @@
+# Searching a filter extractor's filter picker: typing narrows the items by name, the
+# first match is a key away, and Escape clears the search before it closes the picker.
+seed 12345
+size 100x30
+skip-splash
+key ui.MENU_PREV
+cheat tp 0 0 0
+cheat giveitem filter_extractor
+key build.TOGGLE_BREAK_PLACE_MODE 2
+# Picker: Clear slot, Acorn, Filter Extractor
+key hotbar.HOTBAR_SLOT_1 2
+key movement.MOVE_SOUTH 2
+key ui.MENU_ACTIVATE
+key hotbar.HOTBAR_SLOT_1
+key build.PLACE_WEST
+key build.TOGGLE_BREAK_PLACE_MODE 2
+key action.INTERACT
+expect-text "Filter extractor: pick a filter"
+key search.SEARCH
+type "scrap"
+expect-text "Search: scrap_"
+screen typing
+key search.END_SEARCH
+# Rows: (no filter), Scrap Electronics, Iron Scrap, Plasteel Scrap
+key movement.MOVE_SOUTH 2
+key ui.MENU_ACTIVATE
+expect-text "Filter set to Iron Scrap"
+key action.INTERACT
+key search.SEARCH
+type "zzz"
+key search.END_SEARCH
+expect-text "(no filter)"
+screen no-match
+# Escape clears the search, a second Escape closes the picker
+key ui.CLOSE_HELP_MENU
+expect-text "s: search"
+key ui.CLOSE_HELP_MENU
