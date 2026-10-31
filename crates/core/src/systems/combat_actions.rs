@@ -651,7 +651,7 @@ pub fn handle_entity_death(world: &mut World, res: &mut Resources, entity: hecs:
         || world
             .get::<&crate::components::NuclearSlime>(entity)
             .is_ok();
-    let inventory_items = if is_creature {
+    let mut inventory_items = if is_creature {
         world
             .get::<&Inventory>(entity)
             .map(|inv| inv.slots.clone())
@@ -659,6 +659,22 @@ pub fn handle_entity_death(world: &mut World, res: &mut Resources, entity: hecs:
     } else {
         vec![]
     };
+    // Now and then a creature drops an embryo of its own kind
+    let creature = world
+        .get::<&EntityKind>(entity)
+        .ok()
+        .and_then(|k| match *k {
+            EntityKind::FeralDog => Some(crate::spawn_utils::EnemyKind::FeralDog),
+            EntityKind::NuclearSlime => Some(crate::spawn_utils::EnemyKind::NuclearSlime),
+            _ => None,
+        });
+    if let (Some(creature), Some(pos)) = (creature, entity_pos) {
+        let dropped =
+            crate::spawner::roll_embryo(&res.world_state.world, creature, pos, res.time.tick);
+        if let Some(embryo) = dropped {
+            inventory_items.push(crate::components::ItemStack::new(embryo, 1));
+        }
+    }
 
     // Add Dead marker
     world.insert_one(entity, Dead).ok();

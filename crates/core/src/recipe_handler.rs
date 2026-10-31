@@ -157,6 +157,13 @@ impl RecipeHandler {
                 result: ItemKind::Spawner,
                 quantity: 1,
             },
+            // Meat slurry: 2x meat, ground down to feed spawners
+            Recipe {
+                name: "Meat Slurry",
+                ingredients: &[(ItemKind::Meat, 2)],
+                result: ItemKind::MeatSlurry,
+                quantity: 1,
+            },
             // Extractor: 2x wooden plank + 1x iron scrap + 2x nail
             Recipe {
                 name: "Extractor",

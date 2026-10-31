@@ -1708,6 +1708,42 @@ eEe
  ║   ║   ║  
 ▀▀▀ ▀▀▀ ▀▀▀ 
             
+=== items/feral_dog_embryo_flawed  #C07A8A  A feral dog embryo with a strong heartbeat; it grows four dogs before it gives out
+-- 1x
+ε
+-- art 0
+            
+    ▄▄▄▄    
+  ▄▀░░░░▀▄  
+ █░░▄▀▀▄░░█ 
+ █░░▀▄ █░░█ 
+  ▀▄░░░░▄▀  
+    ▀▀▀▀    
+            
+=== items/feral_dog_embryo_flawless  #F0A0C8  A perfect feral dog embryo that never stops kicking; it grows eight dogs before it gives out
+-- 1x
+ε
+-- art 0
+            
+    ▄▄▄▄    
+  ▄▀░░░░▀▄  
+ █░░▄▀▀▄░░█ 
+ █░░▀▄ █░░█ 
+  ▀▄░░░░▄▀  
+    ▀▀▀▀    
+            
+=== items/feral_dog_embryo_poor  #8A6F6A  A feral dog embryo, curled and twitching; a poor one grows two dogs before it gives out
+-- 1x
+ε
+-- art 0
+            
+    ▄▄▄▄    
+  ▄▀░░░░▀▄  
+ █░░▄▀▀▄░░█ 
+ █░░▀▄ █░░█ 
+  ▀▄░░░░▄▀  
+    ▀▀▀▀    
+            
 === items/filter_extractor  #3B92B9  A grabber arm with a sorting eye: moves only the item it's set to
 -- 1x
 →
@@ -1846,6 +1882,18 @@ M
    ▀▀▀      
             
             
+=== items/meat_slurry  #9C3B3B  Meat ground to a red paste; spawners grow their creatures on it
+-- 1x
+≈
+-- art 0
+            
+   ┌────┐   
+   │≈≈≈≈│   
+   │▓▒▓▒│   
+   │▒▓▒▓│   
+   │▓▓▓▓│   
+   └────┘   
+            
 === items/nail  #964B00  A metal nail.
 -- 1x
 n
@@ -1864,6 +1912,42 @@ n
       █     
       ▀     
             
+            
+=== items/nuclear_slime_embryo_flawed  #8CC060  A nuclear slime embryo that glows faintly; it grows four slimes before it gives out
+-- 1x
+ε
+-- art 0
+            
+    ▄▄▄▄    
+  ▄▀░░░░▀▄  
+ █░░▄▀▀▄░░█ 
+ █░░▀▄ █░░█ 
+  ▀▄░░░░▄▀  
+    ▀▀▀▀    
+            
+=== items/nuclear_slime_embryo_flawless  #B8F070  A flawless nuclear slime embryo, bright enough to read by; it grows eight slimes before it gives out
+-- 1x
+ε
+-- art 0
+            
+    ▄▄▄▄    
+  ▄▀░░░░▀▄  
+ █░░▄▀▀▄░░█ 
+ █░░▀▄ █░░█ 
+  ▀▄░░░░▄▀  
+    ▀▀▀▀    
+            
+=== items/nuclear_slime_embryo_poor  #6F8A5A  A nuclear slime embryo, a cloudy green bead; a poor one grows two slimes before it gives out
+-- 1x
+ε
+-- art 0
+            
+    ▄▄▄▄    
+  ▄▀░░░░▀▄  
+ █░░▄▀▀▄░░█ 
+ █░░▀▄ █░░█ 
+  ▀▄░░░░▄▀  
+    ▀▀▀▀    
             
 === items/nuclear_waste  #B6FF00  A cracked SapienCorp canister, still warm after all these years
 -- 1x

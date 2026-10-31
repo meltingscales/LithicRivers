@@ -6,7 +6,7 @@ input_file: scripts/snapshots/crafting-search.txt
 === screen crafting-search ===
                                             LithicRivers
 ┌Crafting──────────────────────────────────────────────────────────────────────────────────────────┐
-│┌Recipes - showing 14 of 44────┐┌Recipe Details──────────────────┐┌Inventory─────────────────────┐│
+│┌Recipes - showing 14 of 45────┐┌Recipe Details──────────────────┐┌Inventory─────────────────────┐│
 ││> * Wooden Plank              ││Recipe Name: Wooden Planks      ││* Acorn: x1                   ││
 ││  * Plank Block               ││Result: 3x Wooden Plank         ││* Log: x3                     ││
 ││  * Stick                     ││A wooden plank.                 ││* Nail: x10                   ││

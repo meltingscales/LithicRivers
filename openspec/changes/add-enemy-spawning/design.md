@@ -42,7 +42,7 @@
 - Both slots take items from extractors and belts like a furnace's input, and Interact opens a window like the crude furnace's (slurry, embryo, charges left, power state).
 - **Spawner recipe:** iron scrap and scrap electronics, like the electric furnace, so it sits at the same point in the tech tree (exact amounts picked during implementation; the reachability test checks it).
 - **Meat slurry:** a hand recipe, 2 meat → 1 meat slurry. A grinder machine can come later.
-- **Embryos:** one item per creature kind and grade (`Feral dog embryo (poor)`, ...). Every creature death rolls, seeded like other loot: poor 10%, flawed 3%, flawless 1%, at most one embryo. Creatures from spawners drop them too, which closes the farm loop.
+- **Embryos:** one item per creature kind and grade (`Feral dog embryo (poor)`, ...). Every creature death rolls, seeded like other loot: poor 10%, flawed 3%, flawless 1%, at most one embryo. Creatures from spawners drop them too, which closes the farm loop. The roll is seeded by where and when the creature died, not where it spawned like its other loot, so creatures a farm keeps spawning on the same tiles don't all drop the same embryo. An embryo the creature drops goes into its corpse.
 
 ### Fences and gates (decided by the user)
 - Fences and gates are factory blocks, so they show in look mode and break back into items. Both are see-through for fog of war and light.
