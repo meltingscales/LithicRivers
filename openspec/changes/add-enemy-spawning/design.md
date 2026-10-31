@@ -25,10 +25,12 @@
 ### Rules and timing
 - **When:** every 10 game seconds (1000 ticks), each rule is checked for the chunks around the player that are out of view. A chunk that spawned waits a cooldown (5 game minutes) before spawning again.
 - **Rolls:** seeded by `(seed, chunk, tick / 1000, rule)`, so the same play gives the same spawns.
-- **Caps:** count creatures of the rule's kind within the radius. At the cap, nothing spawns.
+- **Caps:** count creatures of the rule's kind within the radius. At the cap, nothing spawns. A creature only spawns within its rule's radius of the player, so the cap holds around them.
+- **Rules:** feral dogs in forest (15% a check, 30% at night, 6 within 64 tiles); nuclear slimes in the shallows (10%) and the deep (20%), 4 within 64 tiles. They replace the old one-time roll per underground chunk, so a new world gets its first slimes on the first check.
+- **In view:** core doesn't know the window size, so "the player can see a tile" means: on the player's layer, within 48 tiles (`SIGHT_RADIUS`, wider than a usual window's world view), in line of sight, and lit (surface by day, or within the player's light). Time jumps by whole actions, so the check runs once for each 10-second period crossed (`spawn_check_period`, saved).
 
 ### Bases
-- No natural spawn on a tile within 8 tiles of a placed light source, or in an area enclosed by fences and walls (a flood fill limited to 64 tiles from the candidate finds no way out).
+- No natural spawn on a tile within 8 tiles of a placed light source, or in an area enclosed by fences and walls (a flood fill limited to 64 tiles from the candidate finds no way out). A placed light is any entity with a `LightSource` that isn't the player; no placeable light exists yet, so the rule waits on one (a torch block or lamp). Ground that isn't generated yet counts as a way out of the flood fill.
 
 ### Spawners (craftable, decided by the user)
 - Every spawner spawns one creature within 4 tiles every 30 game seconds while the player is within 24 tiles, up to 4 of its own (tracked by a `SpawnedBy` component, saved).

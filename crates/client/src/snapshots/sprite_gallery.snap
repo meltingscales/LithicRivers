@@ -929,6 +929,25 @@ e<
       └──┘  
             
             
+=== factory/fence  #8C6A43  Stakes and rails of grey wood; beasts stay on their side, but eyes and light pass over
+-- 1x
+╫
+-- 2x
+╫╫
+╨╨
+-- 3x
+┼─┼
+┼─┼
+│ │
+-- art 0
+            
+ ╥   ╥   ╥  
+═╬═══╬═══╬═ 
+ ║   ║   ║  
+═╬═══╬═══╬═ 
+ ║   ║   ║  
+▀▀▀ ▀▀▀ ▀▀▀ 
+            
 === factory/filter_extractor_east  #4FC3F7  A grabber arm with a sorting eye: moves only the item it's set to
 -- 1x
 →
@@ -1004,6 +1023,25 @@ e<
    ╰──┤▓◘│  
       └──┘  
             
+            
+=== factory/gate  #A07A4A  A fence panel hung on a nail: it swings for you and for nothing with teeth
+-- 1x
+Π
+-- 2x
+┌┐
+││
+-- 3x
+┌─┐
+│▒│
+│ │
+-- art 0
+            
+ ╥        ╥ 
+ ╠════════╣ 
+ ║╲      ╱║ 
+ ║  ╲  ╱  ║ 
+ ╠════════╣ 
+ ▀        ▀ 
             
 === factory/power_pole  #E5B53A  Links to poles within 8 tiles and powers blocks within 3
 -- 1x
@@ -1632,6 +1670,25 @@ eEe
   └──┘      
             
             
+=== items/fence  #694F32  Stakes and rails of grey wood; beasts stay on their side, but eyes and light pass over
+-- 1x
+╫
+-- 2x
+╫╫
+╨╨
+-- 3x
+┼─┼
+┼─┼
+│ │
+-- art 0
+            
+ ╥   ╥   ╥  
+═╬═══╬═══╬═ 
+ ║   ║   ║  
+═╬═══╬═══╬═ 
+ ║   ║   ║  
+▀▀▀ ▀▀▀ ▀▀▀ 
+            
 === items/filter_extractor  #3B92B9  A grabber arm with a sorting eye: moves only the item it's set to
 -- 1x
 →
@@ -1650,6 +1707,25 @@ eEe
   │◘▓├──╯   
   └──┘      
             
+            
+=== items/gate  #785C38  A fence panel hung on a nail: it swings for you and for nothing with teeth
+-- 1x
+Π
+-- 2x
+┌┐
+││
+-- 3x
+┌─┐
+│▒│
+│ │
+-- art 0
+            
+ ╥        ╥ 
+ ╠════════╣ 
+ ║╲      ╱║ 
+ ║  ╲  ╱  ║ 
+ ╠════════╣ 
+ ▀        ▀ 
             
 === items/gold_nugget  #FFFF00  A valuable gold nugget
 -- 1x

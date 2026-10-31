@@ -74,6 +74,12 @@ pub const EXAMPLES: &[Example] = &[
         has_input: false,
         build: resurrection_vats,
     },
+    Example {
+        name: "Fenced pen with a gate",
+        size: (5, 5),
+        has_input: false,
+        build: fenced_pen,
+    },
 ];
 
 /// The top-left corner of the first example; the rest follow eastward.
@@ -304,6 +310,22 @@ fn resurrection_vats(game: &mut Game, o: Position) {
 /// ```text
 ///   C > = = C
 /// ```
+/// A ring of fences with a gate on its west side: creatures stay in, the player walks in.
+fn fenced_pen(game: &mut Game, o: Position) {
+    for dx in 0..5 {
+        for dy in 0..5 {
+            if dx == 0 || dx == 4 || dy == 0 || dy == 4 {
+                let kind = if (dx, dy) == (0, 2) {
+                    FactoryKind::Gate
+                } else {
+                    FactoryKind::Fence
+                };
+                place(game, kind, at(o, dx, dy), Facing::North);
+            }
+        }
+    }
+}
+
 fn extractor_line(game: &mut Game, o: Position) {
     let source = place(game, FactoryKind::Chest, o, Facing::North);
     fill(game, source, &[(ItemKind::Log, 6)]);

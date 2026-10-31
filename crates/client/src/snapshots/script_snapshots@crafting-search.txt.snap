@@ -6,7 +6,7 @@ input_file: scripts/snapshots/crafting-search.txt
 === screen crafting-search ===
                                             LithicRivers
 ┌Crafting──────────────────────────────────────────────────────────────────────────────────────────┐
-│┌Recipes - showing 13 of 41────┐┌Recipe Details──────────────────┐┌Inventory─────────────────────┐│
+│┌Recipes - showing 14 of 43────┐┌Recipe Details──────────────────┐┌Inventory─────────────────────┐│
 ││> * Wooden Plank              ││Recipe Name: Wooden Planks      ││* Acorn: x1                   ││
 ││  * Plank Block               ││Result: 3x Wooden Plank         ││* Log: x3                     ││
 ││  * Stick                     ││A wooden plank.                 ││* Nail: x10                   ││
@@ -16,8 +16,8 @@ input_file: scripts/snapshots/crafting-search.txt
 ││  * Auto-Planter              ││* raw material                  ││* Torch: x3                   ││
 ││  * Extractor                 ││                                ││                              ││
 ││  * Vertical Conveyor         ││                                ││                              ││
+││  * Fence                     ││                                ││                              ││
 ││  * Stairs                    ││                                ││                              ││
-││  * Crude Head                ││                                ││                              ││
 │└──────────────────────────────┘└────────────────────────────────┘└──────────────────────────────┘│
 │Search: plank   (s edit, ESCAPE clear)   c: craftable only (off)                                  │
 │                                                                                                  │

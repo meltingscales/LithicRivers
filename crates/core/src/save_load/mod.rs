@@ -526,6 +526,14 @@ mod tests {
                 crate::factory::FactoryKind::ElectricFurnace,
                 Position { x: 11, y: -4, z: 0 },
             ),
+            (
+                crate::factory::FactoryKind::Fence,
+                Position { x: 12, y: -4, z: 0 },
+            ),
+            (
+                crate::factory::FactoryKind::Gate,
+                Position { x: 13, y: -4, z: 0 },
+            ),
         ] {
             crate::factory::place(
                 &mut fight.game.world,

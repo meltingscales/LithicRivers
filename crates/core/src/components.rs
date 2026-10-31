@@ -225,6 +225,8 @@ pub enum ItemKind {
     CrudeVat,
     StandardVat,
     AdvancedVat,
+    Fence,
+    Gate,
 }
 
 pub fn itemkind_name(kind: ItemKind) -> &'static str {
@@ -280,6 +282,8 @@ pub fn itemkind_name(kind: ItemKind) -> &'static str {
         ItemKind::CrudeVat => "Crude Resurrection Vat",
         ItemKind::StandardVat => "Standard Resurrection Vat",
         ItemKind::AdvancedVat => "Advanced Resurrection Vat",
+        ItemKind::Fence => "Fence",
+        ItemKind::Gate => "Gate",
     }
 }
 
@@ -336,6 +340,8 @@ pub fn itemkind_sprite_name(kind: ItemKind) -> &'static str {
         ItemKind::CrudeVat => "crude_vat",
         ItemKind::StandardVat => "standard_vat",
         ItemKind::AdvancedVat => "advanced_vat",
+        ItemKind::Fence => "fence",
+        ItemKind::Gate => "gate",
     }
 }
 
@@ -392,6 +398,8 @@ pub fn parse_itemkind_from_sprite_name(sprite_name: &str) -> Option<ItemKind> {
         "crude_vat" => Some(ItemKind::CrudeVat),
         "standard_vat" => Some(ItemKind::StandardVat),
         "advanced_vat" => Some(ItemKind::AdvancedVat),
+        "fence" => Some(ItemKind::Fence),
+        "gate" => Some(ItemKind::Gate),
         _ => None,
     }
 }
