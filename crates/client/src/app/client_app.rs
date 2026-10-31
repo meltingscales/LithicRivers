@@ -119,6 +119,8 @@ pub(crate) struct App {
     pub splash: SplashScreenState,
     /// Last time we advanced a combat tick (for 10 ticks/second)
     pub last_combat_tick: Option<std::time::Instant>,
+    /// The respawn flyover, while it plays
+    pub flyover: Option<crate::app::flyover::Flyover>,
     /// Time source for all time-dependent behavior and rendering
     pub clock: clock::Clock,
     /// Seed for worlds started without the create-world screen (`skip-splash`)

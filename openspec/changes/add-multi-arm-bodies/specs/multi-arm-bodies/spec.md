@@ -17,6 +17,13 @@ A body's number of arm slots SHALL come from its torso: 2 for a standard torso, 
 - **WHEN** a save from before this change is loaded
 - **THEN** the robot has its two arms exactly as saved
 
+### Requirement: Multi-arm bodies come from the advanced vat
+The advanced resurrection vat SHALL accept quad, hexa and octa torsos, show an arm slot for each of the torso's arms, and wake the robot with that many arms.
+
+#### Scenario: Advanced vat
+- **WHEN** an advanced vat holds a hexa torso, a fusion core and six arms
+- **THEN** the robot wakes from it with six arms
+
 ### Requirement: Every arm is a real part
 Each extra arm SHALL take damage, be repaired, accept an installed replacement and hold one weapon, the same as the left and right arms.
 

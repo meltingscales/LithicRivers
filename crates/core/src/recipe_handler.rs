@@ -209,6 +209,184 @@ impl RecipeHandler {
                 result: ItemKind::WoodenConveyor,
                 quantity: 1,
             },
+            // Body parts, crude: wood, string and scrap, before the factory gets going
+            Recipe {
+                name: "Crude Head",
+                ingredients: &[
+                    (ItemKind::WoodenPlank, 2),
+                    (ItemKind::IronScrap, 1),
+                    (ItemKind::ScrapElectronics, 1),
+                ],
+                result: ItemKind::CrudeHead,
+                quantity: 1,
+            },
+            Recipe {
+                name: "Crude Torso",
+                ingredients: &[
+                    (ItemKind::WoodenPlank, 4),
+                    (ItemKind::IronScrap, 2),
+                    (ItemKind::Nail, 2),
+                ],
+                result: ItemKind::CrudeTorso,
+                quantity: 1,
+            },
+            Recipe {
+                name: "Crude Fusion Core",
+                ingredients: &[
+                    (ItemKind::IronScrap, 2),
+                    (ItemKind::ScrapElectronics, 3),
+                    (ItemKind::Stone, 2),
+                ],
+                result: ItemKind::CrudeFusionCore,
+                quantity: 1,
+            },
+            Recipe {
+                name: "Crude Arm",
+                ingredients: &[
+                    (ItemKind::Stick, 2),
+                    (ItemKind::IronScrap, 1),
+                    (ItemKind::String, 1),
+                ],
+                result: ItemKind::CrudeArm,
+                quantity: 1,
+            },
+            Recipe {
+                name: "Crude Leg",
+                ingredients: &[
+                    (ItemKind::Stick, 2),
+                    (ItemKind::IronScrap, 1),
+                    (ItemKind::String, 1),
+                ],
+                result: ItemKind::CrudeLeg,
+                quantity: 1,
+            },
+            // Body parts, standard: iron, electronics and plasteel
+            Recipe {
+                name: "Standard Head",
+                ingredients: &[
+                    (ItemKind::IronScrap, 2),
+                    (ItemKind::ScrapElectronics, 3),
+                    (ItemKind::PlasteelScrap, 1),
+                ],
+                result: ItemKind::StandardHead,
+                quantity: 1,
+            },
+            Recipe {
+                name: "Standard Torso",
+                ingredients: &[
+                    (ItemKind::IronScrap, 4),
+                    (ItemKind::PlasteelScrap, 2),
+                    (ItemKind::Nail, 2),
+                ],
+                result: ItemKind::StandardTorso,
+                quantity: 1,
+            },
+            Recipe {
+                name: "Standard Fusion Core",
+                ingredients: &[
+                    (ItemKind::ScrapElectronics, 3),
+                    (ItemKind::PlasteelScrap, 2),
+                    (ItemKind::NuclearWaste, 1),
+                ],
+                result: ItemKind::StandardFusionCore,
+                quantity: 1,
+            },
+            Recipe {
+                name: "Standard Arm",
+                ingredients: &[
+                    (ItemKind::IronScrap, 3),
+                    (ItemKind::PlasteelScrap, 1),
+                    (ItemKind::ScrapElectronics, 1),
+                ],
+                result: ItemKind::StandardArm,
+                quantity: 1,
+            },
+            Recipe {
+                name: "Standard Leg",
+                ingredients: &[
+                    (ItemKind::IronScrap, 3),
+                    (ItemKind::PlasteelScrap, 1),
+                    (ItemKind::ScrapElectronics, 1),
+                ],
+                result: ItemKind::StandardLeg,
+                quantity: 1,
+            },
+            // Body parts, advanced: plasteel and nuclear waste
+            Recipe {
+                name: "Advanced Head",
+                ingredients: &[
+                    (ItemKind::PlasteelScrap, 3),
+                    (ItemKind::ScrapElectronics, 4),
+                    (ItemKind::NuclearWaste, 1),
+                ],
+                result: ItemKind::AdvancedHead,
+                quantity: 1,
+            },
+            Recipe {
+                name: "Advanced Torso",
+                ingredients: &[(ItemKind::PlasteelScrap, 6), (ItemKind::NuclearWaste, 2)],
+                result: ItemKind::AdvancedTorso,
+                quantity: 1,
+            },
+            Recipe {
+                name: "Advanced Fusion Core",
+                ingredients: &[(ItemKind::NuclearWaste, 4), (ItemKind::PlasteelScrap, 2)],
+                result: ItemKind::AdvancedFusionCore,
+                quantity: 1,
+            },
+            Recipe {
+                name: "Advanced Arm",
+                ingredients: &[
+                    (ItemKind::PlasteelScrap, 3),
+                    (ItemKind::ScrapElectronics, 2),
+                    (ItemKind::NuclearWaste, 1),
+                ],
+                result: ItemKind::AdvancedArm,
+                quantity: 1,
+            },
+            Recipe {
+                name: "Advanced Leg",
+                ingredients: &[
+                    (ItemKind::PlasteelScrap, 3),
+                    (ItemKind::ScrapElectronics, 2),
+                    (ItemKind::NuclearWaste, 1),
+                ],
+                result: ItemKind::AdvancedLeg,
+                quantity: 1,
+            },
+            // Resurrection vats, each built from the tier before
+            Recipe {
+                name: "Crude Resurrection Vat",
+                ingredients: &[
+                    (ItemKind::WoodenPlank, 8),
+                    (ItemKind::IronScrap, 6),
+                    (ItemKind::String, 4),
+                ],
+                result: ItemKind::CrudeVat,
+                quantity: 1,
+            },
+            Recipe {
+                name: "Standard Resurrection Vat",
+                ingredients: &[
+                    (ItemKind::CrudeVat, 1),
+                    (ItemKind::IronScrap, 6),
+                    (ItemKind::ScrapElectronics, 4),
+                    (ItemKind::PlasteelScrap, 2),
+                ],
+                result: ItemKind::StandardVat,
+                quantity: 1,
+            },
+            Recipe {
+                name: "Advanced Resurrection Vat",
+                ingredients: &[
+                    (ItemKind::StandardVat, 1),
+                    (ItemKind::PlasteelScrap, 6),
+                    (ItemKind::ScrapElectronics, 4),
+                    (ItemKind::NuclearWaste, 4),
+                ],
+                result: ItemKind::AdvancedVat,
+                quantity: 1,
+            },
         ];
 
         Self { recipes }

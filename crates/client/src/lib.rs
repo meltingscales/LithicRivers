@@ -327,6 +327,7 @@ fn mouse_input(me: &crossterm::event::MouseEvent) -> Option<app::input::mouse::M
 /// Shared by the interactive loop and headless runs; reads time only from `app.clock`.
 fn step(app: &mut App) {
     app.update_demo();
+    app.update_flyover();
     // Auto-advance ticks when combat is active (one tick per COMBAT_MS_PER_TICK)
     if app.combat.is_active() {
         let tick_ms = app

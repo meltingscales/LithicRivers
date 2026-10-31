@@ -14,15 +14,15 @@ A Robot Resurrection Vat SHALL hold one spare body assembled from crafted body p
 - **THEN** its window shows it as ready, with the arms and head missing
 
 ### Requirement: Vat tiers
-Vats SHALL come in three tiers: a crude starter vat that needs no power and wakes the robot in damaged crude parts, a mid-game standard vat that needs power and wakes it in working parts, and an end-game advanced vat that also supports bodies with four, six or eight arms.
+Vats SHALL come in three tiers: a crude starter vat that needs no power and wakes the robot in damaged crude parts, a mid-game standard vat that needs power and wakes it in working parts, and an end-game advanced vat that needs a lot of power and wakes it in enhanced parts.
 
 #### Scenario: Crude vat
 - **WHEN** the robot wakes in a crude vat's body
 - **THEN** every part it was given is Damaged and the body has the default two arms and two legs
 
 #### Scenario: Advanced vat
-- **WHEN** an advanced vat holds a six-armed spare body
-- **THEN** the robot wakes with six arms
+- **WHEN** a powered advanced vat holds advanced parts
+- **THEN** the robot wakes with those parts Enhanced
 
 ### Requirement: Choosing where to wake
 After dying, the player SHALL choose among every ready vat, each shown with its spare body's parts and distance, or the junker fallback. Waking in a vat SHALL use up its spare body.

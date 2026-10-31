@@ -47,6 +47,7 @@ pub mod target_tracker;
 pub mod test_support;
 pub mod tile_registry;
 pub mod tiles;
+pub mod vat;
 pub mod view;
 pub mod world;
 pub mod world_state;

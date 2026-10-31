@@ -90,6 +90,11 @@ pub fn handle_mouse(app: &mut App, input: MouseInput) {
 /// Route a mouse event. The demo plays its scripted mouse steps through here.
 pub fn dispatch_mouse(app: &mut App, input: MouseInput) {
     app.ui.mouse_cell = Some((input.col, input.row));
+    // A click skips the respawn flyover
+    if app.flyover.is_some() && matches!(input.kind, MouseKind::Click(_)) {
+        app.finish_flyover();
+        return;
+    }
     if input.kind == MouseKind::Move {
         // In Look mode, hovering picks what to look at; only the keys move the view, so
         // the view never drifts under a still mouse
@@ -378,6 +383,10 @@ fn click_target(app: &mut App, target: crate::ui::click_targets::ClickTarget, bu
         T::DictionaryRow(i) => app.panels.item_dictionary.selected = i,
         T::DeathChoice(i) => {
             app.panels.death_choice = i;
+            activate(app);
+        }
+        T::ResurrectChoice(i) => {
+            app.panels.resurrect = Some(i);
             activate(app);
         }
         T::StairsChoice(i) => {
