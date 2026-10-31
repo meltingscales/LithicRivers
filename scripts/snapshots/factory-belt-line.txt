@@ -31,3 +31,6 @@ expect-text "[7] Put Log on belt"
 key movement.MOVE_NORTHWEST
 expect-text "Put Log on the belt"
 screen belt-line
+# Items on belts blink: on odd seconds the belt under the log shows instead
+wait 1000
+screen belt-line-odd-second
