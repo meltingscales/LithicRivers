@@ -120,6 +120,8 @@ saved_components! {
     "furnace" => crate::furnace::Furnace,
     "extractor" => crate::logistics::Extractor,
     "router" => crate::logistics::Router,
+    "spawner" => crate::spawner::Spawner,
+    "spawned_by" => crate::spawner::SpawnedBy,
 }
 
 /// Entities that carry a component type the registry doesn't know, described by the
@@ -526,6 +528,14 @@ mod tests {
                 crate::factory::FactoryKind::ElectricFurnace,
                 Position { x: 11, y: -4, z: 0 },
             ),
+            (
+                crate::factory::FactoryKind::Fence,
+                Position { x: 12, y: -4, z: 0 },
+            ),
+            (
+                crate::factory::FactoryKind::Gate,
+                Position { x: 13, y: -4, z: 0 },
+            ),
         ] {
             crate::factory::place(
                 &mut fight.game.world,
@@ -561,7 +571,29 @@ mod tests {
             "test".into(),
         );
 
-        vec![started, fight.game, dead.game]
+        // A wild spawner and a dog it let out
+        let mut farm = TestWorld::new(10)
+            .fill((-6, -6, 0), (6, 6, 0), crate::tiles::TileKind::Grass)
+            .build();
+        crate::spawner::place_wild(
+            &mut farm.game.world,
+            &mut farm.game.res,
+            Position { x: 3, y: 0, z: 0 },
+            crate::spawn_utils::EnemyKind::FeralDog,
+        )
+        .unwrap();
+        farm.game.res.time.tick += crate::spawner::SPAWN_INTERVAL_TICKS;
+        crate::factory::run_due_steps(&mut farm.game.world, &mut farm.game.res);
+        assert_eq!(
+            farm.game
+                .world
+                .query::<&crate::spawner::SpawnedBy>()
+                .iter()
+                .count(),
+            1
+        );
+
+        vec![started, fight.game, dead.game, farm.game]
     }
 
     #[test]

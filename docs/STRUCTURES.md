@@ -90,7 +90,7 @@ The other shapes:
 - `kind = "fill"`: a box of one block: `layer` (or `layers = [low, high]`), `x`, `y`, `w`, `h`, `block`.
 - `kind = "put"`: one block or spawn point: `layer`, `x`, `y`, `block`.
 
-Complete examples: `small_temple.lrstructure/plan.toml` (one small room) and `ruined_outpost.lrstructure/plan.toml` (a ruined ground floor with stairs down to a cellar, made with the workflow below). The outpost is not placed in any world; the last workflow step says how to place one.
+Complete examples: `small_temple.lrstructure/plan.toml` (one small room) and `ruined_outpost.lrstructure/plan.toml` (a ruined ground floor with stairs down to a cellar, made with the workflow below). Half the surface forest chunks that roll a ruin place the outpost, buried so its cellar sits a layer down; the last workflow step says how to place a new structure.
 
 ## Commands
 

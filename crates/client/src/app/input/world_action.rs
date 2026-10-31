@@ -195,7 +195,8 @@ pub fn nearby_interactions(app: &App) -> Option<NearbyInteractions> {
             | FactoryKind::AutoHarvester
             | FactoryKind::CrudeVat
             | FactoryKind::StandardVat
-            | FactoryKind::AdvancedVat => available_actions.push(InteractionType::OpenMachine {
+            | FactoryKind::AdvancedVat
+            | FactoryKind::Spawner => available_actions.push(InteractionType::OpenMachine {
                 entity,
                 position,
                 kind: block.kind,

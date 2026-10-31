@@ -929,6 +929,25 @@ e<
       └──┘  
             
             
+=== factory/fence  #8C6A43  Stakes and rails of grey wood; beasts stay on their side, but eyes and light pass over
+-- 1x
+╫
+-- 2x
+╫╫
+╨╨
+-- 3x
+┼─┼
+┼─┼
+│ │
+-- art 0
+            
+ ╥   ╥   ╥  
+═╬═══╬═══╬═ 
+ ║   ║   ║  
+═╬═══╬═══╬═ 
+ ║   ║   ║  
+▀▀▀ ▀▀▀ ▀▀▀ 
+            
 === factory/filter_extractor_east  #4FC3F7  A grabber arm with a sorting eye: moves only the item it's set to
 -- 1x
 →
@@ -1005,6 +1024,25 @@ e<
       └──┘  
             
             
+=== factory/gate  #A07A4A  A fence panel hung on a nail: it swings for you and for nothing with teeth
+-- 1x
+Π
+-- 2x
+┌┐
+││
+-- 3x
+┌─┐
+│▒│
+│ │
+-- art 0
+            
+ ╥        ╥ 
+ ╠════════╣ 
+ ║╲      ╱║ 
+ ║  ╲  ╱  ║ 
+ ╠════════╣ 
+ ▀        ▀ 
+            
 === factory/power_pole  #E5B53A  Links to poles within 8 tiles and powers blocks within 3
 -- 1x
 +
@@ -1042,6 +1080,25 @@ C
  █▓▓▓▓▓▓▓▓█ 
  █▒▒▒▒▒▒▒▒█ 
  ▀▀▀▀▀▀▀▀▀▀ 
+            
+=== factory/spawner  #B4405A  A SapienCorp growth tank, still warm; something wet turns over inside the glass
+-- 1x
+Ø
+-- 2x
+╔╗
+╚╝
+-- 3x
+╔═╗
+║Ø║
+╚═╝
+-- art 0
+            
+  ╔══════╗  
+  ║▓░▒▒░▓║  
+ ═╣░(@@)░╠═ 
+  ║▓░▒▒░▓║  
+  ╚═╦══╦═╝  
+   ▀▀  ▀▀   
             
 === factory/standard_vat  #7FD1B9  A SapienCorp resurrection vat with a cracked visor, kept warm by a trickle of power
 -- 1x
@@ -1632,6 +1689,61 @@ eEe
   └──┘      
             
             
+=== items/fence  #694F32  Stakes and rails of grey wood; beasts stay on their side, but eyes and light pass over
+-- 1x
+╫
+-- 2x
+╫╫
+╨╨
+-- 3x
+┼─┼
+┼─┼
+│ │
+-- art 0
+            
+ ╥   ╥   ╥  
+═╬═══╬═══╬═ 
+ ║   ║   ║  
+═╬═══╬═══╬═ 
+ ║   ║   ║  
+▀▀▀ ▀▀▀ ▀▀▀ 
+            
+=== items/feral_dog_embryo_flawed  #C07A8A  A feral dog embryo with a strong heartbeat; it grows four dogs before it gives out
+-- 1x
+ε
+-- art 0
+            
+    ▄▄▄▄    
+  ▄▀░░░░▀▄  
+ █░░▄▀▀▄░░█ 
+ █░░▀▄ █░░█ 
+  ▀▄░░░░▄▀  
+    ▀▀▀▀    
+            
+=== items/feral_dog_embryo_flawless  #F0A0C8  A perfect feral dog embryo that never stops kicking; it grows eight dogs before it gives out
+-- 1x
+ε
+-- art 0
+            
+    ▄▄▄▄    
+  ▄▀░░░░▀▄  
+ █░░▄▀▀▄░░█ 
+ █░░▀▄ █░░█ 
+  ▀▄░░░░▄▀  
+    ▀▀▀▀    
+            
+=== items/feral_dog_embryo_poor  #8A6F6A  A feral dog embryo, curled and twitching; a poor one grows two dogs before it gives out
+-- 1x
+ε
+-- art 0
+            
+    ▄▄▄▄    
+  ▄▀░░░░▀▄  
+ █░░▄▀▀▄░░█ 
+ █░░▀▄ █░░█ 
+  ▀▄░░░░▄▀  
+    ▀▀▀▀    
+            
 === items/filter_extractor  #3B92B9  A grabber arm with a sorting eye: moves only the item it's set to
 -- 1x
 →
@@ -1650,6 +1762,25 @@ eEe
   │◘▓├──╯   
   └──┘      
             
+            
+=== items/gate  #785C38  A fence panel hung on a nail: it swings for you and for nothing with teeth
+-- 1x
+Π
+-- 2x
+┌┐
+││
+-- 3x
+┌─┐
+│▒│
+│ │
+-- art 0
+            
+ ╥        ╥ 
+ ╠════════╣ 
+ ║╲      ╱║ 
+ ║  ╲  ╱  ║ 
+ ╠════════╣ 
+ ▀        ▀ 
             
 === items/gold_nugget  #FFFF00  A valuable gold nugget
 -- 1x
@@ -1751,6 +1882,18 @@ M
    ▀▀▀      
             
             
+=== items/meat_slurry  #9C3B3B  Meat ground to a red paste; spawners grow their creatures on it
+-- 1x
+≈
+-- art 0
+            
+   ┌────┐   
+   │≈≈≈≈│   
+   │▓▒▓▒│   
+   │▒▓▒▓│   
+   │▓▓▓▓│   
+   └────┘   
+            
 === items/nail  #964B00  A metal nail.
 -- 1x
 n
@@ -1769,6 +1912,42 @@ n
       █     
       ▀     
             
+            
+=== items/nuclear_slime_embryo_flawed  #8CC060  A nuclear slime embryo that glows faintly; it grows four slimes before it gives out
+-- 1x
+ε
+-- art 0
+            
+    ▄▄▄▄    
+  ▄▀░░░░▀▄  
+ █░░▄▀▀▄░░█ 
+ █░░▀▄ █░░█ 
+  ▀▄░░░░▄▀  
+    ▀▀▀▀    
+            
+=== items/nuclear_slime_embryo_flawless  #B8F070  A flawless nuclear slime embryo, bright enough to read by; it grows eight slimes before it gives out
+-- 1x
+ε
+-- art 0
+            
+    ▄▄▄▄    
+  ▄▀░░░░▀▄  
+ █░░▄▀▀▄░░█ 
+ █░░▀▄ █░░█ 
+  ▀▄░░░░▄▀  
+    ▀▀▀▀    
+            
+=== items/nuclear_slime_embryo_poor  #6F8A5A  A nuclear slime embryo, a cloudy green bead; a poor one grows two slimes before it gives out
+-- 1x
+ε
+-- art 0
+            
+    ▄▄▄▄    
+  ▄▀░░░░▀▄  
+ █░░▄▀▀▄░░█ 
+ █░░▀▄ █░░█ 
+  ▀▄░░░░▄▀  
+    ▀▀▀▀    
             
 === items/nuclear_waste  #B6FF00  A cracked SapienCorp canister, still warm after all these years
 -- 1x
@@ -1902,6 +2081,25 @@ eee
  ─┤▒░ ▓ ◘├─ 
   └┴┴┴┴┴┴┘  
             
+            
+=== items/spawner  #873043  A SapienCorp growth tank, still warm; something wet turns over inside the glass
+-- 1x
+Ø
+-- 2x
+╔╗
+╚╝
+-- 3x
+╔═╗
+║Ø║
+╚═╝
+-- art 0
+            
+  ╔══════╗  
+  ║▓░▒▒░▓║  
+ ═╣░(@@)░╠═ 
+  ║▓░▒▒░▓║  
+  ╚═╦══╦═╝  
+   ▀▀  ▀▀   
             
 === items/stairs  #B08850  A flight of pegged planks; two of them dig a way between layers
 -- 1x
@@ -2680,4 +2878,22 @@ t
  ▀▓▓▒▓▓▓▓▓▀ 
    ▀▀▐█▀▀   
      ▐█▌    
-    ▄███▄
+    ▄███▄   
+            
+=== tiles/wild_spawner  #FFFF00  Special worldgen block that turns into a wild spawner
+-- 1x
+¤
+-- 2x
+¤¤
+¤¤
+-- 3x
+¤¤¤
+¤¤¤
+¤¤¤
+-- art 0
+            
+ ┌ ─ ─ ─ ─┐ 
+ ╎        ╎ 
+ ╎   ¤¤   ╎ 
+ ╎        ╎ 
+ └ ─ ─ ─ ─┘

@@ -34,6 +34,7 @@ pub mod save_load;
 mod serde_pairs;
 pub mod showcase;
 pub mod spawn_utils;
+pub mod spawner;
 pub mod stairs;
 pub mod structure;
 pub mod structure_lint;

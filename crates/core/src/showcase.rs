@@ -74,6 +74,12 @@ pub const EXAMPLES: &[Example] = &[
         has_input: false,
         build: resurrection_vats,
     },
+    Example {
+        name: "Spawner farm: a fed, powered spawner in a fenced pen with a gate",
+        size: (9, 7),
+        has_input: true,
+        build: spawner_farm,
+    },
 ];
 
 /// The top-left corner of the first example; the rest follow eastward.
@@ -304,6 +310,46 @@ fn resurrection_vats(game: &mut Game, o: Position) {
 /// ```text
 ///   C > = = C
 /// ```
+/// A fenced pen with a gate on its west side. Inside, a generator and pole power a spawner,
+/// and an extractor and a belt feed it meat slurry and dog embryos from a chest. Dogs grow
+/// while the player is near and stay in the pen; the player walks in through the gate.
+fn spawner_farm(game: &mut Game, o: Position) {
+    for dx in 0..9 {
+        for dy in 0..7 {
+            if dx == 0 || dx == 8 || dy == 0 || dy == 6 {
+                let kind = if (dx, dy) == (0, 5) {
+                    FactoryKind::Gate
+                } else {
+                    FactoryKind::Fence
+                };
+                place(game, kind, at(o, dx, dy), Facing::North);
+            }
+        }
+    }
+    let generator = place(
+        game,
+        FactoryKind::BurnerGenerator,
+        at(o, 7, 1),
+        Facing::North,
+    );
+    fill(game, generator, &[(ItemKind::Biochar, 8)]);
+    // East of the spawner, out of reach of the vats' pole next door
+    place(game, FactoryKind::PowerPole, at(o, 6, 1), Facing::North);
+    let feed = place(game, FactoryKind::Chest, at(o, 1, 3), Facing::North);
+    fill(
+        game,
+        feed,
+        // Embryos first, so the extractor hands those over before the slurry
+        &[
+            (ItemKind::FeralDogEmbryoPoor, 4),
+            (ItemKind::MeatSlurry, 16),
+        ],
+    );
+    place(game, FactoryKind::Extractor, at(o, 2, 3), Facing::East);
+    place(game, FactoryKind::Belt, at(o, 3, 3), Facing::East);
+    place(game, FactoryKind::Spawner, at(o, 4, 3), Facing::North);
+}
+
 fn extractor_line(game: &mut Game, o: Position) {
     let source = place(game, FactoryKind::Chest, o, Facing::North);
     fill(game, source, &[(ItemKind::Log, 6)]);
@@ -454,6 +500,34 @@ mod tests {
         // The check does name a kind with no example
         let all = missing_kinds(&game, FactoryKind::iter());
         assert!(names(&all).contains(&"test arrow"), "{:?}", names(&all));
+    }
+
+    #[test]
+    fn the_spawner_farm_grows_dogs_that_stay_in_the_pen() {
+        let mut game = showcase();
+        let (example, o) = layout()
+            .into_iter()
+            .find(|(e, _)| e.name.starts_with("Spawner farm"))
+            .unwrap();
+        // Stand just outside the pen, south of it
+        let player = game.get_player_entity().unwrap();
+        *game.world.get::<&mut Position>(player).unwrap() = at(o, 4, 8);
+        for _ in 0..12 {
+            game.pass_time();
+        }
+        let in_pen = |p: &Position| {
+            (o.x + 1..o.x + example.size.0 - 1).contains(&p.x)
+                && (o.y + 1..o.y + example.size.1 - 1).contains(&p.y)
+        };
+        let dogs: Vec<Position> = game
+            .world
+            .query::<&Position>()
+            .with::<&crate::spawner::SpawnedBy>()
+            .iter()
+            .map(|(_, p)| *p)
+            .collect();
+        assert!(!dogs.is_empty(), "the farm grew dogs");
+        assert!(dogs.iter().all(in_pen), "{dogs:?}");
     }
 
     #[test]

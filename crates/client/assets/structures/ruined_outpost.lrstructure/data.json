@@ -8,6 +8,7 @@
     "E": "enemy_spawn",
     "S": "scrap_rare",
     "T": "treasure_rare",
+    "W": "wild_spawner",
     "X": "iron_scrap",
     "s": "scrap_common",
     "t": "treasure_common"

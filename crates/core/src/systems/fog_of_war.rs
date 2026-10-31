@@ -37,8 +37,28 @@ fn bresenham_line(start_x: i64, start_y: i64, end_x: i64, end_y: i64) -> Vec<(i6
     points
 }
 
-/// Check if a tile blocks light using line-of-sight raycasting
-fn has_line_of_sight(
+/// Whether a tile stops sight and light: anything impassable except see-through blocks
+/// (fences and gates).
+fn blocks_sight(world: &World, resources: &Resources, x: i64, y: i64, z: i64) -> bool {
+    let tile = resources
+        .world_state
+        .world
+        .get_tile_at_z_no_worldgen(x, y, z);
+    if tile.is_passable() {
+        return false;
+    }
+    let see_through = tile == crate::tiles::TileKind::FactoryBlock
+        && resources
+            .factory_index
+            .get(&Position { x, y, z })
+            .and_then(|&e| world.get::<&crate::factory::FactoryBlock>(e).ok())
+            .is_some_and(|b| b.kind.see_through());
+    !see_through
+}
+
+/// Whether nothing that stops sight stands between two tiles on a layer
+pub fn has_line_of_sight(
+    world: &World,
     resources: &Resources,
     from_x: i64,
     from_y: i64,
@@ -53,13 +73,7 @@ fn has_line_of_sight(
     // We want to be able to see the target tile even if it's a wall
     if line_points.len() > 2 {
         for (point_x, point_y) in line_points.iter().skip(1).take(line_points.len() - 2) {
-            let tile = resources
-                .world_state
-                .world
-                .get_tile_at_z_no_worldgen(*point_x, *point_y, z);
-
-            // If we hit a non-passable tile (wall), light is blocked
-            if !tile.is_passable() {
+            if blocks_sight(world, resources, *point_x, *point_y, z) {
                 return false;
             }
         }
@@ -77,15 +91,19 @@ pub fn light_radius(light_source: &LightSource, body: Option<&Body>) -> u32 {
 
 /// Update fog of war for the player based on their current position and light radius with line-of-sight
 pub fn update_fog_of_war(world: &mut World, resources: &Resources) {
-    // Find the player entity with fog of war, light source, and position
-    for (_entity, (fog_of_war, light_source, position, _player, body)) in world
-        .query::<(
-            &mut FogOfWar,
-            &LightSource,
-            &Position,
-            &Player,
-            Option<&Body>,
-        )>()
+    let seen = lit_tiles(world, resources);
+    for (_, (fog_of_war, _)) in world.query_mut::<(&mut FogOfWar, &Player)>() {
+        for &(x, y, z) in &seen {
+            fog_of_war.mark_visited(x, y, z);
+        }
+    }
+}
+
+/// The tiles the player's light reaches with line of sight.
+fn lit_tiles(world: &World, resources: &Resources) -> Vec<(i64, i64, i64)> {
+    let mut seen = Vec::new();
+    for (_entity, (_fog, light_source, position, _player, body)) in world
+        .query::<(&FogOfWar, &LightSource, &Position, &Player, Option<&Body>)>()
         .iter()
     {
         // Mark all tiles within light radius as visited
@@ -101,14 +119,16 @@ pub fn update_fog_of_war(world: &mut World, resources: &Resources) {
                     let tile_z = position.z;
 
                     // Check line-of-sight before marking as visited
-                    if has_line_of_sight(resources, position.x, position.y, tile_x, tile_y, tile_z)
-                    {
-                        fog_of_war.mark_visited(tile_x, tile_y, tile_z);
+                    if has_line_of_sight(
+                        world, resources, position.x, position.y, tile_x, tile_y, tile_z,
+                    ) {
+                        seen.push((tile_x, tile_y, tile_z));
                     }
                 }
             }
         }
     }
+    seen
 }
 
 #[cfg(any(test, feature = "test-support"))]
@@ -127,6 +147,7 @@ pub fn fog_lookups_built() -> u64 {
 /// What fog of war needs to know about the player, gathered once so many tiles (a whole
 /// frame) can be checked without querying the world for each one.
 pub struct FogLookup<'a> {
+    world: &'a World,
     /// The player's position and light radius, if they carry a light
     light: Option<(Position, i64)>,
     /// The tiles the player has seen
@@ -148,7 +169,11 @@ impl<'a> FogLookup<'a> {
             .next()
             .map(|(entity, _)| entity)
             .and_then(|entity| world.get::<&FogOfWar>(entity).ok());
-        Self { light, memory }
+        Self {
+            world,
+            light,
+            memory,
+        }
     }
 
     /// Whether the player's light reaches a tile, with line of sight.
@@ -169,7 +194,9 @@ impl<'a> FogLookup<'a> {
         // Check if tile is within light radius using circular distance
         let (dx, dy) = (tile_x - position.x, tile_y - position.y);
         dx * dx + dy * dy <= radius * radius
-            && has_line_of_sight(resources, position.x, position.y, tile_x, tile_y, tile_z)
+            && has_line_of_sight(
+                self.world, resources, position.x, position.y, tile_x, tile_y, tile_z,
+            )
     }
 
     /// Whether the player has seen a tile.

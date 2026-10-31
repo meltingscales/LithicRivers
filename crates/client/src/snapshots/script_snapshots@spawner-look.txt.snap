@@ -1,0 +1,37 @@
+---
+source: crates/client/src/snapshot_tests.rs
+expression: "String::from_utf8(out).unwrap()"
+input_file: scripts/snapshots/spawner-look.txt
+---
+=== screen look-spawner ===
+                                            LithicRivers
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌MODES ☼ 08:32─────────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  ------ L - -- - FOG │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Look at───────────────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Pos: (67, -4, 0)      │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Spawner               │
+vvvvv>▲>CvvvvvGv+vvvvvvvvvGG+Gvvvv╫╫╫╫╫╫╫╫╫vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  Grows feral dogs    │
+vvvvv/vvvvvvC→>>|E>>*>CvvvUvUvUvvv╫vvvvv+G╫vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  Slurry 2, embryos 4 │
+vtvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv╫vvvvvvv╫vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  2 left in embryo    │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv╫C→>*vvv╫vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  Next in 26s         │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv╫vvv@vvv╫vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvΠvvvvvvv╫vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Help (h) ! Damaged────┐
+ttvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv╫╫╫╫╫╫╫╫╫vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Look mode             │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Move cursor:          │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  7 8 9               │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  4 5 6               │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  1 2 3               │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│v: stop looking       │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
+┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
+│[1001] Time passes...                                                                             │
+│[2001] Time passes...                                                                             │
+│[2001] Look mode: ON                                                                              │
+│                                                                                                  │
+│                                                                                                  │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===

@@ -1,5 +1,6 @@
-# A collapsed SapienCorp outpost: a broken-walled ground floor with rubble and a guard
-# dog, and stairs down to an intact cellar holding the good loot.
+# A collapsed SapienCorp outpost: a broken-walled ground floor with rubble, a guard dog
+# and the growth tank that keeps breeding more, and stairs down to an intact cellar
+# holding the good loot.
 # Compiled into shape_layers.txt by `just util-structure-build`; edit this, not that.
 layers = 2
 width = 15
@@ -17,6 +18,7 @@ height = 11
 "t" = "treasure_common"
 "T" = "treasure_rare"
 "E" = "enemy_spawn"
+"W" = "wild_spawner"
 
 # --- Layer 0: the cellar, cut into solid rock ---
 [[shape]]
@@ -124,6 +126,13 @@ layer = 1
 x = 8
 y = 5
 block = "E"
+
+[[shape]]
+kind = "put"
+layer = 1
+x = 9
+y = 3
+block = "W"
 
 # The way down
 [[shape]]
