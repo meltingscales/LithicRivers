@@ -209,7 +209,7 @@ pub fn world_spawn_nuclear_slime(
 }
 
 /// Hostile creatures that can be spawned on demand (e.g. by the `spawn_enemy` cheat).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum EnemyKind {
     FeralDog,
     NuclearSlime,

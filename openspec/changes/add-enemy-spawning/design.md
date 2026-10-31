@@ -34,7 +34,7 @@
 
 ### Spawners (craftable, decided by the user)
 - Every spawner spawns one creature within 4 tiles every 30 game seconds while the player is within 24 tiles, up to 4 of its own (tracked by a `SpawnedBy` component, saved).
-- **Wild spawners** (`FactoryKind::Spawner` with a fixed creature, placed by worldgen in ruins and dungeons) need nothing. Breaking one, like breaking a placed one, gives the generic spawner item; its creature is not kept.
+- **Wild spawners** (`FactoryKind::Spawner` with a fixed creature, placed by worldgen in ruins and dungeons) need nothing. Structures mark one with the `wild_spawner` tile, which the game turns into a spawner block (like quest chests): dogs on the surface, slimes underground. The user's choice: the ruined outpost has one, and forest chunks that roll a ruin on the surface pick the outpost (buried a layer, cellar below) or the giant corpse half and half, so nothing changes near spawn. Creatures from a spawner carry `SpawnedBy(spawner position)`; a full spawner's timer waits at full and lets one out as soon as one of its own dies. Breaking one, like breaking a placed one, gives the generic spawner item; its creature is not kept.
 - **Placed spawners** start empty. Each spawn needs:
   - grid power while it grows (a consumer on the `power-grid` network, like the electric furnace; unpowered, the timer pauses),
   - 1 meat slurry from its slurry slot,

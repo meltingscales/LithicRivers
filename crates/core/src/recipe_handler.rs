@@ -149,6 +149,14 @@ impl RecipeHandler {
                 result: ItemKind::ElectricFurnace,
                 quantity: 1,
             },
+            // Spawner: a growth tank of iron scrap run by scrap electronics, at the same
+            // point in the tech tree as the electric furnace
+            Recipe {
+                name: "Spawner",
+                ingredients: &[(ItemKind::IronScrap, 6), (ItemKind::ScrapElectronics, 6)],
+                result: ItemKind::Spawner,
+                quantity: 1,
+            },
             // Extractor: 2x wooden plank + 1x iron scrap + 2x nail
             Recipe {
                 name: "Extractor",

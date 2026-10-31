@@ -227,6 +227,7 @@ pub enum ItemKind {
     AdvancedVat,
     Fence,
     Gate,
+    Spawner,
 }
 
 pub fn itemkind_name(kind: ItemKind) -> &'static str {
@@ -284,6 +285,7 @@ pub fn itemkind_name(kind: ItemKind) -> &'static str {
         ItemKind::AdvancedVat => "Advanced Resurrection Vat",
         ItemKind::Fence => "Fence",
         ItemKind::Gate => "Gate",
+        ItemKind::Spawner => "Spawner",
     }
 }
 
@@ -342,6 +344,7 @@ pub fn itemkind_sprite_name(kind: ItemKind) -> &'static str {
         ItemKind::AdvancedVat => "advanced_vat",
         ItemKind::Fence => "fence",
         ItemKind::Gate => "gate",
+        ItemKind::Spawner => "spawner",
     }
 }
 
@@ -400,6 +403,7 @@ pub fn parse_itemkind_from_sprite_name(sprite_name: &str) -> Option<ItemKind> {
         "advanced_vat" => Some(ItemKind::AdvancedVat),
         "fence" => Some(ItemKind::Fence),
         "gate" => Some(ItemKind::Gate),
+        "spawner" => Some(ItemKind::Spawner),
         _ => None,
     }
 }

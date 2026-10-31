@@ -317,23 +317,45 @@ mod tests {
         sig
     }
 
-    /// Ticking runs real worldgen around the player, which may place structure loot
-    /// (dropped items) in nearby chunks, but never adds creatures or NPCs.
+    /// Ticking runs real worldgen around the player, which may place structures in nearby
+    /// chunks: their loot (dropped items), and an outpost's spawner and guard dog. Nothing
+    /// else appears, and no creature spawns on its own before the first spawn check.
     #[test]
-    fn ticking_adds_no_creatures() {
+    fn ticking_adds_only_what_structures_hold() {
         let mut game = TestWorld::new(1).build();
         game.ticks(5);
-        let mut query = game.game.world.query::<&EntityKind>();
-        let kinds: Vec<EntityKind> = query.iter().map(|(_, k)| *k).collect();
-        assert_eq!(kinds, vec![EntityKind::Player]);
-        let non_items = game
+        assert!(game.game.res.time.tick < crate::systems::creature_spawn::SPAWN_CHECK_TICKS);
+        let spawners: Vec<Position> = game
+            .game
+            .world
+            .query::<&Position>()
+            .with::<&crate::spawner::Spawner>()
+            .iter()
+            .map(|(_, p)| *p)
+            .collect();
+        for (_, (kind, pos)) in game.game.world.query::<(&EntityKind, &Position)>().iter() {
+            match kind {
+                EntityKind::Player => {}
+                // An outpost's guard dog stands in the outpost, beside its spawner
+                EntityKind::FeralDog => assert!(
+                    spawners
+                        .iter()
+                        .any(|s| (s.x - pos.x).abs().max((s.y - pos.y).abs()) <= 15),
+                    "a dog away from any outpost at {pos:?}"
+                ),
+                other => panic!("worldgen added a {other:?}"),
+            }
+        }
+        let others = game
             .game
             .world
             .query::<&Position>()
             .without::<&DroppedItem>()
+            .without::<&EntityKind>()
+            .without::<&crate::spawner::Spawner>()
             .iter()
             .count();
-        assert_eq!(non_items, 1, "only the player and dropped items");
+        assert_eq!(others, 0, "only creatures, dropped items and spawners");
     }
 
     #[test]

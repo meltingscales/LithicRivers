@@ -115,6 +115,8 @@ pub enum FactoryKind {
     Fence,
     /// Keeps creatures out; the player walks through it
     Gate,
+    /// Grows creatures and lets them out beside it
+    Spawner,
     /// A consumer that does nothing but draw power, for grid tests
     #[cfg(any(test, feature = "test-support"))]
     TestConsumer,
@@ -144,6 +146,7 @@ impl FactoryKind {
             ItemKind::VerticalConveyor => Some(FactoryKind::VerticalConveyorUp),
             ItemKind::Fence => Some(FactoryKind::Fence),
             ItemKind::Gate => Some(FactoryKind::Gate),
+            ItemKind::Spawner => Some(FactoryKind::Spawner),
             _ => None,
         }
     }
@@ -170,6 +173,7 @@ impl FactoryKind {
             }
             FactoryKind::Fence => Some(ItemKind::Fence),
             FactoryKind::Gate => Some(ItemKind::Gate),
+            FactoryKind::Spawner => Some(ItemKind::Spawner),
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestConsumer => None,
             #[cfg(any(test, feature = "test-support"))]
@@ -197,6 +201,7 @@ impl FactoryKind {
             FactoryKind::VerticalConveyorDown => "vertical conveyor (down)",
             FactoryKind::Fence => "fence",
             FactoryKind::Gate => "gate",
+            FactoryKind::Spawner => "spawner",
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestConsumer => "test consumer",
             #[cfg(any(test, feature = "test-support"))]
@@ -220,7 +225,7 @@ impl FactoryKind {
             FactoryKind::CrudeVat | FactoryKind::StandardVat | FactoryKind::AdvancedVat => false,
             // Up or down instead of a facing: see `rotate`
             FactoryKind::VerticalConveyorUp | FactoryKind::VerticalConveyorDown => false,
-            FactoryKind::Fence | FactoryKind::Gate => false,
+            FactoryKind::Fence | FactoryKind::Gate | FactoryKind::Spawner => false,
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestConsumer => false,
             #[cfg(any(test, feature = "test-support"))]
@@ -281,6 +286,7 @@ impl FactoryKind {
             }
             FactoryKind::Fence => SpriteRef::new("factory", "fence"),
             FactoryKind::Gate => SpriteRef::new("factory", "gate"),
+            FactoryKind::Spawner => SpriteRef::new("factory", "spawner"),
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestConsumer => SpriteRef::new("factory", "chest"),
             #[cfg(any(test, feature = "test-support"))]
@@ -410,6 +416,9 @@ pub fn place(
             builder.add(crate::power::PowerConsumer::new(TEST_CONSUMER_W));
         }
         FactoryKind::Fence | FactoryKind::Gate => {}
+        FactoryKind::Spawner => {
+            builder.add(crate::spawner::Spawner::default());
+        }
         #[cfg(any(test, feature = "test-support"))]
         FactoryKind::TestArrow => {}
     }
@@ -621,6 +630,7 @@ pub fn run_due_steps(world: &mut World, res: &mut Resources) {
         crate::logistics::step_routers(world, res);
         step_belts(world, res);
         crate::logistics::carry_player(world, res);
+        crate::spawner::step_spawners(world, res, step_tick);
         res.factory_clock.steps += 1;
     }
 }
@@ -658,6 +668,7 @@ pub fn takes(kind: FactoryKind, item: ItemKind) -> bool {
             crate::vat::takes(kind, item)
         }
         FactoryKind::AutoHarvester | FactoryKind::Extractor | FactoryKind::FilterExtractor => false,
+        FactoryKind::Fence | FactoryKind::Gate | FactoryKind::Spawner => false,
         _ => true,
     }
 }

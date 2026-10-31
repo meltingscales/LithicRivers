@@ -75,7 +75,7 @@ pub const EXAMPLES: &[Example] = &[
         build: resurrection_vats,
     },
     Example {
-        name: "Fenced pen with a gate",
+        name: "Fenced pen with a gate, around an unfed spawner",
         size: (5, 5),
         has_input: false,
         build: fenced_pen,
@@ -310,8 +310,10 @@ fn resurrection_vats(game: &mut Game, o: Position) {
 /// ```text
 ///   C > = = C
 /// ```
-/// A ring of fences with a gate on its west side: creatures stay in, the player walks in.
+/// A ring of fences with a gate on its west side around a spawner: creatures stay in, the
+/// player walks in.
 fn fenced_pen(game: &mut Game, o: Position) {
+    place(game, FactoryKind::Spawner, at(o, 2, 2), Facing::North);
     for dx in 0..5 {
         for dy in 0..5 {
             if dx == 0 || dx == 4 || dy == 0 || dy == 4 {

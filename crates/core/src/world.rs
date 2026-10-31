@@ -278,6 +278,10 @@ pub struct GameWorld {
     /// quest chests (`Game::place_quest_chests`)
     #[serde(skip)]
     pub quest_treasures: Vec<(i64, i64, i64)>,
+    /// Wild-spawner tiles placed by structures, waiting for the game to turn them into
+    /// spawner blocks (`Game::place_wild_spawners`)
+    #[serde(skip)]
+    pub wild_spawners: Vec<(i64, i64, i64)>,
 }
 
 impl GameWorld {
@@ -289,6 +293,7 @@ impl GameWorld {
             chunks: HashMap::new(),
             structure_placement_depth: 0,
             quest_treasures: Vec::new(),
+            wild_spawners: Vec::new(),
         }
     }
 
@@ -845,17 +850,24 @@ impl GameWorld {
         let band_for_chunk = self.biome_for(center_wx, center_wy, zf);
         let mut rng = ChaCha20Rng::seed_from_u64(self.mix_coords(cx, cy, cz));
         if rng.gen::<f64>() < 0.05 {
+            let mut bury = false;
             let (name, ox, oy) = match band_for_chunk {
                 BiomeBand::Plains => (
                     "small_temple.lrstructure",
                     rng.gen_range(0..CHUNK_SIZE),
                     rng.gen_range(0..CHUNK_SIZE),
                 ),
-                BiomeBand::Forest => (
-                    "giant_corpse.lrstructure",
-                    rng.gen_range(0..CHUNK_SIZE),
-                    rng.gen_range(0..CHUNK_SIZE),
-                ),
+                BiomeBand::Forest => {
+                    let (ox, oy) = (rng.gen_range(0..CHUNK_SIZE), rng.gen_range(0..CHUNK_SIZE));
+                    // On the surface, half the forest ruins are outposts, cellar buried
+                    // below the ground floor
+                    if cz == 0 && rng.gen_bool(0.5) {
+                        bury = true;
+                        ("ruined_outpost.lrstructure", ox, oy)
+                    } else {
+                        ("giant_corpse.lrstructure", ox, oy)
+                    }
+                }
                 BiomeBand::Rocky => (
                     "small_ship.lrstructure",
                     rng.gen_range(0..CHUNK_SIZE),
@@ -869,7 +881,7 @@ impl GameWorld {
             };
             let structure = StructureDefinition::load_from_embedded(name);
             let world_z = cz * CHUNK_SIZE_Z;
-            self.apply_structure_world(ecs_world, cx, cy, cz, &structure, ox, oy, world_z, false);
+            self.apply_structure_world(ecs_world, cx, cy, cz, &structure, ox, oy, world_z, bury);
         }
     }
 
