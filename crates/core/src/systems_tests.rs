@@ -68,7 +68,7 @@ mod tests {
 
     #[test]
     fn test_all_combat_moves_have_valid_properties() {
-        let moves = get_available_moves();
+        let moves = get_available_moves(true);
 
         for mv in moves {
             // All moves should have non-empty names and descriptions
@@ -115,7 +115,7 @@ mod tests {
 
     #[test]
     fn test_move_type_human_names_are_unique() {
-        let moves = get_available_moves();
+        let moves = get_available_moves(true);
         let mut names = std::collections::HashSet::new();
 
         for mv in moves {

@@ -18,10 +18,10 @@ input_file: scripts/snapshots/combat-queue-full.txt
 ││                                              ││#############vvvvvvvvvvvvvvvvvvvvvvvvvvvtvtttttvvv
 │└──────────────────────────────────────────────┘│#############vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvtttvvv
 │1: Melee - 0E - 5t                ┌Action Queue┐│##############vvvvvvvvvvvvvvvvvvvvvvvvvvvvvttvvvvv
-│2: Fireball (AoE) - 40E - 12t     │Current:    ││##############vvvvvvvvvvvvvvvvvvvvvvvvvvvvvtttvvvv
+│2: Power Strike - 40E - 13t       │Current:    ││##############vvvvvvvvvvvvvvvvvvvvvvvvvvvvvtttvvvv
 │3: Tackle - 20E - 10t             │> Melee →   ││###############vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 │4: Escape - 20E - 15t             │Feral dog   ││################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-│           ▼ More below           └────────────┘│#################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+│5: DebugInstantKill - 0E - 5t     └────────────┘│#################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 │[←→] Target | [↑↓] Move | [C] Clear | [5] Wait |│#################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 └────────────────────────────────────────────────┘##################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 ┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐

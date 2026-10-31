@@ -1,6 +1,6 @@
 # A feral dog attacks
 # A dog charges in and the turn-queue combat opens: the robot queues melee strikes and a
-# fireball while the body panel tracks damage to each part.
+# power strike while the body panel tracks damage to each part.
 skip-splash
 key ui.MENU_PREV
 cheat tp -15 0 0

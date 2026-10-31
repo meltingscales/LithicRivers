@@ -47,6 +47,16 @@ pub enum QuestMarkerType {
     Treasure,
     /// Where the player's old body lies; it goes away once the wreck is empty
     Death,
+    /// A place the player marked themselves, to rename, move or delete at will
+    Waypoint,
+}
+
+impl QuestMarkerType {
+    /// Whether the player may delete markers of this type: their own waypoints and wreck
+    /// markers, never quest markers.
+    pub fn deletable(&self) -> bool {
+        matches!(self, QuestMarkerType::Death | QuestMarkerType::Waypoint)
+    }
 }
 
 /// What kind of world is generated. Everything but Normal is a debug world, offered on the
@@ -263,6 +273,26 @@ impl Resources {
     /// Add a quest marker to the world
     pub fn add_quest_marker(&mut self, marker: QuestMarker) {
         self.quest_markers.push(marker);
+    }
+
+    /// Add a waypoint at `pos` named "Waypoint N", with N the lowest number no waypoint
+    /// uses. Returns its index in `quest_markers`.
+    pub fn add_waypoint(&mut self, pos: crate::components::Position) -> usize {
+        let taken = |n: usize| {
+            self.quest_markers.iter().any(|m| {
+                m.marker_type == QuestMarkerType::Waypoint && m.name == format!("Waypoint {n}")
+            })
+        };
+        let n = (1..).find(|&n| !taken(n)).expect("a free number");
+        self.quest_markers.push(QuestMarker {
+            name: format!("Waypoint {n}"),
+            description: String::new(),
+            x: pos.x,
+            y: pos.y,
+            z: pos.z,
+            marker_type: QuestMarkerType::Waypoint,
+        });
+        self.quest_markers.len() - 1
     }
 
     /// Start a new quest
@@ -500,5 +530,41 @@ mod tests {
         let game = TestWorld::new(1).settings(settings).build().game;
         assert!(!game.res.world_settings.developer_mode);
         assert_eq!(game.res.world_settings, settings);
+    }
+
+    #[test]
+    fn waypoints_take_the_lowest_free_number_and_survive_a_save() {
+        use super::QuestMarkerType;
+        use crate::components::Position;
+        let mut game = crate::test_support::TestWorld::new(1).build().game;
+        let res = &mut game.res;
+        let at = |x| Position { x, y: -2, z: 0 };
+        let first = res.add_waypoint(at(4));
+        let second = res.add_waypoint(at(5));
+        assert_eq!(res.quest_markers[first].name, "Waypoint 1");
+        assert_eq!(res.quest_markers[second].name, "Waypoint 2");
+        assert_eq!(
+            (res.quest_markers[first].x, res.quest_markers[first].y),
+            (4, -2)
+        );
+        res.quest_markers.remove(first);
+        let third = res.add_waypoint(at(6));
+        assert_eq!(res.quest_markers[third].name, "Waypoint 1");
+        assert!(QuestMarkerType::Waypoint.deletable());
+        assert!(QuestMarkerType::Death.deletable());
+        assert!(!QuestMarkerType::MainQuest.deletable());
+
+        res.quest_markers[third].name = "Iron field".to_string();
+        let saved = crate::save_load::save_to_string(&game, &serde_json::Value::Null).unwrap();
+        let mut loaded = crate::test_support::TestWorld::new(1).build().game;
+        crate::save_load::load_from_str(&mut loaded, &saved).unwrap();
+        let names: Vec<&str> = loaded
+            .res
+            .quest_markers
+            .iter()
+            .filter(|m| m.marker_type == QuestMarkerType::Waypoint)
+            .map(|m| m.name.as_str())
+            .collect();
+        assert_eq!(names, vec!["Waypoint 2", "Iron field"]);
     }
 }

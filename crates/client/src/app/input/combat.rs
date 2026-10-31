@@ -22,7 +22,7 @@ pub fn handle_combat_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn 
     };
 
     // Move selection (Up/Down) - with scrolling support and cursor skipping for disabled moves
-    let max_moves = get_available_moves().len();
+    let max_moves = get_available_moves(app.core.game.res.world_settings.cheats_allowed).len();
     const VISIBLE_MOVES: usize = 4; // Number of moves visible at once
 
     if app.ui.keybinds.menu_up(&key) || app.ui.keybinds.matches("movement", "MOVE_UP", &key) {
@@ -123,7 +123,9 @@ pub fn handle_combat_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn 
         // Get the player entity
         if let Some(player_entity) = app.core.game.get_player_entity() {
             // Get available moves and selected move
-            let available_moves = lithicrivers_core::moves::get_available_moves();
+            let available_moves = lithicrivers_core::moves::get_available_moves(
+                app.core.game.res.world_settings.cheats_allowed,
+            );
             if let Some(selected_move) = available_moves.get(current_move) {
                 // Check if player can use this move considering pending energy consumption
                 let queue_full = app
@@ -435,7 +437,9 @@ fn is_move_usable(app: &App, move_index: usize) -> bool {
             .get::<&lithicrivers_core::components::Energy>(player_entity)
         {
             // Get the available moves
-            let available_moves = lithicrivers_core::moves::get_available_moves();
+            let available_moves = lithicrivers_core::moves::get_available_moves(
+                app.core.game.res.world_settings.cheats_allowed,
+            );
             if let Some(selected_move) = available_moves.get(move_index) {
                 // Calculate available energy after pending consumption
                 let pending_energy = calculate_pending_energy_consumption(app);

@@ -117,6 +117,7 @@ fn render_map_panel(f: &mut Frame, app: &mut App, area: Rect) {
                     QuestMarkerType::Location => 'L',
                     QuestMarkerType::Treasure => '$',
                     QuestMarkerType::Death => 'X',
+                    QuestMarkerType::Waypoint => 'W',
                 };
                 style = Style::default().fg(Color::Red);
             }
@@ -179,7 +180,9 @@ fn render_map_panel(f: &mut Frame, app: &mut App, area: Rect) {
             Span::styled("[!] ", Style::default().fg(Color::Red)),
             Span::raw("Main Quest  "),
             Span::styled("[?] ", Style::default().fg(Color::Red)),
-            Span::raw("Side Quest"),
+            Span::raw("Side Quest  "),
+            Span::styled("[W] ", Style::default().fg(Color::Red)),
+            Span::raw("Waypoint"),
         ]),
         Line::from(vec![
             Span::styled("[·] ", Style::default().fg(Color::Gray)),
@@ -248,6 +251,12 @@ fn render_markers_panel(f: &mut Frame, app: &mut App, area: Rect) {
         .border_set(border::THICK)
         .title(Line::from(" Quest Markers "))
         .title_alignment(Alignment::Center)
+        .title_bottom(Line::from(format!(
+            " {}: add waypoint ",
+            app.core
+                .config_manager
+                .get_printable_key_for_keybind("global_map", "ADD_WAYPOINT")
+        )))
         .style(Style::default().fg(Color::Magenta));
 
     let inner_area = block.inner(area);
@@ -263,10 +272,14 @@ fn render_markers_panel(f: &mut Frame, app: &mut App, area: Rect) {
             .map(|(i, distance)| (&app.core.game.res.quest_markers[i], distance))
             .collect();
         let wrap_width = inner_area.width.saturating_sub(3) as usize;
-        let delete_key = app
-            .core
-            .config_manager
-            .get_printable_key_for_keybind("global_map", "DELETE_MARKER");
+        let map_key = |action| {
+            app.core
+                .config_manager
+                .get_printable_key_for_keybind("global_map", action)
+        };
+        let delete_key = map_key("DELETE_MARKER");
+        let rename_key = map_key("RENAME_WAYPOINT");
+        let move_key = map_key("MOVE_WAYPOINT");
 
         // Create list items - start with "unselect" option
         let mut marker_items: Vec<ListItem> = Vec::new();
@@ -320,6 +333,7 @@ fn render_markers_panel(f: &mut Frame, app: &mut App, area: Rect) {
                     QuestMarkerType::Location => "L",
                     QuestMarkerType::Treasure => "$",
                     QuestMarkerType::Death => "X",
+                    QuestMarkerType::Waypoint => "W",
                 };
 
                 let marker_color = match marker.marker_type {
@@ -329,6 +343,7 @@ fn render_markers_panel(f: &mut Frame, app: &mut App, area: Rect) {
                     QuestMarkerType::Location => Color::Blue,
                     QuestMarkerType::Treasure => Color::Green,
                     QuestMarkerType::Death => Color::LightRed,
+                    QuestMarkerType::Waypoint => Color::LightMagenta,
                 };
 
                 let distance_text = if *distance < 1000.0 {
@@ -371,7 +386,13 @@ fn render_markers_panel(f: &mut Frame, app: &mut App, area: Rect) {
                                 .fg(marker_color)
                                 .add_modifier(Modifier::BOLD),
                         ),
-                        Span::styled(&marker.name, name_style),
+                        Span::styled(
+                            match (&app.panels.global_map.renaming, is_selected) {
+                                (Some(typed), true) => format!("{typed}_"),
+                                _ => marker.name.clone(),
+                            },
+                            name_style,
+                        ),
                     ]),
                     Line::from(vec![
                         Span::styled("   ", Style::default()),
@@ -388,7 +409,10 @@ fn render_markers_panel(f: &mut Frame, app: &mut App, area: Rect) {
                 // The selected marker shows what it is about
                 if is_selected {
                     let mut details = wrap_words(&marker.description, wrap_width);
-                    if marker.marker_type == QuestMarkerType::Death {
+                    if marker.marker_type == QuestMarkerType::Waypoint {
+                        details.push(format!("{rename_key}: rename  {move_key}: move here"));
+                    }
+                    if marker.marker_type.deletable() {
                         details.push(format!("{delete_key}: delete marker"));
                     }
                     for text in details {
@@ -494,7 +518,11 @@ pub(crate) fn render_delete_prompt(f: &mut Frame, app: &App) {
             "Delete the marker for {} at ({}, {}, {})?",
             marker.name, marker.x, marker.y, marker.z
         )),
-        Line::from("Its items stay there."),
+        Line::from(if marker.marker_type == QuestMarkerType::Death {
+            "Its items stay there."
+        } else {
+            ""
+        }),
         Line::from(""),
         Line::from(format!(
             "[{}] Yes    [{}] No",

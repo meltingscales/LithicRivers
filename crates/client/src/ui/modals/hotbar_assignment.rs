@@ -98,21 +98,7 @@ fn render_block_picker_modal(
             Style::default()
         };
 
-        // Show block icon and name using actual sprite
-        let sprite_name = lithicrivers_core::components::itemkind_sprite_name(block_kind);
-        let icon = if let Some(slash_pos) = sprite_name.find('/') {
-            let (category, name) = sprite_name.split_at(slash_pos);
-            let name = &name[1..]; // Remove the '/'
-            let sprite_data = app.core.sprite_loader.load_sprite(name, category);
-            // Get the first character from the 1x1 sprite (sprites[0])
-            sprite_data
-                .sprites
-                .first()
-                .and_then(|s| s.chars().next())
-                .unwrap_or('?')
-        } else {
-            '?'
-        };
+        let icon = crate::ui::panels::hotbar::item_glyph(app, block_kind);
         let text = format!("{} {}", icon, itemkind_name(block_kind));
 
         block_items.push(ListItem::new(Line::from(Span::styled(text, style))));

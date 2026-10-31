@@ -19,11 +19,11 @@ input_file: scripts/snapshots/tab-03-global-map.txt
 ┃                                                                    ┃┃                            ┃
 ┃                                                                    ┃┃                            ┃
 ┃                                                                    ┃┃                            ┃
-┃ [@] Player  [!] Main Quest  [?] Side Quest                         ┃┃                            ┃
+┃ [@] Player  [!] Main Quest  [?] Side Quest  [W] Waypoint           ┃┃                            ┃
 ┃ [·] Explored  [ ] Unexplored  [$] Treasure  [X] Wreck              ┃┃                            ┃
 ┃                                                                    ┃┃                            ┃
 ┃             Player: (11, 11, -19) | Chunk: (0, 0, -19)             ┃┃                            ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛┗━━━━━ w: add waypoint ━━━━━━┛
 ┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
 │[0] Loading structure 'sapiencorp-bunker.lrstructure' at (10, 10, 1) for chunk (0, 0, 1)          │
 │[0] Quest marker added: SapienCorp Bunker                                                         │

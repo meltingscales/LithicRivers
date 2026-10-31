@@ -113,7 +113,7 @@ pub fn handle_crafting_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dy
                                 recipe.quantity,
                                 itemkind_name(recipe.result)
                             ),
-                            30, // Display for 30 frames (~0.5 seconds at 60 FPS)
+                            app.clock.now(),
                         ));
 
                         app.core.game.res.log(format!(
@@ -126,7 +126,7 @@ pub fn handle_crafting_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dy
             } else {
                 app.panels.crafting.message = Some((
                     "Not enough resources to craft this item".to_string(),
-                    60, // Display for 1 second at 60 FPS
+                    app.clock.now(),
                 ));
             }
         }
@@ -280,6 +280,20 @@ mod craftable_only_tests {
             .into_iter()
             .map(|i| recipes[i].result)
             .collect()
+    }
+
+    #[test]
+    fn the_crafted_message_lasts_seconds_however_many_frames_are_drawn() {
+        // The first recipe (planks from a log) is craftable from the starting kit
+        let mut runner = crafting_tab(&["key ui.MENU_ACTIVATE"]);
+        for _ in 0..100 {
+            let _ = runner.screen_text();
+        }
+        let _ = runner.screen_text();
+        assert!(runner.app.panels.crafting.message.is_some(), "still shown");
+        runner.chain(&["wait 2500"]);
+        let _ = runner.screen_text();
+        assert!(runner.app.panels.crafting.message.is_none(), "gone");
     }
 
     /// Every recipe the inventory can make now, in recipe order.

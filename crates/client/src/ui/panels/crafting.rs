@@ -10,6 +10,9 @@ use ratatui::{
 
 /// The recipes the tab lists right now, as indices into the recipe list: those whose name,
 /// result (name or description) or an ingredient matches the search.
+/// How long the "Crafted ..." or "Not enough resources" message stays up.
+pub const CRAFT_MESSAGE_DURATION: std::time::Duration = std::time::Duration::from_millis(2500);
+
 pub fn filtered_recipes(app: &mut crate::App) -> Vec<usize> {
     let inventory = get_player_inventory(app);
     let crafting = &mut app.panels.crafting;
@@ -58,10 +61,9 @@ pub fn render_crafting_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     // Get player's inventory
     let inventory = get_player_inventory(app);
 
-    // Update craft message timer
-    if let Some((_, ref mut timer)) = &mut app.panels.crafting.message {
-        *timer = timer.saturating_sub(1);
-        if *timer == 0 {
+    // The craft message goes away after a while, however fast frames are drawn
+    if let Some((_, shown_at)) = app.panels.crafting.message {
+        if app.clock.since(shown_at) >= CRAFT_MESSAGE_DURATION {
             app.panels.crafting.message = None;
         }
     }

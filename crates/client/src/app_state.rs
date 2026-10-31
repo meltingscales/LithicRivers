@@ -186,7 +186,9 @@ pub struct CraftingPanelState {
     /// A position in the filtered recipe list (`ui::panels::crafting::filtered_recipes`)
     pub selected: usize,
     pub search: crate::app::input::search::SearchBox,
-    pub message: Option<(String, u8)>, // (message, timer)
+    /// The last craft's result and when it was shown (by `app.clock`), shown for
+    /// `CRAFT_MESSAGE_DURATION`
+    pub message: Option<(String, std::time::Instant)>,
     /// List only the recipes the inventory can make now (saved with the world)
     pub craftable_only: bool,
     /// The list as last shown (indices into all recipes), so when it changes the
@@ -700,9 +702,11 @@ impl CheatConsoleState {
 #[derive(Default)]
 pub struct GlobalMapPanelState {
     pub selected_marker_index: usize, // Index of currently selected marker (for arrow display)
-    /// The death marker (an index into `quest_markers`) waiting for the player to confirm
-    /// its deletion
+    /// The waypoint or wreck marker (an index into `quest_markers`) waiting for the player
+    /// to confirm its deletion
     pub confirm_delete: Option<usize>,
+    /// The new name being typed, while renaming the selected waypoint
+    pub renaming: Option<String>,
 }
 
 /// Quest panel state

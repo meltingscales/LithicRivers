@@ -653,7 +653,11 @@ fn get_player_combat_data(
             .expect("Player entity must have Energy component");
     }
 
-    (player_body, player_energy, get_available_moves())
+    (
+        player_body,
+        player_energy,
+        get_available_moves(app.core.game.res.world_settings.cheats_allowed),
+    )
 }
 
 #[derive(Debug, Clone)]

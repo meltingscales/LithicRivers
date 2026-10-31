@@ -495,6 +495,21 @@ mod art_tests {
         );
     }
 
+    #[test]
+    fn every_creature_and_corpse_has_all_three_scales() {
+        let mut loader = SpriteLoader::new(None);
+        let short: Vec<String> = SpriteLoader::all_sprite_names()
+            .into_iter()
+            .filter(|(category, _)| category == "entities")
+            .filter(|(category, name)| loader.load_sprite(name, category).sprites.len() < 3)
+            .map(|(_, name)| name)
+            .collect();
+        assert!(
+            short.is_empty(),
+            "entities missing 2x2 or 3x3 sprites: {short:?}"
+        );
+    }
+
     /// Every sprite a placed block can show: each tile, or each factory kind the item
     /// places or breaks back into, at every facing, lit and unlit.
     fn block_sprites(item: lithicrivers_core::components::ItemKind) -> Vec<(String, String)> {

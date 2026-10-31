@@ -19,11 +19,11 @@ input_file: scripts/snapshots/death-marker.txt
 ┃                                                                    ┃┃   (0, 0, 0)                ┃
 ┃                                                                    ┃┃   Cause: self-destruct     ┃
 ┃                                                                    ┃┃   command. Holds Nail x10, ┃
-┃ [@] Player  [!] Main Quest  [?] Side Quest                         ┃┃   Log x3, Torch x3, 5 more.┃
+┃ [@] Player  [!] Main Quest  [?] Side Quest  [W] Waypoint           ┃┃   Log x3, Torch x3, 5 more.┃
 ┃ [·] Explored  [ ] Unexplored  [$] Treasure  [X] Wreck              ┃┃   x: delete marker         ┃
 ┃                                                                    ┃┃                            ┃
 ┃             Player: (207, 1632, 0) | Chunk: (3, 25, 0)             ┃┃                            ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛┗━━━━━ w: add waypoint ━━━━━━┛
 ┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
 │[0] Quest marker added: SapienCorp Factory                                                        │
 │[1] Added 2 Chest to inventory                                                                    │
@@ -55,7 +55,7 @@ input_file: scripts/snapshots/death-marker.txt
 ┃ [·] Explored  [ ] Unexp└────────────────────────────────────────────────┘: delete marker         ┃
 ┃                                                                    ┃┃                            ┃
 ┃             Player: (207, 1632, 0) | Chunk: (3, 25, 0)             ┃┃                            ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛┗━━━━━ w: add waypoint ━━━━━━┛
 ┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
 │[0] Quest marker added: SapienCorp Factory                                                        │
 │[1] Added 2 Chest to inventory                                                                    │
@@ -83,11 +83,11 @@ input_file: scripts/snapshots/death-marker.txt
 ┃                                                                    ┃┃                            ┃
 ┃                                                                    ┃┃                            ┃
 ┃                                                                    ┃┃                            ┃
-┃ [@] Player  [!] Main Quest  [?] Side Quest                         ┃┃                            ┃
+┃ [@] Player  [!] Main Quest  [?] Side Quest  [W] Waypoint           ┃┃                            ┃
 ┃ [·] Explored  [ ] Unexplored  [$] Treasure  [X] Wreck              ┃┃                            ┃
 ┃                                                                    ┃┃                            ┃
 ┃             Player: (207, 1632, 0) | Chunk: (3, 25, 0)             ┃┃                            ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛┗━━━━━ w: add waypoint ━━━━━━┛
 ┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
 │[1] Added 2 Chest to inventory                                                                    │
 │[1] Your body was destroyed: self-destruct command. It lies here with everything you carried.     │

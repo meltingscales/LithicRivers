@@ -18,10 +18,10 @@ input_file: scripts/snapshots/combat-panel.txt
 ││                                              ││vvvvvvvvvvvvvvvvvvvvvvvvvtvtttttvvvvvvvvvvvvvvvvvv
 │└──────────────────────────────────────────────┘│vvvvvvvvvvvvvvvvvvvvvvvvvvvvvtttvvvvvvvvvvvvvvvvvv
 │1: Melee - 0E - 5t                ┌Action Queue┐│vvvvvvvvvvvvvvvvvvvvvvvvvvvvttvvvvvvvvvvvvvvvvvvvv
-│2: Fireball (AoE) - 40E - 12t     │Current:    ││vvvvvvvvvvvvvvvvvvvvvvvvvvvvtttvvvvvvvvvvvvvvvvvvv
+│2: Power Strike - 40E - 13t       │Current:    ││vvvvvvvvvvvvvvvvvvvvvvvvvvvvtttvvvvvvvvvvvvvvvvvvv
 │3: Tackle - 20E - 10t             │> Ready     ││vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 │4: Escape - 20E - 15t             │            ││#vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-│           ▼ More below           └────────────┘│##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+│5: DebugInstantKill - 0E - 5t     └────────────┘│##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 │[←→] Target | [↑↓] Move | [C] Clear | [5] Wait |│##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 └────────────────────────────────────────────────┘###vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 ┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐

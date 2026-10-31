@@ -17,10 +17,10 @@ expression: "String::from_utf8(out).unwrap()"
 ││              ││              ││              ││#############vvvvvvvvvvvvvvvvvvvvvvvvvvvtvtttttvvv
 │└──────────────┘└──────────────┘└──────────────┘│#############vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvtttvvv
 │1: Melee - 0E - 5t                ┌Action Queue┐│##############vvvvvvvvvvvvvvvvvvvvvvvvvvvvvttvvvvv
-│2: Fireball (AoE) - 40E - 12t     │Current:    ││##############vvvvvvvvvvvvvvvvvvvvvvvvvvvvvtttvvvv
-│3: Tackle - 20E - 10t             │> Fireball →││###############vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-│4: Escape - 20E - 15t             │Feral dog   ││################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-│           ▼ More below           └────────────┘│#################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+│2: Power Strike - 40E - 13t       │Current:    ││##############vvvvvvvvvvvvvvvvvvvvvvvvvvvvvtttvvvv
+│3: Tackle - 20E - 10t             │> Power     ││###############vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+│4: Escape - 20E - 15t             │Strike →    ││################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+│5: DebugInstantKill - 0E - 5t     └────────────┘│#################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 │[←→] Target | [↑↓] Move | [C] Clear | [5] Wait |│#################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 └────────────────────────────────────────────────┘##################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 ┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
