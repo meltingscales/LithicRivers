@@ -1,14 +1,17 @@
 //! Spawner blocks: while the player is near, a spawner grows one creature on a timer and
 //! lets it out on open ground beside it, up to a cap of its own. Wild spawners, placed by
-//! worldgen in ruins, have a fixed creature and need nothing.
+//! worldgen in ruins, have a fixed creature and need nothing. A spawner the player places
+//! grows only on grid power, using one meat slurry and one charge of its embryo for each
+//! creature; the embryo sets the creature. Belts and extractors feed it both.
 
 use hecs::World;
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha20Rng;
 use serde::{Deserialize, Serialize};
 
-use crate::components::{ItemKind, Player, Position};
+use crate::components::{ItemKind, ItemStack, Player, Position};
 use crate::factory::{Facing, FactoryKind, FACTORY_STEP_TICKS, TICKS_PER_SECOND};
+use crate::power::PowerConsumer;
 use crate::resources::Resources;
 use crate::spawn_utils::EnemyKind;
 
@@ -22,6 +25,12 @@ pub const SPAWNER_RADIUS: i64 = 4;
 pub const SPAWNER_CAP: usize = 4;
 /// Tiles tried when looking for open ground beside a spawner.
 const SPAWN_TRIES: usize = 16;
+/// What a placed spawner draws while it has slurry and an embryo, in watts.
+pub const SPAWNER_W: u64 = 60_000;
+/// The most meat slurry a spawner holds.
+pub const SLURRY_CAPACITY: u32 = 16;
+/// The most embryos (all of one kind) a spawner holds, counting the one growing.
+pub const EMBRYO_CAPACITY: u32 = 4;
 
 /// A spawner block's state.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -30,12 +39,95 @@ pub struct Spawner {
     pub wild: Option<EnemyKind>,
     /// Ticks grown toward the next creature
     pub elapsed: u64,
+    /// Meat slurry held
+    #[serde(default)]
+    pub slurry: u32,
+    /// The kind of embryo in the embryo slot
+    #[serde(default)]
+    pub embryo: Option<ItemKind>,
+    /// Embryos held, counting the one growing
+    #[serde(default)]
+    pub embryos: u32,
+    /// Creatures the growing embryo has left in it
+    #[serde(default)]
+    pub charges: u32,
 }
 
 impl Spawner {
-    /// The creature it grows now, if it can grow one.
+    /// The creature it grows now, if it can grow one: a wild spawner's own, or for a
+    /// placed one, its embryo's while it has slurry.
     pub fn creature(&self) -> Option<EnemyKind> {
-        self.wild
+        if self.wild.is_some() {
+            return self.wild;
+        }
+        let (creature, _) = embryo_kind(self.embryo?)?;
+        (self.slurry > 0 && self.embryos > 0).then_some(creature)
+    }
+
+    /// Whether it would take `item` now: slurry while it has room, and embryos of the
+    /// kind it holds (any kind when empty). Wild spawners take nothing.
+    pub fn accepts(&self, item: ItemKind) -> bool {
+        if self.wild.is_some() {
+            return false;
+        }
+        if item == ItemKind::MeatSlurry {
+            return self.slurry < SLURRY_CAPACITY;
+        }
+        embryo_kind(item).is_some()
+            && (self.embryos == 0 || (self.embryo == Some(item) && self.embryos < EMBRYO_CAPACITY))
+    }
+
+    /// Store an item it accepts.
+    pub fn insert(&mut self, item: ItemKind) {
+        if item == ItemKind::MeatSlurry {
+            self.slurry += 1;
+        } else if let Some((_, grade)) = embryo_kind(item) {
+            if self.embryos == 0 {
+                self.embryo = Some(item);
+                self.charges = grade.charges();
+            }
+            self.embryos += 1;
+        }
+    }
+
+    /// Use one slurry and one charge for a creature that came out of a placed spawner; a
+    /// spent embryo is used up and the next one starts.
+    fn use_up(&mut self) {
+        if self.wild.is_some() {
+            return;
+        }
+        self.slurry -= 1;
+        self.charges -= 1;
+        if self.charges == 0 {
+            self.embryos -= 1;
+            match (self.embryos, self.embryo.and_then(embryo_kind)) {
+                (0, _) | (_, None) => {
+                    self.embryo = None;
+                    self.embryos = 0;
+                }
+                (_, Some((_, grade))) => self.charges = grade.charges(),
+            }
+        }
+    }
+
+    /// What breaking it gives back besides the block: its slurry and embryos (a growing
+    /// embryo comes back whole).
+    pub fn contents(&self) -> Vec<ItemStack> {
+        let mut items = Vec::new();
+        if self.slurry > 0 {
+            items.push(ItemStack::new(ItemKind::MeatSlurry, self.slurry));
+        }
+        if let (Some(embryo), 1..) = (self.embryo, self.embryos) {
+            items.push(ItemStack::new(embryo, self.embryos));
+        }
+        items
+    }
+}
+
+/// Placed spawners want power while they have slurry and an embryo.
+pub fn update_demand(world: &mut World) {
+    for (_, (spawner, consumer)) in world.query_mut::<(&Spawner, &mut PowerConsumer)>() {
+        consumer.active = spawner.wild.is_none() && spawner.creature().is_some();
     }
 }
 
@@ -163,14 +255,24 @@ pub fn step_spawners(world: &mut World, res: &mut Resources, step_tick: u64) {
         return;
     };
     let mut due = Vec::new();
-    for (entity, (pos, spawner)) in world.query_mut::<(&Position, &mut Spawner)>() {
+    for (entity, (pos, spawner, consumer)) in
+        world.query_mut::<(&Position, &mut Spawner, Option<&PowerConsumer>)>()
+    {
         if spawner.creature().is_none()
             || pos.z != player.z
             || distance(*pos, player) > SPAWNER_RANGE
         {
             continue;
         }
-        spawner.elapsed = (spawner.elapsed + FACTORY_STEP_TICKS).min(SPAWN_INTERVAL_TICKS);
+        // Wild spawners grow at full speed; placed ones as fast as their power allows
+        let grown = match (spawner.wild, consumer) {
+            (None, Some(consumer)) => {
+                FACTORY_STEP_TICKS * u64::from(consumer.satisfaction_permille) / 1000
+            }
+            (None, None) => 0,
+            (Some(_), _) => FACTORY_STEP_TICKS,
+        };
+        spawner.elapsed = (spawner.elapsed + grown).min(SPAWN_INTERVAL_TICKS);
         if spawner.elapsed >= SPAWN_INTERVAL_TICKS {
             due.push((entity, *pos));
         }
@@ -192,10 +294,9 @@ pub fn step_spawners(world: &mut World, res: &mut Resources, step_tick: u64) {
             continue;
         };
         if spawn_beside(world, res, pos, creature, step_tick) {
-            world
-                .get::<&mut Spawner>(entity)
-                .expect("still a spawner")
-                .elapsed = 0;
+            let mut spawner = world.get::<&mut Spawner>(entity).expect("still a spawner");
+            spawner.elapsed = 0;
+            spawner.use_up();
         }
     }
 }
@@ -234,7 +335,7 @@ fn spawn_beside(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::components::{EntityKind, ItemKind};
+    use crate::components::EntityKind;
     use crate::test_support::{TestGame, TestWorld};
     use crate::tiles::TileKind;
 
@@ -445,6 +546,172 @@ mod tests {
         assert_eq!(embryo_kind(ItemKind::Meat), None);
         assert!(EmbryoGrade::Poor.charges() < EmbryoGrade::Flawed.charges());
         assert!(EmbryoGrade::Flawed.charges() < EmbryoGrade::Flawless.charges());
+    }
+
+    /// A placed spawner at (0, 2), on a pole fed by a generator holding `fuel` biochar.
+    fn farm(fuel: u32) -> (TestGame, hecs::Entity) {
+        let mut t = arena().build();
+        let g = &mut t.game;
+        let put = |g: &mut crate::game::Game, kind, pos| {
+            crate::factory::place(&mut g.world, &mut g.res, kind, pos, Facing::North).unwrap()
+        };
+        let generator = put(g, FactoryKind::BurnerGenerator, at(-3, 2));
+        g.world
+            .get::<&mut crate::components::Inventory>(generator)
+            .unwrap()
+            .add(ItemKind::Biochar, fuel);
+        put(g, FactoryKind::PowerPole, at(-2, 2));
+        let spawner = put(g, FactoryKind::Spawner, at(0, 2));
+        (t, spawner)
+    }
+
+    fn feed(t: &mut TestGame, spawner: hecs::Entity, item: ItemKind, qty: u32) {
+        for _ in 0..qty {
+            assert!(crate::factory::insert(&mut t.game.world, spawner, item));
+        }
+    }
+
+    fn state(t: &TestGame, spawner: hecs::Entity) -> Spawner {
+        *t.game.world.get::<&Spawner>(spawner).unwrap()
+    }
+
+    fn count(t: &TestGame, kind: EntityKind) -> usize {
+        t.game
+            .world
+            .query::<&EntityKind>()
+            .iter()
+            .filter(|(_, k)| **k == kind)
+            .count()
+    }
+
+    #[test]
+    fn a_fed_powered_spawner_grows_until_its_embryo_is_spent() {
+        let (mut t, spawner) = farm(20);
+        feed(&mut t, spawner, ItemKind::MeatSlurry, 5);
+        feed(&mut t, spawner, ItemKind::FeralDogEmbryoPoor, 1);
+        pass(&mut t, SPAWN_INTERVAL_TICKS);
+        assert_eq!(dogs(&t), 1);
+        assert_eq!(state(&t, spawner).slurry, 4, "one slurry a creature");
+        pass(&mut t, 5 * SPAWN_INTERVAL_TICKS);
+        assert_eq!(dogs(&t), 2, "a poor embryo grows two");
+        let spent = state(&t, spawner);
+        assert_eq!((spent.slurry, spent.embryos, spent.embryo), (3, 0, None));
+        let consumer = *t.game.world.get::<&PowerConsumer>(spawner).unwrap();
+        assert!(!consumer.active, "with no embryo it draws nothing");
+    }
+
+    #[test]
+    fn an_unpowered_spawner_waits_and_keeps_what_it_holds() {
+        let (mut t, spawner) = farm(0);
+        feed(&mut t, spawner, ItemKind::MeatSlurry, 2);
+        feed(&mut t, spawner, ItemKind::FeralDogEmbryoFlawed, 1);
+        pass(&mut t, 5 * SPAWN_INTERVAL_TICKS);
+        assert_eq!(dogs(&t), 0);
+        let held = state(&t, spawner);
+        assert_eq!((held.slurry, held.embryos, held.charges), (2, 1, 4));
+        // Power comes back
+        let generator = t.game.res.factory_index[&at(-3, 2)];
+        t.game
+            .world
+            .get::<&mut crate::components::Inventory>(generator)
+            .unwrap()
+            .add(ItemKind::Biochar, 10);
+        pass(&mut t, SPAWN_INTERVAL_TICKS + FACTORY_STEP_TICKS);
+        assert_eq!(dogs(&t), 1);
+    }
+
+    #[test]
+    fn a_spawner_out_of_slurry_stops_and_its_embryo_keeps_its_charges() {
+        let (mut t, spawner) = farm(20);
+        feed(&mut t, spawner, ItemKind::MeatSlurry, 1);
+        feed(&mut t, spawner, ItemKind::FeralDogEmbryoFlawed, 1);
+        pass(&mut t, 5 * SPAWN_INTERVAL_TICKS);
+        assert_eq!(dogs(&t), 1);
+        let held = state(&t, spawner);
+        assert_eq!((held.slurry, held.embryos, held.charges), (0, 1, 3));
+        assert_eq!(held.creature(), None);
+    }
+
+    #[test]
+    fn the_embryo_sets_the_creature() {
+        let (mut t, spawner) = farm(20);
+        feed(&mut t, spawner, ItemKind::MeatSlurry, 1);
+        feed(&mut t, spawner, ItemKind::NuclearSlimeEmbryoPoor, 1);
+        assert!(
+            !crate::factory::accepts(&t.game.world, spawner, ItemKind::FeralDogEmbryoPoor),
+            "one kind of embryo at a time"
+        );
+        pass(&mut t, SPAWN_INTERVAL_TICKS);
+        assert_eq!(count(&t, EntityKind::NuclearSlime), 1);
+        assert_eq!(dogs(&t), 0);
+    }
+
+    #[test]
+    fn a_spawned_embryo_makes_way_for_the_next() {
+        let (mut t, spawner) = farm(40);
+        feed(&mut t, spawner, ItemKind::MeatSlurry, 10);
+        feed(&mut t, spawner, ItemKind::FeralDogEmbryoPoor, 2);
+        pass(&mut t, 4 * SPAWN_INTERVAL_TICKS);
+        assert_eq!(dogs(&t), 4, "two poor embryos grow four");
+        assert_eq!(state(&t, spawner).embryos, 0);
+    }
+
+    #[test]
+    fn an_extractor_feeds_a_spawner_from_a_chest() {
+        let (mut t, spawner) = farm(20);
+        let g = &mut t.game;
+        let chest = crate::factory::place(
+            &mut g.world,
+            &mut g.res,
+            FactoryKind::Chest,
+            at(2, 2),
+            Facing::North,
+        )
+        .unwrap();
+        {
+            let mut inv = g
+                .world
+                .get::<&mut crate::components::Inventory>(chest)
+                .unwrap();
+            inv.add(ItemKind::MeatSlurry, 3);
+            inv.add(ItemKind::FeralDogEmbryoPoor, 1);
+        }
+        crate::factory::place(
+            &mut g.world,
+            &mut g.res,
+            FactoryKind::Extractor,
+            at(1, 2),
+            Facing::West,
+        )
+        .unwrap();
+        pass(&mut t, 20 * FACTORY_STEP_TICKS);
+        let fed = state(&t, spawner);
+        assert_eq!((fed.slurry, fed.embryos), (3, 1));
+    }
+
+    #[test]
+    fn breaking_a_placed_spawner_gives_back_what_it_held() {
+        let (mut t, spawner) = farm(0);
+        feed(&mut t, spawner, ItemKind::MeatSlurry, 3);
+        feed(&mut t, spawner, ItemKind::FeralDogEmbryoFlawless, 2);
+        let player = t.game.get_player_entity().unwrap();
+        t.game
+            .world
+            .get::<&mut crate::components::Inventory>(player)
+            .unwrap()
+            .slots
+            .clear();
+        crate::factory::break_block(&mut t.game.world, &mut t.game.res, at(0, 2), player);
+        assert_eq!(t.player_inventory(), vec![(ItemKind::Spawner, 1)]);
+        let mut dropped = t.items_at(0, 2, 0);
+        dropped.sort();
+        assert_eq!(
+            dropped,
+            vec![
+                (ItemKind::MeatSlurry, 3),
+                (ItemKind::FeralDogEmbryoFlawless, 2)
+            ]
+        );
     }
 
     #[test]

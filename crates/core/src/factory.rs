@@ -418,6 +418,7 @@ pub fn place(
         FactoryKind::Fence | FactoryKind::Gate => {}
         FactoryKind::Spawner => {
             builder.add(crate::spawner::Spawner::default());
+            builder.add(crate::power::PowerConsumer::idle(crate::spawner::SPAWNER_W));
         }
         #[cfg(any(test, feature = "test-support"))]
         FactoryKind::TestArrow => {}
@@ -449,6 +450,9 @@ pub fn break_block(
     }
     if let Ok(furnace) = world.get::<&crate::furnace::Furnace>(entity) {
         contents.extend(furnace.slots().into_iter().flatten());
+    }
+    if let Ok(spawner) = world.get::<&crate::spawner::Spawner>(entity) {
+        contents.extend(spawner.contents());
     }
     if let Some(item) = world
         .get::<&crate::logistics::Router>(entity)
@@ -623,6 +627,7 @@ pub fn run_due_steps(world: &mut World, res: &mut Resources) {
         crate::machines::update_demand(world, res);
         crate::furnace::update_demand(world);
         crate::vat::update_demand(world);
+        crate::spawner::update_demand(world);
         crate::power::step_power(world, res);
         crate::machines::step_machines(world, res);
         crate::furnace::step_furnaces(world, res);
@@ -668,7 +673,10 @@ pub fn takes(kind: FactoryKind, item: ItemKind) -> bool {
             crate::vat::takes(kind, item)
         }
         FactoryKind::AutoHarvester | FactoryKind::Extractor | FactoryKind::FilterExtractor => false,
-        FactoryKind::Fence | FactoryKind::Gate | FactoryKind::Spawner => false,
+        FactoryKind::Spawner => {
+            item == ItemKind::MeatSlurry || crate::spawner::embryo_kind(item).is_some()
+        }
+        FactoryKind::Fence | FactoryKind::Gate => false,
         _ => true,
     }
 }
@@ -720,6 +728,11 @@ pub fn accepts_from(
         FactoryKind::BeltRouter => {
             return crate::logistics::router_accepts(world, target, block.facing, heading)
         }
+        FactoryKind::Spawner => {
+            return world
+                .get::<&crate::spawner::Spawner>(target)
+                .is_ok_and(|s| s.accepts(item))
+        }
         // Extractors only pass items through
         FactoryKind::Extractor | FactoryKind::FilterExtractor => return false,
         FactoryKind::BurnerGenerator if crate::power::fuel_energy(item).is_none() => return false,
@@ -761,6 +774,10 @@ pub fn insert_from(
     }
     if let Ok(mut router) = world.get::<&mut crate::logistics::Router>(target) {
         router.item = Some(item);
+        return true;
+    }
+    if let Ok(mut spawner) = world.get::<&mut crate::spawner::Spawner>(target) {
+        spawner.insert(item);
         return true;
     }
     if let Ok(mut belt) = world.get::<&mut BeltSlot>(target) {
