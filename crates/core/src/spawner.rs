@@ -9,7 +9,7 @@ use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha20Rng;
 use serde::{Deserialize, Serialize};
 
-use crate::components::{ItemKind, ItemStack, Player, Position};
+use crate::components::{Inventory, ItemKind, Player, Position};
 use crate::factory::{Facing, FactoryKind, FACTORY_STEP_TICKS, TICKS_PER_SECOND};
 use crate::power::PowerConsumer;
 use crate::resources::Resources;
@@ -30,120 +30,116 @@ pub const SLURRY_CAPACITY: u32 = 16;
 /// The most embryos (all of one kind) a spawner holds, counting the one growing.
 pub const EMBRYO_CAPACITY: u32 = 4;
 
-/// A spawner block's state.
+/// The slots of a placed spawner's inventory: meat slurry and one kind of embryo.
+pub const SPAWNER_SLOTS: usize = 2;
+
+/// A spawner block's state. A placed spawner keeps its meat slurry and embryos in its
+/// `Inventory`; the embryo growing is one of them, with `charges` left in it.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Spawner {
     /// A wild spawner's creature; `None` for one the player placed
     pub wild: Option<EnemyKind>,
     /// Ticks grown toward the next creature
     pub elapsed: u64,
-    /// Meat slurry held
-    #[serde(default)]
-    pub slurry: u32,
-    /// The kind of embryo in the embryo slot
-    #[serde(default)]
-    pub embryo: Option<ItemKind>,
-    /// Embryos held, counting the one growing
-    #[serde(default)]
-    pub embryos: u32,
-    /// Creatures the growing embryo has left in it
+    /// Creatures the growing embryo has left in it; 0 before one starts
     #[serde(default)]
     pub charges: u32,
+}
+
+/// The meat slurry in a spawner's inventory.
+pub fn slurry(inv: &Inventory) -> u32 {
+    inv.slots
+        .iter()
+        .filter(|s| s.kind == ItemKind::MeatSlurry)
+        .map(|s| s.qty)
+        .sum()
+}
+
+/// The embryos in a spawner's inventory: their kind and how many.
+pub fn embryos(inv: &Inventory) -> Option<(ItemKind, u32)> {
+    inv.slots
+        .iter()
+        .find(|s| s.qty > 0 && embryo_kind(s.kind).is_some())
+        .map(|s| (s.kind, s.qty))
 }
 
 impl Spawner {
     /// The creature it grows now, if it can grow one: a wild spawner's own, or for a
     /// placed one, its embryo's while it has slurry.
-    pub fn creature(&self) -> Option<EnemyKind> {
+    pub fn creature(&self, inv: Option<&Inventory>) -> Option<EnemyKind> {
         if self.wild.is_some() {
             return self.wild;
         }
-        let (creature, _) = embryo_kind(self.embryo?)?;
-        (self.slurry > 0 && self.embryos > 0).then_some(creature)
+        let inv = inv?;
+        let (embryo, _) = embryos(inv)?;
+        (slurry(inv) > 0).then(|| embryo_kind(embryo).map(|(c, _)| c))?
     }
 
     /// Whether it would take `item` now: slurry while it has room, and embryos of the
-    /// kind it holds (any kind when empty). Wild spawners take nothing.
-    pub fn accepts(&self, item: ItemKind) -> bool {
+    /// kind it holds (any kind when it holds none). Wild spawners take nothing.
+    pub fn accepts(&self, inv: &Inventory, item: ItemKind) -> bool {
         if self.wild.is_some() {
             return false;
         }
         if item == ItemKind::MeatSlurry {
-            return self.slurry < SLURRY_CAPACITY;
+            return slurry(inv) < SLURRY_CAPACITY;
         }
         embryo_kind(item).is_some()
-            && (self.embryos == 0 || (self.embryo == Some(item) && self.embryos < EMBRYO_CAPACITY))
+            && match embryos(inv) {
+                None => true,
+                Some((kind, qty)) => kind == item && qty < EMBRYO_CAPACITY,
+            }
     }
 
-    /// Store an item it accepts.
-    pub fn insert(&mut self, item: ItemKind) {
-        if item == ItemKind::MeatSlurry {
-            self.slurry += 1;
-        } else if let Some((_, grade)) = embryo_kind(item) {
-            if self.embryos == 0 {
-                self.embryo = Some(item);
-                self.charges = grade.charges();
-            }
-            self.embryos += 1;
+    /// Creatures left in the growing embryo: a fresh one's full charges until it starts.
+    pub fn charges_left(&self, inv: &Inventory) -> u32 {
+        match (self.charges, embryos(inv).and_then(|(e, _)| embryo_kind(e))) {
+            (_, None) => 0,
+            (0, Some((_, grade))) => grade.charges(),
+            (charges, Some(_)) => charges,
         }
     }
 
     /// Use one slurry and one charge for a creature that came out of a placed spawner; a
     /// spent embryo is used up and the next one starts.
-    fn use_up(&mut self) {
+    fn use_up(&mut self, inv: &mut Inventory) {
         if self.wild.is_some() {
             return;
         }
-        self.slurry -= 1;
-        self.charges -= 1;
+        let Some((embryo, _)) = embryos(inv) else {
+            return;
+        };
+        self.charges = self.charges_left(inv) - 1;
+        take_one(inv, ItemKind::MeatSlurry);
         if self.charges == 0 {
-            self.embryos -= 1;
-            match (self.embryos, self.embryo.and_then(embryo_kind)) {
-                (0, _) | (_, None) => {
-                    self.embryo = None;
-                    self.embryos = 0;
-                }
-                (_, Some((_, grade))) => self.charges = grade.charges(),
-            }
+            take_one(inv, embryo);
         }
     }
 
-    /// What breaking it gives back besides the block: its slurry and embryos (a growing
-    /// embryo comes back whole).
-    pub fn contents(&self) -> Vec<ItemStack> {
-        let mut items = Vec::new();
-        if self.slurry > 0 {
-            items.push(ItemStack::new(ItemKind::MeatSlurry, self.slurry));
-        }
-        if let (Some(embryo), 1..) = (self.embryo, self.embryos) {
-            items.push(ItemStack::new(embryo, self.embryos));
-        }
-        items
-    }
-}
-
-impl Spawner {
     /// What the look panel says about it: what it grows, or what it lacks, and how long
     /// until the next creature while it grows.
-    pub fn status_lines(&self) -> Vec<String> {
+    pub fn status_lines(&self, inv: Option<&Inventory>) -> Vec<String> {
+        let held = inv.and_then(embryos);
         let grows = self
             .wild
-            .or_else(|| self.embryo.and_then(embryo_kind).map(|(c, _)| c));
+            .or_else(|| held.and_then(|(e, _)| embryo_kind(e)).map(|(c, _)| c));
         let mut lines = Vec::new();
         match grows {
             Some(creature) => lines.push(format!("Grows {}", creature.plural())),
             None => lines.push("Needs an embryo".to_string()),
         }
-        if self.wild.is_none() {
-            lines.push(format!("Slurry {}, embryos {}", self.slurry, self.embryos));
+        if let (None, Some(inv)) = (self.wild, inv) {
+            let slurry = slurry(inv);
+            let count = held.map_or(0, |(_, qty)| qty);
+            lines.push(format!("Slurry {slurry}, embryos {count}"));
             if grows.is_some() {
-                lines.push(format!("{} left in embryo", self.charges));
+                lines.push(format!("{} left in embryo", self.charges_left(inv)));
             }
-            if self.slurry == 0 {
+            if slurry == 0 {
                 lines.push("Needs meat slurry".to_string());
             }
         }
-        if self.creature().is_some() {
+        if self.creature(inv).is_some() {
             let left = SPAWN_INTERVAL_TICKS - self.elapsed;
             lines.push(format!("Next in {}s", left.div_ceil(TICKS_PER_SECOND)));
         }
@@ -151,10 +147,25 @@ impl Spawner {
     }
 }
 
-/// Placed spawners want power while they have slurry and an embryo.
+fn take_one(inv: &mut Inventory, item: ItemKind) {
+    if let Some(i) = inv.slots.iter().position(|s| s.kind == item && s.qty > 0) {
+        inv.slots[i].qty -= 1;
+        if inv.slots[i].qty == 0 {
+            inv.slots.remove(i);
+        }
+    }
+}
+
+/// Placed spawners want power while they have slurry and an embryo; one whose embryos
+/// were all taken out forgets the charges of the last.
 pub fn update_demand(world: &mut World) {
-    for (_, (spawner, consumer)) in world.query_mut::<(&Spawner, &mut PowerConsumer)>() {
-        consumer.active = spawner.wild.is_none() && spawner.creature().is_some();
+    for (_, (spawner, inv, consumer)) in
+        world.query_mut::<(&mut Spawner, &Inventory, &mut PowerConsumer)>()
+    {
+        if embryos(inv).is_none() {
+            spawner.charges = 0;
+        }
+        consumer.active = spawner.wild.is_none() && spawner.creature(Some(inv)).is_some();
     }
 }
 
@@ -282,10 +293,13 @@ pub fn step_spawners(world: &mut World, res: &mut Resources, step_tick: u64) {
         return;
     };
     let mut due = Vec::new();
-    for (entity, (pos, spawner, consumer)) in
-        world.query_mut::<(&Position, &mut Spawner, Option<&PowerConsumer>)>()
-    {
-        if spawner.creature().is_none()
+    for (entity, (pos, spawner, inv, consumer)) in world.query_mut::<(
+        &Position,
+        &mut Spawner,
+        Option<&Inventory>,
+        Option<&PowerConsumer>,
+    )>() {
+        if spawner.creature(inv).is_none()
             || pos.z != player.z
             || distance(*pos, player) > SPAWNER_RANGE
         {
@@ -313,17 +327,25 @@ pub fn step_spawners(world: &mut World, res: &mut Resources, step_tick: u64) {
         if own >= SPAWNER_CAP {
             continue;
         }
-        let Some(creature) = world
-            .get::<&Spawner>(entity)
-            .ok()
-            .and_then(|s| s.creature())
-        else {
+        let creature = {
+            let inv = world.get::<&Inventory>(entity).ok();
+            world
+                .get::<&Spawner>(entity)
+                .ok()
+                .and_then(|s| s.creature(inv.as_deref()))
+        };
+        let Some(creature) = creature else {
             continue;
         };
         if spawn_beside(world, res, pos, creature, step_tick) {
-            let mut spawner = world.get::<&mut Spawner>(entity).expect("still a spawner");
+            let mut query = world
+                .query_one::<(&mut Spawner, Option<&mut Inventory>)>(entity)
+                .expect("still a spawner");
+            let (spawner, inv) = query.get().expect("still a spawner");
             spawner.elapsed = 0;
-            spawner.use_up();
+            if let Some(inv) = inv {
+                spawner.use_up(inv);
+            }
         }
     }
 }
@@ -395,7 +417,7 @@ fn reachable_ground(world: &World, res: &mut Resources, at: Position) -> Vec<Pos
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::components::EntityKind;
+    use crate::components::{EntityKind, Inventory};
     use crate::test_support::{TestGame, TestWorld};
     use crate::tiles::TileKind;
 
@@ -631,8 +653,15 @@ mod tests {
         }
     }
 
-    fn state(t: &TestGame, spawner: hecs::Entity) -> Spawner {
-        *t.game.world.get::<&Spawner>(spawner).unwrap()
+    /// Slurry, embryos and the charges left in the growing one.
+    fn held(t: &TestGame, spawner: hecs::Entity) -> (u32, u32, u32) {
+        let inv = t.game.world.get::<&Inventory>(spawner).unwrap();
+        let state = t.game.world.get::<&Spawner>(spawner).unwrap();
+        (
+            slurry(&inv),
+            embryos(&inv).map_or(0, |(_, qty)| qty),
+            state.charges_left(&inv),
+        )
     }
 
     fn count(t: &TestGame, kind: EntityKind) -> usize {
@@ -651,11 +680,10 @@ mod tests {
         feed(&mut t, spawner, ItemKind::FeralDogEmbryoPoor, 1);
         pass(&mut t, SPAWN_INTERVAL_TICKS);
         assert_eq!(dogs(&t), 1);
-        assert_eq!(state(&t, spawner).slurry, 4, "one slurry a creature");
+        assert_eq!(held(&t, spawner).0, 4, "one slurry a creature");
         pass(&mut t, 5 * SPAWN_INTERVAL_TICKS);
         assert_eq!(dogs(&t), 2, "a poor embryo grows two");
-        let spent = state(&t, spawner);
-        assert_eq!((spent.slurry, spent.embryos, spent.embryo), (3, 0, None));
+        assert_eq!(held(&t, spawner), (3, 0, 0));
         let consumer = *t.game.world.get::<&PowerConsumer>(spawner).unwrap();
         assert!(!consumer.active, "with no embryo it draws nothing");
     }
@@ -667,8 +695,7 @@ mod tests {
         feed(&mut t, spawner, ItemKind::FeralDogEmbryoFlawed, 1);
         pass(&mut t, 5 * SPAWN_INTERVAL_TICKS);
         assert_eq!(dogs(&t), 0);
-        let held = state(&t, spawner);
-        assert_eq!((held.slurry, held.embryos, held.charges), (2, 1, 4));
+        assert_eq!(held(&t, spawner), (2, 1, 4));
         // Power comes back
         let generator = t.game.res.factory_index[&at(-3, 2)];
         t.game
@@ -687,9 +714,10 @@ mod tests {
         feed(&mut t, spawner, ItemKind::FeralDogEmbryoFlawed, 1);
         pass(&mut t, 5 * SPAWN_INTERVAL_TICKS);
         assert_eq!(dogs(&t), 1);
-        let held = state(&t, spawner);
-        assert_eq!((held.slurry, held.embryos, held.charges), (0, 1, 3));
-        assert_eq!(held.creature(), None);
+        assert_eq!(held(&t, spawner), (0, 1, 3));
+        let inv = t.game.world.get::<&Inventory>(spawner).unwrap();
+        let state = t.game.world.get::<&Spawner>(spawner).unwrap();
+        assert_eq!(state.creature(Some(&inv)), None);
     }
 
     #[test]
@@ -713,7 +741,7 @@ mod tests {
         feed(&mut t, spawner, ItemKind::FeralDogEmbryoPoor, 2);
         pass(&mut t, 4 * SPAWN_INTERVAL_TICKS);
         assert_eq!(dogs(&t), 4, "two poor embryos grow four");
-        assert_eq!(state(&t, spawner).embryos, 0);
+        assert_eq!(held(&t, spawner).1, 0);
     }
 
     #[test]
@@ -745,8 +773,8 @@ mod tests {
         )
         .unwrap();
         pass(&mut t, 20 * FACTORY_STEP_TICKS);
-        let fed = state(&t, spawner);
-        assert_eq!((fed.slurry, fed.embryos), (3, 1));
+        let (slurry, embryos, _) = held(&t, spawner);
+        assert_eq!((slurry, embryos), (3, 1));
     }
 
     #[test]
@@ -782,21 +810,25 @@ mod tests {
             ..Default::default()
         };
         assert_eq!(
-            wild.status_lines(),
+            wild.status_lines(None),
             vec!["Grows nuclear slimes", "Next in 3s"]
         );
-        let mut placed = Spawner::default();
+        let placed = Spawner::default();
+        let mut inv = Inventory {
+            max_slots: SPAWNER_SLOTS,
+            ..Default::default()
+        };
         assert_eq!(
-            placed.status_lines(),
+            placed.status_lines(Some(&inv)),
             vec![
                 "Needs an embryo",
                 "Slurry 0, embryos 0",
                 "Needs meat slurry"
             ]
         );
-        placed.insert(ItemKind::FeralDogEmbryoFlawed);
+        inv.add(ItemKind::FeralDogEmbryoFlawed, 1);
         assert_eq!(
-            placed.status_lines(),
+            placed.status_lines(Some(&inv)),
             vec![
                 "Grows feral dogs",
                 "Slurry 0, embryos 1",

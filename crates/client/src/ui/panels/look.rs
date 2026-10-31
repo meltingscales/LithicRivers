@@ -54,7 +54,7 @@ pub fn render_look_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
                     .world
                     .get::<&lithicrivers_core::spawner::Spawner>(e)
                 {
-                    for line in spawner.status_lines() {
+                    for line in spawner.status_lines(maybe_inventory) {
                         lines.push(Line::from(format!("  {line}")));
                     }
                 }

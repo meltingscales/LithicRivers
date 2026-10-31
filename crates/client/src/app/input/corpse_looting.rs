@@ -250,6 +250,27 @@ pub fn handle_corpse_looting_input(app: &mut App, key: KeyCode) -> Result<bool, 
                     (FactoryKind::AutoHarvester, Some(_)) => {
                         Some("The auto-harvester only gives items out".to_string())
                     }
+                    (FactoryKind::Spawner, Some(item)) => {
+                        use lithicrivers_core::spawner;
+                        let wild = world
+                            .get::<&spawner::Spawner>(corpse_entity)
+                            .is_ok_and(|s| s.wild.is_some());
+                        let held = world
+                            .get::<&lithicrivers_core::components::Inventory>(corpse_entity)
+                            .ok()
+                            .and_then(|inv| spawner::embryos(&inv));
+                        if wild {
+                            Some("A wild spawner takes nothing".to_string())
+                        } else if !lithicrivers_core::factory::takes(block_kind, item) {
+                            Some("The spawner only takes meat slurry and embryos".to_string())
+                        } else if held.is_some_and(|(kind, _)| {
+                            kind != item && spawner::embryo_kind(item).is_some()
+                        }) {
+                            Some("The spawner holds another kind of embryo".to_string())
+                        } else {
+                            None
+                        }
+                    }
                     _ => None,
                 };
                 match result {

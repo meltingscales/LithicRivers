@@ -419,6 +419,10 @@ pub fn place(
         FactoryKind::Spawner => {
             builder.add(crate::spawner::Spawner::default());
             builder.add(crate::power::PowerConsumer::idle(crate::spawner::SPAWNER_W));
+            builder.add(Inventory {
+                max_slots: crate::spawner::SPAWNER_SLOTS,
+                ..Default::default()
+            });
         }
         #[cfg(any(test, feature = "test-support"))]
         FactoryKind::TestArrow => {}
@@ -450,9 +454,6 @@ pub fn break_block(
     }
     if let Ok(furnace) = world.get::<&crate::furnace::Furnace>(entity) {
         contents.extend(furnace.slots().into_iter().flatten());
-    }
-    if let Ok(spawner) = world.get::<&crate::spawner::Spawner>(entity) {
-        contents.extend(spawner.contents());
     }
     if let Some(item) = world
         .get::<&crate::logistics::Router>(entity)
@@ -729,9 +730,13 @@ pub fn accepts_from(
             return crate::logistics::router_accepts(world, target, block.facing, heading)
         }
         FactoryKind::Spawner => {
-            return world
-                .get::<&crate::spawner::Spawner>(target)
-                .is_ok_and(|s| s.accepts(item))
+            return match (
+                world.get::<&crate::spawner::Spawner>(target),
+                world.get::<&Inventory>(target),
+            ) {
+                (Ok(spawner), Ok(inv)) => spawner.accepts(&inv, item),
+                _ => false,
+            }
         }
         // Extractors only pass items through
         FactoryKind::Extractor | FactoryKind::FilterExtractor => return false,
@@ -774,10 +779,6 @@ pub fn insert_from(
     }
     if let Ok(mut router) = world.get::<&mut crate::logistics::Router>(target) {
         router.item = Some(item);
-        return true;
-    }
-    if let Ok(mut spawner) = world.get::<&mut crate::spawner::Spawner>(target) {
-        spawner.insert(item);
         return true;
     }
     if let Ok(mut belt) = world.get::<&mut BeltSlot>(target) {

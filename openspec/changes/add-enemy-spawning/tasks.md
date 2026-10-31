@@ -17,7 +17,7 @@
 ## 2. Client
 
 - [x] 2.1 Sprites for spawners, fences, gates, meat slurry and embryos, and the look panel naming a spawner's creature and timer; verify the sprite gallery and a snapshot
-- [ ] 2.2 The placed spawner's window (slurry, embryo, charges left, power); verify a snapshot script in `scripts/snapshots/`
+- [x] 2.2 The placed spawner's window (slurry, embryo, charges left, power); verify a snapshot script in `scripts/snapshots/`
 
 ## 3. Checks
 
