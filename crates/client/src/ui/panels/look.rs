@@ -22,7 +22,7 @@ pub fn render_look_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
 
     // Entity and item info
     let mut any_entity = false;
-    for (_e, (e_pos, maybe_player, maybe_sr, maybe_drop, maybe_inventory, maybe_block)) in app
+    for (e, (e_pos, maybe_player, maybe_sr, maybe_drop, maybe_inventory, maybe_block)) in app
         .core
         .game
         .world
@@ -48,6 +48,16 @@ pub fn render_look_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
                 )));
             } else if let Some(block) = maybe_block {
                 lines.push(Line::from(capitalize(block.kind.name())));
+                if let Ok(spawner) = app
+                    .core
+                    .game
+                    .world
+                    .get::<&lithicrivers_core::spawner::Spawner>(e)
+                {
+                    for line in spawner.status_lines() {
+                        lines.push(Line::from(format!("  {line}")));
+                    }
+                }
             } else if let Some(di) = maybe_drop {
                 lines.push(Line::from(format!(
                     "{} x{} (lying here)",

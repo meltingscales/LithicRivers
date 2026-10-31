@@ -225,6 +225,14 @@ impl EnemyKind {
         }
     }
 
+    /// How the game names a group of them.
+    pub fn plural(self) -> &'static str {
+        match self {
+            EnemyKind::FeralDog => "feral dogs",
+            EnemyKind::NuclearSlime => "nuclear slimes",
+        }
+    }
+
     pub fn from_name(name: &str) -> Option<EnemyKind> {
         Self::ALL.iter().copied().find(|kind| kind.name() == name)
     }

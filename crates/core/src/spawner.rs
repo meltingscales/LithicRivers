@@ -23,8 +23,6 @@ pub const SPAWNER_RANGE: i64 = 24;
 pub const SPAWNER_RADIUS: i64 = 4;
 /// At most this many of a spawner's creatures are alive at once.
 pub const SPAWNER_CAP: usize = 4;
-/// Tiles tried when looking for open ground beside a spawner.
-const SPAWN_TRIES: usize = 16;
 /// What a placed spawner draws while it has slurry and an embryo, in watts.
 pub const SPAWNER_W: u64 = 60_000;
 /// The most meat slurry a spawner holds.
@@ -121,6 +119,35 @@ impl Spawner {
             items.push(ItemStack::new(embryo, self.embryos));
         }
         items
+    }
+}
+
+impl Spawner {
+    /// What the look panel says about it: what it grows, or what it lacks, and how long
+    /// until the next creature while it grows.
+    pub fn status_lines(&self) -> Vec<String> {
+        let grows = self
+            .wild
+            .or_else(|| self.embryo.and_then(embryo_kind).map(|(c, _)| c));
+        let mut lines = Vec::new();
+        match grows {
+            Some(creature) => lines.push(format!("Grows {}", creature.plural())),
+            None => lines.push("Needs an embryo".to_string()),
+        }
+        if self.wild.is_none() {
+            lines.push(format!("Slurry {}, embryos {}", self.slurry, self.embryos));
+            if grows.is_some() {
+                lines.push(format!("{} left in embryo", self.charges));
+            }
+            if self.slurry == 0 {
+                lines.push("Needs meat slurry".to_string());
+            }
+        }
+        if self.creature().is_some() {
+            let left = SPAWN_INTERVAL_TICKS - self.elapsed;
+            lines.push(format!("Next in {}s", left.div_ceil(TICKS_PER_SECOND)));
+        }
+        lines
     }
 }
 
@@ -301,8 +328,9 @@ pub fn step_spawners(world: &mut World, res: &mut Resources, step_tick: u64) {
     }
 }
 
-/// Let a creature out on open ground near a spawner, picked from the seed, the spawner's
-/// position and the tick. Returns whether one came out.
+/// Let a creature out near a spawner, on open ground it could walk to from the spawner
+/// within `SPAWNER_RADIUS` (so a fenced spawner keeps its creatures in), picked from the
+/// seed, the spawner's position and the tick. Returns whether one came out.
 fn spawn_beside(
     world: &mut World,
     res: &mut Resources,
@@ -310,26 +338,58 @@ fn spawn_beside(
     creature: EnemyKind,
     tick: u64,
 ) -> bool {
+    let open = reachable_ground(world, res, at);
+    if open.is_empty() {
+        return false;
+    }
     let seed = res.world_state.world.mix_coords(at.x, at.y, at.z)
         ^ tick.wrapping_mul(0x9E37_79B9_7F4A_7C15)
         ^ 0x5BA_3E6;
-    let mut rng = ChaCha20Rng::seed_from_u64(seed);
-    for _ in 0..SPAWN_TRIES {
-        let pos = Position {
-            x: at.x + rng.gen_range(-SPAWNER_RADIUS..=SPAWNER_RADIUS),
-            y: at.y + rng.gen_range(-SPAWNER_RADIUS..=SPAWNER_RADIUS),
-            z: at.z,
-        };
-        let spawned =
-            crate::spawn_utils::spawn_enemy(world, &mut res.world_state.world, creature, pos);
-        if let Ok(entity) = spawned {
-            world
-                .insert_one(entity, SpawnedBy(at))
-                .expect("just spawned");
-            return true;
+    let pos = open[ChaCha20Rng::seed_from_u64(seed).gen_range(0..open.len())];
+    let spawned = crate::spawn_utils::spawn_enemy(world, &mut res.world_state.world, creature, pos)
+        .expect("the tile was checked");
+    world
+        .insert_one(spawned, SpawnedBy(at))
+        .expect("just spawned");
+    true
+}
+
+/// Free, passable tiles a creature could walk to from a spawner within `SPAWNER_RADIUS`,
+/// in the order a walk outward finds them.
+fn reachable_ground(world: &World, res: &mut Resources, at: Position) -> Vec<Position> {
+    let occupied: std::collections::HashSet<Position> = world
+        .query::<&Position>()
+        .with::<&crate::components::BlocksMovement>()
+        .iter()
+        .map(|(_, p)| *p)
+        .collect();
+    let mut seen = std::collections::HashSet::from([at]);
+    let mut queue = std::collections::VecDeque::from([at]);
+    let mut open = Vec::new();
+    while let Some(here) = queue.pop_front() {
+        for (dx, dy) in [(1, 0), (-1, 0), (0, 1), (0, -1)] {
+            let next = Position {
+                x: here.x + dx,
+                y: here.y + dy,
+                z: here.z,
+            };
+            if distance(next, at) > SPAWNER_RADIUS || !seen.insert(next) {
+                continue;
+            }
+            let passable = res
+                .world_state
+                .world
+                .get_tile_cached(next.x, next.y, next.z)
+                .is_passable();
+            if passable {
+                queue.push_back(next);
+                if !occupied.contains(&next) {
+                    open.push(next);
+                }
+            }
         }
     }
-    false
+    open
 }
 
 #[cfg(test)]
@@ -711,6 +771,75 @@ mod tests {
                 (ItemKind::MeatSlurry, 3),
                 (ItemKind::FeralDogEmbryoFlawless, 2)
             ]
+        );
+    }
+
+    #[test]
+    fn the_look_panel_names_what_a_spawner_grows_and_lacks() {
+        let wild = Spawner {
+            wild: Some(EnemyKind::NuclearSlime),
+            elapsed: SPAWN_INTERVAL_TICKS - 250,
+            ..Default::default()
+        };
+        assert_eq!(
+            wild.status_lines(),
+            vec!["Grows nuclear slimes", "Next in 3s"]
+        );
+        let mut placed = Spawner::default();
+        assert_eq!(
+            placed.status_lines(),
+            vec![
+                "Needs an embryo",
+                "Slurry 0, embryos 0",
+                "Needs meat slurry"
+            ]
+        );
+        placed.insert(ItemKind::FeralDogEmbryoFlawed);
+        assert_eq!(
+            placed.status_lines(),
+            vec![
+                "Grows feral dogs",
+                "Slurry 0, embryos 1",
+                "4 left in embryo",
+                "Needs meat slurry"
+            ]
+        );
+    }
+
+    #[test]
+    fn a_fenced_spawner_lets_creatures_out_only_inside_the_fence() {
+        let mut t = arena().build();
+        let g = &mut t.game;
+        place_wild(&mut g.world, &mut g.res, at(8, 0), EnemyKind::FeralDog).unwrap();
+        // A 3x3 pen around the spawner: room for eight dogs, all inside
+        for x in 6..=10 {
+            for y in -2..=2 {
+                if x == 6 || x == 10 || y == -2 || y == 2 {
+                    crate::factory::place(
+                        &mut g.world,
+                        &mut g.res,
+                        FactoryKind::Fence,
+                        at(x, y),
+                        Facing::North,
+                    )
+                    .unwrap();
+                }
+            }
+        }
+        pass(&mut t, 10 * SPAWN_INTERVAL_TICKS);
+        let dogs: Vec<Position> = t
+            .game
+            .world
+            .query::<&Position>()
+            .with::<&SpawnedBy>()
+            .iter()
+            .map(|(_, p)| *p)
+            .collect();
+        assert_eq!(dogs.len(), SPAWNER_CAP);
+        assert!(
+            dogs.iter()
+                .all(|p| (7..=9).contains(&p.x) && (-1..=1).contains(&p.y)),
+            "{dogs:?}"
         );
     }
 

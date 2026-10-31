@@ -339,9 +339,10 @@ fn spawner_farm(game: &mut Game, o: Position) {
     fill(
         game,
         feed,
+        // Embryos first, so the extractor hands those over before the slurry
         &[
-            (ItemKind::MeatSlurry, 16),
             (ItemKind::FeralDogEmbryoPoor, 4),
+            (ItemKind::MeatSlurry, 16),
         ],
     );
     place(game, FactoryKind::Extractor, at(o, 2, 3), Facing::East);
