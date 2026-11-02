@@ -387,6 +387,13 @@ impl RecipeHandler {
                 result: ItemKind::AdvancedVat,
                 quantity: 1,
             },
+            // Scrap lantern: a torch caged in iron scrap
+            Recipe {
+                name: "Scrap Lantern",
+                ingredients: &[(ItemKind::Torch, 1), (ItemKind::IronScrap, 1)],
+                result: ItemKind::ScrapLantern,
+                quantity: 1,
+            },
         ];
 
         Self { recipes }

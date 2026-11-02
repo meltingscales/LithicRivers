@@ -1,0 +1,23 @@
+# Scrap lantern: place one underground and walk away; its light stays, and the rock east
+# of it casts a shadow.
+seed 12345
+size 100x30
+world void
+key ui.MENU_PREV
+cheat tp 0 0 -1
+cheat giveitem scrap_lantern 1
+cheat set_tile ~4 ~ ~ rock
+key build.TOGGLE_BREAK_PLACE_MODE 2
+# Picker: Clear slot, Acorn, Scrap Lantern
+key hotbar.HOTBAR_SLOT_1 2
+key movement.MOVE_SOUTH 2
+key ui.MENU_ACTIVATE
+expect-text "Scrap Lantern"
+key build.PLACE_EAST
+key build.TOGGLE_BREAK_PLACE_MODE 2
+key movement.MOVE_WEST 10
+screen lit-room
+key action.LOOK_TOGGLE
+key movement.MOVE_EAST 11
+expect-text "Scrap lantern"
+screen look

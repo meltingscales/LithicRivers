@@ -225,6 +225,7 @@ pub enum ItemKind {
     CrudeVat,
     StandardVat,
     AdvancedVat,
+    ScrapLantern,
 }
 
 pub fn itemkind_name(kind: ItemKind) -> &'static str {
@@ -280,6 +281,7 @@ pub fn itemkind_name(kind: ItemKind) -> &'static str {
         ItemKind::CrudeVat => "Crude Resurrection Vat",
         ItemKind::StandardVat => "Standard Resurrection Vat",
         ItemKind::AdvancedVat => "Advanced Resurrection Vat",
+        ItemKind::ScrapLantern => "Scrap Lantern",
     }
 }
 
@@ -336,6 +338,7 @@ pub fn itemkind_sprite_name(kind: ItemKind) -> &'static str {
         ItemKind::CrudeVat => "crude_vat",
         ItemKind::StandardVat => "standard_vat",
         ItemKind::AdvancedVat => "advanced_vat",
+        ItemKind::ScrapLantern => "scrap_lantern",
     }
 }
 
@@ -392,6 +395,7 @@ pub fn parse_itemkind_from_sprite_name(sprite_name: &str) -> Option<ItemKind> {
         "crude_vat" => Some(ItemKind::CrudeVat),
         "standard_vat" => Some(ItemKind::StandardVat),
         "advanced_vat" => Some(ItemKind::AdvancedVat),
+        "scrap_lantern" => Some(ItemKind::ScrapLantern),
         _ => None,
     }
 }
