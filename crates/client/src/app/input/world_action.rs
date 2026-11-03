@@ -569,7 +569,8 @@ fn handle_torch_toggle(app: &mut App) {
 
     // Toggle torch if available
     if let Ok(mut light_source) = app.core.game.world.get::<&mut LightSource>(player_entity) {
-        if has_torch {
+        // Putting a torch out never needs one in the inventory
+        if has_torch || light_source.torch_equipped {
             let was_equipped = light_source.torch_equipped;
             light_source.set_torch_equipped(!was_equipped);
 

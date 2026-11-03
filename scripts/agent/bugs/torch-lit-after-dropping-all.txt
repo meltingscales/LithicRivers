@@ -1,0 +1,18 @@
+# Dropping every torch while the torch was lit left it lit for good: nothing noticed the
+# last torch leaving, and the toggle key refused to put it out without a torch in hand.
+seed 12345
+size 100x30
+world void
+key ui.MENU_PREV
+cheat tp 0 0 -1
+key action.TOGGLE_TORCH
+expect-text "Torch lit"
+# Inventory tab: Nail, Acorn, Log, Stick, Torch x3
+key ui.MENU_NEXT 5
+key ui.MENU_DOWN 4
+key inventory.DROP_ITEM 3
+expect-text "Dropped"
+key ui.MENU_PREV 5
+key movement.WAIT
+expect-text "Your last torch is gone"
+state torch-out

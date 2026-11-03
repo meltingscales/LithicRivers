@@ -380,6 +380,7 @@ fn enemy_combat_ai_system_wrapper(world: &mut World, res: &mut Resources) -> Opt
 }
 
 fn fog_of_war_system_wrapper(world: &mut World, res: &mut Resources) -> Option<SystemResults> {
+    crate::systems::fog_of_war::put_out_missing_torch(world, res);
     crate::systems::fog_of_war::update_fog_of_war(world, res);
     None
 }
