@@ -1,7 +1,7 @@
 # light-blocks Specification
 
 ## Purpose
-TBD - created by archiving change add-light-blocks. Update Purpose after archive.
+Placed light blocks, starting with the scrap lantern, and how their light reaches tiles and joins fog of war.
 
 ## Requirements
 
