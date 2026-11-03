@@ -111,6 +111,8 @@ pub enum FactoryKind {
     StandardVat,
     /// Holds a spare body of any grade, on a lot of power
     AdvancedVat,
+    /// Lights the tiles around it; needs no fuel or power
+    ScrapLantern,
     /// Keeps creatures and the player out, but not sight or light
     Fence,
     /// Keeps creatures out; the player walks through it
@@ -140,6 +142,7 @@ impl FactoryKind {
             ItemKind::CrudeVat => Some(FactoryKind::CrudeVat),
             ItemKind::StandardVat => Some(FactoryKind::StandardVat),
             ItemKind::AdvancedVat => Some(FactoryKind::AdvancedVat),
+            ItemKind::ScrapLantern => Some(FactoryKind::ScrapLantern),
             ItemKind::Extractor => Some(FactoryKind::Extractor),
             ItemKind::FilterExtractor => Some(FactoryKind::FilterExtractor),
             ItemKind::BeltRouter => Some(FactoryKind::BeltRouter),
@@ -165,6 +168,7 @@ impl FactoryKind {
             FactoryKind::CrudeVat => Some(ItemKind::CrudeVat),
             FactoryKind::StandardVat => Some(ItemKind::StandardVat),
             FactoryKind::AdvancedVat => Some(ItemKind::AdvancedVat),
+            FactoryKind::ScrapLantern => Some(ItemKind::ScrapLantern),
             FactoryKind::Extractor => Some(ItemKind::Extractor),
             FactoryKind::FilterExtractor => Some(ItemKind::FilterExtractor),
             FactoryKind::BeltRouter => Some(ItemKind::BeltRouter),
@@ -194,6 +198,7 @@ impl FactoryKind {
             FactoryKind::CrudeVat => "crude resurrection vat",
             FactoryKind::StandardVat => "standard resurrection vat",
             FactoryKind::AdvancedVat => "advanced resurrection vat",
+            FactoryKind::ScrapLantern => "scrap lantern",
             FactoryKind::Extractor => "extractor",
             FactoryKind::FilterExtractor => "filter extractor",
             FactoryKind::BeltRouter => "belt router",
@@ -223,6 +228,7 @@ impl FactoryKind {
             FactoryKind::AutoPlanter => false,
             FactoryKind::BurnerGenerator | FactoryKind::PowerPole => false,
             FactoryKind::CrudeVat | FactoryKind::StandardVat | FactoryKind::AdvancedVat => false,
+            FactoryKind::ScrapLantern => false,
             // Up or down instead of a facing: see `rotate`
             FactoryKind::VerticalConveyorUp | FactoryKind::VerticalConveyorDown => false,
             FactoryKind::Fence | FactoryKind::Gate | FactoryKind::Spawner => false,
@@ -235,7 +241,10 @@ impl FactoryKind {
 
     /// Whether sight and light pass over the block, though nothing walks through it.
     pub fn see_through(self) -> bool {
-        matches!(self, FactoryKind::Fence | FactoryKind::Gate)
+        matches!(
+            self,
+            FactoryKind::Fence | FactoryKind::Gate | FactoryKind::ScrapLantern
+        )
     }
 
     /// Kinds that exist only in tests (always false outside tests).
@@ -281,6 +290,7 @@ impl FactoryKind {
             FactoryKind::CrudeVat => SpriteRef::new("factory", "crude_vat"),
             FactoryKind::StandardVat => SpriteRef::new("factory", "standard_vat"),
             FactoryKind::AdvancedVat => SpriteRef::new("factory", "advanced_vat"),
+            FactoryKind::ScrapLantern => SpriteRef::new("factory", "scrap_lantern"),
             FactoryKind::VerticalConveyorDown => {
                 SpriteRef::new("factory", "vertical_conveyor_down")
             }
@@ -414,6 +424,12 @@ pub fn place(
         #[cfg(any(test, feature = "test-support"))]
         FactoryKind::TestConsumer => {
             builder.add(crate::power::PowerConsumer::new(TEST_CONSUMER_W));
+        }
+        FactoryKind::ScrapLantern => {
+            // A placed light: natural spawns keep away from it (`creature_spawn::near_light`)
+            builder.add(crate::components::LightSource::new(
+                crate::systems::fog_of_war::LANTERN_RADIUS as u32,
+            ));
         }
         FactoryKind::Fence | FactoryKind::Gate => {}
         FactoryKind::Spawner => {

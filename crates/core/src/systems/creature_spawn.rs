@@ -624,17 +624,23 @@ mod tests {
         let mut unlit = forest(7);
         run_checks(&mut unlit, 200);
         assert!(count(&unlit, EntityKind::FeralDog) > 0);
-        // Lights every 16 tiles leave no tile more than 8 from one
+        // Scrap lanterns every 16 tiles leave no tile more than 8 from one (the middle one
+        // sits a tile east of the player)
         for lx in (-64..=64).step_by(16) {
             for ly in (-64..=64).step_by(16) {
-                t.game.world.spawn((
+                let lx = if (lx, ly) == (0, 0) { 1 } else { lx };
+                crate::factory::place(
+                    &mut t.game.world,
+                    &mut t.game.res,
+                    crate::factory::FactoryKind::ScrapLantern,
                     Position {
                         x: x + lx,
                         y: y + ly,
                         z: 0,
                     },
-                    LightSource::new(8),
-                ));
+                    crate::factory::Facing::North,
+                )
+                .expect("lantern placed");
             }
         }
         run_checks(&mut t, 200);

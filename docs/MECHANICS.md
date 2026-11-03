@@ -30,6 +30,7 @@ The game features a fog of war system that creates atmospheric exploration:
 - **Default Light**: Players emit a base 2-tile radius light source
 - **Torch**: Equipping a torch (if available in inventory) increases light radius to 8 tiles
 - **Torch Toggle**: Press 't' to toggle torch on/off (requires torch in inventory)
+- **Scrap Lantern**: A placed block (1 torch + 1 iron scrap) that lights every tile within 6 tiles on its layer, with the same shadows, while the player is on that layer within 48 tiles. Needs no fuel or power; light passes over it, and the tiles it lights are remembered as seen
 
 ### Fog of War States
 - **Unvisited Areas**: Rendered as very dark grey '?' - completely unknown terrain

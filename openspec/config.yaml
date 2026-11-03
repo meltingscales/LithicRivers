@@ -20,6 +20,7 @@ context: |
 rules:
   tasks:
     - Every task states its verification as cargo test, just code-clippy, or a just client-blind script or snapshot once those exist. Never verify by running the interactive client; tasks that need a human to look at the TUI say "user check".
+    - When a change is merged with only user checks left, add an entry for it to `openspec/changes/playtest-queue/tasks.md` (what to check and how to set it up quickly in the real game; a long checklist gets a one-line pointer instead). If that change has been archived, start a new one with the same name.
 
 # Per-artifact rules (optional)
 # Add custom rules for specific artifacts.

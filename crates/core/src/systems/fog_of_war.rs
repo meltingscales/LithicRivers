@@ -1,7 +1,15 @@
 use crate::components::{FogOfWar, LightSource, Player, Position};
+use crate::factory::{FactoryBlock, FactoryKind};
 use crate::model::body::Body;
 use crate::resources::Resources;
 use hecs::World;
+use std::collections::HashSet;
+
+/// How far a placed lantern's light reaches, in tiles (circular, like the player's light).
+pub const LANTERN_RADIUS: i64 = 6;
+/// Lanterns this close to the player (on each axis, on the player's layer) light tiles;
+/// wider than any screen plus the lantern radius.
+pub const LANTERN_GATHER_RANGE: i64 = 48;
 
 /// Bresenham line algorithm to get all points on a line from start to end
 fn bresenham_line(start_x: i64, start_y: i64, end_x: i64, end_y: i64) -> Vec<(i64, i64)> {
@@ -38,7 +46,7 @@ fn bresenham_line(start_x: i64, start_y: i64, end_x: i64, end_y: i64) -> Vec<(i6
 }
 
 /// Whether a tile stops sight and light: anything impassable except see-through blocks
-/// (fences and gates).
+/// (fences, gates and lanterns).
 fn blocks_sight(world: &World, resources: &Resources, x: i64, y: i64, z: i64) -> bool {
     let tile = resources
         .world_state
@@ -89,9 +97,61 @@ pub fn light_radius(light_source: &LightSource, body: Option<&Body>) -> u32 {
         .light_radius(light_source.radius)
 }
 
+/// The light of the placed lanterns near a point, on that point's layer.
+#[derive(Default)]
+pub struct LanternLight {
+    /// The tiles they light
+    pub lit: HashSet<(i64, i64)>,
+}
+
+impl LanternLight {
+    /// Gather the lanterns within `LANTERN_GATHER_RANGE` of `center` on its layer, and trace
+    /// each one's light once.
+    pub fn around(world: &World, resources: &Resources, center: Position) -> Self {
+        let lanterns: Vec<(i64, i64)> = world
+            .query::<(&Position, &FactoryBlock)>()
+            .iter()
+            .filter(|(_, (pos, block))| {
+                block.kind == FactoryKind::ScrapLantern
+                    && pos.z == center.z
+                    && (pos.x - center.x).abs() <= LANTERN_GATHER_RANGE
+                    && (pos.y - center.y).abs() <= LANTERN_GATHER_RANGE
+            })
+            .map(|(_, (pos, _))| (pos.x, pos.y))
+            .collect();
+        let mut lit = HashSet::new();
+        for &(lx, ly) in &lanterns {
+            for dx in -LANTERN_RADIUS..=LANTERN_RADIUS {
+                for dy in -LANTERN_RADIUS..=LANTERN_RADIUS {
+                    let tile = (lx + dx, ly + dy);
+                    if dx * dx + dy * dy > LANTERN_RADIUS * LANTERN_RADIUS || lit.contains(&tile) {
+                        continue;
+                    }
+                    #[cfg(any(test, feature = "test-support"))]
+                    LANTERN_RAYS_CAST.with(|n| n.set(n.get() + 1));
+                    if has_line_of_sight(world, resources, lx, ly, tile.0, tile.1, center.z) {
+                        lit.insert(tile);
+                    }
+                }
+            }
+        }
+        Self { lit }
+    }
+}
+
 /// Update fog of war for the player based on their current position and light radius with line-of-sight
 pub fn update_fog_of_war(world: &mut World, resources: &Resources) {
-    let seen = lit_tiles(world, resources);
+    let mut seen = lit_tiles(world, resources);
+    // Lantern-lit tiles are remembered like tiles the player lights
+    let center = world
+        .query::<(&Position, &Player)>()
+        .iter()
+        .next()
+        .map(|(_, (pos, _))| *pos);
+    if let Some(center) = center {
+        let placed = LanternLight::around(world, resources, center);
+        seen.extend(placed.lit.iter().map(|&(x, y)| (x, y, center.z)));
+    }
     for (_, (fog_of_war, _)) in world.query_mut::<(&mut FogOfWar, &Player)>() {
         for &(x, y, z) in &seen {
             fog_of_war.mark_visited(x, y, z);
@@ -137,6 +197,19 @@ thread_local! {
     static FOG_LOOKUPS_BUILT: std::cell::Cell<u64> = const { std::cell::Cell::new(0) };
 }
 
+#[cfg(any(test, feature = "test-support"))]
+thread_local! {
+    /// How many rays lanterns have cast on this thread.
+    static LANTERN_RAYS_CAST: std::cell::Cell<u64> = const { std::cell::Cell::new(0) };
+}
+
+/// How many rays lanterns have cast on this thread, so tests can check that a lookup traces
+/// each lantern's light once rather than once per tile drawn.
+#[cfg(any(test, feature = "test-support"))]
+pub fn lantern_rays_cast() -> u64 {
+    LANTERN_RAYS_CAST.with(|n| n.get())
+}
+
 /// How many fog lookups have been built on this thread, so tests can check that drawing a
 /// frame builds one rather than one per tile.
 #[cfg(any(test, feature = "test-support"))]
@@ -150,12 +223,14 @@ pub struct FogLookup<'a> {
     world: &'a World,
     /// The player's position and light radius, if they carry a light
     light: Option<(Position, i64)>,
+    /// The layer the player is on, and the lantern light around them there
+    placed: Option<(i64, LanternLight)>,
     /// The tiles the player has seen
     memory: Option<hecs::Ref<'a, FogOfWar>>,
 }
 
 impl<'a> FogLookup<'a> {
-    pub fn new(world: &'a World) -> Self {
+    pub fn new(world: &'a World, resources: &Resources) -> Self {
         #[cfg(any(test, feature = "test-support"))]
         FOG_LOOKUPS_BUILT.with(|n| n.set(n.get() + 1));
         let light = world
@@ -169,9 +244,15 @@ impl<'a> FogLookup<'a> {
             .next()
             .map(|(entity, _)| entity)
             .and_then(|entity| world.get::<&FogOfWar>(entity).ok());
+        let placed = world
+            .query::<(&Position, &Player)>()
+            .iter()
+            .next()
+            .map(|(_, (pos, _))| (pos.z, LanternLight::around(world, resources, *pos)));
         Self {
             world,
             light,
+            placed,
             memory,
         }
     }
@@ -184,13 +265,19 @@ impl<'a> FogLookup<'a> {
         tile_y: i64,
         tile_z: i64,
     ) -> bool {
+        let Some((z, placed)) = &self.placed else {
+            return false;
+        };
+        // Only illuminate tiles on the player's Z level
+        if tile_z != *z {
+            return false;
+        }
+        if placed.lit.contains(&(tile_x, tile_y)) {
+            return true;
+        }
         let Some((position, radius)) = self.light else {
             return false;
         };
-        // Only illuminate tiles on the same Z level
-        if tile_z != position.z {
-            return false;
-        }
         // Check if tile is within light radius using circular distance
         let (dx, dy) = (tile_x - position.x, tile_y - position.y);
         dx * dx + dy * dy <= radius * radius
@@ -229,7 +316,7 @@ pub fn is_tile_illuminated(
     tile_y: i64,
     tile_z: i64,
 ) -> bool {
-    FogLookup::new(world).is_illuminated(resources, tile_x, tile_y, tile_z)
+    FogLookup::new(world, resources).is_illuminated(resources, tile_x, tile_y, tile_z)
 }
 
 /// Check if a tile has been visited by the player
@@ -257,7 +344,7 @@ pub fn get_fog_state(
     tile_y: i64,
     tile_z: i64,
 ) -> FogState {
-    FogLookup::new(world).state(resources, tile_x, tile_y, tile_z)
+    FogLookup::new(world, resources).state(resources, tile_x, tile_y, tile_z)
 }
 
 #[cfg(test)]
@@ -750,5 +837,171 @@ mod tests {
             get_fog_state(&world, &resources, 9, 10, -1),
             FogState::Illuminated
         ); // West
+    }
+}
+
+#[cfg(test)]
+mod lantern_tests {
+    use super::*;
+    use crate::components::ItemKind;
+    use crate::factory::{self, Facing};
+    use crate::game::Game;
+    use crate::recipe_handler::RecipeHandler;
+    use crate::test_support::TestWorld;
+    use crate::tile_registry::TileKind;
+    use std::collections::HashMap;
+
+    const Z: i64 = -1;
+
+    /// An open underground room around the player at (0, 0, -1).
+    fn cave() -> TestWorld {
+        TestWorld::new(3)
+            .player_at(0, 0, Z)
+            .fill((-60, -20, Z), (60, 20, Z), TileKind::Dirt)
+    }
+
+    fn lantern(game: &mut Game, x: i64, y: i64, z: i64) {
+        factory::place(
+            &mut game.world,
+            &mut game.res,
+            FactoryKind::ScrapLantern,
+            Position { x, y, z },
+            Facing::North,
+        )
+        .expect("placed");
+    }
+
+    fn lit(game: &Game, x: i64, y: i64, z: i64) -> bool {
+        is_tile_illuminated(&game.world, &game.res, x, y, z)
+    }
+
+    #[test]
+    fn a_lantern_is_crafted_from_a_torch_and_iron_scrap() {
+        let recipes = RecipeHandler::new();
+        let index = recipes
+            .find_recipe_by_name("Scrap Lantern")
+            .expect("recipe");
+        let mut inventory = HashMap::from([(ItemKind::Torch, 1), (ItemKind::IronScrap, 1)]);
+        assert!(recipes.craft(index, &mut inventory));
+        assert_eq!(inventory.get(&ItemKind::ScrapLantern), Some(&1));
+        assert_eq!(inventory.get(&ItemKind::Torch).copied().unwrap_or(0), 0);
+    }
+
+    #[test]
+    fn placing_and_breaking_a_lantern() {
+        let mut game = cave().inventory(&[]).build();
+        lantern(&mut game.game, 10, 0, Z);
+        assert!(lit(&game.game, 13, 0, Z));
+        let player = game.game.get_player_entity().unwrap();
+        let broken = factory::break_block(
+            &mut game.game.world,
+            &mut game.game.res,
+            Position { x: 10, y: 0, z: Z },
+            player,
+        );
+        assert_eq!(broken, Some(FactoryKind::ScrapLantern));
+        assert_eq!(game.player_inventory(), vec![(ItemKind::ScrapLantern, 1)]);
+        assert!(!lit(&game.game, 13, 0, Z));
+    }
+
+    #[test]
+    fn a_lantern_lights_six_tiles_around_it() {
+        let mut game = cave().build();
+        lantern(&mut game.game, 10, 0, Z);
+        assert!(lit(&game.game, 14, 0, Z));
+        assert!(lit(&game.game, 16, 0, Z));
+        assert!(!lit(&game.game, 17, 0, Z));
+        // Circular: (14, 4) is about 5.7 tiles away, (15, 5) about 7.1
+        assert!(lit(&game.game, 14, 4, Z));
+        assert!(!lit(&game.game, 15, 5, Z));
+    }
+
+    #[test]
+    fn walls_cast_shadows() {
+        let mut game = cave().tile(12, 0, Z, TileKind::Rock).build();
+        lantern(&mut game.game, 10, 0, Z);
+        assert!(lit(&game.game, 12, 0, Z), "the wall itself is lit");
+        assert!(!lit(&game.game, 13, 0, Z));
+    }
+
+    #[test]
+    fn light_passes_over_lanterns() {
+        let mut game = cave().build();
+        lantern(&mut game.game, 10, 0, Z);
+        lantern(&mut game.game, 11, 0, Z);
+        // Beyond the second lantern, but within the first one's reach
+        assert!(lit(&game.game, 16, 0, Z));
+        // The player's own light passes over a lantern next to them
+        lantern(&mut game.game, -1, 0, Z);
+        assert!(lit(&game.game, -2, 0, Z));
+    }
+
+    #[test]
+    fn other_layers_stay_dark() {
+        let mut game = cave()
+            .fill((-20, -20, Z + 1), (20, 20, Z + 1), TileKind::Dirt)
+            .build();
+        lantern(&mut game.game, 10, 0, Z + 1);
+        assert!(!lit(&game.game, 10, 1, Z));
+        assert!(
+            !lit(&game.game, 10, 1, Z + 1),
+            "the player isn't on that layer"
+        );
+    }
+
+    #[test]
+    fn lanterns_too_far_away_are_not_gathered() {
+        let mut game = cave().build();
+        lantern(&mut game.game, LANTERN_GATHER_RANGE + 1, 0, Z);
+        assert!(!lit(&game.game, LANTERN_GATHER_RANGE + 1, 1, Z));
+    }
+
+    #[test]
+    fn lit_tiles_are_remembered_after_the_player_leaves() {
+        let mut game = cave().build();
+        lantern(&mut game.game, 10, 0, Z);
+        game.tick();
+        // Far beyond the player's light, so only the lantern could have shown it
+        assert!(is_tile_visited(&game.game.world, 14, 0, Z));
+        let player = game.game.get_player_entity().unwrap();
+        *game.game.world.get::<&mut Position>(player).unwrap() = Position { x: -55, y: 0, z: Z };
+        game.tick();
+        assert!(!lit(&game.game, 14, 0, Z));
+        assert_eq!(
+            get_fog_state(&game.game.world, &game.game.res, 14, 0, Z),
+            FogState::Visited
+        );
+    }
+
+    #[test]
+    fn a_lantern_lights_the_surface_at_night() {
+        let mut game = TestWorld::new(3)
+            .fill((-20, -20, 0), (20, 20, 0), TileKind::Grass)
+            .build();
+        let res = &mut game.game.res;
+        res.time.tick = res.time.ticks_until(0, 0);
+        assert!(res.time.is_night());
+        lantern(&mut game.game, 10, 0, 0);
+        let state = |game: &Game, x| get_fog_state(&game.world, &game.res, x, 0, 0);
+        assert_eq!(state(&game.game, 14), FogState::Illuminated);
+        assert_ne!(state(&game.game, 18), FogState::Illuminated);
+    }
+
+    #[test]
+    fn a_lookup_traces_each_lantern_once() {
+        let mut game = cave().build();
+        for x in [5, 15, 25] {
+            lantern(&mut game.game, x, 0, Z);
+        }
+        let before = lantern_rays_cast();
+        let fog = FogLookup::new(&game.game.world, &game.game.res);
+        for x in -40..40 {
+            for y in -12..12 {
+                fog.state(&game.game.res, x, y, Z);
+            }
+        }
+        // At most one ray per tile in each lantern's circle, however many tiles are asked
+        let circle = (2 * LANTERN_RADIUS + 1).pow(2) as u64;
+        assert!(lantern_rays_cast() - before <= 3 * circle);
     }
 }

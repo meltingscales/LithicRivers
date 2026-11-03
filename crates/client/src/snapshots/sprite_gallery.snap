@@ -1081,6 +1081,25 @@ C
  █▒▒▒▒▒▒▒▒█ 
  ▀▀▀▀▀▀▀▀▀▀ 
             
+=== factory/scrap_lantern  #F2A93B  A torch caged in bent iron scrap that never seems to burn down; it lights six tiles around it
+-- 1x
+¤
+-- 2x
+┬┬
+¤¤
+-- 3x
+┌┴┐
+│*│
+└─┘
+-- art 0
+     ▄▄     
+    ┌┴┴┐    
+   ┌┘  └┐   
+   │░**░│   
+   │░**░│   
+   └┐  ┌┘   
+    ▀██▀    
+            
 === factory/spawner  #B4405A  A SapienCorp growth tank, still warm; something wet turns over inside the glass
 -- 1x
 Ø
@@ -2081,6 +2100,25 @@ eee
  ─┤▒░ ▓ ◘├─ 
   └┴┴┴┴┴┴┘  
             
+            
+=== items/scrap_lantern  #B57E2C  A torch caged in bent iron scrap that never seems to burn down; it lights six tiles around it
+-- 1x
+¤
+-- 2x
+┬┬
+¤¤
+-- 3x
+┌┴┐
+│*│
+└─┘
+-- art 0
+     ▄▄     
+    ┌┴┴┐    
+   ┌┘  └┐   
+   │░**░│   
+   │░**░│   
+   └┐  ┌┘   
+    ▀██▀    
             
 === items/spawner  #873043  A SapienCorp growth tank, still warm; something wet turns over inside the glass
 -- 1x
