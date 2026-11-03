@@ -11,5 +11,5 @@
 
 ## 3. Checks
 
-- [ ] 3.1 Verify `just code-clippy`, `cargo test --workspace` and PR checks pass
+- [x] 3.1 Verify `just code-clippy`, `cargo test --workspace` and PR checks pass
 - [ ] 3.2 User check that managing waypoints on the Global Map feels clear
