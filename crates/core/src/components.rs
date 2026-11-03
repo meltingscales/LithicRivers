@@ -236,6 +236,7 @@ pub enum ItemKind {
     NuclearSlimeEmbryoPoor,
     NuclearSlimeEmbryoFlawed,
     NuclearSlimeEmbryoFlawless,
+    StoneBrick,
 }
 
 pub fn itemkind_name(kind: ItemKind) -> &'static str {
@@ -302,6 +303,7 @@ pub fn itemkind_name(kind: ItemKind) -> &'static str {
         ItemKind::NuclearSlimeEmbryoPoor => "Nuclear Slime Embryo (Poor)",
         ItemKind::NuclearSlimeEmbryoFlawed => "Nuclear Slime Embryo (Flawed)",
         ItemKind::NuclearSlimeEmbryoFlawless => "Nuclear Slime Embryo (Flawless)",
+        ItemKind::StoneBrick => "Stone Brick",
     }
 }
 
@@ -369,6 +371,7 @@ pub fn itemkind_sprite_name(kind: ItemKind) -> &'static str {
         ItemKind::NuclearSlimeEmbryoPoor => "nuclear_slime_embryo_poor",
         ItemKind::NuclearSlimeEmbryoFlawed => "nuclear_slime_embryo_flawed",
         ItemKind::NuclearSlimeEmbryoFlawless => "nuclear_slime_embryo_flawless",
+        ItemKind::StoneBrick => "stone_brick",
     }
 }
 
@@ -436,6 +439,7 @@ pub fn parse_itemkind_from_sprite_name(sprite_name: &str) -> Option<ItemKind> {
         "nuclear_slime_embryo_poor" => Some(ItemKind::NuclearSlimeEmbryoPoor),
         "nuclear_slime_embryo_flawed" => Some(ItemKind::NuclearSlimeEmbryoFlawed),
         "nuclear_slime_embryo_flawless" => Some(ItemKind::NuclearSlimeEmbryoFlawless),
+        "stone_brick" => Some(ItemKind::StoneBrick),
         _ => None,
     }
 }

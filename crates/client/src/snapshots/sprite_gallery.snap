@@ -2310,6 +2310,25 @@ U
   ▀▀▀▀▀▀▀▀  
             
             
+=== items/stone_brick  #8A8478  Rubble dressed square and stacked again; it stands like the walls the old cities lost
+-- 1x
+▒
+-- 2x
+▀█
+█▄
+-- 3x
+▀█▀
+█▄█
+▀█▀
+-- art 0
+████▌▐██████
+▀▀▀▀▘▝▀▀▀▀▀▀
+██▌▐██████▌▐
+▀▀▘▝▀▀▀▀▀▀▘▝
+████▌▐██████
+▀▀▀▀▘▝▀▀▀▀▀▀
+██▌▐██████▌▐
+            
 === items/string  #FFFFFF  A piece of string.
 -- 1x
 ∞
@@ -2842,6 +2861,25 @@ ps!
    █▓▓▓▓▓▓▓▓
 ▄▄▄█▓▓▓▓▓▓▓▓
 █▓▓▓▓▓▓▓▓▓▓▓
+=== tiles/stone_brick  #B8B0A0  Rubble dressed square and stacked again; it stands like the walls the old cities lost
+-- 1x
+▒
+-- 2x
+▀█
+█▄
+-- 3x
+▀█▀
+█▄█
+▀█▀
+-- art 0
+████▌▐██████
+▀▀▀▀▘▝▀▀▀▀▀▀
+██▌▐██████▌▐
+▀▀▘▝▀▀▀▀▀▀▘▝
+████▌▐██████
+▀▀▀▀▘▝▀▀▀▀▀▀
+██▌▐██████▌▐
+            
 === tiles/treasure_common  #FFFF00  Special worldgen block that turns into common treasure
 -- 1x
 $

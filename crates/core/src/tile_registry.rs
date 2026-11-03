@@ -87,6 +87,7 @@ define_tiles! {
     SpecialPlayerSpawn, "special_player_spawn", "player spawn", false,
     FactoryBlock, "factory_block", "factory block", false,
     Sapling, "sapling", "sapling", true,
+    StoneBrick, "stone_brick", "stone brick", false,
 }
 
 impl TileKind {
@@ -95,6 +96,7 @@ impl TileKind {
         use crate::components::ItemKind;
         match item {
             ItemKind::PlankBlock => Some(TileKind::PlankBlock),
+            ItemKind::StoneBrick => Some(TileKind::StoneBrick),
             ItemKind::Stone => Some(TileKind::Rock),
             // Placed as a stairway of two; see `stairs::build_stairway`
             ItemKind::Stairs => Some(TileKind::Stairs),

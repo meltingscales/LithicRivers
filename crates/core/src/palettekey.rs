@@ -14,6 +14,7 @@ pub enum PaletteKey {
     ScrapElectronics,
     PlasteelScrap,
     PlankBlock,
+    StoneBrick,
 
     // Doors/stairs
     Door,
