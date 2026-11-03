@@ -45,11 +45,29 @@ fn bresenham_line(start_x: i64, start_y: i64, end_x: i64, end_y: i64) -> Vec<(i6
     points
 }
 
-/// Check if a tile blocks light using line-of-sight raycasting. Lanterns stand on
-/// impassable factory tiles but let light pass, so their positions are given in `lanterns`.
-fn has_line_of_sight(
+/// Whether a tile stops sight and light: anything impassable except see-through blocks
+/// (fences, gates and lanterns).
+fn blocks_sight(world: &World, resources: &Resources, x: i64, y: i64, z: i64) -> bool {
+    let tile = resources
+        .world_state
+        .world
+        .get_tile_at_z_no_worldgen(x, y, z);
+    if tile.is_passable() {
+        return false;
+    }
+    let see_through = tile == crate::tiles::TileKind::FactoryBlock
+        && resources
+            .factory_index
+            .get(&Position { x, y, z })
+            .and_then(|&e| world.get::<&crate::factory::FactoryBlock>(e).ok())
+            .is_some_and(|b| b.kind.see_through());
+    !see_through
+}
+
+/// Whether nothing that stops sight stands between two tiles on a layer
+pub fn has_line_of_sight(
+    world: &World,
     resources: &Resources,
-    lanterns: &HashSet<(i64, i64)>,
     from_x: i64,
     from_y: i64,
     to_x: i64,
@@ -63,13 +81,7 @@ fn has_line_of_sight(
     // We want to be able to see the target tile even if it's a wall
     if line_points.len() > 2 {
         for (point_x, point_y) in line_points.iter().skip(1).take(line_points.len() - 2) {
-            let tile = resources
-                .world_state
-                .world
-                .get_tile_at_z_no_worldgen(*point_x, *point_y, z);
-
-            // If we hit a non-passable tile (wall), light is blocked
-            if !tile.is_passable() && !lanterns.contains(&(*point_x, *point_y)) {
+            if blocks_sight(world, resources, *point_x, *point_y, z) {
                 return false;
             }
         }
@@ -88,8 +100,6 @@ pub fn light_radius(light_source: &LightSource, body: Option<&Body>) -> u32 {
 /// The light of the placed lanterns near a point, on that point's layer.
 #[derive(Default)]
 pub struct LanternLight {
-    /// Where the lanterns stand; light passes over them
-    pub lanterns: HashSet<(i64, i64)>,
     /// The tiles they light
     pub lit: HashSet<(i64, i64)>,
 }
@@ -98,7 +108,7 @@ impl LanternLight {
     /// Gather the lanterns within `LANTERN_GATHER_RANGE` of `center` on its layer, and trace
     /// each one's light once.
     pub fn around(world: &World, resources: &Resources, center: Position) -> Self {
-        let lanterns: HashSet<(i64, i64)> = world
+        let lanterns: Vec<(i64, i64)> = world
             .query::<(&Position, &FactoryBlock)>()
             .iter()
             .filter(|(_, (pos, block))| {
@@ -119,36 +129,41 @@ impl LanternLight {
                     }
                     #[cfg(any(test, feature = "test-support"))]
                     LANTERN_RAYS_CAST.with(|n| n.set(n.get() + 1));
-                    if has_line_of_sight(resources, &lanterns, lx, ly, tile.0, tile.1, center.z) {
+                    if has_line_of_sight(world, resources, lx, ly, tile.0, tile.1, center.z) {
                         lit.insert(tile);
                     }
                 }
             }
         }
-        Self { lanterns, lit }
+        Self { lit }
     }
 }
 
 /// Update fog of war for the player based on their current position and light radius with line-of-sight
 pub fn update_fog_of_war(world: &mut World, resources: &Resources) {
-    let Some(center) = world
+    let mut seen = lit_tiles(world, resources);
+    // Lantern-lit tiles are remembered like tiles the player lights
+    let center = world
         .query::<(&Position, &Player)>()
         .iter()
         .next()
-        .map(|(_, (pos, _))| *pos)
-    else {
-        return;
-    };
-    let placed = LanternLight::around(world, resources, center);
-    // Find the player entity with fog of war, light source, and position
-    for (_entity, (fog_of_war, light_source, position, _player, body)) in world
-        .query::<(
-            &mut FogOfWar,
-            &LightSource,
-            &Position,
-            &Player,
-            Option<&Body>,
-        )>()
+        .map(|(_, (pos, _))| *pos);
+    if let Some(center) = center {
+        let placed = LanternLight::around(world, resources, center);
+        seen.extend(placed.lit.iter().map(|&(x, y)| (x, y, center.z)));
+    }
+    for (_, (fog_of_war, _)) in world.query_mut::<(&mut FogOfWar, &Player)>() {
+        for &(x, y, z) in &seen {
+            fog_of_war.mark_visited(x, y, z);
+        }
+    }
+}
+
+/// The tiles the player's light reaches with line of sight.
+fn lit_tiles(world: &World, resources: &Resources) -> Vec<(i64, i64, i64)> {
+    let mut seen = Vec::new();
+    for (_entity, (_fog, light_source, position, _player, body)) in world
+        .query::<(&FogOfWar, &LightSource, &Position, &Player, Option<&Body>)>()
         .iter()
     {
         // Mark all tiles within light radius as visited
@@ -165,24 +180,15 @@ pub fn update_fog_of_war(world: &mut World, resources: &Resources) {
 
                     // Check line-of-sight before marking as visited
                     if has_line_of_sight(
-                        resources,
-                        &placed.lanterns,
-                        position.x,
-                        position.y,
-                        tile_x,
-                        tile_y,
-                        tile_z,
+                        world, resources, position.x, position.y, tile_x, tile_y, tile_z,
                     ) {
-                        fog_of_war.mark_visited(tile_x, tile_y, tile_z);
+                        seen.push((tile_x, tile_y, tile_z));
                     }
                 }
             }
         }
-        // Lantern-lit tiles are remembered like tiles the player lights
-        for &(x, y) in &placed.lit {
-            fog_of_war.mark_visited(x, y, position.z);
-        }
     }
+    seen
 }
 
 #[cfg(any(test, feature = "test-support"))]
@@ -214,6 +220,7 @@ pub fn fog_lookups_built() -> u64 {
 /// What fog of war needs to know about the player, gathered once so many tiles (a whole
 /// frame) can be checked without querying the world for each one.
 pub struct FogLookup<'a> {
+    world: &'a World,
     /// The player's position and light radius, if they carry a light
     light: Option<(Position, i64)>,
     /// The layer the player is on, and the lantern light around them there
@@ -243,6 +250,7 @@ impl<'a> FogLookup<'a> {
             .next()
             .map(|(_, (pos, _))| (pos.z, LanternLight::around(world, resources, *pos)));
         Self {
+            world,
             light,
             placed,
             memory,
@@ -274,13 +282,7 @@ impl<'a> FogLookup<'a> {
         let (dx, dy) = (tile_x - position.x, tile_y - position.y);
         dx * dx + dy * dy <= radius * radius
             && has_line_of_sight(
-                resources,
-                &placed.lanterns,
-                position.x,
-                position.y,
-                tile_x,
-                tile_y,
-                tile_z,
+                self.world, resources, position.x, position.y, tile_x, tile_y, tile_z,
             )
     }
 

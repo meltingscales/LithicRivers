@@ -226,6 +226,16 @@ pub enum ItemKind {
     StandardVat,
     AdvancedVat,
     ScrapLantern,
+    Fence,
+    Gate,
+    Spawner,
+    MeatSlurry,
+    FeralDogEmbryoPoor,
+    FeralDogEmbryoFlawed,
+    FeralDogEmbryoFlawless,
+    NuclearSlimeEmbryoPoor,
+    NuclearSlimeEmbryoFlawed,
+    NuclearSlimeEmbryoFlawless,
 }
 
 pub fn itemkind_name(kind: ItemKind) -> &'static str {
@@ -282,6 +292,16 @@ pub fn itemkind_name(kind: ItemKind) -> &'static str {
         ItemKind::StandardVat => "Standard Resurrection Vat",
         ItemKind::AdvancedVat => "Advanced Resurrection Vat",
         ItemKind::ScrapLantern => "Scrap Lantern",
+        ItemKind::Fence => "Fence",
+        ItemKind::Gate => "Gate",
+        ItemKind::Spawner => "Spawner",
+        ItemKind::MeatSlurry => "Meat Slurry",
+        ItemKind::FeralDogEmbryoPoor => "Feral Dog Embryo (Poor)",
+        ItemKind::FeralDogEmbryoFlawed => "Feral Dog Embryo (Flawed)",
+        ItemKind::FeralDogEmbryoFlawless => "Feral Dog Embryo (Flawless)",
+        ItemKind::NuclearSlimeEmbryoPoor => "Nuclear Slime Embryo (Poor)",
+        ItemKind::NuclearSlimeEmbryoFlawed => "Nuclear Slime Embryo (Flawed)",
+        ItemKind::NuclearSlimeEmbryoFlawless => "Nuclear Slime Embryo (Flawless)",
     }
 }
 
@@ -339,6 +359,16 @@ pub fn itemkind_sprite_name(kind: ItemKind) -> &'static str {
         ItemKind::StandardVat => "standard_vat",
         ItemKind::AdvancedVat => "advanced_vat",
         ItemKind::ScrapLantern => "scrap_lantern",
+        ItemKind::Fence => "fence",
+        ItemKind::Gate => "gate",
+        ItemKind::Spawner => "spawner",
+        ItemKind::MeatSlurry => "meat_slurry",
+        ItemKind::FeralDogEmbryoPoor => "feral_dog_embryo_poor",
+        ItemKind::FeralDogEmbryoFlawed => "feral_dog_embryo_flawed",
+        ItemKind::FeralDogEmbryoFlawless => "feral_dog_embryo_flawless",
+        ItemKind::NuclearSlimeEmbryoPoor => "nuclear_slime_embryo_poor",
+        ItemKind::NuclearSlimeEmbryoFlawed => "nuclear_slime_embryo_flawed",
+        ItemKind::NuclearSlimeEmbryoFlawless => "nuclear_slime_embryo_flawless",
     }
 }
 
@@ -396,6 +426,16 @@ pub fn parse_itemkind_from_sprite_name(sprite_name: &str) -> Option<ItemKind> {
         "standard_vat" => Some(ItemKind::StandardVat),
         "advanced_vat" => Some(ItemKind::AdvancedVat),
         "scrap_lantern" => Some(ItemKind::ScrapLantern),
+        "fence" => Some(ItemKind::Fence),
+        "gate" => Some(ItemKind::Gate),
+        "spawner" => Some(ItemKind::Spawner),
+        "meat_slurry" => Some(ItemKind::MeatSlurry),
+        "feral_dog_embryo_poor" => Some(ItemKind::FeralDogEmbryoPoor),
+        "feral_dog_embryo_flawed" => Some(ItemKind::FeralDogEmbryoFlawed),
+        "feral_dog_embryo_flawless" => Some(ItemKind::FeralDogEmbryoFlawless),
+        "nuclear_slime_embryo_poor" => Some(ItemKind::NuclearSlimeEmbryoPoor),
+        "nuclear_slime_embryo_flawed" => Some(ItemKind::NuclearSlimeEmbryoFlawed),
+        "nuclear_slime_embryo_flawless" => Some(ItemKind::NuclearSlimeEmbryoFlawless),
         _ => None,
     }
 }

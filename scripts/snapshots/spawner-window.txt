@@ -1,0 +1,26 @@
+# A placed spawner's window, on the showcase's spawner farm: what it grows, the charges
+# left in the growing embryo, its power, and the slurry and embryos it holds. The player
+# carries slurry and a slime embryo to move in; the spawner takes the slurry but not the
+# slime embryo while it holds dog embryos.
+seed 12345
+size 100x30
+world factory-showcase
+key ui.MENU_PREV
+cheat giveitem meat_slurry 3
+cheat giveitem nuclear_slime_embryo_poor 1
+# Inside the pen, just south of the spawner
+cheat tp 67 -3 0
+key action.PASS_TIME
+key action.PASS_TIME
+key action.INTERACT
+key movement.MOVE_NORTH
+expect-text "Spawner - grows feral dogs"
+expect-text "power 100%"
+screen spawner-window
+# Move a slurry in, then try the slime embryo (your items have the focus)
+key movement.MOVE_SOUTH 7
+rawkey ENTER
+expect-text "Slurry 3/16"
+key movement.MOVE_SOUTH
+rawkey ENTER
+screen spawner-window-moved

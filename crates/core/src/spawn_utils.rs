@@ -209,7 +209,7 @@ pub fn world_spawn_nuclear_slime(
 }
 
 /// Hostile creatures that can be spawned on demand (e.g. by the `spawn_enemy` cheat).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum EnemyKind {
     FeralDog,
     NuclearSlime,
@@ -222,6 +222,14 @@ impl EnemyKind {
         match self {
             EnemyKind::FeralDog => "feral_dog",
             EnemyKind::NuclearSlime => "nuclear_slime",
+        }
+    }
+
+    /// How the game names a group of them.
+    pub fn plural(self) -> &'static str {
+        match self {
+            EnemyKind::FeralDog => "feral dogs",
+            EnemyKind::NuclearSlime => "nuclear slimes",
         }
     }
 

@@ -35,6 +35,8 @@ pub enum PaletteKey {
     ExistingWorldgen,
     // special tile that spawns enemies
     EnemySpawn,
+    // special tile that becomes a wild spawner block
+    WildSpawner,
     // special tiles that spawn treasure
     ScrapCommon,
     ScrapRare,

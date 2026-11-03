@@ -249,6 +249,46 @@ fn render_corpse_loot_modal(
                 format!(" Spare body ({}/{parts} parts) ", parts - missing.len()),
             )
         }
+        Some(FactoryKind::Spawner) => {
+            use lithicrivers_core::spawner::{self, EMBRYO_CAPACITY, SLURRY_CAPACITY};
+            let world = &app.core.game.world;
+            let state = world
+                .get::<&spawner::Spawner>(corpse_entity)
+                .map(|s| *s)
+                .unwrap_or_default();
+            let consumer = world
+                .get::<&lithicrivers_core::power::PowerConsumer>(corpse_entity)
+                .ok()
+                .map(|c| *c);
+            let powered = app.core.game.res.power.network_of(corpse_entity).is_some();
+            // What it grows or lacks, then how its power is doing while it grows
+            let lines = state.status_lines(Some(&corpse_inv));
+            let mut status = vec![lines[0].to_lowercase()];
+            let embryos = spawner::embryos(&corpse_inv).map_or(0, |(_, qty)| qty);
+            if embryos > 0 {
+                status.push(format!(
+                    "{} left in embryo",
+                    state.charges_left(&corpse_inv)
+                ));
+            }
+            if state.wild.is_none() {
+                status.push(match consumer {
+                    Some(c) if c.active && powered => {
+                        format!("power {}%", c.satisfaction_permille / 10)
+                    }
+                    Some(c) if c.active => "no power pole in reach".to_string(),
+                    _ if spawner::slurry(&corpse_inv) == 0 => "needs meat slurry".to_string(),
+                    _ => "idle".to_string(),
+                });
+            }
+            (
+                format!(" Spawner - {} ", status.join(", ")),
+                format!(
+                    " Slurry {}/{SLURRY_CAPACITY}, embryos {embryos}/{EMBRYO_CAPACITY} ",
+                    spawner::slurry(&corpse_inv),
+                ),
+            )
+        }
         Some(_) => (
             " Chest ".to_string(),
             format!(

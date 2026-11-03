@@ -113,6 +113,12 @@ pub enum FactoryKind {
     AdvancedVat,
     /// Lights the tiles around it; needs no fuel or power
     ScrapLantern,
+    /// Keeps creatures and the player out, but not sight or light
+    Fence,
+    /// Keeps creatures out; the player walks through it
+    Gate,
+    /// Grows creatures and lets them out beside it
+    Spawner,
     /// A consumer that does nothing but draw power, for grid tests
     #[cfg(any(test, feature = "test-support"))]
     TestConsumer,
@@ -141,6 +147,9 @@ impl FactoryKind {
             ItemKind::FilterExtractor => Some(FactoryKind::FilterExtractor),
             ItemKind::BeltRouter => Some(FactoryKind::BeltRouter),
             ItemKind::VerticalConveyor => Some(FactoryKind::VerticalConveyorUp),
+            ItemKind::Fence => Some(FactoryKind::Fence),
+            ItemKind::Gate => Some(FactoryKind::Gate),
+            ItemKind::Spawner => Some(FactoryKind::Spawner),
             _ => None,
         }
     }
@@ -166,6 +175,9 @@ impl FactoryKind {
             FactoryKind::VerticalConveyorUp | FactoryKind::VerticalConveyorDown => {
                 Some(ItemKind::VerticalConveyor)
             }
+            FactoryKind::Fence => Some(ItemKind::Fence),
+            FactoryKind::Gate => Some(ItemKind::Gate),
+            FactoryKind::Spawner => Some(ItemKind::Spawner),
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestConsumer => None,
             #[cfg(any(test, feature = "test-support"))]
@@ -192,6 +204,9 @@ impl FactoryKind {
             FactoryKind::BeltRouter => "belt router",
             FactoryKind::VerticalConveyorUp => "vertical conveyor (up)",
             FactoryKind::VerticalConveyorDown => "vertical conveyor (down)",
+            FactoryKind::Fence => "fence",
+            FactoryKind::Gate => "gate",
+            FactoryKind::Spawner => "spawner",
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestConsumer => "test consumer",
             #[cfg(any(test, feature = "test-support"))]
@@ -216,11 +231,20 @@ impl FactoryKind {
             FactoryKind::ScrapLantern => false,
             // Up or down instead of a facing: see `rotate`
             FactoryKind::VerticalConveyorUp | FactoryKind::VerticalConveyorDown => false,
+            FactoryKind::Fence | FactoryKind::Gate | FactoryKind::Spawner => false,
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestConsumer => false,
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestArrow => true,
         }
+    }
+
+    /// Whether sight and light pass over the block, though nothing walks through it.
+    pub fn see_through(self) -> bool {
+        matches!(
+            self,
+            FactoryKind::Fence | FactoryKind::Gate | FactoryKind::ScrapLantern
+        )
     }
 
     /// Kinds that exist only in tests (always false outside tests).
@@ -270,6 +294,9 @@ impl FactoryKind {
             FactoryKind::VerticalConveyorDown => {
                 SpriteRef::new("factory", "vertical_conveyor_down")
             }
+            FactoryKind::Fence => SpriteRef::new("factory", "fence"),
+            FactoryKind::Gate => SpriteRef::new("factory", "gate"),
+            FactoryKind::Spawner => SpriteRef::new("factory", "spawner"),
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestConsumer => SpriteRef::new("factory", "chest"),
             #[cfg(any(test, feature = "test-support"))]
@@ -398,7 +425,21 @@ pub fn place(
         FactoryKind::TestConsumer => {
             builder.add(crate::power::PowerConsumer::new(TEST_CONSUMER_W));
         }
-        FactoryKind::ScrapLantern => {}
+        FactoryKind::ScrapLantern => {
+            // A placed light: natural spawns keep away from it (`creature_spawn::near_light`)
+            builder.add(crate::components::LightSource::new(
+                crate::systems::fog_of_war::LANTERN_RADIUS as u32,
+            ));
+        }
+        FactoryKind::Fence | FactoryKind::Gate => {}
+        FactoryKind::Spawner => {
+            builder.add(crate::spawner::Spawner::default());
+            builder.add(crate::power::PowerConsumer::idle(crate::spawner::SPAWNER_W));
+            builder.add(Inventory {
+                max_slots: crate::spawner::SPAWNER_SLOTS,
+                ..Default::default()
+            });
+        }
         #[cfg(any(test, feature = "test-support"))]
         FactoryKind::TestArrow => {}
     }
@@ -603,6 +644,7 @@ pub fn run_due_steps(world: &mut World, res: &mut Resources) {
         crate::machines::update_demand(world, res);
         crate::furnace::update_demand(world);
         crate::vat::update_demand(world);
+        crate::spawner::update_demand(world);
         crate::power::step_power(world, res);
         crate::machines::step_machines(world, res);
         crate::furnace::step_furnaces(world, res);
@@ -610,6 +652,7 @@ pub fn run_due_steps(world: &mut World, res: &mut Resources) {
         crate::logistics::step_routers(world, res);
         step_belts(world, res);
         crate::logistics::carry_player(world, res);
+        crate::spawner::step_spawners(world, res, step_tick);
         res.factory_clock.steps += 1;
     }
 }
@@ -647,6 +690,10 @@ pub fn takes(kind: FactoryKind, item: ItemKind) -> bool {
             crate::vat::takes(kind, item)
         }
         FactoryKind::AutoHarvester | FactoryKind::Extractor | FactoryKind::FilterExtractor => false,
+        FactoryKind::Spawner => {
+            item == ItemKind::MeatSlurry || crate::spawner::embryo_kind(item).is_some()
+        }
+        FactoryKind::Fence | FactoryKind::Gate => false,
         _ => true,
     }
 }
@@ -697,6 +744,15 @@ pub fn accepts_from(
         }
         FactoryKind::BeltRouter => {
             return crate::logistics::router_accepts(world, target, block.facing, heading)
+        }
+        FactoryKind::Spawner => {
+            return match (
+                world.get::<&crate::spawner::Spawner>(target),
+                world.get::<&Inventory>(target),
+            ) {
+                (Ok(spawner), Ok(inv)) => spawner.accepts(&inv, item),
+                _ => false,
+            }
         }
         // Extractors only pass items through
         FactoryKind::Extractor | FactoryKind::FilterExtractor => return false,
@@ -954,6 +1010,7 @@ impl crate::Game {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::intent::PlayerAction;
     use crate::test_support::TestWorld;
     use crate::Game;
 
@@ -971,6 +1028,113 @@ mod tests {
 
     fn place_in(game: &mut Game, kind: FactoryKind, pos: Position, facing: Facing) -> Entity {
         place(&mut game.world, &mut game.res, kind, pos, facing).expect("placed")
+    }
+
+    /// Fence in the ring of tiles from `(x0, y0)` to `(x1, y1)`, with a gate at `gate`.
+    fn pen(game: &mut Game, (x0, y0): (i64, i64), (x1, y1): (i64, i64), gate: Option<Position>) {
+        for x in x0..=x1 {
+            for y in y0..=y1 {
+                if x == x0 || x == x1 || y == y0 || y == y1 {
+                    let kind = if Some(at(x, y)) == gate {
+                        FactoryKind::Gate
+                    } else {
+                        FactoryKind::Fence
+                    };
+                    place_in(game, kind, at(x, y), Facing::North);
+                }
+            }
+        }
+    }
+
+    fn wait(t: &mut crate::test_support::TestGame, turns: usize) {
+        for _ in 0..turns {
+            t.act(PlayerAction::Move {
+                dx: 0,
+                dy: 0,
+                dz: 0,
+            });
+            t.tick();
+        }
+    }
+
+    #[test]
+    fn a_fenced_dog_cannot_reach_the_player_who_still_sees_it() {
+        let mut world = arena();
+        let dog = world.feral_dog(4, 0, 0);
+        let mut t = world.build();
+        pen(&mut t.game, (3, -1), (5, 1), None);
+        wait(&mut t, 20);
+        assert_eq!(t.pos(dog), Some(at(4, 0)), "the dog stays in its pen");
+        assert!(!t.game.res.player_state.combat_active);
+        assert!(crate::systems::fog_of_war::has_line_of_sight(
+            &t.game.world,
+            &t.game.res,
+            0,
+            0,
+            4,
+            0,
+            0
+        ));
+        // A wall of rock, unlike a fence, hides it
+        t.game
+            .res
+            .world_state
+            .world
+            .set_tile_cached(3, 0, 0, TileKind::Rock);
+        t.game.res.factory_index.remove(&at(3, 0));
+        assert!(!crate::systems::fog_of_war::has_line_of_sight(
+            &t.game.world,
+            &t.game.res,
+            0,
+            0,
+            4,
+            0,
+            0
+        ));
+    }
+
+    #[test]
+    fn the_player_walks_through_a_gate_and_the_player_only() {
+        // Into an empty pen through its gate
+        let mut t = arena().player_at(1, 0, 0).build();
+        pen(&mut t.game, (2, -2), (6, 2), Some(at(2, 0)));
+        let east = PlayerAction::Move {
+            dx: 1,
+            dy: 0,
+            dz: 0,
+        };
+        t.act(east.clone());
+        t.tick();
+        assert_eq!(t.player_pos(), at(2, 0), "onto the gate");
+        t.act(east);
+        t.tick();
+        assert_eq!(t.player_pos(), at(3, 0), "into the pen");
+        // But not through a fence
+        t.act(PlayerAction::Move {
+            dx: 0,
+            dy: -1,
+            dz: 0,
+        });
+        t.tick();
+        t.act(PlayerAction::Move {
+            dx: 0,
+            dy: -1,
+            dz: 0,
+        });
+        t.tick();
+        assert_eq!(t.player_pos(), at(3, -1), "the fence stops the player");
+
+        // A dog in a gated pen can't leave by the gate
+        let mut world = arena().player_at(-3, 0, 0);
+        let dog = world.feral_dog(4, 0, 0);
+        let mut t = world.build();
+        pen(&mut t.game, (2, -2), (6, 2), Some(at(2, 0)));
+        wait(&mut t, 30);
+        let pos = t.pos(dog).unwrap();
+        assert!(
+            (3..=5).contains(&pos.x) && (-1..=1).contains(&pos.y),
+            "{pos:?}"
+        );
     }
 
     #[test]

@@ -149,6 +149,21 @@ impl RecipeHandler {
                 result: ItemKind::ElectricFurnace,
                 quantity: 1,
             },
+            // Spawner: a growth tank of iron scrap run by scrap electronics, at the same
+            // point in the tech tree as the electric furnace
+            Recipe {
+                name: "Spawner",
+                ingredients: &[(ItemKind::IronScrap, 6), (ItemKind::ScrapElectronics, 6)],
+                result: ItemKind::Spawner,
+                quantity: 1,
+            },
+            // Meat slurry: 2x meat, ground down to feed spawners
+            Recipe {
+                name: "Meat Slurry",
+                ingredients: &[(ItemKind::Meat, 2)],
+                result: ItemKind::MeatSlurry,
+                quantity: 1,
+            },
             // Extractor: 2x wooden plank + 1x iron scrap + 2x nail
             Recipe {
                 name: "Extractor",
@@ -188,6 +203,20 @@ impl RecipeHandler {
                 ],
                 result: ItemKind::VerticalConveyor,
                 quantity: 2,
+            },
+            // 2 fences: 1x wooden plank + 2x stick
+            Recipe {
+                name: "Fence",
+                ingredients: &[(ItemKind::WoodenPlank, 1), (ItemKind::Stick, 2)],
+                result: ItemKind::Fence,
+                quantity: 2,
+            },
+            // Gate: 2x fence + 1x nail, for a hinge
+            Recipe {
+                name: "Gate",
+                ingredients: &[(ItemKind::Fence, 2), (ItemKind::Nail, 1)],
+                result: ItemKind::Gate,
+                quantity: 1,
             },
             // 2 stairs: 2x wooden plank + 2x stick (a stairway takes both)
             Recipe {

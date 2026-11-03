@@ -7,6 +7,7 @@ use strum::IntoEnumIterator;
 
 use crate::components::{itemkind_name, ItemKind};
 use crate::recipe_handler::Recipe;
+use crate::spawn_utils::EnemyKind;
 use crate::tiles::TileKind;
 
 /// What mining a tile leaves behind and drops. Each item drops `min..=max` (seeded by the
@@ -97,11 +98,24 @@ pub const NUCLEAR_SLIME_LOOT: &[CreatureLoot] = &[CreatureLoot {
     max: 1,
 }];
 
-/// Every creature's loot, with how the Item Dictionary names the creature.
-pub const CREATURE_LOOT: &[(&str, &[CreatureLoot])] = &[
-    ("feral dogs", FERAL_DOG_LOOT),
-    ("nuclear slimes", NUCLEAR_SLIME_LOOT),
+/// Every creature's loot, with how the Item Dictionary names the creature. Each can also
+/// drop an embryo of its own kind when it dies (`spawner::roll_embryo`).
+pub const CREATURE_LOOT: &[(&str, EnemyKind, &[CreatureLoot])] = &[
+    ("feral dogs", EnemyKind::FeralDog, FERAL_DOG_LOOT),
+    (
+        "nuclear slimes",
+        EnemyKind::NuclearSlime,
+        NUCLEAR_SLIME_LOOT,
+    ),
 ];
+
+/// Whether a creature can carry or drop `item`.
+fn creature_gives(creature: EnemyKind, table: &[CreatureLoot], item: ItemKind) -> bool {
+    table
+        .iter()
+        .any(|loot| loot.item == item && can_carry(loot))
+        || crate::spawner::embryo_kind(item).is_some_and(|(c, _)| c == creature)
+}
 
 /// Roll a creature's loot. Entries that always drop skip the chance roll, so adding
 /// chances never shifts the rolls of creatures that don't use them.
@@ -131,10 +145,13 @@ pub fn raw_sources() -> BTreeSet<ItemKind> {
         .map(|(item, _, _)| *item);
     let carried = CREATURE_LOOT
         .iter()
-        .flat_map(|(_, table)| table.iter())
+        .flat_map(|(_, _, table)| table.iter())
         .filter(|loot| can_carry(loot))
         .map(|loot| loot.item);
-    mined.chain(carried).collect()
+    let embryos = CREATURE_LOOT.iter().flat_map(|&(_, creature, _)| {
+        crate::spawner::EmbryoGrade::ALL.map(|g| crate::spawner::embryo(creature, g))
+    });
+    mined.chain(carried).chain(embryos).collect()
 }
 
 /// Where an item comes from without crafting.
@@ -161,11 +178,8 @@ pub fn raw_sources_of(item: ItemKind) -> Vec<RawSource> {
         mining_drop(tile).is_some_and(|d| d.items.iter().any(|&(i, _, max)| i == item && max > 0))
     });
     let mut sources: Vec<RawSource> = mined.map(|&tile| RawSource::Mined(tile)).collect();
-    for (creatures, table) in CREATURE_LOOT {
-        if table
-            .iter()
-            .any(|loot| loot.item == item && can_carry(loot))
-        {
+    for &(creatures, creature, table) in CREATURE_LOOT {
+        if creature_gives(creature, table, item) {
             sources.push(RawSource::Carried(creatures));
         }
     }
@@ -396,6 +410,13 @@ mod tests {
             ItemKind::Leather,
             ItemKind::Meat,
             ItemKind::NuclearWaste,
+            // Creatures drop embryos of their own kind
+            ItemKind::FeralDogEmbryoPoor,
+            ItemKind::FeralDogEmbryoFlawed,
+            ItemKind::FeralDogEmbryoFlawless,
+            ItemKind::NuclearSlimeEmbryoPoor,
+            ItemKind::NuclearSlimeEmbryoFlawed,
+            ItemKind::NuclearSlimeEmbryoFlawless,
         ]
         .into_iter()
         .collect();

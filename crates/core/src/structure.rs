@@ -71,6 +71,7 @@ pub fn block_will_spawn_entity(tile_kind: TileKind) -> bool {
         TileKind::TreasureCommon => true,
         TileKind::TreasureRare => true,
         TileKind::EnemySpawn => true,
+        TileKind::WildSpawner => true,
         TileKind::ScrapCommon => true,
         TileKind::ScrapRare => true,
         TileKind::TreasureQuest1 => true,
@@ -114,6 +115,10 @@ pub fn spawn_entity_for_block(
         }
         TileKind::ScrapRare => {
             spawn_utils::world_spawn_scraprare(ecs_world, block_x, block_y, block_z, game_world);
+        }
+        TileKind::WildSpawner => {
+            // The game turns it into a spawner block
+            game_world.wild_spawners.push((block_x, block_y, block_z));
         }
         TileKind::TreasureQuest1 => {
             // The game turns it into the quest chest, once per world

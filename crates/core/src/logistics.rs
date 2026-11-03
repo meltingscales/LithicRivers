@@ -187,15 +187,17 @@ pub fn set_filter(world: &mut World, block: Entity, filter: Option<ItemKind>) {
     }
 }
 
-/// Whether the player can stand at `pos`: a passable tile, or a belt.
+/// Whether the player can stand at `pos`: a passable tile, a belt, or a gate.
 pub fn walkable(res: &mut Resources, world: &World, pos: Position) -> bool {
     let tile = res.world_state.world.get_tile_cached(pos.x, pos.y, pos.z);
     tile.is_passable()
         || (tile == TileKind::FactoryBlock
-            && res
-                .factory_index
-                .get(&pos)
-                .is_some_and(|&e| world.get::<&BeltSlot>(e).is_ok()))
+            && res.factory_index.get(&pos).is_some_and(|&e| {
+                world.get::<&BeltSlot>(e).is_ok()
+                    || world
+                        .get::<&FactoryBlock>(e)
+                        .is_ok_and(|b| b.kind == FactoryKind::Gate)
+            }))
 }
 
 /// After the belts move: a player standing on a belt is carried one tile along it every

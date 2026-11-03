@@ -1,0 +1,16 @@
+# The look panel on the showcase's spawner farm: a chest feeds the spawner meat slurry and
+# dog embryos down an extractor and a belt, and the panel names what it grows, what it
+# holds and how long until the next dog.
+seed 12345
+size 100x30
+world factory-showcase
+key ui.MENU_PREV
+# Inside the pen, just south of the spawner
+cheat tp 67 -3 0
+key action.PASS_TIME
+key action.PASS_TIME
+key action.LOOK_TOGGLE
+key movement.MOVE_NORTH
+expect-text "Grows feral dogs"
+expect-text "Next in"
+screen look-spawner

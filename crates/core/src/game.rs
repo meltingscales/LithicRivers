@@ -548,6 +548,21 @@ impl Game {
         }
     }
 
+    /// Turn wild-spawner tiles that structures placed into spawner blocks, growing dogs on
+    /// the surface and slimes underground.
+    pub fn place_wild_spawners(&mut self) {
+        for (x, y, z) in std::mem::take(&mut self.res.world_state.world.wild_spawners) {
+            let creature = crate::spawner::wild_creature(z);
+            // Something already stands there: the ruin goes without
+            let _ = crate::spawner::place_wild(
+                &mut self.world,
+                &mut self.res,
+                Position { x, y, z },
+                creature,
+            );
+        }
+    }
+
     /// A save from before quest chests has the facility placed but no arm chest: place
     /// it once, where the facility's quest-treasure tile is.
     pub(crate) fn place_quest_chests_for_old_save(&mut self) {
@@ -779,6 +794,7 @@ impl Game {
         }
 
         self.place_quest_chests();
+        self.place_wild_spawners();
         crate::systems::fog_of_war::update_fog_of_war(&mut self.world, &self.res);
     }
 
