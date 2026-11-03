@@ -193,7 +193,7 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
     };
     use lithicrivers_core::systems::fog_of_war::{FogLookup, FogState};
     // The world's fog memory and the player's light, read once for the whole frame
-    let fog = FogLookup::new(&app.core.game.world);
+    let fog = FogLookup::new(&app.core.game.world, &app.core.game.res);
     for row in 0..target_rows {
         let mut spans = Vec::with_capacity(target_cols);
         for col in 0..target_cols {

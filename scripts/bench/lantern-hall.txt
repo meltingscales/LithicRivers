@@ -1,0 +1,52 @@
+# Benchmark: walk through an underground hall lit by 20 scrap lanterns.
+# Steps before the first `beat` are setup and aren't timed.
+seed 12345
+size 80x24
+world void
+key ui.MENU_PREV
+cheat tp -30 0 -1
+cheat giveitem scrap_lantern 20
+key build.TOGGLE_BREAK_PLACE_MODE 2
+# Picker: Clear slot, Acorn, Scrap Lantern
+key hotbar.HOTBAR_SLOT_1 2
+key movement.MOVE_SOUTH 2
+key ui.MENU_ACTIVATE
+key build.PLACE_NORTH
+key build.PLACE_SOUTH
+key movement.MOVE_EAST 3
+key build.PLACE_NORTH
+key build.PLACE_SOUTH
+key movement.MOVE_EAST 3
+key build.PLACE_NORTH
+key build.PLACE_SOUTH
+key movement.MOVE_EAST 3
+key build.PLACE_NORTH
+key build.PLACE_SOUTH
+key movement.MOVE_EAST 3
+key build.PLACE_NORTH
+key build.PLACE_SOUTH
+key movement.MOVE_EAST 3
+key build.PLACE_NORTH
+key build.PLACE_SOUTH
+key movement.MOVE_EAST 3
+key build.PLACE_NORTH
+key build.PLACE_SOUTH
+key movement.MOVE_EAST 3
+key build.PLACE_NORTH
+key build.PLACE_SOUTH
+key movement.MOVE_EAST 3
+key build.PLACE_NORTH
+key build.PLACE_SOUTH
+key movement.MOVE_EAST 3
+key build.PLACE_NORTH
+key build.PLACE_SOUTH
+key movement.MOVE_EAST 3
+key build.TOGGLE_BREAK_PLACE_MODE 2
+beat 0
+key movement.MOVE_WEST 30
+key movement.MOVE_EAST 30
+key action.LOOK_TOGGLE
+key movement.MOVE_NORTH 5
+key action.LOOK_TOGGLE
+expect-text "LithicRivers"
+state end

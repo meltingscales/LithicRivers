@@ -1043,6 +1043,25 @@ C
  █▒▒▒▒▒▒▒▒█ 
  ▀▀▀▀▀▀▀▀▀▀ 
             
+=== factory/scrap_lantern  #F2A93B  A torch caged in bent iron scrap that never seems to burn down; it lights six tiles around it
+-- 1x
+¤
+-- 2x
+┬┬
+¤¤
+-- 3x
+┌┴┐
+│*│
+└─┘
+-- art 0
+     ▄▄     
+    ┌┴┴┐    
+   ┌┘  └┐   
+   │░**░│   
+   │░**░│   
+   └┐  ┌┘   
+    ▀██▀    
+            
 === factory/standard_vat  #7FD1B9  A SapienCorp resurrection vat with a cracked visor, kept warm by a trickle of power
 -- 1x
 U
@@ -1902,6 +1921,25 @@ eee
  ─┤▒░ ▓ ◘├─ 
   └┴┴┴┴┴┴┘  
             
+            
+=== items/scrap_lantern  #B57E2C  A torch caged in bent iron scrap that never seems to burn down; it lights six tiles around it
+-- 1x
+¤
+-- 2x
+┬┬
+¤¤
+-- 3x
+┌┴┐
+│*│
+└─┘
+-- art 0
+     ▄▄     
+    ┌┴┴┐    
+   ┌┘  └┐   
+   │░**░│   
+   │░**░│   
+   └┐  ┌┘   
+    ▀██▀    
             
 === items/stairs  #B08850  A flight of pegged planks; two of them dig a way between layers
 -- 1x

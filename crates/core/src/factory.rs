@@ -111,6 +111,8 @@ pub enum FactoryKind {
     StandardVat,
     /// Holds a spare body of any grade, on a lot of power
     AdvancedVat,
+    /// Lights the tiles around it; needs no fuel or power
+    ScrapLantern,
     /// A consumer that does nothing but draw power, for grid tests
     #[cfg(any(test, feature = "test-support"))]
     TestConsumer,
@@ -134,6 +136,7 @@ impl FactoryKind {
             ItemKind::CrudeVat => Some(FactoryKind::CrudeVat),
             ItemKind::StandardVat => Some(FactoryKind::StandardVat),
             ItemKind::AdvancedVat => Some(FactoryKind::AdvancedVat),
+            ItemKind::ScrapLantern => Some(FactoryKind::ScrapLantern),
             ItemKind::Extractor => Some(FactoryKind::Extractor),
             ItemKind::FilterExtractor => Some(FactoryKind::FilterExtractor),
             ItemKind::BeltRouter => Some(FactoryKind::BeltRouter),
@@ -156,6 +159,7 @@ impl FactoryKind {
             FactoryKind::CrudeVat => Some(ItemKind::CrudeVat),
             FactoryKind::StandardVat => Some(ItemKind::StandardVat),
             FactoryKind::AdvancedVat => Some(ItemKind::AdvancedVat),
+            FactoryKind::ScrapLantern => Some(ItemKind::ScrapLantern),
             FactoryKind::Extractor => Some(ItemKind::Extractor),
             FactoryKind::FilterExtractor => Some(ItemKind::FilterExtractor),
             FactoryKind::BeltRouter => Some(ItemKind::BeltRouter),
@@ -182,6 +186,7 @@ impl FactoryKind {
             FactoryKind::CrudeVat => "crude resurrection vat",
             FactoryKind::StandardVat => "standard resurrection vat",
             FactoryKind::AdvancedVat => "advanced resurrection vat",
+            FactoryKind::ScrapLantern => "scrap lantern",
             FactoryKind::Extractor => "extractor",
             FactoryKind::FilterExtractor => "filter extractor",
             FactoryKind::BeltRouter => "belt router",
@@ -208,6 +213,7 @@ impl FactoryKind {
             FactoryKind::AutoPlanter => false,
             FactoryKind::BurnerGenerator | FactoryKind::PowerPole => false,
             FactoryKind::CrudeVat | FactoryKind::StandardVat | FactoryKind::AdvancedVat => false,
+            FactoryKind::ScrapLantern => false,
             // Up or down instead of a facing: see `rotate`
             FactoryKind::VerticalConveyorUp | FactoryKind::VerticalConveyorDown => false,
             #[cfg(any(test, feature = "test-support"))]
@@ -260,6 +266,7 @@ impl FactoryKind {
             FactoryKind::CrudeVat => SpriteRef::new("factory", "crude_vat"),
             FactoryKind::StandardVat => SpriteRef::new("factory", "standard_vat"),
             FactoryKind::AdvancedVat => SpriteRef::new("factory", "advanced_vat"),
+            FactoryKind::ScrapLantern => SpriteRef::new("factory", "scrap_lantern"),
             FactoryKind::VerticalConveyorDown => {
                 SpriteRef::new("factory", "vertical_conveyor_down")
             }
@@ -391,6 +398,7 @@ pub fn place(
         FactoryKind::TestConsumer => {
             builder.add(crate::power::PowerConsumer::new(TEST_CONSUMER_W));
         }
+        FactoryKind::ScrapLantern => {}
         #[cfg(any(test, feature = "test-support"))]
         FactoryKind::TestArrow => {}
     }

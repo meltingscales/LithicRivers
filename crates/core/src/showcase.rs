@@ -74,6 +74,12 @@ pub const EXAMPLES: &[Example] = &[
         has_input: false,
         build: resurrection_vats,
     },
+    Example {
+        name: "Scrap lantern (lights its surroundings at night)",
+        size: (1, 1),
+        has_input: false,
+        build: lantern,
+    },
 ];
 
 /// The top-left corner of the first example; the rest follow eastward.
@@ -148,6 +154,10 @@ fn chest(game: &mut Game, o: Position) {
 }
 
 /// Four belts east into a chest, with logs lying on the first belt.
+fn lantern(game: &mut Game, o: Position) {
+    place(game, FactoryKind::ScrapLantern, o, Facing::North);
+}
+
 fn belt_line(game: &mut Game, o: Position) {
     for dx in 0..4 {
         place(game, FactoryKind::Belt, at(o, dx, 0), Facing::East);
