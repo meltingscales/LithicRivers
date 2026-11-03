@@ -208,9 +208,9 @@ pub struct Resources {
     /// The last 10-second period whose creature spawn rules were checked
     #[serde(default)]
     pub spawn_check_period: u64,
-    /// Chunks resting after a creature spawned there, with the tick they may spawn again
-    #[serde(default, with = "crate::serde_pairs")]
-    pub spawn_cooldowns: HashMap<(i64, i64, i64), u64>,
+    /// Chunks where a creature has spawned naturally; each spawns at most once
+    #[serde(default)]
+    pub spawned_chunks: std::collections::BTreeSet<(i64, i64, i64)>,
     /// Where quest chests have been placed, so each is placed once per world
     #[serde(default)]
     pub quest_chests_placed: std::collections::BTreeSet<(i64, i64, i64)>,
@@ -240,7 +240,7 @@ impl Resources {
             belt_ride_steps: 0,
             blueprints: Default::default(),
             spawn_check_period: 0,
-            spawn_cooldowns: HashMap::new(),
+            spawned_chunks: Default::default(),
             quest_chests_placed: Default::default(),
         }
     }

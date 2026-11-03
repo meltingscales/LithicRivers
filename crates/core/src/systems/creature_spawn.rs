@@ -1,7 +1,8 @@
 //! Creatures that keep appearing where they belong. Every 10 game seconds each spawn rule
 //! is checked for the chunks around the player: a seeded roll picks whether a chunk gets a
 //! creature, which then appears on open ground out of the player's sight, unless the kind
-//! is already at its cap near the player. A chunk that spawned rests for a while.
+//! is already at its cap near the player. Each chunk spawns at most once, so a cleared
+//! area refills once and then stays clear; spawner blocks are the steady source.
 
 use crate::components::{BlocksMovement, EntityKind, LightSource, Player, Position};
 use crate::resources::{Resources, WorldType};
@@ -15,8 +16,6 @@ use rand_chacha::ChaCha20Rng;
 
 /// Spawn rules are checked once per this many ticks (10 game seconds).
 pub const SPAWN_CHECK_TICKS: u64 = 1000;
-/// After a creature spawns in a chunk, the chunk rests this long (5 game minutes).
-pub const CHUNK_COOLDOWN_TICKS: u64 = 30 * SPAWN_CHECK_TICKS;
 /// Creatures never appear this close to the player.
 pub const SPAWN_MIN_DISTANCE: i64 = 16;
 /// How far the player sees in daylight; creatures appear only beyond it or out of line
@@ -81,8 +80,8 @@ pub const SPAWN_RULES: &[SpawnRule] = &[
     SpawnRule {
         kind: EnemyKind::FeralDog,
         place: SpawnPlace::Biome(BiomeBand::Forest),
-        chance_percent: 15,
-        night_chance_percent: 30,
+        chance_percent: 8,
+        night_chance_percent: 15,
         cap: 6,
         radius: 64,
     },
@@ -90,16 +89,16 @@ pub const SPAWN_RULES: &[SpawnRule] = &[
     SpawnRule {
         kind: EnemyKind::NuclearSlime,
         place: SpawnPlace::Band(DepthBand::Shallows),
-        chance_percent: 10,
-        night_chance_percent: 10,
+        chance_percent: 5,
+        night_chance_percent: 5,
         cap: 4,
         radius: 64,
     },
     SpawnRule {
         kind: EnemyKind::NuclearSlime,
         place: SpawnPlace::Band(DepthBand::Deep),
-        chance_percent: 20,
-        night_chance_percent: 20,
+        chance_percent: 10,
+        night_chance_percent: 10,
         cap: 4,
         radius: 64,
     },
@@ -190,8 +189,6 @@ pub fn creature_spawn_system(world: &mut World, res: &mut Resources) {
     let Some(player) = get_player_position(world) else {
         return;
     };
-    let tick = res.time.tick;
-    res.spawn_cooldowns.retain(|_, until| *until > tick);
 
     let (pcx, pcy, cz) = (
         player.x.div_euclid(CHUNK_SIZE),
@@ -205,7 +202,7 @@ pub fn creature_spawn_system(world: &mut World, res: &mut Resources) {
         for cy in pcy - 1..=pcy + 1 {
             for cx in pcx - 1..=pcx + 1 {
                 let chunk = (cx, cy, cz);
-                if res.spawn_cooldowns.contains_key(&chunk) {
+                if res.spawned_chunks.contains(&chunk) {
                     continue;
                 }
                 if let Some(pos) = roll_spawn(world, res, rule, index, chunk, period, player) {
@@ -216,8 +213,7 @@ pub fn creature_spawn_system(world: &mut World, res: &mut Resources) {
                         pos,
                     )
                     .expect("the spawn tile was checked");
-                    res.spawn_cooldowns
-                        .insert(chunk, tick + CHUNK_COOLDOWN_TICKS);
+                    res.spawned_chunks.insert(chunk);
                 }
             }
         }
@@ -549,7 +545,7 @@ mod tests {
     }
 
     #[test]
-    fn a_chunk_rests_after_a_spawn() {
+    fn a_chunk_spawns_naturally_only_once() {
         let mut t = forest(7);
         let mut checks = 0;
         while count(&t, EntityKind::FeralDog) == 0 {
@@ -557,24 +553,35 @@ mod tests {
             checks += 1;
             assert!(checks < 500, "no dog ever came");
         }
-        let tick = t.game.res.time.tick;
-        assert!(t
-            .game
-            .res
-            .spawn_cooldowns
-            .values()
-            .all(|until| *until == tick + CHUNK_COOLDOWN_TICKS));
         assert_eq!(
-            t.game.res.spawn_cooldowns.len(),
+            t.game.res.spawned_chunks.len(),
             count(&t, EntityKind::FeralDog),
-            "one resting chunk per dog"
+            "one spent chunk per dog"
         );
-        // The resting chunks get nothing more until their rest ends
-        let rested = t.game.res.spawn_cooldowns.clone();
-        run_checks(&mut t, 29);
-        for chunk in rested.keys() {
-            assert_eq!(t.game.res.spawn_cooldowns[chunk], rested[chunk]);
+        // Spent chunks are remembered across a save and reload
+        let saved = crate::save_load::save_to_string(&t.game, &serde_json::Value::Null).unwrap();
+        crate::save_load::load_from_str(&mut t.game, &saved).unwrap();
+        // Clear the dogs, again and again: each of the nine chunks around the player
+        // spawns at most once, so no more than nine ever come
+        let mut total = 0;
+        for _ in 0..200 {
+            let dogs: Vec<hecs::Entity> = t
+                .game
+                .world
+                .query::<&EntityKind>()
+                .iter()
+                .filter(|(_, k)| **k == EntityKind::FeralDog)
+                .map(|(e, _)| e)
+                .collect();
+            total += dogs.len();
+            for dog in dogs {
+                t.game.world.despawn(dog).unwrap();
+            }
+            run_checks(&mut t, 10);
         }
+        total += count(&t, EntityKind::FeralDog);
+        assert!(total <= 9, "{total} dogs spawned around one spot");
+        assert_eq!(total, t.game.res.spawned_chunks.len());
     }
 
     /// Let `nights` spawn checks pass, each at midnight a day after the last.
@@ -649,8 +656,8 @@ mod tests {
 
     #[test]
     fn nothing_spawns_inside_a_fenced_base() {
-        let pen_dogs = |fenced: bool| {
-            let mut t = forest(7);
+        let pen_dogs = |seed: u64, fenced: bool| {
+            let mut t = forest(seed);
             let p = t.game.get_player_position().unwrap();
             if fenced {
                 for i in -30..=30 {
@@ -681,11 +688,19 @@ mod tests {
                 .filter(|d| distance(*d, p) < 30)
                 .count()
         };
+        // Each chunk spawns only once, so few dogs land that close: look at twenty worlds
+        let seeds = 7..27;
         assert!(
-            pen_dogs(false) > 0,
+            seeds
+                .clone()
+                .map(|seed| pen_dogs(seed, false))
+                .sum::<usize>()
+                > 0,
             "without the fence, dogs come that close"
         );
-        assert_eq!(pen_dogs(true), 0);
+        for seed in seeds {
+            assert_eq!(pen_dogs(seed, true), 0, "seed {seed}");
+        }
     }
 
     #[test]
