@@ -1290,6 +1290,14 @@ mod smoke_tests {
     }
 
     #[test]
+    fn dropping_every_torch_puts_the_lit_torch_out() {
+        let script = include_str!("../../../scripts/agent/bugs/torch-lit-after-dropping-all.txt");
+        let (mut out, mut err_out) = (Vec::new(), Vec::new());
+        let code = run_script(script, 0, Overrides::default(), &mut out, &mut err_out);
+        assert_eq!(code, EXIT_OK, "{}", String::from_utf8_lossy(&err_out));
+    }
+
+    #[test]
     fn interacting_with_an_empty_corpse_clears_it_away() {
         let script = include_str!("../../../scripts/agent/bugs/loot-empty-corpse.txt");
         let (mut out, mut err_out) = (Vec::new(), Vec::new());

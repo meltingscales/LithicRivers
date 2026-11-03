@@ -1,4 +1,4 @@
-use crate::components::{FogOfWar, LightSource, Player, Position};
+use crate::components::{FogOfWar, Inventory, ItemKind, LightSource, Player, Position};
 use crate::factory::{FactoryBlock, FactoryKind};
 use crate::model::body::Body;
 use crate::resources::Resources;
@@ -88,6 +88,21 @@ pub fn has_line_of_sight(
     }
 
     true
+}
+
+/// Put out the player's torch once they no longer carry one (dropped, stored or crafted
+/// away), so the light never stays lit without a torch.
+pub fn put_out_missing_torch(world: &mut World, res: &mut Resources) {
+    for (_, (light, inventory, _)) in world.query_mut::<(&mut LightSource, &Inventory, &Player)>() {
+        let has_torch = inventory
+            .slots
+            .iter()
+            .any(|stack| stack.kind == ItemKind::Torch && stack.qty > 0);
+        if light.torch_equipped && !has_torch {
+            light.set_torch_equipped(false);
+            res.log("Your last torch is gone. Light radius reduced to 2.");
+        }
+    }
 }
 
 /// The radius a light source reaches, dimmed by a damaged or missing head.
@@ -1003,5 +1018,44 @@ mod lantern_tests {
         // At most one ray per tile in each lantern's circle, however many tiles are asked
         let circle = (2 * LANTERN_RADIUS + 1).pow(2) as u64;
         assert!(lantern_rays_cast() - before <= 3 * circle);
+    }
+}
+
+#[cfg(test)]
+mod torch_tests {
+    use super::*;
+    use crate::test_support::TestWorld;
+
+    #[test]
+    fn the_torch_goes_out_when_the_last_one_leaves_the_inventory() {
+        let mut game = TestWorld::new(3)
+            .player_at(0, 0, -1)
+            .inventory(&[(ItemKind::Torch, 2)])
+            .build();
+        let player = game.game.get_player_entity().unwrap();
+        let light = |game: &crate::test_support::TestGame| {
+            *game.game.world.get::<&LightSource>(player).unwrap()
+        };
+        game.game
+            .world
+            .get::<&mut LightSource>(player)
+            .unwrap()
+            .set_torch_equipped(true);
+        let set_torches = |game: &mut crate::test_support::TestGame, qty: u32| {
+            let mut inv = game.game.world.get::<&mut Inventory>(player).unwrap();
+            inv.slots.clear();
+            if qty > 0 {
+                inv.add(ItemKind::Torch, qty);
+            }
+        };
+        // One torch left: still lit
+        set_torches(&mut game, 1);
+        game.tick();
+        assert!(light(&game).torch_equipped);
+        // None left (dropped, stored or crafted away): put out
+        set_torches(&mut game, 0);
+        game.tick();
+        assert!(!light(&game).torch_equipped);
+        assert_eq!(light(&game).radius, 2);
     }
 }
