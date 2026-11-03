@@ -1298,6 +1298,14 @@ mod smoke_tests {
     }
 
     #[test]
+    fn the_combat_clear_key_is_labelled_and_empties_the_queue() {
+        let script = include_str!("../../../scripts/agent/bugs/combat-clear-queue.txt");
+        let (mut out, mut err_out) = (Vec::new(), Vec::new());
+        let code = run_script(script, 0, Overrides::default(), &mut out, &mut err_out);
+        assert_eq!(code, EXIT_OK, "{}", String::from_utf8_lossy(&err_out));
+    }
+
+    #[test]
     fn interacting_with_an_empty_corpse_clears_it_away() {
         let script = include_str!("../../../scripts/agent/bugs/loot-empty-corpse.txt");
         let (mut out, mut err_out) = (Vec::new(), Vec::new());

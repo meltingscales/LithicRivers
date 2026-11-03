@@ -21,7 +21,7 @@ expression: "String::from_utf8(out).unwrap()"
 │3: Tackle - 20E - 10t             │> Power     ││###############vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 │4: Escape - 20E - 15t             │Strike →    ││################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 │5: DebugInstantKill - 0E - 5t     └────────────┘│#################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-│[←→] Target | [↑↓] Move | [C] Clear | [5] Wait |│#################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+│[←→] Target | [↑↓] Move | [c] Clear | [5] Wait |│#################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 └────────────────────────────────────────────────┘##################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 ┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
 │[408] Queued Melee against target 0                                                               │
