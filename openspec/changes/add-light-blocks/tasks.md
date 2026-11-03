@@ -15,4 +15,4 @@
 
 - [x] 3.1 Add the lantern to Light Sources in `docs/MECHANICS.md` and to the factory notes in `AGENTS.md`
 - [x] 3.2 Verify `just code-clippy`, `cargo test --workspace` and PR checks pass
-- [ ] 3.3 User check that lanterns make an underground base pleasant to see, and that 6 tiles feels right next to the torch's 8
+- [x] 3.3 User check that lanterns make an underground base pleasant to see, and that 6 tiles feels right next to the torch's 8
