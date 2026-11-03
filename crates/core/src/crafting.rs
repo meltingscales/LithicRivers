@@ -27,6 +27,7 @@ pub fn mining_drop(tile: TileKind) -> Option<MiningDrop> {
             &[(ItemKind::Log, 2, 3), (ItemKind::Acorn, 1, 3)],
         ),
         TileKind::PlankBlock => drop(TileKind::Air, &[(ItemKind::PlankBlock, 1, 1)]),
+        TileKind::StoneBrick => drop(TileKind::Air, &[(ItemKind::StoneBrick, 1, 1)]),
         TileKind::Stairs => drop(TileKind::Air, &[(ItemKind::Stairs, 1, 1)]),
         TileKind::Rock => drop(TileKind::Air, &[(ItemKind::Stone, 1, 1)]),
         TileKind::IronScrap => drop(TileKind::Air, &[(ItemKind::IronScrap, 1, 2)]),
@@ -401,6 +402,8 @@ mod tests {
             ItemKind::Log,
             ItemKind::Acorn,
             ItemKind::PlankBlock,
+            // Placed stone bricks can be mined back
+            ItemKind::StoneBrick,
             // Generated stairs can be mined too
             ItemKind::Stairs,
             ItemKind::Stone,
@@ -583,6 +586,25 @@ mod tests {
                 .into_iter()
                 .collect()
         );
+    }
+
+    #[test]
+    fn stone_bricks_are_crafted_from_stone_placed_and_mined_back() {
+        let bricks = craft("Stone Brick", &[(ItemKind::Stone, 2)]);
+        assert_eq!(
+            bricks,
+            [(ItemKind::StoneBrick, 1), (ItemKind::Stone, 1)]
+                .into_iter()
+                .collect()
+        );
+        assert_eq!(
+            TileKind::from_item_kind(ItemKind::StoneBrick),
+            Some(TileKind::StoneBrick)
+        );
+        assert!(!TileKind::StoneBrick.is_passable());
+        let mined = mining_drop(TileKind::StoneBrick).expect("stone bricks can be mined");
+        assert_eq!(mined.becomes, TileKind::Air);
+        assert_eq!(mined.items, &[(ItemKind::StoneBrick, 1, 1)]);
     }
 
     #[test]

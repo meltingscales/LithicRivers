@@ -1,0 +1,23 @@
+# Stone bricks: place a short wall from the hotbar beside the starting
+# area, then a look at one brick.
+seed 12345
+size 100x30
+skip-splash
+key ui.MENU_PREV
+cheat tp 0 0 0
+cheat giveitem stone_brick 3
+key build.TOGGLE_BREAK_PLACE_MODE 2
+# Picker: Clear slot, Acorn, Stone Brick
+key hotbar.HOTBAR_SLOT_1 2
+key movement.MOVE_SOUTH 2
+key ui.MENU_ACTIVATE
+expect-text "Assigned Stone Brick"
+key build.PLACE_NORTHEAST
+key build.PLACE_EAST
+key build.PLACE_SOUTHEAST
+key build.TOGGLE_BREAK_PLACE_MODE 2
+screen wall
+key action.LOOK_TOGGLE
+key movement.MOVE_EAST
+expect-text "Tile: StoneBrick"
+screen look

@@ -423,6 +423,13 @@ impl RecipeHandler {
                 result: ItemKind::ScrapLantern,
                 quantity: 1,
             },
+            // Stone brick: a stone dressed square for building
+            Recipe {
+                name: "Stone Brick",
+                ingredients: &[(ItemKind::Stone, 1)],
+                result: ItemKind::StoneBrick,
+                quantity: 1,
+            },
         ];
 
         Self { recipes }

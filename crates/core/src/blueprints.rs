@@ -13,7 +13,10 @@ use std::collections::BTreeMap;
 
 /// Plain blocks only the player builds, with the item each one costs. Rock is left out:
 /// placed stone can't be told apart from the rock the world generates.
-const BUILT_TILES: &[(TileKind, ItemKind)] = &[(TileKind::PlankBlock, ItemKind::PlankBlock)];
+const BUILT_TILES: &[(TileKind, ItemKind)] = &[
+    (TileKind::PlankBlock, ItemKind::PlankBlock),
+    (TileKind::StoneBrick, ItemKind::StoneBrick),
+];
 
 fn built_tile_item(tile: TileKind) -> Option<ItemKind> {
     BUILT_TILES
