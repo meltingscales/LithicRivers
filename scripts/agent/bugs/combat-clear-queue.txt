@@ -1,0 +1,16 @@
+# The combat panel labelled Clear as "[C]", but the key is a lowercase c (Shift+C does
+# nothing), so Clear seemed broken. The label now comes from the keybind, and pressing it
+# empties the queue, current move included.
+seed 12345
+size 100x30
+skip-splash
+key ui.MENU_PREV
+cheat tp -15 0 0
+cheat spawn_enemy feral_dog
+key movement.WAIT
+key ui.MENU_ACTIVATE 4
+expect-text "[c] Clear"
+expect-text "> Melee"
+key combat.CLEAR_MOVE_QUEUE
+expect-text "Cleared move queue"
+expect-text "> Ready"

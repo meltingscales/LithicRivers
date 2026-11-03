@@ -96,9 +96,19 @@ pub fn render_combat_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     );
 
     // Controls
-    let controls = Paragraph::new("[←→] Target | [↑↓] Move | [C] Clear | [5] Wait | [SPACE] Use")
-        .style(Style::default().fg(Color::Gray))
-        .alignment(Alignment::Center);
+    let key = |category, action| {
+        app.core
+            .config_manager
+            .get_printable_key_for_keybind(category, action)
+    };
+    let controls = Paragraph::new(format!(
+        "[←→] Target | [↑↓] Move | [{}] Clear | [{}] Wait | [{}] Use",
+        key("combat", "CLEAR_MOVE_QUEUE"),
+        key("movement", "WAIT"),
+        key("ui", "MENU_ACTIVATE"),
+    ))
+    .style(Style::default().fg(Color::Gray))
+    .alignment(Alignment::Center);
     f.render_widget(controls, chunks[3]);
 }
 
