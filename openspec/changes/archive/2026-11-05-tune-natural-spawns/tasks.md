@@ -8,5 +8,6 @@
 ## 2. Docs and checks
 
 - [x] 2.1 Update the respawn note in `AGENTS.md`
-- [ ] 2.2 Verify `just code-clippy`, `cargo test --workspace` and PR checks pass
-- [ ] 2.3 User check that the wild feels calmer and that cleared areas staying cleared makes spawner farms worth building
+- [x] 2.2 Verify `just code-clippy`, `cargo test --workspace` and PR checks pass
+- [x] 2.3 User check that the wild feels calmer and that cleared areas staying cleared makes spawner farms worth building
+  - 2026-11-05: passed ("somewhat dangerous but not impossible").

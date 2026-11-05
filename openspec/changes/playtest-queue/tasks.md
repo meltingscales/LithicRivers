@@ -10,7 +10,8 @@ Play the real game (`just client-linux`, or the release build). Turn on Allow ch
   - 2026-11-03: passed ("hard but fair"). Natural spawn rates are being cut and limited in a follow-up change.
 - [ ] 1.4 `check-windows-and-deck`: work through that change's own checklist (Windows launch, input, the Display panel, Steam Deck)
 - [ ] 1.5 `polish-android`: work through that change's own checklist (section 1, playing on a phone)
-- [ ] 1.6 `tune-natural-spawns` (task 2.3, once its PR is merged): the wild feels calmer, and cleared areas staying cleared makes spawner farms worth building. Setup: in a Normal world, clear the dogs around a forest at night, wait several game minutes nearby, and see that at most one more dog comes from each surrounding chunk; then compare with a fed spawner pen
+- [x] 1.6 `tune-natural-spawns` (task 2.3, once its PR is merged): the wild feels calmer, and cleared areas staying cleared makes spawner farms worth building. Setup: in a Normal world, clear the dogs around a forest at night, wait several game minutes nearby, and see that at most one more dog comes from each surrounding chunk; then compare with a fed spawner pen
+  - 2026-11-05: passed ("somewhat dangerous but not impossible"). Archived.
 
 ## 2. Keeping the queue
 
