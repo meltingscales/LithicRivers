@@ -31,7 +31,7 @@ pub fn replace_arm(npc_entity: Option<hecs::Entity>) -> ActiveQuest {
     ActiveQuest::new(
         QuestType::ReplaceArm,
         "A New Arm".to_string(),
-        "SapienCorp built arms like yours at the facility a mile north. Find a salvaged one and install it.".to_string(),
+        "SapienCorp built arms like yours at the facility half a mile north. Find a salvaged one and install it.".to_string(),
         vec![
             objective(
                 "Reach the SapienCorp facility",

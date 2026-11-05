@@ -27,7 +27,7 @@ input_file: scripts/snapshots/modal-corpse-loot.txt
 ┌Messages──────││                                ││                                ││──────────────┐
 │[0] Quest mark││                                ││                                ││              │
 │[0] Player mov│└────←→ Panel | ↑↓ Select | Enter Take | a Take All | Esc Close────┘│              │
-│[0] Loading st└────────────────────────────────────────────────────────────────────┘3, 25, 1)     │
+│[0] Loading st└────────────────────────────────────────────────────────────────────┘, 12, 1)      │
 │[0] Quest marker added: SapienCorp Factory                                                        │
 │[1] Started looting corpse                                                                        │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘

@@ -10,13 +10,13 @@ input_file: scripts/snapshots/quest-new-arm.txt
 ????                                                                    ????└──────────────────────┘
 ????  ┌────────────┐ > SC-M4X7: "Your left arm...       ┌────────────┐  ????┌Inventory─────────────┐
 ????  │   ▄▄▄▄▄    │ SapienCorp built that model at the │    ▄▄▄▄    │  ????│Nail x10              │
-????  │  █▀░▀▀▀█   │ assembly facility, about a mile    │   █▀▀▀▀█   │  ????│Acorn x1              │
-????  │  █ o  o█ * │ north of here. The line shut down  │   █ ◘ ─█▌  │  ????│Log x3                │
-????  │  ▀█▄‿‿▄█▀  │ mid-shift. There should still be a │  ▄█▄▄▄▄█▄  │  ????└──────────────────────┘
-????  │  ▐█▒▓▒▓█▀▀ │ salvaged arm in a parts locker by  │ ▐█▓▒▒▒▒▓█▌ │  ????┌Help (h) ! Damaged────┐
-????  │   █▓▒▓█    │ the line. Watch out: the dogs got  │  ▀█▓▓▓▓█▀  │  ????│Move:                 │
-????  │   ▐▌  ▐▌   │ in after the staff left. Bring it  │   ▐▌  ▐▌   │  ????│  7 8 9               │
-????  │            │ back attached, user!"              │            │  ????│  4 5 6               │
+????  │  █▀░▀▀▀█   │ assembly facility, about half a    │   █▀▀▀▀█   │  ????│Acorn x1              │
+????  │  █ o  o█ * │ mile north of here. The line shut  │   █ ◘ ─█▌  │  ????│Log x3                │
+????  │  ▀█▄‿‿▄█▀  │ down mid-shift. There should still │  ▄█▄▄▄▄█▄  │  ????└──────────────────────┘
+????  │  ▐█▒▓▒▓█▀▀ │ be a salvaged arm in a parts       │ ▐█▓▒▒▒▒▓█▌ │  ????┌Help (h) ! Damaged────┐
+????  │   █▓▒▓█    │ locker by the line. Watch out: the │  ▀█▓▓▓▓█▀  │  ????│Move:                 │
+????  │   ▐▌  ▐▌   │ dogs got in after the staff left.  │   ▐▌  ▐▌   │  ????│  7 8 9               │
+????  │            │ Bring it back attached, user!"     │            │  ????│  4 5 6               │
 ????  └────────────┘                                    └────────────┘  ????│  1 2 3               │
 ????                 > 1.  [ACCEPT QUEST] I'll go and                   ????│q: mine               │
 ???? │                                                                │ ????│v: look               │
@@ -40,8 +40,8 @@ input_file: scripts/snapshots/quest-new-arm.txt
 ┌Active Quests───────────────────────────────────┐┌Completed Quests────────────────────────────────┐
 │► [ ] A New Arm                                 ││  [✓] Repair the Broken Android                 │
 │    SapienCorp built arms like yours at the     ││                                                │
-│    facility a mile north. Find a salvaged one  ││                                                │
-│    and install it.                             ││                                                │
+│    facility half a mile north. Find a salvaged ││                                                │
+│    one and install it.                         ││                                                │
 │    [✓] Reach the SapienCorp facility           ││                                                │
 │    [ ] Find the salvaged arm on the assembly   ││                                                │
 │    line                                        ││                                                │
@@ -60,7 +60,7 @@ input_file: scripts/snapshots/quest-new-arm.txt
 │[401] Quest started: A New Arm                                                                    │
 │[401] You feel Friendly.                                                                          │
 │[401] Conversation ended                                                                          │
-│[401] Teleported to (207, 1632, 0)                                                                │
+│[401] Teleported to (112, 833, 0)                                                                 │
 │[801] Quest objective completed: Reach the SapienCorp facility                                    │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -92,7 +92,7 @@ input_file: scripts/snapshots/quest-new-arm.txt
 │[401] Conversa││                                ││                                ││              │
 │[401] Teleport│└────←→ Panel | ↑↓ Select | Enter Move | a Take All | Esc Close────┘│              │
 │[801] Quest ob└────────────────────────────────────────────────────────────────────┘              │
-│[801] Teleported to (209, 1610, -6)                                                               │
+│[801] Teleported to (114, 811, -6)                                                                │
 │[801] Opened chest                                                                                │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐

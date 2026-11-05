@@ -7,22 +7,22 @@ input_file: scripts/snapshots/death-marker.txt
                                             LithicRivers
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━ Global Map ━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓┏━━━━━━ Quest Markers ━━━━━━━┓
 ┃                                                                    ┃┃  ✗ (unselect quest marker) ┃
-┃                                 ╲                                  ┃┃   Hide arrow               ┃
-┃                                  ╲                                 ┃┃  ! SapienCorp Factory      ┃
+┃                                  │                                 ┃┃   Hide arrow               ┃
+┃                                  │                                 ┃┃  ! SapienCorp Factory      ┃
 ┃                                  │                                 ┃┃   24 blocks                ┃
-┃                                  │                                 ┃┃   (200, 1609, 1)           ┃
-┃                                 ·│·                                ┃┃  ! SapienCorp Bunker       ┃
-┃                                 ·@·                                ┃┃   1.6k blocks              ┃
+┃                                  │                                 ┃┃   (105, 810, 1)            ┃
+┃                                 ·!·                                ┃┃  ! SapienCorp Bunker       ┃
+┃                                 ·@·                                ┃┃   829 blocks               ┃
 ┃                                 ···                                ┃┃   (10, 10, 1)              ┃
 ┃                                                                    ┃┃► X Wreck 1                 ┃
-┃                                                                    ┃┃   1.6k blocks              ┃
+┃                                                                    ┃┃   840 blocks               ┃
 ┃                                                                    ┃┃   (0, 0, 0)                ┃
 ┃                                                                    ┃┃   Cause: self-destruct     ┃
 ┃                                                                    ┃┃   command. Holds Nail x10, ┃
 ┃ [@] Player  [!] Main Quest  [?] Side Quest  [W] Waypoint           ┃┃   Log x3, Torch x3, 5 more.┃
 ┃ [·] Explored  [ ] Unexplored  [$] Treasure  [X] Wreck              ┃┃   x: delete marker         ┃
 ┃                                                                    ┃┃                            ┃
-┃             Player: (207, 1632, 0) | Chunk: (3, 25, 0)             ┃┃                            ┃
+┃              Player: (112, 833, 0) | Chunk: (1, 13, 0)             ┃┃                            ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛┗━━━━━ w: add waypoint ━━━━━━┛
 ┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
 │[0] Quest marker added: SapienCorp Factory                                                        │
@@ -39,22 +39,22 @@ input_file: scripts/snapshots/death-marker.txt
                                             LithicRivers
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━ Global Map ━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓┏━━━━━━ Quest Markers ━━━━━━━┓
 ┃                                                                    ┃┃  ✗ (unselect quest marker) ┃
-┃                                 ╲                                  ┃┃   Hide arrow               ┃
-┃                                  ╲                                 ┃┃  ! SapienCorp Factory      ┃
+┃                                  │                                 ┃┃   Hide arrow               ┃
+┃                                  │                                 ┃┃  ! SapienCorp Factory      ┃
 ┃                                  │                                 ┃┃   24 blocks                ┃
-┃                                  │                                 ┃┃   (200, 1609, 1)           ┃
-┃                                 ·│·                                ┃┃  ! SapienCorp Bunker       ┃
-┃                                 ·@·                                ┃┃   1.6k blocks              ┃
+┃                                  │                                 ┃┃   (105, 810, 1)            ┃
+┃                                 ·!·                                ┃┃  ! SapienCorp Bunker       ┃
+┃                                 ·@·                                ┃┃   829 blocks               ┃
 ┃                                 ···                                ┃┃   (10, 10, 1)              ┃
 ┃                                                                    ┃┃► X Wreck 1                 ┃
-┃                        ┌──────────────── Are you sure? ─────────────────┐.6k blocks              ┃
+┃                        ┌──────────────── Are you sure? ─────────────────┐40 blocks               ┃
 ┃                        │   Delete the marker for Wreck 1 at (0, 0, 0)?  │0, 0, 0)                ┃
 ┃                        │              Its items stay there.             │ause: self-destruct     ┃
 ┃                        │                                                │ommand. Holds Nail x10, ┃
 ┃ [@] Player  [!] Main Qu│                [y] Yes    [n] No               │og x3, Torch x3, 5 more.┃
 ┃ [·] Explored  [ ] Unexp└────────────────────────────────────────────────┘: delete marker         ┃
 ┃                                                                    ┃┃                            ┃
-┃             Player: (207, 1632, 0) | Chunk: (3, 25, 0)             ┃┃                            ┃
+┃              Player: (112, 833, 0) | Chunk: (1, 13, 0)             ┃┃                            ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛┗━━━━━ w: add waypoint ━━━━━━┛
 ┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
 │[0] Quest marker added: SapienCorp Factory                                                        │
@@ -74,9 +74,9 @@ input_file: scripts/snapshots/death-marker.txt
 ┃                                                                    ┃┃   Hide arrow               ┃
 ┃                                                                    ┃┃  ! SapienCorp Factory      ┃
 ┃                                                                    ┃┃   24 blocks                ┃
-┃                                                                    ┃┃   (200, 1609, 1)           ┃
-┃                                 ···                                ┃┃  ! SapienCorp Bunker       ┃
-┃                                 ·@·                                ┃┃   1.6k blocks              ┃
+┃                                                                    ┃┃   (105, 810, 1)            ┃
+┃                                 ·!·                                ┃┃  ! SapienCorp Bunker       ┃
+┃                                 ·@·                                ┃┃   829 blocks               ┃
 ┃                                 ···                                ┃┃   (10, 10, 1)              ┃
 ┃                                                                    ┃┃                            ┃
 ┃                                                                    ┃┃                            ┃
@@ -86,7 +86,7 @@ input_file: scripts/snapshots/death-marker.txt
 ┃ [@] Player  [!] Main Quest  [?] Side Quest  [W] Waypoint           ┃┃                            ┃
 ┃ [·] Explored  [ ] Unexplored  [$] Treasure  [X] Wreck              ┃┃                            ┃
 ┃                                                                    ┃┃                            ┃
-┃             Player: (207, 1632, 0) | Chunk: (3, 25, 0)             ┃┃                            ┃
+┃              Player: (112, 833, 0) | Chunk: (1, 13, 0)             ┃┃                            ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛┗━━━━━ w: add waypoint ━━━━━━┛
 ┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
 │[1] Added 2 Chest to inventory                                                                    │

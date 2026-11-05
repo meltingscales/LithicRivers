@@ -26,7 +26,7 @@ input_file: scripts/snapshots/player-death.txt
 ################vvvvvv│                                                      │─────────────────────┘
 ┌Messages─────────────└─────────────────── ENTER: choose ────────────────────┘─────────────────────┐
 │[0] Player moved to bunker spawn at (11, 11, -19)                                                 │
-│[0] Loading structure 'sapiencorp-factory.lrstructure' at (200, 1609, 1) for chunk (3, 25, 1)     │
+│[0] Loading structure 'sapiencorp-factory.lrstructure' at (105, 810, 1) for chunk (1, 12, 1)      │
 │[0] Quest marker added: SapienCorp Factory                                                        │
 │[1] Added 2 Chest to inventory                                                                    │
 │[1] Your body was destroyed: self-destruct command. It lies here with everything you carried.     │
@@ -45,7 +45,7 @@ input_file: scripts/snapshots/player-death.txt
 ########vv│RESURRECT                                                                     │         │
 ########vv│Choose a body to wake in.                                                     │         │
 #########v│                                                                              │─────────┘
-#########v│ Junker body at the SapienCorp HQ, 1632 tiles                                 │maged────┐
+#########v│ Junker body at the SapienCorp HQ, 833 tiles                                  │maged────┐
 ##########│   Every part damaged                                                         │         │
 ##########└─────────────────────── ENTER: wake here  ESCAPE: back ───────────────────────┘         │
 ###########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvtttvvvvvvvvvvvvvvvvvvvvvvvvvv,,t  │  4 5 6               │
@@ -58,7 +58,7 @@ input_file: scripts/snapshots/player-death.txt
 ################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
 ┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
 │[0] Player moved to bunker spawn at (11, 11, -19)                                                 │
-│[0] Loading structure 'sapiencorp-factory.lrstructure' at (200, 1609, 1) for chunk (3, 25, 1)     │
+│[0] Loading structure 'sapiencorp-factory.lrstructure' at (105, 810, 1) for chunk (1, 12, 1)      │
 │[0] Quest marker added: SapienCorp Factory                                                        │
 │[1] Added 2 Chest to inventory                                                                    │
 │[1] Your body was destroyed: self-destruct command. It lies here with everything you carried.     │
@@ -101,25 +101,25 @@ input_file: scripts/snapshots/player-death.txt
 === end screen ===
 === screen flyover-middle ===
                                             LithicRivers
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌MODES ☼ 08:00─────────┐
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  ------ - - -- - FOG │
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Inventory─────────────┐
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Nail x10              │
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Acorn x1              │
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Log x3                │
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Help (h) ! Damaged────┐
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Move:                 │
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  7 8 9               │
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  4 5 6               │
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  1 2 3               │
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│q: mine               │
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│v: look               │
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│`: build mode         │
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│f: open door          │
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│                      │
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
+vvvvvvvvvvv###########################################vvvvvvvvvvvvvvvvvvvvvv┌MODES ☼ 08:00─────────┐
+vvvvvvvvvvv###########################################vvvvvvvvvvvvvvvvvvvvvv│  ------ - - -- - FOG │
+vvvvvvvvvvv###########################################vvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
+vvvvvvvvvvv###########################################vvvvvvvvvvvvvvvvvvvvvv┌Inventory─────────────┐
+vvvvvvvvvvv###########################################vvvvvvvvvvvvvvvvvvvvvv│Nail x10              │
+vvvvvvvvvvv###########################################vvvvvvvvvvvvvvvvvvvvvv│Acorn x1              │
+vvvvvvvvvvvv##########################################vvvvvvvvvvvvvvvvvvvvvv│Log x3                │
+vvvvvvvvvvvv##########################################vvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
+vvvvvvvvvvvv##########################################vvvvvvvvvvvvvvvvvvvvvv┌Help (h) ! Damaged────┐
+vvvvvvvvvvvv###########################################vvvvvvvvvvvvvvvvvvvvv│Move:                 │
+vvvvvvvvvvvv###########################################vvvvvvvvvvvvvvvvvvvvv│  7 8 9               │
+vvvvvvvvvvvvv##########################################vvvvvvvvvvvvvvvvvvvvv│  4 5 6               │
+vvvvvvvvvvvvv##########################################vvvvvvvvvvvvvvvvvvvvv│  1 2 3               │
+vvvvvvvvvvvvv##########################################vvvvvvvvvvvvvvvvvvvvv│q: mine               │
+vvvvvvvvvvvvvv#########################################vvvvvvvvvvvvvvvvvvvvv│v: look               │
+vvvvvvvvvvvvvv#########################################vvvvvvvvvvvvvvvvvvvvv│`: build mode         │
+vvvvvvvvvvvvvvv#########################################vvvvvvvvvvvvvvvvvvvv│f: open door          │
+vvvvvvvvvvvvvvv#########################################vvvvvvvvvvvvvvvvvvvv│                      │
+vvvvvvvvvvvvvvvv########################################vvvvvvvvvvvvvvvvvvvv└──────────────────────┘
 ┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
 │[0] Quest marker added: SapienCorp Factory                                                        │
 │[1] Added 2 Chest to inventory                                                                    │

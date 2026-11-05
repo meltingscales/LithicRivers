@@ -1,5 +1,5 @@
 # The arm quest from the android to the install. The repaired android offers "A New
-# Arm"; teleports stand in for the mile-long walk and the fight through the facility.
+# Arm"; teleports stand in for the half-mile walk and the fight through the facility.
 seed 12345
 size 100x30
 skip-splash
@@ -34,14 +34,14 @@ screen quest-active
 key ui.MENU_PREV 3
 # The parts locker on the assembly line, seven levels down
 cheat tp_quest
-expect-text "Teleported to (209, 1610, -6)"
+expect-text "Teleported to (114, 811, -6)"
 key action.INTERACT
 screen locker
 # The window opens on the locker's side: take the arm
 key ui.MENU_ACTIVATE
 key ui.CLOSE_HELP_MENU
 # Back out past the locker's guard dog; objectives are checked each tick
-cheat tp 206 1630 0
+cheat tp 111 831 0
 key movement.WAIT
 expect-text "Quest objective completed: Find the salvaged arm"
 key ui.MENU_NEXT 4

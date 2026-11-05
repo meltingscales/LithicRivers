@@ -17,8 +17,8 @@ input_file: scripts/snapshots/global-map-waypoints.txt
 ┃                                                                    ┃┃   14 blocks                ┃
 ┃                                                                    ┃┃   (10, 10, 1)              ┃
 ┃                                                                    ┃┃  ! SapienCorp Factory      ┃
-┃                                                                    ┃┃   1.6k blocks              ┃
-┃                                                                    ┃┃   (200, 1609, 1)           ┃
+┃                                                                    ┃┃   817 blocks               ┃
+┃                                                                    ┃┃   (105, 810, 1)            ┃
 ┃ [@] Player  [!] Main Quest  [?] Side Quest  [W] Waypoint           ┃┃                            ┃
 ┃ [·] Explored  [ ] Unexplored  [$] Treasure  [X] Wreck              ┃┃                            ┃
 ┃                                                                    ┃┃                            ┃
@@ -27,7 +27,7 @@ input_file: scripts/snapshots/global-map-waypoints.txt
 ┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
 │[0] Quest marker added: SapienCorp Bunker                                                         │
 │[0] Player moved to bunker spawn at (11, 11, -19)                                                 │
-│[0] Loading structure 'sapiencorp-factory.lrstructure' at (200, 1609, 1) for chunk (3, 25, 1)     │
+│[0] Loading structure 'sapiencorp-factory.lrstructure' at (105, 810, 1) for chunk (1, 12, 1)      │
 │[0] Quest marker added: SapienCorp Factory                                                        │
 │[1] Added Waypoint 1 at (0, 0, 0).                                                                │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
@@ -49,8 +49,8 @@ input_file: scripts/snapshots/global-map-waypoints.txt
 ┃                                                                    ┃┃   14 blocks                ┃
 ┃                                                                    ┃┃   (10, 10, 1)              ┃
 ┃                                                                    ┃┃  ! SapienCorp Factory      ┃
-┃                                                                    ┃┃   1.6k blocks              ┃
-┃                                                                    ┃┃   (200, 1609, 1)           ┃
+┃                                                                    ┃┃   817 blocks               ┃
+┃                                                                    ┃┃   (105, 810, 1)            ┃
 ┃ [@] Player  [!] Main Quest  [?] Side Quest  [W] Waypoint           ┃┃                            ┃
 ┃ [·] Explored  [ ] Unexplored  [$] Treasure  [X] Wreck              ┃┃                            ┃
 ┃                                                                    ┃┃                            ┃
@@ -58,7 +58,7 @@ input_file: scripts/snapshots/global-map-waypoints.txt
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛┗━━━━━ w: add waypoint ━━━━━━┛
 ┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
 │[0] Player moved to bunker spawn at (11, 11, -19)                                                 │
-│[0] Loading structure 'sapiencorp-factory.lrstructure' at (200, 1609, 1) for chunk (3, 25, 1)     │
+│[0] Loading structure 'sapiencorp-factory.lrstructure' at (105, 810, 1) for chunk (1, 12, 1)      │
 │[0] Quest marker added: SapienCorp Factory                                                        │
 │[1] Added Waypoint 1 at (0, 0, 0).                                                                │
 │[1] Renamed Waypoint 1 to Iron field.                                                             │
@@ -81,8 +81,8 @@ input_file: scripts/snapshots/global-map-waypoints.txt
 ┃                                                                    ┃┃   9 blocks                 ┃
 ┃                        ┌──────────────── Are you sure? ─────────────────┐10, 10, 1)              ┃
 ┃                        │ Delete the marker for Iron field at (5, 3, 0)? │SapienCorp Factory      ┃
-┃                        │                                                │.6k blocks              ┃
-┃                        │                                                │200, 1609, 1)           ┃
+┃                        │                                                │13 blocks               ┃
+┃                        │                                                │105, 810, 1)            ┃
 ┃ [@] Player  [!] Main Qu│                [y] Yes    [n] No               │                        ┃
 ┃ [·] Explored  [ ] Unexp└────────────────────────────────────────────────┘                        ┃
 ┃                                                                    ┃┃                            ┃
@@ -108,8 +108,8 @@ input_file: scripts/snapshots/global-map-waypoints.txt
 ┃                                                                    ┃┃   9 blocks                 ┃
 ┃                                                                    ┃┃   (10, 10, 1)              ┃
 ┃                                 ···                                ┃┃  ! SapienCorp Factory      ┃
-┃                                 ·@·                                ┃┃   1.6k blocks              ┃
-┃                                 ···                                ┃┃   (200, 1609, 1)           ┃
+┃                                 ·@·                                ┃┃   813 blocks               ┃
+┃                                 ···                                ┃┃   (105, 810, 1)            ┃
 ┃                                                                    ┃┃                            ┃
 ┃                                                                    ┃┃                            ┃
 ┃                                                                    ┃┃                            ┃
