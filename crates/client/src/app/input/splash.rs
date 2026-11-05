@@ -28,7 +28,6 @@ pub fn handle_splash_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn 
                     app.splash.boot_display_text = full_text.clone();
                     app.splash.boot_line_index = full_text.len();
                     app.splash.boot_complete = true;
-                    app.splash.start_time = Some(app.clock.now());
                 } else {
                     // Move to main UI if already complete
                     app.splash.state = SplashState::MainUI;

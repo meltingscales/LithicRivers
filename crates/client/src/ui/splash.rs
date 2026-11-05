@@ -54,7 +54,7 @@ pub(crate) fn render_splash(f: &mut Frame, app: &mut App) -> bool {
         }
         SplashState::BootMessage => {
             // Show boot message with glitch effect
-            let block = Block::default()
+            let mut block = Block::default()
                 .borders(Borders::ALL)
                 .border_set(border::THICK)
                 .title(Line::from(" System Boot "))
@@ -67,6 +67,15 @@ pub(crate) fn render_splash(f: &mut Frame, app: &mut App) -> bool {
                 },
                 f.area(),
             );
+
+            // Once the log is done it waits for a key, with a blinking prompt
+            if app.splash.boot_complete && (app.clock.animation_millis() / 600) % 2 == 0 {
+                block = block.title_bottom(
+                    Line::from(" Press any key to continue ")
+                        .style(Style::default().fg(Color::White))
+                        .centered(),
+                );
+            }
 
             // Inner and centered content area with padding
             let inner = block.inner(Rect::new(0, 0, f.area().width, f.area().height));

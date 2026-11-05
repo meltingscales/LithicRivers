@@ -1,0 +1,17 @@
+# The finished boot log stays up (here 10 seconds after it ends) with a blinking prompt
+# until a key is pressed
+seed 12345
+size 100x30
+rawkey ENTER
+rawkey ENTER
+key title.SELECT
+key title.SELECT
+key title.DOWN 6
+key title.SELECT
+# The first key finishes the typing
+rawkey ENTER
+wait 10000
+expect-text "Press any key to continue"
+screen waiting
+rawkey ENTER
+expect-text "Tutorial"

@@ -206,15 +206,11 @@ impl App {
                                 }
                                 self.splash.boot_display_text =
                                     full_text[..self.splash.boot_line_index].to_string();
-                            } else if !self.splash.boot_complete {
+                            } else {
+                                // The log stays up until a key is pressed
                                 self.splash.boot_complete = true;
-                                // Set a minimum display time after completion
-                                self.splash.start_time = Some(self.clock.now());
                             }
                         }
-                    } else if self.clock.since(start_time) >= Duration::from_secs(2) {
-                        // 2 seconds after completion, move to main UI
-                        self.splash.state = SplashState::MainUI;
                     }
                 }
                 _ => {}
