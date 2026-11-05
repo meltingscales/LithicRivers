@@ -68,33 +68,29 @@ pub(crate) fn render_splash(f: &mut Frame, app: &mut App) -> bool {
             // Clear content area before drawing
             f.render_widget(Clear, area);
 
-            // Calculate available height for text (accounting for borders and padding)
+            // The text fills the padded area, minus the scrollbar's column on the right
             let inner_area = area.inner(Margin {
                 horizontal: 2,
                 vertical: 2,
             });
-            let text_area = inner_area.inner(Margin {
-                horizontal: 1,
-                vertical: 1,
-            });
+            let text_area = Rect {
+                width: inner_area.width.saturating_sub(2),
+                ..inner_area
+            };
 
-            // Calculate visible lines and update scroll position if needed
-            let visible_lines = text_area.height.saturating_sub(2); // Leave room for border
-            let total_lines = app.splash.boot_display_text.lines().count() as u16;
+            let paragraph =
+                Paragraph::new(app.splash.boot_display_text.as_str()).wrap(Wrap { trim: false });
+            let visible_lines = text_area.height;
+            let total_lines = paragraph.line_count(text_area.width) as u16;
+            let max_scroll = total_lines.saturating_sub(visible_lines);
 
-            // Auto-scroll if we're at the bottom
-            if app.splash.boot_scroll + visible_lines >= total_lines.saturating_sub(1) {
-                app.splash.boot_scroll = total_lines.saturating_sub(visible_lines);
+            // Follow new lines while the view is at (or a line short of) the bottom
+            if app.splash.boot_scroll + 1 >= max_scroll {
+                app.splash.boot_scroll = max_scroll;
             }
+            app.splash.boot_scroll = app.splash.boot_scroll.min(max_scroll);
 
-            // Create a scrollable paragraph
-            let paragraph = Paragraph::new(app.splash.boot_display_text.as_str())
-                .block(Block::default().borders(Borders::NONE))
-                .wrap(Wrap { trim: false })
-                .scroll((app.splash.boot_scroll, 0));
-
-            // Render content with padding
-            f.render_widget(paragraph, inner_area);
+            f.render_widget(paragraph.scroll((app.splash.boot_scroll, 0)), text_area);
 
             // Add scrollbar if needed
             if total_lines > visible_lines {
@@ -110,8 +106,7 @@ pub(crate) fn render_splash(f: &mut Frame, app: &mut App) -> bool {
                 let thumb_height = (visible_lines as f32 / total_lines as f32
                     * visible_lines as f32)
                     .max(1.0) as u16;
-                let thumb_position = (app.splash.boot_scroll as f32
-                    / (total_lines - visible_lines) as f32
+                let thumb_position = (app.splash.boot_scroll as f32 / max_scroll as f32
                     * (visible_lines - thumb_height) as f32)
                     .round() as u16;
 

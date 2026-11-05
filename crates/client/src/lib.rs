@@ -416,11 +416,8 @@ fn handle_mouse_event(app: &mut App, input: app::input::mouse::MouseInput) {
     if let SplashState::BootMessage = app.splash.state {
         match input.kind {
             MouseKind::ScrollDown => {
-                let total_lines = app.splash.boot_display_text.lines().count() as u16;
-                let visible_lines = 20; // Approximate visible lines
-                if app.splash.boot_scroll + visible_lines < total_lines {
-                    app.splash.boot_scroll = app.splash.boot_scroll.saturating_add(3);
-                }
+                // Drawing the log clamps this to its last page
+                app.splash.boot_scroll = app.splash.boot_scroll.saturating_add(3);
             }
             MouseKind::ScrollUp => {
                 app.splash.boot_scroll = app.splash.boot_scroll.saturating_sub(3);
