@@ -36,7 +36,7 @@ pub(crate) enum MenuTab {
     Quit,
 }
 
-pub(crate) const BOOT_MESSAGE_TYPEWRITER_MS: u64 = 100;
+pub(crate) const BOOT_MESSAGE_TYPEWRITER_MS: u64 = 200;
 
 impl MenuTab {
     /// Every tab, in the order the menu bar shows them.

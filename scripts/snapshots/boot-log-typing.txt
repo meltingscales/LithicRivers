@@ -1,5 +1,5 @@
-# The boot log mid-typewriter: once the text outgrows the box, the newest line sits on the
-# box's last text row (no blank rows below it while it scrolls)
+# The boot log mid-typewriter over its broken-panel backdrop: once the text outgrows the box,
+# the newest line sits on the box's last text row (no blank rows below it while it scrolls)
 seed 12345
 size 100x30
 rawkey ENTER
@@ -8,6 +8,6 @@ key title.SELECT
 key title.SELECT
 key title.DOWN 6
 key title.SELECT
-wait 1500
+wait 3000
 expect-text "System Boot"
 screen typing
