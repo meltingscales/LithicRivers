@@ -1,62 +1,57 @@
+ (106,834,-6) item=Meatx1
+ (106,835,-6) item=Meatx1
+ (107,819,-6) item=ScrapElectronicsx10
+ (108,819,-6) item=ScrapElectronicsx10
+ (108,821,-6) item=ScrapElectronicsx10
+ (108,828,-6) item=ScrapElectronicsx10
+ (109,819,-6) item=ScrapElectronicsx10
+ (109,828,-6) item=ScrapElectronicsx10
+ (111,813,-6) item=ScrapElectronicsx10
+ (111,814,-6) item=ScrapElectronicsx10
+ (111,815,-6) item=ScrapElectronicsx10
+ (111,816,-6) item=ScrapElectronicsx10
+ (111,818,-6) item=ScrapElectronicsx10
+ (111,820,-6) item=ScrapElectronicsx10
+ (111,822,-6) item=ScrapElectronicsx10
+ (111,824,-6) item=ScrapElectronicsx10
+ (111,826,-6) item=ScrapElectronicsx10
+ (111,829,-6) item=ScrapElectronicsx10
+ (113,811,-6) inv=[SalvagedArmx1]
+ (113,818,-6) item=Diamondx10
+ (113,823,-6) item=Diamondx10
+ (114,818,-6) item=ScrapElectronicsx10
+ (116,823,-6) item=ScrapElectronicsx10
+ (116,824,-6) item=Diamondx10
+ (118,811,-6) item=Meatx1
+ (118,812,-6) item=Meatx1
+ (118,813,-6) item=Meatx1
+ (118,814,-6) item=Meatx1
+ (118,815,-6) item=Logx1
+ (118,816,-6) item=Meatx1
+ (118,817,-6) item=Meatx1
+ (118,818,-6) item=Meatx1
+ (118,819,-6) item=Meatx1
+ (118,820,-6) item=Meatx1
+ (118,821,-6) item=Meatx1
+ (118,822,-6) item=Meatx1
+ (118,823,-6) item=Logx1
+ (118,824,-6) item=Meatx1
+ (118,825,-6) item=Meatx1
+ (118,826,-6) item=Meatx1
+ (118,827,-6) item=Meatx1
+ (118,828,-6) item=Meatx1
+ (118,829,-6) item=Logx1
+ (118,830,-6) item=Meatx1
+ (118,834,-6) item=Meatx1
+ (118,835,-6) item=Meatx1
+ (118,836,-6) item=Logx1
  (16,20,-19) item=Diamondx10
  (17,11,-19) item=Diamondx10
  (19,19,0) item=Logx1
  (19,31,0) item=Logx1
  (20,21,-19) item=Diamondx10
- (201,1633,-6) item=Leatherx1
- (201,1634,-6) item=Meatx1
- (202,1620,-6) item=ScrapElectronicsx10
- (203,1627,-6) item=ScrapElectronicsx10
- (204,1618,-6) item=ScrapElectronicsx10
- (204,1626,-6) item=ScrapElectronicsx10
- (204,1627,-6) item=ScrapElectronicsx10
- (206,1611,-6) item=ScrapElectronicsx10
- (206,1612,-6) item=ScrapElectronicsx10
- (206,1613,-6) item=ScrapElectronicsx10
- (206,1614,-6) item=ScrapElectronicsx10
- (206,1615,-6) item=ScrapElectronicsx10
- (206,1619,-6) item=ScrapElectronicsx10
- (206,1620,-6) item=ScrapElectronicsx10
- (206,1622,-6) item=ScrapElectronicsx10
- (206,1624,-6) item=ScrapElectronicsx10
- (206,1625,-6) item=ScrapElectronicsx10
- (206,1626,-6) item=ScrapElectronicsx10
- (206,1627,-6) item=ScrapElectronicsx10
- (206,1628,-6) item=ScrapElectronicsx10
- (208,1610,-6) inv=[SalvagedArmx1]
- (208,1617,-6) item=Diamondx10
- (208,1618,-6) item=ScrapElectronicsx10
- (208,1622,-6) item=Diamondx10
- (208,1623,-6) item=ScrapElectronicsx10
- (209,1622,-6) item=ScrapElectronicsx10
  (21,21,0) item=Logx1
  (21,25,0) item=Logx1
- (210,1622,-6) item=ScrapElectronicsx10
- (211,1622,-6) item=ScrapElectronicsx10
- (211,1623,-6) item=Diamondx10
- (213,1610,-6) item=Meatx1
- (213,1611,-6) item=Meatx1
- (213,1612,-6) item=Logx1
- (213,1613,-6) item=Meatx1
- (213,1614,-6) item=Logx1
- (213,1615,-6) item=Meatx1
- (213,1616,-6) item=Meatx1
- (213,1617,-6) item=Meatx1
- (213,1618,-6) item=Meatx1
- (213,1619,-6) item=Meatx1
- (213,1620,-6) item=Meatx1
- (213,1621,-6) item=Meatx1
- (213,1622,-6) item=Logx1
- (213,1623,-6) item=Meatx1
- (213,1624,-6) item=Meatx1
- (213,1625,-6) item=Meatx1
- (213,1626,-6) item=Meatx1
- (213,1627,-6) item=Meatx1
- (213,1628,-6) item=Logx1
- (213,1629,-6) item=Meatx1
- (213,1633,-6) item=Meatx1
- (213,1634,-6) item=Meatx1
- (213,1635,-6) item=Leatherx1
  (25,30,0) item=Logx1
  (25,31,0) item=Logx1
  (27,13,-19) item=Diamondx10
@@ -75,11 +70,11 @@ FeralDog (-12,-12,0) hp=80/80 inv=[Leatherx1,Meatx1]
 FeralDog (-13,-13,0) hp=80/80 inv=[Meatx2]
 FeralDog (-14,-14,0) hp=80/80 inv=[Meatx1]
 FeralDog (-15,-15,0) hp=80/80 inv=[Leatherx1,Meatx1]
-FeralDog (201,1631,-3) hp=80/80 inv=[Leatherx2,Meatx3]
-FeralDog (202,1615,-6) hp=80/80 inv=[Meatx3]
-FeralDog (208,1628,-6) hp=80/80 inv=[Leatherx2,Meatx1]
-FeralDog (208,1635,-6) hp=80/80 inv=[Leatherx2,Meatx3]
-FeralDog (210,1612,-6) hp=80/80 inv=[Meatx1]
+FeralDog (106,832,-3) hp=80/80 inv=[Leatherx2,Meatx3]
+FeralDog (107,816,-6) hp=80/80 inv=[Leatherx1,Meatx2]
+FeralDog (113,829,-6) hp=80/80 inv=[Leatherx2,Meatx2]
+FeralDog (113,836,-6) hp=80/80 inv=[Leatherx2,Meatx3]
+FeralDog (115,813,-6) hp=80/80 inv=[Leatherx1,Meatx2]
 FeralDog (37,37,0) hp=80/80 inv=[Meatx1]
 FeralDog (38,38,0) hp=80/80 inv=[Meatx2]
 Player (11,11,-19) inv=[Nailx10,Acornx1,Logx3,Stickx2,Torchx3,Stringx2,ScrapElectronicsx3]

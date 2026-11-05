@@ -47,7 +47,7 @@ input_file: scripts/snapshots/resurrection-vat.txt
 ##########│                                                                              │─────────┘
 ##########│ Crude resurrection vat at (1, 0, 0), 7 tiles                                 │maged────┐
 ##########│   Damaged: torso, fusion core, legs. Missing: head, arms                     │irection:│
-##########│ Junker body at the SapienCorp HQ, 1632 tiles                                 │         │
+##########│ Junker body at the SapienCorp HQ, 833 tiles                                  │         │
 ##########│   Every part damaged                                                         │         │
 ##########└─────────────────────── ENTER: wake here  ESCAPE: back ───────────────────────┘         │
 ###################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│F1-F12: hotbar        │

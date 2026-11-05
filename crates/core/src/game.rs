@@ -15,9 +15,10 @@ use hecs::World;
 use bitflags::bitflags;
 
 /// The SapienCorp facility of the arm quest: its structure, and where it is placed (its
-/// top-left corner, buried with its top layer at z), about a mile from the bunker.
+/// top-left corner, buried with its top layer at z), about half a mile from the bunker
+/// (half the distance it started at, so the first trip is less of a walk).
 pub const FACILITY_STRUCTURE: &str = "sapiencorp-factory.lrstructure";
-pub const FACILITY_POS: (i64, i64, i64) = (200, 1609, 1);
+pub const FACILITY_POS: (i64, i64, i64) = (105, 810, 1);
 /// The facility's quest marker, removed when the arm quest is done.
 pub const FACILITY_MARKER: &str = "SapienCorp Factory";
 

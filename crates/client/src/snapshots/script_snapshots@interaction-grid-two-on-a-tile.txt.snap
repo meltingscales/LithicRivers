@@ -26,7 +26,7 @@ input_file: scripts/snapshots/interaction-grid-two-on-a-tile.txt
 ####################│                Direction keys: pick a tile               │───────────────────┘
 ┌Messages───────────│      ENTER: choose | UP/DOWN: list | ESCAPE: cancel      │───────────────────┐
 │[0] Player moved to└──────────────────────────────────────────────────────────┘                   │
-│[0] Loading structure 'sapiencorp-factory.lrstructure' at (200, 1609, 1) for chunk (3, 25, 1)     │
+│[0] Loading structure 'sapiencorp-factory.lrstructure' at (105, 810, 1) for chunk (1, 12, 1)      │
 │[0] Quest marker added: SapienCorp Factory                                                        │
 │[1] Dropped 1 Nail                                                                                │
 │[401] Choose interaction:                                                                         │
@@ -58,7 +58,7 @@ input_file: scripts/snapshots/interaction-grid-two-on-a-tile.txt
 ####################│                Direction keys: pick a tile               │───────────────────┘
 ┌Messages───────────│      ENTER: choose | UP/DOWN: list | ESCAPE: cancel      │───────────────────┐
 │[0] Player moved to└──────────────────────────────────────────────────────────┘                   │
-│[0] Loading structure 'sapiencorp-factory.lrstructure' at (200, 1609, 1) for chunk (3, 25, 1)     │
+│[0] Loading structure 'sapiencorp-factory.lrstructure' at (105, 810, 1) for chunk (1, 12, 1)      │
 │[0] Quest marker added: SapienCorp Factory                                                        │
 │[1] Dropped 1 Nail                                                                                │
 │[401] Choose interaction:                                                                         │
@@ -89,7 +89,7 @@ input_file: scripts/snapshots/interaction-grid-two-on-a-tile.txt
 ###############││                                ││                                ││corpse        │
 ###############││                                ││                                ││──────────────┘
 ┌Messages──────││                                ││                                ││──────────────┐
-│[0] Loading st││                                ││                                ││3, 25, 1)     │
+│[0] Loading st││                                ││                                ││, 12, 1)      │
 │[0] Quest mark│└────←→ Panel | ↑↓ Select | Enter Take | a Take All | Esc Close────┘│              │
 │[1] Dropped 1 └────────────────────────────────────────────────────────────────────┘              │
 │[401] Choose interaction:                                                                         │

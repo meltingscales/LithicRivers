@@ -361,7 +361,7 @@ impl DialogueDatabase {
         tree.add_node(DialogueNode {
             id: DialogueNodeID::NewArm,
             speaker: "SC-M4X7".to_string(),
-            text: "Your left arm... SapienCorp built that model at the assembly facility, about a mile north of here. The line shut down mid-shift. There should still be a salvaged arm in a parts locker by the line. Watch out: the dogs got in after the staff left. Bring it back attached, user!".to_string(),
+            text: "Your left arm... SapienCorp built that model at the assembly facility, about half a mile north of here. The line shut down mid-shift. There should still be a salvaged arm in a parts locker by the line. Watch out: the dogs got in after the staff left. Bring it back attached, user!".to_string(),
             text_effects: vec![],
             mood: NPCMood::Happy,
             choices: vec![

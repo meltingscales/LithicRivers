@@ -28,7 +28,7 @@ input_file: scripts/snapshots/cheat-console-help.txt
 │[0] Loading structu│                                                          │(0, 0, 1)          │
 │[0] Quest marker ad│     Enter: Execute | Tab: Autocomplete | Esc: Cancel     │                   │
 │[0] Player moved to└──────────────────────────────────────────────────────────┘                   │
-│[0] Loading structure 'sapiencorp-factory.lrstructure' at (200, 1609, 1) for chunk (3, 25, 1)     │
+│[0] Loading structure 'sapiencorp-factory.lrstructure' at (105, 810, 1) for chunk (1, 12, 1)      │
 │[0] Quest marker added: SapienCorp Factory                                                        │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -60,7 +60,7 @@ input_file: scripts/snapshots/cheat-console-help.txt
 │[0] Loading structu│                                                          │(0, 0, 1)          │
 │[0] Quest marker ad│     Enter: Execute | Tab: Autocomplete | Esc: Cancel     │                   │
 │[0] Player moved to└──────────────────────────────────────────────────────────┘                   │
-│[0] Loading structure 'sapiencorp-factory.lrstructure' at (200, 1609, 1) for chunk (3, 25, 1)     │
+│[0] Loading structure 'sapiencorp-factory.lrstructure' at (105, 810, 1) for chunk (1, 12, 1)      │
 │[0] Quest marker added: SapienCorp Factory                                                        │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
