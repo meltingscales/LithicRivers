@@ -61,6 +61,13 @@ pub(crate) fn render_splash(f: &mut Frame, app: &mut App) -> bool {
                 .title_alignment(Alignment::Center)
                 .border_style(Style::default().fg(Color::LightBlue));
 
+            f.render_widget(
+                crate::ui::boot_backdrop::BootBackdrop {
+                    millis: app.clock.animation_millis(),
+                },
+                f.area(),
+            );
+
             // Inner and centered content area with padding
             let inner = block.inner(Rect::new(0, 0, f.area().width, f.area().height));
             let area = centered_rect(80, 60, inner);
