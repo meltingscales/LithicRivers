@@ -33,3 +33,35 @@ New teleporters SHALL get a unique default name, and the player SHALL be able to
 #### Scenario: Rename
 - **WHEN** the player renames a teleporter to "Furnace Row"
 - **THEN** other teleporters list it as "Furnace Row"
+
+### Requirement: Transit stations activate on first use
+SapienCorp transit stations SHALL start dormant. Interacting with a dormant station SHALL activate it and say so, without opening the destination list. Dormant stations SHALL NOT appear in any destination list. Activation SHALL be saved with the world.
+
+#### Scenario: Activating a station
+- **WHEN** the player interacts with the dormant Factory Station for the first time
+- **THEN** a message says the transit node is registered, the player doesn't move, and the Factory Station appears in other stations' destination lists from then on
+
+### Requirement: Free travel between stations
+Interacting with an activated station SHALL list every other activated station. Choosing one SHALL move the player to a free tile next to it at no energy cost.
+
+#### Scenario: Station to station
+- **WHEN** the player, with the Bunker and Factory Stations activated, uses the Bunker Station to travel to the Factory Station
+- **THEN** the player stands next to the Factory Station
+
+### Requirement: Mobile tele-access device
+Using the mobile tele-access device SHALL list every player-built teleporter and every activated station. A jump SHALL cost the same as from a teleporter at the player's position, drawn from carried power cells. If the cells can't cover it, the jump SHALL not happen and a message SHALL say there is no charge.
+
+#### Scenario: Device jump
+- **WHEN** the player, carrying a charged power cell, uses the device to travel to the Bunker Station
+- **THEN** the player stands next to the Bunker Station and the cell's charge has dropped by the jump cost
+
+#### Scenario: Device with no charge
+- **WHEN** the player uses the device with only empty power cells
+- **THEN** the player doesn't move and is told there is no charge
+
+### Requirement: A station where the player wakes up
+The SapienCorp bunker SHALL have a transit station in the room where a new player wakes up.
+
+#### Scenario: New world
+- **WHEN** a new world starts
+- **THEN** a dormant transit station stands in the player's starting room in the bunker
