@@ -40,6 +40,7 @@ pub enum PaletteKey {
     WildSpawner,
     // special tile that becomes a SapienCorp transit station block
     TeleporterStation,
+    TeleporterStationInner,
     // special tiles that become a station's built-in RTG and item charger, and a pole
     SapiencorpRtg,
     StationItemCharger,

@@ -34,6 +34,8 @@
 ### SapienCorp transit stations
 - `FactoryKind::TransitStation`, placed by a `teleporter_station` structure block. A station can't be broken or picked up.
 - `TransitStation { name, activated }`, saved. The name comes from its location ("Bunker Station", "Factory Station", "Android Station", "Facility Station").
+- **The locker station:** the factory has a second station, the Locker Station, with its own RTG, pole and charger, a couple of tiles from the arm locker (`teleporter_station_inner` tile).
+- **The spawn station:** the bunker's station starts activated (silently) in a new world, so the player never has to wake the one they start beside. Old saves keep their stations as they were.
 - **First use:** interacting with a dormant station activates it and logs the handshake message. It does not jump on that same interaction. Later interactions open the destination list.
 - **Placement:** in the bunker, the station goes in the west room with the player spawn (`!` in `shape_layers.txt`). The factory, the android's site and the arm quest's facility each get one near their entrance. (In practice the android is moved beside the bunker spawn and the facility is the factory, so there are two stations.)
 - **Bank:** a station carries a battery bank like a player teleporter's (same 50 MJ capacity). It starts full and charges whether the station is awake or not.

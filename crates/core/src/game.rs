@@ -282,6 +282,10 @@ impl Game {
         // Run one tick to generate structures around the player spawn
         new_game.tick();
 
+        // The station in the wake-up room starts registered, so the player never has to
+        // wake the one they start beside
+        crate::teleporter::register_spawn_station(&mut new_game.world);
+
         new_game
     }
 

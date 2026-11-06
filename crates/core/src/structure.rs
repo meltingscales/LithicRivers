@@ -72,7 +72,7 @@ pub fn block_will_spawn_entity(tile_kind: TileKind) -> bool {
         TileKind::TreasureRare => true,
         TileKind::EnemySpawn => true,
         TileKind::WildSpawner => true,
-        TileKind::TeleporterStation => true,
+        TileKind::TeleporterStation | TileKind::TeleporterStationInner => true,
         TileKind::SapiencorpRtg | TileKind::StationItemCharger | TileKind::PowerPole => true,
         TileKind::ScrapCommon => true,
         TileKind::ScrapRare => true,
@@ -122,13 +122,14 @@ pub fn spawn_entity_for_block(
             // The game turns it into a spawner block
             game_world.wild_spawners.push((block_x, block_y, block_z));
         }
-        TileKind::TeleporterStation => {
+        TileKind::TeleporterStation | TileKind::TeleporterStationInner => {
             // The game turns it into a transit station block named for the structure
+            let inner = tile_kind == TileKind::TeleporterStationInner;
             game_world.transit_stations.push((
                 block_x,
                 block_y,
                 block_z,
-                structure_name.to_string(),
+                crate::teleporter::station_name(structure_name, inner).to_string(),
             ));
         }
         TileKind::SapiencorpRtg | TileKind::StationItemCharger | TileKind::PowerPole => {

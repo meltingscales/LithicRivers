@@ -28,6 +28,7 @@ Each folder holds:
   | `special_player_spawn` | Where a new game puts the player (the bunker) |
   | `wild_spawner` | A wild spawner block: dogs on the surface, slimes underground |
   | `teleporter_station` | A dormant SapienCorp transit station, named for its structure (`teleporter::station_name`) |
+  | `teleporter_station_inner` | A structure's second station, deeper in (the factory's Locker Station) |
   | `sapiencorp_rtg`, `station_item_charger` | A built-in RTG or item charger (can't be broken), for a station's power |
   | `power_pole` | An ordinary power pole |
 - **`plan.toml`** (optional): a short description the build compiles into the two files above.

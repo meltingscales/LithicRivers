@@ -3222,6 +3222,25 @@ ps!
             
             
             
+=== tiles/teleporter_station_inner  #FFFF00  Special worldgen block that turns into a structure's second SapienCorp transit station
+-- 1x
+Ψ
+-- 2x
+ΨΨ
+ΨΨ
+-- 3x
+ΨΨΨ
+ΨΨΨ
+ΨΨΨ
+-- art 0
+            
+            
+            
+            
+            
+            
+            
+            
 === tiles/treasure_common  #FFFF00  Special worldgen block that turns into common treasure
 -- 1x
 $

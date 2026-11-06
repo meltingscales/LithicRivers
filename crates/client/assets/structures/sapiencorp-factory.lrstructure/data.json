@@ -11,6 +11,7 @@
     "H": "station_item_charger",
     "I": "power_pole",
     "P": "teleporter_station",
+    "Q": "teleporter_station_inner",
     "R": "sapiencorp_rtg",
     "S": "scrap_rare",
     "T": "treasure_rare",

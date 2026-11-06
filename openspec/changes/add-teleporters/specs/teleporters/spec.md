@@ -81,8 +81,8 @@ Using the mobile tele-access device SHALL list every player-built teleporter and
 - **THEN** the player doesn't move and is told there is no charge
 
 ### Requirement: A station where the player wakes up
-The SapienCorp bunker SHALL have a transit station in the room where a new player wakes up.
+The SapienCorp bunker SHALL have a transit station in the room where a new player wakes up. It SHALL start activated, so the player never has to wake it.
 
 #### Scenario: New world
 - **WHEN** a new world starts
-- **THEN** a dormant transit station stands in the player's starting room in the bunker, beside an RTG, a power pole and an Item Charger
+- **THEN** an activated transit station stands in the player's starting room in the bunker, beside an RTG, a power pole and an Item Charger

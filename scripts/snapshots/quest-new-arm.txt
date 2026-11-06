@@ -35,7 +35,9 @@ key ui.MENU_PREV 3
 # The parts locker on the assembly line, seven levels down
 cheat tp_quest
 expect-text "Teleported to (114, 811, -6)"
+# The Locker Station stands just east, so pick the locker to the west
 key action.INTERACT
+key movement.MOVE_WEST
 screen locker
 # The window opens on the locker's side: take the arm
 key ui.MENU_ACTIVATE

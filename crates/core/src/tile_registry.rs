@@ -85,6 +85,7 @@ define_tiles! {
     EnemySpawn, "enemy_spawn", "enemy spawn", false,
     WildSpawner, "wild_spawner", "wild spawner", false,
     TeleporterStation, "teleporter_station", "transit station", false,
+    TeleporterStationInner, "teleporter_station_inner", "inner transit station", false,
     SapiencorpRtg, "sapiencorp_rtg", "SapienCorp RTG", false,
     StationItemCharger, "station_item_charger", "station item charger", false,
     PowerPole, "power_pole", "power pole", false,

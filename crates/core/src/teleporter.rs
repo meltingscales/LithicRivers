@@ -85,14 +85,20 @@ fn spend(world: &mut World, entity: Entity, joules: u64) {
 
 /// What a station built into a structure is called; `structure` is its folder name, with
 /// or without the `.lrstructure` suffix.
-pub fn station_name(structure: &str) -> &'static str {
+/// `inner` is a structure's second station, deeper in (the factory's, by the arm locker).
+pub fn station_name(structure: &str, inner: bool) -> &'static str {
     let structure = structure.trim_end_matches(".lrstructure");
     if structure == crate::game::FACILITY_STRUCTURE.trim_end_matches(".lrstructure") {
-        return "Factory Station";
+        return if inner {
+            "Locker Station"
+        } else {
+            "Factory Station"
+        };
     }
-    match structure {
-        "sapiencorp-bunker" => "Bunker Station",
-        _ => "Transit Station",
+    match (structure, inner) {
+        ("sapiencorp-bunker", _) => "Bunker Station",
+        (_, false) => "Transit Station",
+        (_, true) => "Inner Transit Station",
     }
 }
 
@@ -209,6 +215,20 @@ pub fn activate(world: &mut World, station: Entity) -> Option<String> {
         crate::components::SpriteRef::new("factory", "transit_station_active"),
     );
     Some(name)
+}
+
+/// Register the bunker's station, where a new player wakes up, without a message.
+pub fn register_spawn_station(world: &mut World) {
+    let spawn = station_name("sapiencorp-bunker", false);
+    let bunker: Vec<Entity> = world
+        .query::<&TransitStation>()
+        .iter()
+        .filter(|(_, s)| s.name == spawn)
+        .map(|(e, _)| e)
+        .collect();
+    for station in bunker {
+        activate(world, station);
+    }
 }
 
 /// Where a jump can be made from, and what it lists.
@@ -448,8 +468,7 @@ impl crate::Game {
                 }
             }
         }
-        for (x, y, z, structure) in std::mem::take(&mut self.res.world_state.world.transit_stations)
-        {
+        for (x, y, z, name) in std::mem::take(&mut self.res.world_state.world.transit_stations) {
             let pos = Position { x, y, z };
             // Something already stands there: the structure goes without
             if let Ok(entity) = crate::factory::place(
@@ -460,7 +479,7 @@ impl crate::Game {
                 crate::factory::Facing::North,
             ) {
                 if let Ok(mut s) = self.world.get::<&mut TransitStation>(entity) {
-                    s.name = station_name(&structure).to_string();
+                    s.name = name.to_string();
                 }
             }
         }
@@ -966,7 +985,7 @@ mod tests {
             .iter()
             .map(|(_, p)| *p)
             .collect();
-        assert_eq!(stations.len(), 2);
+        assert_eq!(stations.len(), 3);
         for s in stations {
             let near = |kind: FactoryKind| {
                 game.world
@@ -1079,7 +1098,7 @@ mod tests {
     }
 
     #[test]
-    fn a_new_world_has_a_dormant_station_in_the_wake_up_room() {
+    fn a_new_world_has_a_registered_station_in_the_wake_up_room() {
         let game = Game::new(12345);
         let player = game.get_player_position().unwrap();
         let stations: Vec<(Position, TransitStation)> = game
@@ -1092,16 +1111,41 @@ mod tests {
             .iter()
             .find(|(_, s)| s.name == "Bunker Station")
             .expect("a bunker station");
-        assert!(!bunker.activated);
+        assert!(bunker.activated, "registered from the start");
         assert_eq!(pos.z, player.z);
         assert!(
             distance(*pos, player) <= 3,
             "{pos:?} is in the room with {player:?}"
         );
-        // The arm quest's factory has one too
-        assert!(stations
+        // The arm quest's factory has two, still dormant: one at its entrance and one by
+        // the arm locker
+        for name in ["Factory Station", "Locker Station"] {
+            assert!(
+                stations.iter().any(|(_, s)| s.name == name && !s.activated),
+                "{name}"
+            );
+        }
+        let locker = game
+            .world
+            .query::<&Position>()
+            .with::<&crate::components::Inventory>()
             .iter()
-            .any(|(_, s)| s.name == "Factory Station" && !s.activated));
+            .find(|(e, _)| {
+                game.world
+                    .get::<&crate::components::Inventory>(*e)
+                    .is_ok_and(|inv| {
+                        inv.slots
+                            .iter()
+                            .any(|s| s.kind == crate::components::ItemKind::SalvagedArm)
+                    })
+            })
+            .map(|(_, p)| *p)
+            .expect("the arm locker");
+        let (station, _) = stations
+            .iter()
+            .find(|(_, s)| s.name == "Locker Station")
+            .unwrap();
+        assert!(distance(*station, locker) <= 3, "{station:?} by {locker:?}");
     }
 
     // --- 4. the mobile tele-access device -----------------------------------------------
