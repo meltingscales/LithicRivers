@@ -549,6 +549,14 @@ impl Game {
         }
     }
 
+    /// Turn the placeholder tiles that freshly placed structures left (quest treasure, wild
+    /// spawners, transit stations) into their blocks.
+    pub fn place_structure_blocks(&mut self) {
+        self.place_quest_chests();
+        self.place_wild_spawners();
+        self.place_transit_stations();
+    }
+
     /// Turn wild-spawner tiles that structures placed into spawner blocks, growing dogs on
     /// the surface and slimes underground.
     pub fn place_wild_spawners(&mut self) {
@@ -794,8 +802,7 @@ impl Game {
             }
         }
 
-        self.place_quest_chests();
-        self.place_wild_spawners();
+        self.place_structure_blocks();
         crate::systems::fog_of_war::update_fog_of_war(&mut self.world, &self.res);
     }
 

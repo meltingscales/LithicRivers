@@ -237,6 +237,12 @@ pub enum ItemKind {
     NuclearSlimeEmbryoFlawed,
     NuclearSlimeEmbryoFlawless,
     StoneBrick,
+    Teleporter,
+    Battery,
+    CrudePowerCell,
+    StandardPowerCell,
+    AdvancedPowerCell,
+    MobileTeleAccessDevice,
 }
 
 pub fn itemkind_name(kind: ItemKind) -> &'static str {
@@ -304,6 +310,12 @@ pub fn itemkind_name(kind: ItemKind) -> &'static str {
         ItemKind::NuclearSlimeEmbryoFlawed => "Nuclear Slime Embryo (Flawed)",
         ItemKind::NuclearSlimeEmbryoFlawless => "Nuclear Slime Embryo (Flawless)",
         ItemKind::StoneBrick => "Stone Brick",
+        ItemKind::Teleporter => "Teleporter",
+        ItemKind::Battery => "Battery",
+        ItemKind::CrudePowerCell => "Crude Power Cell",
+        ItemKind::StandardPowerCell => "Standard Power Cell",
+        ItemKind::AdvancedPowerCell => "Advanced Power Cell",
+        ItemKind::MobileTeleAccessDevice => "Mobile Tele-Access Device",
     }
 }
 
@@ -372,6 +384,12 @@ pub fn itemkind_sprite_name(kind: ItemKind) -> &'static str {
         ItemKind::NuclearSlimeEmbryoFlawed => "nuclear_slime_embryo_flawed",
         ItemKind::NuclearSlimeEmbryoFlawless => "nuclear_slime_embryo_flawless",
         ItemKind::StoneBrick => "stone_brick",
+        ItemKind::Teleporter => "teleporter",
+        ItemKind::Battery => "battery",
+        ItemKind::CrudePowerCell => "crude_power_cell",
+        ItemKind::StandardPowerCell => "standard_power_cell",
+        ItemKind::AdvancedPowerCell => "advanced_power_cell",
+        ItemKind::MobileTeleAccessDevice => "mobile_tele_access_device",
     }
 }
 
@@ -440,6 +458,12 @@ pub fn parse_itemkind_from_sprite_name(sprite_name: &str) -> Option<ItemKind> {
         "nuclear_slime_embryo_flawed" => Some(ItemKind::NuclearSlimeEmbryoFlawed),
         "nuclear_slime_embryo_flawless" => Some(ItemKind::NuclearSlimeEmbryoFlawless),
         "stone_brick" => Some(ItemKind::StoneBrick),
+        "teleporter" => Some(ItemKind::Teleporter),
+        "battery" => Some(ItemKind::Battery),
+        "crude_power_cell" => Some(ItemKind::CrudePowerCell),
+        "standard_power_cell" => Some(ItemKind::StandardPowerCell),
+        "advanced_power_cell" => Some(ItemKind::AdvancedPowerCell),
+        "mobile_tele_access_device" => Some(ItemKind::MobileTeleAccessDevice),
         _ => None,
     }
 }
@@ -454,12 +478,32 @@ pub fn get_all_item_sprite_names() -> Vec<&'static str> {
 pub struct ItemStack {
     pub kind: ItemKind,
     pub qty: u32,
+    /// A power cell's charge in joules; `None` for everything else (and an empty cell)
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub charge_j: Option<u64>,
 }
 
 impl ItemStack {
     pub fn new(kind: ItemKind, qty: u32) -> Self {
-        Self { kind, qty }
+        Self {
+            kind,
+            qty,
+            charge_j: None,
+        }
     }
+}
+
+/// A stack's name for lists: the item's name, with a power cell's charge after it.
+pub fn stack_name(stack: &ItemStack) -> String {
+    match crate::power_cells::charge_label(stack) {
+        Some(charge) => format!("{} ({charge})", itemkind_name(stack.kind)),
+        None => itemkind_name(stack.kind).to_string(),
+    }
+}
+
+/// Whether items of this kind share a stack. Power cells don't: each keeps its own charge.
+pub fn stacks(kind: ItemKind) -> bool {
+    !crate::power_cells::is_cell(kind)
 }
 
 // -----------------------------
@@ -496,8 +540,16 @@ impl Default for Inventory {
 }
 
 impl Inventory {
+    /// Add `qty` items. Kinds that stack join their stack; others (power cells) each take
+    /// a slot of their own, as far as there are slots.
     pub fn add(&mut self, kind: ItemKind, qty: u32) {
         if qty == 0 {
+            return;
+        }
+        if !stacks(kind) {
+            for _ in 0..qty {
+                self.add_stack(ItemStack::new(kind, 1));
+            }
             return;
         }
         if let Some(s) = self.slots.iter_mut().find(|s| s.kind == kind) {
@@ -507,6 +559,39 @@ impl Inventory {
         if self.slots.len() < self.max_slots {
             self.slots.push(ItemStack::new(kind, qty));
         }
+    }
+
+    /// Whether one more item of `kind` fits.
+    pub fn has_room_for(&self, kind: ItemKind) -> bool {
+        (stacks(kind) && self.slots.iter().any(|s| s.kind == kind))
+            || self.slots.len() < self.max_slots
+    }
+
+    /// Add a whole stack, keeping a power cell's charge. Returns whether it fit.
+    pub fn add_stack(&mut self, stack: ItemStack) -> bool {
+        if stacks(stack.kind) {
+            if !self.has_room_for(stack.kind) {
+                return false;
+            }
+            self.add(stack.kind, stack.qty);
+            return true;
+        }
+        if self.slots.len() >= self.max_slots {
+            return false;
+        }
+        self.slots.push(stack);
+        true
+    }
+
+    /// Take one item from stack `slot`, with its charge if it is a cell.
+    pub fn take_one(&mut self, slot: usize) -> Option<ItemStack> {
+        let stack = self.slots.get_mut(slot).filter(|s| s.qty > 0)?;
+        stack.qty -= 1;
+        let taken = ItemStack { qty: 1, ..*stack };
+        if stack.qty == 0 {
+            self.slots.remove(slot);
+        }
+        Some(taken)
     }
 }
 

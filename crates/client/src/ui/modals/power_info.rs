@@ -28,6 +28,18 @@ pub(crate) fn render_power_info_modal(f: &mut Frame, app: &App) {
                 network.generators.len(),
                 network.consumers.len()
             )));
+            if !network.batteries.is_empty() {
+                let flow: i64 = network.battery_flows.iter().map(|(_, w)| w).sum();
+                let doing = match flow {
+                    w if w > 0 => format!("charging at {} kW", w / 1000),
+                    w if w < 0 => format!("discharging at {} kW", -w / 1000),
+                    _ => "idle".to_string(),
+                };
+                lines.push(Line::from(format!(
+                    "Stored: {}, {doing}",
+                    lithicrivers_core::teleporter::format_mj(network.stored_j),
+                )));
+            }
         }
         None => lines.push(Line::from("Not part of a network yet")),
     }

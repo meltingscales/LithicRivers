@@ -196,11 +196,15 @@ pub fn nearby_interactions(app: &App) -> Option<NearbyInteractions> {
             | FactoryKind::CrudeVat
             | FactoryKind::StandardVat
             | FactoryKind::AdvancedVat
-            | FactoryKind::Spawner => available_actions.push(InteractionType::OpenMachine {
+            | FactoryKind::Spawner
+            | FactoryKind::Battery => available_actions.push(InteractionType::OpenMachine {
                 entity,
                 position,
                 kind: block.kind,
             }),
+            FactoryKind::Teleporter | FactoryKind::TransitStation => {
+                available_actions.push(InteractionType::UseTeleporter { entity, position })
+            }
             _ => {}
         }
     }
@@ -445,6 +449,16 @@ pub fn execute_interaction_action(app: &mut App, action: &crate::app_state::Inte
         }
         InteractionType::InspectPole { entity, .. } => {
             app.panels.power_info = Some(*entity);
+        }
+        InteractionType::UseTeleporter { entity, .. } => {
+            // A dormant station wakes up instead of opening
+            if !app.core.game.activate_station(*entity) {
+                app.panels.teleporter_window = Some(crate::app_state::TeleporterWindow {
+                    entity: *entity,
+                    selected: 0,
+                    renaming: None,
+                });
+            }
         }
         InteractionType::SetFilter { entity, .. } => {
             // Start on the current filter

@@ -26,6 +26,8 @@ Each folder holds:
   | `scrap_common`, `scrap_rare` | Scrap on the floor |
   | `treasure_quest_1` | The arm quest's parts locker (once per world) |
   | `special_player_spawn` | Where a new game puts the player (the bunker) |
+  | `wild_spawner` | A wild spawner block: dogs on the surface, slimes underground |
+  | `teleporter_station` | A dormant SapienCorp transit station, named for its structure (`teleporter::station_name`) |
 - **`plan.toml`** (optional): a short description the build compiles into the two files above.
 
 A structure has one source: its `plan.toml` if it has one, else its hand-written `shape_layers.txt`. Nothing else rewrites hand-written layers, so edit them directly. Never edit the layers of a planned structure: `cargo test` fails until they match the plan again.

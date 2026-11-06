@@ -141,7 +141,7 @@ fn render_corpse_loot_modal(
     selected_player_item: usize,
     loot_panel_focus: bool,
 ) {
-    use lithicrivers_core::components::{itemkind_name, Inventory as InvComp};
+    use lithicrivers_core::components::Inventory as InvComp;
     use ratatui::{
         style::Modifier,
         text::{Line, Span},
@@ -289,6 +289,17 @@ fn render_corpse_loot_modal(
                 ),
             )
         }
+        Some(FactoryKind::Battery) => (
+            format!(
+                " Battery - {} ",
+                lithicrivers_core::power_cells::battery_status(
+                    &app.core.game.world,
+                    &app.core.game.res,
+                    corpse_entity
+                )
+            ),
+            " Cell slot ".to_string(),
+        ),
         Some(_) => (
             " Chest ".to_string(),
             format!(
@@ -349,10 +360,7 @@ fn render_corpse_loot_modal(
                 Style::default()
             };
 
-            ListItem::new(Line::from(Span::styled(
-                format!("{:2} x {}", stack.qty, itemkind_name(stack.kind)),
-                style,
-            )))
+            ListItem::new(Line::from(Span::styled(stack_row(stack), style)))
         })
         .collect();
 
@@ -406,10 +414,7 @@ fn render_corpse_loot_modal(
                 Style::default()
             };
 
-            ListItem::new(Line::from(Span::styled(
-                format!("{:2} x {}", stack.qty, itemkind_name(stack.kind)),
-                style,
-            )))
+            ListItem::new(Line::from(Span::styled(stack_row(stack), style)))
         })
         .collect();
 
@@ -469,4 +474,15 @@ fn inset(rect: Rect) -> Rect {
         rect.width.saturating_sub(2),
         rect.height.saturating_sub(2),
     )
+}
+
+/// A transfer-window row: the count and name, or for a power cell (always one) its name
+/// and charge alone, so the charge fits.
+fn stack_row(stack: &lithicrivers_core::components::ItemStack) -> String {
+    let name = lithicrivers_core::components::stack_name(stack);
+    if lithicrivers_core::components::stacks(stack.kind) {
+        format!("{:2} x {name}", stack.qty)
+    } else {
+        name
+    }
 }

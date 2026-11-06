@@ -60,7 +60,8 @@ pub fn peek(world: &World, source: Entity, filter: Option<ItemKind>) -> Option<I
     let inv = world.get::<&Inventory>(source).ok()?;
     inv.slots
         .iter()
-        .find(|s| s.qty > 0 && matches(s.kind))
+        // Power cells stay put: belts would lose their charge
+        .find(|s| s.qty > 0 && matches(s.kind) && !crate::power_cells::is_cell(s.kind))
         .map(|s| s.kind)
 }
 

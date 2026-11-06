@@ -68,6 +68,7 @@ fn modal_open(app: &App) -> bool {
     use crate::app_state::*;
     app.panels.furnace_window.is_some()
         || app.panels.filter_picker.is_some()
+        || app.panels.teleporter_window.is_some()
         || app.panels.blueprint_window.is_some()
         || app.panels.stairs_prompt.is_some()
         || crate::app::input::death::showing(app)
@@ -1102,7 +1103,7 @@ pub(crate) mod tests {
                 .unwrap();
             for &(kind, qty) in recipe.ingredients {
                 inv.slots
-                    .push(lithicrivers_core::components::ItemStack { kind, qty });
+                    .push(lithicrivers_core::components::ItemStack::new(kind, qty));
             }
         }
         let before = player_count(&runner, recipe.result);

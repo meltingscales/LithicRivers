@@ -86,6 +86,18 @@ pub const EXAMPLES: &[Example] = &[
         has_input: false,
         build: lantern,
     },
+    Example {
+        name: "Teleporters: two linked, one charging on the grid; two active transit stations",
+        size: (9, 3),
+        has_input: true,
+        build: teleporters,
+    },
+    Example {
+        name: "Battery bank: an electric furnace keeps smelting after the burner's fuel runs out",
+        size: (3, 2),
+        has_input: true,
+        build: battery_bank,
+    },
 ];
 
 /// The top-left corner of the first example; the rest follow eastward.
@@ -315,6 +327,78 @@ fn resurrection_vats(game: &mut Game, o: Position) {
     }
 }
 
+/// Two teleporters, the west one charging from two burners (short of its full rate) and
+/// already holding enough for the jump east; and a pair of activated transit stations
+/// below them, free to travel between.
+///
+/// ```text
+///   G G P T . . . . T
+///   . . . . . . . . .
+///   S . . . . . . . S
+/// ```
+fn teleporters(game: &mut Game, o: Position) {
+    for dx in [0, 1] {
+        let generator = place(
+            game,
+            FactoryKind::BurnerGenerator,
+            at(o, dx, 0),
+            Facing::North,
+        );
+        fill(game, generator, &[(ItemKind::Biochar, 20)]);
+    }
+    place(game, FactoryKind::PowerPole, at(o, 2, 0), Facing::North);
+    let west = place(game, FactoryKind::Teleporter, at(o, 3, 0), Facing::North);
+    let east = place(game, FactoryKind::Teleporter, at(o, 8, 0), Facing::North);
+    crate::teleporter::rename(&mut game.world, west, "Showcase West");
+    crate::teleporter::rename(&mut game.world, east, "Showcase East");
+    if let Ok(mut t) = game.world.get::<&mut crate::teleporter::Teleporter>(west) {
+        t.charge_j = 30_000_000;
+    }
+    for (dx, name) in [(0, "West Station"), (8, "East Station")] {
+        let station = place(
+            game,
+            FactoryKind::TransitStation,
+            at(o, dx, 2),
+            Facing::North,
+        );
+        if let Ok(mut s) = game
+            .world
+            .get::<&mut crate::teleporter::TransitStation>(station)
+        {
+            s.name = name.to_string();
+        }
+        crate::teleporter::activate(&mut game.world, station);
+    }
+}
+
+/// A burner with one stick of fuel, a pole, a charged battery with a power cell in its
+/// slot, and an electric furnace full of logs: the furnace keeps smelting on the battery
+/// once the stick is burned, and the battery charges the cell meanwhile.
+///
+/// ```text
+///   G P B
+///   . F .
+/// ```
+fn battery_bank(game: &mut Game, o: Position) {
+    let generator = place(game, FactoryKind::BurnerGenerator, o, Facing::North);
+    fill(game, generator, &[(ItemKind::Stick, 1)]);
+    place(game, FactoryKind::PowerPole, at(o, 1, 0), Facing::North);
+    let battery = place(game, FactoryKind::Battery, at(o, 2, 0), Facing::North);
+    if let Ok(mut b) = game.world.get::<&mut crate::power_cells::Battery>(battery) {
+        b.stored_j = 6_000_000;
+    }
+    fill(game, battery, &[(ItemKind::CrudePowerCell, 1)]);
+    let furnace = place(
+        game,
+        FactoryKind::ElectricFurnace,
+        at(o, 1, 1),
+        Facing::South,
+    );
+    if let Ok(mut f) = game.world.get::<&mut crate::furnace::Furnace>(furnace) {
+        f.input = Some(crate::components::ItemStack::new(ItemKind::Log, 16));
+    }
+}
+
 /// A chest of logs, an extractor pulling them onto two belts, and a chest at the end.
 ///
 /// ```text
@@ -465,6 +549,12 @@ pub fn fingerprint(game: &mut Game, example: &Example, origin: Position) -> Stri
                 if let Ok(belt) = game.world.get::<&factory::BeltSlot>(block) {
                     parts.insert(format!("{dx},{dy} belt {:?}", belt.item));
                 }
+                if let Ok(b) = game.world.get::<&crate::power_cells::Battery>(block) {
+                    parts.insert(format!("{dx},{dy} stored {}", b.stored_j));
+                }
+                if let Ok(t) = game.world.get::<&crate::teleporter::Teleporter>(block) {
+                    parts.insert(format!("{dx},{dy} charge {}", t.charge_j));
+                }
             }
         }
     }
@@ -560,6 +650,50 @@ mod tests {
                 );
             }
         }
+    }
+
+    #[test]
+    fn the_battery_bank_keeps_the_furnace_smelting_past_the_fuel() {
+        let mut game = showcase();
+        let (_, o) = layout()
+            .into_iter()
+            .find(|(e, _)| e.name.starts_with("Battery bank"))
+            .unwrap();
+        let generator = game.res.factory_index[&o];
+        let battery = game.res.factory_index[&at(o, 2, 0)];
+        let furnace = game.res.factory_index[&at(o, 1, 1)];
+        // 10 game seconds: the stick lasts under one factory second of the furnace's 90 kW
+        game.pass_time();
+        let fuel_left = game
+            .world
+            .get::<&Inventory>(generator)
+            .is_ok_and(|inv| !inv.slots.is_empty());
+        assert!(!fuel_left, "the stick is burned");
+        let consumer = *game
+            .world
+            .get::<&crate::power::PowerConsumer>(furnace)
+            .unwrap();
+        let state = game
+            .world
+            .get::<&crate::furnace::Furnace>(furnace)
+            .map(|f| format!("{:?}", *f))
+            .unwrap();
+        assert!(consumer.active, "{state}");
+        assert_eq!(
+            consumer.satisfaction_permille, 1000,
+            "the battery covers it"
+        );
+        let stored = game
+            .world
+            .get::<&crate::power_cells::Battery>(battery)
+            .unwrap()
+            .stored_j;
+        assert!(stored < 6_000_000);
+        let cell = game.world.get::<&Inventory>(battery).unwrap().slots[0];
+        assert!(
+            crate::power_cells::charge(&cell) > 0,
+            "the cell charges too"
+        );
     }
 
     #[test]

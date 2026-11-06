@@ -310,6 +310,7 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
     drop(fog);
 
     climb_overlay(app, area, &mut lines);
+    arrival_overlay(app, area, &mut lines);
     hover_overlay(app, area, &mut lines);
     blueprint_overlay(app, area, &mut lines);
 
@@ -318,6 +319,41 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
         .wrap(Wrap { trim: false });
 
     f.render_widget(paragraph, area);
+}
+
+/// How long the rings around a teleport landing last.
+pub const ARRIVAL_MILLIS: u128 = 900;
+
+/// Right after a teleport, rings spread out from where the player landed: the tiles one
+/// step away for the first third, then two, then three. Drawing only.
+fn arrival_overlay(app: &mut crate::App, area: Rect, lines: &mut [Line]) {
+    let Some((landed, start)) = app.ui.teleport_arrival else {
+        return;
+    };
+    let elapsed = app.clock.since(start).as_millis();
+    if elapsed >= ARRIVAL_MILLIS || landed.z != app.ui.view_z {
+        return;
+    }
+    let ring = 1 + (elapsed * 3 / ARRIVAL_MILLIS) as i64;
+    let (glyph, color) = match ring {
+        1 => ('*', Color::Rgb(0xC8, 0xFF, 0xF8)),
+        2 => ('+', Color::Rgb(0x7F, 0xE0, 0xD4)),
+        _ => ('.', Color::Rgb(0x4F, 0xA0, 0x98)),
+    };
+    let scale = app.ui.scale.as_i64();
+    for (row, line) in lines.iter_mut().enumerate() {
+        for (col, span) in line.spans.iter_mut().enumerate() {
+            let (x, y, _, _) = cell_to_tile(
+                (app.ui.view_x, app.ui.view_y),
+                (area.width as i64, area.height as i64),
+                scale,
+                (col as i64, row as i64),
+            );
+            if (x - landed.x).abs().max((y - landed.y).abs()) == ring {
+                *span = Span::styled(glyph.to_string(), Style::default().fg(color));
+            }
+        }
+    }
 }
 
 /// Highlight the tile under the mouse; in Place mode, show a dim ghost of the selected

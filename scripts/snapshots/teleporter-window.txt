@@ -1,0 +1,20 @@
+# The showcase's west teleporter: its battery charging on two burners, the jump east and
+# the two transit stations with their costs
+seed 12345
+size 100x30
+world factory-showcase
+key ui.MENU_PREV
+cheat tp 83 -6 0
+key action.PASS_TIME
+key action.INTERACT
+expect-text "Showcase West"
+screen teleporter-window
+# Jump east: the battery pays, and rings spread from the landing for under a second
+key ui.MENU_DOWN
+key ui.MENU_ACTIVATE
+expect-text "You step out beside Showcase East"
+screen arrival-rings
+wait 1000
+key action.INTERACT
+expect-text "Showcase East"
+screen east-window

@@ -83,9 +83,18 @@ pub struct Network {
     pub poles: Vec<Entity>,
     pub generators: Vec<Entity>,
     pub consumers: Vec<Entity>,
+    /// Batteries, in position order (the order they charge and discharge in)
+    #[serde(default)]
+    pub batteries: Vec<Entity>,
     /// Last step's figures, in watts
     pub supply_w: u64,
     pub demand_w: u64,
+    /// Energy stored in its batteries after last step, in joules
+    #[serde(default)]
+    pub stored_j: u64,
+    /// What each battery did last step, in watts: positive charging, negative discharging
+    #[serde(default)]
+    pub battery_flows: Vec<(Entity, i64)>,
 }
 
 /// The networks, derived from the factory blocks and rebuilt when `dirty`. Saved anyway
@@ -116,6 +125,7 @@ impl PowerNetworks {
             n.poles.contains(&entity)
                 || n.generators.contains(&entity)
                 || n.consumers.contains(&entity)
+                || n.batteries.contains(&entity)
         })
     }
 }
@@ -152,7 +162,15 @@ fn union(parent: &mut [usize], a: usize, b: usize) {
     }
 }
 
-/// Rebuild every network from the poles, generators and consumers in the world.
+/// What a block joins a network as.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Member {
+    Generator,
+    Consumer,
+    Battery,
+}
+
+/// Rebuild every network from the poles, generators, consumers and batteries in the world.
 pub fn rebuild(world: &World) -> PowerNetworks {
     let mut poles: Vec<(Entity, Position)> = world
         .query::<&Position>()
@@ -174,22 +192,29 @@ pub fn rebuild(world: &World) -> PowerNetworks {
     }
 
     // Each block joins (and merges) the networks of every pole covering it
-    let mut members: Vec<(Entity, Position, bool)> = world
+    let mut members: Vec<(Entity, Position, Member)> = world
         .query::<&Position>()
         .with::<&Generator>()
         .iter()
-        .map(|(e, p)| (e, *p, true))
+        .map(|(e, p)| (e, *p, Member::Generator))
         .chain(
             world
                 .query::<&Position>()
                 .with::<&PowerConsumer>()
                 .iter()
-                .map(|(e, p)| (e, *p, false)),
+                .map(|(e, p)| (e, *p, Member::Consumer)),
+        )
+        .chain(
+            world
+                .query::<&Position>()
+                .with::<&crate::power_cells::Battery>()
+                .iter()
+                .map(|(e, p)| (e, *p, Member::Battery)),
         )
         .collect();
     members.sort_by_key(|(_, p, _)| sort_key(p));
-    let mut attached: Vec<(Entity, bool, usize)> = Vec::new();
-    for &(entity, pos, is_generator) in &members {
+    let mut attached: Vec<(Entity, Member, usize)> = Vec::new();
+    for &(entity, pos, member) in &members {
         let covering: Vec<usize> = (0..poles.len())
             .filter(|&i| poles[i].1.z == pos.z && chebyshev(poles[i].1, pos) <= SUPPLY_RADIUS)
             .collect();
@@ -197,7 +222,7 @@ pub fn rebuild(world: &World) -> PowerNetworks {
             union(&mut parent, pair[0], pair[1]);
         }
         if let Some(&first) = covering.first() {
-            attached.push((entity, is_generator, first));
+            attached.push((entity, member, first));
         }
     }
 
@@ -209,18 +234,21 @@ pub fn rebuild(world: &World) -> PowerNetworks {
             poles: Vec::new(),
             generators: Vec::new(),
             consumers: Vec::new(),
+            batteries: Vec::new(),
             supply_w: 0,
             demand_w: 0,
+            stored_j: 0,
+            battery_flows: Vec::new(),
         });
         network.poles.push(entity);
     }
-    for (entity, is_generator, pole) in attached {
+    for (entity, member, pole) in attached {
         let root = find(&mut parent, pole);
         let network = by_root.get_mut(&root).expect("every pole has a network");
-        if is_generator {
-            network.generators.push(entity);
-        } else {
-            network.consumers.push(entity);
+        match member {
+            Member::Generator => network.generators.push(entity),
+            Member::Consumer => network.consumers.push(entity),
+            Member::Battery => network.batteries.push(entity),
         }
     }
     let mut networks: Vec<Network> = by_root.into_values().collect();
@@ -290,17 +318,42 @@ pub fn step_power(world: &mut World, res: &mut Resources) {
             .map(|&g| available_j(world, g))
             .collect();
         let total_available: u64 = available.iter().sum();
-        let supplied = demand_j.min(total_available);
+        let from_generators = demand_j.min(total_available);
+        // Batteries, in position order, cover a deficit or store a surplus, up to their rate
+        let battery_step = crate::power_cells::BATTERY_RATE_W / STEPS_PER_FACTORY_SECOND;
+        let mut deficit = demand_j - from_generators;
+        let mut surplus = total_available - from_generators;
+        let (mut discharged, mut charged) = (0, 0);
+        let mut flows = Vec::with_capacity(network.batteries.len());
+        let mut stored_j = 0;
+        for &b in &network.batteries {
+            let Ok(mut battery) = world.get::<&mut crate::power_cells::Battery>(b) else {
+                continue;
+            };
+            let out = battery_step.min(battery.stored_j).min(deficit);
+            let room = crate::power_cells::BATTERY_CAPACITY_J.saturating_sub(battery.stored_j);
+            let into = battery_step.min(room).min(surplus);
+            battery.stored_j = battery.stored_j - out + into;
+            deficit -= out;
+            surplus -= into;
+            discharged += out;
+            charged += into;
+            stored_j += battery.stored_j;
+            let watts = (into as i64 - out as i64) * STEPS_PER_FACTORY_SECOND as i64;
+            flows.push((b, watts));
+        }
+        let supplied = from_generators + discharged;
+        let drawn = from_generators + charged;
         // An idle network is fully satisfied
         let satisfaction = (supplied * 1000).checked_div(demand_j).unwrap_or(1000) as u16;
-        // Generators share in proportion to what they can give; the rounding remainder
-        // goes to the first generators, one joule each
-        if supplied > 0 {
+        // Generators share what is drawn in proportion to what they can give; the rounding
+        // remainder goes to the first generators, one joule each
+        if drawn > 0 {
             let mut shares: Vec<u64> = available
                 .iter()
-                .map(|&a| supplied * a / total_available)
+                .map(|&a| drawn * a / total_available)
                 .collect();
-            let mut remainder = supplied - shares.iter().sum::<u64>();
+            let mut remainder = drawn - shares.iter().sum::<u64>();
             for (share, &a) in shares.iter_mut().zip(&available) {
                 if remainder == 0 {
                     break;
@@ -323,6 +376,8 @@ pub fn step_power(world: &mut World, res: &mut Resources) {
         }
         network.supply_w = supplied * STEPS_PER_FACTORY_SECOND;
         network.demand_w = demand_j * STEPS_PER_FACTORY_SECOND;
+        network.stored_j = stored_j;
+        network.battery_flows = flows;
     }
     res.power.networks = networks;
 }
@@ -339,6 +394,8 @@ pub fn is_grid_block(kind: FactoryKind) -> bool {
             | FactoryKind::StandardVat
             | FactoryKind::AdvancedVat
             | FactoryKind::Spawner
+            | FactoryKind::Teleporter
+            | FactoryKind::Battery
     ) || kind.is_test_consumer()
 }
 

@@ -589,7 +589,7 @@ mod tests {
             (ItemKind::Acorn, 5),
         ]
         .into_iter()
-        .map(|(kind, qty)| ItemStack { kind, qty })
+        .map(|(kind, qty)| ItemStack::new(kind, qty))
         .collect();
         assert_eq!(
             wreck_description("Torso destroyed by a dog", &slots),

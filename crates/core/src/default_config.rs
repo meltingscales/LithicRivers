@@ -115,6 +115,11 @@ pub fn default_config() -> ConfigRoot {
             "DELETE_CHAR": ["BACKSPACE"], // While renaming: erase a character
             "END_RENAME": ["ENTER"]       // While renaming: keep the new name
         },
+        "teleporter": {
+            "RENAME": ["r"],              // Teleporter window: rename the teleporter
+            "DELETE_CHAR": ["BACKSPACE"], // While renaming: erase a character
+            "END_RENAME": ["ENTER"]       // While renaming: keep the new name
+        },
         "global_map": {
             "DELETE_MARKER": ["x"],              // Global Map: delete the selected waypoint or wreck marker
             "CONFIRM_DELETE": ["y"],             // Delete marker prompt: yes
@@ -135,6 +140,7 @@ pub fn default_config() -> ConfigRoot {
         },
         "inventory": {
             "DROP_ITEM": ["g"], // Drop item
+            "USE_ITEM": ["u"], // Use the selected gear (the mobile tele-access device)
             "DESTROY_ITEM": ["x"], // Destroy item, remove later
             "CHEAT_DUPLICATE_ITEM": ["."], // Duplicate item, remove later
             "TOGGLE_ITEM_AUTO_PICKUP_KEY": ["p"] // Toggle item auto pickup

@@ -23,7 +23,12 @@ pub fn take_item_from_corpse(app: &mut App, corpse_entity: hecs::Entity, item_id
 
     if let Some((item_kind, item_name)) = item_info {
         // Take one item from corpse
+        let mut taken = None;
         if let Ok(mut corpse_inv) = app.core.game.world.get::<&mut InvComp>(corpse_entity) {
+            taken = corpse_inv
+                .slots
+                .get(item_idx)
+                .map(|s| ItemStack { qty: 1, ..*s });
             if let Some(stack) = corpse_inv.slots.get_mut(item_idx) {
                 if stack.qty > 0 {
                     stack.qty -= 1;
@@ -36,7 +41,16 @@ pub fn take_item_from_corpse(app: &mut App, corpse_entity: hecs::Entity, item_id
             }
         }
 
-        // Add to player inventory
+        // Add to player inventory; a power cell keeps its own stack and charge
+        if !lithicrivers_core::components::stacks(item_kind) {
+            if let (Some(player), Some(stack)) = (app.core.game.get_player_entity(), taken) {
+                if let Ok(mut player_inv) = app.core.game.world.get::<&mut InvComp>(player) {
+                    player_inv.slots.push(stack);
+                }
+                app.core.game.res.log(format!("Took {}", item_name));
+            }
+            return;
+        }
         if let Some(player_entity) = app.core.game.get_player_entity() {
             if let Ok(mut player_inv) = app.core.game.world.get::<&mut InvComp>(player_entity) {
                 // Try to stack with existing item
@@ -51,10 +65,7 @@ pub fn take_item_from_corpse(app: &mut App, corpse_entity: hecs::Entity, item_id
 
                 // Create new stack if couldn't add to existing
                 if !added {
-                    player_inv.slots.push(ItemStack {
-                        kind: item_kind,
-                        qty: 1,
-                    });
+                    player_inv.slots.push(ItemStack::new(item_kind, 1));
                 }
 
                 app.core.game.res.log(format!("Took {}", item_name));
@@ -246,6 +257,11 @@ pub fn handle_corpse_looting_input(app: &mut App, key: KeyCode) -> Result<bool, 
                         if item != lithicrivers_core::components::ItemKind::Acorn =>
                     {
                         Some("The auto-planter only takes acorns".to_string())
+                    }
+                    (FactoryKind::Battery, Some(item))
+                        if !lithicrivers_core::power_cells::is_cell(item) =>
+                    {
+                        Some("The battery only takes power cells".to_string())
                     }
                     (FactoryKind::AutoHarvester, Some(_)) => {
                         Some("The auto-harvester only gives items out".to_string())

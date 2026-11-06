@@ -257,15 +257,15 @@ pub fn handle_body_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn Er
 
                                         // Update player inventory
                                         if let Ok(mut inv) = app.core.game.world.get::<&mut lithicrivers_core::components::Inventory>(player_entity) {
+                                            // Power cells keep their own stacks and charge
+                                            let cells: Vec<_> = inv.slots.iter().copied().filter(|s| !lithicrivers_core::components::stacks(s.kind)).collect();
                                             inv.slots.clear();
                                             for (item_kind, quantity) in inventory {
-                                                if quantity > 0 {
-                                                    inv.slots.push(lithicrivers_core::components::ItemStack {
-                                                        kind: item_kind,
-                                                        qty: quantity,
-                                                    });
+                                                if quantity > 0 && lithicrivers_core::components::stacks(item_kind) {
+                                                    inv.slots.push(lithicrivers_core::components::ItemStack::new(item_kind, quantity));
                                                 }
                                             }
+                                            inv.slots.extend(cells);
                                         }
 
                                         app.core.game.res.log(format!(

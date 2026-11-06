@@ -74,6 +74,7 @@ fn interaction_label(action: &InteractionType) -> String {
         InteractionType::OpenFurnace { .. } => "open furnace".to_string(),
         InteractionType::SetFilter { .. } => "set filter".to_string(),
         InteractionType::InspectPole { .. } => "inspect pole".to_string(),
+        InteractionType::UseTeleporter { .. } => "use teleporter".to_string(),
         InteractionType::LoadBelt { item, .. } => format!(
             "{} on belt",
             lithicrivers_core::components::itemkind_name(*item)

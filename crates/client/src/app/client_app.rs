@@ -159,6 +159,10 @@ impl App {
                         .as_ref()
                         .is_some_and(|p| p.search.typing)
                     || panels
+                        .teleporter_window
+                        .as_ref()
+                        .is_some_and(|w| w.renaming.is_some())
+                    || panels
                         .blueprint_window
                         .as_ref()
                         .is_some_and(|w| w.renaming.is_some())

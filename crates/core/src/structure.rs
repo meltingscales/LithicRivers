@@ -72,6 +72,7 @@ pub fn block_will_spawn_entity(tile_kind: TileKind) -> bool {
         TileKind::TreasureRare => true,
         TileKind::EnemySpawn => true,
         TileKind::WildSpawner => true,
+        TileKind::TeleporterStation => true,
         TileKind::ScrapCommon => true,
         TileKind::ScrapRare => true,
         TileKind::TreasureQuest1 => true,
@@ -84,7 +85,7 @@ pub fn block_will_spawn_entity(tile_kind: TileKind) -> bool {
 pub fn spawn_entity_for_block(
     game_world: &mut GameWorld,
     ecs_world: &mut ECSWorld,
-    _structure_name: &str,
+    structure_name: &str,
     tile_kind: TileKind,
     block_x: i64,
     block_y: i64,
@@ -119,6 +120,15 @@ pub fn spawn_entity_for_block(
         TileKind::WildSpawner => {
             // The game turns it into a spawner block
             game_world.wild_spawners.push((block_x, block_y, block_z));
+        }
+        TileKind::TeleporterStation => {
+            // The game turns it into a transit station block named for the structure
+            game_world.transit_stations.push((
+                block_x,
+                block_y,
+                block_z,
+                structure_name.to_string(),
+            ));
         }
         TileKind::TreasureQuest1 => {
             // The game turns it into the quest chest, once per world

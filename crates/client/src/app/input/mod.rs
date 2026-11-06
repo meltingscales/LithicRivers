@@ -20,6 +20,7 @@ pub mod quests;
 pub mod search;
 pub mod splash;
 pub mod stairs_prompt;
+pub mod teleporter_window;
 pub mod tutorial_selection;
 pub mod tutorial_skip;
 pub mod world_action;

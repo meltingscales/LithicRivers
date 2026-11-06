@@ -8,6 +8,7 @@
     ">": "stairs",
     "D": "door",
     "E": "enemy_spawn",
+    "P": "teleporter_station",
     "S": "scrap_rare",
     "T": "treasure_rare",
     "s": "scrap_common",

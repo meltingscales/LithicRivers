@@ -235,6 +235,7 @@ fn ui_main(f: &mut Frame, app: &mut App) {
     crate::ui::modals::render_power_info_modal(f, app);
     crate::ui::modals::render_furnace_window(f, app);
     crate::ui::modals::render_filter_picker(f, app);
+    crate::ui::modals::render_teleporter_window(f, app);
     crate::ui::modals::render_blueprint_window(f, app);
     crate::ui::modals::render_stairs_prompt(f, app);
 

@@ -70,6 +70,28 @@ pub fn handle_inventory_input(app: &mut App, key: KeyCode) -> Result<bool, Box<d
         }
     }
 
+    // Use the selected gear: the mobile tele-access device opens its destination window
+    if app.ui.keybinds.matches("inventory", "USE_ITEM", &key) {
+        match selected {
+            Some((ItemKind::MobileTeleAccessDevice, _)) => {
+                if let Some(player) = app.core.game.get_player_entity() {
+                    app.panels.teleporter_window = Some(crate::app_state::TeleporterWindow {
+                        entity: player,
+                        selected: 0,
+                        renaming: None,
+                    });
+                }
+            }
+            Some((kind, _)) => app
+                .core
+                .game
+                .res
+                .log(format!("The {} can't be used", itemkind_name(kind))),
+            None => {}
+        }
+        return Ok(true);
+    }
+
     // Drop selected item (quantity 1 for now)
     if app.ui.keybinds.matches("inventory", "DROP_ITEM", &key) {
         if let Some((kind, qty)) = selected {
