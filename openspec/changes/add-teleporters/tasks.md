@@ -25,5 +25,5 @@
 
 ## 5. Checks
 
-- [ ] 5.1 Verify `just code-clippy`, `cargo test --workspace` and PR checks pass
+- [x] 5.1 Verify `just code-clippy`, `cargo test --workspace` and PR checks pass
 - [ ] 5.2 User check that teleporting feels worth its cost, that stations are found and activated naturally on the way through quests, and that the device feels like a useful late convenience
