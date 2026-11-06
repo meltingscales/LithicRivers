@@ -90,8 +90,12 @@ pub fn handle_crafting_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dy
                         }
 
                         // Add crafted item to inventory
-                        let mut added = false;
-                        for slot in inv.slots.iter_mut() {
+                        // Power cells each take a slot of their own
+                        let mut added = !lithicrivers_core::components::stacks(recipe.result);
+                        if added {
+                            inv.add(recipe.result, recipe.quantity);
+                        }
+                        for slot in inv.slots.iter_mut().filter(|_| !added) {
                             if slot.kind == recipe.result && slot.qty < 1000 {
                                 // Arbitrary max stack size
                                 slot.qty = slot.qty.saturating_add(recipe.quantity);
@@ -101,10 +105,8 @@ pub fn handle_crafting_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dy
                         }
 
                         if !added {
-                            inv.slots.push(ItemStack {
-                                kind: recipe.result,
-                                qty: recipe.quantity,
-                            });
+                            inv.slots
+                                .push(ItemStack::new(recipe.result, recipe.quantity));
                         }
 
                         app.panels.crafting.message = Some((

@@ -84,6 +84,7 @@ define_tiles! {
     ExistingWorldgen, "existing_worldgen", "existing worldgen", false,
     EnemySpawn, "enemy_spawn", "enemy spawn", false,
     WildSpawner, "wild_spawner", "wild spawner", false,
+    TeleporterStation, "teleporter_station", "transit station", false,
     SpecialPlayerSpawn, "special_player_spawn", "player spawn", false,
     FactoryBlock, "factory_block", "factory block", false,
     Sapling, "sapling", "sapling", true,

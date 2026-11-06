@@ -157,6 +157,65 @@ impl RecipeHandler {
                 result: ItemKind::Spawner,
                 quantity: 1,
             },
+            // Battery: stores the grid's surplus
+            Recipe {
+                name: "Battery",
+                ingredients: &[(ItemKind::IronScrap, 6), (ItemKind::ScrapElectronics, 4)],
+                result: ItemKind::Battery,
+                quantity: 1,
+            },
+            // Power cells: crude from early materials, each tier built on the one below.
+            // The advanced cell's ingredients are placeholders until `add-advanced-processing`
+            Recipe {
+                name: "Crude Power Cell",
+                ingredients: &[(ItemKind::IronScrap, 2), (ItemKind::ScrapElectronics, 1)],
+                result: ItemKind::CrudePowerCell,
+                quantity: 1,
+            },
+            Recipe {
+                name: "Standard Power Cell",
+                ingredients: &[
+                    (ItemKind::CrudePowerCell, 1),
+                    (ItemKind::ScrapElectronics, 3),
+                    (ItemKind::PlasteelScrap, 1),
+                ],
+                result: ItemKind::StandardPowerCell,
+                quantity: 1,
+            },
+            Recipe {
+                name: "Advanced Power Cell",
+                ingredients: &[
+                    (ItemKind::StandardPowerCell, 1),
+                    (ItemKind::PlasteelScrap, 3),
+                    (ItemKind::NuclearWaste, 2),
+                ],
+                result: ItemKind::AdvancedPowerCell,
+                quantity: 1,
+            },
+            // Mobile tele-access device: gear that jumps to the transit network on carried
+            // power cells; placeholder mid-game ingredients
+            Recipe {
+                name: "Mobile Tele-Access Device",
+                ingredients: &[
+                    (ItemKind::ScrapElectronics, 6),
+                    (ItemKind::PlasteelScrap, 2),
+                    (ItemKind::IronScrap, 2),
+                ],
+                result: ItemKind::MobileTeleAccessDevice,
+                quantity: 1,
+            },
+            // Teleporter: a late-tier block; placeholder ingredients until the later tiers
+            // have their own materials
+            Recipe {
+                name: "Teleporter",
+                ingredients: &[
+                    (ItemKind::StandardFusionCore, 1),
+                    (ItemKind::PlasteelScrap, 6),
+                    (ItemKind::ScrapElectronics, 8),
+                ],
+                result: ItemKind::Teleporter,
+                quantity: 1,
+            },
             // Meat slurry: 2x meat, ground down to feed spawners
             Recipe {
                 name: "Meat Slurry",

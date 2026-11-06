@@ -340,6 +340,25 @@ pPp
  ▀▀▀▀▀▀▀▀▀▀ 
   . ,  , .  
             
+=== factory/battery  #C8B04A  A bank of salvaged SapienCorp cells wired in series; it hums when the grid has power to spare
+-- 1x
+β
+-- 2x
+┌┐
+└┘
+-- 3x
+┌─┐
+╡β╞
+└─┘
+-- art 0
+            
+  ┌──────┐  
+  │▓▓▓▓▓▓│  
+ ═╡░░░░░░╞═ 
+  │▒▒▒▒▒▒│  
+  └──────┘  
+   ▀▀  ▀▀   
+            
 === factory/belt_east  #9C6B30  A wooden conveyor belt facing east
 -- 1x
 >
@@ -1138,6 +1157,63 @@ U
  █▌ ░▌▐░ ▐█ 
  ▀████████▀ 
    ▀▀  ▀▀   
+=== factory/teleporter  #4FD6C8  A SapienCorp transit gate; it folds you through the grid's dark and sets you down somewhere else, mostly intact
+-- 1x
+Ξ
+-- 2x
+╔╗
+╩╩
+-- 3x
+╔═╗
+║Ξ║
+╩═╩
+-- art 0
+            
+   ╔════╗   
+  ╔╝░▒▒░╚╗  
+  ║▒ ** ▒║  
+  ║░ ** ░║  
+  ╚╗▒░░▒╔╝  
+ ▄▄╩════╩▄▄ 
+            
+=== factory/transit_station  #5C7290  A SapienCorp transit node, plated and cold; a dusty panel waits for a hand to wake it
+-- 1x
+Ψ
+-- 2x
+▄▄
+ΨΨ
+-- 3x
+▄█▄
+█Ψ█
+▀▀▀
+-- art 0
+            
+ ▄████████▄ 
+ █╔══════╗█ 
+ █║ .  . ║█ 
+ █║  ..  ║█ 
+ █╚══════╝█ 
+▄██▀▀▀▀▀▀██▄
+            
+=== factory/transit_station_active  #7FE0FF  A SapienCorp transit node humming on reserve power older than the war
+-- 1x
+Ψ
+-- 2x
+▄▄
+ΨΨ
+-- 3x
+▄█▄
+█Ψ█
+▀▀▀
+-- art 0
+            
+ ▄████████▄ 
+ █╔══════╗█ 
+ █║░▒**▒░║█ 
+ █║░▒**▒░║█ 
+ █╚══════╝█ 
+▄██▀▀▀▀▀▀██▄
+            
 === factory/vertical_conveyor_down  #9C6B30  A wooden shaft that lets one item at a time down to the layer below
 -- 1x
 ▼
@@ -1366,6 +1442,25 @@ L
     ▐▓▌     
    ▄██▌▄▄   
             
+=== items/advanced_power_cell  #B57BFF  A plasteel cell that holds a small storm; the casing is warm even when empty
+-- 1x
+¦
+-- 2x
+┌┐
+└┘
+-- 3x
+┌─┐
+│¦│
+└─┘
+-- art 0
+            
+    ┌──┐    
+   ┌┘  └┐   
+   │ ** │   
+   │ ▓▓ │   
+   │ ▓▓ │   
+   └────┘   
+            
 === items/advanced_torso  #B8F2FF  A plasteel chassis shot through with warm, humming conduits
 -- 1x
 H
@@ -1441,6 +1536,25 @@ pPp
  █▓░▓▓▓▓░▓█ 
  ▀▀▀▀▀▀▀▀▀▀ 
             
+            
+=== items/battery  #968437  A bank of salvaged SapienCorp cells wired in series; it hums when the grid has power to spare
+-- 1x
+β
+-- 2x
+┌┐
+└┘
+-- 3x
+┌─┐
+╡β╞
+└─┘
+-- art 0
+            
+  ┌──────┐  
+  │▓▓▓▓▓▓│  
+ ═╡░░░░░░╞═ 
+  │▒▒▒▒▒▒│  
+  └──────┘  
+   ▀▀  ▀▀   
             
 === items/belt_router  #755024  A wooden junction that deals items left, straight and right in turn
 -- 1x
@@ -1612,6 +1726,25 @@ L
     ▓▓▓     
     ▐▓▌     
    ▄██▌▄▄   
+            
+=== items/crude_power_cell  #B87333  A scrap-iron canister packed with charge-holding sludge; it sweats when full
+-- 1x
+¦
+-- 2x
+┌┐
+└┘
+-- 3x
+┌─┐
+│¦│
+└─┘
+-- art 0
+            
+    ┌──┐    
+   ┌┘  └┐   
+   │ ** │   
+   │ ▓▓ │   
+   │ ▓▓ │   
+   └────┘   
             
 === items/crude_torso  #A0673A  Planks and iron bolted around an empty chest cavity, enough to hold a robot together
 -- 1x
@@ -1912,6 +2045,25 @@ M
    │▒▓▒▓│   
    │▓▓▓▓│   
    └────┘   
+            
+=== items/mobile_tele_access_device  #5FC4B8  A palm-sized SapienCorp transit key; it still knows the way to every node that answered it
+-- 1x
+§
+-- 2x
+┌┐
+└┘
+-- 3x
+┌─┐
+│§│
+└─┘
+-- art 0
+            
+   ┌────┐   
+   │░▒▒░│   
+   │ ** │   
+   │░▒▒░│   
+   ├─┬┬─┤   
+   └─┴┴─┘   
             
 === items/nail  #964B00  A metal nail.
 -- 1x
@@ -2234,6 +2386,25 @@ L
     ▐▓▌     
    ▄██▌▄▄   
             
+=== items/standard_power_cell  #6FA8DC  A SapienCorp field cell, its serial number filed off by someone in a hurry
+-- 1x
+¦
+-- 2x
+┌┐
+└┘
+-- 3x
+┌─┐
+│¦│
+└─┘
+-- art 0
+            
+    ┌──┐    
+   ┌┘  └┐   
+   │ ** │   
+   │ ▓▓ │   
+   │ ▓▓ │   
+   └────┘   
+            
 === items/standard_torso  #8FB8A8  A plasteel chassis in the old SapienCorp pattern, ribs and all
 -- 1x
 H
@@ -2347,6 +2518,25 @@ U
      ╰─╯╲   
          ╲  
             
+            
+=== items/teleporter  #3BA196  A SapienCorp transit gate; it folds you through the grid's dark and sets you down somewhere else, mostly intact
+-- 1x
+Ξ
+-- 2x
+╔╗
+╩╩
+-- 3x
+╔═╗
+║Ξ║
+╩═╩
+-- art 0
+            
+   ╔════╗   
+  ╔╝░▒▒░╚╗  
+  ║▒ ** ▒║  
+  ║░ ** ░║  
+  ╚╗▒░░▒╔╝  
+ ▄▄╩════╩▄▄ 
             
 === items/torch  #FFD700  A small torch.
 -- 1x
@@ -2879,6 +3069,25 @@ ps!
 ████▌▐██████
 ▀▀▀▀▘▝▀▀▀▀▀▀
 ██▌▐██████▌▐
+            
+=== tiles/teleporter_station  #FFFF00  Special worldgen block that turns into a SapienCorp transit station
+-- 1x
+Ψ
+-- 2x
+ΨΨ
+ΨΨ
+-- 3x
+ΨΨΨ
+ΨΨΨ
+ΨΨΨ
+-- art 0
+            
+            
+            
+            
+            
+            
+            
             
 === tiles/treasure_common  #FFFF00  Special worldgen block that turns into common treasure
 -- 1x

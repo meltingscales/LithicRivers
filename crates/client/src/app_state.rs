@@ -57,6 +57,8 @@ pub struct UiState {
     pub world_view_rect: Option<Rect>,
     /// The screen cell under the mouse, if it has moved over the window
     pub mouse_cell: Option<(u16, u16)>,
+    /// Where the player last stepped out of a teleporter, and when, for the arrival rings
+    pub teleport_arrival: Option<(Position, std::time::Instant)>,
     /// Clickable rows recorded while drawing this frame
     pub click_targets: crate::ui::click_targets::ClickTargets,
     pub keybinds: Keybinds,
@@ -123,6 +125,17 @@ pub struct ItemDictionaryState {
     pub search: crate::app::input::search::SearchBox,
 }
 
+/// A teleporter's or transit station's window: its charge, the destinations it reaches,
+/// and (for a teleporter) a rename field.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TeleporterWindow {
+    pub entity: hecs::Entity,
+    /// The selected destination
+    pub selected: usize,
+    /// The new name being typed, while renaming the teleporter
+    pub renaming: Option<String>,
+}
+
 /// The filter picker of a filter extractor or belt router: row 0 is "no filter", then
 /// every item the search matches.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -140,6 +153,7 @@ pub struct PanelStates {
     pub furnace_window: Option<FurnaceWindow>,
     pub item_dictionary: ItemDictionaryState,
     pub filter_picker: Option<FilterPicker>,
+    pub teleporter_window: Option<TeleporterWindow>,
     pub blueprint_window: Option<BlueprintWindow>,
     pub stairs_prompt: Option<StairsPrompt>,
     /// The selected row of the system-failure screen (0 respawn, 1 quit)
@@ -534,6 +548,12 @@ pub enum InteractionType {
         entity: hecs::Entity,
         position: Position,
     },
+    /// Use a teleporter or transit station: wake a dormant station, else open the
+    /// destination window
+    UseTeleporter {
+        entity: hecs::Entity,
+        position: Position,
+    },
     /// Put one of the selected inventory item on an empty belt
     LoadBelt {
         entity: hecs::Entity,
@@ -557,6 +577,7 @@ impl InteractionType {
             | InteractionType::OpenFurnace { position, .. }
             | InteractionType::SetFilter { position, .. }
             | InteractionType::InspectPole { position, .. }
+            | InteractionType::UseTeleporter { position, .. }
             | InteractionType::LoadBelt { position, .. } => *position,
         }
     }
@@ -574,6 +595,7 @@ impl InteractionType {
             | InteractionType::OpenFurnace { entity, .. }
             | InteractionType::SetFilter { entity, .. }
             | InteractionType::InspectPole { entity, .. }
+            | InteractionType::UseTeleporter { entity, .. }
             | InteractionType::LoadBelt { entity, .. } => Some(*entity),
             InteractionType::OpenCloseDoor { .. } => None,
         }
@@ -617,6 +639,13 @@ impl InteractionType {
             InteractionType::OpenFurnace { kind, .. } => format!("Open {}", kind.name()),
             InteractionType::SetFilter { kind, .. } => format!("Set {} filter", kind.name()),
             InteractionType::InspectPole { .. } => "Inspect power pole".to_string(),
+            InteractionType::UseTeleporter { entity, .. } => {
+                match world.get::<&lithicrivers_core::teleporter::TransitStation>(*entity) {
+                    Ok(station) if !station.activated => "Wake transit station".to_string(),
+                    Ok(_) => "Use transit station".to_string(),
+                    Err(_) => "Use teleporter".to_string(),
+                }
+            }
             InteractionType::LoadBelt { item, .. } => format!(
                 "Put {} on belt",
                 lithicrivers_core::components::itemkind_name(*item)
@@ -638,6 +667,7 @@ impl InteractionType {
             InteractionType::OpenFurnace { .. } => "F",
             InteractionType::SetFilter { .. } => "?",
             InteractionType::InspectPole { .. } => "+",
+            InteractionType::UseTeleporter { .. } => "T",
             InteractionType::LoadBelt { .. } => ">", // onto the belt
             InteractionType::OpenCloseDoor { is_open, .. } => {
                 if *is_open {

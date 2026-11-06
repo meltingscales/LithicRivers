@@ -1,0 +1,69 @@
+---
+source: crates/client/src/snapshot_tests.rs
+expression: "String::from_utf8(out).unwrap()"
+input_file: scripts/snapshots/battery-window.txt
+---
+=== screen battery-window ===
+                                            LithicRivers
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌MODES ☼ 08:16─────────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  ------ - - -- - FOG │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Inventory─────────────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Nail x10              │
+vvvvvvvvvvvvvvv┌────────── Battery - 5.7 MJ / 40 MJ, discharging at 90 kW ──────────┐              │
+vvvvvvvvvvvvvvv│┌ Cell slot ─────────────────────┐┌ Showing power cells: 1 of 8 ───┐│              │
+vvvvvvvvvvvvvvv││Crude Power Cell (0.3/2 MJ)     ││Standard Power Cell (0.1/20 MJ) ││──────────────┘
+G+Gvvvv╫╫╫╫╫╫╫╫││                                ││                                ││ ! Damaged────┐
+vUvUvvv╫vvvvv+G││                                ││                                ││              │
+vvvvvvv╫vvvvvvv││                                ││                                ││              │
+vvvvvvv╫C→>Øvvv││                                ││                                ││              │
+vvvvvvv╫vvvvvvv││                                ││                                ││              │
+vvvvvvvΠvvvvvvv││                                ││                                ││              │
+vvvvvvv╫╫╫╫╫╫╫╫││                                ││                                ││              │
+vvvvvvvvvvvvvvv││                                ││                                ││ mode         │
+vvvvvvvvvvvvvvv││                                ││                                ││battery       │
+vvvvvvvvvvvvvvv││                                ││                                ││              │
+vvvvvvvvvvvvvvv││                                ││                                ││──────────────┘
+┌Messages──────││                                ││                                ││──────────────┐
+│[1] Added 1 St││                                ││                                ││              │
+│[1001] Time pa│└────←→ Panel | ↑↓ Select | Enter Move | a Take All | Esc Close────┘│              │
+│[1001] Opened └────────────────────────────────────────────────────────────────────┘              │
+│                                                                                                  │
+│                                                                                                  │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===
+=== screen pole-info ===
+                                            LithicRivers
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌MODES ☼ 08:16─────────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  ------ - - -- - FOG │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Inventory─────────────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Nail x10              │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Acorn x1              │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Log x3                │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Help (h) ! Damaged────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv@vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Move:                 │
+vGG+Gvvvv╫╫╫╫╫╫╫╫╫vvv¤vvv┌──────────────── Power Network ─────────────────┐v│  7 8 9               │
+vUvUvUvvv╫vvvvv+G╫vvvvvvv│                                                │v│  4 5 6               │
+vvvvvvvvv╫vvvvvvv╫vvvvvvv│          Supply: 90 kW   Demand: 90 kW         │v│  1 2 3               │
+vvvvvvvvv╫C→>Øvvv╫vvvvvvv│     Poles: 1   Generators: 1   Machines: 1     │v│q: mine               │
+vvvvvvvvv╫vvvvvvv╫vvvvvvv│      Stored: 5.7 MJ, discharging at 90 kW      │v│v: look               │
+vvvvvvvvvΠvvvvvvv╫vvvvvvv│                                                │v│`: build mode         │
+vvvvvvvvv╫╫╫╫╫╫╫╫╫vvvvvvv│                  ESCAPE: close                 │v│f: fuel generator     │
+vvvvvvvvvvvvvvvvvvvvvvvvv│                                                │v│f: inspect pole       │
+vvvvvvvvvvvvvvvvvvvvvvvvv└────────────────────────────────────────────────┘v└──────────────────────┘
+┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
+│[1] Added 1 Standard Power Cell to inventory                                                      │
+│[1001] Time passes...                                                                             │
+│[1001] Opened battery                                                                             │
+│[1001] Finished looting                                                                           │
+│[1001] Choose interaction:                                                                        │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===

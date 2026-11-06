@@ -282,6 +282,10 @@ pub struct GameWorld {
     /// spawner blocks (`Game::place_wild_spawners`)
     #[serde(skip)]
     pub wild_spawners: Vec<(i64, i64, i64)>,
+    /// Transit-station tiles placed by structures, with the structure's name, waiting for
+    /// the game to turn them into station blocks (`Game::place_transit_stations`)
+    #[serde(skip)]
+    pub transit_stations: Vec<(i64, i64, i64, String)>,
 }
 
 impl GameWorld {
@@ -294,6 +298,7 @@ impl GameWorld {
             structure_placement_depth: 0,
             quest_treasures: Vec::new(),
             wild_spawners: Vec::new(),
+            transit_stations: Vec::new(),
         }
     }
 

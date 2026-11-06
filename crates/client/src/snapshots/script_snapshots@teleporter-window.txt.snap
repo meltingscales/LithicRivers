@@ -1,0 +1,101 @@
+---
+source: crates/client/src/snapshot_tests.rs
+expression: "String::from_utf8(out).unwrap()"
+input_file: scripts/snapshots/teleporter-window.txt
+---
+=== screen teleporter-window ===
+                                            LithicRivers
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌MODES ☼ 08:16─────────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  ------ - - -- - FOG │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Inventory─────────────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Nail x10              │
+vvvvvvvvvvvvvvvvvvvv┌───────────────────── Showcase West ──────────────────────┐rn x1              │
+vvvvvvvvvvvvvvvvvvvv│      Battery: 30.6 MJ / 50 MJ   (charging at 180 kW)     │ x3                │
+vvvvvvvvvvvvvvvvvvvv│                                                          │───────────────────┘
++vvvvvvvvvGG+Gvvvv╫╫│  West Station                  3 tiles   10.1 MJ         │p (h) ! Damaged────┐
+>E>>>>CvvvUvUvUvvv╫v│  Showcase East                 5 tiles   10.1 MJ         │e:                 │
+vvvvvvvvvvvvvvvvvv╫v│  East Station                  5 tiles   10.1 MJ         │ 8 9               │
+vvvvvvvvvvvvvvvvvv╫C│                                                          │ 5 6               │
+vvvvvvvvvvvvvvvvvv╫v│                                                          │ 2 3               │
+vvvvvvvvvvvvvvvvvvΠv│                                                          │mine               │
+vvvvvvvvvvvvvvvvvv╫╫│                                                          │look               │
+vvvvvvvvvvvvvvvvvvvv│                                                          │build mode         │
+vvvvvvvvvvvvvvvvvvvv│                                                          │use teleporter     │
+vvvvvvvvvvvvvvvvvvvv│                                                          │                   │
+vvvvvvvvvvvvvvvvvvvv│                                                          │───────────────────┘
+┌Messages───────────│                                                          │───────────────────┐
+│[1001] Time passes.│                                                          │                   │
+│                   │                                                          │                   │
+│                   └───────── ENTER: jump  r: rename  ESCAPE: close ──────────┘                   │
+│                                                                                                  │
+│                                                                                                  │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===
+=== screen arrival-rings ===
+                                            LithicRivers
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌MODES ☼ 08:16─────────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  ------ - - -- - FOG │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Inventory─────────────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Nail x10              │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Acorn x1              │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Log x3                │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv***vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Help (h) ! Damaged────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv*@*vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Move:                 │
+vvvvvvGG+Gvvvv╫╫╫╫╫╫╫╫╫vvv¤vvvGG+Ξvvv***vvG+βvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  7 8 9               │
+>>CvvvUvUvUvvv╫vvvvv+G╫vvvvvvvvvvvvvvvvvvvvEvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  4 5 6               │
+vvvvvvvvvvvvvv╫vvvvvvv╫vvvvvvvΨvvvvvvvΨvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  1 2 3               │
+vvvvvvvvvvvvvv╫C→>Øvvv╫vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│q: mine               │
+vvvvvvvvvvvvvv╫vvvvvvv╫vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│v: look               │
+vvvvvvvvvvvvvvΠvvvvvvv╫vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│`: build mode         │
+vvvvvvvvvvvvvv╫╫╫╫╫╫╫╫╫vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│f: use teleporter     │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│                      │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
+┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
+│[1001] Time passes...                                                                             │
+│[1001] The teleporter hums, and the world folds. You step out beside Showcase East.               │
+│                                                                                                  │
+│                                                                                                  │
+│                                                                                                  │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===
+=== screen east-window ===
+                                            LithicRivers
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌MODES ☼ 08:16─────────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  ------ - - -- - FOG │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Inventory─────────────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Nail x10              │
+vvvvvvvvvvvvvvvvvvvv┌───────────────────── Showcase East ──────────────────────┐rn x1              │
+vvvvvvvvvvvvvvvvvvvv│        Battery: 0 MJ / 50 MJ   (charging at 0 kW)        │ x3                │
+vvvvvvvvvvvvvvvvvvvv│                                                          │───────────────────┘
+vvvvvvvvvvvvvvvvvvvv│  East Station                  2 tiles   10.1 MJ         │p (h) ! Damaged────┐
+vvvvvvvvvvvvvvvvvvvv│  Showcase West                 5 tiles   10.1 MJ         │e:                 │
+vvvvvvGG+Gvvvv╫╫╫╫╫╫│  West Station                  8 tiles   10.1 MJ         │ 8 9               │
+>>CvvvUvUvUvvv╫vvvvv│                                                          │ 5 6               │
+vvvvvvvvvvvvvv╫vvvvv│                                                          │ 2 3               │
+vvvvvvvvvvvvvv╫C→>Øv│                                                          │mine               │
+vvvvvvvvvvvvvv╫vvvvv│                                                          │look               │
+vvvvvvvvvvvvvvΠvvvvv│                                                          │build mode         │
+vvvvvvvvvvvvvv╫╫╫╫╫╫│                                                          │use teleporter     │
+vvvvvvvvvvvvvvvvvvvv│                                                          │                   │
+vvvvvvvvvvvvvvvvvvvv│                                                          │───────────────────┘
+┌Messages───────────│                                                          │───────────────────┐
+│[1001] Time passes.│                                                          │                   │
+│[1001] The teleport│                                                          │ast.               │
+│                   └───────── ENTER: jump  r: rename  ESCAPE: close ──────────┘                   │
+│                                                                                                  │
+│                                                                                                  │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===

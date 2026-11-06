@@ -38,6 +38,8 @@ pub enum PaletteKey {
     EnemySpawn,
     // special tile that becomes a wild spawner block
     WildSpawner,
+    // special tile that becomes a SapienCorp transit station block
+    TeleporterStation,
     // special tiles that spawn treasure
     ScrapCommon,
     ScrapRare,

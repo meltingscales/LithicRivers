@@ -149,6 +149,9 @@ fn built_at(
 ) -> Option<(Piece, Facing, Option<ItemKind>)> {
     if let Some(&entity) = res.factory_index.get(&pos) {
         let block = *world.get::<&FactoryBlock>(entity).ok()?;
+        if block.kind.fixed() {
+            return None;
+        }
         return Some((
             Piece::Factory(block.kind),
             block.facing,

@@ -1,3 +1,4 @@
+ (106,813,-8)
  (106,834,-6) item=Meatx1
  (106,835,-6) item=Meatx1
  (107,819,-6) item=ScrapElectronicsx10
@@ -45,6 +46,7 @@
  (118,834,-6) item=Meatx1
  (118,835,-6) item=Meatx1
  (118,836,-6) item=Logx1
+ (12,13,-19)
  (16,20,-19) item=Diamondx10
  (17,11,-19) item=Diamondx10
  (19,19,0) item=Logx1

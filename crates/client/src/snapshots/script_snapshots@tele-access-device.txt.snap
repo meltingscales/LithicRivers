@@ -1,0 +1,101 @@
+---
+source: crates/client/src/snapshot_tests.rs
+expression: "String::from_utf8(out).unwrap()"
+input_file: scripts/snapshots/tele-access-device.txt
+---
+=== screen device-in-inventory ===
+                                            LithicRivers
+┌Item──────────────────────┐┌Inventory─────────────────────────────────────────────────────────────┐
+│                          ││Nail x10                                                              │
+│   ┌────┐                 ││Acorn x1                                                              │
+│   │░▒▒░│                 ││Log x3                                                                │
+│   │ ** │                 ││Stick x2                                                              │
+│   │░▒▒░│                 ││Torch x3                                                              │
+│   ├─┬┬─┤                 ││String x2                                                             │
+│   └─┴┴─┘                 ││Scrap Electronics x3                                                  │
+│                          ││Mobile Tele-Access Device x1                                          │
+│Mobile Tele-Access Device ││Standard Power Cell (0/20 MJ) x1                                      │
+│(x1)                      ││                                                                      │
+│u: use                    ││                                                                      │
+│                          ││                                                                      │
+│A palm-sized SapienCorp   ││                                                                      │
+│transit key; it still     ││                                                                      │
+│knows the way to every    ││                                                                      │
+│node that answered it     ││                                                                      │
+│                          ││                                                                      │
+└──────────────────────────┘└──────────────────────────────────────────────────────────────────────┘
+┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
+│[0] Loading structure 'sapiencorp-factory.lrstructure' at (105, 810, 1) for chunk (1, 12, 1)      │
+│[0] Quest marker added: SapienCorp Factory                                                        │
+│[401] Handshake accepted. Transit node registered: Bunker Station. Reserve power: nominal.        │
+│[401] Added 1 Mobile Tele-Access Device to inventory                                              │
+│[401] Added 1 Standard Power Cell to inventory                                                    │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===
+=== screen device-window ===
+                                            LithicRivers
+┌Item──────────────────────┐┌Inventory─────────────────────────────────────────────────────────────┐
+│                          ││Nail x10                                                              │
+│   ┌────┐                 ││Acorn x1                                                              │
+│   │░▒▒░│                 ││Log x3                                                                │
+│   │ ** │                 ││Stick x2                                                              │
+│   │░▒▒░│          ┌─────────────── Mobile Tele-Access Device ────────────────┐                   │
+│   ├─┬┬─┤          │                 Fullest power cell: 0 MJ                 │                   │
+│   └─┴┴─┘          │                                                          │                   │
+│                   │  Bunker Station             1928 tiles   19.7 MJ         │                   │
+│Mobile Tele-Access │                                                          │                   │
+│(x1)               │                                                          │                   │
+│u: use             │                                                          │                   │
+│                   │                                                          │                   │
+│A palm-sized Sapien│                                                          │                   │
+│transit key; it sti│                                                          │                   │
+│knows the way to ev│                                                          │                   │
+│node that answered │                                                          │                   │
+│                   │                                                          │                   │
+└───────────────────│                                                          │───────────────────┘
+┌Messages───────────│                                                          │───────────────────┐
+│[0] Loading structu│                                                          │nk (1, 12, 1)      │
+│[0] Quest marker ad│                                                          │                   │
+│[401] Handshake acc└─────────────── ENTER: jump  ESCAPE: close ───────────────┘r: nominal.        │
+│[401] Added 1 Mobile Tele-Access Device to inventory                                              │
+│[401] Added 1 Standard Power Cell to inventory                                                    │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===
+=== screen no-charge ===
+                                            LithicRivers
+┌Item──────────────────────┐┌Inventory─────────────────────────────────────────────────────────────┐
+│                          ││Nail x10                                                              │
+│   ┌────┐                 ││Acorn x1                                                              │
+│   │░▒▒░│                 ││Log x3                                                                │
+│   │ ** │                 ││Stick x2                                                              │
+│   │░▒▒░│          ┌─────────────── Mobile Tele-Access Device ────────────────┐                   │
+│   ├─┬┬─┤          │                 Fullest power cell: 0 MJ                 │                   │
+│   └─┴┴─┘          │                                                          │                   │
+│                   │  Bunker Station             1928 tiles   19.7 MJ         │                   │
+│Mobile Tele-Access │                                                          │                   │
+│(x1)               │                                                          │                   │
+│u: use             │                                                          │                   │
+│                   │                                                          │                   │
+│A palm-sized Sapien│                                                          │                   │
+│transit key; it sti│                                                          │                   │
+│knows the way to ev│                                                          │                   │
+│node that answered │                                                          │                   │
+│                   │                                                          │                   │
+└───────────────────│                                                          │───────────────────┘
+┌Messages───────────│                                                          │───────────────────┐
+│[0] Quest marker ad│                                                          │                   │
+│[401] Handshake acc│                                                          │r: nominal.        │
+│[401] Added 1 Mobil└─────────────── ENTER: jump  ESCAPE: close ───────────────┘                   │
+│[401] Added 1 Standard Power Cell to inventory                                                    │
+│[401] No charge: your fullest power cell is 19.7 MJ short.                                        │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===

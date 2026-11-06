@@ -27,6 +27,7 @@ pub mod pathfinding;
 pub mod plants;
 pub mod player_state;
 pub mod power;
+pub mod power_cells;
 pub mod quests;
 pub mod recipe_handler;
 pub mod resources;
@@ -44,6 +45,7 @@ pub mod systems;
 #[cfg(test)]
 mod systems_tests;
 pub mod target_tracker;
+pub mod teleporter;
 #[cfg(any(test, feature = "test-support"))]
 pub mod test_support;
 pub mod tile_registry;

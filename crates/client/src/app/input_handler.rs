@@ -90,6 +90,10 @@ pub fn dispatch(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
         return Ok(());
     }
 
+    if crate::app::input::teleporter_window::handle_teleporter_window_input(app, key) {
+        return Ok(());
+    }
+
     if crate::app::input::blueprint::handle_blueprint_window_input(app, key) {
         return Ok(());
     }

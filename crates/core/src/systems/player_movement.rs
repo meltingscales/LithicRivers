@@ -176,7 +176,28 @@ pub fn mining_system(world: &mut World, res: &mut Resources) -> bool {
             let Some(player) = get_player_entity(world) else {
                 return false;
             };
-            match crate::factory::break_block(world, res, Position { x, y, z }, player) {
+            let pos = Position { x, y, z };
+            let fixed = res
+                .factory_index
+                .get(&pos)
+                .and_then(|&e| {
+                    world
+                        .get::<&crate::factory::FactoryBlock>(e)
+                        .ok()
+                        .map(|b| b.kind)
+                })
+                .filter(|kind| kind.fixed());
+            if let Some(kind) = fixed {
+                res.events.interaction_event(
+                    format!(
+                        "The {} is built into the structure; it won't come loose.",
+                        kind.name()
+                    ),
+                    res.time.tick,
+                );
+                return false;
+            }
+            match crate::factory::break_block(world, res, pos, player) {
                 Some(kind) => {
                     res.events.interaction_event(
                         format!("You break the {}.", kind.name()),
@@ -247,11 +268,18 @@ pub fn pickup_system(world: &mut World, res: &mut Resources) {
 /// Move every DroppedItem on `pos` into the player's inventory.
 fn pick_up_items_at(world: &mut World, res: &mut Resources, player_e: hecs::Entity, pos: Position) {
     let mut pickups: Vec<hecs::Entity> = Vec::new();
-    let mut items: Vec<DroppedItem> = Vec::new();
-    for (e, (ipos, di)) in world.query::<(&Position, &DroppedItem)>().iter() {
+    let mut items: Vec<(DroppedItem, Option<u64>)> = Vec::new();
+    for (e, (ipos, di, charge)) in world
+        .query::<(
+            &Position,
+            &DroppedItem,
+            Option<&crate::power_cells::CellCharge>,
+        )>()
+        .iter()
+    {
         if *ipos == pos {
             pickups.push(e);
-            items.push(*di);
+            items.push((*di, charge.map(|c| c.0)));
         }
     }
     if pickups.is_empty() {
@@ -260,11 +288,20 @@ fn pick_up_items_at(world: &mut World, res: &mut Resources, player_e: hecs::Enti
 
     let mut comp_access = ComponentAccess::new(world, res);
     if let Ok(()) = comp_access.modify_inventory(player_e, |inv| {
-        for di in &items {
-            inv.add(di.kind, di.qty);
+        for (di, charge) in &items {
+            match charge {
+                // A dropped cell comes back with its charge
+                Some(_) => {
+                    inv.add_stack(crate::components::ItemStack {
+                        charge_j: *charge,
+                        ..crate::components::ItemStack::new(di.kind, di.qty)
+                    });
+                }
+                None => inv.add(di.kind, di.qty),
+            }
         }
     }) {
-        let total: u32 = items.iter().map(|di| di.qty).sum();
+        let total: u32 = items.iter().map(|(di, _)| di.qty).sum();
         if total > 0 {
             res.events
                 .interaction_event(format!("Picked up {} items", total), res.time.tick);

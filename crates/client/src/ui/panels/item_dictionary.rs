@@ -128,6 +128,12 @@ pub fn render_item_dictionary_panel(f: &mut Frame, app: &mut crate::App, area: R
             Style::default().fg(color).add_modifier(Modifier::BOLD),
         )));
         lines.push(Line::from(sd.description.clone()));
+        if let Some(capacity) = lithicrivers_core::power_cells::cell_capacity(item) {
+            lines.push(Line::from(format!(
+                "Holds up to {} of charge",
+                lithicrivers_core::teleporter::format_mj(capacity)
+            )));
+        }
         lines.push(Line::from(""));
         // 12x8 art above the 3x and 2x sprites, in its own column
         art_lines.extend(

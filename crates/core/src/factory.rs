@@ -119,6 +119,12 @@ pub enum FactoryKind {
     Gate,
     /// Grows creatures and lets them out beside it
     Spawner,
+    /// Moves the player to another teleporter, paid for from its battery bank
+    Teleporter,
+    /// A SapienCorp teleporter built into a quest location; free between stations
+    TransitStation,
+    /// Stores the grid's surplus and covers its deficits; charges the cell in its slot
+    Battery,
     /// A consumer that does nothing but draw power, for grid tests
     #[cfg(any(test, feature = "test-support"))]
     TestConsumer,
@@ -150,6 +156,8 @@ impl FactoryKind {
             ItemKind::Fence => Some(FactoryKind::Fence),
             ItemKind::Gate => Some(FactoryKind::Gate),
             ItemKind::Spawner => Some(FactoryKind::Spawner),
+            ItemKind::Teleporter => Some(FactoryKind::Teleporter),
+            ItemKind::Battery => Some(FactoryKind::Battery),
             _ => None,
         }
     }
@@ -178,6 +186,9 @@ impl FactoryKind {
             FactoryKind::Fence => Some(ItemKind::Fence),
             FactoryKind::Gate => Some(ItemKind::Gate),
             FactoryKind::Spawner => Some(ItemKind::Spawner),
+            FactoryKind::Teleporter => Some(ItemKind::Teleporter),
+            FactoryKind::TransitStation => None,
+            FactoryKind::Battery => Some(ItemKind::Battery),
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestConsumer => None,
             #[cfg(any(test, feature = "test-support"))]
@@ -207,6 +218,9 @@ impl FactoryKind {
             FactoryKind::Fence => "fence",
             FactoryKind::Gate => "gate",
             FactoryKind::Spawner => "spawner",
+            FactoryKind::Teleporter => "teleporter",
+            FactoryKind::TransitStation => "transit station",
+            FactoryKind::Battery => "battery",
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestConsumer => "test consumer",
             #[cfg(any(test, feature = "test-support"))]
@@ -232,6 +246,7 @@ impl FactoryKind {
             // Up or down instead of a facing: see `rotate`
             FactoryKind::VerticalConveyorUp | FactoryKind::VerticalConveyorDown => false,
             FactoryKind::Fence | FactoryKind::Gate | FactoryKind::Spawner => false,
+            FactoryKind::Teleporter | FactoryKind::TransitStation | FactoryKind::Battery => false,
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestConsumer => false,
             #[cfg(any(test, feature = "test-support"))]
@@ -245,6 +260,11 @@ impl FactoryKind {
             self,
             FactoryKind::Fence | FactoryKind::Gate | FactoryKind::ScrapLantern
         )
+    }
+
+    /// Blocks built into the world: they can't be broken, picked up or copied.
+    pub fn fixed(self) -> bool {
+        self == FactoryKind::TransitStation
     }
 
     /// Kinds that exist only in tests (always false outside tests).
@@ -297,6 +317,9 @@ impl FactoryKind {
             FactoryKind::Fence => SpriteRef::new("factory", "fence"),
             FactoryKind::Gate => SpriteRef::new("factory", "gate"),
             FactoryKind::Spawner => SpriteRef::new("factory", "spawner"),
+            FactoryKind::Teleporter => SpriteRef::new("factory", "teleporter"),
+            FactoryKind::TransitStation => SpriteRef::new("factory", "transit_station"),
+            FactoryKind::Battery => SpriteRef::new("factory", "battery"),
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestConsumer => SpriteRef::new("factory", "chest"),
             #[cfg(any(test, feature = "test-support"))]
@@ -440,6 +463,25 @@ pub fn place(
                 ..Default::default()
             });
         }
+        FactoryKind::Teleporter => {
+            builder.add(crate::teleporter::Teleporter {
+                name: crate::teleporter::default_name(world),
+                charge_j: 0,
+            });
+            builder.add(crate::power::PowerConsumer::idle(
+                crate::teleporter::CHARGE_W,
+            ));
+        }
+        FactoryKind::TransitStation => {
+            builder.add(crate::teleporter::TransitStation::default());
+        }
+        FactoryKind::Battery => {
+            builder.add(crate::power_cells::Battery::default());
+            builder.add(Inventory {
+                max_slots: crate::power_cells::BATTERY_SLOTS,
+                ..Default::default()
+            });
+        }
         #[cfg(any(test, feature = "test-support"))]
         FactoryKind::TestArrow => {}
     }
@@ -452,15 +494,20 @@ pub fn place(
 }
 
 /// Break the factory block at `pos`: its item goes to `receiver`'s inventory and everything
-/// it held is dropped on its tile. Returns the kind broken, or `None` if nothing is there.
+/// it held is dropped on its tile. Returns the kind broken, or `None` if nothing is there
+/// or the block is `fixed`.
 pub fn break_block(
     world: &mut World,
     res: &mut Resources,
     pos: Position,
     receiver: Entity,
 ) -> Option<FactoryKind> {
-    let entity = res.factory_index.remove(&pos)?;
+    let entity = *res.factory_index.get(&pos)?;
     let block = *world.get::<&FactoryBlock>(entity).ok()?;
+    if block.kind.fixed() {
+        return None;
+    }
+    res.factory_index.remove(&pos);
     let mut contents = world
         .get::<&Inventory>(entity)
         .map(|inv| inv.slots.clone())
@@ -491,16 +538,24 @@ pub fn break_block(
         }
     }
     for stack in contents {
-        world.spawn((
-            pos,
-            DroppedItem {
-                kind: stack.kind,
-                qty: stack.qty,
-            },
-            SpriteRef::new("items", itemkind_sprite_name(stack.kind)),
-        ));
+        spawn_drop(world, pos, stack);
     }
     Some(block.kind)
+}
+
+/// Put a stack on the ground at `pos`; a power cell keeps its charge (`CellCharge`).
+pub fn spawn_drop(world: &mut World, pos: Position, stack: crate::components::ItemStack) {
+    let drop = world.spawn((
+        pos,
+        DroppedItem {
+            kind: stack.kind,
+            qty: stack.qty,
+        },
+        SpriteRef::new("items", itemkind_sprite_name(stack.kind)),
+    ));
+    if let Some(charge) = stack.charge_j {
+        let _ = world.insert_one(drop, crate::power_cells::CellCharge(charge));
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -577,21 +632,21 @@ pub fn move_one_item(
             .ok_or(TransferError::Empty)?
             .kind
     };
-    {
-        let mut dest = world
-            .get::<&mut Inventory>(to)
-            .map_err(|_| TransferError::Full)?;
-        let has_stack = dest.slots.iter().any(|s| s.kind == kind);
-        if !has_stack && dest.slots.len() >= dest.max_slots {
-            return Err(TransferError::Full);
-        }
-        dest.add(kind, 1);
+    let room = world
+        .get::<&Inventory>(to)
+        .is_ok_and(|dest| dest.has_room_for(kind));
+    if !room {
+        return Err(TransferError::Full);
     }
-    let mut src = world.get::<&mut Inventory>(from).expect("checked above");
-    src.slots[slot].qty -= 1;
-    if src.slots[slot].qty == 0 {
-        src.slots.remove(slot);
-    }
+    let taken = world
+        .get::<&mut Inventory>(from)
+        .expect("checked above")
+        .take_one(slot)
+        .expect("checked above");
+    world
+        .get::<&mut Inventory>(to)
+        .expect("checked above")
+        .add_stack(taken);
     Ok(kind)
 }
 
@@ -611,11 +666,9 @@ pub fn move_all_items(world: &mut World, from: Entity, to: Entity) -> u32 {
             let Ok(mut dest) = world.get::<&mut Inventory>(to) else {
                 return moved;
             };
-            let has_stack = dest.slots.iter().any(|s| s.kind == stack.kind);
-            if !has_stack && dest.slots.len() >= dest.max_slots {
+            if !dest.add_stack(stack) {
                 return moved;
             }
-            dest.add(stack.kind, stack.qty);
         }
         world
             .get::<&mut Inventory>(from)
@@ -645,9 +698,13 @@ pub fn run_due_steps(world: &mut World, res: &mut Resources) {
         crate::furnace::update_demand(world);
         crate::vat::update_demand(world);
         crate::spawner::update_demand(world);
+        crate::teleporter::update_demand(world);
         crate::power::step_power(world, res);
         crate::machines::step_machines(world, res);
         crate::furnace::step_furnaces(world, res);
+        crate::teleporter::step_charging(world);
+        crate::power_cells::charge_slot_cells(world);
+        crate::power_cells::trickle_charge(world);
         crate::logistics::step_extractors(world, res);
         crate::logistics::step_routers(world, res);
         step_belts(world, res);
@@ -693,7 +750,11 @@ pub fn takes(kind: FactoryKind, item: ItemKind) -> bool {
         FactoryKind::Spawner => {
             item == ItemKind::MeatSlurry || crate::spawner::embryo_kind(item).is_some()
         }
-        FactoryKind::Fence | FactoryKind::Gate => false,
+        FactoryKind::Fence
+        | FactoryKind::Gate
+        | FactoryKind::Teleporter
+        | FactoryKind::TransitStation => false,
+        FactoryKind::Battery => crate::power_cells::is_cell(item),
         _ => true,
     }
 }
@@ -709,6 +770,7 @@ pub fn takes_label(kind: FactoryKind) -> Option<&'static str> {
         FactoryKind::CrudeVat => Some("crude body parts"),
         FactoryKind::StandardVat => Some("crude/standard body parts"),
         FactoryKind::AdvancedVat => Some("body parts"),
+        FactoryKind::Battery => Some("power cells"),
         FactoryKind::AutoHarvester | FactoryKind::Extractor | FactoryKind::FilterExtractor => {
             Some("nothing")
         }
@@ -732,13 +794,22 @@ pub fn accepts_from(
     item: ItemKind,
     heading: Option<Facing>,
 ) -> bool {
+    // Power cells stay off belts and routers, which would lose their charge
+    let cell = crate::power_cells::is_cell(item);
     if let Ok(belt) = world.get::<&BeltSlot>(target) {
-        return belt.item.is_none();
+        return belt.item.is_none() && !cell;
     }
     let Ok(block) = world.get::<&FactoryBlock>(target).map(|b| *b) else {
         return false;
     };
     match block.kind {
+        FactoryKind::Battery => {
+            return cell
+                && world
+                    .get::<&Inventory>(target)
+                    .is_ok_and(|inv| inv.has_room_for(item))
+        }
+        FactoryKind::BeltRouter if cell => return false,
         FactoryKind::CrudeFurnace | FactoryKind::ElectricFurnace => {
             return crate::furnace::accepts(world, target, block, item, heading)
         }
@@ -765,9 +836,9 @@ pub fn accepts_from(
         }
         _ => {}
     }
-    world.get::<&Inventory>(target).is_ok_and(|inv| {
-        inv.slots.iter().any(|s| s.kind == item) || inv.slots.len() < inv.max_slots
-    })
+    world
+        .get::<&Inventory>(target)
+        .is_ok_and(|inv| inv.has_room_for(item))
 }
 
 /// Give `item` to `target` if it accepts it, with no direction. Returns whether it did.
@@ -824,6 +895,22 @@ pub fn move_one_item_to_block(
         .ok()
         .and_then(|inv| inv.slots.get(slot).filter(|s| s.qty > 0).map(|s| s.kind))
         .ok_or(TransferError::Empty)?;
+    // A power cell goes into the block's inventory whole, keeping its charge
+    if !crate::components::stacks(kind) {
+        if !accepts(world, to, kind) || world.get::<&Inventory>(to).is_err() {
+            return Err(TransferError::Full);
+        }
+        let taken = world
+            .get::<&mut Inventory>(from)
+            .expect("checked above")
+            .take_one(slot)
+            .expect("checked above");
+        world
+            .get::<&mut Inventory>(to)
+            .expect("checked above")
+            .add_stack(taken);
+        return Ok(kind);
+    }
     if !insert(world, to, kind) {
         return Err(TransferError::Full);
     }
@@ -966,6 +1053,7 @@ impl crate::Game {
     pub fn factory_tile(&mut self, pos: Position) -> TileKind {
         let (cx, cy, cz) = crate::Game::world_to_chunk_coords(pos.x, pos.y, pos.z);
         self.ensure_chunk_with_pending_structures(cx, cy, cz);
+        self.place_structure_blocks();
         self.res
             .world_state
             .world

@@ -122,6 +122,10 @@ saved_components! {
     "router" => crate::logistics::Router,
     "spawner" => crate::spawner::Spawner,
     "spawned_by" => crate::spawner::SpawnedBy,
+    "teleporter" => crate::teleporter::Teleporter,
+    "transit_station" => crate::teleporter::TransitStation,
+    "battery" => crate::power_cells::Battery,
+    "cell_charge" => crate::power_cells::CellCharge,
 }
 
 /// Entities that carry a component type the registry doesn't know, described by the
@@ -535,6 +539,10 @@ mod tests {
             (
                 crate::factory::FactoryKind::Gate,
                 Position { x: 13, y: -4, z: 0 },
+            ),
+            (
+                crate::factory::FactoryKind::Teleporter,
+                Position { x: 14, y: -4, z: 0 },
             ),
         ] {
             crate::factory::place(

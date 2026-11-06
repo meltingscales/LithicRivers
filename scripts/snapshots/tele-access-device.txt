@@ -1,0 +1,22 @@
+# Wake the bunker's transit station, walk off, and use the mobile tele-access device from
+# the Inventory tab: it lists the station, but an empty power cell can't pay for the jump
+seed 12345
+size 100x30
+skip-splash
+key ui.MENU_PREV
+key movement.MOVE_SOUTH
+key action.INTERACT
+expect-text "Transit node registered: Bunker Station"
+cheat giveitem mobile_tele_access_device
+cheat giveitem standard_power_cell
+cheat tp 40 40 0
+key ui.MENU_NEXT 5
+key ui.MENU_DOWN 7
+expect-text "u: use"
+screen device-in-inventory
+key inventory.USE_ITEM
+expect-text "Mobile Tele-Access Device"
+screen device-window
+key ui.MENU_ACTIVATE
+expect-text "No charge"
+screen no-charge

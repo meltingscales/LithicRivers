@@ -24,7 +24,11 @@ pub fn render_inventory_list_only(f: &mut Frame, app: &mut crate::App, area: Rec
                     app.panels.inventory.selected = inv.slots.len() - 1;
                 }
                 for (i, s) in inv.slots.iter().enumerate() {
-                    let label = format!("{} x{}", itemkind_name(s.kind), s.qty);
+                    let label = format!(
+                        "{} x{}",
+                        lithicrivers_core::components::stack_name(s),
+                        s.qty
+                    );
                     if i == app.panels.inventory.selected {
                         list_lines.push(Line::from(Span::styled(
                             label,
@@ -71,7 +75,11 @@ pub fn render_inventory_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
                     app.panels.inventory.selected = inv.slots.len() - 1;
                 }
                 for (i, s) in inv.slots.iter().enumerate() {
-                    let label = format!("{} x{}", itemkind_name(s.kind), s.qty);
+                    let label = format!(
+                        "{} x{}",
+                        lithicrivers_core::components::stack_name(s),
+                        s.qty
+                    );
                     if i == app.panels.inventory.selected {
                         selected_kind = Some(s.kind);
                         selected_qty = s.qty;
@@ -118,10 +126,23 @@ pub fn render_inventory_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
             format!("{} (x{})", itemkind_name(kind), selected_qty),
             Style::default().fg(Color::Cyan),
         )));
+        // Gear says how to use it right under its name
+        if kind == lithicrivers_core::components::ItemKind::MobileTeleAccessDevice {
+            left_lines.push(Line::from(Span::styled(
+                format!(
+                    "{}: use",
+                    app.core
+                        .config_manager
+                        .get_printable_key_for_keybind("inventory", "USE_ITEM")
+                ),
+                Style::default().fg(Color::Yellow),
+            )));
+        }
         left_lines.push(Line::from(""));
         left_lines.push(Line::from(Span::raw(sd.description.clone())));
         left_lines.push(Line::from(""));
         left_lines.push(Line::from(Span::raw("Keys:")));
+
         left_lines.push(Line::from(Span::raw(format!(
             "  {}=drop",
             app.core
