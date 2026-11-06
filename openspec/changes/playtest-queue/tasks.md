@@ -12,6 +12,8 @@ Play the real game (`just client-linux`, or the release build). Turn on Allow ch
 - [ ] 1.5 `polish-android`: work through that change's own checklist (section 1, playing on a phone)
 - [x] 1.6 `tune-natural-spawns` (task 2.3, once its PR is merged): the wild feels calmer, and cleared areas staying cleared makes spawner farms worth building. Setup: in a Normal world, clear the dogs around a forest at night, wait several game minutes nearby, and see that at most one more dog comes from each surrounding chunk; then compare with a fed spawner pen
   - 2026-11-05: passed ("somewhat dangerous but not impossible"). Archived.
+- [ ] 1.7 `add-power-cells` (task 3.2): batteries and cells are easy to understand. Setup: look at the Factory showcase's last example (a battery keeps an electric furnace smelting after the burner's stick runs out) and Interact with its battery and pole; then `giveitem battery`, `burner_generator`, `power_pole`, `crude_power_cell`, build a small grid, put the cell in the battery's slot, and watch its charge in the inventory. Carry an empty cell for a while to see the fusion core trickle-charge it
+- [ ] 1.8 `add-teleporters` (task 5.2): teleporting feels worth its cost, stations are found and woken naturally on the way through the quests, and the device feels like a useful late convenience. Setup: in a new Normal world, wake the station beside where you wake up and the one in the factory's entrance room (reach it on foot, or `tp 107 813 -8`), then jump between them. Build two teleporters on a grid (`giveitem teleporter 2`, `burner_generator 3`, `power_pole 2`), rename one and jump. Try `giveitem mobile_tele_access_device` with an empty cell, then with a cell charged at a battery
 
 ## 2. Keeping the queue
 
