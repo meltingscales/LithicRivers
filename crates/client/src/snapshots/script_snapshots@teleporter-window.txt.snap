@@ -11,7 +11,7 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└�
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Inventory─────────────┐
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Nail x10              │
 vvvvvvvvvvvvvvvvvvvv┌───────────────────── Showcase West ──────────────────────┐rn x1              │
-vvvvvvvvvvvvvvvvvvvv│      Battery: 30.6 MJ / 50 MJ   (charging at 180 kW)     │ x3                │
+vvvvvvvvvvvvvvvvvvvv│      Battery: 30.4 MJ / 50 MJ   (charging at 124 kW)     │ x3                │
 vvvvvvvvvvvvvvvvvvvv│                                                          │───────────────────┘
 +vvvvvvvvvGG+Gvvvv╫╫│  West Station                  3 tiles   10.1 MJ         │p (h) ! Damaged────┐
 >E>>>>CvvvUvUvUvvv╫v│  Showcase East                 5 tiles   10.1 MJ         │e:                 │
@@ -47,10 +47,10 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│L
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv***vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Help (h) ! Damaged────┐
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv*@*vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Move:                 │
-vvvvvvGG+Gvvvv╫╫╫╫╫╫╫╫╫vvv¤vvvGG+Ξvvv***vvG+βvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  7 8 9               │
->>CvvvUvUvUvvv╫vvvvv+G╫vvvvvvvvvvvvvvvvvvvvEvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  4 5 6               │
-vvvvvvvvvvvvvv╫vvvvvvv╫vvvvvvvΨvvvvvvvΨvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  1 2 3               │
-vvvvvvvvvvvvvv╫C→>Øvvv╫vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│q: mine               │
+vvvvvvGG+Gvvvv╫╫╫╫╫╫╫╫╫vvv¤vvvGG+Ξvvv***vvvvvvvvG+βvvvvvvvvvvvvvvvvvvvvvvvvv│  7 8 9               │
+>>CvvvUvUvUvvv╫vvvvv+G╫vvvvvvvvvv╲─vvvvvvvvvvvvvvEvvvvvvvvvvvvvvvvvvvvvvvvvv│  4 5 6               │
+vvvvvvvvvvvvvv╫vvvvvvv╫vvvvvvvΨvvvv╲─vΨvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  1 2 3               │
+vvvvvvvvvvvvvv╫C→>Øvvv╫vvvvvvvvvvvvvЖ+ŧvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│q: mine               │
 vvvvvvvvvvvvvv╫vvvvvvv╫vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│v: look               │
 vvvvvvvvvvvvvvΠvvvvvvv╫vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│`: build mode         │
 vvvvvvvvvvvvvv╫╫╫╫╫╫╫╫╫vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│f: use teleporter     │
@@ -75,7 +75,7 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└�
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Inventory─────────────┐
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Nail x10              │
 vvvvvvvvvvvvvvvvvvvv┌───────────────────── Showcase East ──────────────────────┐rn x1              │
-vvvvvvvvvvvvvvvvvvvv│        Battery: 0 MJ / 50 MJ   (charging at 0 kW)        │ x3                │
+vvvvvvvvvvvvvvvvvvvv│      Battery: 0.4 MJ / 50 MJ   (charging at 124 kW)      │ x3                │
 vvvvvvvvvvvvvvvvvvvv│                                                          │───────────────────┘
 vvvvvvvvvvvvvvvvvvvv│  East Station                  2 tiles   10.1 MJ         │p (h) ! Damaged────┐
 vvvvvvvvvvvvvvvvvvvv│  Showcase West                 5 tiles   10.1 MJ         │e:                 │

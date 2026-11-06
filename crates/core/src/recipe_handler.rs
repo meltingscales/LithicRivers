@@ -204,6 +204,24 @@ impl RecipeHandler {
                 result: ItemKind::MobileTeleAccessDevice,
                 quantity: 1,
             },
+            // Item charger: charges power cells from the grid
+            Recipe {
+                name: "Item Charger",
+                ingredients: &[(ItemKind::IronScrap, 4), (ItemKind::ScrapElectronics, 3)],
+                result: ItemKind::ItemCharger,
+                quantity: 1,
+            },
+            // RTG: constant power without fuel; late-game, placeholder ingredients
+            Recipe {
+                name: "RTG",
+                ingredients: &[
+                    (ItemKind::NuclearWaste, 4),
+                    (ItemKind::PlasteelScrap, 6),
+                    (ItemKind::ScrapElectronics, 6),
+                ],
+                result: ItemKind::Rtg,
+                quantity: 1,
+            },
             // Teleporter: a late-tier block; placeholder ingredients until the later tiers
             // have their own materials
             Recipe {

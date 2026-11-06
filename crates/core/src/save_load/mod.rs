@@ -126,6 +126,8 @@ saved_components! {
     "transit_station" => crate::teleporter::TransitStation,
     "battery" => crate::power_cells::Battery,
     "cell_charge" => crate::power_cells::CellCharge,
+    "rtg" => crate::power::Rtg,
+    "built_in" => crate::factory::BuiltIn,
 }
 
 /// Entities that carry a component type the registry doesn't know, described by the

@@ -243,6 +243,8 @@ pub enum ItemKind {
     StandardPowerCell,
     AdvancedPowerCell,
     MobileTeleAccessDevice,
+    Rtg,
+    ItemCharger,
 }
 
 pub fn itemkind_name(kind: ItemKind) -> &'static str {
@@ -316,6 +318,8 @@ pub fn itemkind_name(kind: ItemKind) -> &'static str {
         ItemKind::StandardPowerCell => "Standard Power Cell",
         ItemKind::AdvancedPowerCell => "Advanced Power Cell",
         ItemKind::MobileTeleAccessDevice => "Mobile Tele-Access Device",
+        ItemKind::Rtg => "RTG",
+        ItemKind::ItemCharger => "Item Charger",
     }
 }
 
@@ -390,6 +394,8 @@ pub fn itemkind_sprite_name(kind: ItemKind) -> &'static str {
         ItemKind::StandardPowerCell => "standard_power_cell",
         ItemKind::AdvancedPowerCell => "advanced_power_cell",
         ItemKind::MobileTeleAccessDevice => "mobile_tele_access_device",
+        ItemKind::Rtg => "rtg",
+        ItemKind::ItemCharger => "item_charger",
     }
 }
 
@@ -464,6 +470,8 @@ pub fn parse_itemkind_from_sprite_name(sprite_name: &str) -> Option<ItemKind> {
         "standard_power_cell" => Some(ItemKind::StandardPowerCell),
         "advanced_power_cell" => Some(ItemKind::AdvancedPowerCell),
         "mobile_tele_access_device" => Some(ItemKind::MobileTeleAccessDevice),
+        "rtg" => Some(ItemKind::Rtg),
+        "item_charger" => Some(ItemKind::ItemCharger),
         _ => None,
     }
 }

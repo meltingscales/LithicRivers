@@ -87,14 +87,14 @@ pub const EXAMPLES: &[Example] = &[
         build: lantern,
     },
     Example {
-        name: "Teleporters: two linked, one charging on the grid; two active transit stations",
-        size: (9, 3),
+        name: "Teleporters: two linked, one charging on the grid; two active transit stations, an RTG and an item charger",
+        size: (9, 4),
         has_input: true,
         build: teleporters,
     },
     Example {
         name: "Battery bank: an electric furnace keeps smelting after the burner's fuel runs out",
-        size: (3, 2),
+        size: (9, 2),
         has_input: true,
         build: battery_bank,
     },
@@ -335,6 +335,7 @@ fn resurrection_vats(game: &mut Game, o: Position) {
 ///   G G P T . . . . T
 ///   . . . . . . . . .
 ///   S . . . . . . . S
+///   . . . . . . R + H      R RTG, H item charger with a crude cell
 /// ```
 fn teleporters(game: &mut Game, o: Position) {
     for dx in [0, 1] {
@@ -369,17 +370,29 @@ fn teleporters(game: &mut Game, o: Position) {
         }
         crate::teleporter::activate(&mut game.world, station);
     }
+    // The east station's kit, as quest stations have it (the RTG also feeds the east
+    // teleporter)
+    let rtg = place(game, FactoryKind::Rtg, at(o, 6, 3), Facing::North);
+    place(game, FactoryKind::PowerPole, at(o, 7, 3), Facing::North);
+    let charger = place(game, FactoryKind::ItemCharger, at(o, 8, 3), Facing::North);
+    for block in [rtg, charger] {
+        let _ = game.world.insert_one(block, factory::BuiltIn);
+    }
+    fill(game, charger, &[(ItemKind::CrudePowerCell, 1)]);
 }
 
 /// A burner with one stick of fuel, a pole, a charged battery with a power cell in its
 /// slot, and an electric furnace full of logs: the furnace keeps smelting on the battery
 /// once the stick is burned, and the battery charges the cell meanwhile.
 ///
+/// It starts 6 tiles in, so its pole is out of wire reach of the teleporters' grid.
+///
 /// ```text
-///   G P B
-///   . F .
+///   . . . . . . G P B
+///   . . . . . . . F .
 /// ```
 fn battery_bank(game: &mut Game, o: Position) {
+    let o = at(o, BATTERY_BANK_LEAD, 0);
     let generator = place(game, FactoryKind::BurnerGenerator, o, Facing::North);
     fill(game, generator, &[(ItemKind::Stick, 1)]);
     place(game, FactoryKind::PowerPole, at(o, 1, 0), Facing::North);
@@ -398,6 +411,9 @@ fn battery_bank(game: &mut Game, o: Position) {
         f.input = Some(crate::components::ItemStack::new(ItemKind::Log, 16));
     }
 }
+
+/// Empty tiles before the battery bank example's blocks.
+const BATTERY_BANK_LEAD: i64 = 6;
 
 /// A chest of logs, an extractor pulling them onto two belts, and a chest at the end.
 ///
@@ -659,6 +675,7 @@ mod tests {
             .into_iter()
             .find(|(e, _)| e.name.starts_with("Battery bank"))
             .unwrap();
+        let o = at(o, BATTERY_BANK_LEAD, 0);
         let generator = game.res.factory_index[&o];
         let battery = game.res.factory_index[&at(o, 2, 0)];
         let furnace = game.res.factory_index[&at(o, 1, 1)];
@@ -673,12 +690,7 @@ mod tests {
             .world
             .get::<&crate::power::PowerConsumer>(furnace)
             .unwrap();
-        let state = game
-            .world
-            .get::<&crate::furnace::Furnace>(furnace)
-            .map(|f| format!("{:?}", *f))
-            .unwrap();
-        assert!(consumer.active, "{state}");
+        assert!(consumer.active);
         assert_eq!(
             consumer.satisfaction_permille, 1000,
             "the battery covers it"

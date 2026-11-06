@@ -1,0 +1,20 @@
+# The bunker station's built-in item charger, on the station's RTG: store an empty crude
+# cell, let a few factory seconds pass, and watch it charge
+seed 12345
+size 100x30
+skip-splash
+key ui.MENU_PREV
+cheat giveitem crude_power_cell
+cheat tp 13 13 -19
+key action.INTERACT
+# Choices: the station (west) and the item charger (south-east)
+key movement.MOVE_SOUTHEAST
+expect-text "Item Charger - idle"
+key ui.MENU_ACTIVATE
+expect-text "Stored Crude Power Cell"
+rawkey ESCAPE
+key action.PASS_TIME
+key action.INTERACT
+key movement.MOVE_SOUTHEAST
+expect-text "Item Charger - charging"
+screen item-charger

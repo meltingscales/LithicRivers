@@ -43,6 +43,13 @@ pub struct Generator {
     pub buffer_j: u64,
 }
 
+/// What an RTG gives its network, in watts, always: it needs no fuel.
+pub const RTG_W: u64 = 100_000;
+
+/// Marks a generator as an RTG: constant output, no fuel or buffer.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Rtg;
+
 /// A power pole: links to poles within `WIRE_REACH`, powers blocks within `SUPPLY_RADIUS`.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PowerPole;
@@ -263,6 +270,9 @@ pub fn rebuild(world: &World) -> PowerNetworks {
 /// Joules a generator can give this step: up to its maximum, from its buffer plus the next
 /// fuel item it would have to start.
 fn available_j(world: &World, generator: Entity) -> u64 {
+    if world.get::<&Rtg>(generator).is_ok() {
+        return RTG_W / STEPS_PER_FACTORY_SECOND;
+    }
     let max_step = BURNER_MAX_W / STEPS_PER_FACTORY_SECOND;
     let buffer = world.get::<&Generator>(generator).map_or(0, |g| g.buffer_j);
     let next = world
@@ -275,6 +285,10 @@ fn available_j(world: &World, generator: Entity) -> u64 {
 
 /// Take `joules` from a generator, starting its next fuel item if the buffer runs short.
 fn draw(world: &mut World, generator: Entity, joules: u64) {
+    // An RTG burns nothing
+    if world.get::<&Rtg>(generator).is_ok() {
+        return;
+    }
     let buffer = world.get::<&Generator>(generator).map_or(0, |g| g.buffer_j);
     let mut buffer = buffer;
     if buffer < joules {
@@ -395,7 +409,10 @@ pub fn is_grid_block(kind: FactoryKind) -> bool {
             | FactoryKind::AdvancedVat
             | FactoryKind::Spawner
             | FactoryKind::Teleporter
+            | FactoryKind::TransitStation
             | FactoryKind::Battery
+            | FactoryKind::Rtg
+            | FactoryKind::ItemCharger
     ) || kind.is_test_consumer()
 }
 

@@ -17,8 +17,10 @@ The user also wants SapienCorp's own teleporters at the major quest locations: e
 - **Recipe:** later-tier materials (placeholder ingredients until those tiers exist).
 - **SapienCorp transit stations:** teleporter stations built into the major quest locations: the bunker, the SapienCorp factory, the broken android's site and the arm quest's facility.
   - Each starts **dormant**. Interacting with it once runs an activation handshake ("Transit node registered"). After that it works normally.
-  - Stations run on SapienCorp's old reserve power, so a jump from a station is free. A station lists only the other activated stations: free travel between quest hubs.
-  - Stations can't be broken or picked up.
+  - Each station stands beside a SapienCorp radioisotope thermoelectric generator (RTG), an ordinary power pole and an Item Charger. The RTG charges the station's own battery bank, and a jump from a station costs the normal distance cost from that bank, which refills over time. A station lists only the other activated stations.
+  - Stations, and their RTG and Item Charger, can't be broken or picked up.
+- **RTG:** a generator with constant output and no fuel. Fixed at stations; a late-game recipe (placeholder ingredients) builds one for the player's own grid.
+- **Item Charger:** a grid-powered block with cell slots that charges power cells straight from the grid. Fixed at stations, where it refills cells for the device; craftable mid-game.
 - **The bunker's station:** it stands in the room where the player wakes up, so it is the first station they meet.
 - **Mobile tele-access device:** a gear item that opens the destination list from anywhere, listing every activated station and every player-built teleporter.
   - It runs on carried power cells, by `add-power-cells`' gear rule: it draws from the fullest cell, and says "no charge" when every cell is empty.
@@ -29,7 +31,7 @@ The user also wants SapienCorp's own teleporters at the major quest locations: e
 ## Capabilities
 
 ### New Capabilities
-- `teleporters`: Teleporter blocks, battery banks charged from the grid, naming, the destination list, jump costs and the out-of-charge message; SapienCorp transit stations at quest locations, their activation and free station-to-station travel; the mobile tele-access device.
+- `teleporters`: Teleporter blocks, battery banks charged from the grid, naming, the destination list, jump costs and the out-of-charge message; SapienCorp transit stations at quest locations, their activation and RTG-powered station-to-station travel; RTGs and Item Chargers; the mobile tele-access device.
 
 ### Modified Capabilities
 <!-- None. The battery bank is an ordinary power consumer whose demand depends on its charge; the power-grid requirements hold unchanged. -->
@@ -42,5 +44,6 @@ The user also wants SapienCorp's own teleporters at the major quest locations: e
 - **Structures:** a station in the bunker's wake-up room (`sapiencorp-bunker`), the factory, the android's site and the arm quest's facility.
 - **Device:** a `MobileTeleAccessDevice` item and recipe, drawing its jump cost from carried power cells.
 - **Client:** the same destination window for stations and the device, and the activation message.
+- **Station power:** `FactoryKind::Rtg` and `FactoryKind::ItemCharger`, structure tiles for them and for a power pole, and a battery bank on each station.
 - **Showcase:** a pair of linked teleporters example.
-- **Depends on:** `add-power-cells`, for the device only. Stations and player teleporters can ship before it.
+- **Depends on:** `add-power-cells` (merged), for the device and the Item Charger.

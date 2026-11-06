@@ -286,6 +286,10 @@ pub struct GameWorld {
     /// the game to turn them into station blocks (`Game::place_transit_stations`)
     #[serde(skip)]
     pub transit_stations: Vec<(i64, i64, i64, String)>,
+    /// RTG, item-charger and power-pole tiles placed by structures, waiting for the game to
+    /// turn them into factory blocks (`Game::place_transit_stations`)
+    #[serde(skip)]
+    pub structure_blocks: Vec<(i64, i64, i64, crate::tiles::TileKind)>,
 }
 
 impl GameWorld {
@@ -299,6 +303,7 @@ impl GameWorld {
             quest_treasures: Vec::new(),
             wild_spawners: Vec::new(),
             transit_stations: Vec::new(),
+            structure_blocks: Vec::new(),
         }
     }
 

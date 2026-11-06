@@ -258,10 +258,10 @@ pub fn handle_corpse_looting_input(app: &mut App, key: KeyCode) -> Result<bool, 
                     {
                         Some("The auto-planter only takes acorns".to_string())
                     }
-                    (FactoryKind::Battery, Some(item))
+                    (FactoryKind::Battery | FactoryKind::ItemCharger, Some(item))
                         if !lithicrivers_core::power_cells::is_cell(item) =>
                     {
-                        Some("The battery only takes power cells".to_string())
+                        Some(format!("The {block_name} only takes power cells"))
                     }
                     (FactoryKind::AutoHarvester, Some(_)) => {
                         Some("The auto-harvester only gives items out".to_string())

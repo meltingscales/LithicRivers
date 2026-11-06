@@ -1,5 +1,6 @@
 # Wake the bunker's transit station beside where a new robot wakes up, wake the
-# factory's, then jump back from the factory to the bunker for free
+# factory's, then jump back from the factory to the bunker, paid from the factory
+# station's RTG-charged bank
 seed 12345
 size 100x30
 skip-splash
@@ -9,9 +10,12 @@ key action.INTERACT
 expect-text "Transit node registered: Bunker Station"
 screen bunker-station-awake
 cheat tp 107 813 -8
+# The station is west; its power pole east also has a choice, so pick the west tile
 key action.INTERACT
+key movement.MOVE_WEST
 expect-text "Transit node registered: Factory Station"
 key action.INTERACT
+key movement.MOVE_WEST
 expect-text "Bunker Station"
 screen factory-station-window
 key ui.MENU_ACTIVATE

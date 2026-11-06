@@ -1062,6 +1062,25 @@ e<
  ╠════════╣ 
  ▀        ▀ 
             
+=== factory/item_charger  #8FD06A  A two-socket charging cradle; cells slotted into it tick quietly as they fill
+-- 1x
+ŧ
+-- 2x
+┌┐
+└┘
+-- 3x
+┌─┐
+│ŧ│
+└─┘
+-- art 0
+            
+  ┌──────┐  
+  │┌┐  ┌┐│  
+  ││¦  ¦││  
+  │└┘  └┘│  
+  ├──**──┤  
+  └──────┘  
+            
 === factory/power_pole  #E5B53A  Links to poles within 8 tiles and powers blocks within 3
 -- 1x
 +
@@ -1099,6 +1118,25 @@ C
  █▓▓▓▓▓▓▓▓█ 
  █▒▒▒▒▒▒▒▒█ 
  ▀▀▀▀▀▀▀▀▀▀ 
+            
+=== factory/rtg  #E0C040  A SapienCorp radioisotope generator, warm to the touch and humming the same note it hummed before the war
+-- 1x
+Ж
+-- 2x
+╓╖
+╙╜
+-- 3x
+╓─╖
+╣Ж╠
+╙─╜
+-- art 0
+            
+   ╓────╖   
+  ╓╜▒▓▓▒╙╖  
+ ═╣▒▓@@▓▒╠═ 
+  ╙╖▒▓▓▒╓╜  
+   ╙─╥╥─╜   
+   ▀▀▀▀▀▀   
             
 === factory/scrap_lantern  #F2A93B  A torch caged in bent iron scrap that never seems to burn down; it lights six tiles around it
 -- 1x
@@ -1991,6 +2029,25 @@ iii
    ▀  ▀▀    
             
             
+=== items/item_charger  #6B9C50  A two-socket charging cradle; cells slotted into it tick quietly as they fill
+-- 1x
+ŧ
+-- 2x
+┌┐
+└┘
+-- 3x
+┌─┐
+│ŧ│
+└─┘
+-- art 0
+            
+  ┌──────┐  
+  │┌┐  ┌┐│  
+  ││¦  ¦││  
+  │└┘  └┘│  
+  ├──**──┤  
+  └──────┘  
+            
 === items/leather  #8B4513  Tough hide from an animal
 -- 1x
 L
@@ -2214,6 +2271,25 @@ ppp
   ▀▓▓▒▒▓▓▀  
             
             
+            
+=== items/rtg  #A89030  A SapienCorp radioisotope generator, warm to the touch and humming the same note it hummed before the war
+-- 1x
+Ж
+-- 2x
+╓╖
+╙╜
+-- 3x
+╓─╖
+╣Ж╠
+╙─╜
+-- art 0
+            
+   ╓────╖   
+  ╓╜▒▓▓▒╙╖  
+ ═╣▒▓@@▓▒╠═ 
+  ╙╖▒▓▓▒╓╜  
+   ╙─╥╥─╜   
+   ▀▀▀▀▀▀   
             
 === items/salvaged_arm  #8FB8A8  A plated SapienCorp arm, pulled off the line before it was ever switched on
 -- 1x
@@ -2918,6 +2994,25 @@ s=s
 ░║▒▒▒▒▒▒║▓▓▒
 ▒╚══════╝▓▓▓
 ▓▓▓▓▓▒▓▓▒▓▓▓
+=== tiles/power_pole  #FFFF00  Special worldgen block that turns into a power pole
+-- 1x
++
+-- 2x
+++
+++
+-- 3x
++++
++++
++++
+-- art 0
+            
+            
+            
+            
+            
+            
+            
+            
 === tiles/rock  #808080  A solid block of stone.
 -- 1x
 #
@@ -2937,6 +3032,25 @@ s=s
 ░▒▓▓▓▒▓▓▓▓▓▒
 ▒▓▓▓▒░▒▓▓▓▓▓
 ▓▓▓▓▓▒▓▓▒▓▓▓
+=== tiles/sapiencorp_rtg  #FFFF00  Special worldgen block that turns into a built-in SapienCorp RTG
+-- 1x
+Ж
+-- 2x
+ЖЖ
+ЖЖ
+-- 3x
+ЖЖЖ
+ЖЖЖ
+ЖЖЖ
+-- art 0
+            
+            
+            
+            
+            
+            
+            
+            
 === tiles/sapling  #5DBB4A  A young tree growing from a planted acorn
 -- 1x
 τ
@@ -3051,6 +3165,25 @@ ps!
    █▓▓▓▓▓▓▓▓
 ▄▄▄█▓▓▓▓▓▓▓▓
 █▓▓▓▓▓▓▓▓▓▓▓
+=== tiles/station_item_charger  #FFFF00  Special worldgen block that turns into a station item charger
+-- 1x
+ŧ
+-- 2x
+ŧŧ
+ŧŧ
+-- 3x
+ŧŧŧ
+ŧŧŧ
+ŧŧŧ
+-- art 0
+            
+            
+            
+            
+            
+            
+            
+            
 === tiles/stone_brick  #B8B0A0  Rubble dressed square and stacked again; it stands like the walls the old cities lost
 -- 1x
 ▒
