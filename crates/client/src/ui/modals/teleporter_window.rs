@@ -27,29 +27,25 @@ pub(crate) fn render_teleporter_window(f: &mut Frame, app: &App) {
         .get::<&TransitStation>(window.entity)
         .ok()
         .map(|s| (*s).clone());
+    // A teleporter's or station's bank: its charge and how fast it is charging
+    let bank_line = |charge_j: u64| {
+        let rate = world
+            .get::<&PowerConsumer>(window.entity)
+            .map_or(0, |c| teleporter::charge_rate_w(&c));
+        let charging = if charge_j >= teleporter::CAPACITY_J {
+            "full".to_string()
+        } else {
+            format!("charging at {} kW", rate / 1000)
+        };
+        format!(
+            "Battery: {} / {}   ({charging})",
+            format_mj(charge_j),
+            format_mj(teleporter::CAPACITY_J)
+        )
+    };
     let (title, status) = match (&teleporter, &station) {
-        (Some(t), _) => {
-            let rate = world
-                .get::<&PowerConsumer>(window.entity)
-                .map_or(0, |c| teleporter::charge_rate_w(&c));
-            let charging = if t.charge_j >= teleporter::CAPACITY_J {
-                "full".to_string()
-            } else {
-                format!("charging at {} kW", rate / 1000)
-            };
-            (
-                t.name.clone(),
-                format!(
-                    "Battery: {} / {}   ({charging})",
-                    format_mj(t.charge_j),
-                    format_mj(teleporter::CAPACITY_J)
-                ),
-            )
-        }
-        (None, Some(s)) => (
-            s.name.clone(),
-            "SapienCorp reserve power: jumps to other stations are free".to_string(),
-        ),
+        (Some(t), _) => (t.name.clone(), bank_line(t.charge_j)),
+        (None, Some(s)) => (s.name.clone(), bank_line(s.charge_j)),
         (None, None) if teleporter::carries_device(world, window.entity) => (
             "Mobile Tele-Access Device".to_string(),
             format!(
@@ -78,8 +74,8 @@ pub(crate) fn render_teleporter_window(f: &mut Frame, app: &App) {
                 } else {
                     format_mj(d.cost_j)
                 };
-                let short = match &teleporter {
-                    Some(t) => t.charge_j < d.cost_j,
+                let short = match teleporter::bank_charge(world, window.entity) {
+                    Some(charge) => charge < d.cost_j,
                     None => {
                         lithicrivers_core::power_cells::fullest_charge(world, window.entity)
                             < d.cost_j

@@ -1,7 +1,10 @@
+ (106,811,-8)
  (106,813,-8)
  (106,834,-6) item=Meatx1
  (106,835,-6) item=Meatx1
  (107,819,-6) item=ScrapElectronicsx10
+ (108,811,-8) inv=[]
+ (108,813,-8)
  (108,819,-6) item=ScrapElectronicsx10
  (108,821,-6) item=ScrapElectronicsx10
  (108,828,-6) item=ScrapElectronicsx10
@@ -21,8 +24,12 @@
  (113,818,-6) item=Diamondx10
  (113,823,-6) item=Diamondx10
  (114,818,-6) item=ScrapElectronicsx10
+ (115,811,-6)
+ (116,811,-6)
+ (116,812,-6)
  (116,823,-6) item=ScrapElectronicsx10
  (116,824,-6) item=Diamondx10
+ (117,811,-6) inv=[]
  (118,811,-6) item=Meatx1
  (118,812,-6) item=Meatx1
  (118,813,-6) item=Meatx1
@@ -47,6 +54,9 @@
  (118,835,-6) item=Meatx1
  (118,836,-6) item=Logx1
  (12,13,-19)
+ (13,15,-19)
+ (14,14,-19) inv=[]
+ (14,15,-19)
  (16,20,-19) item=Diamondx10
  (17,11,-19) item=Diamondx10
  (19,19,0) item=Logx1

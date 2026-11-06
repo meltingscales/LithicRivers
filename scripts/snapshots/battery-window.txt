@@ -6,13 +6,13 @@ size 100x30
 world factory-showcase
 key ui.MENU_PREV
 cheat giveitem standard_power_cell
-cheat tp 94 -6 0
+cheat tp 100 -6 0
 key action.PASS_TIME
 key action.INTERACT
 expect-text "Battery - "
 screen battery-window
 rawkey ESCAPE
-cheat tp 92 -8 0
+cheat tp 98 -8 0
 key action.INTERACT
 key movement.MOVE_SOUTH
 expect-text "Stored:"

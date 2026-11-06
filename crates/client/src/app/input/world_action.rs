@@ -197,7 +197,8 @@ pub fn nearby_interactions(app: &App) -> Option<NearbyInteractions> {
             | FactoryKind::StandardVat
             | FactoryKind::AdvancedVat
             | FactoryKind::Spawner
-            | FactoryKind::Battery => available_actions.push(InteractionType::OpenMachine {
+            | FactoryKind::Battery
+            | FactoryKind::ItemCharger => available_actions.push(InteractionType::OpenMachine {
                 entity,
                 position,
                 kind: block.kind,

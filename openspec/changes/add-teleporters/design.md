@@ -10,7 +10,7 @@
 
 **Goals:** fast travel between player-built points, gated by energy; deterministic.
 
-**Goals (stations):** free travel between quest hubs the player has visited, starting with one in the bunker's wake-up room; a carried device for jumping to the network from anywhere.
+**Goals (stations):** cheap travel between quest hubs the player has visited, powered by RTGs in the world, starting with one in the bunker's wake-up room; a carried device for jumping to the network from anywhere.
 
 **Non-Goals:** teleporting items or creatures, stations in random ruins, cross-world travel.
 
@@ -34,13 +34,28 @@
 ### SapienCorp transit stations
 - `FactoryKind::TransitStation`, placed by a `teleporter_station` structure block. A station can't be broken or picked up.
 - `TransitStation { name, activated }`, saved. The name comes from its location ("Bunker Station", "Factory Station", "Android Station", "Facility Station").
+- **The locker station:** the factory has a second station, the Locker Station, with its own RTG, pole and charger, a couple of tiles from the arm locker (`teleporter_station_inner` tile).
+- **The spawn station:** the bunker's station starts activated (silently) in a new world, so the player never has to wake the one they start beside. Old saves keep their stations as they were.
 - **First use:** interacting with a dormant station activates it and logs the handshake message. It does not jump on that same interaction. Later interactions open the destination list.
-- **Placement:** in the bunker, the station goes in the west room with the player spawn (`!` in `shape_layers.txt`). The factory, the android's site and the arm quest's facility each get one near their entrance.
+- **Placement:** in the bunker, the station goes in the west room with the player spawn (`!` in `shape_layers.txt`). The factory, the android's site and the arm quest's facility each get one near their entrance. (In practice the android is moved beside the bunker spawn and the facility is the factory, so there are two stations.)
+- **Bank:** a station carries a battery bank like a player teleporter's (same 50 MJ capacity). It starts full and charges whether the station is awake or not.
+
+### RTGs
+- `FactoryKind::Rtg`: a generator with a constant 100 kW output into its network and no fuel.
+- A station's RTG is `fixed()` like the station: it can't be broken, picked up or copied. A crafted RTG (late recipe, placeholder ingredients) is an ordinary block.
+- Bunker to factory costs about 19.5 MJ; a station's RTG refills that in about 16 game minutes when nothing else draws on it.
+
+### Item Charger
+- `FactoryKind::ItemCharger`: 2 cell slots. It draws up to 50 kW from its network, only while a cell in it isn't full, and charges the cells in slot order.
+- A station's charger is `fixed()`; a crafted one (mid-game recipe) is an ordinary block. Its window is the two-panel machine window.
+
+### Station placement
+- New structure tiles: `sapiencorp_rtg` and `station_item_charger` place the fixed blocks, and `power_pole` places an ordinary pole. Each station's room gets all three beside it, within the pole's supply radius.
 
 ### Destinations by source
 | Source | Lists | Cost |
 |---|---|---|
-| Transit station | other activated stations | free (SapienCorp reserve power) |
+| Transit station | other activated stations | the jump cost, from its RTG-charged bank |
 | Player teleporter | other teleporters and activated stations | the jump cost, from its battery bank |
 | Mobile tele-access device | every teleporter and activated station | the jump cost, from carried power cells |
 
@@ -56,5 +71,6 @@ Dormant stations are never listed.
 
 - [Trivializes travel] → The cost scales with distance, and the battery needs a real grid.
 - [Teleporting into danger] → The landing is next to the player's own block; combat starts normally if enemies are near.
-- [Free stations make walking pointless] → Stations only reach other stations, at fixed quest hubs, and each must be reached on foot first to activate it.
+- [Stations make walking pointless] → Stations only reach other stations, at fixed quest hubs, each must be reached on foot first to activate it, and their banks refill slowly.
+- [A station's pole is an ordinary block] → Breaking it cuts the station's power; rebuilding it restores the power.
 - [The device waits on power cells] → Stations and player teleporters don't depend on `add-power-cells`, so they can ship first; the device task waits.

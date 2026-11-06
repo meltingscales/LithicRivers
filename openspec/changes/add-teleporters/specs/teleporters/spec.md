@@ -41,12 +41,33 @@ SapienCorp transit stations SHALL start dormant. Interacting with a dormant stat
 - **WHEN** the player interacts with the dormant Factory Station for the first time
 - **THEN** a message says the transit node is registered, the player doesn't move, and the Factory Station appears in other stations' destination lists from then on
 
-### Requirement: Free travel between stations
-Interacting with an activated station SHALL list every other activated station. Choosing one SHALL move the player to a free tile next to it at no energy cost.
+### Requirement: Travel between stations
+Interacting with an activated station SHALL list every other activated station. Choosing one SHALL move the player to a free tile next to it and spend the jump's cost from the station's battery bank. If the bank is short, the jump SHALL not happen and a message SHALL say how much more charge it needs.
 
 #### Scenario: Station to station
 - **WHEN** the player, with the Bunker and Factory Stations activated, uses the Bunker Station to travel to the Factory Station
-- **THEN** the player stands next to the Factory Station
+- **THEN** the player stands next to the Factory Station and the Bunker Station's bank has dropped by the jump cost
+
+### Requirement: Stations are powered by an RTG
+Each transit station SHALL stand beside an RTG, a power pole and an Item Charger, and its battery bank SHALL charge from the RTG's network.
+
+#### Scenario: Refilling
+- **WHEN** a station's bank has been emptied by jumps and time passes
+- **THEN** its charge grows again from the RTG
+
+### Requirement: RTGs supply constant power without fuel
+An RTG SHALL supply a constant output to its network without fuel. RTGs at stations SHALL NOT be breakable; a late-game recipe SHALL build one for the player's grid.
+
+#### Scenario: Endless power
+- **WHEN** a network's only generator is an RTG
+- **THEN** its consumers stay powered for as long as time passes
+
+### Requirement: Item Chargers charge power cells from the grid
+An Item Charger SHALL charge the power cells in its slots from its network, drawing power only while a cell in it isn't full.
+
+#### Scenario: Charging a cell
+- **WHEN** an empty power cell is put in a powered Item Charger
+- **THEN** its charge rises until it's full
 
 ### Requirement: Mobile tele-access device
 Using the mobile tele-access device SHALL list every player-built teleporter and every activated station. A jump SHALL cost the same as from a teleporter at the player's position, drawn from carried power cells. If the cells can't cover it, the jump SHALL not happen and a message SHALL say there is no charge.
@@ -60,8 +81,8 @@ Using the mobile tele-access device SHALL list every player-built teleporter and
 - **THEN** the player doesn't move and is told there is no charge
 
 ### Requirement: A station where the player wakes up
-The SapienCorp bunker SHALL have a transit station in the room where a new player wakes up.
+The SapienCorp bunker SHALL have a transit station in the room where a new player wakes up. It SHALL start activated, so the player never has to wake it.
 
 #### Scenario: New world
 - **WHEN** a new world starts
-- **THEN** a dormant transit station stands in the player's starting room in the bunker
+- **THEN** an activated transit station stands in the player's starting room in the bunker, beside an RTG, a power pole and an Item Charger

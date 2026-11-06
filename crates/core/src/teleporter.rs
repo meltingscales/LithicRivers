@@ -3,8 +3,8 @@
 //! source teleporter's bank, more the farther it goes.
 //!
 //! SapienCorp transit stations stand in the quest locations. Each is dormant until the
-//! player first uses it; after that it reaches the other activated stations for free, and
-//! player-built teleporters list it too.
+//! player first uses it; after that it reaches the other activated stations, paid from a
+//! bank that the RTG beside it keeps charging, and player-built teleporters list it too.
 //!
 //! All energy is whole joules, so charging and jump costs stay exact and deterministic.
 
@@ -38,23 +38,67 @@ pub struct Teleporter {
 }
 
 /// A SapienCorp transit station, built into a quest location: it can't be broken or picked
-/// up, and does nothing until the player activates it.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+/// up, and does nothing until the player activates it. Its battery bank charges from the
+/// RTG beside it (a station from an older save starts full).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct TransitStation {
     pub name: String,
     pub activated: bool,
+    #[serde(default = "full_bank")]
+    pub charge_j: u64,
+}
+
+fn full_bank() -> u64 {
+    CAPACITY_J
+}
+
+impl Default for TransitStation {
+    /// A dormant, unnamed station with a full bank.
+    fn default() -> Self {
+        Self {
+            name: String::new(),
+            activated: false,
+            charge_j: CAPACITY_J,
+        }
+    }
+}
+
+/// The charge in a teleporter's or station's battery bank.
+pub fn bank_charge(world: &World, entity: Entity) -> Option<u64> {
+    if let Ok(t) = world.get::<&Teleporter>(entity) {
+        return Some(t.charge_j);
+    }
+    world
+        .get::<&TransitStation>(entity)
+        .ok()
+        .map(|s| s.charge_j)
+}
+
+/// Spend joules from a teleporter's or station's bank (the caller checked it holds them).
+fn spend(world: &mut World, entity: Entity, joules: u64) {
+    if let Ok(mut t) = world.get::<&mut Teleporter>(entity) {
+        t.charge_j -= joules;
+    } else if let Ok(mut s) = world.get::<&mut TransitStation>(entity) {
+        s.charge_j -= joules;
+    }
 }
 
 /// What a station built into a structure is called; `structure` is its folder name, with
 /// or without the `.lrstructure` suffix.
-pub fn station_name(structure: &str) -> &'static str {
+/// `inner` is a structure's second station, deeper in (the factory's, by the arm locker).
+pub fn station_name(structure: &str, inner: bool) -> &'static str {
     let structure = structure.trim_end_matches(".lrstructure");
     if structure == crate::game::FACILITY_STRUCTURE.trim_end_matches(".lrstructure") {
-        return "Factory Station";
+        return if inner {
+            "Locker Station"
+        } else {
+            "Factory Station"
+        };
     }
-    match structure {
-        "sapiencorp-bunker" => "Bunker Station",
-        _ => "Transit Station",
+    match (structure, inner) {
+        ("sapiencorp-bunker", _) => "Bunker Station",
+        (_, false) => "Transit Station",
+        (_, true) => "Inner Transit Station",
     }
 }
 
@@ -121,10 +165,16 @@ pub fn rename(world: &mut World, teleporter: Entity, name: &str) -> bool {
 /// Before power is shared: a bank wants power only while it isn't full, and never more
 /// than it has room for this step.
 pub fn update_demand(world: &mut World) {
-    for (_, (teleporter, consumer)) in world.query_mut::<(&Teleporter, &mut PowerConsumer)>() {
-        let room_j = CAPACITY_J.saturating_sub(teleporter.charge_j);
+    let want = |charge_j: u64, consumer: &mut PowerConsumer| {
+        let room_j = CAPACITY_J.saturating_sub(charge_j);
         consumer.demand_w = CHARGE_W.min(room_j * STEPS_PER_FACTORY_SECOND);
         consumer.active = consumer.demand_w > 0;
+    };
+    for (_, (t, consumer)) in world.query_mut::<(&Teleporter, &mut PowerConsumer)>() {
+        want(t.charge_j, consumer);
+    }
+    for (_, (s, consumer)) in world.query_mut::<(&TransitStation, &mut PowerConsumer)>() {
+        want(s.charge_j, consumer);
     }
 }
 
@@ -146,6 +196,9 @@ pub fn step_charging(world: &mut World) {
     for (_, (teleporter, consumer)) in world.query_mut::<(&mut Teleporter, &PowerConsumer)>() {
         teleporter.charge_j = (teleporter.charge_j + delivered_j(consumer)).min(CAPACITY_J);
     }
+    for (_, (station, consumer)) in world.query_mut::<(&mut TransitStation, &PowerConsumer)>() {
+        station.charge_j = (station.charge_j + delivered_j(consumer)).min(CAPACITY_J);
+    }
 }
 
 /// Activate a dormant station, lighting it up. Returns its name if it was dormant.
@@ -164,12 +217,27 @@ pub fn activate(world: &mut World, station: Entity) -> Option<String> {
     Some(name)
 }
 
+/// Register the bunker's station, where a new player wakes up, without a message.
+pub fn register_spawn_station(world: &mut World) {
+    let spawn = station_name("sapiencorp-bunker", false);
+    let bunker: Vec<Entity> = world
+        .query::<&TransitStation>()
+        .iter()
+        .filter(|(_, s)| s.name == spawn)
+        .map(|(e, _)| e)
+        .collect();
+    for station in bunker {
+        activate(world, station);
+    }
+}
+
 /// Where a jump can be made from, and what it lists.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Source {
     /// A player-built teleporter: lists teleporters and activated stations, paid from its bank
     Teleporter,
-    /// An activated transit station: lists the other activated stations, for free
+    /// An activated transit station: lists the other activated stations, paid from its
+    /// RTG-charged bank
     Station,
     /// The player carrying a mobile tele-access device: lists every teleporter and
     /// activated station, at the jump cost from where they stand, paid from carried cells
@@ -214,7 +282,7 @@ pub struct Destination {
 
 /// Where `from` can jump to, nearest first, then by position: from a teleporter, every
 /// other teleporter and every activated station, at the jump cost; from an activated
-/// station, every other activated station, for free; from a player with the device, every
+/// station, every other activated station, at the jump cost; from a player with the device, every
 /// teleporter and activated station, at the jump cost. Dormant stations are never listed.
 pub fn destinations(world: &World, from: Entity) -> Vec<Destination> {
     let (Ok(origin), Some(source)) = (
@@ -246,10 +314,7 @@ pub fn destinations(world: &World, from: Entity) -> Vec<Destination> {
             name,
             position: pos,
             distance: distance(origin, pos),
-            cost_j: match source {
-                Source::Teleporter | Source::Device => jump_cost(origin, pos),
-                Source::Station => 0,
-            },
+            cost_j: jump_cost(origin, pos),
         })
         .collect();
     found.sort_by_key(|d| (d.distance, d.position.z, d.position.y, d.position.x));
@@ -310,8 +375,8 @@ impl JumpError {
 impl crate::Game {
     /// Move the player from `from` (a teleporter, an activated station, or the player with
     /// the device) to beside `to`, one of its `destinations`, paying the jump's cost from
-    /// `from`'s bank, or for the device from the fullest carried cell (stations pay
-    /// nothing). The destination's chunk is generated first; the player lands on the first
+    /// `from`'s bank (a teleporter's or station's), or for the device from the fullest
+    /// carried cell. The destination's chunk is generated first; the player lands on the first
     /// free walkable tile in `landing_order`, and the world around them is loaded at once.
     /// Passes no time. Returns where the player landed.
     pub fn teleport(&mut self, from: Entity, to: Entity) -> Result<Position, JumpError> {
@@ -331,10 +396,7 @@ impl crate::Game {
                 }));
             }
         }
-        let charge = self
-            .world
-            .get::<&Teleporter>(from)
-            .map_or(0, |t| t.charge_j);
+        let charge = bank_charge(&self.world, from).unwrap_or(0);
         if !device && charge < cost {
             return Err(JumpError::ShortOfCharge {
                 needed_j: cost - charge,
@@ -356,10 +418,8 @@ impl crate::Game {
         if device {
             crate::power_cells::use_power(&mut self.world, from, cost)
                 .map_err(JumpError::NoCharge)?;
-        } else if cost > 0 {
-            if let Ok(mut t) = self.world.get::<&mut Teleporter>(from) {
-                t.charge_j -= cost;
-            }
+        } else {
+            spend(&mut self.world, from, cost);
         }
         if let Some(player) = player {
             if let Ok(mut pos) = self.world.get::<&mut Position>(player) {
@@ -384,10 +444,31 @@ impl crate::Game {
     }
 
     /// Turn the transit-station tiles that structures placed into station blocks, named for
-    /// their structure.
+    /// their structure, and the RTG, item-charger and pole tiles beside them into their
+    /// blocks: the RTG and charger built in, the pole an ordinary one.
     pub fn place_transit_stations(&mut self) {
-        for (x, y, z, structure) in std::mem::take(&mut self.res.world_state.world.transit_stations)
-        {
+        use crate::factory::FactoryKind;
+        use crate::tiles::TileKind;
+        for (x, y, z, tile) in std::mem::take(&mut self.res.world_state.world.structure_blocks) {
+            let (kind, built_in) = match tile {
+                TileKind::SapiencorpRtg => (FactoryKind::Rtg, true),
+                TileKind::StationItemCharger => (FactoryKind::ItemCharger, true),
+                _ => (FactoryKind::PowerPole, false),
+            };
+            // Something already stands there: the structure goes without
+            if let Ok(entity) = crate::factory::place(
+                &mut self.world,
+                &mut self.res,
+                kind,
+                Position { x, y, z },
+                crate::factory::Facing::North,
+            ) {
+                if built_in {
+                    let _ = self.world.insert_one(entity, crate::factory::BuiltIn);
+                }
+            }
+        }
+        for (x, y, z, name) in std::mem::take(&mut self.res.world_state.world.transit_stations) {
             let pos = Position { x, y, z };
             // Something already stands there: the structure goes without
             if let Ok(entity) = crate::factory::place(
@@ -398,7 +479,7 @@ impl crate::Game {
                 crate::factory::Facing::North,
             ) {
                 if let Ok(mut s) = self.world.get::<&mut TransitStation>(entity) {
-                    s.name = station_name(&structure).to_string();
+                    s.name = name.to_string();
                 }
             }
         }
@@ -826,7 +907,10 @@ mod tests {
         );
         assert_eq!(
             listed(&game, bunker),
-            vec![("Factory Station".to_string(), 0)]
+            vec![(
+                "Factory Station".to_string(),
+                jump_cost(at(2, 0, 0), at(8, 0, 0))
+            )]
         );
         assert!(!game.activate_station(factory), "only once");
         let sprite = game
@@ -839,14 +923,90 @@ mod tests {
     }
 
     #[test]
-    fn stations_jump_free_between_each_other() {
+    fn stations_jump_on_their_bank_and_refuse_when_short() {
         let mut game = game();
         let bunker = station(&mut game, at(2, 0, 0), "Bunker Station");
         let factory = station(&mut game, at(10, 8, 0), "Factory Station");
         activate(&mut game.world, bunker);
         activate(&mut game.world, factory);
+        let charge_of = |g: &Game, e| bank_charge(&g.world, e).unwrap();
+        assert_eq!(charge_of(&game, bunker), CAPACITY_J, "stations start full");
+        let cost = jump_cost(at(2, 0, 0), at(10, 8, 0));
         assert_eq!(game.teleport(bunker, factory), Ok(at(10, 7, 0)));
         assert_eq!(game.get_player_position(), Some(at(10, 7, 0)));
+        assert_eq!(charge_of(&game, bunker), CAPACITY_J - cost);
+        game.world
+            .get::<&mut TransitStation>(factory)
+            .unwrap()
+            .charge_j = cost - 1_000_000;
+        assert_eq!(
+            game.teleport(factory, bunker),
+            Err(JumpError::ShortOfCharge {
+                needed_j: 1_000_000
+            })
+        );
+    }
+
+    #[test]
+    fn a_stations_rtg_refills_its_bank() {
+        let mut game = game();
+        let s = station(&mut game, at(2, 0, 0), "Bunker Station");
+        put(&mut game, FactoryKind::Rtg, at(4, 0, 0));
+        put(&mut game, FactoryKind::PowerPole, at(3, 1, 0));
+        game.world.get::<&mut TransitStation>(s).unwrap().charge_j = 0;
+        pass_factory_seconds(&mut game, 10);
+        // The RTG gives 100 kW, under the bank's 200 kW rate
+        assert_eq!(bank_charge(&game.world, s), Some(crate::power::RTG_W * 10));
+    }
+
+    #[test]
+    fn a_built_in_rtg_or_charger_stays_but_a_crafted_one_breaks() {
+        let mut game = game();
+        let player = game.get_player_entity().unwrap();
+        let built_in = put(&mut game, FactoryKind::Rtg, at(1, 0, 0));
+        game.world.insert_one(built_in, factory::BuiltIn).unwrap();
+        put(&mut game, FactoryKind::Rtg, at(2, 0, 0));
+        let charger = put(&mut game, FactoryKind::ItemCharger, at(3, 0, 0));
+        game.world.insert_one(charger, factory::BuiltIn).unwrap();
+        let brk =
+            |g: &mut Game, x| factory::break_block(&mut g.world, &mut g.res, at(x, 0, 0), player);
+        assert_eq!(brk(&mut game, 1), None);
+        assert_eq!(brk(&mut game, 2), Some(FactoryKind::Rtg));
+        assert_eq!(brk(&mut game, 3), None);
+    }
+
+    #[test]
+    fn new_world_stations_stand_beside_an_rtg_a_pole_and_a_charger() {
+        let game = Game::new(12345);
+        let stations: Vec<Position> = game
+            .world
+            .query::<&Position>()
+            .with::<&TransitStation>()
+            .iter()
+            .map(|(_, p)| *p)
+            .collect();
+        assert_eq!(stations.len(), 3);
+        for s in stations {
+            let near = |kind: FactoryKind| {
+                game.world
+                    .query::<(&Position, &factory::FactoryBlock)>()
+                    .iter()
+                    .filter(|(_, (p, b))| b.kind == kind && p.z == s.z && distance(**p, s) <= 3)
+                    .map(|(e, _)| e)
+                    .collect::<Vec<_>>()
+            };
+            for kind in [FactoryKind::Rtg, FactoryKind::ItemCharger] {
+                let found = near(kind);
+                assert_eq!(found.len(), 1, "{kind:?} by {s:?}");
+                assert!(
+                    factory::is_fixed(&game.world, found[0]),
+                    "{kind:?} built in"
+                );
+            }
+            let pole = near(FactoryKind::PowerPole);
+            assert_eq!(pole.len(), 1);
+            assert!(!factory::is_fixed(&game.world, pole[0]), "an ordinary pole");
+        }
     }
 
     #[test]
@@ -875,7 +1035,10 @@ mod tests {
         activate(&mut game.world, dormant);
         assert_eq!(
             listed(&game, active),
-            vec![("Factory Station".to_string(), 0)]
+            vec![(
+                "Factory Station".to_string(),
+                jump_cost(at(8, 2, 0), at(9, 2, 0))
+            )]
         );
         // A jump from a teleporter to a station is paid from its bank
         set_charge(&mut game, tp, CAPACITY_J);
@@ -935,7 +1098,7 @@ mod tests {
     }
 
     #[test]
-    fn a_new_world_has_a_dormant_station_in_the_wake_up_room() {
+    fn a_new_world_has_a_registered_station_in_the_wake_up_room() {
         let game = Game::new(12345);
         let player = game.get_player_position().unwrap();
         let stations: Vec<(Position, TransitStation)> = game
@@ -948,16 +1111,41 @@ mod tests {
             .iter()
             .find(|(_, s)| s.name == "Bunker Station")
             .expect("a bunker station");
-        assert!(!bunker.activated);
+        assert!(bunker.activated, "registered from the start");
         assert_eq!(pos.z, player.z);
         assert!(
             distance(*pos, player) <= 3,
             "{pos:?} is in the room with {player:?}"
         );
-        // The arm quest's factory has one too
-        assert!(stations
+        // The arm quest's factory has two, still dormant: one at its entrance and one by
+        // the arm locker
+        for name in ["Factory Station", "Locker Station"] {
+            assert!(
+                stations.iter().any(|(_, s)| s.name == name && !s.activated),
+                "{name}"
+            );
+        }
+        let locker = game
+            .world
+            .query::<&Position>()
+            .with::<&crate::components::Inventory>()
             .iter()
-            .any(|(_, s)| s.name == "Factory Station" && !s.activated));
+            .find(|(e, _)| {
+                game.world
+                    .get::<&crate::components::Inventory>(*e)
+                    .is_ok_and(|inv| {
+                        inv.slots
+                            .iter()
+                            .any(|s| s.kind == crate::components::ItemKind::SalvagedArm)
+                    })
+            })
+            .map(|(_, p)| *p)
+            .expect("the arm locker");
+        let (station, _) = stations
+            .iter()
+            .find(|(_, s)| s.name == "Locker Station")
+            .unwrap();
+        assert!(distance(*station, locker) <= 3, "{station:?} by {locker:?}");
     }
 
     // --- 4. the mobile tele-access device -----------------------------------------------

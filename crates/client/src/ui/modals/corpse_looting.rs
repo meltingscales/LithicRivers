@@ -300,6 +300,33 @@ fn render_corpse_loot_modal(
             ),
             " Cell slot ".to_string(),
         ),
+        Some(FactoryKind::ItemCharger) => {
+            let world = &app.core.game.world;
+            let consumer = world
+                .get::<&lithicrivers_core::power::PowerConsumer>(corpse_entity)
+                .ok()
+                .map(|c| *c);
+            let powered = app.core.game.res.power.network_of(corpse_entity).is_some();
+            let status = match consumer {
+                Some(c) if c.active && powered => format!(
+                    "charging at {} kW",
+                    lithicrivers_core::power_cells::ITEM_CHARGER_W
+                        * u64::from(c.satisfaction_permille)
+                        / 1000
+                        / 1000
+                ),
+                Some(c) if c.active => "no power pole in reach".to_string(),
+                _ => "idle".to_string(),
+            };
+            (
+                format!(" Item Charger - {status} "),
+                format!(
+                    " Cells ({}/{}) ",
+                    corpse_inv.slots.len(),
+                    lithicrivers_core::power_cells::ITEM_CHARGER_SLOTS
+                ),
+            )
+        }
         Some(_) => (
             " Chest ".to_string(),
             format!(

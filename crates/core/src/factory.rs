@@ -125,6 +125,10 @@ pub enum FactoryKind {
     TransitStation,
     /// Stores the grid's surplus and covers its deficits; charges the cell in its slot
     Battery,
+    /// A radioisotope thermoelectric generator: constant power, no fuel
+    Rtg,
+    /// Charges the power cells in its slots from the grid
+    ItemCharger,
     /// A consumer that does nothing but draw power, for grid tests
     #[cfg(any(test, feature = "test-support"))]
     TestConsumer,
@@ -158,6 +162,8 @@ impl FactoryKind {
             ItemKind::Spawner => Some(FactoryKind::Spawner),
             ItemKind::Teleporter => Some(FactoryKind::Teleporter),
             ItemKind::Battery => Some(FactoryKind::Battery),
+            ItemKind::Rtg => Some(FactoryKind::Rtg),
+            ItemKind::ItemCharger => Some(FactoryKind::ItemCharger),
             _ => None,
         }
     }
@@ -189,6 +195,8 @@ impl FactoryKind {
             FactoryKind::Teleporter => Some(ItemKind::Teleporter),
             FactoryKind::TransitStation => None,
             FactoryKind::Battery => Some(ItemKind::Battery),
+            FactoryKind::Rtg => Some(ItemKind::Rtg),
+            FactoryKind::ItemCharger => Some(ItemKind::ItemCharger),
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestConsumer => None,
             #[cfg(any(test, feature = "test-support"))]
@@ -221,6 +229,8 @@ impl FactoryKind {
             FactoryKind::Teleporter => "teleporter",
             FactoryKind::TransitStation => "transit station",
             FactoryKind::Battery => "battery",
+            FactoryKind::Rtg => "RTG",
+            FactoryKind::ItemCharger => "item charger",
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestConsumer => "test consumer",
             #[cfg(any(test, feature = "test-support"))]
@@ -247,6 +257,7 @@ impl FactoryKind {
             FactoryKind::VerticalConveyorUp | FactoryKind::VerticalConveyorDown => false,
             FactoryKind::Fence | FactoryKind::Gate | FactoryKind::Spawner => false,
             FactoryKind::Teleporter | FactoryKind::TransitStation | FactoryKind::Battery => false,
+            FactoryKind::Rtg | FactoryKind::ItemCharger => false,
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestConsumer => false,
             #[cfg(any(test, feature = "test-support"))]
@@ -262,7 +273,8 @@ impl FactoryKind {
         )
     }
 
-    /// Blocks built into the world: they can't be broken, picked up or copied.
+    /// Kinds that are always built into the world: they can't be broken, picked up or
+    /// copied. Other blocks can be built in one at a time (`BuiltIn`).
     pub fn fixed(self) -> bool {
         self == FactoryKind::TransitStation
     }
@@ -320,12 +332,28 @@ impl FactoryKind {
             FactoryKind::Teleporter => SpriteRef::new("factory", "teleporter"),
             FactoryKind::TransitStation => SpriteRef::new("factory", "transit_station"),
             FactoryKind::Battery => SpriteRef::new("factory", "battery"),
+            FactoryKind::Rtg => SpriteRef::new("factory", "rtg"),
+            FactoryKind::ItemCharger => SpriteRef::new("factory", "item_charger"),
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestConsumer => SpriteRef::new("factory", "chest"),
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestArrow => SpriteRef::new("factory", "chest"),
         }
     }
+}
+
+/// Marks one block built into a structure, such as a transit station's RTG: like a `fixed`
+/// kind, it can't be broken, picked up or copied.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct BuiltIn;
+
+/// Whether the block can't be broken, picked up or copied: its kind is `fixed`, or it is
+/// `BuiltIn`.
+pub fn is_fixed(world: &World, entity: Entity) -> bool {
+    world.get::<&BuiltIn>(entity).is_ok()
+        || world
+            .get::<&FactoryBlock>(entity)
+            .is_ok_and(|b| b.kind.fixed())
 }
 
 /// A placed factory block. The entity also has a `Position`, a `SpriteRef`, and per-kind
@@ -474,6 +502,22 @@ pub fn place(
         }
         FactoryKind::TransitStation => {
             builder.add(crate::teleporter::TransitStation::default());
+            builder.add(crate::power::PowerConsumer::idle(
+                crate::teleporter::CHARGE_W,
+            ));
+        }
+        FactoryKind::Rtg => {
+            builder.add(crate::power::Generator::default());
+            builder.add(crate::power::Rtg);
+        }
+        FactoryKind::ItemCharger => {
+            builder.add(crate::power::PowerConsumer::idle(
+                crate::power_cells::ITEM_CHARGER_W,
+            ));
+            builder.add(Inventory {
+                max_slots: crate::power_cells::ITEM_CHARGER_SLOTS,
+                ..Default::default()
+            });
         }
         FactoryKind::Battery => {
             builder.add(crate::power_cells::Battery::default());
@@ -504,7 +548,7 @@ pub fn break_block(
 ) -> Option<FactoryKind> {
     let entity = *res.factory_index.get(&pos)?;
     let block = *world.get::<&FactoryBlock>(entity).ok()?;
-    if block.kind.fixed() {
+    if is_fixed(world, entity) {
         return None;
     }
     res.factory_index.remove(&pos);
@@ -699,11 +743,13 @@ pub fn run_due_steps(world: &mut World, res: &mut Resources) {
         crate::vat::update_demand(world);
         crate::spawner::update_demand(world);
         crate::teleporter::update_demand(world);
+        crate::power_cells::update_charger_demand(world);
         crate::power::step_power(world, res);
         crate::machines::step_machines(world, res);
         crate::furnace::step_furnaces(world, res);
         crate::teleporter::step_charging(world);
         crate::power_cells::charge_slot_cells(world);
+        crate::power_cells::step_chargers(world);
         crate::power_cells::trickle_charge(world);
         crate::logistics::step_extractors(world, res);
         crate::logistics::step_routers(world, res);
@@ -754,7 +800,8 @@ pub fn takes(kind: FactoryKind, item: ItemKind) -> bool {
         | FactoryKind::Gate
         | FactoryKind::Teleporter
         | FactoryKind::TransitStation => false,
-        FactoryKind::Battery => crate::power_cells::is_cell(item),
+        FactoryKind::Battery | FactoryKind::ItemCharger => crate::power_cells::is_cell(item),
+        FactoryKind::Rtg => false,
         _ => true,
     }
 }
@@ -770,7 +817,7 @@ pub fn takes_label(kind: FactoryKind) -> Option<&'static str> {
         FactoryKind::CrudeVat => Some("crude body parts"),
         FactoryKind::StandardVat => Some("crude/standard body parts"),
         FactoryKind::AdvancedVat => Some("body parts"),
-        FactoryKind::Battery => Some("power cells"),
+        FactoryKind::Battery | FactoryKind::ItemCharger => Some("power cells"),
         FactoryKind::AutoHarvester | FactoryKind::Extractor | FactoryKind::FilterExtractor => {
             Some("nothing")
         }
@@ -803,7 +850,7 @@ pub fn accepts_from(
         return false;
     };
     match block.kind {
-        FactoryKind::Battery => {
+        FactoryKind::Battery | FactoryKind::ItemCharger => {
             return cell
                 && world
                     .get::<&Inventory>(target)

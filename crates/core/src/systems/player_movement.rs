@@ -180,13 +180,13 @@ pub fn mining_system(world: &mut World, res: &mut Resources) -> bool {
             let fixed = res
                 .factory_index
                 .get(&pos)
+                .filter(|&&e| crate::factory::is_fixed(world, e))
                 .and_then(|&e| {
                     world
                         .get::<&crate::factory::FactoryBlock>(e)
                         .ok()
                         .map(|b| b.kind)
-                })
-                .filter(|kind| kind.fixed());
+                });
             if let Some(kind) = fixed {
                 res.events.interaction_event(
                     format!(

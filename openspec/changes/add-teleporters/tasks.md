@@ -27,3 +27,14 @@
 
 - [x] 5.1 Verify `just code-clippy`, `cargo test --workspace` and PR checks pass
 - [ ] 5.2 User check that teleporting feels worth its cost, that stations are found and activated naturally on the way through quests, and that the device feels like a useful late convenience
+
+## 6. Station power (RTGs and Item Chargers)
+
+- [x] 6.1 Stations get an RTG-charged battery bank, starting full; station jumps cost the jump cost from it; verify tests for station costs, refusal when short, and refilling
+- [x] 6.2 `FactoryKind::Rtg`: constant 100 kW output, fixed at stations, a late recipe; verify grid tests and the reachability test
+- [x] 6.3 `FactoryKind::ItemCharger`: 2 cell slots charging from the grid, its window, fixed at stations, a mid-game recipe; verify charging tests and a snapshot
+- [x] 6.4 An RTG, a pole and a charger beside the bunker and factory stations; verify the golden `Game::new` entities, the structure lint, and the transit-stations snapshot
+- [x] 6.7 The bunker's station, where the player wakes up, starts registered; verify the new-world test and the transit-stations and tele-access-device snapshots
+- [x] 6.8 A second factory station, the Locker Station, with its RTG kit beside the arm locker; verify the new-world test and the golden `Game::new` entities
+- [ ] 6.5 Verify `just code-clippy`, `cargo test --workspace` and PR checks pass
+- [ ] 6.6 User check that RTG-powered stations and the Item Charger feel natural

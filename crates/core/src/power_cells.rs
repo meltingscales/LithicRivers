@@ -14,6 +14,7 @@ use serde::{Deserialize, Serialize};
 use crate::components::{Inventory, ItemKind, ItemStack, Player};
 use crate::factory::{FACTORY_STEP_TICKS, STEPS_PER_FACTORY_SECOND, TICKS_PER_SECOND};
 use crate::model::body::{Body, BodyPartState, BodyPartType};
+use crate::power::PowerConsumer;
 
 /// The most a battery stores, in joules.
 pub const BATTERY_CAPACITY_J: u64 = 40_000_000;
@@ -23,6 +24,53 @@ pub const BATTERY_RATE_W: u64 = 90_000;
 pub const CELL_CHARGE_W: u64 = 90_000;
 /// Item slots a battery has: one, for a cell.
 pub const BATTERY_SLOTS: usize = 1;
+
+/// What an item charger draws from its network while a cell in it isn't full, in watts.
+pub const ITEM_CHARGER_W: u64 = 50_000;
+/// Cell slots an item charger has.
+pub const ITEM_CHARGER_SLOTS: usize = 2;
+
+/// Whether an inventory holds a cell that isn't full.
+fn has_unfull_cell(inv: &Inventory) -> bool {
+    inv.slots.iter().any(|s| room(s) > 0)
+}
+
+/// Before power is shared: an item charger wants power only while a cell in it isn't full.
+pub fn update_charger_demand(world: &mut World) {
+    for (_, (block, inv, consumer)) in world.query_mut::<(
+        &crate::factory::FactoryBlock,
+        &Inventory,
+        &mut PowerConsumer,
+    )>() {
+        if block.kind == crate::factory::FactoryKind::ItemCharger {
+            consumer.active = has_unfull_cell(inv);
+        }
+    }
+}
+
+/// After power is shared: each item charger puts what its network delivered into its
+/// cells, in slot order.
+pub fn step_chargers(world: &mut World) {
+    for (_, (block, inv, consumer)) in world.query_mut::<(
+        &crate::factory::FactoryBlock,
+        &mut Inventory,
+        &PowerConsumer,
+    )>() {
+        if block.kind != crate::factory::FactoryKind::ItemCharger || !consumer.active {
+            continue;
+        }
+        let mut joules = consumer.demand_w / STEPS_PER_FACTORY_SECOND
+            * u64::from(consumer.satisfaction_permille)
+            / 1000;
+        for cell in inv.slots.iter_mut() {
+            let moved = joules.min(room(cell));
+            if moved > 0 {
+                cell.charge_j = Some(charge(cell) + moved);
+                joules -= moved;
+            }
+        }
+    }
+}
 
 /// A battery block's stored energy.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -545,5 +593,47 @@ mod tests {
             2_000_000,
             "nothing drawn"
         );
+    }
+
+    #[test]
+    fn an_item_charger_fills_its_cells_in_slot_order_from_the_grid() {
+        let mut game = game();
+        let rtg = put(&mut game, FactoryKind::Rtg, at(0, 0));
+        put(&mut game, FactoryKind::PowerPole, at(1, 0));
+        let charger = put(&mut game, FactoryKind::ItemCharger, at(2, 0));
+        assert!(!factory::accepts(&game.world, charger, ItemKind::Log));
+        // Nothing to charge: it draws nothing
+        pass_factory_seconds(&mut game, 1);
+        assert!(!game.world.get::<&PowerConsumer>(charger).unwrap().active);
+        {
+            let mut inv = game.world.get::<&mut Inventory>(charger).unwrap();
+            inv.add_stack(cell(ItemKind::CrudePowerCell, 1_990_000));
+            inv.add_stack(cell(ItemKind::CrudePowerCell, 0));
+        }
+        pass_factory_seconds(&mut game, 1);
+        let charges: Vec<u64> = game
+            .world
+            .get::<&Inventory>(charger)
+            .unwrap()
+            .slots
+            .iter()
+            .map(charge)
+            .collect();
+        // 50 kW: the first cell takes what it has room for, the second the rest
+        assert_eq!(charges, vec![2_000_000, ITEM_CHARGER_W - 10_000]);
+        assert!(game.world.contains(rtg));
+    }
+
+    #[test]
+    fn an_rtg_powers_its_network_forever_and_burns_nothing() {
+        let mut game = game();
+        put(&mut game, FactoryKind::Rtg, at(0, 0));
+        put(&mut game, FactoryKind::PowerPole, at(1, 0));
+        let consumer = put(&mut game, FactoryKind::TestConsumer, at(2, 0));
+        pass_factory_seconds(&mut game, 200);
+        let c = *game.world.get::<&PowerConsumer>(consumer).unwrap();
+        assert_eq!(c.satisfaction_permille, 1000);
+        let network = game.res.power.network_of(consumer).unwrap();
+        assert_eq!(network.supply_w, crate::factory::TEST_CONSUMER_W);
     }
 }

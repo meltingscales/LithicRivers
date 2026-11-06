@@ -13,13 +13,13 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│N
 vvvvvvvvvvvvvvv┌────────── Battery - 5.7 MJ / 40 MJ, discharging at 90 kW ──────────┐              │
 vvvvvvvvvvvvvvv│┌ Cell slot ─────────────────────┐┌ Showing power cells: 1 of 8 ───┐│              │
 vvvvvvvvvvvvvvv││Crude Power Cell (0.3/2 MJ)     ││Standard Power Cell (0.1/20 MJ) ││──────────────┘
-G+Gvvvv╫╫╫╫╫╫╫╫││                                ││                                ││ ! Damaged────┐
-vUvUvvv╫vvvvv+G││                                ││                                ││              │
-vvvvvvv╫vvvvvvv││                                ││                                ││              │
-vvvvvvv╫C→>Øvvv││                                ││                                ││              │
-vvvvvvv╫vvvvvvv││                                ││                                ││              │
-vvvvvvvΠvvvvvvv││                                ││                                ││              │
-vvvvvvv╫╫╫╫╫╫╫╫││                                ││                                ││              │
+v╫╫╫╫╫╫╫╫╫vvv¤v││                                ││                                ││ ! Damaged────┐
+v╫vvvvv+G╫vvvvv││                                ││                                ││              │
+v╫vvvvvvv╫vvvvv││                                ││                                ││              │
+v╫C→>Øvvv╫vvvvv││                                ││                                ││              │
+v╫vvvvvvv╫vvvvv││                                ││                                ││              │
+vΠvvvvvvv╫vvvvv││                                ││                                ││              │
+v╫╫╫╫╫╫╫╫╫vvvvv││                                ││                                ││              │
 vvvvvvvvvvvvvvv││                                ││                                ││ mode         │
 vvvvvvvvvvvvvvv││                                ││                                ││battery       │
 vvvvvvvvvvvvvvv││                                ││                                ││              │
@@ -47,13 +47,13 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│L
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Help (h) ! Damaged────┐
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv@vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Move:                 │
-vGG+Gvvvv╫╫╫╫╫╫╫╫╫vvv¤vvv┌──────────────── Power Network ─────────────────┐v│  7 8 9               │
-vUvUvUvvv╫vvvvv+G╫vvvvvvv│                                                │v│  4 5 6               │
-vvvvvvvvv╫vvvvvvv╫vvvvvvv│          Supply: 90 kW   Demand: 90 kW         │v│  1 2 3               │
-vvvvvvvvv╫C→>Øvvv╫vvvvvvv│     Poles: 1   Generators: 1   Machines: 1     │v│q: mine               │
-vvvvvvvvv╫vvvvvvv╫vvvvvvv│      Stored: 5.7 MJ, discharging at 90 kW      │v│v: look               │
-vvvvvvvvvΠvvvvvvv╫vvvvvvv│                                                │v│`: build mode         │
-vvvvvvvvv╫╫╫╫╫╫╫╫╫vvvvvvv│                  ESCAPE: close                 │v│f: fuel generator     │
+vvv╫╫╫╫╫╫╫╫╫vvv¤vvvGG+Ξvv┌──────────────── Power Network ─────────────────┐v│  7 8 9               │
+vvv╫vvvvv+G╫vvvvvvvvvv╲─v│                                                │v│  4 5 6               │
+vvv╫vvvvvvv╫vvvvvvvΨvvvv╲│          Supply: 90 kW   Demand: 90 kW         │v│  1 2 3               │
+vvv╫C→>Øvvv╫vvvvvvvvvvvvv│     Poles: 1   Generators: 1   Machines: 1     │v│q: mine               │
+vvv╫vvvvvvv╫vvvvvvvvvvvvv│      Stored: 5.7 MJ, discharging at 90 kW      │v│v: look               │
+vvvΠvvvvvvv╫vvvvvvvvvvvvv│                                                │v│`: build mode         │
+vvv╫╫╫╫╫╫╫╫╫vvvvvvvvvvvvv│                  ESCAPE: close                 │v│f: fuel generator     │
 vvvvvvvvvvvvvvvvvvvvvvvvv│                                                │v│f: inspect pole       │
 vvvvvvvvvvvvvvvvvvvvvvvvv└────────────────────────────────────────────────┘v└──────────────────────┘
 ┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
