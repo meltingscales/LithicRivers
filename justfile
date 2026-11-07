@@ -104,25 +104,25 @@ build-linux: code-fmt util-structure-build clean-linux git-data copy-config-data
 build-release-windows: code-fmt util-structure-build clean-windows git-data copy-config-data-windows build-demos-release
     cargo --version
     cargo build -p lithicrivers-core --release {{build_flags}}
-    cargo build -p lithicrivers-client --bin lithicrivers-client --release {{build_flags}}
+    cargo build -p lithicrivers-client --bin lithicrivers-client --release --features steam {{build_flags}}
 
 # Build the project in release mode
 build-release-linux: code-fmt util-structure-build clean-linux git-data copy-config-data-linux build-demos-release
     cargo --version
     cargo build -p lithicrivers-core --release {{build_flags}}
-    cargo build -p lithicrivers-client --bin lithicrivers-client --release {{build_flags}}
+    cargo build -p lithicrivers-client --bin lithicrivers-client --release --features steam {{build_flags}}
 
 # Build in release mode without cleaning first
 build-release-no-clean-windows: code-fmt util-structure-build git-data copy-config-data-windows build-demos-release
     cargo --version
     cargo build -p lithicrivers-core --release {{build_flags}}
-    cargo build -p lithicrivers-client --bin lithicrivers-client --release {{build_flags}}
+    cargo build -p lithicrivers-client --bin lithicrivers-client --release --features steam {{build_flags}}
 
 # Build in release mode without cleaning first
 build-release-no-clean-linux: code-fmt util-structure-build git-data copy-config-data-linux build-demos-release
     cargo --version
     cargo build -p lithicrivers-core --release {{build_flags}}
-    cargo build -p lithicrivers-client --bin lithicrivers-client --release {{build_flags}}
+    cargo build -p lithicrivers-client --bin lithicrivers-client --release --features steam {{build_flags}}
 
 # Stage license and third-party notice files for release
 stage-artifacts-legal-linux:
