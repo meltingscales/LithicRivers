@@ -45,6 +45,10 @@ pub struct Wreck;
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct NuclearSlime;
 
+/// Marker for mining bots: SapienCorp diggers in the deep that drill toward the player
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct MiningBot;
+
 /// A nuclear slime's pace: it moves on every other turn it is chasing
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SlimeAI {
@@ -532,6 +536,7 @@ pub enum EntityKind {
     Corpse,
     QuestTutorialBrokenAndroid,
     NuclearSlime,
+    MiningBot,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
