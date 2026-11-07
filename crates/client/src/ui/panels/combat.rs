@@ -192,9 +192,10 @@ fn render_single_enemy(
             .alignment(Alignment::Center)
     };
 
-    // Layout: portrait at top, health bar at bottom
+    // Layout: portrait at top, health bar at bottom. The portrait takes what's left, so a
+    // short panel shrinks the portrait rather than hiding the health bar inside its border
     let enemy_layout = Layout::vertical([
-        Constraint::Min(3),    // Portrait area
+        Constraint::Fill(1),   // Portrait area
         Constraint::Length(3), // Health bar
         Constraint::Length(1), // Attack timer
     ])
