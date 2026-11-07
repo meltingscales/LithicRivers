@@ -10,6 +10,15 @@ use rust_embed::RustEmbed;
 #[folder = "assets/"]
 struct EmbeddedAssets;
 
+/// Whether an asset path (as passed to `AudioTrack::new`) is embedded.
+#[cfg(test)]
+pub(crate) fn is_embedded(path: &str) -> bool {
+    AudioManager::read_embedded_bytes(Path::new(path)).is_some()
+}
+
+/// At most this many sound effects wait to play; more are skipped.
+const MAX_WAITING_EFFECTS: usize = 3;
+
 /// Represents a music track that can be played
 #[derive(Debug, Clone)]
 pub struct AudioTrack {
@@ -108,9 +117,11 @@ impl AudioManager {
         Ok(())
     }
 
-    /// Play a sound effect (can play simultaneously with music)
+    /// Play a sound effect (can play simultaneously with music). Effects play one after
+    /// another, so one is skipped while `MAX_WAITING_EFFECTS` are already waiting rather than
+    /// playing late.
     pub fn play_sound_effect(&mut self, name: &str) -> Result<()> {
-        if self.stream.is_none() {
+        if self.stream.is_none() || self.sfx_sink.len() >= MAX_WAITING_EFFECTS {
             return Ok(());
         }
         if let Some(track) = self.sfx_tracks.get(name) {
