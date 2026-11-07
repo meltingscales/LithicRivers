@@ -923,8 +923,9 @@ impl GameWorld {
                     rng.gen_range(0..CHUNK_SIZE),
                     rng.gen_range(0..CHUNK_SIZE),
                 ),
+                // A SapienCorp dig site, its riverglass still in the store
                 BiomeBand::LithicRivers => (
-                    "small_temple.lrstructure",
+                    "sapiencorp_dig_site.lrstructure",
                     rng.gen_range(0..CHUNK_SIZE),
                     rng.gen_range(0..CHUNK_SIZE),
                 ),
