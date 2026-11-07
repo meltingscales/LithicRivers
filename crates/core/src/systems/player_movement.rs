@@ -199,6 +199,7 @@ pub fn mining_system(world: &mut World, res: &mut Resources) -> bool {
             }
             match crate::factory::break_block(world, res, pos, player) {
                 Some(kind) => {
+                    res.play(crate::sound::SoundCue::Mine);
                     res.events.interaction_event(
                         format!("You break the {}.", kind.name()),
                         res.time.tick,
@@ -223,6 +224,11 @@ pub fn mining_system(world: &mut World, res: &mut Resources) -> bool {
                     SpriteRef::new("items", crate::components::itemkind_sprite_name(kind)),
                 ));
             }
+            res.play(if tile == TileKind::Tree {
+                crate::sound::SoundCue::Chop
+            } else {
+                crate::sound::SoundCue::Mine
+            });
             let message = if tile == TileKind::Tree {
                 format!(
                     "You chop the tree. (+{} Wood, +{} Acorn)",
@@ -303,6 +309,7 @@ fn pick_up_items_at(world: &mut World, res: &mut Resources, player_e: hecs::Enti
     }) {
         let total: u32 = items.iter().map(|(di, _)| di.qty).sum();
         if total > 0 {
+            res.play(crate::sound::SoundCue::Pickup);
             res.events
                 .interaction_event(format!("Picked up {} items", total), res.time.tick);
         }

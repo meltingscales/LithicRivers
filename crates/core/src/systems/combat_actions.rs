@@ -500,6 +500,11 @@ fn apply_damage(
     // Check if target is the player for better messaging before creating ComponentAccess
     let is_player = is_player_entity(world, target_entity);
     let target_name = if is_player { "You" } else { "Enemy" };
+    res.play(if is_player {
+        crate::sound::SoundCue::Hurt
+    } else {
+        crate::sound::SoundCue::Hit
+    });
 
     let mut comp_access = ComponentAccess::new(world, res);
 

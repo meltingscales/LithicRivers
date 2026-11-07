@@ -34,6 +34,7 @@ pub mod resources;
 pub mod save_load;
 mod serde_pairs;
 pub mod showcase;
+pub mod sound;
 pub mod spawn_utils;
 pub mod spawner;
 pub mod stairs;

@@ -188,7 +188,7 @@ The game opens its own window with a bundled font (`add-game-window`), so it no 
 - [x] tutorial sequence that can be accessed anytime
   - [x] **Interactive Tutorial System with modal overlays, popup GUI and keybind detection**
   - [x] **TutorialSystem class with toggleable panel (F1) and Menu integration**
-- [ ] Basic sound effects, not just music
+- [x] Basic sound effects, not just music (`add-sound-effects`: chop, mine, place, pick up, hit, hurt, teleport, craft)
 - [x] Main menu with new game/load game
   - [x] **Title screen, world list (play, rename, delete) and Create New World with per-world settings**
 - [x] Basic UI feedback for player actions

@@ -427,6 +427,7 @@ impl crate::Game {
             }
         }
         self.load_around_player();
+        self.res.play(crate::sound::SoundCue::Teleport);
         self.res.log_green(format!(
             "The teleporter hums, and the world folds. You step out beside {name}."
         ));

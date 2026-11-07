@@ -44,9 +44,9 @@ impl App {
             panic!("Failed to play music: {}", e);
         }
 
-        let wood_crack =
-            audio::AudioTrack::new("crates/client/assets/sound/effects/wood_crack.mp3");
-        audio.register_sound_effect("wood_crack", wood_crack);
+        for cue in lithicrivers_core::sound::SoundCue::ALL {
+            audio.register_sound_effect(cue.name(), audio::AudioTrack::new(sound_path(cue)));
+        }
 
         // Build credits text from embedded config files
         let version = EmbeddedAssets::get("config/VERSION")
@@ -244,5 +244,55 @@ impl App {
         self.combat = CombatUiState::default();
         self.last_combat_tick = None;
         self.flyover = None;
+    }
+}
+
+/// Where a sound cue's file is among the embedded assets: the wood crack is the one MP3,
+/// the generated sounds (`scripts/generate_sfx.py`) are WAVs.
+pub(crate) fn sound_path(cue: lithicrivers_core::sound::SoundCue) -> String {
+    let extension = match cue {
+        lithicrivers_core::sound::SoundCue::Chop => "mp3",
+        _ => "wav",
+    };
+    format!(
+        "crates/client/assets/sound/effects/{}.{extension}",
+        cue.name()
+    )
+}
+
+#[cfg(test)]
+mod sound_tests {
+    use crate::headless::chain_commands;
+    use lithicrivers_core::components::ItemKind;
+    use lithicrivers_core::sound::SoundCue;
+
+    #[test]
+    fn every_sound_cue_has_an_embedded_sound() {
+        for cue in SoundCue::ALL {
+            let path = super::sound_path(cue);
+            assert!(
+                crate::audio::is_embedded(&path),
+                "{cue:?}: {path} is missing"
+            );
+        }
+    }
+
+    #[test]
+    fn placing_a_block_queues_the_place_sound() {
+        let mut runner = chain_commands(&["skip-splash", "cheat giveitem stone 1"]);
+        let app = &mut runner.app;
+        app.panels.build.hotbar_assignments[0] = Some(ItemKind::Stone);
+        app.panels.build.selected_hotbar_slot = 0;
+        let p = app.core.game.get_player_position().unwrap();
+        // Make room next to the player whatever the bunker has there
+        app.core.game.res.world_state.world.set_tile_cached(
+            p.x + 1,
+            p.y,
+            p.z,
+            lithicrivers_core::tiles::TileKind::Air,
+        );
+        app.core.game.res.sounds.clear();
+        crate::app::input::world_build::place_from_hotbar(app, p.x + 1, p.y, p.z);
+        assert_eq!(app.core.game.res.sounds, vec![SoundCue::Place]);
     }
 }

@@ -383,11 +383,14 @@ pub(crate) fn place_from_hotbar(app: &mut App, x: i64, y: i64, z: i64) {
             dz,
             player,
         ) {
-            Ok(()) => game.res.log(format!(
-                "Built stairs {} to z = {} at ({x}, {y})",
-                if dz > 0 { "up" } else { "down" },
-                z + dz
-            )),
+            Ok(()) => {
+                game.res.play(lithicrivers_core::sound::SoundCue::Place);
+                game.res.log(format!(
+                    "Built stairs {} to z = {} at ({x}, {y})",
+                    if dz > 0 { "up" } else { "down" },
+                    z + dz
+                ))
+            }
             Err(e) => game.res.log(e.message()),
         }
         return;
@@ -398,6 +401,10 @@ pub(crate) fn place_from_hotbar(app: &mut App, x: i64, y: i64, z: i64) {
             return;
         }
         remove_item_from_inventory(app, item, 1);
+        app.core
+            .game
+            .res
+            .play(lithicrivers_core::sound::SoundCue::Place);
         app.core
             .game
             .res
@@ -418,6 +425,10 @@ pub(crate) fn place_from_hotbar(app: &mut App, x: i64, y: i64, z: i64) {
         game.res.world_state.world.set_tile_cached(x, y, z, tile);
     }
     remove_item_from_inventory(app, item, 1);
+    app.core
+        .game
+        .res
+        .play(lithicrivers_core::sound::SoundCue::Place);
     app.core
         .game
         .res

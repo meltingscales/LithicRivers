@@ -326,6 +326,12 @@ fn mouse_input(me: &crossterm::event::MouseEvent) -> Option<app::input::mouse::M
 /// Advance the client by one frame: combat auto-ticks and splash/UI timers.
 /// Shared by the interactive loop and headless runs; reads time only from `app.clock`.
 fn step(app: &mut App) {
+    // Play the sounds the game queued since the last frame
+    for cue in std::mem::take(&mut app.core.game.res.sounds) {
+        if let Err(e) = app.audio.audio.play_sound_effect(cue.name()) {
+            tracing::warn!(target: "game", "couldn't play {}: {e}", cue.name());
+        }
+    }
     app.update_demo();
     app.update_flyover();
     // Auto-advance ticks when combat is active (one tick per COMBAT_MS_PER_TICK)
