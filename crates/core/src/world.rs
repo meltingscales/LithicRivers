@@ -75,6 +75,33 @@ pub fn depth_band(z: i64) -> DepthBand {
     }
 }
 
+/// Lava rivers get one ford in every stretch of this many tiles along x, at a seeded spot,
+/// so a crossing is never more than about two stretches away.
+const FORD_SPACING: i64 = 48;
+/// Riverglass forms on river rims where its noise is above this (higher is rarer).
+const RIVERGLASS_THRESHOLD: f64 = 0.5;
+/// How far from a river's centerline its lava reaches, in tiles; the rest of the 2-tile
+/// channel is open shore.
+const LAVA_HALF_WIDTH: f64 = 1.5;
+
+impl GameWorld {
+    /// Whether the deep lava river numbered `river` (counted along y) is crusted over at
+    /// `x` on layer `z`: each stretch of `FORD_SPACING` tiles has one ford 3 to 5 tiles
+    /// wide at a spot seeded by the world, the stretch, the river and the layer.
+    pub fn river_ford(&self, x: i64, river: i64, z: i64) -> bool {
+        fn splitmix(mut v: u64) -> u64 {
+            v = (v ^ (v >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
+            v = (v ^ (v >> 27)).wrapping_mul(0x94D0_49BB_1331_11EB);
+            v ^ (v >> 31)
+        }
+        let stretch = x.div_euclid(FORD_SPACING);
+        let h = splitmix(self.mix_coords(stretch, river, z) ^ 0xF04D);
+        let width = 3 + (h % 3) as i64;
+        let start = (splitmix(h) % (FORD_SPACING - width) as u64) as i64;
+        (start..start + width).contains(&x.rem_euclid(FORD_SPACING))
+    }
+}
+
 /// How much cave noise changes from one layer to the next: small, so caves mostly line up.
 const CAVE_Z_SCALE: f64 = 0.12;
 const STAIRWAY_TRIES: usize = 48;
@@ -444,7 +471,7 @@ impl GameWorld {
                 let meander = biome_noise.get([wx * 0.02, zf * 0.02, 17.0]); // [-1,1]
                 let y_adj = wy + meander * 5.0; // up to ~5 tiles vertical wobble
                 let period = 22.0; // tiles between river centerlines
-                let t = (y_adj / period).fract(); // [0,1)
+                let t = (y_adj / period).rem_euclid(1.0); // [0,1), also for negative y
                 let tri = (t - 0.5).abs(); // distance to center in [0,0.5]
                 let d_tiles = tri * period; // distance in tiles from nearest river center
 
@@ -455,8 +482,16 @@ impl GameWorld {
                 let cave_mix = 0.6 * cave_coarse + 0.4 * cave_fine; // [-1,1]
 
                 // Determine terrain by distance to river and cave field
-                if d_tiles < 2.0 {
-                    // Core: 0-2 tiles from center -> clear channel for lava flow
+                if d_tiles < LAVA_HALF_WIDTH {
+                    // Core: molten lava, crusted over at fords
+                    let river = (y_adj / period).floor() as i64;
+                    if self.river_ford(wx as i64, river, zf.floor() as i64) {
+                        TileKind::LavaCrust
+                    } else {
+                        TileKind::Lava
+                    }
+                } else if d_tiles < 2.0 {
+                    // Shores: open ground along the lava
                     TileKind::Air
                 } else if d_tiles < 3.0 {
                     // Banks: 2-3 tiles -> mostly air with occasional rock pillars
@@ -508,7 +543,7 @@ impl GameWorld {
                 let meander = biome_noise.get([wx * 0.02, zf * 0.02, 17.0]);
                 let y_adj = wy + meander * 5.0;
                 let period = 22.0;
-                let t = (y_adj / period).fract();
+                let t = (y_adj / period).rem_euclid(1.0);
                 let tri = (t - 0.5).abs();
                 let d_tiles = tri * period; // distance in tiles to nearest river centerline
 
@@ -518,6 +553,11 @@ impl GameWorld {
                     }
                     if feature_value < -0.92 {
                         tile = TileKind::PlasteelScrap;
+                    }
+                    // Riverglass grows where the lava meets the rock
+                    let glass = biome_noise.get([wx * 0.15 + 1500.0, wy * 0.15 - 1500.0, zf * 0.1]);
+                    if tile == TileKind::Rock && glass > RIVERGLASS_THRESHOLD {
+                        tile = TileKind::Riverglass;
                     }
                 }
 
