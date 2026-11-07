@@ -93,6 +93,9 @@ define_tiles! {
     FactoryBlock, "factory_block", "factory block", false,
     Sapling, "sapling", "sapling", true,
     StoneBrick, "stone_brick", "stone brick", false,
+    Lava, "lava", "lava", false,
+    LavaCrust, "lava_crust", "lava crust", true,
+    Riverglass, "riverglass", "riverglass", false,
 }
 
 impl TileKind {

@@ -1,0 +1,180 @@
+---
+source: crates/client/src/snapshot_tests.rs
+expression: "String::from_utf8(out).unwrap()"
+input_file: scripts/snapshots/lava-bridge.txt
+---
+=== screen blocked ===
+                                            LithicRivers
+                                                                            ┌MODES ☼ 08:06─────────┐
+                                                                            │  ------ - - -- - FOG │
+                                                                            └──────────────────────┘
+                                                                            ┌Inventory─────────────┐
+                                                                            │Nail x10              │
+                                                                            │Acorn x1              │
+                                                                            │Log x3                │
+                                    vvvvv                                   └──────────────────────┘
+                                    vvv≈v                                   ┌Help (h) ! Damaged────┐
+                                    vv@≈v                                   │Move:                 │
+                                    vvv≈v                                   │  7 8 9               │
+                                    vvvvv                                   │  4 5 6               │
+                                                                            │  1 2 3               │
+                                                                            │q: mine               │
+                                                                            │v: look               │
+                                                                            │`: build mode         │
+                                                                            │f: interact           │
+                                                                            │                      │
+                                                                            └──────────────────────┘
+┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
+│[1] Selected hotbar slot: 1                                                                       │
+│[1] Choose block for slot F1                                                                      │
+│[1] Assigned Stone to slot F1                                                                     │
+│[1] Build mode: Rotate                                                                            │
+│[1] Build mode: Movement                                                                          │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===
+=== screen bridged ===
+                                            LithicRivers
+                                                                            ┌MODES ☼ 08:06─────────┐
+                                                                            │  ------ - P -- - FOG │
+                                                                            └──────────────────────┘
+                                                                            ┌Inventory─────────────┐
+                                                                            │Nail x10              │
+                                                                            │Acorn x1              │
+                                    vvvvv                                   │Log x3                │
+                                    vvv≈v                                   └──────────────────────┘
+                                    vv@░v                                   ┌Help (h) ! Damaged────┐
+                                    vvv≈v                                   │Place mode, direction:│
+                                    vvvvv                                   │  q w e               │
+                                                                            │  a s d               │
+                                                                            │  z x c               │
+                                                                            │F1-F12: hotbar        │
+                                                                            │r: turn (^)           │
+                                                                            └──────────────────────┘
+┌Hotbar (F1-F12) | facing ^ north (r to turn)──────────────────────────────────────────────────────┐
+│            F1[■] F2[ ] F3[ ] F4[ ] F5[ ] F6[ ] F7[ ] F8[ ] F9[ ] F10[ ] F11[ ] F12[ ]            │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
+│[1] Build mode: Rotate                                                                            │
+│[1] Build mode: Movement                                                                          │
+│[401] Build mode: Break                                                                           │
+│[401] Build mode: Place                                                                           │
+│[401] The stone sinks, and the lava crusts over.                                                  │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===
+=== state crossed ===
+{
+  "version": 1,
+  "seed": 12345,
+  "tick": 801,
+  "screen": "MainUI",
+  "tab": "World",
+  "modal": null,
+  "player": {
+    "position": [
+      1,
+      0,
+      0
+    ],
+    "body": [
+      {
+        "part": "Head",
+        "state": "Functional",
+        "integrity": 100
+      },
+      {
+        "part": "LeftArm",
+        "state": "Missing",
+        "integrity": 0
+      },
+      {
+        "part": "LeftLeg",
+        "state": "Functional",
+        "integrity": 100
+      },
+      {
+        "part": "PowerSource",
+        "state": "Damaged",
+        "integrity": 21
+      },
+      {
+        "part": "RightArm",
+        "state": "Functional",
+        "integrity": 100
+      },
+      {
+        "part": "RightLeg",
+        "state": "Damaged",
+        "integrity": 43
+      },
+      {
+        "part": "Torso",
+        "state": "Functional",
+        "integrity": 100
+      }
+    ],
+    "inventory": [
+      {
+        "item": "Acorn",
+        "qty": 1
+      },
+      {
+        "item": "Log",
+        "qty": 3
+      },
+      {
+        "item": "Nail",
+        "qty": 10
+      },
+      {
+        "item": "ScrapElectronics",
+        "qty": 3
+      },
+      {
+        "item": "Stick",
+        "qty": 2
+      },
+      {
+        "item": "Stone",
+        "qty": 1
+      },
+      {
+        "item": "String",
+        "qty": 2
+      },
+      {
+        "item": "Torch",
+        "qty": 3
+      }
+    ]
+  },
+  "combat": {
+    "active": false,
+    "enemies": []
+  },
+  "nearby": [],
+  "messages": [
+    "[1] Set (1, 0, 0) to lava",
+    "[1] Set (1, -1, 0) to lava",
+    "[1] Set (1, 1, 0) to lava",
+    "[1] Added 2 Stone to inventory",
+    "[1] Build mode: Break",
+    "[1] Build mode: Place",
+    "[1] Selected hotbar slot: 1",
+    "[1] Choose block for slot F1",
+    "[1] Assigned Stone to slot F1",
+    "[1] Build mode: Rotate",
+    "[1] Build mode: Movement",
+    "[401] Build mode: Break",
+    "[401] Build mode: Place",
+    "[401] The stone sinks, and the lava crusts over.",
+    "[401] Build mode: Rotate",
+    "[401] Build mode: Movement"
+  ]
+}
+=== end state ===

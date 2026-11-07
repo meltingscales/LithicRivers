@@ -1,5 +1,5 @@
 ---
-source: crates/client/src/bin/../sprite_loader.rs
+source: crates/client/src/sprite_loader.rs
 expression: loader.gallery()
 ---
 === entities/corpse  #8B4513  The remains of a fallen creature
@@ -2253,6 +2253,25 @@ ppp
    ▄▄█▄▄    
             
             
+=== items/riverglass  #7A57AE  A shard of riverglass. Held near a power cell, it hums louder.
+-- 1x
+*
+-- 2x
+*/
+/*
+-- 3x
+*%/
+/*%
+%/*
+-- art 0
+            
+     ╱╲     
+    ╱▓▓╲    
+   ╱▓*▒▓╲   
+   ╲▓▒▓▓╱   
+    ╲▓▓╱    
+     ╲╱     
+            
 === items/rock  #808080  A rock.
 -- 1x
 *
@@ -2956,6 +2975,44 @@ v  '  v  ,
 ░▒▓┌──┐▓▓▓▓▒
 ▒▓▓│▓▓│▒▓▓▓▓
 ▓▓▓└──┘▒▓▒▓▓
+=== tiles/lava  #FF6A1A  Molten rock that has run in these channels since before SapienCorp dug down to it.
+-- 1x
+≈
+-- 2x
+≈~
+~≈
+-- 3x
+≈~≈
+~≈~
+≈~≈
+-- art 0
+            
+ ~≈~   ≈~≈  
+≈▓▒≈~≈▒▓▒≈~ 
+▒█▓▒≈▒▓█▓▒≈▒
+▓█▓▒░▒▓██▓▒▓
+≈▒▓≈~≈▒▓▒≈~≈
+ ~≈~ ≈~ ≈~  
+            
+=== tiles/lava_crust  #6E4436  A skin of cooled rock over the river. It is warm underfoot and it holds, for now.
+-- 1x
+░
+-- 2x
+░░
+░░
+-- 3x
+░▒░
+▒░▒
+░▒░
+-- art 0
+            
+  ░░▒░░▒░   
+ ░▒░░▒░░▒░░ 
+░▒░╱░░▒░░▒░░
+░░▒░░▒╲░▒░▒░
+ ░▒░░▒░░▒░░ 
+  ░░▒░░▒░   
+            
 === tiles/plank_block  #A0522D  A block made out of wooden planks
 -- 1x
 P
@@ -3013,6 +3070,25 @@ s=s
             
             
             
+=== tiles/riverglass  #A374E8  Black glass with a violet sheen, grown where the lava meets the rock. It hums faintly.
+-- 1x
+*
+-- 2x
+*%
+%*
+-- 3x
+*%*
+%*%
+*%*
+-- art 0
+▓▓▒▓▓▓▓▒▓▓▓▒
+▓▓▒▓╱╲▓▒▓▓▓▓
+▒▓▓╱*▓╲▓▒▓▓▓
+▓▓▓╲▓▓╱▒╱╲▓▒
+▒▓▓▒╲╱▓╱*▓╲▓
+░▒▓▓▓▒▓╲▓▓╱▓
+▒▓▓▓▒░▒▓╲╱▓▓
+▓▓▓▓▓▒▓▓▒▓▓▓
 === tiles/rock  #808080  A solid block of stone.
 -- 1x
 #

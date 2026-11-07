@@ -22,12 +22,14 @@ How LithicRivers builds its world, layer by layer. The code is in `crates/core/s
 | Sky | z ≥ 1 | Open air, to build up into with stairs and vertical conveyors |
 | Surface | z = 0 | The biomes (plains, forest, rocky), tree clusters and rare one-tile resources, exactly as before depth bands existed |
 | Shallows | z = -1 to `SHALLOWS_BOTTOM` (-5) | Rock with winding tunnels and chambers, and the first deposits |
-| Deep | below -5 | The Lithic Rivers caverns (river channels, banks, rims, caverns), richer in deposits |
+| Deep | below -5 | The Lithic Rivers caverns (lava rivers with crust fords, shores, banks, rims, caverns), richer in deposits, with riverglass on the river rims |
 
 - `generate_chunk` dispatches on the band:
   - **Sky:** fills the chunk with air.
   - **Surface:** `generate_surface` runs the original code path unchanged. `the_surface_is_generated_as_before_depth_bands` pins a hash of its tiles.
   - **Shallows and deep:** `generate_underground` builds the terrain, then runs the feature stage.
+- **Lava rivers:** the deep's rivers run along x, one centerline every 22 tiles (with meander). The core (within `LAVA_HALF_WIDTH` = 1.5 tiles) is lava, then open shore out to 2 tiles, banks to 3 and a rocky rim to 4. Each river gets one ford of lava crust, 3 to 5 tiles wide, in every stretch of `FORD_SPACING` (48) tiles along x, at a spot seeded by the world, the stretch, the river and the layer (`GameWorld::river_ford`), so a crossing is never more than 96 tiles away. Lava is impassable and unmineable but sight passes over it; a plain block placed on lava becomes walkable crust (`factory::place_plain_block`).
+- **Riverglass:** rim rock where a riverglass noise is above `RIVERGLASS_THRESHOLD` becomes riverglass, a deep-only material (the teleporter and the advanced power cell need it).
 - **Pure terrain:** `underground_tile(noises, x, y, z)` is the terrain of one underground tile before features. It is pure, so a neighboring layer can be checked without generating it.
 - **Caves line up across layers:** shallow tunnels sample noise with a small z scale (`CAVE_Z_SCALE`), so 50 to 90% of a layer's open tiles are open on the next layer too. The deep caverns' noise varies slowly with z as well.
 
