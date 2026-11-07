@@ -166,6 +166,8 @@ impl App {
             title: crate::app::title_menu::TitleMenuState::new(developer_mode),
             persist_config: true,
             demo: None,
+            steam: crate::steam::Steam::default(),
+            was_dead: None,
         };
         app.apply_volumes();
         app.reset_for_game();
@@ -244,5 +246,21 @@ impl App {
         self.combat = CombatUiState::default();
         self.last_combat_tick = None;
         self.flyover = None;
+        self.was_dead = None;
+    }
+
+    /// Unlock the achievements whose conditions became true this frame. Worlds that allow
+    /// cheats never unlock any.
+    pub(crate) fn check_achievements(&mut self) {
+        let game = &self.core.game;
+        let Some(player) = game.get_player_entity() else {
+            return;
+        };
+        let dead = lithicrivers_core::death::is_dead(&game.world, player);
+        let cheats = game.res.world_settings.cheats_allowed;
+        if self.was_dead == Some(false) && dead && !cheats {
+            self.steam.unlock(crate::steam::Achievement::FirstDeath);
+        }
+        self.was_dead = Some(dead);
     }
 }

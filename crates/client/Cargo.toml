@@ -36,6 +36,8 @@ strum = { version = "0.25", features = ["derive"] }
 rmcp = { version = "3.5.1", features = ["server", "transport-io", "macros"] }
 tokio = { version = "1.54.0", features = ["rt", "macros", "io-std", "sync"] }
 schemars = "1.2.3"
+# Steam (release builds only; see the add-steamworks change)
+steamworks = { version = "0.13.1", optional = true }
 
 [dev-dependencies]
 lithicrivers-core = { path = "../core", features = ["test-support"] }
@@ -53,3 +55,4 @@ libc = "0.2"
 
 [features]
 default = []
+steam = ["dep:steamworks"]
