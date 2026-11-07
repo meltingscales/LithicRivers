@@ -26,6 +26,7 @@ pub enum SystemId {
     PickupSystem,
     FeralDogSystem,
     NuclearSlimeSystem,
+    MiningBotSystem,
     CreatureSpawnSystem,
     StumblingSheepSystem,
     BattleDelayTimerSystem,
@@ -134,6 +135,19 @@ impl SystemScheduler {
 
         self.register_system(
             SystemDesc {
+                id: SystemId::MiningBotSystem,
+                phase: SystemPhase::EntityAI,
+                depends_on: vec![SystemId::MovePlayerSystem],
+                name: "mining_bot_system",
+            },
+            |world, res| {
+                crate::systems::mining_bot_system(world, res);
+                None
+            },
+        );
+
+        self.register_system(
+            SystemDesc {
                 id: SystemId::CreatureSpawnSystem,
                 phase: SystemPhase::EntityAI,
                 depends_on: vec![SystemId::MovePlayerSystem],
@@ -185,6 +199,7 @@ impl SystemScheduler {
                     SystemId::MovePlayerSystem, // Position-based combat detection
                     SystemId::FeralDogSystem,   // AI positions finalized
                     SystemId::NuclearSlimeSystem,
+                    SystemId::MiningBotSystem,
                     SystemId::BattleDelayTimerSystem, // Timers updated first
                 ],
                 name: "combat_trigger_system",

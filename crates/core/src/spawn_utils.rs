@@ -208,20 +208,57 @@ pub fn world_spawn_nuclear_slime(
     ))
 }
 
+/// A mining bot's health: more than a nuclear slime's.
+pub const MINING_BOT_HEALTH: u32 = 150;
+
+/// Spawn a mining bot carrying its salvage, rolled from the world seed and its spawn
+/// position.
+pub fn world_spawn_mining_bot(
+    ecs_world: &mut hecs::World,
+    x: i64,
+    y: i64,
+    z: i64,
+    game_world: &GameWorld,
+) -> hecs::Entity {
+    let mut rng = ChaCha20Rng::seed_from_u64(game_world.mix_coords(x, y, z) ^ 0xB07_D16);
+    let mut inventory = Inventory::default();
+    for (item, qty) in crate::crafting::roll_loot(crate::crafting::MINING_BOT_LOOT, &mut rng) {
+        inventory.add(item, qty);
+    }
+    ecs_world.spawn((
+        Position { x, y, z },
+        GameEntity,
+        EntityKind::MiningBot,
+        crate::components::MiningBot,
+        Health::new(MINING_BOT_HEALTH),
+        Glyph('m'),
+        SpriteRef::new("entities", "mining_bot"),
+        BlocksMovement,
+        Combat::default(),
+        inventory,
+    ))
+}
+
 /// Hostile creatures that can be spawned on demand (e.g. by the `spawn_enemy` cheat).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum EnemyKind {
     FeralDog,
     NuclearSlime,
+    MiningBot,
 }
 
 impl EnemyKind {
-    pub const ALL: &'static [EnemyKind] = &[EnemyKind::FeralDog, EnemyKind::NuclearSlime];
+    pub const ALL: &'static [EnemyKind] = &[
+        EnemyKind::FeralDog,
+        EnemyKind::NuclearSlime,
+        EnemyKind::MiningBot,
+    ];
 
     pub fn name(self) -> &'static str {
         match self {
             EnemyKind::FeralDog => "feral_dog",
             EnemyKind::NuclearSlime => "nuclear_slime",
+            EnemyKind::MiningBot => "mining_bot",
         }
     }
 
@@ -230,6 +267,7 @@ impl EnemyKind {
         match self {
             EnemyKind::FeralDog => "feral dogs",
             EnemyKind::NuclearSlime => "nuclear slimes",
+            EnemyKind::MiningBot => "mining bots",
         }
     }
 
@@ -281,6 +319,7 @@ pub fn spawn_enemy(
         EnemyKind::NuclearSlime => {
             world_spawn_nuclear_slime(ecs_world, pos.x, pos.y, pos.z, game_world)
         }
+        EnemyKind::MiningBot => world_spawn_mining_bot(ecs_world, pos.x, pos.y, pos.z, game_world),
     })
 }
 

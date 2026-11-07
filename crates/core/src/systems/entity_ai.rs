@@ -402,6 +402,90 @@ pub fn nuclear_slime_system(world: &mut World, res: &mut Resources) {
     }
 }
 
+/// How far a mining bot hears the player, in tiles on its level, through rock or not.
+pub const MINING_BOT_HEARING: i64 = 10;
+
+/// Whether a mining bot drills through a tile: natural rock and deposits, never bedrock,
+/// lava, built blocks, stairs, doors or machines.
+pub fn drillable(tile: crate::tiles::TileKind) -> bool {
+    use crate::tiles::TileKind::*;
+    matches!(
+        tile,
+        Rock | IronScrap | ScrapElectronics | PlasteelScrap | Riverglass
+    )
+}
+
+/// Mining bots: once they hear the player within `MINING_BOT_HEARING` tiles on their
+/// level, they step one tile toward them each turn, straight or sliding along what they
+/// can't drill. When nothing toward the player is open, they drill out the tile in the
+/// way instead (taking the turn) and keep its mining drop. Combat starts when one is
+/// adjacent, as with dogs.
+pub fn mining_bot_system(world: &mut World, res: &mut Resources) {
+    use crate::components::{Inventory, MiningBot};
+    let Some(player_pos) = get_player_position(world) else {
+        return;
+    };
+    let mut bots: Vec<(hecs::Entity, Position)> = world
+        .query::<&Position>()
+        .with::<&MiningBot>()
+        .iter()
+        .map(|(e, p)| (e, *p))
+        .collect();
+    bots.sort_by_key(|(e, p)| (p.z, p.y, p.x, e.to_bits()));
+    for (bot, pos) in bots {
+        let engaged = world.get::<&Combat>(bot).is_ok_and(|c| c.triggered);
+        if is_stunned(world, bot) || world.get::<&Dead>(bot).is_ok() || engaged {
+            continue;
+        }
+        let (dx, dy) = (player_pos.x - pos.x, player_pos.y - pos.y);
+        let distance = dx.abs().max(dy.abs());
+        if pos.z != player_pos.z || distance > MINING_BOT_HEARING || distance <= 1 {
+            continue;
+        }
+        let (sx, sy) = (dx.signum(), dy.signum());
+        let steps: Vec<Position> = [(sx, sy), (sx, 0), (0, sy)]
+            .into_iter()
+            .filter(|&step| step != (0, 0))
+            .map(|(mx, my)| Position {
+                x: pos.x + mx,
+                y: pos.y + my,
+                z: pos.z,
+            })
+            .collect();
+        let occupied = |p: Position| {
+            world
+                .query::<&Position>()
+                .with::<&BlocksMovement>()
+                .iter()
+                .any(|(_, q)| *q == p)
+        };
+        let open = steps.iter().copied().find(|&p| {
+            p != player_pos && res.world_state.world.is_passable(p.x, p.y, p.z) && !occupied(p)
+        });
+        if let Some(next) = open {
+            if let Ok(mut p) = world.get::<&mut Position>(bot) {
+                *p = next;
+            }
+            continue;
+        }
+        // Nothing open: drill the first tile in the way, if it can
+        let target = steps[0];
+        let tile = res
+            .world_state
+            .world
+            .get_tile_cached(target.x, target.y, target.z);
+        if !drillable(tile) || occupied(target) {
+            continue;
+        }
+        let drops = crate::crafting::mine_tile(res, target).unwrap_or_default();
+        if let Ok(mut inventory) = world.get::<&mut Inventory>(bot) {
+            for (item, qty) in drops {
+                inventory.add(item, qty);
+            }
+        }
+    }
+}
+
 /// Very simple deterministic-ish wander: each sheep picks a random 4-neighbor step.
 /// Uses the global RNG for determinism relative to the initial seed and tick order.
 pub fn stumbling_sheep_system(world: &mut World, res: &mut Resources) {
@@ -537,7 +621,12 @@ pub fn generate_enemy_action(world: &mut World, res: &mut Resources, enemy_entit
     let slime = world
         .get::<&crate::components::NuclearSlime>(enemy_entity)
         .is_ok();
-    let (damage_range, time_range) = if slime {
+    let bot = world
+        .get::<&crate::components::MiningBot>(enemy_entity)
+        .is_ok();
+    let (damage_range, time_range) = if bot {
+        (12..=22, 10..=13)
+    } else if slime {
         (10..=20, 14..=18)
     } else {
         (5..=15, 7..=10)
@@ -587,6 +676,126 @@ mod tests {
             game.tick();
         }
         game.pos(dog).unwrap()
+    }
+
+    use crate::components::{EntityKind, Health, Inventory, ItemKind};
+    use crate::test_support::TestGame;
+
+    /// Open ground with the player at the origin, and `wall` tiles in the column x = 2.
+    fn bot_arena(wall: TileKind, bot_x: i64) -> (TestGame, crate::test_support::Handle) {
+        let mut world = TestWorld::new(7)
+            .fill((-12, -3, 0), (14, 3, 0), TileKind::Air)
+            .fill((2, -3, 0), (2, 3, 0), wall)
+            .inventory(&[]);
+        let bot = world.mining_bot(bot_x, 0, 0);
+        (world.build(), bot)
+    }
+
+    fn wait(game: &mut TestGame, turns: usize) {
+        for _ in 0..turns {
+            game.game.res.player_state.intent = PlayerIntent::movement(0, 0, 0, 100);
+            game.tick();
+        }
+    }
+
+    fn engaged(game: &TestGame, bot: crate::test_support::Handle) -> bool {
+        game.game
+            .world
+            .get::<&crate::components::Combat>(game.entity(bot))
+            .is_ok_and(|c| c.triggered)
+    }
+
+    fn carried(game: &TestGame, bot: crate::test_support::Handle) -> Vec<(ItemKind, u32)> {
+        let inventory = game
+            .game
+            .world
+            .get::<&Inventory>(game.entity(bot))
+            .unwrap()
+            .clone();
+        inventory.slots.iter().map(|s| (s.kind, s.qty)).collect()
+    }
+
+    #[test]
+    fn a_mining_bot_drills_through_rock_to_the_player() {
+        let (mut game, bot) = bot_arena(TileKind::Rock, 5);
+        wait(&mut game, 8);
+        assert_eq!(game.tile(2, 0, 0), TileKind::Air, "it drilled the wall");
+        assert!(engaged(&game, bot), "it reached the player");
+    }
+
+    #[test]
+    fn a_mining_bot_does_nothing_out_of_earshot() {
+        let (mut game, bot) = bot_arena(TileKind::Rock, 12);
+        wait(&mut game, 5);
+        assert_eq!(game.pos(bot).unwrap().x, 12);
+    }
+
+    #[test]
+    fn a_mining_bot_keeps_what_it_drills() {
+        let (mut game, bot) = bot_arena(TileKind::Rock, 3);
+        game.game
+            .res
+            .world_state
+            .world
+            .set_tile_cached(2, 0, 0, TileKind::IronScrap);
+        game.game
+            .res
+            .world_state
+            .world
+            .set_tile_cached(2, 1, 0, TileKind::Rock);
+        game.game
+            .res
+            .world_state
+            .world
+            .set_tile_cached(2, -1, 0, TileKind::Rock);
+        let before = carried(&game, bot)
+            .iter()
+            .filter(|(k, _)| *k == ItemKind::IronScrap)
+            .map(|(_, n)| n)
+            .sum::<u32>();
+        wait(&mut game, 1);
+        assert_eq!(game.tile(2, 0, 0), TileKind::Air);
+        let after = carried(&game, bot)
+            .iter()
+            .filter(|(k, _)| *k == ItemKind::IronScrap)
+            .map(|(_, n)| n)
+            .sum::<u32>();
+        assert!(after > before, "iron {before} -> {after}");
+    }
+
+    #[test]
+    fn built_walls_stop_mining_bots() {
+        let (mut game, bot) = bot_arena(TileKind::StoneBrick, 5);
+        wait(&mut game, 10);
+        assert_eq!(game.tile(2, 0, 0), TileKind::StoneBrick);
+        assert!(!engaged(&game, bot));
+    }
+
+    #[test]
+    fn mining_bots_are_tougher_than_slimes_and_leave_a_wreck() {
+        let mut world = TestWorld::new(7).fill((-3, -3, 0), (3, 3, 0), TileKind::Air);
+        let bot = world.mining_bot(2, 0, 0);
+        let slime = world.nuclear_slime(-2, 0, 0);
+        let mut game = world.build();
+        assert!(game.health(bot) > game.health(slime));
+        let entity = game.entity(bot);
+        let salvage = carried(&game, bot);
+        assert!(salvage
+            .iter()
+            .any(|(k, _)| *k == ItemKind::ScrapElectronics));
+        if let Ok(mut health) = game.game.world.get::<&mut Health>(entity) {
+            health.current = 0;
+        }
+        crate::systems::handle_entity_death(&mut game.game.world, &mut game.game.res, entity);
+        let wreck: Vec<(ItemKind, u32)> = game
+            .game
+            .world
+            .query::<(&EntityKind, &Inventory)>()
+            .iter()
+            .find(|(_, (k, _))| **k == EntityKind::Corpse)
+            .map(|(_, (_, inv))| inv.slots.iter().map(|s| (s.kind, s.qty)).collect())
+            .expect("a wreck remains");
+        assert_eq!(wreck, salvage, "the wreck holds its salvage and no embryo");
     }
 
     #[test]

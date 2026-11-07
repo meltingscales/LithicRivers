@@ -73,6 +73,9 @@ pub struct SpawnRule {
     /// At most this many of the kind within `radius` tiles of the player
     pub cap: usize,
     pub radius: i64,
+    /// Never closer than this many tiles (horizontally) to the bunker, the starting
+    /// structure; 0 for no limit
+    pub away_from_bunker: i64,
 }
 
 pub const SPAWN_RULES: &[SpawnRule] = &[
@@ -84,6 +87,7 @@ pub const SPAWN_RULES: &[SpawnRule] = &[
         night_chance_percent: 15,
         cap: 6,
         radius: 64,
+        away_from_bunker: 0,
     },
     // Nuclear slimes ooze through the shallows, and more often through the deep
     SpawnRule {
@@ -93,6 +97,7 @@ pub const SPAWN_RULES: &[SpawnRule] = &[
         night_chance_percent: 5,
         cap: 4,
         radius: 64,
+        away_from_bunker: 0,
     },
     SpawnRule {
         kind: EnemyKind::NuclearSlime,
@@ -101,6 +106,17 @@ pub const SPAWN_RULES: &[SpawnRule] = &[
         night_chance_percent: 10,
         cap: 4,
         radius: 64,
+        away_from_bunker: 0,
+    },
+    // Mining bots dig through the deep, far from the bunker so the first escape is fair
+    SpawnRule {
+        kind: EnemyKind::MiningBot,
+        place: SpawnPlace::Band(DepthBand::Deep),
+        chance_percent: 6,
+        night_chance_percent: 6,
+        cap: 2,
+        radius: 64,
+        away_from_bunker: 128,
     },
 ];
 
@@ -108,6 +124,7 @@ fn entity_kind(kind: EnemyKind) -> EntityKind {
     match kind {
         EnemyKind::FeralDog => EntityKind::FeralDog,
         EnemyKind::NuclearSlime => EntityKind::NuclearSlime,
+        EnemyKind::MiningBot => EntityKind::MiningBot,
     }
 }
 
@@ -262,6 +279,10 @@ fn roll_spawn(
         };
         let dist = distance(pos, player);
         if dist < SPAWN_MIN_DISTANCE || dist > rule.radius || !rule.place.contains(res, pos) {
+            continue;
+        }
+        let (bx, by, _) = crate::game::BUNKER_POS;
+        if (pos.x - bx).abs().max((pos.y - by).abs()) < rule.away_from_bunker {
             continue;
         }
         let open = res
@@ -493,6 +514,20 @@ mod tests {
         };
         assert_eq!(slimes(0), 0);
         assert!(slimes(-20) > 0);
+    }
+
+    #[test]
+    fn mining_bots_spawn_only_in_the_deep_and_away_from_the_bunker() {
+        let bots = |x: i64, y: i64, z: i64| {
+            let mut t = TestWorld::new(12345).player_at(x, y, z).build();
+            run_checks(&mut t, 150);
+            count(&t, EntityKind::MiningBot)
+        };
+        assert_eq!(bots(1000, 1000, -3), 0, "none in the shallows");
+        assert_eq!(bots(1000, 1000, 0), 0, "none on the surface");
+        let (bx, by, _) = crate::game::BUNKER_POS;
+        assert_eq!(bots(bx, by, -19), 0, "none by the bunker");
+        assert!(bots(1000, 1000, -20) > 0, "some in the deep far away");
     }
 
     #[test]
