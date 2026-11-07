@@ -249,18 +249,41 @@ impl App {
         self.was_dead = None;
     }
 
-    /// Unlock the achievements whose conditions became true this frame. Worlds that allow
-    /// cheats never unlock any.
+    /// Unlock the achievements whose conditions hold this frame (the first death on the
+    /// frame the player dies). Worlds that allow cheats never unlock any.
     pub(crate) fn check_achievements(&mut self) {
+        use crate::steam::Achievement;
+        use lithicrivers_core::dialogue::QuestType;
         let game = &self.core.game;
         let Some(player) = game.get_player_entity() else {
             return;
         };
         let dead = lithicrivers_core::death::is_dead(&game.world, player);
-        let cheats = game.res.world_settings.cheats_allowed;
-        if self.was_dead == Some(false) && dead && !cheats {
-            self.steam.unlock(crate::steam::Achievement::FirstDeath);
-        }
+        let died = self.was_dead == Some(false) && dead;
         self.was_dead = Some(dead);
+        let res = &game.res;
+        if res.world_settings.cheats_allowed {
+            return;
+        }
+        let on_surface = game.get_player_position().is_some_and(|p| p.z >= 0);
+        let earned = [
+            (Achievement::FirstDeath, died),
+            (Achievement::Surface, on_surface && !dead),
+            (Achievement::FirstKill, res.stats.enemies_killed > 0),
+            (
+                Achievement::RepairAndroid,
+                res.is_quest_completed(QuestType::RepairBrokenAndroid),
+            ),
+            (
+                Achievement::ReplaceArm,
+                res.is_quest_completed(QuestType::ReplaceArm),
+            ),
+            (Achievement::FirstJump, res.stats.teleports > 0),
+        ];
+        for (achievement, done) in earned {
+            if done {
+                self.steam.unlock(achievement);
+            }
+        }
     }
 }

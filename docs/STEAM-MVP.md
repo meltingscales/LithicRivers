@@ -178,7 +178,7 @@ The game opens its own window with a bundled font (`add-game-window`), so it no 
 
 ## Steam Integration
 - [ ] Steamworks SDK integration
-- [ ] Achievements system
+- [ ] Achievements system (six achievements in code, `add-steam-achievements`; waiting on Steamworks setup)
 - [ ] Cloud saves
 - [ ] Basic Steam overlay support
 
