@@ -36,5 +36,5 @@
 - [x] 6.4 An RTG, a pole and a charger beside the bunker and factory stations; verify the golden `Game::new` entities, the structure lint, and the transit-stations snapshot
 - [x] 6.7 The bunker's station, where the player wakes up, starts registered; verify the new-world test and the transit-stations and tele-access-device snapshots
 - [x] 6.8 A second factory station, the Locker Station, with its RTG kit beside the arm locker; verify the new-world test and the golden `Game::new` entities
-- [ ] 6.5 Verify `just code-clippy`, `cargo test --workspace` and PR checks pass
+- [x] 6.5 Verify `just code-clippy`, `cargo test --workspace` and PR checks pass
 - [ ] 6.6 User check that RTG-powered stations and the Item Charger feel natural
