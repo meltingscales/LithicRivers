@@ -138,8 +138,8 @@ The game opens its own window with a bundled font (`add-game-window`), so it no 
   - [x] 3 starter recipes (stick, plank, torch) with deterministic outputs
 - [x] Day/night cycle
   - [x] **15-minute day, dark surface nights with fog of war, a clock in the MODES panel**
-- [ ] Basic survival mechanics (damage, repair, body parts)
-  - [ ] Body panel shows part states; player can incur and repair at least 1 damage type
+- [x] Basic survival mechanics (damage, repair, body parts)
+  - [x] Body panel shows part states; player can incur and repair at least 1 damage type (the Body tab's repair window, and installing or swapping parts)
 - [x] NPC interactions and conversations just like the python version
   - [x] **Dialogue engine with clean architecture and unit tests**
   - [x] **15+ emotional dialogue states for rich NPC interactions**
@@ -235,9 +235,8 @@ Non-code work from the old TODO.md.
 ## Next Priority Items (Suggested Order)
 
 ### HIGH PRIORITY (Core Gameplay Gaps)
-1. **Basic survival mechanics (damage, repair, body parts)**
-   - Body panel shows part states; player can incur and repair at least 1 damage type
-   - This is essential for the core survival loop
+1. **~~Basic survival mechanics (damage, repair, body parts)~~** ✅ **COMPLETED**
+   - ✅ **The Body tab shows part states, combat damages parts, and the repair window and part installs fix them**
 
 2. **~~Day/night cycle~~** ✅ **COMPLETED**
    - ~~Full cycle length ~10–20 minutes with visual cue~~
