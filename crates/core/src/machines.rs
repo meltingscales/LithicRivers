@@ -1,7 +1,8 @@
-//! Tree-farm machines: the auto-planter plants acorns around itself and the auto-harvester
-//! chops grown trees around itself and pushes the wood into the block it faces.
+//! Farm machines: the auto-planter plants acorns and crop seeds around itself, and the
+//! auto-harvester chops grown trees and harvests ripe crops around itself and pushes what it
+//! gets into the block it faces.
 //!
-//! A machine's items are in its `Inventory` (the planter's acorns, the harvester's output),
+//! A machine's items are in its `Inventory` (the planter's seeds, the harvester's output),
 //! capped at `MACHINE_CAPACITY` items. Each factory step it demands power only if it has
 //! work, and adds its power satisfaction (per-mille) to its progress; it acts when the
 //! progress reaches its action cost.
@@ -63,18 +64,35 @@ fn held(world: &World, machine: Entity) -> u32 {
         .map_or(0, |inv| inv.slots.iter().map(|s| s.qty).sum())
 }
 
-/// Whether a machine takes `item` into its input: planters take acorns up to their capacity;
+/// Whether a machine takes `item` into its input: planters take seeds up to their capacity;
 /// harvesters take nothing.
 pub fn accepts_input(world: &World, machine: Entity, kind: FactoryKind, item: ItemKind) -> bool {
     kind == FactoryKind::AutoPlanter
-        && item == ItemKind::Acorn
+        && crate::plants::is_seed(item)
         && held(world, machine) < MACHINE_CAPACITY
+        && world
+            .get::<&Inventory>(machine)
+            .is_ok_and(|inv| inv.has_room_for(item))
 }
 
-/// The most items one chopped tree can drop.
-fn max_tree_drop() -> u32 {
-    crate::crafting::mining_drop(TileKind::Tree)
-        .map_or(0, |d| d.items.iter().map(|&(_, _, max)| max).sum())
+/// Whether a harvester works this tile: a grown tree or a ripe crop.
+pub fn harvestable(tile: TileKind) -> bool {
+    tile == TileKind::Tree || crate::plants::Crop::on_tile(tile).is_some_and(|(_, ripe)| ripe)
+}
+
+/// The most items harvesting one tile of this kind can drop.
+fn max_drop(tile: TileKind) -> u32 {
+    crate::crafting::mining_drop(tile).map_or(0, |d| d.items.iter().map(|&(_, _, max)| max).sum())
+}
+
+/// The first seed in a planter's inventory.
+fn first_seed(world: &World, machine: Entity) -> Option<ItemKind> {
+    world.get::<&Inventory>(machine).ok().and_then(|inv| {
+        inv.slots
+            .iter()
+            .find(|s| s.qty > 0 && crate::plants::is_seed(s.kind))
+            .map(|s| s.kind)
+    })
 }
 
 /// The tiles a machine at `center` works, in its fixed order: row by row from the
@@ -90,9 +108,9 @@ pub fn work_area(center: Position) -> impl Iterator<Item = Position> {
         })
 }
 
-/// The tile a machine would act on next, if it has work: for a planter with acorns, the
-/// first free grass or dirt tile; for a harvester with room for a tree's drops, the first
-/// grown tree.
+/// The tile a machine would act on next, if it has work: for a planter with seeds, the
+/// first free grass or dirt tile; for a harvester, the first grown tree or ripe crop whose
+/// drops it has room for.
 fn work_target(
     world: &World,
     res: &mut Resources,
@@ -115,10 +133,11 @@ fn work_target(
             })
         }
         FactoryKind::AutoHarvester => {
-            if held(world, machine) + max_tree_drop() > MACHINE_CAPACITY {
-                return None;
-            }
-            work_area(pos).find(|p| tiles.get_tile_cached(p.x, p.y, p.z) == TileKind::Tree)
+            let held = held(world, machine);
+            work_area(pos).find(|p| {
+                let tile = tiles.get_tile_cached(p.x, p.y, p.z);
+                harvestable(tile) && held + max_drop(tile) <= MACHINE_CAPACITY
+            })
         }
         _ => None,
     }
@@ -192,8 +211,11 @@ pub fn step_machines(world: &mut World, res: &mut Resources) {
 fn act(world: &mut World, res: &mut Resources, machine: Entity, kind: FactoryKind, at: Position) {
     match kind {
         FactoryKind::AutoPlanter => {
-            if crate::plants::plant(world, res, at).is_ok() {
-                take_one(world, machine, ItemKind::Acorn);
+            let Some(seed) = first_seed(world, machine) else {
+                return;
+            };
+            if crate::plants::plant(world, res, at, seed).is_ok() {
+                take_one(world, machine, seed);
             }
         }
         FactoryKind::AutoHarvester => {
@@ -339,6 +361,61 @@ mod tests {
     }
 
     // --- 1.2 auto-planter --------------------------------------------------------------
+
+    #[test]
+    fn planter_plants_crop_seeds_too() {
+        let mut game = field();
+        let planter = put(&mut game, FactoryKind::AutoPlanter, at(0, 0), Facing::North);
+        power(&mut game, at(3, 0));
+        give(&mut game, planter, ItemKind::Potato, 1);
+        give(&mut game, planter, ItemKind::WheatSeeds, 1);
+        assert!(factory::accepts(
+            &game.game.world,
+            planter,
+            ItemKind::Carrot
+        ));
+        assert!(!factory::accepts(
+            &game.game.world,
+            planter,
+            ItemKind::Wheat
+        ));
+        seconds(&mut game, 2 * PLANT_SECONDS);
+        assert_eq!(
+            game.tile(-2, -2, 0),
+            TileKind::PotatoSeedling,
+            "first stack first"
+        );
+        assert_eq!(game.tile(-1, -2, 0), TileKind::WheatSeedling);
+        assert_eq!(count(&game, planter, ItemKind::Potato), 0);
+    }
+
+    #[test]
+    fn harvester_harvests_only_ripe_crops() {
+        let mut game = field();
+        let harvester = put(
+            &mut game,
+            FactoryKind::AutoHarvester,
+            at(0, 0),
+            Facing::North,
+        );
+        power(&mut game, at(3, 0));
+        let g = &mut game.game;
+        g.res
+            .world_state
+            .world
+            .set_tile_cached(-2, -2, 0, TileKind::WheatGrowing);
+        g.res
+            .world_state
+            .world
+            .set_tile_cached(-1, -2, 0, TileKind::WheatRipe);
+        seconds(&mut game, CHOP_SECONDS);
+        assert_eq!(game.tile(-1, -2, 0), TileKind::Dirt);
+        assert_eq!(game.tile(-2, -2, 0), TileKind::WheatGrowing, "not ripe yet");
+        assert_eq!(count(&game, harvester, ItemKind::Wheat), 2);
+        assert!((1..=2).contains(&count(&game, harvester, ItemKind::WheatSeeds)));
+        seconds(&mut game, 1);
+        assert!(!active(&game, harvester), "nothing ripe left");
+    }
 
     #[test]
     fn planter_plants_in_fixed_order_once_per_action() {

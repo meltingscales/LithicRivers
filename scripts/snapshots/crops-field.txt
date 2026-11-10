@@ -1,0 +1,28 @@
+# A row of each crop at every stage (seedling, growing, ripe) east of the player, the look
+# panel on the ripe wheat, and the wheat harvested by hand into wheat and seeds.
+seed 12345
+size 100x30
+world factory-showcase
+key ui.MENU_PREV
+cheat tp 0 6 0
+cheat set_tile ~2 ~-1 ~ wheat_seedling
+cheat set_tile ~3 ~-1 ~ wheat_growing
+cheat set_tile ~4 ~-1 ~ wheat_ripe
+cheat set_tile ~2 ~ ~ potato_seedling
+cheat set_tile ~3 ~ ~ potato_growing
+cheat set_tile ~4 ~ ~ potato_ripe
+cheat set_tile ~2 ~1 ~ carrot_seedling
+cheat set_tile ~3 ~1 ~ carrot_growing
+cheat set_tile ~4 ~1 ~ carrot_ripe
+screen stages
+# Look at the ripe wheat
+cheat tp 3 5 0
+key action.LOOK_TOGGLE
+key movement.MOVE_EAST
+expect-text "Tile: WheatRipe"
+screen look-ripe-wheat
+key action.LOOK_TOGGLE
+# Harvest it: right click the tile east of the player
+click 39 10 right
+expect-text "Wheat Seeds"
+screen harvested

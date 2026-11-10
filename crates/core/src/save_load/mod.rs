@@ -113,6 +113,7 @@ saved_components! {
     "light_source" => LightSource,
     "factory_block" => crate::factory::FactoryBlock,
     "growth" => crate::plants::Growth,
+    "crop_growth" => crate::plants::CropGrowth,
     "belt_slot" => crate::factory::BeltSlot,
     "generator" => crate::power::Generator,
     "power_pole" => crate::power::PowerPole,
@@ -578,6 +579,14 @@ mod tests {
             &mut fight.game.world,
             &mut fight.game.res,
             Position { x: 3, y: -3, z: 0 },
+            crate::components::ItemKind::Acorn,
+        )
+        .unwrap();
+        crate::plants::plant(
+            &mut fight.game.world,
+            &mut fight.game.res,
+            Position { x: 4, y: -3, z: 0 },
+            crate::components::ItemKind::WheatSeeds,
         )
         .unwrap();
         fight.ticks(30);

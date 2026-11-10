@@ -526,7 +526,9 @@ mod art_tests {
                 let mut sprites = vec![kind.sprite(facing)];
                 if matches!(
                     kind,
-                    FactoryKind::CrudeFurnace | FactoryKind::ElectricFurnace
+                    FactoryKind::CrudeFurnace
+                        | FactoryKind::ElectricFurnace
+                        | FactoryKind::Fermenter
                 ) {
                     sprites.push(lithicrivers_core::furnace::sprite(kind, facing, true));
                 }

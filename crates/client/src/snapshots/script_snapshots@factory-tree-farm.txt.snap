@@ -11,7 +11,7 @@ input_file: scripts/snapshots/factory-tree-farm.txt
 ########################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Inventory─────────────┐
 ########################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Nail x10              │
 ###############┌────────────── Auto-Planter - working 80%, power 100% ──────────────┐              │
-###############│┌ Acorns (16/16) ────────────────┐┌ Showing acorns: 0 of 5 ────────┐│              │
+###############│┌ Seeds (16/16) ─────────────────┐┌ Showing seeds: 0 of 5 ─────────┐│              │
 ###############││16 x Acorn                      ││                                ││──────────────┘
 ###############││                                ││                                ││ ! Damaged────┐
 ###############││                                ││                                ││              │

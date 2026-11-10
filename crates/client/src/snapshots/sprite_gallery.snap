@@ -986,6 +986,158 @@ e<
  ║   ║   ║  
 ▀▀▀ ▀▀▀ ▀▀▀ 
             
+=== factory/fermenter_lit_east  #E8C27A  A plank vat on an iron frame, warmed by a salvaged coil; it bottles ethanol from grain and sets the leftovers aside.
+-- 1x
+B
+-- 2x
+B>
+B>
+-- 3x
+[B>
+[B>
+[B>
+-- art 0
+            
+  ┌▄▄▄▄▄▄┐  
+  █▓▒▓▒▓▒█▄ 
+ ═█▒oooo▓█► 
+ ═█▓▒▓▒▓▒█► 
+  █▒▓▒▓▒▓█  
+  ╨──────╨  
+            
+=== factory/fermenter_lit_north  #E8C27A  A plank vat on an iron frame, warmed by a salvaged coil; it bottles ethanol from grain and sets the leftovers aside.
+-- 1x
+B
+-- 2x
+B^
+B^
+-- 3x
+[B^
+[B^
+[B^
+-- art 0
+     ▲▲     
+  ┌▄▄██▄▄┐  
+  █▓▒▓▒▓▒█  
+  █▒oooo▓█  
+  █▓▒▓▒▓▒█  
+  █▒▓▒▓▒▓█  
+  ╨──────╨  
+     ║║     
+=== factory/fermenter_lit_south  #E8C27A  A plank vat on an iron frame, warmed by a salvaged coil; it bottles ethanol from grain and sets the leftovers aside.
+-- 1x
+B
+-- 2x
+Bv
+Bv
+-- 3x
+[Bv
+[Bv
+[Bv
+-- art 0
+     ║║     
+  ┌▄▄▄▄▄▄┐  
+  █▓▒▓▒▓▒█  
+  █▒oooo▓█  
+  █▓▒▓▒▓▒█  
+  █▒▓▒▓▒▓█  
+  ╨──██──╨  
+     ▼▼     
+=== factory/fermenter_lit_west  #E8C27A  A plank vat on an iron frame, warmed by a salvaged coil; it bottles ethanol from grain and sets the leftovers aside.
+-- 1x
+B
+-- 2x
+B<
+B<
+-- 3x
+[B<
+[B<
+[B<
+-- art 0
+            
+  ┌▄▄▄▄▄▄┐  
+ ▄█▓▒▓▒▓▒█  
+ ◄█▒oooo▓█═ 
+ ◄█▓▒▓▒▓▒█═ 
+  █▒▓▒▓▒▓█  
+  ╨──────╨  
+            
+=== factory/fermenter_unlit_east  #8C6A44  A plank vat on an iron frame, warmed by a salvaged coil; it bottles ethanol from grain and sets the leftovers aside.
+-- 1x
+b
+-- 2x
+b>
+b>
+-- 3x
+[b>
+[b>
+[b>
+-- art 0
+            
+  ┌▄▄▄▄▄▄┐  
+  █▓▒▓▒▓▒█▄ 
+ ═█▒~~~~▓█► 
+ ═█▓▒▓▒▓▒█► 
+  █▒▓▒▓▒▓█  
+  ╨──────╨  
+            
+=== factory/fermenter_unlit_north  #8C6A44  A plank vat on an iron frame, warmed by a salvaged coil; it bottles ethanol from grain and sets the leftovers aside.
+-- 1x
+b
+-- 2x
+b^
+b^
+-- 3x
+[b^
+[b^
+[b^
+-- art 0
+     ▲▲     
+  ┌▄▄██▄▄┐  
+  █▓▒▓▒▓▒█  
+  █▒~~~~▓█  
+  █▓▒▓▒▓▒█  
+  █▒▓▒▓▒▓█  
+  ╨──────╨  
+     ║║     
+=== factory/fermenter_unlit_south  #8C6A44  A plank vat on an iron frame, warmed by a salvaged coil; it bottles ethanol from grain and sets the leftovers aside.
+-- 1x
+b
+-- 2x
+bv
+bv
+-- 3x
+[bv
+[bv
+[bv
+-- art 0
+     ║║     
+  ┌▄▄▄▄▄▄┐  
+  █▓▒▓▒▓▒█  
+  █▒~~~~▓█  
+  █▓▒▓▒▓▒█  
+  █▒▓▒▓▒▓█  
+  ╨──██──╨  
+     ▼▼     
+=== factory/fermenter_unlit_west  #8C6A44  A plank vat on an iron frame, warmed by a salvaged coil; it bottles ethanol from grain and sets the leftovers aside.
+-- 1x
+b
+-- 2x
+b<
+b<
+-- 3x
+[b<
+[b<
+[b<
+-- art 0
+            
+  ┌▄▄▄▄▄▄┐  
+ ▄█▓▒▓▒▓▒█  
+ ◄█▒~~~~▓█═ 
+ ◄█▓▒▓▒▓▒█═ 
+  █▒▓▒▓▒▓█  
+  ╨──────╨  
+            
 === factory/filter_extractor_east  #4FC3F7  A grabber arm with a sorting eye: moves only the item it's set to
 -- 1x
 →
@@ -1670,6 +1822,25 @@ GG
  ▀▀▀▀▀▀▀▀▀▀ 
             
             
+=== items/carrot  #E87A22  A carrot. Plant it to grow more; animals would want it, if there were any farms left.
+-- 1x
+>
+-- 2x
+>>
+>>
+-- 3x
+>>>
+>>>
+>>>
+-- art 0
+            
+     ╲│╱    
+      │     
+     ███    
+     ▓█▓    
+      █     
+      ▀     
+            
 === items/chest  #946A2F  A wooden chest; place it to store items
 -- 1x
 C
@@ -1879,6 +2050,25 @@ eEe
  █▓└────┘▓█ 
  ▀▀▀▀▀▀▀▀▀▀ 
             
+=== items/ethanol  #BFE6F0  A stoppered bottle of fermented spirit. It burns hot and clean in a generator.
+-- 1x
+!
+-- 2x
+!!
+!!
+-- 3x
+!!!
+!!!
+!!!
+-- art 0
+            
+     ▄▄     
+     ██     
+     ▐▌     
+    ▄▓▓▄    
+    █░░█    
+    ▀▀▀▀    
+            
 === items/extractor  #9F7811  A salvaged grabber arm: pulls one item a second from behind and drops it ahead
 -- 1x
 →
@@ -1952,6 +2142,25 @@ eEe
  █░░▀▄ █░░█ 
   ▀▄░░░░▄▀  
     ▀▀▀▀    
+            
+=== items/fermenter  #6B5236  A plank vat on an iron frame with a warming coil underneath. Grain goes in; spirit comes out.
+-- 1x
+b
+-- 2x
+bb
+bb
+-- 3x
+[b]
+bBb
+[b]
+-- art 0
+            
+   ▄▄▄▄▄▄   
+  █▓▒▓▒▓▒█  
+  █▒▓▒▓▒▓█  
+  █▓▒▓▒▓▒█  
+  ╨──────╨  
+            
             
 === items/filter_extractor  #3B92B9  A grabber arm with a sorting eye: moves only the item it's set to
 -- 1x
@@ -2096,6 +2305,25 @@ L
 ▐▒▓▒▓▒▓▒▓(◎)
  ▀▀▀▀▀▀▀▀▀  
             
+            
+            
+=== items/mash  #9C7A4A  Spent potato mash, sour and warm. Good for nothing yet but feed.
+-- 1x
+~
+-- 2x
+~~
+~~
+-- 3x
+~~~
+~~~
+~~~
+-- art 0
+            
+            
+            
+   ▄▒░▒▓░▄  
+  ▒░▓▒░▒▓▒  
+  ▀▀▀▀▀▀▀▀  
             
             
 === items/meat  #CD5C5C  Fresh meat from an animal
@@ -2251,6 +2479,25 @@ ppp
   ▐▒▓██▓▒▌  
    ▀▓▒▒▓▀ / 
      ▀▀  /  
+            
+            
+=== items/potato  #B08850  A lumpy potato. Plant it to grow more, or ferment it for more ethanol than wheat gives.
+-- 1x
+o
+-- 2x
+oo
+oo
+-- 3x
+ooo
+ooo
+ooo
+-- art 0
+            
+            
+    ▄▄▓▓▄   
+   ▓▒▓▒▒▓▄  
+   ▓▒▒▓▒▒▓  
+    ▀▓▓▓▓▀  
             
             
 === items/power_pole  #AB872B  Links to poles within 8 tiles and powers blocks within 3
@@ -2614,6 +2861,25 @@ U
 ▀▀▀▀▘▝▀▀▀▀▀▀
 ██▌▐██████▌▐
             
+=== items/straw  #CDB66A  Dry wheat stalks left from fermenting. They burn fast and weak.
+-- 1x
+≡
+-- 2x
+≡≡
+≡≡
+-- 3x
+≡≡≡
+≡≡≡
+≡≡≡
+-- art 0
+            
+            
+  ╲╲╲│││╱╱╱ 
+   ╲╲│││╱╱  
+   ═══════  
+   ╱╱│││╲╲  
+  ╱╱╱│││╲╲╲ 
+            
 === items/string  #FFFFFF  A piece of string.
 -- 1x
 ∞
@@ -2689,6 +2955,44 @@ t,
    ║▓▲▼▓║   
    ╚════╝   
      ▼▼     
+            
+=== items/wheat  #D4B04C  A sheaf of wheat. It ferments into ethanol; nobody here eats bread.
+-- 1x
+/
+-- 2x
+//
+//
+-- 3x
+///
+///
+///
+-- art 0
+            
+    ¥ ¥ ¥   
+    ║╲║╱║   
+     ╲║╱    
+     ═╬═    
+     ╱║╲    
+    ╱ ║ ╲   
+            
+=== items/wheat_seeds  #B59A52  A pinch of wheat seeds. Plant them on grass or dirt.
+-- 1x
+:
+-- 2x
+::
+::
+-- 3x
+:::
+:.:
+.:.
+-- art 0
+            
+            
+    ▪  ▪    
+  ▪   ▪   ▪ 
+    ▪   ▪   
+  ▪   ▪  ▪  
+            
             
 === items/wooden_conveyor  #9C6B30  Place it to carry items one tile at a time
 -- 1x
@@ -2804,6 +3108,63 @@ t,
    ║   ╚═╝╚ 
   ═╩═ ═╗╔═  
        ╚╝   
+=== tiles/carrot_growing  #8FC84A  Carrot tops in a tidy row, the roots still pale.
+-- 1x
+v
+-- 2x
+vv
+vv
+-- 3x
+vvv
+vvv
+vvv
+-- art 0
+            
+            
+   ╲│╱ ╲│╱  
+    ╲│ ╱│   
+     │  │   
+            
+ ▄▄▄▄▄▄▄▄▄▄ 
+            
+=== tiles/carrot_ripe  #E07B2A  Carrot tops gone shaggy over orange shoulders breaking the soil.
+-- 1x
+Y
+-- 2x
+YY
+YY
+-- 3x
+YYY
+YYY
+YYY
+-- art 0
+            
+   ╲│╱ ╲│╱  
+   ╲╲│╱╲│╱  
+    ╲│ ╱│   
+     ▼  ▼   
+            
+ ▄▄▄▄▄▄▄▄▄▄ 
+            
+=== tiles/carrot_seedling  #7FC05A  Feathery carrot sprouts, barely there.
+-- 1x
+.
+-- 2x
+.`
+`.
+-- 3x
+.`.
+`.`
+.`.
+-- art 0
+            
+            
+            
+            
+     ` `    
+   `  `  `  
+ ▄▄▄▄▄▄▄▄▄▄ 
+            
 === tiles/cloud  #FFFFFF  A fluffy cloud floating in the sky
 -- 1x
 ~
@@ -3070,6 +3431,63 @@ s=s
 ░║▒▒▒▒▒▒║▓▓▒
 ▒╚══════╝▓▓▓
 ▓▓▓▓▓▒▓▓▒▓▓▓
+=== tiles/potato_growing  #7F9F4A  A bushy potato plant; something is swelling underneath.
+-- 1x
+%
+-- 2x
+%%
+%%
+-- 3x
+%%%
+%%%
+%%%
+-- art 0
+            
+            
+    ▄▒▄     
+   ▒▓▒▓▒    
+  ▄▒▓▒▓▒▄   
+    ▀│▀     
+ ▄▄▄▄▄▄▄▄▄▄ 
+            
+=== tiles/potato_ripe  #A8B04A  A wilting potato plant with fat tubers just under the soil.
+-- 1x
+&
+-- 2x
+&&
+&&
+-- 3x
+&&&
+&&&
+&&&
+-- art 0
+            
+            
+   ▄▒▓▒▄    
+  ▒▓▒▓▒▓▒   
+  ▀▒▓▒▓▒▀   
+    ▀│▀     
+ ▄▄o▄▄O▄▄o▄ 
+            
+=== tiles/potato_seedling  #6FA05A  A potato's first leaves pushing up through the dirt.
+-- 1x
+.
+-- 2x
+.'
+'.
+-- 3x
+.'.
+'.'
+.'.
+-- art 0
+            
+            
+            
+            
+     ' '    
+   '  '  '  
+ ▄▄▄▄▄▄▄▄▄▄ 
+            
 === tiles/power_pole  #FFFF00  Special worldgen block that turns into a power pole
 -- 1x
 +
@@ -3411,6 +3829,63 @@ t
    ▀▀▐█▀▀   
      ▐█▌    
     ▄███▄   
+            
+=== tiles/wheat_growing  #B9C25A  Green wheat, its heads still soft and closed.
+-- 1x
+;
+-- 2x
+;;
+;;
+-- 3x
+;;;
+;;;
+;;;
+-- art 0
+            
+            
+   │ │ │ │  
+   │╲│╱│╲│  
+  ╲│ │╱│ │╱ 
+   │ │ │ │  
+ ▄▄▄▄▄▄▄▄▄▄ 
+            
+=== tiles/wheat_ripe  #E3C25A  Wheat gone gold and heavy; it rustles like paper in the dead wind.
+-- 1x
+¥
+-- 2x
+¥¥
+¥¥
+-- 3x
+¥¥¥
+¥¥¥
+¥¥¥
+-- art 0
+            
+  ¥  ¥  ¥   
+  ║ ¥║ ¥║ ¥ 
+  ║ ║║ ║║ ║ 
+ ╲║ ║║╱║║ ║ 
+  ║ ║║ ║║ ║ 
+ ▄▄▄▄▄▄▄▄▄▄ 
+            
+=== tiles/wheat_seedling  #8DBF4F  A row of wheat sprouts, thin as wire, leaning toward the light.
+-- 1x
+,
+-- 2x
+,.
+.,
+-- 3x
+.,.
+,.,
+.,.
+-- art 0
+            
+            
+            
+            
+     , ,    
+   ,  ,  ,  
+ ▄▄▄▄▄▄▄▄▄▄ 
             
 === tiles/wild_spawner  #FFFF00  Special worldgen block that turns into a wild spawner
 -- 1x

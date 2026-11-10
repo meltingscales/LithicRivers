@@ -129,6 +129,8 @@ pub enum FactoryKind {
     Rtg,
     /// Charges the power cells in its slots from the grid
     ItemCharger,
+    /// Ferments wheat or potatoes into ethanol on grid power; fed from its back and sides
+    Fermenter,
     /// A consumer that does nothing but draw power, for grid tests
     #[cfg(any(test, feature = "test-support"))]
     TestConsumer,
@@ -164,6 +166,7 @@ impl FactoryKind {
             ItemKind::Battery => Some(FactoryKind::Battery),
             ItemKind::Rtg => Some(FactoryKind::Rtg),
             ItemKind::ItemCharger => Some(FactoryKind::ItemCharger),
+            ItemKind::Fermenter => Some(FactoryKind::Fermenter),
             _ => None,
         }
     }
@@ -197,6 +200,7 @@ impl FactoryKind {
             FactoryKind::Battery => Some(ItemKind::Battery),
             FactoryKind::Rtg => Some(ItemKind::Rtg),
             FactoryKind::ItemCharger => Some(ItemKind::ItemCharger),
+            FactoryKind::Fermenter => Some(ItemKind::Fermenter),
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestConsumer => None,
             #[cfg(any(test, feature = "test-support"))]
@@ -231,6 +235,7 @@ impl FactoryKind {
             FactoryKind::Battery => "battery",
             FactoryKind::Rtg => "RTG",
             FactoryKind::ItemCharger => "item charger",
+            FactoryKind::Fermenter => "fermenter",
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestConsumer => "test consumer",
             #[cfg(any(test, feature = "test-support"))]
@@ -246,6 +251,7 @@ impl FactoryKind {
             | FactoryKind::AutoHarvester
             | FactoryKind::CrudeFurnace
             | FactoryKind::ElectricFurnace
+            | FactoryKind::Fermenter
             | FactoryKind::Extractor
             | FactoryKind::FilterExtractor
             | FactoryKind::BeltRouter => true,
@@ -306,7 +312,7 @@ impl FactoryKind {
             FactoryKind::AutoHarvester => {
                 SpriteRef::new("factory", &format!("auto_harvester_{}", facing.name()))
             }
-            FactoryKind::CrudeFurnace | FactoryKind::ElectricFurnace => {
+            FactoryKind::CrudeFurnace | FactoryKind::ElectricFurnace | FactoryKind::Fermenter => {
                 crate::furnace::sprite(self, facing, false)
             }
             FactoryKind::Extractor => {
@@ -463,6 +469,14 @@ pub fn place(
         }
         FactoryKind::CrudeFurnace => {
             builder.add(crate::furnace::Furnace::default());
+        }
+        FactoryKind::Fermenter => {
+            builder.add(crate::furnace::Furnace::new(
+                crate::furnace::Process::Fermenting,
+            ));
+            builder.add(crate::power::PowerConsumer::idle(
+                crate::furnace::FERMENTER_W,
+            ));
         }
         FactoryKind::ElectricFurnace => {
             builder.add(crate::furnace::Furnace::default());
@@ -806,12 +820,13 @@ pub struct BeltSlot {
 pub fn takes(kind: FactoryKind, item: ItemKind) -> bool {
     match kind {
         FactoryKind::BurnerGenerator => crate::power::fuel_energy(item).is_some(),
-        FactoryKind::AutoPlanter => item == ItemKind::Acorn,
+        FactoryKind::AutoPlanter => crate::plants::is_seed(item),
         FactoryKind::CrudeFurnace => {
             crate::power::fuel_energy(item).is_some()
                 || crate::furnace::smelting_recipe(item).is_some()
         }
         FactoryKind::ElectricFurnace => crate::furnace::smelting_recipe(item).is_some(),
+        FactoryKind::Fermenter => crate::furnace::Process::Fermenting.recipe(item).is_some(),
         FactoryKind::CrudeVat | FactoryKind::StandardVat | FactoryKind::AdvancedVat => {
             crate::vat::takes(kind, item)
         }
@@ -834,9 +849,10 @@ pub fn takes(kind: FactoryKind, item: ItemKind) -> bool {
 pub fn takes_label(kind: FactoryKind) -> Option<&'static str> {
     match kind {
         FactoryKind::BurnerGenerator => Some("fuel"),
-        FactoryKind::AutoPlanter => Some("acorns"),
+        FactoryKind::AutoPlanter => Some("seeds"),
         FactoryKind::CrudeFurnace => Some("fuel/smeltables"),
         FactoryKind::ElectricFurnace => Some("smeltables"),
+        FactoryKind::Fermenter => Some("fermentables"),
         FactoryKind::CrudeVat => Some("crude body parts"),
         FactoryKind::StandardVat => Some("crude/standard body parts"),
         FactoryKind::AdvancedVat => Some("body parts"),
@@ -880,7 +896,7 @@ pub fn accepts_from(
                     .is_ok_and(|inv| inv.has_room_for(item))
         }
         FactoryKind::BeltRouter if cell => return false,
-        FactoryKind::CrudeFurnace | FactoryKind::ElectricFurnace => {
+        FactoryKind::CrudeFurnace | FactoryKind::ElectricFurnace | FactoryKind::Fermenter => {
             return crate::furnace::accepts(world, target, block, item, heading)
         }
         FactoryKind::BeltRouter => {

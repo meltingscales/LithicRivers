@@ -27,6 +27,7 @@ pub fn handle_furnace_window_input(app: &mut App, key: KeyCode) -> bool {
     let player_items = crate::app::item_filter::PlayerRows::for_furnace_slot(
         &app.core.game.world,
         player,
+        window.kind,
         window.slot,
     )
     .len();
@@ -53,6 +54,7 @@ pub fn handle_furnace_window_input(app: &mut App, key: KeyCode) -> bool {
     let player_items = crate::app::item_filter::PlayerRows::for_furnace_slot(
         &app.core.game.world,
         player,
+        window.kind,
         window.slot,
     )
     .len();
@@ -64,7 +66,12 @@ pub fn handle_furnace_window_input(app: &mut App, key: KeyCode) -> bool {
 /// Store the selected player item into the selected slot, or take one item out of it.
 fn transfer(app: &mut App, window: &FurnaceWindow, player: hecs::Entity) {
     let world = &mut app.core.game.world;
-    let rows = crate::app::item_filter::PlayerRows::for_furnace_slot(world, player, window.slot);
+    let rows = crate::app::item_filter::PlayerRows::for_furnace_slot(
+        world,
+        player,
+        window.kind,
+        window.slot,
+    );
     let player_slot = rows.slot(window.player_item).unwrap_or(usize::MAX);
     let item = world
         .get::<&Inventory>(player)

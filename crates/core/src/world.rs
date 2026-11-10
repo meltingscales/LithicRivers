@@ -107,11 +107,16 @@ const CAVE_Z_SCALE: f64 = 0.12;
 const STAIRWAY_TRIES: usize = 48;
 const STAIRWAYS_PER_CHUNK: usize = 2;
 
+/// Chances at a wild crop patch in each surface chunk, and how likely each one is.
+const WILD_CROP_PATCHES_PER_CHUNK: usize = 2;
+const WILD_CROP_PATCH_CHANCE: f64 = 0.2;
+
 /// Features placed after terrain that roll dice, each with its own generator (deposits
 /// come from noise and roll none).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Feature {
     Stairways,
+    WildCrops,
 }
 
 /// A resource that generates as veins, with a vein-noise threshold per band (higher is
@@ -391,6 +396,37 @@ impl GameWorld {
                 let x = rng.gen_range(0..CHUNK_SIZE);
                 let y = rng.gen_range(0..CHUNK_SIZE);
                 chunk.set(x, y, *resource);
+            }
+        }
+
+        self.add_wild_crops(cx, cy, cz, chunk);
+    }
+
+    /// Surface feature step: a few patches of wild, ripe crops on grass in plains and
+    /// forests, so the first seeds can be found. Its own generator, so the rest of the
+    /// surface is unchanged.
+    fn add_wild_crops(&self, cx: i64, cy: i64, cz: i64, chunk: &mut Chunk) {
+        let mut rng = self.feature_rng(cx, cy, cz, Feature::WildCrops);
+        let zf = (cz as f64) * (CHUNK_SIZE_Z as f64) + (CHUNK_SIZE_Z as f64 * 0.5);
+        for _ in 0..WILD_CROP_PATCHES_PER_CHUNK {
+            if rng.gen::<f64>() >= WILD_CROP_PATCH_CHANCE {
+                continue;
+            }
+            let crop = crate::plants::Crop::ALL[rng.gen_range(0..crate::plants::Crop::ALL.len())];
+            let (mut x, mut y) = (rng.gen_range(0..CHUNK_SIZE), rng.gen_range(0..CHUNK_SIZE));
+            let size = rng.gen_range(3..=6);
+            for _ in 0..size * 2 {
+                let wx = (cx * CHUNK_SIZE + x) as f64;
+                let wy = (cy * CHUNK_SIZE + y) as f64;
+                let biome = self.biome_for(wx, wy, zf);
+                if chunk.get(x, y) == TileKind::Grass
+                    && matches!(biome, BiomeBand::Plains | BiomeBand::Forest)
+                {
+                    chunk.set(x, y, crop.ripe_tile());
+                }
+                let (dx, dy) = [(1, 0), (-1, 0), (0, 1), (0, -1)][rng.gen_range(0..4)];
+                x = (x + dx).clamp(0, CHUNK_SIZE - 1);
+                y = (y + dy).clamp(0, CHUNK_SIZE - 1);
             }
         }
     }

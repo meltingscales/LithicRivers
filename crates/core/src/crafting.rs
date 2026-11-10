@@ -34,6 +34,13 @@ pub fn mining_drop(tile: TileKind) -> Option<MiningDrop> {
         TileKind::ScrapElectronics => drop(TileKind::Air, &[(ItemKind::ScrapElectronics, 1, 1)]),
         TileKind::PlasteelScrap => drop(TileKind::Air, &[(ItemKind::PlasteelScrap, 1, 1)]),
         TileKind::Riverglass => drop(TileKind::Air, &[(ItemKind::Riverglass, 1, 1)]),
+        // Ripe crops: their produce and 1 to 2 seeds; the field is left as dirt
+        TileKind::WheatRipe => drop(
+            TileKind::Dirt,
+            &[(ItemKind::Wheat, 2, 2), (ItemKind::WheatSeeds, 1, 2)],
+        ),
+        TileKind::PotatoRipe => drop(TileKind::Dirt, &[(ItemKind::Potato, 4, 5)]),
+        TileKind::CarrotRipe => drop(TileKind::Dirt, &[(ItemKind::Carrot, 3, 4)]),
         _ => None,
     }
 }
@@ -421,6 +428,11 @@ mod tests {
             ItemKind::ScrapElectronics,
             ItemKind::PlasteelScrap,
             ItemKind::Riverglass,
+            // Ripe crops
+            ItemKind::Wheat,
+            ItemKind::WheatSeeds,
+            ItemKind::Potato,
+            ItemKind::Carrot,
             ItemKind::Leather,
             ItemKind::Meat,
             ItemKind::NuclearWaste,

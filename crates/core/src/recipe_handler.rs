@@ -149,6 +149,17 @@ impl RecipeHandler {
                 result: ItemKind::ElectricFurnace,
                 quantity: 1,
             },
+            // Fermenter: a plank vat on an iron frame, warmed by scrap electronics
+            Recipe {
+                name: "Fermenter",
+                ingredients: &[
+                    (ItemKind::WoodenPlank, 6),
+                    (ItemKind::IronScrap, 4),
+                    (ItemKind::ScrapElectronics, 2),
+                ],
+                result: ItemKind::Fermenter,
+                quantity: 1,
+            },
             // Spawner: a growth tank of iron scrap run by scrap electronics, at the same
             // point in the tech tree as the electric furnace
             Recipe {

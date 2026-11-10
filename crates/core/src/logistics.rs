@@ -55,7 +55,11 @@ pub fn peek(world: &World, source: Entity, filter: Option<ItemKind>) -> Option<I
         return None;
     }
     if let Ok(furnace) = world.get::<&Furnace>(source) {
-        return furnace.output.map(|s| s.kind).filter(|&k| matches(k));
+        return [furnace.output, furnace.byproduct]
+            .into_iter()
+            .flatten()
+            .map(|s| s.kind)
+            .find(|&k| matches(k));
     }
     let inv = world.get::<&Inventory>(source).ok()?;
     inv.slots
@@ -68,7 +72,12 @@ pub fn peek(world: &World, source: Entity, filter: Option<ItemKind>) -> Option<I
 /// Take one `item` out of `source`, as `peek` found it.
 fn remove_one(world: &mut World, source: Entity, item: ItemKind) {
     if let Ok(mut furnace) = world.get::<&mut Furnace>(source) {
-        furnace.take(Slot::Output);
+        let slot = if furnace.output.is_some_and(|s| s.kind == item) {
+            Slot::Output
+        } else {
+            Slot::Byproduct
+        };
+        furnace.take(slot);
         return;
     }
     if let Ok(mut inv) = world.get::<&mut Inventory>(source) {

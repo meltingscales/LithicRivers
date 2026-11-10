@@ -80,6 +80,6 @@ fn acorns_need_grass_or_dirt() {
         .set_tile_cached(0, -1, 0, TileKind::Air);
     runner.chain(&[
         "key build.PLACE_NORTH",
-        "expect-text \"Acorns need grass or dirt\"",
+        "expect-text \"Seeds need grass or dirt\"",
     ]);
 }
