@@ -159,18 +159,25 @@ pub fn mining_system(world: &mut World, res: &mut Resources) -> bool {
     let tile_to_mine = res.world_state.world.get_tile_cached(x, y, z);
     use crate::tiles::TileKind;
     match tile_to_mine {
-        TileKind::Sapling => {
+        tile if tile == TileKind::Sapling
+            || crate::plants::Crop::on_tile(tile).is_some_and(|(_, ripe)| !ripe) =>
+        {
             let Some(player) = get_player_entity(world) else {
                 return false;
             };
-            let pulled = crate::plants::break_sapling(world, res, Position { x, y, z }, player);
-            if pulled {
-                res.events.interaction_event(
-                    "You pull up the sapling. (+1 Acorn)".to_string(),
-                    res.time.tick,
-                );
-            }
-            pulled
+            let Some(seed) = crate::plants::break_plant(world, res, Position { x, y, z }, player)
+            else {
+                return false;
+            };
+            res.events.interaction_event(
+                format!(
+                    "You pull up the {}. (+1 {})",
+                    tile.display_name(),
+                    crate::components::itemkind_name(seed)
+                ),
+                res.time.tick,
+            );
+            true
         }
         TileKind::FactoryBlock => {
             let Some(player) = get_player_entity(world) else {
@@ -241,8 +248,13 @@ pub fn mining_system(world: &mut World, res: &mut Resources) -> bool {
                         format!("+{qty} {}", crate::components::itemkind_name(*kind))
                     })
                     .collect();
+                let verb = if crate::plants::Crop::on_tile(tile).is_some() {
+                    "harvest"
+                } else {
+                    "mine"
+                };
                 format!(
-                    "You mine the {}. ({})",
+                    "You {verb} the {}. ({})",
                     tile.display_name(),
                     items.join(", ")
                 )

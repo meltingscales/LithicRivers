@@ -177,7 +177,7 @@ pub fn nearby_interactions(app: &App) -> Option<NearbyInteractions> {
             FactoryKind::PowerPole => {
                 available_actions.push(InteractionType::InspectPole { entity, position })
             }
-            FactoryKind::CrudeFurnace | FactoryKind::ElectricFurnace => {
+            FactoryKind::CrudeFurnace | FactoryKind::ElectricFurnace | FactoryKind::Fermenter => {
                 available_actions.push(InteractionType::OpenFurnace {
                     entity,
                     position,

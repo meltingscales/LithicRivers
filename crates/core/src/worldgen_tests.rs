@@ -139,14 +139,15 @@ fn bands_by_depth() {
     assert_eq!(depth_band(-6), DepthBand::Deep);
 }
 
-/// A hash of the surface tiles of 25 chunks around the origin.
-fn surface_hash(w: &mut GameWorld) -> u64 {
+/// A hash of the surface tiles of 25 chunks around the origin, each tile first mapped by
+/// `map`.
+fn surface_hash_by(w: &mut GameWorld, map: impl Fn(TileKind) -> TileKind) -> u64 {
     let mut h: u64 = 0xcbf29ce484222325;
     for cy in -2..=2 {
         for cx in -2..=2 {
             for y in 0..CHUNK_SIZE {
                 for x in 0..CHUNK_SIZE {
-                    let t = w.get_tile_cached(cx * CHUNK_SIZE + x, cy * CHUNK_SIZE + y, 0);
+                    let t = map(w.get_tile_cached(cx * CHUNK_SIZE + x, cy * CHUNK_SIZE + y, 0));
                     h = (h ^ t as u64).wrapping_mul(0x100000001b3);
                 }
             }
@@ -155,14 +156,46 @@ fn surface_hash(w: &mut GameWorld) -> u64 {
     h
 }
 
+fn surface_hash(w: &mut GameWorld) -> u64 {
+    surface_hash_by(w, |t| t)
+}
+
 #[test]
 fn the_surface_is_generated_as_before_depth_bands() {
-    // The same hash the generator from before depth bands gives (checked on release)
+    // Re-pinned on purpose when wild crops were added (add-crops): their feature step is
+    // the only change to the surface since depth bands
     let hash = surface_hash(&mut world());
     assert_eq!(hash, SURFACE_HASH, "the surface changed: {hash:#x}");
 }
 
-const SURFACE_HASH: u64 = 0x998f_620a_e8af_b832;
+#[test]
+fn wild_crops_are_the_only_change_since_depth_bands() {
+    // With wild crops back to the grass they grow on, the surface hashes as the generator
+    // from before depth bands did (checked on release)
+    let hash = surface_hash_by(&mut world(), |t| match crate::plants::Crop::on_tile(t) {
+        Some(_) => TileKind::Grass,
+        None => t,
+    });
+    assert_eq!(hash, SURFACE_HASH_BEFORE_WILD_CROPS, "{hash:#x}");
+}
+
+const SURFACE_HASH: u64 = 0xb8e3_c5a2_7928_5378;
+const SURFACE_HASH_BEFORE_WILD_CROPS: u64 = 0x998f_620a_e8af_b832;
+
+#[test]
+fn wild_crops_grow_on_the_surface_only() {
+    let w = world();
+    let surface = w.survey(0, 512);
+    let wild: f64 = ["WheatRipe", "PotatoRipe", "CarrotRipe"]
+        .iter()
+        .map(|k| share(&surface, k))
+        .sum();
+    assert!((0.005..=0.2).contains(&wild), "wild crops {wild:.3}%");
+    for z in [1, -1, -6] {
+        let s = w.survey(z, 128);
+        assert!(s.keys().all(|k| !k.ends_with("Ripe")), "z={z}");
+    }
+}
 
 #[test]
 fn the_bunker_staircase_reaches_the_surface() {

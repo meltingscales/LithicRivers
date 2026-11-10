@@ -441,7 +441,12 @@ fn furnace_window_lists_what_the_selected_slot_takes() {
     let rows = |runner: &Runner, slot| {
         let player = runner.app.core.game.get_player_entity().unwrap();
         let world = &runner.app.core.game.world;
-        let rows = crate::app::item_filter::PlayerRows::for_furnace_slot(world, player, slot);
+        let rows = crate::app::item_filter::PlayerRows::for_furnace_slot(
+            world,
+            player,
+            lithicrivers_core::factory::FactoryKind::CrudeFurnace,
+            slot,
+        );
         let inv = world.get::<&Inventory>(player).unwrap();
         rows.slots
             .iter()

@@ -1,0 +1,17 @@
+# The fermenter in the Factory showcase's wheat farm: the harvester's chest feeds it wheat
+# through a filter extractor, and it bottles ethanol into the chest in front, setting the
+# straw aside in its byproduct slot.
+seed 12345
+size 100x30
+world factory-showcase
+key ui.MENU_PREV
+# Two minutes on: the starting wheat is harvested and the first batch ferments
+key action.PASS_TIME 9
+# South of the fermenter: interact, then north
+cheat tp 107 -2 0
+screen farm
+key action.INTERACT
+key movement.MOVE_NORTH
+expect-text "Fermenter facing west - fermenting"
+expect-text "Byproduct:"
+screen fermenter-window

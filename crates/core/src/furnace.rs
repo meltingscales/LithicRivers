@@ -1,5 +1,7 @@
-//! Smelting: the shared smelting table and the furnaces that use it. A crude furnace burns
-//! fuel to turn wood into biochar; an electric furnace draws grid power instead.
+//! Smelting and fermenting: the furnaces and the fermenter. A crude furnace burns fuel to
+//! turn wood into biochar; an electric furnace draws grid power instead. The fermenter is a
+//! powered furnace with its own table: wheat or potatoes become bottled ethanol, with straw
+//! or mash left over in its byproduct slot.
 //!
 //! A furnace has three single-stack slots. Items arriving from its back go to the input, and
 //! finished items leave through its front. From either side, items go to a crude furnace's
@@ -22,12 +24,52 @@ pub const FURNACE_SLOT_MAX: u32 = 32;
 pub const CRUDE_FURNACE_W: u64 = 90_000;
 /// Grid power an electric furnace draws while smelting, in watts.
 pub const ELECTRIC_FURNACE_W: u64 = 90_000;
+/// Grid power a fermenter draws while fermenting, in watts.
+pub const FERMENTER_W: u64 = 60_000;
 /// Progress a furnace makes in one fully powered (or fueled) factory step.
 const FULL_STEP: u64 = 1000;
 
 /// Whether a furnace kind runs on grid power, with no fuel slot.
 pub fn is_electric(kind: FactoryKind) -> bool {
-    kind == FactoryKind::ElectricFurnace
+    matches!(kind, FactoryKind::ElectricFurnace | FactoryKind::Fermenter)
+}
+
+/// Which table a furnace works from.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub enum Process {
+    #[default]
+    Smelting,
+    Fermenting,
+}
+
+impl Process {
+    pub fn for_kind(kind: FactoryKind) -> Self {
+        if kind == FactoryKind::Fermenter {
+            Process::Fermenting
+        } else {
+            Process::Smelting
+        }
+    }
+
+    pub fn recipes(self) -> &'static [SmeltingRecipe] {
+        match self {
+            Process::Smelting => SMELTING,
+            Process::Fermenting => FERMENTING,
+        }
+    }
+
+    /// The recipe for `input` in this table.
+    pub fn recipe(self, input: ItemKind) -> Option<&'static SmeltingRecipe> {
+        self.recipes().iter().find(|r| r.input == input)
+    }
+
+    /// What the window calls working: "smelting" or "fermenting".
+    pub fn verb(self) -> &'static str {
+        match self {
+            Process::Smelting => "smelting",
+            Process::Fermenting => "fermenting",
+        }
+    }
 }
 
 /// Where a furnace's energy comes from this step.
@@ -39,8 +81,8 @@ pub enum Energy {
     Grid { satisfaction_permille: u16 },
 }
 
-/// One row of the smelting table: `input_count` of `input` become `output_count` of
-/// `output` after `seconds` factory seconds of smelting.
+/// One row of a furnace table: `input_count` of `input` become `output_count` of `output`
+/// (and the byproduct, if any) after `seconds` factory seconds.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct SmeltingRecipe {
     pub input: ItemKind,
@@ -48,6 +90,7 @@ pub struct SmeltingRecipe {
     pub output: ItemKind,
     pub output_count: u32,
     pub seconds: u64,
+    pub byproduct: Option<(ItemKind, u32)>,
 }
 
 impl SmeltingRecipe {
@@ -64,6 +107,7 @@ const fn biochar(input: ItemKind, input_count: u32, seconds: u64) -> SmeltingRec
         output: ItemKind::Biochar,
         output_count: 1,
         seconds,
+        byproduct: None,
     }
 }
 
@@ -77,8 +121,29 @@ pub const SMELTING: &[SmeltingRecipe] = &[
 ];
 
 pub fn smelting_recipe(input: ItemKind) -> Option<&'static SmeltingRecipe> {
-    SMELTING.iter().find(|r| r.input == input)
+    Process::Smelting.recipe(input)
 }
+
+/// The fermenter's table: 4 wheat make 5 bottles of ethanol and 2 straw; 4 potatoes make
+/// more ethanol but leave mash instead.
+pub const FERMENTING: &[SmeltingRecipe] = &[
+    SmeltingRecipe {
+        input: ItemKind::Wheat,
+        input_count: 4,
+        output: ItemKind::Ethanol,
+        output_count: 5,
+        seconds: 8,
+        byproduct: Some((ItemKind::Straw, 2)),
+    },
+    SmeltingRecipe {
+        input: ItemKind::Potato,
+        input_count: 4,
+        output: ItemKind::Ethanol,
+        output_count: 8,
+        seconds: 10,
+        byproduct: Some((ItemKind::Mash, 2)),
+    },
+];
 
 /// Which furnace slot a stack is in.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -86,36 +151,42 @@ pub enum Slot {
     Fuel,
     Input,
     Output,
+    /// What a fermenter leaves over besides its output
+    Byproduct,
 }
 
 impl Slot {
     pub const ALL: [Slot; 3] = [Slot::Fuel, Slot::Input, Slot::Output];
 
     /// The slots a furnace of this kind has, in window order: an electric furnace has no
-    /// fuel slot.
+    /// fuel slot, and a fermenter has a byproduct slot instead.
     pub fn for_kind(kind: FactoryKind) -> &'static [Slot] {
-        if is_electric(kind) {
+        if kind == FactoryKind::Fermenter {
+            &[Slot::Input, Slot::Output, Slot::Byproduct]
+        } else if is_electric(kind) {
             &[Slot::Input, Slot::Output]
         } else {
             &Slot::ALL
         }
     }
 
-    /// Whether the player can ever put `item` in this slot (however full it is).
-    pub fn takes(self, item: ItemKind) -> bool {
+    /// Whether the player can ever put `item` in this slot of a furnace of this kind
+    /// (however full it is).
+    pub fn takes(self, kind: FactoryKind, item: ItemKind) -> bool {
         match self {
             Slot::Fuel => fuel_energy(item).is_some(),
-            Slot::Input => smelting_recipe(item).is_some(),
-            Slot::Output => false,
+            Slot::Input => Process::for_kind(kind).recipe(item).is_some(),
+            Slot::Output | Slot::Byproduct => false,
         }
     }
 
     /// What the slot takes, for the filtered item list.
-    pub fn takes_label(self) -> &'static str {
+    pub fn takes_label(self, kind: FactoryKind) -> &'static str {
         match self {
             Slot::Fuel => "fuel",
+            Slot::Input if kind == FactoryKind::Fermenter => "fermentables",
             Slot::Input => "smeltables",
-            Slot::Output => "nothing",
+            Slot::Output | Slot::Byproduct => "nothing",
         }
     }
 
@@ -124,6 +195,7 @@ impl Slot {
             Slot::Fuel => "Fuel",
             Slot::Input => "Input",
             Slot::Output => "Output",
+            Slot::Byproduct => "Byproduct",
         }
     }
 }
@@ -133,6 +205,7 @@ impl Slot {
 pub enum Refusal {
     NotFuel,
     NotSmeltable,
+    NotFermentable,
     /// Only the furnace puts items in its output
     Output,
     /// The slot holds another item or is full
@@ -145,6 +218,7 @@ impl Refusal {
         match self {
             Refusal::NotFuel => format!("{name} isn't fuel"),
             Refusal::NotSmeltable => format!("{name} can't be smelted"),
+            Refusal::NotFermentable => format!("{name} can't be fermented"),
             Refusal::Output => "Only finished items go in the output".to_string(),
             Refusal::Full => "That slot is full".to_string(),
         }
@@ -157,6 +231,12 @@ pub struct Furnace {
     pub fuel: Option<ItemStack>,
     pub input: Option<ItemStack>,
     pub output: Option<ItemStack>,
+    /// A fermenter's leftovers (straw or mash)
+    #[serde(default)]
+    pub byproduct: Option<ItemStack>,
+    /// Which table it works from
+    #[serde(default)]
+    pub process: Process,
     /// Progress of the current smelt, in thousandths of a fully powered factory step
     pub progress: u64,
     /// Energy left in the fuel item being burned, in joules
@@ -190,8 +270,16 @@ fn remove(slot: &mut Option<ItemStack>, qty: u32) {
 }
 
 impl Furnace {
-    pub fn slots(&self) -> [Option<ItemStack>; 3] {
-        [self.fuel, self.input, self.output]
+    /// A furnace working from `process`'s table.
+    pub fn new(process: Process) -> Self {
+        Self {
+            process,
+            ..Default::default()
+        }
+    }
+
+    pub fn slots(&self) -> [Option<ItemStack>; 4] {
+        [self.fuel, self.input, self.output, self.byproduct]
     }
 
     pub fn slot(&self, slot: Slot) -> Option<ItemStack> {
@@ -199,6 +287,7 @@ impl Furnace {
             Slot::Fuel => self.fuel,
             Slot::Input => self.input,
             Slot::Output => self.output,
+            Slot::Byproduct => self.byproduct,
         }
     }
 
@@ -207,6 +296,7 @@ impl Furnace {
             Slot::Fuel => &mut self.fuel,
             Slot::Input => &mut self.input,
             Slot::Output => &mut self.output,
+            Slot::Byproduct => &mut self.byproduct,
         }
     }
 
@@ -214,8 +304,13 @@ impl Furnace {
     pub fn check(&self, slot: Slot, item: ItemKind) -> Result<(), Refusal> {
         match slot {
             Slot::Fuel if fuel_energy(item).is_none() => return Err(Refusal::NotFuel),
-            Slot::Input if smelting_recipe(item).is_none() => return Err(Refusal::NotSmeltable),
-            Slot::Output => return Err(Refusal::Output),
+            Slot::Input if self.process.recipe(item).is_none() => {
+                return Err(match self.process {
+                    Process::Smelting => Refusal::NotSmeltable,
+                    Process::Fermenting => Refusal::NotFermentable,
+                })
+            }
+            Slot::Output | Slot::Byproduct => return Err(Refusal::Output),
             _ => {}
         }
         if fits(&self.slot(slot), item, 1) {
@@ -262,12 +357,32 @@ impl Furnace {
         }
     }
 
-    /// The recipe it can smelt now: the input holds a full batch and the output has room.
+    /// The recipe it can work now: the input holds a full batch and the output (and
+    /// byproduct slot) has room.
     pub fn ready_recipe(&self) -> Option<&'static SmeltingRecipe> {
         let input = self.input?;
-        let recipe = smelting_recipe(input.kind)?;
-        (input.qty >= recipe.input_count && fits(&self.output, recipe.output, recipe.output_count))
+        let recipe = self.process.recipe(input.kind)?;
+        let byproduct_fits = recipe
+            .byproduct
+            .is_none_or(|(item, qty)| fits(&self.byproduct, item, qty));
+        (input.qty >= recipe.input_count
+            && fits(&self.output, recipe.output, recipe.output_count)
+            && byproduct_fits)
             .then_some(recipe)
+    }
+
+    /// The finished item it would hand out next: the output first, then the byproduct.
+    pub fn next_out(&self) -> Option<ItemKind> {
+        self.output.or(self.byproduct).map(|s| s.kind)
+    }
+
+    /// Take out the item `next_out` names.
+    pub fn take_out(&mut self) -> Option<ItemKind> {
+        if self.output.is_some() {
+            self.take(Slot::Output)
+        } else {
+            self.take(Slot::Byproduct)
+        }
     }
 
     /// How far the current smelt is, in percent.
@@ -319,6 +434,9 @@ impl Furnace {
             self.progress = 0;
             remove(&mut self.input, recipe.input_count);
             add(&mut self.output, recipe.output, recipe.output_count);
+            if let Some((item, qty)) = recipe.byproduct {
+                add(&mut self.byproduct, item, qty);
+            }
         }
     }
 }
@@ -415,10 +533,10 @@ pub fn accepts(
 
 /// The furnace sprite for its kind, facing and whether it is lit.
 pub fn sprite(kind: FactoryKind, facing: Facing, lit: bool) -> SpriteRef {
-    let base = if is_electric(kind) {
-        "electric_furnace"
-    } else {
-        "crude_furnace"
+    let base = match kind {
+        FactoryKind::Fermenter => "fermenter",
+        FactoryKind::ElectricFurnace => "electric_furnace",
+        _ => "crude_furnace",
     };
     let state = if lit { "lit" } else { "unlit" };
     SpriteRef::new("factory", &format!("{base}_{state}_{}", facing.name()))
@@ -458,7 +576,7 @@ pub fn step_furnaces(world: &mut World, res: &mut Resources) {
             let mut furnace = world.get::<&mut Furnace>(entity).expect("furnace");
             let was_lit = furnace.lit;
             furnace.step(energy);
-            (was_lit, furnace.lit, furnace.output.map(|s| s.kind))
+            (was_lit, furnace.lit, furnace.next_out())
         };
         if lit != was_lit {
             let _ = world.insert_one(entity, sprite(block.kind, facing, lit));
@@ -477,7 +595,7 @@ pub fn step_furnaces(world: &mut World, res: &mut Resources) {
         };
         if crate::factory::insert_from(world, target, item, Some(facing)) {
             let mut furnace = world.get::<&mut Furnace>(entity).expect("furnace");
-            remove(&mut furnace.output, 1);
+            furnace.take_out();
         }
     }
 }
@@ -741,6 +859,81 @@ mod tests {
             Err(TransferError::Empty)
         );
         assert_eq!(qty(furnace(&g, f).input), 3);
+    }
+
+    // --- fermenter ----------------------------------------------------------------------
+
+    #[test]
+    fn fermenting_ratios_and_new_fuels() {
+        let wheat = Process::Fermenting.recipe(ItemKind::Wheat).unwrap();
+        assert_eq!((wheat.input_count, wheat.output_count), (4, 5));
+        assert_eq!(wheat.byproduct, Some((ItemKind::Straw, 2)));
+        let potato = Process::Fermenting.recipe(ItemKind::Potato).unwrap();
+        assert_eq!((potato.input_count, potato.output_count), (4, 8));
+        assert_eq!(potato.byproduct, Some((ItemKind::Mash, 2)));
+        assert!(
+            potato.output_count > wheat.output_count,
+            "potatoes give more ethanol"
+        );
+        assert_eq!(Process::Fermenting.recipe(ItemKind::Log), None);
+        assert_eq!(
+            smelting_recipe(ItemKind::Wheat),
+            None,
+            "furnaces don't ferment"
+        );
+        assert_eq!(fuel_energy(ItemKind::Straw), Some(300_000));
+        assert_eq!(fuel_energy(ItemKind::Ethanol), Some(1_000_000));
+        assert_eq!(fuel_energy(ItemKind::Mash), None);
+    }
+
+    #[test]
+    fn a_powered_fermenter_bottles_ethanol_and_hands_out_the_straw() {
+        let mut g = game();
+        grid(&mut g, 8);
+        let f = put(&mut g, FactoryKind::Fermenter, at(2, 0), Facing::East);
+        let out = put(&mut g, FactoryKind::Chest, at(3, 0), Facing::North);
+        assert_eq!(
+            Slot::for_kind(FactoryKind::Fermenter),
+            [Slot::Input, Slot::Output, Slot::Byproduct]
+        );
+        assert_eq!(
+            g.world
+                .get::<&mut Furnace>(f)
+                .unwrap()
+                .put(Slot::Input, ItemKind::Log),
+            Err(Refusal::NotFermentable)
+        );
+        load(&mut g, f, Slot::Input, ItemKind::Wheat, 4);
+        seconds(&mut g, 8);
+        // Every bottle and both straws leave through the front, ethanol first
+        seconds(&mut g, 2);
+        let chest: Vec<(ItemKind, u32)> = g
+            .world
+            .get::<&Inventory>(out)
+            .unwrap()
+            .slots
+            .iter()
+            .map(|s| (s.kind, s.qty))
+            .collect();
+        assert_eq!(chest, [(ItemKind::Ethanol, 5), (ItemKind::Straw, 2)]);
+        assert_eq!(furnace(&g, f).next_out(), None);
+    }
+
+    #[test]
+    fn a_fermenter_waits_for_room_for_its_byproduct() {
+        let mut g = game();
+        grid(&mut g, 8);
+        let f = put(&mut g, FactoryKind::Fermenter, at(2, 0), Facing::East);
+        g.world.get::<&mut Furnace>(f).unwrap().byproduct =
+            Some(ItemStack::new(ItemKind::Mash, FURNACE_SLOT_MAX));
+        load(&mut g, f, Slot::Input, ItemKind::Wheat, 4);
+        assert!(
+            furnace(&g, f).ready_recipe().is_none(),
+            "mash fills the slot"
+        );
+        seconds(&mut g, 10);
+        assert_eq!(qty(furnace(&g, f).input), 4);
+        assert!(!consumer(&g, f).active, "no demand while blocked");
     }
 
     // --- electric furnace ---------------------------------------------------------------

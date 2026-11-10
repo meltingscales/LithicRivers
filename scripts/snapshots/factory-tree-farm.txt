@@ -74,7 +74,7 @@ key action.INTERACT
 expect-text "Auto-Planter"
 # Your Items shows only acorns
 key ui.MENU_ACTIVATE 16
-expect-text "Acorns (16/16)"
+expect-text "Seeds (16/16)"
 key ui.CLOSE_HELP_MENU
 # Ten seconds in, the planter is working
 key action.PASS_TIME

@@ -1,0 +1,69 @@
+---
+source: crates/client/src/snapshot_tests.rs
+expression: "String::from_utf8(out).unwrap()"
+input_file: scripts/snapshots/fermenter-window.txt
+---
+=== screen farm ===
+                                            LithicRivers
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌MODES ☼ 10:24─────────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  ------ - - -- - FOG │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Inventory─────────────┐
+╫╫╫vvv¤vvvGG+ΞvvvvΞvvvvvvvvvG+βvvvvvvG,,,,,vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Nail x10              │
++G╫vvvvvvvvvv╲─vvvvvvvvvvvvvvEvvvvvvvG+,,vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Acorn x1              │
+vv╫vvvvvvvΨvvvv╲─vΨvvvvvvvvvvvvvvvvvvGvvpvv,vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Log x3                │
+vv╫vvvvvvvvvvvvvЖ+ŧvvvvvvvvvvvvvvvvvvvvv↑vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
+vv╫vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvCB←CHvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Help (h) ! Damaged────┐
+vv╫vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv@vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Move:                 │
+╫╫╫vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,vv,,vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  7 8 9               │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  4 5 6               │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  1 2 3               │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│q: mine               │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│v: look               │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│`: build mode         │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│f: open chest         │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│f: set filter         │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
+┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
+│[5001] Time passes...                                                                             │
+│[6001] Time passes...                                                                             │
+│[7001] Time passes...                                                                             │
+│[8001] Time passes...                                                                             │
+│[9001] Time passes...                                                                             │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===
+=== screen fermenter-window ===
+                                            LithicRivers
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌MODES ☼ 10:24─────────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  ------ - - -- - FOG │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Inventory─────────────┐
+╫╫╫vvv¤vvvGG+ΞvvvvΞvvvvvvvvvG+βvvvvvvG,,,,,vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Nail x10              │
++G╫vvvvvvvvvv╲─┌────────────── Fermenter facing west - fermenting 50% ──────────────┐              │
+vv╫vvvvvvvΨvvvv│┌ Slots - power 100% ────────────┐┌ Showing fermentables: 0 of 7 ──┐│              │
+vv╫vvvvvvvvvvvv││Input:     4 x Wheat            ││                                ││──────────────┘
+vv╫vvvvvvvvvvvv││Output:    (empty)              ││                                ││ ! Damaged────┐
+vv╫vvvvvvvvvvvv││Byproduct: (empty)              ││                                ││              │
+╫╫╫vvvvvvvvvvvv││                                ││                                ││              │
+vvvvvvvvvvvvvvv││                                ││                                ││              │
+vvvvvvvvvvvvvvv││                                ││                                ││              │
+vvvvvvvvvvvvvvv││                                ││                                ││              │
+vvvvvvvvvvvvvvv││                                ││                                ││              │
+vvvvvvvvvvvvvvv││                                ││                                ││ mode         │
+vvvvvvvvvvvvvvv││                                ││                                ││chest         │
+vvvvvvvvvvvvvvv││                                ││                                ││ilter         │
+vvvvvvvvvvvvvvv││                                ││                                ││──────────────┘
+┌Messages──────│└────────────────────────────────┘└────────────────────────────────┘│──────────────┐
+│[7001] Time pa│    4/6: panel  8/2: select  ENTER: move one item  ESCAPE: close    │              │
+│[8001] Time pa│                                                                    │              │
+│[9001] Time pa└────────────────────────────────────────────────────────────────────┘              │
+│[9001] Choose interaction:                                                                        │
+│[9001] Opened fermenter                                                                           │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===

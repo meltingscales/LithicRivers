@@ -4,7 +4,7 @@
 
 use hecs::{Entity, World};
 use lithicrivers_core::components::{Inventory, ItemKind};
-use lithicrivers_core::factory::{self, FactoryBlock};
+use lithicrivers_core::factory::{self, FactoryBlock, FactoryKind};
 
 pub struct PlayerRows {
     /// Inventory stack indices shown, in inventory order
@@ -50,10 +50,11 @@ impl PlayerRows {
     pub fn for_furnace_slot(
         world: &World,
         player: Entity,
+        kind: FactoryKind,
         slot: lithicrivers_core::furnace::Slot,
     ) -> Self {
-        Self::new(world, player, Some(slot.takes_label()), |item| {
-            slot.takes(item)
+        Self::new(world, player, Some(slot.takes_label(kind)), |item| {
+            slot.takes(kind, item)
         })
     }
 

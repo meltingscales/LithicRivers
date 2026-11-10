@@ -250,6 +250,14 @@ pub enum ItemKind {
     Rtg,
     ItemCharger,
     Riverglass,
+    WheatSeeds,
+    Wheat,
+    Potato,
+    Carrot,
+    Straw,
+    Mash,
+    Ethanol,
+    Fermenter,
 }
 
 pub fn itemkind_name(kind: ItemKind) -> &'static str {
@@ -326,6 +334,14 @@ pub fn itemkind_name(kind: ItemKind) -> &'static str {
         ItemKind::Rtg => "RTG",
         ItemKind::ItemCharger => "Item Charger",
         ItemKind::Riverglass => "Riverglass",
+        ItemKind::WheatSeeds => "Wheat Seeds",
+        ItemKind::Wheat => "Wheat",
+        ItemKind::Potato => "Potato",
+        ItemKind::Carrot => "Carrot",
+        ItemKind::Straw => "Straw",
+        ItemKind::Mash => "Mash",
+        ItemKind::Ethanol => "Bottled Ethanol",
+        ItemKind::Fermenter => "Fermenter",
     }
 }
 
@@ -403,6 +419,14 @@ pub fn itemkind_sprite_name(kind: ItemKind) -> &'static str {
         ItemKind::Rtg => "rtg",
         ItemKind::ItemCharger => "item_charger",
         ItemKind::Riverglass => "riverglass",
+        ItemKind::WheatSeeds => "wheat_seeds",
+        ItemKind::Wheat => "wheat",
+        ItemKind::Potato => "potato",
+        ItemKind::Carrot => "carrot",
+        ItemKind::Straw => "straw",
+        ItemKind::Mash => "mash",
+        ItemKind::Ethanol => "ethanol",
+        ItemKind::Fermenter => "fermenter",
     }
 }
 
@@ -480,6 +504,14 @@ pub fn parse_itemkind_from_sprite_name(sprite_name: &str) -> Option<ItemKind> {
         "rtg" => Some(ItemKind::Rtg),
         "item_charger" => Some(ItemKind::ItemCharger),
         "riverglass" => Some(ItemKind::Riverglass),
+        "wheat_seeds" => Some(ItemKind::WheatSeeds),
+        "wheat" => Some(ItemKind::Wheat),
+        "potato" => Some(ItemKind::Potato),
+        "carrot" => Some(ItemKind::Carrot),
+        "straw" => Some(ItemKind::Straw),
+        "mash" => Some(ItemKind::Mash),
+        "ethanol" => Some(ItemKind::Ethanol),
+        "fermenter" => Some(ItemKind::Fermenter),
         _ => None,
     }
 }

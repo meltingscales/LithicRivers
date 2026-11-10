@@ -227,7 +227,7 @@ fn render_corpse_loot_modal(
             if kind == FactoryKind::AutoPlanter {
                 (
                     format!(" Auto-Planter - {status} "),
-                    format!(" Acorns ({held}/{MACHINE_CAPACITY}) "),
+                    format!(" Seeds ({held}/{MACHINE_CAPACITY}) "),
                 )
             } else {
                 (

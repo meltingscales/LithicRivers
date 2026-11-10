@@ -44,8 +44,8 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌I
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Nail x10              │
 vvvvvvvvvvvvvvv┌─────────── Electric Furnace facing east - smelting 80% ────────────┐              │
 vvvvvvvvvvvvvvv│┌ Slots - power 100% ────────────┐┌ Showing smeltables: 3 of 7 ────┐│              │
-vvCvvvvvvvvvvvv││Input: 4 x Log                  ││ 1 x Acorn                      ││──────────────┘
-vv^vvvvv>>F>Cvv││Output:(empty)                  ││ 3 x Log                        ││ ! Damaged────┐
+vvCvvvvvvvvvvvv││Input:  4 x Log                 ││ 1 x Acorn                      ││──────────────┘
+vv^vvvvv>>F>Cvv││Output: (empty)                 ││ 3 x Log                        ││ ! Damaged────┐
 >>╬>Cvvvvvvvvvv││                                ││ 2 x Stick                      ││              │
 vvvvvvvvvvvvvvv││                                ││                                ││              │
 vvCvvvvvvvvvvvv││                                ││                                ││              │

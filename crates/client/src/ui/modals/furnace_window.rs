@@ -44,7 +44,9 @@ pub(crate) fn render_furnace_window(f: &mut Frame, app: &App) {
         .map_or("north", |b| b.facing.name());
     let electric = furnace::is_electric(window.kind);
     let status = match furnace.ready_recipe() {
-        Some(_) if furnace.lit => format!("smelting {}%", furnace.progress_percent()),
+        Some(_) if furnace.lit => {
+            format!("{} {}%", furnace.process.verb(), furnace.progress_percent())
+        }
         Some(_) if electric => "no power".to_string(),
         Some(_) => "out of fuel".to_string(),
         None => "idle".to_string(),
@@ -52,8 +54,9 @@ pub(crate) fn render_furnace_window(f: &mut Frame, app: &App) {
     let slots = Slot::for_kind(window.kind);
     // Only what the selected slot takes
     let player = app.core.game.get_player_entity();
-    let rows = player
-        .map(|p| crate::app::item_filter::PlayerRows::for_furnace_slot(world, p, window.slot));
+    let rows = player.map(|p| {
+        crate::app::item_filter::PlayerRows::for_furnace_slot(world, p, window.kind, window.slot)
+    });
     let stacks = player
         .and_then(|p| world.get::<&Inventory>(p).ok().map(|inv| inv.slots.clone()))
         .unwrap_or_default();
@@ -65,13 +68,15 @@ pub(crate) fn render_furnace_window(f: &mut Frame, app: &App) {
         .map(|s| format!("{:>2} x {}", s.qty, itemkind_name(s.kind)))
         .collect();
     let player_title = rows.map_or_else(|| " Your Items ".to_string(), |r| r.title());
+    // Labels padded to the longest one with a space after its colon
+    let label_width = slots.iter().map(|s| s.name().len() + 2).max().unwrap_or(0);
     let slot_rows: Vec<String> = slots
         .iter()
         .map(|&slot| {
             let contents = furnace.slot(slot).map_or("(empty)".to_string(), |s| {
                 format!("{} x {}", s.qty, itemkind_name(s.kind))
             });
-            format!("{:<7}{contents}", format!("{}:", slot.name()))
+            format!("{:<label_width$}{contents}", format!("{}:", slot.name()))
         })
         .collect();
 

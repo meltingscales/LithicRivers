@@ -396,7 +396,8 @@ pub(crate) fn place_from_hotbar(app: &mut App, x: i64, y: i64, z: i64) {
         return;
     }
     if lithicrivers_core::plants::is_seed(item) {
-        if let Err(e) = lithicrivers_core::plants::plant(&mut game.world, &mut game.res, pos) {
+        if let Err(e) = lithicrivers_core::plants::plant(&mut game.world, &mut game.res, pos, item)
+        {
             game.res.log(e.to_string());
             return;
         }

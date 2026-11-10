@@ -98,6 +98,12 @@ pub const EXAMPLES: &[Example] = &[
         has_input: true,
         build: battery_bank,
     },
+    Example {
+        name: "Wheat farm: harvested wheat ferments into ethanol, and the seeds are replanted",
+        size: (WHEAT_FARM_LEAD + 7, 7),
+        has_input: true,
+        build: wheat_farm,
+    },
 ];
 
 /// The top-left corner of the first example; the rest follow eastward.
@@ -549,6 +555,62 @@ fn tree_farm(game: &mut Game, o: Position) {
     }
 }
 
+/// A self-replanting wheat field that feeds a fermenter, like the tree farm: the harvester
+/// drops wheat and seeds in the chest, one filter extractor sends seeds back to the planter
+/// and another sends wheat on to the fermenter, which bottles ethanol into a chest.
+///
+/// ```text
+///   G . . . . . .      G generator, + pole
+///   G + . . . . .      P planter, H harvester
+///   G . . P . . w      e filter extractor, C chest
+///   . . . e . . .      F fermenter (facing west), c its output chest
+///   c F e C H . .      w ripe wheat to start with
+///   . . . . . . .
+///   . . w . . w w
+/// ```
+fn wheat_farm(game: &mut Game, o: Position) {
+    let o = at(o, WHEAT_FARM_LEAD, 0);
+    // Three generators (270 kW) of the 300 kW the planter, harvester and fermenter draw
+    for dy in [0, 1, 2] {
+        let generator = place(
+            game,
+            FactoryKind::BurnerGenerator,
+            at(o, 0, dy),
+            Facing::North,
+        );
+        fill(game, generator, &[(ItemKind::Log, 5)]);
+    }
+    place(game, FactoryKind::PowerPole, at(o, 1, 1), Facing::North);
+    let planter = place(game, FactoryKind::AutoPlanter, at(o, 3, 2), Facing::North);
+    fill(game, planter, &[(ItemKind::WheatSeeds, 4)]);
+    let filtered = |game: &mut Game, pos, facing, item| {
+        let extractor = place(game, FactoryKind::FilterExtractor, pos, facing);
+        if let Ok(mut ex) = game
+            .world
+            .get::<&mut crate::logistics::Extractor>(extractor)
+        {
+            ex.filter = Some(item);
+        }
+    };
+    filtered(game, at(o, 3, 3), Facing::North, ItemKind::WheatSeeds);
+    filtered(game, at(o, 2, 4), Facing::West, ItemKind::Wheat);
+    place(game, FactoryKind::Chest, at(o, 3, 4), Facing::North);
+    place(game, FactoryKind::AutoHarvester, at(o, 4, 4), Facing::West);
+    place(game, FactoryKind::Fermenter, at(o, 1, 4), Facing::West);
+    place(game, FactoryKind::Chest, at(o, 0, 4), Facing::North);
+    for (dx, dy) in [(6, 2), (2, 6), (5, 6), (6, 6)] {
+        let p = at(o, dx, dy);
+        game.res
+            .world_state
+            .world
+            .set_tile_cached(p.x, p.y, p.z, TileKind::WheatRipe);
+    }
+}
+
+/// Empty tiles before the wheat farm's blocks, so its pole stays out of wire reach of the
+/// battery bank's.
+const WHEAT_FARM_LEAD: i64 = 3;
+
 /// Everything inside an example's area that time can change: tiles, block contents and
 /// items lying there.
 pub fn fingerprint(game: &mut Game, example: &Example, origin: Position) -> String {
@@ -729,6 +791,64 @@ mod tests {
             .map(|s| s.qty)
             .sum();
         assert_eq!(logs, 4);
+    }
+
+    #[test]
+    fn the_wheat_farm_ferments_its_harvest_and_replants() {
+        let mut game = showcase();
+        let (_, o) = layout()
+            .into_iter()
+            .find(|(e, _)| e.name.starts_with("Wheat farm"))
+            .unwrap();
+        let output = game.res.factory_index[&at(o, WHEAT_FARM_LEAD, 4)];
+        game.res.player_state.intent = crate::intent::PlayerIntent::movement(
+            0,
+            0,
+            0,
+            3 * 60 * crate::factory::TICKS_PER_SECOND,
+        );
+        game.tick();
+        let held: Vec<ItemKind> = game
+            .world
+            .get::<&Inventory>(output)
+            .unwrap()
+            .slots
+            .iter()
+            .map(|s| s.kind)
+            .collect();
+        assert!(held.contains(&ItemKind::Ethanol), "{held:?}");
+        assert!(held.contains(&ItemKind::Straw), "{held:?}");
+        let crops = game
+            .world
+            .query::<&crate::plants::CropGrowth>()
+            .iter()
+            .count();
+        assert!(crops > 0, "seeds replanted");
+    }
+
+    #[test]
+    fn examples_keep_their_power_networks_apart() {
+        let mut game = showcase();
+        game.res.player_state.intent =
+            crate::intent::PlayerIntent::movement(0, 0, 0, crate::factory::FACTORY_SECOND_TICKS);
+        game.tick();
+        assert!(!game.res.power.networks.is_empty());
+        let example_of = |p: Position| {
+            layout()
+                .into_iter()
+                .position(|(e, o)| {
+                    (o.x..o.x + e.size.0).contains(&p.x) && (o.y..o.y + e.size.1).contains(&p.y)
+                })
+                .unwrap_or(usize::MAX)
+        };
+        for network in &game.res.power.networks {
+            let examples: BTreeSet<usize> = network
+                .poles
+                .iter()
+                .map(|&e| example_of(*game.world.get::<&Position>(e).unwrap()))
+                .collect();
+            assert_eq!(examples.len(), 1, "network {:?} spans examples", network.id);
+        }
     }
 
     #[test]

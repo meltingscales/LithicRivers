@@ -96,6 +96,15 @@ define_tiles! {
     Lava, "lava", "lava", false,
     LavaCrust, "lava_crust", "lava crust", true,
     Riverglass, "riverglass", "riverglass", false,
+    WheatSeedling, "wheat_seedling", "wheat seedling", true,
+    WheatGrowing, "wheat_growing", "growing wheat", true,
+    WheatRipe, "wheat_ripe", "ripe wheat", true,
+    PotatoSeedling, "potato_seedling", "potato seedling", true,
+    PotatoGrowing, "potato_growing", "growing potato", true,
+    PotatoRipe, "potato_ripe", "ripe potato", true,
+    CarrotSeedling, "carrot_seedling", "carrot seedling", true,
+    CarrotGrowing, "carrot_growing", "growing carrot", true,
+    CarrotRipe, "carrot_ripe", "ripe carrot", true,
 }
 
 impl TileKind {
@@ -110,6 +119,9 @@ impl TileKind {
             ItemKind::Stairs => Some(TileKind::Stairs),
             // Planted rather than placed; see `plants::plant`
             ItemKind::Acorn => Some(TileKind::Sapling),
+            ItemKind::WheatSeeds => Some(TileKind::WheatSeedling),
+            ItemKind::Potato => Some(TileKind::PotatoSeedling),
+            ItemKind::Carrot => Some(TileKind::CarrotSeedling),
             _ => None,
         }
     }

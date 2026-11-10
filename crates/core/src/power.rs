@@ -32,6 +32,8 @@ pub fn fuel_energy(item: ItemKind) -> Option<u64> {
         ItemKind::WoodenPlank => Some(500_000),
         ItemKind::Stick => Some(250_000),
         ItemKind::WoodenShavings => Some(100_000),
+        ItemKind::Ethanol => Some(1_000_000),
+        ItemKind::Straw => Some(300_000),
         _ => None,
     }
 }
@@ -405,6 +407,7 @@ pub fn is_grid_block(kind: FactoryKind) -> bool {
             | FactoryKind::AutoPlanter
             | FactoryKind::AutoHarvester
             | FactoryKind::ElectricFurnace
+            | FactoryKind::Fermenter
             | FactoryKind::StandardVat
             | FactoryKind::AdvancedVat
             | FactoryKind::Spawner

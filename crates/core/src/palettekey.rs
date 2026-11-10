@@ -60,4 +60,13 @@ pub enum PaletteKey {
     Sapling,
     LavaCrust,
     Riverglass,
+    WheatSeedling,
+    WheatGrowing,
+    WheatRipe,
+    PotatoSeedling,
+    PotatoGrowing,
+    PotatoRipe,
+    CarrotSeedling,
+    CarrotGrowing,
+    CarrotRipe,
 }

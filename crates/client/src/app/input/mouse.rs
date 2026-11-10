@@ -524,7 +524,7 @@ fn selected_kind(app: &App) -> Option<ItemKind> {
     };
     if let Some(window) = app.panels.furnace_window {
         return if window.player_focus {
-            let rows = PlayerRows::for_furnace_slot(world, player, window.slot);
+            let rows = PlayerRows::for_furnace_slot(world, player, window.kind, window.slot);
             rows.slot(window.player_item)
                 .and_then(|slot| stack_kind(player, slot))
         } else {
@@ -1064,7 +1064,12 @@ pub(crate) mod tests {
         let logs = player_count(&runner, ItemKind::Log);
         let game = &runner.app.core.game;
         let player = game.get_player_entity().unwrap();
-        let rows = PlayerRows::for_furnace_slot(&game.world, player, Slot::Fuel);
+        let rows = PlayerRows::for_furnace_slot(
+            &game.world,
+            player,
+            lithicrivers_core::factory::FactoryKind::CrudeFurnace,
+            Slot::Fuel,
+        );
         let row = rows
             .slots
             .iter()
