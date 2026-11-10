@@ -53,6 +53,7 @@ mod audio;
 mod rendering_helpers;
 mod sprite_constants;
 mod sprite_loader;
+mod steam;
 pub(crate) use crate::app::client_app::{App, MenuTab, SplashState};
 pub(crate) use crate::ui::layout::ui;
 use crate::{
@@ -75,6 +76,8 @@ pub fn run_desktop() -> Result<(), Box<dyn Error>> {
     };
 
     let mut app = App::new_with_seed(seed_val);
+    // Before the window and its graphics device exist, so the Steam overlay can hook them
+    app.steam = steam::Steam::connect();
 
     // The game's own window, unless the player asked for the terminal
     if !terminal_mode {
@@ -326,6 +329,8 @@ fn mouse_input(me: &crossterm::event::MouseEvent) -> Option<app::input::mouse::M
 /// Advance the client by one frame: combat auto-ticks and splash/UI timers.
 /// Shared by the interactive loop and headless runs; reads time only from `app.clock`.
 fn step(app: &mut App) {
+    app.steam.run_callbacks();
+    app.check_achievements();
     app.update_demo();
     app.update_flyover();
     // Auto-advance ticks when combat is active (one tick per COMBAT_MS_PER_TICK)

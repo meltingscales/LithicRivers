@@ -2,22 +2,22 @@
 
 ## 1. Dependency and build
 
-- [ ] 1.1 Add `steamworks` (current release) as an optional dependency of `lithicrivers-client` behind a `steam` feature; verify `cargo test --workspace` still builds without it and `cargo build -p lithicrivers-client --release --features steam` builds on Linux
-- [ ] 1.2 Add a client `build.rs` that, only when `CARGO_FEATURE_STEAM` is set, gives the `lithicrivers-client` binary an rpath to its own folder (`$ORIGIN` on Linux, `@executable_path` on macOS); verify with `readelf -d target/release/lithicrivers-client | grep -i runpath` after a `--features steam` build
-- [ ] 1.3 Find where the `steamworks-sys` build leaves the Steam API library for each platform, and copy it into `artifacts/` in `scripts/stage-artifacts-release.sh`, `scripts/stage-artifacts-release.ps1` and the macOS step of `.github/workflows/release.yml`; verify `just stage-artifacts-release-linux` puts `libsteam_api.so` beside `lithicrivers-client` and `ldd artifacts/lithicrivers-client` resolves it
-- [ ] 1.4 Enable `--features steam` in the `build-release-*` recipes (and the macOS release build in CI) and add a `--features steam` pass to `just code-clippy` on desktop; verify `just code-clippy` passes
+- [x] 1.1 Add `steamworks` (current release) as an optional dependency of `lithicrivers-client` behind a `steam` feature; verify `cargo test --workspace` still builds without it and `cargo build -p lithicrivers-client --release --features steam` builds on Linux
+- [x] 1.2 Add a client `build.rs` that, only when `CARGO_FEATURE_STEAM` is set, gives the `lithicrivers-client` binary an rpath to its own folder (`$ORIGIN` on Linux, `@executable_path` on macOS); verify with `readelf -d target/release/lithicrivers-client | grep -i runpath` after a `--features steam` build
+- [x] 1.3 Find where the `steamworks-sys` build leaves the Steam API library for each platform, and copy it into `artifacts/` in `scripts/stage-artifacts-release.sh`, `scripts/stage-artifacts-release.ps1` and the macOS step of `.github/workflows/release.yml`; verify `just stage-artifacts-release-linux` puts `libsteam_api.so` beside `lithicrivers-client` and `ldd artifacts/lithicrivers-client` resolves it
+- [x] 1.4 Enable `--features steam` in the `build-release-*` recipes (and the macOS release build in CI) and add a `--features steam` pass to `just code-clippy` on desktop; verify `just code-clippy` passes
 
 ## 2. Connecting to Steam
 
-- [ ] 2.1 Add `crates/client/src/steam.rs`: a `Steam` type wrapping `Option<steamworks::Client>` with the feature and an empty stub without it, with `connect()`, `run_callbacks()`, `is_connected()`; `connect()` uses `Client::init_app(3940720)` and logs "Steam unavailable" on error. Add `app.steam` (disconnected by default); verify `cargo test --workspace` and `just code-clippy`
-- [ ] 2.2 In `run_desktop`, connect after headless flags are handled and before the window (and its wgpu device) or terminal UI starts; call `app.steam.run_callbacks()` from `step`; verify `just client-blind scripts/agent/smoke.txt` output is unchanged and the existing snapshot tests pass
+- [x] 2.1 Add `crates/client/src/steam.rs`: a `Steam` type wrapping `Option<steamworks::Client>` with the feature and an empty stub without it, with `connect()` and `run_callbacks()` (no `is_connected()`: nothing needs it yet); `connect()` uses `Client::init_app(3940720)` and logs "Steam unavailable" on error. Add `app.steam` (disconnected by default); verify `cargo test --workspace` and `just code-clippy`
+- [x] 2.2 In `run_desktop`, connect after headless flags are handled and before the window (and its wgpu device) or terminal UI starts; call `app.steam.run_callbacks()` from `step`; verify `just client-blind scripts/agent/smoke.txt` output is unchanged and the existing snapshot tests pass
 - [ ] 2.3 Verify a `--features steam` release build with Steam closed reaches the title screen and logs "Steam unavailable" (user check: launch it with Steam closed)
 
 ## 3. Placeholder achievement
 
-- [ ] 3.1 Add the `Achievement` enum (`FirstDeath` → `ACH_FIRST_DEATH`) and `Steam::unlock`, which records into `unlocked_this_session` and, when connected, sets the achievement and stores stats; verify `cargo test -p lithicrivers-client`
-- [ ] 3.2 Track `app.was_dead`, reset to the world's current state on every world create and load, and unlock `FirstDeath` in `step` on the false→true edge unless `cheats_allowed`; add client tests: dying with cheats off records `FirstDeath` once (dying twice still records it once per edge, with no error), dying with cheats on records nothing, and loading a world saved while dead records nothing. Verify `cargo test -p lithicrivers-client`
-- [ ] 3.3 Confirm `save_reload_anywhere_changes_nothing` and all snapshot tests still pass (`was_dead` and `app.steam` are not saved; `cargo test --workspace`)
+- [x] 3.1 Add the `Achievement` enum (`FirstDeath` → `ACH_FIRST_DEATH`) and `Steam::unlock`, which records into `unlocked_this_session` and, when connected, sets the achievement and stores stats; verify `cargo test -p lithicrivers-client`
+- [x] 3.2 Track `app.was_dead` (`None` after every world create and load, so the first frame takes the world's current state), and unlock `FirstDeath` in `step` on the false→true edge unless `cheats_allowed`; add client tests: dying with cheats off records `FirstDeath` once (dying twice still records it once per edge, with no error), dying with cheats on records nothing, and loading a world saved while dead records nothing. Verify `cargo test -p lithicrivers-client`
+- [x] 3.3 Confirm `save_reload_anywhere_changes_nothing` and all snapshot tests still pass (`was_dead` and `app.steam` are not saved; `cargo test --workspace`)
 
 ## 4. Steamworks setup (manual, user)
 
