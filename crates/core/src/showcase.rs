@@ -104,6 +104,12 @@ pub const EXAMPLES: &[Example] = &[
         has_input: true,
         build: wheat_farm,
     },
+    Example {
+        name: "Sheep farm: a feeder breeds the flock, a counter watches it, a processor culls it and a bio-vat grows embryos",
+        size: (9, 7),
+        has_input: true,
+        build: sheep_farm,
+    },
 ];
 
 /// The top-left corner of the first example; the rest follow eastward.
@@ -607,6 +613,73 @@ fn wheat_farm(game: &mut Game, o: Position) {
     }
 }
 
+/// A fenced sheep pen. A feeder of carrots keeps the flock breeding and a counter in the
+/// middle counts it; the livestock processor in the south fence strikes sheep that wander in
+/// front of it, and a bio-vat outside grows an embryo from a batch with bonus meat.
+///
+/// ```text
+///   # # # # # # # # #      # fence, s sheep
+///   # s . s . . . . #      f feeder, n counter
+///   # . f . . . n . #      P processor (facing north, into the pen)
+///   # . . s . . s . #      G generator, + pole, V bio-vat
+///   # . . . . . . . #
+///   # # # # P # # # #
+///   . G G + . V . . .
+/// ```
+fn sheep_farm(game: &mut Game, o: Position) {
+    for dx in 0..9 {
+        for dy in [0, 5] {
+            if (dx, dy) != (4, 5) {
+                place(game, FactoryKind::Fence, at(o, dx, dy), Facing::North);
+            }
+        }
+    }
+    for dy in 1..5 {
+        for dx in [0, 8] {
+            place(game, FactoryKind::Fence, at(o, dx, dy), Facing::North);
+        }
+    }
+    let feeder = place(game, FactoryKind::AutoFeeder, at(o, 2, 2), Facing::North);
+    fill(game, feeder, &[(ItemKind::Carrot, 8)]);
+    let counter = place(game, FactoryKind::AnimalCounter, at(o, 6, 2), Facing::North);
+    if let Ok(mut c) = game
+        .world
+        .get::<&mut crate::livestock::AnimalCounter>(counter)
+    {
+        c.size = 9;
+    }
+    for (dx, dy) in [(1, 1), (3, 1), (3, 3), (6, 3)] {
+        let p = at(o, dx, dy);
+        crate::spawn_utils::world_spawn_sheep(&mut game.world, p.x, p.y, p.z);
+    }
+    place(
+        game,
+        FactoryKind::LivestockProcessor,
+        at(o, 4, 5),
+        Facing::North,
+    );
+    for dx in [1, 2] {
+        let generator = place(
+            game,
+            FactoryKind::BurnerGenerator,
+            at(o, dx, 6),
+            Facing::North,
+        );
+        fill(game, generator, &[(ItemKind::Log, 5)]);
+    }
+    place(game, FactoryKind::PowerPole, at(o, 3, 6), Facing::North);
+    let vat = place(game, FactoryKind::BioVat, at(o, 5, 6), Facing::North);
+    fill(
+        game,
+        vat,
+        &[
+            (ItemKind::Meat, 6),
+            (ItemKind::Mash, 2),
+            (ItemKind::ScrapElectronics, 1),
+        ],
+    );
+}
+
 /// Empty tiles before the wheat farm's blocks, so its pole stays out of wire reach of the
 /// battery bank's.
 const WHEAT_FARM_LEAD: i64 = 3;
@@ -824,6 +897,46 @@ mod tests {
             .iter()
             .count();
         assert!(crops > 0, "seeds replanted");
+    }
+
+    #[test]
+    fn the_sheep_farm_breeds_counts_culls_and_grows_an_embryo() {
+        let mut game = showcase();
+        let (_, o) = layout()
+            .into_iter()
+            .find(|(e, _)| e.name.starts_with("Sheep farm"))
+            .unwrap();
+        game.res.player_state.intent = crate::intent::PlayerIntent::movement(
+            0,
+            0,
+            0,
+            3 * 60 * crate::factory::TICKS_PER_SECOND,
+        );
+        game.tick();
+        let counter = game.res.factory_index[&at(o, 6, 2)];
+        let counted = game
+            .world
+            .get::<&crate::livestock::AnimalCounter>(counter)
+            .unwrap()
+            .summary();
+        assert!(counted.ends_with("sheep"), "{counted}");
+        let vat = game.res.factory_index[&at(o, 5, 6)];
+        let inv = game.world.get::<&Inventory>(vat).unwrap();
+        assert!(
+            inv.slots
+                .iter()
+                .any(|s| crate::livestock::is_embryo(s.kind)),
+            "{:?}",
+            inv.slots
+        );
+        let lambs_or_culled = game.world.query::<&crate::livestock::Lamb>().iter().count()
+            + game
+                .world
+                .get::<&Inventory>(game.res.factory_index[&at(o, 4, 5)])
+                .unwrap()
+                .slots
+                .len();
+        assert!(lambs_or_culled > 0, "the flock bred or was culled");
     }
 
     #[test]

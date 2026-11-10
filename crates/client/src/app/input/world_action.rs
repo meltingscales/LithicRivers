@@ -198,7 +198,10 @@ pub fn nearby_interactions(app: &App) -> Option<NearbyInteractions> {
             | FactoryKind::AdvancedVat
             | FactoryKind::Spawner
             | FactoryKind::Battery
-            | FactoryKind::ItemCharger => available_actions.push(InteractionType::OpenMachine {
+            | FactoryKind::ItemCharger
+            | FactoryKind::AutoFeeder
+            | FactoryKind::LivestockProcessor
+            | FactoryKind::BioVat => available_actions.push(InteractionType::OpenMachine {
                 entity,
                 position,
                 kind: block.kind,
@@ -206,7 +209,35 @@ pub fn nearby_interactions(app: &App) -> Option<NearbyInteractions> {
             FactoryKind::Teleporter | FactoryKind::TransitStation => {
                 available_actions.push(InteractionType::UseTeleporter { entity, position })
             }
+            FactoryKind::AnimalCounter => {
+                available_actions.push(InteractionType::AdjustCounter { entity, position })
+            }
             _ => {}
+        }
+    }
+
+    // Find nearby hungry sheep, if the player carries feed
+    let player = app.core.game.get_player_entity();
+    let feed =
+        player.and_then(|p| lithicrivers_core::livestock::first_feed(&app.core.game.world, p));
+    if let Some(item) = feed {
+        let tick = app.core.game.res.time.tick;
+        let world = &app.core.game.world;
+        for (entity, pos) in world
+            .query::<&Position>()
+            .with::<&lithicrivers_core::components::Sheep>()
+            .iter()
+        {
+            let adjacent = (pos.x - player_pos.x).abs() <= 1
+                && (pos.y - player_pos.y).abs() <= 1
+                && pos.z == player_pos.z;
+            if adjacent && lithicrivers_core::livestock::hungry(world, entity, tick).is_ok() {
+                available_actions.push(InteractionType::FeedSheep {
+                    entity,
+                    position: *pos,
+                    item,
+                });
+            }
         }
     }
 
@@ -450,6 +481,38 @@ pub fn execute_interaction_action(app: &mut App, action: &crate::app_state::Inte
         }
         InteractionType::InspectPole { entity, .. } => {
             app.panels.power_info = Some(*entity);
+        }
+        InteractionType::FeedSheep { entity, .. } => {
+            let Some(player) = app.core.game.get_player_entity() else {
+                return;
+            };
+            let game = &mut app.core.game;
+            match lithicrivers_core::livestock::player_feeds(
+                &mut game.world,
+                &game.res,
+                player,
+                *entity,
+            ) {
+                Ok(item) => game.res.log(format!(
+                    "The sheep eats the {}. It looks around for a mate.",
+                    lithicrivers_core::components::itemkind_name(item).to_lowercase()
+                )),
+                Err(e) => game.res.log(e.message()),
+            }
+        }
+        InteractionType::AdjustCounter { entity, .. } => {
+            let game = &mut app.core.game;
+            let message = game
+                .world
+                .get::<&mut lithicrivers_core::livestock::AnimalCounter>(*entity)
+                .ok()
+                .map(|mut c| {
+                    c.next_size();
+                    format!("The animal counter now watches a {0}x{0} square", c.size)
+                });
+            if let Some(message) = message {
+                game.res.log(message);
+            }
         }
         InteractionType::UseTeleporter { entity, .. } => {
             // A dormant station wakes up instead of opening

@@ -289,6 +289,73 @@ fn render_corpse_loot_modal(
                 ),
             )
         }
+        Some(FactoryKind::AutoFeeder) => {
+            let feed: u32 = corpse_inv.slots.iter().map(|s| s.qty).sum();
+            let status = if feed == 0 {
+                "empty".to_string()
+            } else {
+                format!("feeds a hungry sheep every {}s", {
+                    lithicrivers_core::livestock::FEEDER_PERIOD_TICKS
+                        / lithicrivers_core::factory::TICKS_PER_SECOND
+                })
+            };
+            (
+                format!(" Auto-Feeder - {status} "),
+                format!(
+                    " Feed ({}/{}) ",
+                    corpse_inv.slots.len(),
+                    corpse_inv.max_slots
+                ),
+            )
+        }
+        Some(kind @ (FactoryKind::LivestockProcessor | FactoryKind::BioVat)) => {
+            let world = &app.core.game.world;
+            let consumer = world
+                .get::<&lithicrivers_core::power::PowerConsumer>(corpse_entity)
+                .ok()
+                .map(|c| *c);
+            let powered = app.core.game.res.power.network_of(corpse_entity).is_some();
+            let working = if kind == FactoryKind::BioVat {
+                format!(
+                    "growing {}%",
+                    lithicrivers_core::livestock::vat_progress_percent(world, corpse_entity)
+                )
+            } else {
+                "working".to_string()
+            };
+            let status = match consumer {
+                Some(c) if c.active && powered => {
+                    format!("{working}, power {}%", c.satisfaction_permille / 10)
+                }
+                Some(c) if c.active => "no power pole in reach".to_string(),
+                _ if kind == FactoryKind::BioVat => {
+                    "needs 4 meat, 2 mash, 1 scrap electronics".to_string()
+                }
+                _ => "idle".to_string(),
+            };
+            let facing = world
+                .get::<&lithicrivers_core::factory::FactoryBlock>(corpse_entity)
+                .map(|b| b.facing.name())
+                .unwrap_or("north");
+            let title = if kind == FactoryKind::BioVat {
+                format!(" Bio-Vat - {status} ")
+            } else {
+                format!(" Livestock Processor facing {facing} - {status} ")
+            };
+            (
+                title,
+                format!(
+                    " {} ({}/{}) ",
+                    if kind == FactoryKind::BioVat {
+                        "Contents"
+                    } else {
+                        "Drops"
+                    },
+                    corpse_inv.slots.len(),
+                    corpse_inv.max_slots
+                ),
+            )
+        }
         Some(FactoryKind::Battery) => (
             format!(
                 " Battery - {} ",

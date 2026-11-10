@@ -230,6 +230,7 @@ pub fn placeable_items() -> Vec<ItemKind> {
 /// Items obtainable from `raw` by applying `recipes` any number of times.
 pub fn obtainable(recipes: &[Recipe], raw: &BTreeSet<ItemKind>) -> BTreeSet<ItemKind> {
     let mut have = raw.clone();
+    let processes = machine_processes();
     loop {
         let before = have.len();
         for recipe in recipes {
@@ -237,10 +238,40 @@ pub fn obtainable(recipes: &[Recipe], raw: &BTreeSet<ItemKind>) -> BTreeSet<Item
                 have.insert(recipe.result);
             }
         }
+        for (inputs, outputs) in &processes {
+            if inputs.iter().all(|i| have.contains(i)) {
+                have.extend(outputs.iter().copied());
+            }
+        }
         if have.len() == before {
             return have;
         }
     }
+}
+
+/// What machines make from what, beyond crafting recipes: the furnace and fermenter
+/// tables, and the bio-vat's embryos.
+pub fn machine_processes() -> Vec<(Vec<ItemKind>, Vec<ItemKind>)> {
+    use crate::furnace::Process;
+    let mut processes: Vec<(Vec<ItemKind>, Vec<ItemKind>)> =
+        [Process::Smelting, Process::Fermenting]
+            .into_iter()
+            .flat_map(|p| p.recipes())
+            .map(|r| {
+                let mut outputs = vec![r.output];
+                outputs.extend(r.byproduct.map(|(item, _)| item));
+                (vec![r.input], outputs)
+            })
+            .collect();
+    processes.push((
+        vec![ItemKind::Meat, ItemKind::Mash, ItemKind::ScrapElectronics],
+        vec![
+            ItemKind::BiomechEmbryoDeformed,
+            ItemKind::BiomechEmbryoWrinkly,
+            ItemKind::BiomechEmbryoPerfect,
+        ],
+    ));
+    processes
 }
 
 /// For each item in `items` that can't be obtained, a line naming it and the first

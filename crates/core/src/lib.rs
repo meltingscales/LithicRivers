@@ -19,6 +19,7 @@ pub mod intent;
 pub mod keycode_mapping;
 #[cfg(test)]
 mod lava_tests;
+pub mod livestock;
 pub mod logistics;
 pub mod machines;
 pub mod message_log;

@@ -9,13 +9,13 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌M
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  ------ - - -- - FOG │
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Inventory─────────────┐
-╫╫╫vvv¤vvvGG+ΞvvvvΞvvvvvvvvvG+βvvvvvvG,,,,,vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Nail x10              │
-+G╫vvvvvvvvvv╲─vvvvvvvvvvvvvvEvvvvvvvG+,,vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Acorn x1              │
-vv╫vvvvvvvΨvvvv╲─vΨvvvvvvvvvvvvvvvvvvGvvpvv,vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Log x3                │
-vv╫vvvvvvvvvvvvvЖ+ŧvvvvvvvvvvvvvvvvvvvvv↑vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
-vv╫vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvCB←CHvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Help (h) ! Damaged────┐
-vv╫vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv@vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Move:                 │
-╫╫╫vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,vv,,vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  7 8 9               │
+╫╫╫vvv¤vvvGG+ΞvvvvΞvvvvvvvvvG+βvvvvvvG,,,,,vvvv╫╫╫╫╫╫╫╫╫vvvvvvvvvvvvvvvvvvvv│Nail x10              │
++G╫vvvvvvvvvv╲─vvvvvvvvvvvvvvEvvvvvvvG+,,vvvvvv╫Svvvvvv╫vvvvvvvvvvvvvvvvvvvv│Acorn x1              │
+vv╫vvvvvvvΨvvvv╲─vΨvvvvvvvvvvvvvvvvvvGvvpvv,vvv╫vuvvv#v╫vvvvvvvvvvvvvvvvvvvv│Log x3                │
+vv╫vvvvvvvvvvvvvЖ+ŧvvvvvvvvvvvvvvvvvvvvv↑vvvvvv╫vvvvvvv╫vvvvvvvvvvvvvvvvvvvv└──────────────────────┘
+vv╫vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvCB←CHvvvvv╫vvvvvSv╫vvvvvvvvvvvvvvvvvvvv┌Help (h) ! Damaged────┐
+vv╫vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv@vvvvvvvv╫╫╫╫X╫╫╫╫vvvvvvvvvvvvvvvvvvvv│Move:                 │
+╫╫╫vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv,vv,,vvvvGG+vΩvvvvvvvvvvvvvvvvvvvvvvv│  7 8 9               │
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  4 5 6               │
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  1 2 3               │
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│q: mine               │
@@ -41,7 +41,7 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌M
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  ------ - - -- - FOG │
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Inventory─────────────┐
-╫╫╫vvv¤vvvGG+ΞvvvvΞvvvvvvvvvG+βvvvvvvG,,,,,vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Nail x10              │
+╫╫╫vvv¤vvvGG+ΞvvvvΞvvvvvvvvvG+βvvvvvvG,,,,,vvvv╫╫╫╫╫╫╫╫╫vvvvvvvvvvvvvvvvvvvv│Nail x10              │
 +G╫vvvvvvvvvv╲─┌────────────── Fermenter facing west - fermenting 50% ──────────────┐              │
 vv╫vvvvvvvΨvvvv│┌ Slots - power 100% ────────────┐┌ Showing fermentables: 0 of 7 ──┐│              │
 vv╫vvvvvvvvvvvv││Input:     4 x Wheat            ││                                ││──────────────┘

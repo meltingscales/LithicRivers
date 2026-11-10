@@ -62,8 +62,11 @@ pub fn peek(world: &World, source: Entity, filter: Option<ItemKind>) -> Option<I
             .find(|&k| matches(k));
     }
     let inv = world.get::<&Inventory>(source).ok()?;
+    // A bio-vat gives only its embryos, never its ingredients
+    let bio_vat = world.get::<&crate::livestock::BioVat>(source).is_ok();
     inv.slots
         .iter()
+        .filter(|s| !bio_vat || crate::livestock::is_embryo(s.kind))
         // Power cells stay put: belts would lose their charge
         .find(|s| s.qty > 0 && matches(s.kind) && !crate::power_cells::is_cell(s.kind))
         .map(|s| s.kind)

@@ -408,6 +408,8 @@ pub fn is_grid_block(kind: FactoryKind) -> bool {
             | FactoryKind::AutoHarvester
             | FactoryKind::ElectricFurnace
             | FactoryKind::Fermenter
+            | FactoryKind::LivestockProcessor
+            | FactoryKind::BioVat
             | FactoryKind::StandardVat
             | FactoryKind::AdvancedVat
             | FactoryKind::Spawner

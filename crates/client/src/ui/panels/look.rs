@@ -58,6 +58,11 @@ pub fn render_look_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
                         lines.push(Line::from(format!("  {line}")));
                     }
                 }
+                let tick = app.core.game.res.time.tick;
+                for line in lithicrivers_core::livestock::look_lines(&app.core.game.world, e, tick)
+                {
+                    lines.push(Line::from(format!("  {line}")));
+                }
             } else if let Some(di) = maybe_drop {
                 lines.push(Line::from(format!(
                     "{} x{} (lying here)",
@@ -66,6 +71,11 @@ pub fn render_look_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
                 )));
             } else if let Some(sr) = maybe_sr {
                 lines.push(Line::from(capitalize(&sr.name.replace('_', " "))));
+                let tick = app.core.game.res.time.tick;
+                for line in lithicrivers_core::livestock::look_lines(&app.core.game.world, e, tick)
+                {
+                    lines.push(Line::from(format!("  {line}")));
+                }
             } else {
                 lines.push(Line::from("Something"));
             }
