@@ -1,0 +1,6 @@
+{
+    "name": "Mining Bot",
+    "color": "#E8A33A",
+    "description": "A SapienCorp digger still working its last dig order. It hears you through the rock.",
+    "has_emotion_states": false
+}

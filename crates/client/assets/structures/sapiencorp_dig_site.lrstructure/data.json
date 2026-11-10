@@ -1,0 +1,21 @@
+{
+  "blocks": {
+    " ": "air",
+    ".": "existing_worldgen",
+    "B": "stone_brick",
+    "D": "door",
+    "E": "scrap_electronics",
+    "G": "riverglass",
+    "I": "power_pole",
+    "S": "scrap_rare",
+    "T": "treasure_rare",
+    "X": "iron_scrap",
+    "s": "scrap_common"
+  },
+  "gen_biomes": "QUEST_ONLY",
+  "gen_chance": 0.0,
+  "y_layer_gen_range": [
+    0,
+    0
+  ]
+}

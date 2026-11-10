@@ -418,11 +418,21 @@ pub(crate) fn place_from_hotbar(app: &mut App, x: i64, y: i64, z: i64) {
             return;
         }
     } else if let Some(tile) = lithicrivers_core::tiles::TileKind::from_item_kind(item) {
-        if !factory::can_place_at(&game.world, &mut game.res, pos) {
-            game.res.log("Cannot place block here");
-            return;
+        match factory::place_plain_block(&game.world, &mut game.res, tile, pos) {
+            Err(_) => {
+                game.res.log("Cannot place block here");
+                return;
+            }
+            Ok(placed) if placed != tile => {
+                remove_item_from_inventory(app, item, 1);
+                app.core.game.res.log(format!(
+                    "The {} sinks, and the lava crusts over.",
+                    name.to_lowercase()
+                ));
+                return;
+            }
+            Ok(_) => {}
         }
-        game.res.world_state.world.set_tile_cached(x, y, z, tile);
     }
     remove_item_from_inventory(app, item, 1);
     app.core

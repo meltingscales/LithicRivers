@@ -1474,7 +1474,8 @@ mod cheat_tests {
         assert!(
             err_out.contains("dragon")
                 && err_out.contains("feral_dog")
-                && err_out.contains("nuclear_slime"),
+                && err_out.contains("nuclear_slime")
+                && err_out.contains("mining_bot"),
             "{err_out}"
         );
 

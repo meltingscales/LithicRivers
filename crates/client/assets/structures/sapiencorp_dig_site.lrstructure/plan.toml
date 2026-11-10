@@ -1,0 +1,131 @@
+# A SapienCorp dig site in the Lithic Rivers: a brick site office and a riverglass store
+# joined by a short hall, the office's east wall caved in, and the drill's last bore hole
+# cut out to the west. Placed by the deep band's biome structures.
+# Compiled into shape_layers.txt by `just util-structure-build`; edit this, not that.
+layers = 1
+width = 17
+height = 9
+background = "."
+
+[legend]
+"." = "existing_worldgen"
+" " = "air"
+"B" = "stone_brick"
+"D" = "door"
+"G" = "riverglass"
+"X" = "iron_scrap"
+"E" = "scrap_electronics"
+"s" = "scrap_common"
+"S" = "scrap_rare"
+"T" = "treasure_rare"
+"I" = "power_pole"
+
+# The bore hole: a straight cut west, where the drill stopped
+[[shape]]
+kind = "corridor"
+layer = 0
+from = [0, 4]
+to = [3, 4]
+
+# The site office
+[[shape]]
+kind = "room"
+layer = 0
+x = 3
+y = 1
+w = 6
+h = 7
+wall = "B"
+doors = [[3, 4], [8, 4]]
+
+# The riverglass store
+[[shape]]
+kind = "room"
+layer = 0
+x = 11
+y = 2
+w = 5
+h = 5
+wall = "B"
+doors = [[11, 4]]
+
+[[shape]]
+kind = "corridor"
+layer = 0
+from = [9, 4]
+to = [10, 4]
+
+# Caved-in wall: rubble where the office's south-east corner was
+[[shape]]
+kind = "put"
+layer = 0
+x = 8
+y = 7
+block = "X"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 8
+y = 6
+block = " "
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 7
+y = 7
+block = "s"
+
+# Office contents: the site's dead power pole, salvage and a lockbox
+[[shape]]
+kind = "put"
+layer = 0
+x = 4
+y = 2
+block = "I"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 5
+y = 6
+block = "E"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 7
+y = 2
+block = "S"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 6
+y = 4
+block = "T"
+
+# The store: riverglass stacked along the back wall, never shipped
+[[shape]]
+kind = "fill"
+layer = 0
+x = 14
+y = 3
+w = 1
+h = 3
+block = "G"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 13
+y = 3
+block = "G"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 12
+y = 5
+block = "s"

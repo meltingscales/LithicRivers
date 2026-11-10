@@ -29,6 +29,7 @@ enum Placement {
     Sheep,
     FeralDog,
     NuclearSlime,
+    MiningBot,
     TutorialAndroid,
     Item(ItemKind, u32),
 }
@@ -116,6 +117,10 @@ impl TestWorld {
         self.add(x, y, z, Placement::NuclearSlime)
     }
 
+    pub fn mining_bot(&mut self, x: i64, y: i64, z: i64) -> Handle {
+        self.add(x, y, z, Placement::MiningBot)
+    }
+
     /// The tutorial quest NPC (Broken SapienCorp Android).
     pub fn npc(&mut self, x: i64, y: i64, z: i64) -> Handle {
         self.add(x, y, z, Placement::TutorialAndroid)
@@ -172,6 +177,9 @@ impl TestWorld {
                     z,
                     &game.res.world_state.world,
                 ),
+                Placement::MiningBot => {
+                    spawn_utils::world_spawn_mining_bot(world, x, y, z, &game.res.world_state.world)
+                }
                 Placement::TutorialAndroid => {
                     spawn_utils::world_spawn_tutorial_android(world, x, y, z)
                 }

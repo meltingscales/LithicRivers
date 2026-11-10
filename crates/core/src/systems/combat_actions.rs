@@ -652,7 +652,9 @@ pub fn handle_entity_death(world: &mut World, res: &mut Resources, entity: hecs:
     let entity_pos = world.get::<&Position>(entity).ok().map(|p| *p);
     let is_player = is_player_entity(world, entity);
     // Creatures leave a corpse with what they carried; one carrying nothing just goes
-    let is_creature = world.get::<&FeralDog>(entity).is_ok()
+    let is_bot = world.get::<&crate::components::MiningBot>(entity).is_ok();
+    let is_creature = is_bot
+        || world.get::<&FeralDog>(entity).is_ok()
         || world
             .get::<&crate::components::NuclearSlime>(entity)
             .is_ok();
@@ -671,6 +673,7 @@ pub fn handle_entity_death(world: &mut World, res: &mut Resources, entity: hecs:
         .and_then(|k| match *k {
             EntityKind::FeralDog => Some(crate::spawn_utils::EnemyKind::FeralDog),
             EntityKind::NuclearSlime => Some(crate::spawn_utils::EnemyKind::NuclearSlime),
+            EntityKind::MiningBot => Some(crate::spawn_utils::EnemyKind::MiningBot),
             _ => None,
         });
     if let (Some(creature), Some(pos)) = (creature, entity_pos) {
@@ -679,6 +682,10 @@ pub fn handle_entity_death(world: &mut World, res: &mut Resources, entity: hecs:
         if let Some(embryo) = dropped {
             inventory_items.push(crate::components::ItemStack::new(embryo, 1));
         }
+    }
+
+    if !is_player {
+        res.stats.enemies_killed += 1;
     }
 
     // Add Dead marker
@@ -703,16 +710,21 @@ pub fn handle_entity_death(world: &mut World, res: &mut Resources, entity: hecs:
                 corpse_inventory.add(item_stack.kind, item_stack.qty);
             }
 
-            // Create a corpse entity
+            // Create a corpse entity; a bot leaves a wreck
+            let sprite = if is_bot { "wreck" } else { "corpse" };
             world.spawn((
                 pos,
                 GameEntity,
                 EntityKind::Corpse,
-                SpriteRef::new("entities", "corpse"),
+                SpriteRef::new("entities", sprite),
                 corpse_inventory,
                 // Note: Corpses don't block movement and aren't combatants
             ));
-            res.log("A corpse remains...".to_string());
+            res.log(if is_bot {
+                "The mining bot grinds to a halt.".to_string()
+            } else {
+                "A corpse remains...".to_string()
+            });
 
             // Remove the original creature since it's been replaced by a corpse
             if let Err(e) = world.despawn(entity) {

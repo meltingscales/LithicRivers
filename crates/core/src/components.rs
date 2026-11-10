@@ -45,6 +45,10 @@ pub struct Wreck;
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct NuclearSlime;
 
+/// Marker for mining bots: SapienCorp diggers in the deep that drill toward the player
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct MiningBot;
+
 /// A nuclear slime's pace: it moves on every other turn it is chasing
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SlimeAI {
@@ -245,6 +249,7 @@ pub enum ItemKind {
     MobileTeleAccessDevice,
     Rtg,
     ItemCharger,
+    Riverglass,
 }
 
 pub fn itemkind_name(kind: ItemKind) -> &'static str {
@@ -320,6 +325,7 @@ pub fn itemkind_name(kind: ItemKind) -> &'static str {
         ItemKind::MobileTeleAccessDevice => "Mobile Tele-Access Device",
         ItemKind::Rtg => "RTG",
         ItemKind::ItemCharger => "Item Charger",
+        ItemKind::Riverglass => "Riverglass",
     }
 }
 
@@ -396,6 +402,7 @@ pub fn itemkind_sprite_name(kind: ItemKind) -> &'static str {
         ItemKind::MobileTeleAccessDevice => "mobile_tele_access_device",
         ItemKind::Rtg => "rtg",
         ItemKind::ItemCharger => "item_charger",
+        ItemKind::Riverglass => "riverglass",
     }
 }
 
@@ -472,6 +479,7 @@ pub fn parse_itemkind_from_sprite_name(sprite_name: &str) -> Option<ItemKind> {
         "mobile_tele_access_device" => Some(ItemKind::MobileTeleAccessDevice),
         "rtg" => Some(ItemKind::Rtg),
         "item_charger" => Some(ItemKind::ItemCharger),
+        "riverglass" => Some(ItemKind::Riverglass),
         _ => None,
     }
 }
@@ -528,6 +536,7 @@ pub enum EntityKind {
     Corpse,
     QuestTutorialBrokenAndroid,
     NuclearSlime,
+    MiningBot,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -135,6 +135,11 @@ pub(crate) struct App {
     pub persist_config: bool,
     /// The attract-mode demo, while it plays
     pub demo: Option<crate::app::demo::DemoState>,
+    /// The connection to Steam (never connected in headless runs and tests)
+    pub steam: crate::steam::Steam,
+    /// Whether the player was dead at the last frame; `None` right after a world is
+    /// started or loaded, so a world saved on the system-failure screen isn't a new death
+    pub was_dead: Option<bool>,
 }
 
 impl App {

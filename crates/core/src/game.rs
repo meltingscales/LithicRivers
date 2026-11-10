@@ -14,6 +14,10 @@ use hecs::World;
 
 use bitflags::bitflags;
 
+/// Where the SapienCorp bunker, the starting structure, is placed (its top-left corner, with
+/// its top layer at z; it reaches down to the player's spawn at z = -19).
+pub const BUNKER_POS: (i64, i64, i64) = (10, 10, 1);
+
 /// The SapienCorp facility of the arm quest: its structure, and where it is placed (its
 /// top-left corner, buried with its top layer at z), about half a mile from the bunker
 /// (half the distance it started at, so the first trip is less of a walk).
@@ -163,8 +167,9 @@ impl Game {
         dead_dog_inventory.add(ItemKind::Meat, 2);
         world.insert_one(dead_dog, dead_dog_inventory).unwrap();
 
-        // Now properly kill it and convert to corpse
+        // Now properly kill it and convert to corpse; the player didn't kill it
         crate::systems::handle_entity_death(&mut world, &mut res, dead_dog);
+        res.stats.enemies_killed = 0;
 
         // spawn 2 feral dogs a bit further
         let dog_positions = [(sx + 12, sy + 12, sz), (sx + 13, sy + 13, sz)];
@@ -205,9 +210,7 @@ impl Game {
         };
 
         // Queue the 1st quest structure for lazy loading
-        let q1x = 10;
-        let q1y = 10;
-        let q1z = 1;
+        let (q1x, q1y, q1z) = BUNKER_POS;
         new_game
             .res
             .pending_structures

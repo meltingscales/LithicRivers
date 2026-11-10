@@ -428,6 +428,7 @@ impl crate::Game {
         }
         self.load_around_player();
         self.res.play(crate::sound::SoundCue::Teleport);
+        self.res.stats.teleports += 1;
         self.res.log_green(format!(
             "The teleporter hums, and the world folds. You step out beside {name}."
         ));
@@ -643,6 +644,7 @@ mod tests {
         );
         assert_eq!(charge(&game, to), 0, "the destination pays nothing");
         assert_eq!(game.res.time.tick, tick, "a jump passes no time");
+        assert_eq!(game.res.stats.teleports, 1, "the jump is counted");
     }
 
     #[test]

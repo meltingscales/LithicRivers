@@ -33,6 +33,7 @@ pub fn mining_drop(tile: TileKind) -> Option<MiningDrop> {
         TileKind::IronScrap => drop(TileKind::Air, &[(ItemKind::IronScrap, 1, 2)]),
         TileKind::ScrapElectronics => drop(TileKind::Air, &[(ItemKind::ScrapElectronics, 1, 1)]),
         TileKind::PlasteelScrap => drop(TileKind::Air, &[(ItemKind::PlasteelScrap, 1, 1)]),
+        TileKind::Riverglass => drop(TileKind::Air, &[(ItemKind::Riverglass, 1, 1)]),
         _ => None,
     }
 }
@@ -99,8 +100,14 @@ pub const NUCLEAR_SLIME_LOOT: &[CreatureLoot] = &[CreatureLoot {
     max: 1,
 }];
 
-/// Every creature's loot, with how the Item Dictionary names the creature. Each can also
-/// drop an embryo of its own kind when it dies (`spawner::roll_embryo`).
+/// What a mining bot carries besides what it drilled: always some salvage.
+pub const MINING_BOT_LOOT: &[CreatureLoot] = &[
+    always(ItemKind::ScrapElectronics, 1, 3),
+    always(ItemKind::IronScrap, 0, 2),
+];
+
+/// Every creature's loot, with how the Item Dictionary names the creature. Creatures with
+/// embryos can also drop one of their own kind when they die (`spawner::roll_embryo`).
 pub const CREATURE_LOOT: &[(&str, EnemyKind, &[CreatureLoot])] = &[
     ("feral dogs", EnemyKind::FeralDog, FERAL_DOG_LOOT),
     (
@@ -108,6 +115,7 @@ pub const CREATURE_LOOT: &[(&str, EnemyKind, &[CreatureLoot])] = &[
         EnemyKind::NuclearSlime,
         NUCLEAR_SLIME_LOOT,
     ),
+    ("mining bots", EnemyKind::MiningBot, MINING_BOT_LOOT),
 ];
 
 /// Whether a creature can carry or drop `item`.
@@ -150,7 +158,9 @@ pub fn raw_sources() -> BTreeSet<ItemKind> {
         .filter(|loot| can_carry(loot))
         .map(|loot| loot.item);
     let embryos = CREATURE_LOOT.iter().flat_map(|&(_, creature, _)| {
-        crate::spawner::EmbryoGrade::ALL.map(|g| crate::spawner::embryo(creature, g))
+        crate::spawner::EmbryoGrade::ALL
+            .into_iter()
+            .filter_map(move |g| crate::spawner::embryo(creature, g))
     });
     mined.chain(carried).chain(embryos).collect()
 }
@@ -410,6 +420,7 @@ mod tests {
             ItemKind::IronScrap,
             ItemKind::ScrapElectronics,
             ItemKind::PlasteelScrap,
+            ItemKind::Riverglass,
             ItemKind::Leather,
             ItemKind::Meat,
             ItemKind::NuclearWaste,

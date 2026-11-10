@@ -11,8 +11,8 @@ expression: "String::from_utf8(out).unwrap()"
 │┌──────────────┐┌──────────────┐┌──────────────┐│#########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 ││              ││              ││              ││##########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 ││  ▄     ,▄▄▄  ││  ▄     ,▄▄▄  ││  ▄     ,▄▄▄  ││##########vvvvvvvvvvvvvvdvvvvvvvvvvvvvvvvvvvvvvvvv
-││  ▀█▄▄▄█▓▓▒▀▄ ││  ▀█▄▄▄█▓▓▒▀▄ ││  ▀█▄▄▄█▓▓▒▀▄ ││###########vvvvvvvvvvvvvdvvvvvvvvvvvvvvvvvvvvvvvvv
-││┌Feral dog───┐││┌Feral dog───┐││┌Feral dog───┐││###########vvvvvvvvvvvvvvddvvvvvvvvvvvvvvvvvvvvvvv
+││┌Feral dog───┐││┌Feral dog───┐││┌Feral dog───┐││###########vvvvvvvvvvvvvdvvvvvvvvvvvvvvvvvvvvvvvvv
+│││██ 68/80    ││││██ 80/80  ██││││██ 80/80  ██│││###########vvvvvvvvvvvvvvddvvvvvvvvvvvvvvvvvvvvvvv
 ││└────────────┘││└────────────┘││└────────────┘││############vvvvvvvvvvvvv@dvvvvvvvvvvvvvtttvvvtvvv
 ││              ││              ││              ││#############vvvvvvvvvvvvvvvvvvvvvvvvvvvtvtttttvvv
 │└──────────────┘└──────────────┘└──────────────┘│#############vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvtttvvv

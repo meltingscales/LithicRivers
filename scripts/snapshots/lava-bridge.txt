@@ -1,0 +1,26 @@
+# Lava: placing a stone on lava sinks it and leaves walkable lava crust (add-molten-rivers).
+seed 12345
+size 100x30
+world void
+key ui.MENU_PREV
+cheat set_tile ~1 ~ ~ lava
+cheat set_tile ~1 ~-1 ~ lava
+cheat set_tile ~1 ~1 ~ lava
+cheat giveitem stone 2
+# Place mode, F1 gets Stone (the picker lists Clear slot, Acorn, Stone)
+key build.TOGGLE_BREAK_PLACE_MODE 2
+key hotbar.HOTBAR_SLOT_1 2
+key movement.MOVE_SOUTH 2
+key ui.MENU_ACTIVATE
+# Place, Rotate, Movement: walking east into the lava does nothing
+key build.TOGGLE_BREAK_PLACE_MODE 2
+key movement.MOVE_EAST
+screen blocked
+# Movement, Break, Place
+key build.TOGGLE_BREAK_PLACE_MODE 2
+key build.PLACE_EAST
+expect-text "lava crusts over"
+screen bridged
+key build.TOGGLE_BREAK_PLACE_MODE 2
+key movement.MOVE_EAST
+state crossed

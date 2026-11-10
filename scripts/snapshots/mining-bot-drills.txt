@@ -1,0 +1,16 @@
+# A mining bot hears the player through a rock wall and drills through it (add-mining-bots).
+seed 12345
+size 100x30
+world void
+key ui.MENU_PREV
+cheat set_tile ~2 ~-1 ~ rock
+cheat set_tile ~2 ~ ~ rock
+cheat set_tile ~2 ~1 ~ rock
+cheat spawn_enemy mining_bot ~4 ~ ~
+key movement.WAIT
+screen approaching
+key movement.WAIT 2
+screen drilled
+key movement.WAIT 2
+expect-text "Mining bot"
+screen combat

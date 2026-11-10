@@ -27,6 +27,16 @@ foreach ($b in $bins)
     }
 }
 
+# add the Steam API library the release binary loads, from where the steamworks-sys build left it
+$steam_lib = Get-ChildItem -Path 'target/release/build' -Recurse -Filter 'steam_api64.dll' |
+    Where-Object { $_.FullName -like '*steamworks-sys*' } | Select-Object -First 1
+if (-not $steam_lib)
+{
+    Write-Error "Steam API library not found; was the release built with --features steam?"
+    exit 1
+}
+Copy-Item -Force $steam_lib.FullName "./artifacts/"
+
 # add changelog
 Copy-Item -Force CHANGELOG.txt "./artifacts/"
 

@@ -89,6 +89,7 @@ saved_components! {
     "sheep" => Sheep,
     "feral_dog" => FeralDog,
     "nuclear_slime" => crate::components::NuclearSlime,
+    "mining_bot" => crate::components::MiningBot,
     "wreck" => crate::components::Wreck,
     "slime_ai" => crate::components::SlimeAI,
     "quest_tutorial_broken_android" => QuestTutorialBrokenAndroid,
@@ -290,6 +291,22 @@ mod tests {
         load_from_str(game, &saved).expect("load");
     }
 
+    #[test]
+    fn kills_are_counted_and_saved() {
+        let mut world = TestWorld::new(7).fill((-3, -3, 0), (3, 3, 0), TileKind::Grass);
+        let a = world.feral_dog(2, 0, 0);
+        let b = world.feral_dog(-2, 0, 0);
+        let mut test = world.build();
+        for dog in [a, b] {
+            let dog = test.entity(dog);
+            crate::systems::handle_entity_death(&mut test.game.world, &mut test.game.res, dog);
+        }
+        test.game.res.stats.teleports = 1;
+        reload(&mut test.game);
+        assert_eq!(test.game.res.stats.enemies_killed, 2);
+        assert_eq!(test.game.res.stats.teleports, 1);
+    }
+
     /// Everything a save holds, as JSON: equal before and after a reload if nothing is lost.
     fn snapshot(game: &Game) -> serde_json::Value {
         serde_json::to_value(save_ref(game, &serde_json::Value::Null)).unwrap()
@@ -469,6 +486,7 @@ mod tests {
         let dog = world.feral_dog(1, 0, 0);
         world.feral_dog(4, 4, 0);
         world.npc(-4, 3, 0);
+        world.mining_bot(-5, 5, 0);
         world.item(2, 2, 0, crate::components::ItemKind::Log, 1);
         let mut fight = world.build();
         let chest = crate::factory::place(
