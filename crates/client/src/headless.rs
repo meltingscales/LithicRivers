@@ -63,6 +63,17 @@ pub enum Step {
     Beat(u64),
     /// A mouse event at a screen cell: `click`, `scroll` or `move`
     Mouse(crate::app::input::mouse::MouseInput),
+    /// A gamepad step: `pad <button> [n]`, `pad hold|release <button>`, `pad <stick> <dir>`
+    Pad(PadStep),
+}
+
+/// What a `pad` step does.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum PadStep {
+    Tap(crate::gamepad::PadButton, u32),
+    Hold(crate::gamepad::PadButton),
+    Release(crate::gamepad::PadButton),
+    Push(crate::gamepad::Stick, crate::gamepad::Dir8),
 }
 
 /// Renders a step back to script syntax; parsing the result gives the same step.
@@ -111,6 +122,13 @@ impl std::fmt::Display for Step {
                     MouseKind::ScrollDown => write!(f, "scroll down {} {}{shift}", m.col, m.row),
                     MouseKind::Move => write!(f, "move {} {}", m.col, m.row),
                 }
+            }
+            Step::Pad(PadStep::Tap(b, 1)) => write!(f, "pad {}", b.script_name()),
+            Step::Pad(PadStep::Tap(b, n)) => write!(f, "pad {} {n}", b.script_name()),
+            Step::Pad(PadStep::Hold(b)) => write!(f, "pad hold {}", b.script_name()),
+            Step::Pad(PadStep::Release(b)) => write!(f, "pad release {}", b.script_name()),
+            Step::Pad(PadStep::Push(s, d)) => {
+                write!(f, "pad {} {}", s.script_name(), d.script_name())
             }
         }
     }
@@ -292,6 +310,30 @@ pub fn parse_script(text: &str) -> Result<Script, ScriptError> {
                     category: category.to_string(),
                     action: action.to_string(),
                     count,
+                }
+            }
+            "pad" => {
+                use crate::gamepad::{Dir8, PadButton, Stick};
+                let button = |name: &str| {
+                    PadButton::from_script(name)
+                        .ok_or_else(|| err(line, format!("pad: unknown button '{name}'")))
+                };
+                match args.as_slice() {
+                    ["hold", b] => Step::Pad(PadStep::Hold(button(b)?)),
+                    ["release", b] => Step::Pad(PadStep::Release(button(b)?)),
+                    [s, d] if Stick::from_script(s).is_some() => {
+                        let dir = Dir8::from_script(d)
+                            .ok_or_else(|| err(line, format!("pad: unknown direction '{d}'")))?;
+                        Step::Pad(PadStep::Push(Stick::from_script(s).expect("checked"), dir))
+                    }
+                    [b] => Step::Pad(PadStep::Tap(button(b)?, 1)),
+                    [b, n] => Step::Pad(PadStep::Tap(button(b)?, parse_num(line, cmd, n)?)),
+                    _ => {
+                        return Err(err(
+                            line,
+                            "pad expects <button> [n], hold|release <button>, or <stick> <dir>",
+                        ))
+                    }
                 }
             }
             "rawkey" => {
@@ -550,6 +592,7 @@ impl Runner {
 
     /// Feed one key press the way the interactive loop does, then run a frame.
     fn press(&mut self, line: usize, code: KeyCode) -> Result<(), StepFailure> {
+        self.app.ui.last_input = crate::gamepad::InputDevice::Keyboard;
         let start = self.bench_start();
         handle_input(&mut self.app, code)
             .map_err(|e| StepFailure::Error(err(line, format!("input error: {e}"))))?;
@@ -620,6 +663,7 @@ impl Runner {
                 }
             }
             Step::Mouse(input) => {
+                self.app.ui.last_input = crate::gamepad::InputDevice::Keyboard;
                 crate::app::input::mouse::handle_mouse(&mut self.app, *input);
                 self.frame();
             }
@@ -646,6 +690,45 @@ impl Runner {
                 }
             }
             Step::RawKey { code, .. } => self.press(line, *code)?,
+            Step::Pad(pad) => {
+                use crate::gamepad::{handle_event, PadEvent, HOLD_MS};
+                let button = |button, pressed| PadEvent::Button { button, pressed };
+                match *pad {
+                    PadStep::Tap(b, n) => {
+                        for _ in 0..n {
+                            handle_event(&mut self.app, button(b, true));
+                            handle_event(&mut self.app, button(b, false));
+                            self.frame();
+                        }
+                    }
+                    PadStep::Hold(b) => {
+                        handle_event(&mut self.app, button(b, true));
+                        // Long enough for a wheel to open
+                        let mut remaining = Duration::from_millis(HOLD_MS);
+                        while !remaining.is_zero() {
+                            let dt = remaining.min(FRAME);
+                            self.app.clock.advance(dt);
+                            remaining -= dt;
+                            self.frame();
+                        }
+                    }
+                    PadStep::Release(b) => {
+                        handle_event(&mut self.app, button(b, false));
+                        self.frame();
+                    }
+                    PadStep::Push(stick, dir) => {
+                        handle_event(
+                            &mut self.app,
+                            PadEvent::Stick {
+                                stick,
+                                dir: Some(dir),
+                            },
+                        );
+                        handle_event(&mut self.app, PadEvent::Stick { stick, dir: None });
+                        self.frame();
+                    }
+                }
+            }
             Step::Type(text) => {
                 for c in text.chars() {
                     self.press(line, KeyCode::Char(c))?;
@@ -1131,6 +1214,54 @@ mod tests {
         assert_eq!(parse_err("type hello").line, 1);
         assert_eq!(parse_err("rawkey NOT_A_KEY").line, 1);
         assert_eq!(parse_err("cheat").line, 1);
+        assert!(parse_err("pad z").message.contains("unknown button 'z'"));
+        assert!(parse_err("pad lstick up")
+            .message
+            .contains("unknown direction"));
+        assert_eq!(parse_err("skip-splash\npad").line, 2);
+    }
+
+    #[test]
+    fn pad_steps_parse_and_print_back() {
+        use crate::gamepad::{Dir8, PadButton, Stick};
+        for (text, step) in [
+            ("pad a", PadStep::Tap(PadButton::South, 1)),
+            ("pad rb 3", PadStep::Tap(PadButton::RightBumper, 3)),
+            ("pad hold lb", PadStep::Hold(PadButton::LeftBumper)),
+            ("pad release lb", PadStep::Release(PadButton::LeftBumper)),
+            ("pad rstick ne", PadStep::Push(Stick::Right, Dir8::NE)),
+            ("pad dpad w", PadStep::Push(Stick::DPad, Dir8::W)),
+        ] {
+            let parsed = parse_script(text).unwrap();
+            assert_eq!(parsed.steps[0].step, Step::Pad(step), "{text}");
+            assert_eq!(Step::Pad(step).to_string(), text);
+        }
+    }
+
+    #[test]
+    fn pad_steps_do_nothing_while_gamepad_is_off() {
+        let mut runner = chain_commands(&["skip-splash", "key ui.MENU_PREV", "cheat tp 0 0 0"]);
+        runner.app.ui.window.gamepad = false;
+        let before = runner.app.core.game.get_player_position().unwrap();
+        runner.chain(&["pad lstick e", "pad a"]);
+        assert_eq!(runner.app.core.game.get_player_position().unwrap(), before);
+        assert_eq!(
+            runner.app.ui.last_input,
+            crate::gamepad::InputDevice::Keyboard
+        );
+    }
+
+    #[test]
+    fn a_pad_tap_moves_the_robot_like_its_key() {
+        let mut runner = chain_commands(&["skip-splash", "key ui.MENU_PREV", "cheat tp 0 0 0"]);
+        let before = runner.app.core.game.get_player_position().unwrap();
+        runner.chain(&["pad lstick e", "pad dpad e"]);
+        let after = runner.app.core.game.get_player_position().unwrap();
+        assert_eq!(after.x - before.x, 2);
+        assert_eq!(
+            runner.app.ui.last_input,
+            crate::gamepad::InputDevice::Gamepad
+        );
     }
 
     // --- 3.2: validation against config and cheat registry -------------------------

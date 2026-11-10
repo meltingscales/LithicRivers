@@ -96,11 +96,7 @@ pub fn render_combat_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     );
 
     // Controls
-    let key = |category, action| {
-        app.core
-            .config_manager
-            .get_printable_key_for_keybind(category, action)
-    };
+    let key = |category, action| app.key_label(category, action);
     let controls = Paragraph::new(format!(
         "[←→] Target | [↑↓] Move | [{}] Clear | [{}] Wait | [{}] Use",
         key("combat", "CLEAR_MOVE_QUEUE"),

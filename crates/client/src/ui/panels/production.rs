@@ -42,7 +42,7 @@ fn row_text(item: &str, made: &str, used: &str) -> String {
 pub fn render_production_panel(f: &mut Frame, app: &App, area: Rect) {
     let (minutes, range_name) = RANGES[app.panels.production.range];
     let rows = rows(app);
-    let key = |c, a| app.core.config_manager.get_printable_key_for_keybind(c, a);
+    let key = |c, a| app.key_label(c, a);
     let columns = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])

@@ -759,6 +759,20 @@ mod tests {
         });
     }
 
+    #[test]
+    fn run_script_takes_pad_steps() {
+        block_on(async {
+            let server = server();
+            let result = server
+                .run_script(Parameters(ScriptArgs {
+                    script: "pad lstick s\npad hold lb\npad release lb\nstate after".into(),
+                }))
+                .await
+                .unwrap();
+            assert!(!is_error(&result) && text(&result).contains("=== state after ==="));
+        });
+    }
+
     // --- 3.1: export replays to the same final state ---------------------------------
 
     #[test]

@@ -39,17 +39,18 @@ impl CreateField {
         }
     }
 }
-pub const OPTIONS_ROWS: [&str; 7] = [
+pub const OPTIONS_ROWS: [&str; 8] = [
     "Music volume",
     "Sound volume",
     "Text size",
     "Fullscreen",
     "Display",
     "Touch controls",
+    "Gamepad",
     "Back",
 ];
 /// The first Options row that only applies in the game window, and the last
-const WINDOW_ROWS: std::ops::RangeInclusive<usize> = 2..=5;
+const WINDOW_ROWS: std::ops::RangeInclusive<usize> = 2..=6;
 const VOLUME_STEP: f64 = 0.05;
 const MAX_TEXT_LEN: usize = 32;
 
@@ -473,6 +474,9 @@ impl App {
             4 if right || select => change(self, |w| w.display = w.display.next()),
             5 if self.ui.window.mobile && (left || right || select) => {
                 change(self, |w| w.touch_controls = !w.touch_controls)
+            }
+            6 if !self.ui.window.mobile && (left || right || select) => {
+                change(self, |w| w.gamepad = !w.gamepad)
             }
             _ => {}
         }
@@ -949,5 +953,17 @@ mod tests {
         let saved =
             crate::window::settings::WindowSettings::from_config(&runner.app.core.config_manager);
         assert!(!saved.touch_controls);
+        // Gamepad: on by default on desktop, saved when turned off, "not on mobile" there
+        runner.app.ui.window.mobile = false;
+        runner.chain(&["key title.DOWN"]);
+        assert!(runner.screen_text().contains("Gamepad: on"));
+        runner.chain(&["key title.SELECT"]);
+        assert!(!runner.app.ui.window.gamepad);
+        assert!(runner.screen_text().contains("Gamepad: off"));
+        let saved =
+            crate::window::settings::WindowSettings::from_config(&runner.app.core.config_manager);
+        assert!(!saved.gamepad);
+        runner.app.ui.window.mobile = true;
+        assert!(runner.screen_text().contains("Gamepad: not on mobile"));
     }
 }

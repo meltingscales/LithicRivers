@@ -141,7 +141,7 @@ pub(crate) fn render_furnace_window(f: &mut Frame, app: &App) {
         player_count.saturating_sub(first),
         crate::ui::click_targets::ClickTarget::FurnacePlayerRow,
     );
-    let key = |c, a| app.core.config_manager.get_printable_key_for_keybind(c, a);
+    let key = |c, a| app.key_label(c, a);
     let hint = format!(
         "{}/{}: panel  {}/{}: select  {}: move one item  {}: close",
         key("movement", "MOVE_WEST"),

@@ -69,6 +69,10 @@ pub struct UiState {
     pub show_context_help: bool,
     /// The game window's text size and fullscreen choice (`ui.WINDOW_*`)
     pub window: crate::window::settings::WindowSettings,
+    /// Gamepad layout and what is held (`gamepad-input` spec)
+    pub gamepad: crate::gamepad::Mapper,
+    /// The device used last, for button prompts
+    pub last_input: crate::gamepad::InputDevice,
     // UI-owned viewport state - what the player is currently viewing
     pub view_x: i64,
     pub view_y: i64,

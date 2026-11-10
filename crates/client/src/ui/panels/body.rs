@@ -147,11 +147,7 @@ pub fn render_body_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     }
 
     // Bottom: controls, naming what Install would do to the selected part
-    let key = |a| {
-        app.core
-            .config_manager
-            .get_printable_key_for_keybind("body", a)
-    };
+    let key = |a| app.key_label("body", a);
     let mut controls_text = "[R] Repair".to_string();
     match fitting.as_slice() {
         [] => {}

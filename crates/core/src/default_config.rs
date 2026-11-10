@@ -168,6 +168,45 @@ pub fn default_config() -> ConfigRoot {
         "ui": {
             "SHOW_CONTEXT_HELP": true
         },
+        // What each gamepad button and stick sends: a keybind (category.ACTION) whose first
+        // key is pressed, or one of `context.CONFIRM` (Interact on the World page, Enter
+        // elsewhere), `wheel.UP` / `wheel.DOWN` (a mouse wheel step), `build.AIM` (the
+        // break or place key for the stick's direction in build modes), `tab.<NAME>` (a
+        // menu tab) and `movement` (the move key for the stick's direction)
+        "gamepad": {
+            "SOUTH": "context.CONFIRM",
+            "EAST": "ui.CLOSE_HELP_MENU",
+            "WEST": "action.MINE",
+            "NORTH": "build.TOGGLE_BREAK_PLACE_MODE",
+            "LEFT_BUMPER": "ui.MENU_PREV",
+            "RIGHT_BUMPER": "ui.MENU_NEXT",
+            "LEFT_TRIGGER": "wheel.UP",
+            "RIGHT_TRIGGER": "wheel.DOWN",
+            "SELECT": "action.LOOK_TOGGLE",
+            "START": "tab.MENU",
+            "LEFT_THUMB": "action.PASS_TIME",
+            "RIGHT_THUMB": "action.TOGGLE_TORCH",
+            "LEFT_STICK": "movement",
+            "DPAD": "movement",
+            "RIGHT_STICK": "build.AIM"
+        },
+        // Holding LB opens the wheel for where the player is: 8 slots in N, NE, E, SE, S,
+        // SW, W, NW order, with the same actions as `gamepad`, plus `tab.<NAME>` for a menu
+        // tab; "" is an empty slot
+        "gamepad_wheels": {
+            "WORLD": [
+                "action.PICKUP_ITEMS", "action.TOGGLE_TORCH", "action.PASS_TIME", "tab.INVENTORY",
+                "build.BLUEPRINT_MODE", "ui.TOGGLE_CONTEXT_HELP", "action.LOOK_TOGGLE", "tab.MENU"
+            ],
+            "BUILD": [
+                "build.ROTATE_PLACEMENT", "wheel.DOWN", "build.BLUEPRINT_LIBRARY", "build.NEW_BLUEPRINT",
+                "build.TOGGLE_BREAK_PLACE_MODE", "build.BLUEPRINT_MODE", "", "wheel.UP"
+            ],
+            "INVENTORY": [
+                "inventory.USE_ITEM", "inventory.DROP_ITEM", "inventory.TOGGLE_ITEM_AUTO_PICKUP_KEY", "",
+                "", "", "", ""
+            ]
+        },
         "audio": {
             "MUSIC_VOLUME": 0.60,
             "SFX_VOLUME": 0.35
