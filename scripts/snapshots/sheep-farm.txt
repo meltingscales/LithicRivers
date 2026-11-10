@@ -1,0 +1,19 @@
+# The Factory showcase's sheep farm: the bio-vat outside the pen growing an embryo from a
+# batch with bonus meat, then the look panel on the animal counter inside the pen.
+seed 12345
+size 100x30
+world factory-showcase
+key ui.MENU_PREV
+key action.PASS_TIME 3
+# South of the bio-vat: its window opens straight away
+cheat tp 121 0 0
+key action.INTERACT
+expect-text "Bio-Vat - growing"
+screen bio-vat-window
+key ui.CLOSE_HELP_MENU
+# Inside the pen, west of the counter
+cheat tp 121 -5 0
+key action.LOOK_TOGGLE
+key movement.MOVE_EAST
+expect-text "Counts a 9x9 square"
+screen look-counter

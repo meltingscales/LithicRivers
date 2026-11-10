@@ -160,6 +160,42 @@ impl RecipeHandler {
                 result: ItemKind::Fermenter,
                 quantity: 1,
             },
+            // Auto-feeder: a plank trough with an iron hopper
+            Recipe {
+                name: "Auto-Feeder",
+                ingredients: &[(ItemKind::WoodenPlank, 4), (ItemKind::IronScrap, 2)],
+                result: ItemKind::AutoFeeder,
+                quantity: 1,
+            },
+            // Animal counter: a salvaged motion sensor on a post
+            Recipe {
+                name: "Animal Counter",
+                ingredients: &[(ItemKind::ScrapElectronics, 3), (ItemKind::Stick, 2)],
+                result: ItemKind::AnimalCounter,
+                quantity: 1,
+            },
+            // Livestock processor: SapienCorp's agri-plant slaughter unit, rebuilt
+            Recipe {
+                name: "Livestock Processor",
+                ingredients: &[
+                    (ItemKind::IronScrap, 8),
+                    (ItemKind::ScrapElectronics, 4),
+                    (ItemKind::PlasteelScrap, 2),
+                ],
+                result: ItemKind::LivestockProcessor,
+                quantity: 1,
+            },
+            // Bio-vat: a growth tank that runs on meat
+            Recipe {
+                name: "Bio-Vat",
+                ingredients: &[
+                    (ItemKind::IronScrap, 6),
+                    (ItemKind::ScrapElectronics, 6),
+                    (ItemKind::PlasteelScrap, 3),
+                ],
+                result: ItemKind::BioVat,
+                quantity: 1,
+            },
             // Spawner: a growth tank of iron scrap run by scrap electronics, at the same
             // point in the tech tree as the electric furnace
             Recipe {
@@ -252,6 +288,13 @@ impl RecipeHandler {
                 ingredients: &[(ItemKind::Meat, 2)],
                 result: ItemKind::MeatSlurry,
                 quantity: 1,
+            },
+            // A deformed embryo is good for little but rendering down
+            Recipe {
+                name: "Meat Slurry from Deformed Embryo",
+                ingredients: &[(ItemKind::BiomechEmbryoDeformed, 1)],
+                result: ItemKind::MeatSlurry,
+                quantity: 2,
             },
             // Extractor: 2x wooden plank + 1x iron scrap + 2x nail
             Recipe {
@@ -395,6 +438,7 @@ impl RecipeHandler {
                     (ItemKind::IronScrap, 4),
                     (ItemKind::PlasteelScrap, 2),
                     (ItemKind::Nail, 2),
+                    (ItemKind::BiomechEmbryoWrinkly, 1),
                 ],
                 result: ItemKind::StandardTorso,
                 quantity: 1,
@@ -442,7 +486,11 @@ impl RecipeHandler {
             },
             Recipe {
                 name: "Advanced Torso",
-                ingredients: &[(ItemKind::PlasteelScrap, 6), (ItemKind::NuclearWaste, 2)],
+                ingredients: &[
+                    (ItemKind::PlasteelScrap, 6),
+                    (ItemKind::NuclearWaste, 2),
+                    (ItemKind::BiomechEmbryoPerfect, 1),
+                ],
                 result: ItemKind::AdvancedTorso,
                 quantity: 1,
             },

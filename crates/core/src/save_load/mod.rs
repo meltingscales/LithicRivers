@@ -114,6 +114,13 @@ saved_components! {
     "factory_block" => crate::factory::FactoryBlock,
     "growth" => crate::plants::Growth,
     "crop_growth" => crate::plants::CropGrowth,
+    "fed" => crate::livestock::Fed,
+    "breed_cooldown" => crate::livestock::BreedCooldown,
+    "lamb" => crate::livestock::Lamb,
+    "feeder" => crate::livestock::Feeder,
+    "animal_counter" => crate::livestock::AnimalCounter,
+    "livestock_processor" => crate::livestock::Processor,
+    "bio_vat" => crate::livestock::BioVat,
     "belt_slot" => crate::factory::BeltSlot,
     "generator" => crate::power::Generator,
     "power_pole" => crate::power::PowerPole,
@@ -589,6 +596,20 @@ mod tests {
             crate::components::ItemKind::WheatSeeds,
         )
         .unwrap();
+        // A lamb, and a fed sheep resting after breeding
+        let lamb =
+            crate::livestock::spawn_lamb(&mut fight.game.world, Position { x: 5, y: -3, z: 0 }, 0);
+        fight
+            .game
+            .world
+            .insert(
+                lamb,
+                (
+                    crate::livestock::Fed { until_tick: 10 },
+                    crate::livestock::BreedCooldown { until_tick: 10 },
+                ),
+            )
+            .unwrap();
         fight.ticks(30);
         let dog = fight.entity(dog);
         crate::systems::handle_entity_death(&mut fight.game.world, &mut fight.game.res, dog);

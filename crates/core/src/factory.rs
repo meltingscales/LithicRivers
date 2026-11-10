@@ -131,6 +131,14 @@ pub enum FactoryKind {
     ItemCharger,
     /// Ferments wheat or potatoes into ethanol on grid power; fed from its back and sides
     Fermenter,
+    /// Feeds carrots or mash to nearby sheep so they breed
+    AutoFeeder,
+    /// Counts the animals around it
+    AnimalCounter,
+    /// Strikes the animals in front of it on grid power and keeps their drops
+    LivestockProcessor,
+    /// Grows biomechanical embryos from meat, mash and scrap electronics on grid power
+    BioVat,
     /// A consumer that does nothing but draw power, for grid tests
     #[cfg(any(test, feature = "test-support"))]
     TestConsumer,
@@ -167,6 +175,10 @@ impl FactoryKind {
             ItemKind::Rtg => Some(FactoryKind::Rtg),
             ItemKind::ItemCharger => Some(FactoryKind::ItemCharger),
             ItemKind::Fermenter => Some(FactoryKind::Fermenter),
+            ItemKind::AutoFeeder => Some(FactoryKind::AutoFeeder),
+            ItemKind::AnimalCounter => Some(FactoryKind::AnimalCounter),
+            ItemKind::LivestockProcessor => Some(FactoryKind::LivestockProcessor),
+            ItemKind::BioVat => Some(FactoryKind::BioVat),
             _ => None,
         }
     }
@@ -201,6 +213,10 @@ impl FactoryKind {
             FactoryKind::Rtg => Some(ItemKind::Rtg),
             FactoryKind::ItemCharger => Some(ItemKind::ItemCharger),
             FactoryKind::Fermenter => Some(ItemKind::Fermenter),
+            FactoryKind::AutoFeeder => Some(ItemKind::AutoFeeder),
+            FactoryKind::AnimalCounter => Some(ItemKind::AnimalCounter),
+            FactoryKind::LivestockProcessor => Some(ItemKind::LivestockProcessor),
+            FactoryKind::BioVat => Some(ItemKind::BioVat),
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestConsumer => None,
             #[cfg(any(test, feature = "test-support"))]
@@ -236,6 +252,10 @@ impl FactoryKind {
             FactoryKind::Rtg => "RTG",
             FactoryKind::ItemCharger => "item charger",
             FactoryKind::Fermenter => "fermenter",
+            FactoryKind::AutoFeeder => "auto-feeder",
+            FactoryKind::AnimalCounter => "animal counter",
+            FactoryKind::LivestockProcessor => "livestock processor",
+            FactoryKind::BioVat => "bio-vat",
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestConsumer => "test consumer",
             #[cfg(any(test, feature = "test-support"))]
@@ -252,6 +272,7 @@ impl FactoryKind {
             | FactoryKind::CrudeFurnace
             | FactoryKind::ElectricFurnace
             | FactoryKind::Fermenter
+            | FactoryKind::LivestockProcessor
             | FactoryKind::Extractor
             | FactoryKind::FilterExtractor
             | FactoryKind::BeltRouter => true,
@@ -264,6 +285,7 @@ impl FactoryKind {
             FactoryKind::Fence | FactoryKind::Gate | FactoryKind::Spawner => false,
             FactoryKind::Teleporter | FactoryKind::TransitStation | FactoryKind::Battery => false,
             FactoryKind::Rtg | FactoryKind::ItemCharger => false,
+            FactoryKind::AutoFeeder | FactoryKind::AnimalCounter | FactoryKind::BioVat => false,
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestConsumer => false,
             #[cfg(any(test, feature = "test-support"))]
@@ -332,6 +354,12 @@ impl FactoryKind {
             FactoryKind::VerticalConveyorDown => {
                 SpriteRef::new("factory", "vertical_conveyor_down")
             }
+            FactoryKind::AutoFeeder => SpriteRef::new("factory", "auto_feeder"),
+            FactoryKind::AnimalCounter => SpriteRef::new("factory", "animal_counter"),
+            FactoryKind::LivestockProcessor => {
+                SpriteRef::new("factory", &format!("livestock_processor_{}", facing.name()))
+            }
+            FactoryKind::BioVat => SpriteRef::new("factory", "bio_vat"),
             FactoryKind::Fence => SpriteRef::new("factory", "fence"),
             FactoryKind::Gate => SpriteRef::new("factory", "gate"),
             FactoryKind::Spawner => SpriteRef::new("factory", "spawner"),
@@ -520,6 +548,36 @@ pub fn place(
             ));
         }
         FactoryKind::Fence | FactoryKind::Gate => {}
+        FactoryKind::AutoFeeder => {
+            builder.add(crate::livestock::Feeder::default());
+            builder.add(Inventory {
+                max_slots: crate::livestock::FEEDER_SLOTS,
+                ..Default::default()
+            });
+        }
+        FactoryKind::AnimalCounter => {
+            builder.add(crate::livestock::AnimalCounter::new());
+        }
+        FactoryKind::LivestockProcessor => {
+            builder.add(crate::livestock::Processor::default());
+            builder.add(crate::power::PowerConsumer::idle(
+                crate::livestock::PROCESSOR_W,
+            ));
+            builder.add(Inventory {
+                max_slots: crate::livestock::PROCESSOR_SLOTS,
+                ..Default::default()
+            });
+        }
+        FactoryKind::BioVat => {
+            builder.add(crate::livestock::BioVat::default());
+            builder.add(crate::power::PowerConsumer::idle(
+                crate::livestock::BIO_VAT_W,
+            ));
+            builder.add(Inventory {
+                max_slots: crate::livestock::BIO_VAT_SLOTS,
+                ..Default::default()
+            });
+        }
         FactoryKind::Spawner => {
             builder.add(crate::spawner::Spawner::default());
             builder.add(crate::power::PowerConsumer::idle(crate::spawner::SPAWNER_W));
@@ -781,8 +839,10 @@ pub fn run_due_steps(world: &mut World, res: &mut Resources) {
         crate::spawner::update_demand(world);
         crate::teleporter::update_demand(world);
         crate::power_cells::update_charger_demand(world);
+        crate::livestock::update_demand(world);
         crate::power::step_power(world, res);
         crate::machines::step_machines(world, res);
+        crate::livestock::step(world, res, step_tick);
         crate::furnace::step_furnaces(world, res);
         crate::teleporter::step_charging(world);
         crate::power_cells::charge_slot_cells(world);
@@ -840,6 +900,8 @@ pub fn takes(kind: FactoryKind, item: ItemKind) -> bool {
         | FactoryKind::TransitStation => false,
         FactoryKind::Battery | FactoryKind::ItemCharger => crate::power_cells::is_cell(item),
         FactoryKind::Rtg => false,
+        FactoryKind::AutoFeeder | FactoryKind::BioVat => crate::livestock::takes(kind, item),
+        FactoryKind::AnimalCounter | FactoryKind::LivestockProcessor => false,
         _ => true,
     }
 }
@@ -853,6 +915,9 @@ pub fn takes_label(kind: FactoryKind) -> Option<&'static str> {
         FactoryKind::CrudeFurnace => Some("fuel/smeltables"),
         FactoryKind::ElectricFurnace => Some("smeltables"),
         FactoryKind::Fermenter => Some("fermentables"),
+        FactoryKind::AutoFeeder => Some("feed"),
+        FactoryKind::BioVat => Some("vat ingredients"),
+        FactoryKind::LivestockProcessor => Some("nothing"),
         FactoryKind::CrudeVat => Some("crude body parts"),
         FactoryKind::StandardVat => Some("crude/standard body parts"),
         FactoryKind::AdvancedVat => Some("body parts"),
@@ -920,6 +985,10 @@ pub fn accepts_from(
         FactoryKind::CrudeVat | FactoryKind::StandardVat | FactoryKind::AdvancedVat => {
             return crate::vat::accepts(world, target, item)
         }
+        FactoryKind::AutoFeeder | FactoryKind::BioVat => {
+            return crate::livestock::accepts(world, target, block.kind, item)
+        }
+        FactoryKind::AnimalCounter | FactoryKind::LivestockProcessor => return false,
         _ => {}
     }
     world

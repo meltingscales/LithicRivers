@@ -649,16 +649,31 @@ fn apply_damage(
 
 /// Handle entity death - add Dead marker and clean up
 pub fn handle_entity_death(world: &mut World, res: &mut Resources, entity: hecs::Entity) {
+    entity_death(world, res, entity, true);
+}
+
+/// A creature killed by a machine (the livestock processor): the same corpse and drops, but
+/// no messages, and it doesn't count as the player's kill.
+pub fn handle_machine_kill(world: &mut World, res: &mut Resources, entity: hecs::Entity) {
+    entity_death(world, res, entity, false);
+}
+
+fn entity_death(world: &mut World, res: &mut Resources, entity: hecs::Entity, by_player: bool) {
     let entity_pos = world.get::<&Position>(entity).ok().map(|p| *p);
     let is_player = is_player_entity(world, entity);
     // Creatures leave a corpse with what they carried; one carrying nothing just goes
     let is_bot = world.get::<&crate::components::MiningBot>(entity).is_ok();
+    let is_sheep = world.get::<&crate::components::Sheep>(entity).is_ok();
     let is_creature = is_bot
+        || is_sheep
         || world.get::<&FeralDog>(entity).is_ok()
         || world
             .get::<&crate::components::NuclearSlime>(entity)
             .is_ok();
-    let mut inventory_items = if is_creature {
+    let mut inventory_items = if let (true, Some(pos)) = (is_sheep, entity_pos) {
+        // Sheep carry nothing while alive; what they drop is rolled where they fall
+        crate::livestock::sheep_drops(world, res, entity, pos)
+    } else if is_creature {
         world
             .get::<&Inventory>(entity)
             .map(|inv| inv.slots.clone())
@@ -684,7 +699,7 @@ pub fn handle_entity_death(world: &mut World, res: &mut Resources, entity: hecs:
         }
     }
 
-    if !is_player {
+    if !is_player && by_player {
         res.stats.enemies_killed += 1;
     }
 
@@ -698,7 +713,9 @@ pub fn handle_entity_death(world: &mut World, res: &mut Resources, entity: hecs:
     world.remove_one::<Combat>(entity).ok();
 
     if is_creature && inventory_items.is_empty() {
-        res.log("It dissolves, leaving nothing.".to_string());
+        if by_player {
+            res.log("It dissolves, leaving nothing.".to_string());
+        }
         if let Err(e) = world.despawn(entity) {
             tracing::warn!(target: "combat", "Failed to despawn dead creature {:?}: {}", entity, e);
         }
@@ -720,11 +737,13 @@ pub fn handle_entity_death(world: &mut World, res: &mut Resources, entity: hecs:
                 corpse_inventory,
                 // Note: Corpses don't block movement and aren't combatants
             ));
-            res.log(if is_bot {
-                "The mining bot grinds to a halt.".to_string()
-            } else {
-                "A corpse remains...".to_string()
-            });
+            if by_player {
+                res.log(if is_bot {
+                    "The mining bot grinds to a halt.".to_string()
+                } else {
+                    "A corpse remains...".to_string()
+                });
+            }
 
             // Remove the original creature since it's been replaced by a corpse
             if let Err(e) = world.despawn(entity) {
@@ -736,7 +755,7 @@ pub fn handle_entity_death(world: &mut World, res: &mut Resources, entity: hecs:
     // Log death
     if is_player {
         crate::death::player_died(world, res, entity, "shut down".to_string());
-    } else {
+    } else if by_player {
         res.log("Enemy defeated!".to_string());
     }
 }

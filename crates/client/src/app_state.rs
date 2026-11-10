@@ -560,6 +560,17 @@ pub enum InteractionType {
         position: Position,
         item: lithicrivers_core::components::ItemKind,
     },
+    /// Feed a hungry sheep the first carrot or mash the player carries
+    FeedSheep {
+        entity: hecs::Entity,
+        position: Position,
+        item: lithicrivers_core::components::ItemKind,
+    },
+    /// Make an animal counter count a larger square (wrapping back to the smallest)
+    AdjustCounter {
+        entity: hecs::Entity,
+        position: Position,
+    },
 }
 
 impl InteractionType {
@@ -578,7 +589,9 @@ impl InteractionType {
             | InteractionType::SetFilter { position, .. }
             | InteractionType::InspectPole { position, .. }
             | InteractionType::UseTeleporter { position, .. }
-            | InteractionType::LoadBelt { position, .. } => *position,
+            | InteractionType::LoadBelt { position, .. }
+            | InteractionType::FeedSheep { position, .. }
+            | InteractionType::AdjustCounter { position, .. } => *position,
         }
     }
 
@@ -596,7 +609,9 @@ impl InteractionType {
             | InteractionType::SetFilter { entity, .. }
             | InteractionType::InspectPole { entity, .. }
             | InteractionType::UseTeleporter { entity, .. }
-            | InteractionType::LoadBelt { entity, .. } => Some(*entity),
+            | InteractionType::LoadBelt { entity, .. }
+            | InteractionType::FeedSheep { entity, .. }
+            | InteractionType::AdjustCounter { entity, .. } => Some(*entity),
             InteractionType::OpenCloseDoor { .. } => None,
         }
     }
@@ -650,6 +665,16 @@ impl InteractionType {
                 "Put {} on belt",
                 lithicrivers_core::components::itemkind_name(*item)
             ),
+            InteractionType::FeedSheep { item, .. } => format!(
+                "Feed sheep a {}",
+                lithicrivers_core::components::itemkind_name(*item).to_lowercase()
+            ),
+            InteractionType::AdjustCounter { entity, .. } => {
+                let size = world
+                    .get::<&lithicrivers_core::livestock::AnimalCounter>(*entity)
+                    .map_or(0, |c| c.size);
+                format!("Adjust animal counter ({size}x{size})")
+            }
             InteractionType::OpenCloseDoor { is_open: true, .. } => "Close door".to_string(),
             InteractionType::OpenCloseDoor { is_open: false, .. } => "Open door".to_string(),
         }
@@ -669,6 +694,8 @@ impl InteractionType {
             InteractionType::InspectPole { .. } => "+",
             InteractionType::UseTeleporter { .. } => "T",
             InteractionType::LoadBelt { .. } => ">", // onto the belt
+            InteractionType::FeedSheep { .. } => "e",
+            InteractionType::AdjustCounter { .. } => "n",
             InteractionType::OpenCloseDoor { is_open, .. } => {
                 if *is_open {
                     "o"

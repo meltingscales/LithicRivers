@@ -83,3 +83,42 @@ fn acorns_need_grass_or_dirt() {
         "expect-text \"Seeds need grass or dirt\"",
     ]);
 }
+
+#[test]
+fn feeding_a_sheep_by_hand_takes_a_carrot() {
+    use lithicrivers_core::components::{Inventory, ItemKind};
+    let mut runner = crate::headless::chain_commands(&[
+        "skip-splash",
+        "cheat tp 0 0 0",
+        "cheat set_tile ~1 ~ ~ grass",
+        "cheat giveitem carrot 2",
+    ]);
+    let game = &mut runner.app.core.game;
+    let p = game.get_player_position().unwrap();
+    let sheep =
+        lithicrivers_core::spawn_utils::world_spawn_sheep(&mut game.world, p.x + 1, p.y, p.z);
+    game.world
+        .insert_one(
+            sheep,
+            lithicrivers_core::components::BattleDelay::new(1_000_000),
+        )
+        .unwrap();
+    runner.chain(&["key action.INTERACT"]);
+    runner.chain(&["expect-text \"The sheep eats the carrot\""]);
+    let game = &runner.app.core.game;
+    assert!(game
+        .world
+        .get::<&lithicrivers_core::livestock::Fed>(sheep)
+        .is_ok());
+    let player = game.get_player_entity().unwrap();
+    let carrots: u32 = game
+        .world
+        .get::<&Inventory>(player)
+        .unwrap()
+        .slots
+        .iter()
+        .filter(|s| s.kind == ItemKind::Carrot)
+        .map(|s| s.qty)
+        .sum();
+    assert_eq!(carrots, 1);
+}

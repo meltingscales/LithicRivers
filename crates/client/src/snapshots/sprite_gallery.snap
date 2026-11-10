@@ -59,6 +59,25 @@ dd,
   ▄▀    ▄▀  
             
             
+=== entities/lamb  #F2EEE4  A lamb, all knees and wool, that follows whatever moves.
+-- 1x
+s
+-- 2x
+ss
+,,
+-- 3x
+sws
+##.
+. .
+-- art 0
+            
+            
+     ▄▓▓▄ ▄ 
+    ▓▒░▒▓█▀ 
+    ▀▌▐▀▌▐  
+     ▘▝ ▘▝  
+            
+            
 === entities/mining_bot  #E8A33A  A SapienCorp digger still working its last dig order. It hears you through the rock.
 -- 1x
 m
@@ -264,6 +283,44 @@ U
  █▌ ░▌▐░ ▐█ 
  ▀████████▀ 
    ▀▀  ▀▀   
+=== factory/animal_counter  #7FD0C0  A salvaged motion sensor on a post, ticking quietly every time something breathes nearby.
+-- 1x
+#
+-- 2x
+#9
+9#
+-- 3x
+[#]
+(#)
+[#]
+-- art 0
+            
+    ┌────┐  
+    │ 03 │  
+    │ () │  
+    └─┬──┘  
+      │     
+    ▄▄█▄▄   
+            
+=== factory/auto_feeder  #A07C4A  A plank trough under an iron hopper; it drops one ration at a time to whatever comes close.
+-- 1x
+u
+-- 2x
+uu
+uu
+-- 3x
+\u/
+[u]
+\_/
+-- art 0
+            
+    ▄████▄  
+    █▓▒▒▓█  
+     ▀██▀   
+  ▄▄▄▐▌▄▄▄  
+  █░▒░▒░▒█  
+  ▀▀▀▀▀▀▀▀  
+            
 === factory/auto_harvester_east  #B45F06  Chops grown trees within 2 tiles and outputs the wood in front
 -- 1x
 H
@@ -529,6 +586,25 @@ vv
 ▓ ▓ ▓ ▓ ▓ ▓ 
 ════════════
             
+            
+=== factory/bio_vat  #8FBF6A  A glass tank of warm broth wired to old SapienCorp boards; it grows embryos that are half meat, half circuit.
+-- 1x
+Ω
+-- 2x
+ΩΩ
+ΩΩ
+-- 3x
+(Ω)
+[Ω]
+(Ω)
+-- art 0
+   ▄▄▄▄▄▄   
+  █░░░░░░█  
+  █░▒@@▒░█  
+  █░▒▓▓▒░█  
+  █░░▒▒░░█  
+  ▐▀▀▀▀▀▀▌  
+  ╨══╦╦══╨  
             
 === factory/burner_generator  #C0392B  Burns logs, planks, sticks and shavings to power its network
 -- 1x
@@ -1252,6 +1328,82 @@ b<
   ├──**──┤  
   └──────┘  
             
+=== factory/livestock_processor_east  #C24B3A  A SapienCorp agri-plant slaughter unit, rebuilt from scrap. It does exactly what it was built to do.
+-- 1x
+X
+-- 2x
+X>
+X>
+-- 3x
+[X>
+[X>
+[X>
+-- art 0
+            
+  ▄█████▄ ╱ 
+  █▓▒▓▒▓█▐  
+  █▒▓@@▓█▐╲ 
+  █▓▒▓▒▓█▐╱ 
+  ▀█████▀ ╲ 
+            
+            
+=== factory/livestock_processor_north  #C24B3A  A SapienCorp agri-plant slaughter unit, rebuilt from scrap. It does exactly what it was built to do.
+-- 1x
+X
+-- 2x
+X^
+X^
+-- 3x
+[X^
+[X^
+[X^
+-- art 0
+   ╲╱╲╱╲╱   
+  ▄██████▄  
+  █▓▒██▒▓█  
+  █▒▓@@▓▒█  
+  █▓▒▓▒▓▒█  
+  ▀██████▀  
+    ║  ║    
+            
+=== factory/livestock_processor_south  #C24B3A  A SapienCorp agri-plant slaughter unit, rebuilt from scrap. It does exactly what it was built to do.
+-- 1x
+X
+-- 2x
+Xv
+Xv
+-- 3x
+[Xv
+[Xv
+[Xv
+-- art 0
+            
+    ║  ║    
+  ▄██████▄  
+  █▓▒▓▒▓▒█  
+  █▒▓@@▓▒█  
+  █▓▒██▒▓█  
+  ▀██████▀  
+   ╱╲╱╲╱╲   
+=== factory/livestock_processor_west  #C24B3A  A SapienCorp agri-plant slaughter unit, rebuilt from scrap. It does exactly what it was built to do.
+-- 1x
+X
+-- 2x
+X<
+X<
+-- 3x
+[X<
+[X<
+[X<
+-- art 0
+            
+ ╲ ▄█████▄  
+  ▌█▓▒▓▒▓█  
+ ╱▌█▓@@▓▒█  
+ ╲▌█▓▒▓▒▓█  
+ ╱ ▀█████▀  
+            
+            
 === factory/power_pole  #E5B53A  Links to poles within 8 tiles and powers blocks within 3
 -- 1x
 +
@@ -1708,6 +1860,44 @@ U
  █▌ ░▌▐░ ▐█ 
  ▀████████▀ 
    ▀▀  ▀▀   
+=== items/animal_counter  #5E9C90  A motion sensor on a stake. Set it in a pen and it counts heads.
+-- 1x
+#
+-- 2x
+##
+##
+-- 3x
+[#]
+###
+[#]
+-- art 0
+            
+            
+    ┌────┐  
+    │ 00 │  
+    └─┬──┘  
+      │     
+      ▀     
+            
+=== items/auto_feeder  #78603A  A folded trough and hopper, ready to fill with carrots or mash.
+-- 1x
+u
+-- 2x
+uu
+uu
+-- 3x
+[u]
+uuu
+[u]
+-- art 0
+            
+            
+    ▄████▄  
+    █▓▒▒▓█  
+  ▄▄▄▀██▀▄  
+  █░▒░▒░▒█  
+  ▀▀▀▀▀▀▀▀  
+            
 === items/auto_harvester  #B45F06  Chops grown trees within 2 tiles and outputs the wood in front
 -- 1x
 h
@@ -1784,6 +1974,25 @@ pPp
      ║      
      ▼      
             
+=== items/bio_vat  #6B8F50  A dry growth tank packed in straw, its boards still smelling of ozone.
+-- 1x
+Ω
+-- 2x
+ΩΩ
+ΩΩ
+-- 3x
+[Ω]
+ΩΩΩ
+[Ω]
+-- art 0
+            
+   ▄▄▄▄▄▄   
+  █░░░░░░█  
+  █░░░░░░█  
+  ▐▀▀▀▀▀▀▌  
+  ╨══════╨  
+            
+            
 === items/biochar  #3D3D3D  Smelted wood: a dense fuel for furnaces and generators
 -- 1x
 *
@@ -1801,6 +2010,63 @@ pPp
  ▐█▓▒█▓▒▓▌ ·
   ▀▓█▓▓█▀  ·
     ▀▀▀  ·  
+            
+            
+=== items/biomech_embryo_deformed  #9A7A6A  A lumpy knot of flesh and wire that never quite took. It twitches when warmed.
+-- 1x
+e
+-- 2x
+ee
+ee
+-- 3x
+eee
+eee
+eee
+-- art 0
+            
+            
+    ▄▓▒▄    
+   ▓░▒▓▒▓▄  
+   ▀▓▒░▓▀▀  
+     ▀▀     
+            
+            
+=== items/biomech_embryo_perfect  #F0C8B4  A smooth, glowing embryo with a circuit heart. SapienCorp grew its finest bodies from these.
+-- 1x
+@
+-- 2x
+@@
+@@
+-- 3x
+(@)
+@@@
+(@)
+-- art 0
+            
+     ▄▄     
+    ▓░░▓    
+   ▓░@@░▓   
+   ▓░░░░▓   
+    ▀▓▓▀    
+            
+            
+=== items/biomech_embryo_wrinkly  #C49A8A  A creased embryo with a filament spine. Good enough for standard parts.
+-- 1x
+e
+-- 2x
+ee
+ee
+-- 3x
+eee
+eee
+eee
+-- art 0
+            
+            
+    ▄▓▓▄    
+   ▓≈▒≈▓    
+   ▓▒≈▒▓    
+    ▀▓▓▀    
             
             
 === items/burner_generator  #902A20  Burns logs, planks, sticks and shavings to power its network
@@ -2286,6 +2552,25 @@ L
   ▓▒▓▒▓▒▓▓  
  ▐▓▓▓▓▓▓▓▓▌ 
   ▀▀    ▀▀  
+            
+            
+=== items/livestock_processor  #923829  A crated SapienCorp slaughter unit. The safety stickers were scraped off long ago.
+-- 1x
+X
+-- 2x
+XX
+XX
+-- 3x
+[X]
+XXX
+[X]
+-- art 0
+            
+  ▄██████▄  
+  █▓▒▓▒▓▒█  
+  █▒▓▒▓▒▓█  
+  █▓▒▓▒▓▒█  
+  ▀██████▀  
             
             
 === items/log  #964B00  A wooden log.

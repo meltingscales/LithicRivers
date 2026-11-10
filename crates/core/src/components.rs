@@ -258,6 +258,13 @@ pub enum ItemKind {
     Mash,
     Ethanol,
     Fermenter,
+    AutoFeeder,
+    AnimalCounter,
+    LivestockProcessor,
+    BioVat,
+    BiomechEmbryoDeformed,
+    BiomechEmbryoWrinkly,
+    BiomechEmbryoPerfect,
 }
 
 pub fn itemkind_name(kind: ItemKind) -> &'static str {
@@ -342,6 +349,13 @@ pub fn itemkind_name(kind: ItemKind) -> &'static str {
         ItemKind::Mash => "Mash",
         ItemKind::Ethanol => "Bottled Ethanol",
         ItemKind::Fermenter => "Fermenter",
+        ItemKind::AutoFeeder => "Auto-Feeder",
+        ItemKind::AnimalCounter => "Animal Counter",
+        ItemKind::LivestockProcessor => "Livestock Processor",
+        ItemKind::BioVat => "Bio-Vat",
+        ItemKind::BiomechEmbryoDeformed => "Deformed Biomech Embryo",
+        ItemKind::BiomechEmbryoWrinkly => "Wrinkly Biomech Embryo",
+        ItemKind::BiomechEmbryoPerfect => "Perfect Biomech Embryo",
     }
 }
 
@@ -427,6 +441,13 @@ pub fn itemkind_sprite_name(kind: ItemKind) -> &'static str {
         ItemKind::Mash => "mash",
         ItemKind::Ethanol => "ethanol",
         ItemKind::Fermenter => "fermenter",
+        ItemKind::AutoFeeder => "auto_feeder",
+        ItemKind::AnimalCounter => "animal_counter",
+        ItemKind::LivestockProcessor => "livestock_processor",
+        ItemKind::BioVat => "bio_vat",
+        ItemKind::BiomechEmbryoDeformed => "biomech_embryo_deformed",
+        ItemKind::BiomechEmbryoWrinkly => "biomech_embryo_wrinkly",
+        ItemKind::BiomechEmbryoPerfect => "biomech_embryo_perfect",
     }
 }
 
@@ -512,6 +533,13 @@ pub fn parse_itemkind_from_sprite_name(sprite_name: &str) -> Option<ItemKind> {
         "mash" => Some(ItemKind::Mash),
         "ethanol" => Some(ItemKind::Ethanol),
         "fermenter" => Some(ItemKind::Fermenter),
+        "auto_feeder" => Some(ItemKind::AutoFeeder),
+        "animal_counter" => Some(ItemKind::AnimalCounter),
+        "livestock_processor" => Some(ItemKind::LivestockProcessor),
+        "bio_vat" => Some(ItemKind::BioVat),
+        "biomech_embryo_deformed" => Some(ItemKind::BiomechEmbryoDeformed),
+        "biomech_embryo_wrinkly" => Some(ItemKind::BiomechEmbryoWrinkly),
+        "biomech_embryo_perfect" => Some(ItemKind::BiomechEmbryoPerfect),
         _ => None,
     }
 }

@@ -11,7 +11,7 @@ input_file: scripts/snapshots/crafting-craftable-only.txt
 ││  * Wooden Shavings           ││Result: 3x Wooden Plank         ││* Log: x3                     ││
 ││  * Wooden Shavings           ││A wooden plank.                 ││* Nail: x10                   ││
 ││  * Torch                     ││                                ││* Scrap Electronics: x3       ││
-││                              ││Ingredients:                    ││* Stick: x2                   ││
+││  * Animal Counter            ││Ingredients:                    ││* Stick: x2                   ││
 ││                              ││  * 1x Log (have 3)             ││* String: x2                  ││
 ││                              ││* raw material                  ││* Torch: x3                   ││
 ││                              ││                                ││                              ││
