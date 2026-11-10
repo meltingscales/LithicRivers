@@ -123,6 +123,10 @@ pub fn handle_crafting_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dy
                             recipe.quantity,
                             itemkind_name(recipe.result)
                         ));
+                        app.core
+                            .game
+                            .res
+                            .play(lithicrivers_core::sound::SoundCue::Craft);
                     }
                 }
             } else {

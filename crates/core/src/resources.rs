@@ -214,6 +214,9 @@ pub struct Resources {
     /// Where quest chests have been placed, so each is placed once per world
     #[serde(default)]
     pub quest_chests_placed: std::collections::BTreeSet<(i64, i64, i64)>,
+    /// Sounds waiting for the client to play them; never saved
+    #[serde(skip)]
+    pub sounds: Vec<crate::sound::SoundCue>,
     /// What the player has done in this world, for achievements
     #[serde(default)]
     pub stats: PlayerStats,
@@ -254,6 +257,7 @@ impl Resources {
             spawn_check_period: 0,
             spawned_chunks: Default::default(),
             quest_chests_placed: Default::default(),
+            sounds: Vec::new(),
             stats: PlayerStats::default(),
         }
     }
