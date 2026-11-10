@@ -121,6 +121,8 @@ fn every_generated_solid_tile_can_be_mined() {
             assert!(
                 tile.is_passable()
                     || tile == TileKind::Bedrock
+                    // A fluid, bridged with blocks rather than mined
+                    || tile == TileKind::Lava
                     || crate::crafting::mining_drop(tile).is_some(),
                 "{name} at z={z} is solid and can't be mined"
             );
@@ -173,3 +175,60 @@ fn the_bunker_staircase_reaches_the_surface() {
         .find(|&(x, y)| (-19..=0).all(|z| world.get_tile_cached(x, y, z) == TileKind::Stairs));
     assert!(column.is_some(), "no staircase from z = -19 to the surface");
 }
+
+#[test]
+fn the_deep_rivers_carry_lava_with_fords() {
+    let w = world();
+    for z in [-6, -20] {
+        let s = w.survey(z, 256);
+        let lava = share(&s, "Lava");
+        let crust = share(&s, "LavaCrust");
+        assert!((6.0..=16.0).contains(&lava), "z={z}: lava {lava:.2}%");
+        assert!((0.5..=4.0).contains(&crust), "z={z}: crust {crust:.2}%");
+        let glass = share(&s, "Riverglass");
+        assert!(
+            (0.1..=0.8).contains(&glass),
+            "z={z}: riverglass {glass:.2}%"
+        );
+    }
+}
+
+#[test]
+fn no_lava_or_riverglass_above_the_deep() {
+    let w = world();
+    for z in [1, 0, -1, -5] {
+        let s = w.survey(z, 256);
+        for tile in ["Lava", "LavaCrust", "Riverglass"] {
+            assert_eq!(share(&s, tile), 0.0, "{tile} at z={z}");
+        }
+    }
+}
+
+/// Along every lava river, a ford (crust across the whole core at that x, so a straight
+/// walk across) comes within a short walk.
+#[test]
+fn lava_rivers_have_fords_nearby() {
+    let w = world();
+    let mut longest = 0;
+    for z in [-6, -10, -20] {
+        for river in -20..20 {
+            let mut gap = 0;
+            for x in -2000..2000 {
+                if w.river_ford(x, river, z) {
+                    gap = 0;
+                } else {
+                    gap += 1;
+                    longest = longest.max(gap);
+                }
+            }
+        }
+    }
+    println!("longest stretch without a ford: {longest}");
+    assert!(
+        longest <= MAX_FORD_GAP,
+        "{longest} tiles of lava with no ford"
+    );
+}
+
+/// The longest stretch of a lava river with no ford, for seed 12345.
+const MAX_FORD_GAP: i64 = 96;
