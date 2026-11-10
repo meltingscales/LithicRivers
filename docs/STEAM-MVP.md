@@ -123,7 +123,7 @@ The game opens its own window with a bundled font (`add-game-window`), so it no 
 ## Core Gameplay Loop (Must Have)
 - [ ] Basic world generation with multiple biomes
   - [ ] At least 3 distinct biome bands with tile/feature differences
-    - [ ] structure generation that's unique across biomes
+    - [x] structure generation that's unique across biomes (plains temple, forest outpost and corpse, rocky ship, deep dig site)
     - [x] underground "Lithic Rivers" biome that's molten lava and rare ore, and dangerous mining bots
       - [x] molten lava rivers with fords, and riverglass as the rare ore (`add-molten-rivers`)
       - [x] dangerous mining bots (`add-mining-bots`)

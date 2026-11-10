@@ -232,3 +232,30 @@ fn lava_rivers_have_fords_nearby() {
 
 /// The longest stretch of a lava river with no ford, for seed 12345.
 const MAX_FORD_GAP: i64 = 96;
+
+/// The deep's biome structure is the SapienCorp dig site: brick walls and a riverglass
+/// store.
+#[test]
+fn the_deep_places_dig_sites() {
+    let mut w = world();
+    let mut ecs = hecs::World::new();
+    let mut sites = 0;
+    for cx in -12..12 {
+        for cy in -12..12 {
+            w.ensure_chunk(cx, cy, -10);
+            w.place_structures_for_chunk(&mut ecs, cx, cy, -10);
+            let has = |w: &mut GameWorld, tile| {
+                (0..CHUNK_SIZE).any(|x| {
+                    (0..CHUNK_SIZE).any(|y| {
+                        w.get_tile_cached_no_worldgen(cx * CHUNK_SIZE + x, cy * CHUNK_SIZE + y, -10)
+                            == tile
+                    })
+                })
+            };
+            if has(&mut w, TileKind::StoneBrick) {
+                sites += 1;
+            }
+        }
+    }
+    assert!(sites > 0, "no dig site in 576 deep chunks");
+}
