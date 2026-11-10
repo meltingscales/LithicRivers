@@ -11,6 +11,7 @@ pub mod item_dictionary;
 pub mod look;
 pub mod menu;
 pub mod modes;
+pub mod production;
 pub mod quests;
 pub mod quit;
 pub mod repair;

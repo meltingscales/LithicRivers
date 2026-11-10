@@ -32,7 +32,7 @@ input_file: scripts/snapshots/global-map-waypoints.txt
 │[1] Added Waypoint 1 at (0, 0, 0).                                                                │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
-│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Production │ Menu │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 === end screen ===
 === screen renamed ===
@@ -64,7 +64,7 @@ input_file: scripts/snapshots/global-map-waypoints.txt
 │[1] Renamed Waypoint 1 to Iron field.                                                             │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
-│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Production │ Menu │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 === end screen ===
 === screen prompt ===
@@ -96,7 +96,7 @@ input_file: scripts/snapshots/global-map-waypoints.txt
 │[1] Quest markers can't be deleted.                                                               │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
-│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Production │ Menu │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 === end screen ===
 === screen deleted ===
@@ -128,6 +128,6 @@ input_file: scripts/snapshots/global-map-waypoints.txt
 │[1] Deleted the marker for Iron field.                                                            │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
-│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Production │ Menu │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 === end screen ===

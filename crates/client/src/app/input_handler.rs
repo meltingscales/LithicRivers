@@ -106,6 +106,8 @@ pub fn dispatch(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
     if app.panels.power_info.is_some() {
         if app.ui.keybinds.matches("ui", "CLOSE_HELP_MENU", &key) {
             app.panels.power_info = None;
+        } else if app.ui.keybinds.matches("stats", "CYCLE_RANGE", &key) {
+            app.panels.power_range_long = !app.panels.power_range_long;
         }
         return Ok(());
     }
@@ -126,6 +128,10 @@ pub fn dispatch(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
 
     // Handle crafting tab input when active - delegated to input module
     if crate::app::input::crafting::handle_crafting_input(app, key)? {
+        return Ok(());
+    }
+
+    if crate::app::input::production::handle_production_input(app, key) {
         return Ok(());
     }
 

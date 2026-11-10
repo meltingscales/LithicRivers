@@ -133,6 +133,9 @@ pub fn default_config() -> ConfigRoot {
         "crafting": {
             "TOGGLE_CRAFTABLE_ONLY": ["c"], // Crafting tab: list only what you can craft now
         },
+        "stats": {
+            "CYCLE_RANGE": ["r"]          // Power pole box and Production tab: switch the time range
+        },
         "search": {
             "SEARCH": ["s"],              // Item Dictionary and Crafting: start typing a search
             "DELETE_CHAR": ["BACKSPACE"], // While searching: erase a character

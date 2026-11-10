@@ -32,7 +32,7 @@ vvvvvvvvvvvvvvv││                                ││                     
 │[2001] Opened spawner                                                                             │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
-│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Production │ Menu │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 === end screen ===
 === screen spawner-window-moved ===
@@ -64,6 +64,6 @@ vvvvvvvvvvvvvvv││                                ││                     
 │[2001] The spawner holds another kind of embryo                                                   │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
-│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Production │ Menu │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 === end screen ===

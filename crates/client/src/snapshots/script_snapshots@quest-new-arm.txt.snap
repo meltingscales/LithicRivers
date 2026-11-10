@@ -32,7 +32,7 @@ input_file: scripts/snapshots/quest-new-arm.txt
 │[401] Started conversation with Broken SapienCorp Android                                         │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
-│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Production │ Menu │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 === end screen ===
 === screen quest-active ===
@@ -64,7 +64,7 @@ input_file: scripts/snapshots/quest-new-arm.txt
 │[801] Quest objective completed: Reach the SapienCorp facility                                    │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
-│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Production │ Menu │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 === end screen ===
 === screen locker ===
@@ -96,7 +96,7 @@ input_file: scripts/snapshots/quest-new-arm.txt
 │[801] Opened chest                                                                                │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
-│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Production │ Menu │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 === end screen ===
 === screen installed ===
@@ -128,7 +128,7 @@ input_file: scripts/snapshots/quest-new-arm.txt
 │[1201] SC-M4X7 on the radio: "Arm signal detected. Two hands again, user!"                        │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
-│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Production │ Menu │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 === end screen ===
 === screen quests ===
@@ -160,6 +160,6 @@ input_file: scripts/snapshots/quest-new-arm.txt
 │[1201] SC-M4X7 on the radio: "Arm signal detected. Two hands again, user!"                        │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
-│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Production │ Menu │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 === end screen ===

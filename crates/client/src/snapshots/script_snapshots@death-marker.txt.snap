@@ -32,7 +32,7 @@ input_file: scripts/snapshots/death-marker.txt
 │[1] I should really make a vat...                                                                 │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
-│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Production │ Menu │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 === end screen ===
 === screen prompt ===
@@ -64,7 +64,7 @@ input_file: scripts/snapshots/death-marker.txt
 │[1] I should really make a vat...                                                                 │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
-│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Production │ Menu │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 === end screen ===
 === screen deleted ===
@@ -96,6 +96,6 @@ input_file: scripts/snapshots/death-marker.txt
 │[2] Deleted the marker for Wreck 1.                                                               │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
-│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Production │ Menu │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 === end screen ===

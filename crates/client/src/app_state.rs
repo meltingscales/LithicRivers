@@ -146,9 +146,21 @@ pub struct FilterPicker {
 }
 
 /// All UI panel-specific states grouped by functionality
+/// The Production tab: the selected item row and which time range is shown.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct ProductionPanelState {
+    pub selected: usize,
+    /// An index into `ui::panels::production::RANGES`
+    pub range: usize,
+}
+
 pub struct PanelStates {
     /// The power pole whose network info box is open
     pub power_info: Option<hecs::Entity>,
+    /// Whether the pole box graphs the last 10 game minutes instead of the last 60 seconds
+    pub power_range_long: bool,
+    /// The Production tab
+    pub production: ProductionPanelState,
     /// The open furnace window, if any
     pub furnace_window: Option<FurnaceWindow>,
     pub item_dictionary: ItemDictionaryState,

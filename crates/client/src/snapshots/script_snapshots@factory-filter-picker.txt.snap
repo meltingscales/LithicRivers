@@ -32,6 +32,6 @@ input_file: scripts/snapshots/factory-filter-picker.txt
 │[1] Filter set to Acorn └───── s: search  ENTER: set  ESCAPE: close ─────┘                        │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
-│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Production │ Menu │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 === end screen ===

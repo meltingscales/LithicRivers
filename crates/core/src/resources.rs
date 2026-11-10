@@ -220,6 +220,9 @@ pub struct Resources {
     /// What the player has done in this world, for achievements
     #[serde(default)]
     pub stats: PlayerStats,
+    /// Power history and item flow, for the pole graph and the Production tab
+    #[serde(default)]
+    pub factory_stats: crate::factory_stats::FactoryStats,
 }
 
 /// Counts of what the player has done in a world, saved with it.
@@ -259,6 +262,7 @@ impl Resources {
             quest_chests_placed: Default::default(),
             sounds: Vec::new(),
             stats: PlayerStats::default(),
+            factory_stats: Default::default(),
         }
     }
 

@@ -1,0 +1,14 @@
+# The Production tab after two game minutes in the Factory showcase: what its machines,
+# generators and the player made and used, per minute, and the selected item's sources.
+seed 12345
+size 100x30
+world factory-showcase
+key ui.MENU_PREV
+key action.PASS_TIME 12
+key ui.MENU_NEXT 8
+expect-text "Per minute, last minute"
+screen production-last-minute
+key stats.CYCLE_RANGE
+key ui.MENU_DOWN 2
+expect-text "last 10 minutes"
+screen production-ten-minutes

@@ -32,7 +32,7 @@ vvvvvvvvvvvvvvv││                                ││                     
 │                                                                                                  │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
-│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Production │ Menu │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 === end screen ===
 === screen pole-info ===
@@ -42,28 +42,28 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│ 
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Inventory─────────────┐
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Nail x10              │
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Acorn x1              │
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Log x3                │
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Help (h) ! Damaged────┐
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv@vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Move:                 │
-vvv╫╫╫╫╫╫╫╫╫vvv¤vvvGG+Ξvv┌──────────────── Power Network ─────────────────┐v│  7 8 9               │
-vvv╫vvvvv+G╫vvvvvvvvvv╲─v│                                                │v│  4 5 6               │
-vvv╫vvvvvvv╫vvvvvvvΨvvvv╲│          Supply: 90 kW   Demand: 90 kW         │v│  1 2 3               │
-vvv╫C→>Øvvv╫vvvvvvvvvvvvv│     Poles: 1   Generators: 1   Machines: 1     │v│q: mine               │
-vvv╫vvvvvvv╫vvvvvvvvvvvvv│      Stored: 5.7 MJ, discharging at 90 kW      │v│v: look               │
-vvvΠvvvvvvv╫vvvvvvvvvvvvv│                                                │v│`: build mode         │
-vvv╫╫╫╫╫╫╫╫╫vvvvvvvvvvvvv│                  ESCAPE: close                 │v│f: fuel generator     │
-vvvvvvvvvvvvvvvvvvvvvvvvv│                                                │v│f: inspect pole       │
-vvvvvvvvvvvvvvvvvvvvvvvvv└────────────────────────────────────────────────┘v└──────────────────────┘
-┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
-│[1] Added 1 Standard Power Cell to inventory                                                      │
-│[1001] Time passes...                                                                             │
-│[1001] Opened battery                                                                             │
+vvvvvvvvvvvvvvvvvvvv┌───────────────────── Power Network ──────────────────────┐rn x1              │
+vvvvvvvvvvvvvvvvvvvv│                                                          │ x3                │
+vvvvvvvvvvvvvvvvvvvv│               Supply: 90 kW   Demand: 90 kW              │───────────────────┘
+vvvvvvvvvvvvvvvvvvvv│          Poles: 1   Generators: 1   Machines: 1          │p (h) ! Damaged────┐
+vvvvvvvvvvvvvvvvvvvv│           Stored: 5.7 MJ, discharging at 90 kW           │e:                 │
+vvv╫╫╫╫╫╫╫╫╫vvv¤vvvG│                                                          │ 8 9               │
+vvv╫vvvvv+G╫vvvvvvvv│           Demand, last 60 seconds (peak 90 kW)           │ 5 6               │
+vvv╫vvvvvvv╫vvvvvvvΨ│                                   ████                   │ 2 3               │
+vvv╫C→>Øvvv╫vvvvvvvv│                                   ████                   │mine               │
+vvv╫vvvvvvv╫vvvvvvvv│                                   ████                   │look               │
+vvvΠvvvvvvv╫vvvvvvvv│                                   ████                   │build mode         │
+vvv╫╫╫╫╫╫╫╫╫vvvvvvvv│                                                          │fuel generator     │
+vvvvvvvvvvvvvvvvvvvv│             r: last 10 minutes  ESCAPE: close            │inspect pole       │
+vvvvvvvvvvvvvvvvvvvv│                                                          │───────────────────┘
+┌Messages───────────│                                                          │───────────────────┐
+│[1] Added 1 Standar│                                                          │                   │
+│[1001] Time passes.│                                                          │                   │
+│[1001] Opened batte└──────────────────────────────────────────────────────────┘                   │
 │[1001] Finished looting                                                                           │
 │[1001] Choose interaction:                                                                        │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
-│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Menu │ Help │ Cred│
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Production │ Menu │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 === end screen ===

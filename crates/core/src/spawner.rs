@@ -102,18 +102,22 @@ impl Spawner {
 
     /// Use one slurry and one charge for a creature that came out of a placed spawner; a
     /// spent embryo is used up and the next one starts.
-    fn use_up(&mut self, inv: &mut Inventory) {
+    /// Returns what it used up.
+    fn use_up(&mut self, inv: &mut Inventory) -> Vec<ItemKind> {
         if self.wild.is_some() {
-            return;
+            return Vec::new();
         }
         let Some((embryo, _)) = embryos(inv) else {
-            return;
+            return Vec::new();
         };
         self.charges = self.charges_left(inv) - 1;
         take_one(inv, ItemKind::MeatSlurry);
+        let mut used = vec![ItemKind::MeatSlurry];
         if self.charges == 0 {
             take_one(inv, embryo);
+            used.push(embryo);
         }
+        used
     }
 
     /// What the look panel says about it: what it grows, or what it lacks, and how long
@@ -345,8 +349,16 @@ pub fn step_spawners(world: &mut World, res: &mut Resources, step_tick: u64) {
                 .expect("still a spawner");
             let (spawner, inv) = query.get().expect("still a spawner");
             spawner.elapsed = 0;
-            if let Some(inv) = inv {
-                spawner.use_up(inv);
+            let used = inv.map(|inv| spawner.use_up(inv)).unwrap_or_default();
+            drop(query);
+            for item in used {
+                crate::factory_stats::record(
+                    res,
+                    item,
+                    1,
+                    crate::factory_stats::Source::Machine(FactoryKind::Spawner),
+                    false,
+                );
             }
         }
     }

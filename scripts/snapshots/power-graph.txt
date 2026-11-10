@@ -1,0 +1,15 @@
+# The power pole box's demand graph on the showcase's battery bank: the burner's stick runs
+# out and the battery carries the furnace. Then the same box over the last 10 minutes.
+seed 12345
+size 100x30
+world factory-showcase
+key ui.MENU_PREV
+key action.PASS_TIME 6
+cheat tp 98 -8 0
+key action.INTERACT
+key movement.MOVE_SOUTH
+expect-text "Demand, last 60 seconds"
+screen pole-graph-60s
+key stats.CYCLE_RANGE
+expect-text "Demand, last 10 minutes"
+screen pole-graph-10m

@@ -176,6 +176,9 @@ fn ui_main(f: &mut Frame, app: &mut App) {
                 root_chunks[1],
             );
         }
+        MenuTab::Production => {
+            crate::ui::panels::production::render_production_panel(f, app, root_chunks[1]);
+        }
         MenuTab::Body => {
             // Body panel
             render_body_panel(f, app, root_chunks[1]);
@@ -396,6 +399,7 @@ fn calculate_game_viewport_area(f: &Frame, app: &App) -> Rect {
         | MenuTab::Quests
         | MenuTab::Crafting
         | MenuTab::ItemDictionary
+        | MenuTab::Production
         | MenuTab::Body
         | MenuTab::Help
         | MenuTab::Inventory
