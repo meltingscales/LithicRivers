@@ -533,6 +533,13 @@ fn step_feeders(world: &mut World, res: &mut Resources, tick: u64) {
         };
         if feed(world, res, sheep, item).is_ok() {
             take_one(world, feeder, item);
+            crate::factory_stats::record(
+                res,
+                item,
+                1,
+                crate::factory_stats::Source::Machine(FactoryKind::AutoFeeder),
+                false,
+            );
             if let Ok(mut f) = world.get::<&mut Feeder>(feeder) {
                 f.next_tick = tick + FEEDER_PERIOD_TICKS;
             }
@@ -682,14 +689,24 @@ fn step_processors(world: &mut World, res: &mut Resources) {
             };
             if dead {
                 crate::systems::handle_machine_kill(world, res, victim);
-                collect_corpses(world, processor, victim_pos);
+                for stack in collect_corpses(world, processor, victim_pos) {
+                    crate::factory_stats::record(
+                        res,
+                        stack.kind,
+                        stack.qty,
+                        crate::factory_stats::Source::Machine(FactoryKind::LivestockProcessor),
+                        true,
+                    );
+                }
             }
         }
     }
 }
 
-/// Move everything corpses at `pos` hold into the processor, and clear them away.
-fn collect_corpses(world: &mut World, processor: Entity, pos: Position) {
+/// Move everything corpses at `pos` hold into the processor, and clear them away. Returns
+/// what it collected.
+fn collect_corpses(world: &mut World, processor: Entity, pos: Position) -> Vec<ItemStack> {
+    let mut collected = Vec::new();
     let corpses: Vec<Entity> = world
         .query::<(&EntityKind, &Position)>()
         .iter()
@@ -702,12 +719,14 @@ fn collect_corpses(world: &mut World, processor: Entity, pos: Position) {
             .map(|inv| inv.slots.clone())
             .unwrap_or_default();
         if let Ok(mut inv) = world.get::<&mut Inventory>(processor) {
-            for stack in items {
+            for stack in &items {
                 inv.add(stack.kind, stack.qty);
             }
         }
+        collected.extend(items);
         let _ = world.despawn(corpse);
     }
+    collected
 }
 
 /// Bio-vats work their batch at their power and grow an embryo when it is done.
@@ -753,8 +772,22 @@ fn step_bio_vats(world: &mut World, res: &mut Resources) {
             for _ in 0..qty {
                 take_one(world, vat, item);
             }
+            crate::factory_stats::record(
+                res,
+                item,
+                qty,
+                crate::factory_stats::Source::Machine(FactoryKind::BioVat),
+                false,
+            );
         }
         let grade = roll_grade(res, pos, batch, bonus);
+        crate::factory_stats::record(
+            res,
+            grade.item(),
+            1,
+            crate::factory_stats::Source::Machine(FactoryKind::BioVat),
+            true,
+        );
         if let Ok(mut inv) = world.get::<&mut Inventory>(vat) {
             inv.add(grade.item(), 1);
         }

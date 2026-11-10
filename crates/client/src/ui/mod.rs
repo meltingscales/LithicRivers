@@ -3,6 +3,7 @@
 pub mod boot_backdrop;
 pub mod click_targets;
 pub mod demo;
+pub mod graph;
 pub mod layout;
 pub mod modals;
 pub mod panels;

@@ -169,6 +169,13 @@ pub fn mining_system(world: &mut World, res: &mut Resources) -> bool {
             else {
                 return false;
             };
+            crate::factory_stats::record(
+                res,
+                seed,
+                1,
+                crate::factory_stats::Source::PlayerMining,
+                true,
+            );
             res.events.interaction_event(
                 format!(
                     "You pull up the {}. (+1 {})",
@@ -225,6 +232,13 @@ pub fn mining_system(world: &mut World, res: &mut Resources) -> bool {
                 return false;
             };
             for &(kind, qty) in &gained {
+                crate::factory_stats::record(
+                    res,
+                    kind,
+                    qty,
+                    crate::factory_stats::Source::PlayerMining,
+                    true,
+                );
                 world.spawn((
                     Position { x, y, z },
                     DroppedItem { kind, qty },

@@ -34,3 +34,19 @@
 
 - [Memory: 600 samples per network] → Small (two u64 each); stale networks expire.
 - [A missed record call makes numbers lie] → The inventory-delta test catches it.
+
+## Implementation notes
+
+- **Module:** `factory_stats.rs`; the data is `Resources::factory_stats` (`res.stats` was already the achievement counters).
+- **Power sampling:** once per factory second (every 5 factory steps, 3 game seconds), not once per game second: factory steps are 0.6 game seconds, so a game second isn't a whole number of steps. 10 game minutes is 200 samples and the short view's 60 game seconds is 20. Histories live in a list sorted by id rather than a map, since the save is JSON and positions can't be map keys.
+- **Graph:** `ui::graph::bars` is a pure function. The pole box draws demand per sample, scaled to the larger of supply and demand, with short samples in red. `stats.CYCLE_RANGE` (`r`) switches between 60 seconds (one column a sample) and 10 minutes (bucketed to fit). The pole box got taller to fit it.
+- **Item flow:** minute buckets hold a list of `(item, source, produced, consumed)` entries. `record` is called by:
+  - player mining and chopping, and pulling up a plant (`PlayerMining`)
+  - the harvester, furnaces and the fermenter, the spawner, the feeder, the processor and the bio-vat (`Machine(kind)`)
+  - player crafting (`Crafting`)
+  - generators and crude furnaces burning fuel (`Fuel`)
+  - `plants::plant` (`Planting`)
+
+  `recorded_totals_match_what_inventories_gained_and_lost` checks player mining, planting, fuel and a furnace against the inventories. Feeding a sheep by hand and items picked up from corpses aren't counted, as neither is production.
+- **Production tab:** after Items (not after Crafting, where Items now sits), so earlier tabs keep their positions. It averages over the last 1, 10 or 60 game minutes, dividing by the whole window. The menu bar in every snapshot changed.
+

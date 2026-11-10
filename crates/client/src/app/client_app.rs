@@ -30,6 +30,7 @@ pub(crate) enum MenuTab {
     Inventory,
     Crafting,
     ItemDictionary,
+    Production,
     Menu,
     Help,
     Credits,
@@ -40,7 +41,7 @@ pub(crate) const BOOT_MESSAGE_TYPEWRITER_MS: u64 = 200;
 
 impl MenuTab {
     /// Every tab, in the order the menu bar shows them.
-    const ORDER: [MenuTab; 12] = [
+    const ORDER: [MenuTab; 13] = [
         MenuTab::World,
         MenuTab::Tutorial,
         MenuTab::GlobalMap,
@@ -49,6 +50,7 @@ impl MenuTab {
         MenuTab::Inventory,
         MenuTab::Crafting,
         MenuTab::ItemDictionary,
+        MenuTab::Production,
         MenuTab::Menu,
         MenuTab::Help,
         MenuTab::Credits,
@@ -74,6 +76,7 @@ impl MenuTab {
             MenuTab::Inventory => "Inventory",
             MenuTab::Crafting => "Crafting",
             MenuTab::ItemDictionary => "Items",
+            MenuTab::Production => "Production",
             MenuTab::Menu => "Menu",
             MenuTab::Help => "Help",
             MenuTab::Credits => "Credits",
@@ -327,6 +330,9 @@ impl App {
             }
             MenuTab::ItemDictionary => {
                 self.core.game.res.log("Item Dictionary active");
+            }
+            MenuTab::Production => {
+                self.core.game.res.log("Production statistics active");
             }
         }
     }

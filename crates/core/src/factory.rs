@@ -78,7 +78,19 @@ impl Facing {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, strum::EnumIter)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    Serialize,
+    Deserialize,
+    strum::EnumIter,
+)]
 pub enum FactoryKind {
     Chest,
     /// Wooden conveyor: carries one item a tile in its facing direction
@@ -841,6 +853,7 @@ pub fn run_due_steps(world: &mut World, res: &mut Resources) {
         crate::power_cells::update_charger_demand(world);
         crate::livestock::update_demand(world);
         crate::power::step_power(world, res);
+        crate::factory_stats::sample_power(res, step_tick);
         crate::machines::step_machines(world, res);
         crate::livestock::step(world, res, step_tick);
         crate::furnace::step_furnaces(world, res);

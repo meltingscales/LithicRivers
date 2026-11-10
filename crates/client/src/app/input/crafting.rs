@@ -109,6 +109,10 @@ pub fn handle_crafting_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dy
                                 .push(ItemStack::new(recipe.result, recipe.quantity));
                         }
 
+                        lithicrivers_core::factory_stats::record_craft(
+                            &mut app.core.game.res,
+                            recipe,
+                        );
                         app.panels.crafting.message = Some((
                             format!(
                                 "Crafted {}x {}",

@@ -402,17 +402,19 @@ impl Furnace {
 
     /// One factory step: smelt if there's a full batch, room for the result and energy for
     /// the step. Without energy it pauses, keeping its progress; with nothing to smelt it
-    /// resets.
-    pub fn step(&mut self, energy: Energy) {
+    /// resets. Returns the fuel item it started burning and the recipe it finished, if any.
+    pub fn step(&mut self, energy: Energy) -> StepOutcome {
+        let mut outcome = StepOutcome::default();
         let Some(recipe) = self.ready_recipe() else {
             self.progress = 0;
             self.lit = false;
-            return;
+            return outcome;
         };
         let gained = match energy {
             Energy::Fuel { step_j } => {
                 if self.buffer_j < step_j {
                     if let Some(energy) = self.fuel.and_then(|s| fuel_energy(s.kind)) {
+                        outcome.burned = self.fuel.map(|s| s.kind);
                         self.buffer_j += energy;
                         remove(&mut self.fuel, 1);
                     }
@@ -437,8 +439,19 @@ impl Furnace {
             if let Some((item, qty)) = recipe.byproduct {
                 add(&mut self.byproduct, item, qty);
             }
+            outcome.finished = Some(recipe);
         }
+        outcome
     }
+}
+
+/// What one furnace step used up and made.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct StepOutcome {
+    /// The fuel item it started burning
+    pub burned: Option<ItemKind>,
+    /// The recipe it finished
+    pub finished: Option<&'static SmeltingRecipe>,
 }
 
 /// Why moving an item between the player and a furnace slot failed.
@@ -542,6 +555,22 @@ pub fn sprite(kind: FactoryKind, facing: Facing, lit: bool) -> SpriteRef {
     SpriteRef::new("factory", &format!("{base}_{state}_{}", facing.name()))
 }
 
+/// Count what a furnace step used and made in the factory stats.
+fn record_outcome(res: &mut Resources, kind: FactoryKind, outcome: StepOutcome) {
+    use crate::factory_stats::{record, Source};
+    if let Some(fuel) = outcome.burned {
+        record(res, fuel, 1, Source::Fuel, false);
+    }
+    if let Some(recipe) = outcome.finished {
+        let source = Source::Machine(kind);
+        record(res, recipe.input, recipe.input_count, source, false);
+        record(res, recipe.output, recipe.output_count, source, true);
+        if let Some((item, qty)) = recipe.byproduct {
+            record(res, item, qty, source, true);
+        }
+    }
+}
+
 /// Before power is shared: an electric furnace wants power only with a batch to smelt.
 pub fn update_demand(world: &mut World) {
     for (_, (furnace, consumer)) in world.query_mut::<(&Furnace, &mut PowerConsumer)>() {
@@ -572,12 +601,13 @@ pub fn step_furnaces(world: &mut World, res: &mut Resources) {
                 step_j: CRUDE_FURNACE_W / STEPS_PER_FACTORY_SECOND,
             },
         };
-        let (was_lit, lit, output) = {
+        let (was_lit, lit, output, outcome) = {
             let mut furnace = world.get::<&mut Furnace>(entity).expect("furnace");
             let was_lit = furnace.lit;
-            furnace.step(energy);
-            (was_lit, furnace.lit, furnace.next_out())
+            let outcome = furnace.step(energy);
+            (was_lit, furnace.lit, furnace.next_out(), outcome)
         };
+        record_outcome(res, block.kind, outcome);
         if lit != was_lit {
             let _ = world.insert_one(entity, sprite(block.kind, facing, lit));
         }

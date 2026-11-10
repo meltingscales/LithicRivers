@@ -178,6 +178,8 @@ impl App {
     fn fresh_panels(credits_text: String) -> PanelStates {
         PanelStates {
             power_info: None,
+            power_range_long: false,
+            production: Default::default(),
             furnace_window: None,
             item_dictionary: Default::default(),
             filter_picker: None,

@@ -1433,7 +1433,7 @@ pub(crate) mod tests {
         let mut runner = chain_commands(&[
             "skip-splash",
             "key movement.MOVE_SOUTH",
-            "key ui.MENU_NEXT 10",
+            "key ui.MENU_NEXT 11",
             "key ui.MENU_ACTIVATE",
         ]);
         click_on(&mut runner, ClickTarget::TitleChoice(0), "left");

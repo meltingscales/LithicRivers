@@ -220,6 +220,15 @@ fn act(world: &mut World, res: &mut Resources, machine: Entity, kind: FactoryKin
         }
         FactoryKind::AutoHarvester => {
             let drops = crate::crafting::mine_tile(res, at).unwrap_or_default();
+            for &(item, qty) in &drops {
+                crate::factory_stats::record(
+                    res,
+                    item,
+                    qty,
+                    crate::factory_stats::Source::Machine(kind),
+                    true,
+                );
+            }
             if let Ok(mut inv) = world.get::<&mut Inventory>(machine) {
                 for (item, qty) in drops {
                     inv.add(item, qty);

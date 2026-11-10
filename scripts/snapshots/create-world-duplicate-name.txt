@@ -10,7 +10,7 @@ key title.DOWN 6
 key title.SELECT
 rawkey ENTER
 rawkey ENTER
-key ui.MENU_NEXT 7
+key ui.MENU_NEXT 8
 key ui.SAVE_AND_QUIT_TO_TITLE
 key title.SELECT
 # Create New World again with the default name
@@ -22,7 +22,7 @@ key title.DOWN 6
 key title.SELECT
 rawkey ENTER
 rawkey ENTER
-key ui.MENU_NEXT 7
+key ui.MENU_NEXT 8
 key ui.SAVE_AND_QUIT_TO_TITLE
 key title.SELECT
 expect-text "New World (2)"

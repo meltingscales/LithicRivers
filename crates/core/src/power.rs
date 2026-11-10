@@ -286,17 +286,20 @@ fn available_j(world: &World, generator: Entity) -> u64 {
 }
 
 /// Take `joules` from a generator, starting its next fuel item if the buffer runs short.
-fn draw(world: &mut World, generator: Entity, joules: u64) {
+/// Returns the fuel item it started burning, if any.
+fn draw(world: &mut World, generator: Entity, joules: u64) -> Option<ItemKind> {
     // An RTG burns nothing
     if world.get::<&Rtg>(generator).is_ok() {
-        return;
+        return None;
     }
+    let mut burned = None;
     let buffer = world.get::<&Generator>(generator).map_or(0, |g| g.buffer_j);
     let mut buffer = buffer;
     if buffer < joules {
         if let Ok(mut inv) = world.get::<&mut Inventory>(generator) {
             if let Some(slot) = inv.slots.iter().position(|s| fuel_energy(s.kind).is_some()) {
                 buffer += fuel_energy(inv.slots[slot].kind).unwrap_or(0);
+                burned = Some(inv.slots[slot].kind);
                 inv.slots[slot].qty -= 1;
                 if inv.slots[slot].qty == 0 {
                     inv.slots.remove(slot);
@@ -307,6 +310,7 @@ fn draw(world: &mut World, generator: Entity, joules: u64) {
     if let Ok(mut g) = world.get::<&mut Generator>(generator) {
         g.buffer_j = buffer.saturating_sub(joules);
     }
+    burned
 }
 
 /// One factory step of the grid: rebuild networks if needed, then share each network's
@@ -381,7 +385,15 @@ pub fn step_power(world: &mut World, res: &mut Resources) {
             }
             for (&generator, &share) in network.generators.iter().zip(&shares) {
                 if share > 0 {
-                    draw(world, generator, share);
+                    if let Some(fuel) = draw(world, generator, share) {
+                        crate::factory_stats::record(
+                            res,
+                            fuel,
+                            1,
+                            crate::factory_stats::Source::Fuel,
+                            false,
+                        );
+                    }
                 }
             }
         }

@@ -161,6 +161,7 @@ pub fn plant(
     if world.query::<&Position>().iter().any(|(_, p)| *p == pos) {
         return Err(PlantError::Occupied);
     }
+    crate::factory_stats::record(res, seed, 1, crate::factory_stats::Source::Planting, false);
     let Some(crop) = Crop::from_seed(seed) else {
         res.world_state
             .world

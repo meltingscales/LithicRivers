@@ -16,6 +16,7 @@ pub mod look_mode;
 pub mod mouse;
 pub mod multi_action;
 pub mod npc_interaction;
+pub mod production;
 pub mod quests;
 pub mod search;
 pub mod splash;
