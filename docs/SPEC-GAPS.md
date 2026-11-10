@@ -10,7 +10,6 @@ To act on one, ask for it by its suggested change name ("propose add-day-night-c
 
 | Idea | Source | Today | Suggested change |
 |---|---|---|---|
-| **Steam achievements:** the real achievement list (`add-steamworks` only adds a placeholder for dying). | STEAM-MVP.md | Missing | `add-steam-achievements` |
 | **Combat panel cleanup:** the emojis and stray "z" are gone and the enemy health bar shows again at small sizes; the spacing still needs a look by eye. | STEAM-MVP.md ("ugly combat UI") | Partly | `polish-combat-panel` |
 | **Sound effects** beyond music, for actions other than mining. | STEAM-MVP.md | Partly | `add-sound-effects` |
 | **Controller support and Steam Deck** checks. | TODO.md | Missing | `add-controller-support` |

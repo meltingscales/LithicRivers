@@ -214,6 +214,18 @@ pub struct Resources {
     /// Where quest chests have been placed, so each is placed once per world
     #[serde(default)]
     pub quest_chests_placed: std::collections::BTreeSet<(i64, i64, i64)>,
+    /// What the player has done in this world, for achievements
+    #[serde(default)]
+    pub stats: PlayerStats,
+}
+
+/// Counts of what the player has done in a world, saved with it.
+#[derive(Debug, Clone, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct PlayerStats {
+    /// Enemies and creatures destroyed
+    pub enemies_killed: u64,
+    /// Teleports taken (teleporters, stations and the device)
+    pub teleports: u64,
 }
 
 impl Resources {
@@ -242,6 +254,7 @@ impl Resources {
             spawn_check_period: 0,
             spawned_chunks: Default::default(),
             quest_chests_placed: Default::default(),
+            stats: PlayerStats::default(),
         }
     }
 

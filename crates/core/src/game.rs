@@ -167,8 +167,9 @@ impl Game {
         dead_dog_inventory.add(ItemKind::Meat, 2);
         world.insert_one(dead_dog, dead_dog_inventory).unwrap();
 
-        // Now properly kill it and convert to corpse
+        // Now properly kill it and convert to corpse; the player didn't kill it
         crate::systems::handle_entity_death(&mut world, &mut res, dead_dog);
+        res.stats.enemies_killed = 0;
 
         // spawn 2 feral dogs a bit further
         let dog_positions = [(sx + 12, sy + 12, sz), (sx + 13, sy + 13, sz)];

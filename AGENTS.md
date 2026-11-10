@@ -124,7 +124,7 @@ The budget is 16 ms per tick and per frame at 80x24 on a release build (`perform
 
 Steam support (`crates/client/src/steam.rs`) is behind the client's `steam` cargo feature, which only the `build-release-*` recipes turn on, so tests, `just build-linux`, headless runs, MCP and Android never link the Steam library. Without the feature, `Steam` is a stub that never connects. The release binary loads `libsteam_api.so` / `libsteam_api.dylib` / `steam_api64.dll` from its own folder: `build.rs` sets the rpath, and the stage-artifacts-release scripts copy the library from the steamworks-sys build. `just code-clippy` uses `--all-features`, so it lints the Steam code too.
 
-Achievements are checked in the client (`App::check_achievements`, once a frame) and recorded in `app.steam.unlocked_this_session` whether or not Steam is connected, so tests can check them without Steam (see the tests in `steam.rs`). Worlds that allow cheats never unlock achievements.
+Achievements are checked in the client (`App::check_achievements`, once a frame) and recorded in `app.steam.unlocked_this_session` whether or not Steam is connected, so tests can check them without Steam (see the tests in `steam.rs`). Worlds that allow cheats never unlock achievements. The list is `steam::Achievement` (System Failure, Daylight, Self-Defense, Spare Parts, Two Hands, Transit); conditions read the world's state, including `res.stats` (enemies destroyed, teleports taken), and each new achievement also has to be added in Steamworks by hand.
 
 ## Saves
 

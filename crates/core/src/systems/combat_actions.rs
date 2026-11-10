@@ -679,6 +679,10 @@ pub fn handle_entity_death(world: &mut World, res: &mut Resources, entity: hecs:
         }
     }
 
+    if !is_player {
+        res.stats.enemies_killed += 1;
+    }
+
     // Add Dead marker
     world.insert_one(entity, Dead).ok();
 

@@ -13,6 +13,16 @@ pub const APP_ID: u32 = 3940720;
 pub enum Achievement {
     /// Lose your body for the first time ("System Failure")
     FirstDeath,
+    /// Reach the surface ("Daylight")
+    Surface,
+    /// Destroy an enemy ("Self-Defense")
+    FirstKill,
+    /// Complete Repair the Broken Android ("Spare Parts")
+    RepairAndroid,
+    /// Complete the arm quest ("Two Hands")
+    ReplaceArm,
+    /// Teleport for the first time ("Transit")
+    FirstJump,
 }
 
 impl Achievement {
@@ -21,6 +31,11 @@ impl Achievement {
     pub fn api_name(self) -> &'static str {
         match self {
             Achievement::FirstDeath => "ACH_FIRST_DEATH",
+            Achievement::Surface => "ACH_SURFACE",
+            Achievement::FirstKill => "ACH_FIRST_KILL",
+            Achievement::RepairAndroid => "ACH_REPAIR_ANDROID",
+            Achievement::ReplaceArm => "ACH_REPLACE_ARM",
+            Achievement::FirstJump => "ACH_FIRST_JUMP",
         }
     }
 }
@@ -65,8 +80,12 @@ impl Steam {
     }
 
     /// Unlock an achievement: recorded for this session always, and set and stored in
-    /// Steam when connected (Steam ignores repeated unlocks).
+    /// Steam when connected. Does nothing for one already unlocked this session, so a
+    /// condition that stays true doesn't call Steam every frame.
     pub fn unlock(&mut self, achievement: Achievement) {
+        if self.unlocked_this_session.contains(&achievement) {
+            return;
+        }
         self.unlocked_this_session.push(achievement);
         #[cfg(feature = "steam")]
         if let Some(client) = &self.client {
@@ -121,6 +140,69 @@ mod tests {
     fn dying_with_cheats_unlocks_nothing() {
         let mut runner = alive(true);
         die(&mut runner);
+        assert!(runner.app.steam.unlocked_this_session.is_empty());
+    }
+
+    #[test]
+    fn reaching_the_surface_unlocks_daylight_once() {
+        let mut runner = alive(false);
+        assert!(
+            runner.app.steam.unlocked_this_session.is_empty(),
+            "in the bunker"
+        );
+        let game = &mut runner.app.core.game;
+        let player = game.get_player_entity().unwrap();
+        *game
+            .world
+            .get::<&mut lithicrivers_core::components::Position>(player)
+            .unwrap() = lithicrivers_core::components::Position { x: 0, y: 0, z: 0 };
+        for _ in 0..10 {
+            runner.app.check_achievements();
+        }
+        assert_eq!(
+            runner.app.steam.unlocked_this_session,
+            vec![Achievement::Surface]
+        );
+    }
+
+    #[test]
+    fn kills_quests_and_jumps_unlock_theirs() {
+        use lithicrivers_core::dialogue::{ActiveQuest, QuestType};
+        let mut runner = alive(false);
+        let res = &mut runner.app.core.game.res;
+        res.stats.enemies_killed = 1;
+        res.stats.teleports = 1;
+        for quest in [QuestType::RepairBrokenAndroid, QuestType::ReplaceArm] {
+            res.start_quest(ActiveQuest::new(
+                quest,
+                format!("{quest:?}"),
+                String::new(),
+                vec![],
+                None,
+            ));
+            res.complete_quest(quest);
+        }
+        runner.app.check_achievements();
+        let mut unlocked = runner.app.steam.unlocked_this_session.clone();
+        unlocked.sort_by_key(|a| a.api_name());
+        assert_eq!(
+            unlocked,
+            vec![
+                Achievement::FirstJump,
+                Achievement::FirstKill,
+                Achievement::RepairAndroid,
+                Achievement::ReplaceArm,
+            ]
+        );
+    }
+
+    #[test]
+    fn worlds_with_cheats_unlock_nothing() {
+        let mut runner = alive(true);
+        let res = &mut runner.app.core.game.res;
+        res.stats.enemies_killed = 3;
+        res.stats.teleports = 2;
+        runner.app.check_achievements();
         assert!(runner.app.steam.unlocked_this_session.is_empty());
     }
 
