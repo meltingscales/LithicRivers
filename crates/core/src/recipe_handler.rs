@@ -188,6 +188,7 @@ impl RecipeHandler {
                     (ItemKind::StandardPowerCell, 1),
                     (ItemKind::PlasteelScrap, 3),
                     (ItemKind::NuclearWaste, 2),
+                    (ItemKind::Riverglass, 2),
                 ],
                 result: ItemKind::AdvancedPowerCell,
                 quantity: 1,
@@ -222,14 +223,14 @@ impl RecipeHandler {
                 result: ItemKind::Rtg,
                 quantity: 1,
             },
-            // Teleporter: a late-tier block; placeholder ingredients until the later tiers
-            // have their own materials
+            // Teleporter: a late-tier block that needs riverglass from the deep
             Recipe {
                 name: "Teleporter",
                 ingredients: &[
                     (ItemKind::StandardFusionCore, 1),
                     (ItemKind::PlasteelScrap, 6),
                     (ItemKind::ScrapElectronics, 8),
+                    (ItemKind::Riverglass, 4),
                 ],
                 result: ItemKind::Teleporter,
                 quantity: 1,

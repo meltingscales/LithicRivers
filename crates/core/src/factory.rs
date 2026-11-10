@@ -400,6 +400,29 @@ pub fn can_place_at(world: &World, res: &mut Resources, pos: Position) -> bool {
     tile.is_passable() && !world.query::<&Position>().iter().any(|(_, p)| *p == pos)
 }
 
+/// Place a plain block tile (stone, a plank block, a stone brick) at `pos`, and return the
+/// tile that ends up there. On lava the block sinks and leaves walkable lava crust. Does not
+/// touch the player's inventory.
+pub fn place_plain_block(
+    world: &World,
+    res: &mut Resources,
+    tile: TileKind,
+    pos: Position,
+) -> Result<TileKind, PlaceError> {
+    let here = res.world_state.world.get_tile_cached(pos.x, pos.y, pos.z);
+    let placed = if here == TileKind::Lava {
+        TileKind::LavaCrust
+    } else if can_place_at(world, res, pos) {
+        tile
+    } else {
+        return Err(PlaceError::Occupied);
+    };
+    res.world_state
+        .world
+        .set_tile_cached(pos.x, pos.y, pos.z, placed);
+    Ok(placed)
+}
+
 /// Place a factory block. Does not touch the player's inventory.
 pub fn place(
     world: &mut World,

@@ -10,7 +10,7 @@ To act on one, ask for it by its suggested change name ("propose add-day-night-c
 
 | Idea | Source | Today | Suggested change |
 |---|---|---|---|
-| **Combat panel cleanup:** too much spacing, emojis and a stray "z" character. | STEAM-MVP.md ("ugly combat UI") | Missing | `polish-combat-panel` |
+| **Combat panel cleanup:** the emojis and stray "z" are gone and the enemy health bar shows again at small sizes; the spacing still needs a look by eye. | STEAM-MVP.md ("ugly combat UI") | Partly | `polish-combat-panel` |
 | **Sound effects** beyond music, for actions other than mining. | STEAM-MVP.md | Partly | `add-sound-effects` |
 | **Controller support and Steam Deck** checks. | TODO.md | Missing | `add-controller-support` |
 | **Mods:** a modding system and Steam Workshop support. | TODO.md | Missing | `add-modding` |
@@ -22,7 +22,6 @@ To act on one, ask for it by its suggested change name ("propose add-day-night-c
 | **More surface biomes:** arboreal, frozen wasteland, lush forest with springs, pools and ruins, nuked city, abandoned mine. `overhaul-worldgen-depth` leaves the surface as it is on purpose. | STEAM-MVP.md (small temp list), TODO.md | Missing | `add-surface-biomes` |
 | **Landmark structures** placed by worldgen, like the Python version's: a crashed ship and an abandoned research station (the abandoned factory exists). | STEAM-MVP.md | Partly | `add-landmark-structures` |
 | **Procedural dungeons v2**, using the TinyKeep layout algorithm in `docs/dungeons/tinybuild-dungeons.md` (originally from https://www.gamedeveloper.com/programming/procedural-dungeon-generation-algorithm). | TODO.md, docs/dungeons | Missing | `add-procedural-dungeons` |
-| **Mining bots:** dangerous enemies of the Lithic Rivers depths. | STEAM-MVP.md (core loop) | Missing | `add-mining-bots` |
 | **Structure generation "stretched" across z**, noted as a bug. `overhaul-worldgen-depth` (archived) reworked the bands but did not check it. | STEAM-MVP.md (small temp list) | Bug | `fix-structure-z-stretch` |
 
 ## Getting around

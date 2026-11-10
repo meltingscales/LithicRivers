@@ -45,14 +45,14 @@ fn bresenham_line(start_x: i64, start_y: i64, end_x: i64, end_y: i64) -> Vec<(i6
     points
 }
 
-/// Whether a tile stops sight and light: anything impassable except see-through blocks
-/// (fences, gates and lanterns).
+/// Whether a tile stops sight and light: anything impassable except lava and see-through
+/// blocks (fences, gates and lanterns).
 fn blocks_sight(world: &World, resources: &Resources, x: i64, y: i64, z: i64) -> bool {
     let tile = resources
         .world_state
         .world
         .get_tile_at_z_no_worldgen(x, y, z);
-    if tile.is_passable() {
+    if tile.is_passable() || tile == crate::tiles::TileKind::Lava {
         return false;
     }
     let see_through = tile == crate::tiles::TileKind::FactoryBlock

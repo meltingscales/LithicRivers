@@ -58,4 +58,6 @@ pub enum PaletteKey {
     // Marker under a factory block entity
     FactoryBlock,
     Sapling,
+    LavaCrust,
+    Riverglass,
 }
