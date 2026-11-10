@@ -209,17 +209,19 @@ impl EmbryoGrade {
     }
 }
 
-/// The embryo item for a creature and grade.
-pub fn embryo(creature: EnemyKind, grade: EmbryoGrade) -> ItemKind {
+/// The embryo item for a creature and grade; `None` for kinds without embryos.
+pub fn embryo(creature: EnemyKind, grade: EmbryoGrade) -> Option<ItemKind> {
     use EmbryoGrade::*;
-    match (creature, grade) {
+    Some(match (creature, grade) {
         (EnemyKind::FeralDog, Poor) => ItemKind::FeralDogEmbryoPoor,
         (EnemyKind::FeralDog, Flawed) => ItemKind::FeralDogEmbryoFlawed,
         (EnemyKind::FeralDog, Flawless) => ItemKind::FeralDogEmbryoFlawless,
         (EnemyKind::NuclearSlime, Poor) => ItemKind::NuclearSlimeEmbryoPoor,
         (EnemyKind::NuclearSlime, Flawed) => ItemKind::NuclearSlimeEmbryoFlawed,
         (EnemyKind::NuclearSlime, Flawless) => ItemKind::NuclearSlimeEmbryoFlawless,
-    }
+        // Machines have no embryos
+        (EnemyKind::MiningBot, _) => return None,
+    })
 }
 
 /// The creature and grade of an embryo item, if it is one.
@@ -227,7 +229,7 @@ pub fn embryo_kind(item: ItemKind) -> Option<(EnemyKind, EmbryoGrade)> {
     EnemyKind::ALL
         .iter()
         .flat_map(|&c| EmbryoGrade::ALL.map(|g| (c, g)))
-        .find(|&(c, g)| embryo(c, g) == item)
+        .find(|&(c, g)| embryo(c, g) == Some(item))
 }
 
 /// Roll whether a dying creature drops an embryo of its own kind: at most one, rolled
@@ -246,7 +248,7 @@ pub fn roll_embryo(
     for grade in EmbryoGrade::ALL {
         below += grade.drop_percent();
         if roll < below {
-            return Some(embryo(creature, grade));
+            return embryo(creature, grade);
         }
     }
     None
@@ -619,10 +621,9 @@ mod tests {
     fn an_embryo_item_knows_its_creature_and_grade() {
         for creature in EnemyKind::ALL {
             for grade in EmbryoGrade::ALL {
-                assert_eq!(
-                    embryo_kind(embryo(*creature, grade)),
-                    Some((*creature, grade))
-                );
+                if let Some(item) = embryo(*creature, grade) {
+                    assert_eq!(embryo_kind(item), Some((*creature, grade)));
+                }
             }
         }
         assert_eq!(embryo_kind(ItemKind::Meat), None);

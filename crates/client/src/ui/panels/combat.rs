@@ -950,6 +950,7 @@ fn enemy_name(app: &crate::App, entity: hecs::Entity) -> String {
     match app.core.game.world.get::<&EntityKind>(entity).map(|k| *k) {
         Ok(EntityKind::FeralDog) => "Feral dog".to_string(),
         Ok(EntityKind::NuclearSlime) => "Nuclear slime".to_string(),
+        Ok(EntityKind::MiningBot) => "Mining bot".to_string(),
         Ok(EntityKind::Sheep) => "Sheep".to_string(),
         _ => "Enemy".to_string(),
     }
