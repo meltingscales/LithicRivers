@@ -1,0 +1,23 @@
+# Playing with a gamepad: the stick moves, A opens the chest beside the robot, B closes it,
+# RB changes tabs, and in Place mode the right stick places the hotbar block.
+seed 12345
+size 100x30
+world factory-showcase
+key ui.MENU_PREV
+cheat tp -11 -7 0
+pad lstick w
+pad a
+expect-text "Chest"
+screen chest-open
+pad b
+pad rb
+expect-text "Tutorial"
+pad lb
+cheat giveitem stone 3
+key hotbar.HOTBAR_SLOT_1 2
+key movement.MOVE_SOUTH 2
+key ui.MENU_ACTIVATE
+pad y 2
+pad rstick s
+expect-text "Placed"
+screen placed

@@ -525,10 +525,7 @@ fn render_corpse_loot_modal(
         });
 
     // Controls at bottom
-    let take_all = app
-        .core
-        .config_manager
-        .get_printable_key_for_keybind("ui", "TAKE_ALL");
+    let take_all = app.key_label("ui", "TAKE_ALL");
     let controls = Paragraph::new(if is_chest {
         format!("←→ Panel | ↑↓ Select | Enter Move | {take_all} Take All | Esc Close")
     } else {

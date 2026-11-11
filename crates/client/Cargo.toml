@@ -50,6 +50,10 @@ winapi = { version = "0.3", features = ["winuser", "wincon"] }
 # GameActivity: the Android activity with soft-keyboard (IME) text input
 winit = { version = "0.30", features = ["android-game-activity"] }
 
+[target.'cfg(not(target_os = "android"))'.dependencies]
+# Gamepads on desktop (the gamepad-input spec); Android keeps the touch pad
+gilrs = "0.11"
+
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"
 

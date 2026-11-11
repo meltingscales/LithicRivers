@@ -559,11 +559,7 @@ fn action_label(app: &crate::App, action: &QueuedAction) -> String {
 }
 
 fn render_controls(f: &mut Frame, area: Rect, many_enemies: bool, app: &crate::App) {
-    let key = |category, action| {
-        app.core
-            .config_manager
-            .get_printable_key_for_keybind(category, action)
-    };
+    let key = |category, action| app.key_label(category, action);
     let hint = |k: &str, what: &'static str| {
         [
             Span::styled(format!("[{k}]"), Style::default().fg(Color::Yellow)),

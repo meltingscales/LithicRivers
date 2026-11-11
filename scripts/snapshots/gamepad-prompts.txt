@@ -1,0 +1,13 @@
+# Hints follow the last device: after the stick moves the robot, the context help panel
+# names gamepad controls and the wheel; a key press brings the keys back.
+seed 12345
+size 100x30
+skip-splash
+key ui.MENU_PREV
+pad lstick s
+expect-text "X: mine"
+expect-text "Hold LB: more"
+screen pad-hints
+key movement.WAIT
+expect-text "q: mine"
+screen key-hints

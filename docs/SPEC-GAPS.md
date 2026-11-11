@@ -11,7 +11,6 @@ To act on one, ask for it by its suggested change name ("propose add-day-night-c
 | Idea | Source | Today | Suggested change |
 |---|---|---|---|
 | **Combat panel cleanup:** the emojis and stray "z" are gone and the enemy health bar shows again at small sizes; the spacing still needs a look by eye. | STEAM-MVP.md ("ugly combat UI") | Partly | `polish-combat-panel` |
-| **Controller support and Steam Deck** checks. | TODO.md | Missing | `add-controller-support` |
 | **Mods:** a modding system and Steam Workshop support. | TODO.md | Missing | `add-modding` |
 
 ## Worldgen and places

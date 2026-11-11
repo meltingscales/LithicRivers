@@ -1,0 +1,69 @@
+---
+source: crates/client/src/snapshot_tests.rs
+expression: "String::from_utf8(out).unwrap()"
+input_file: scripts/snapshots/gamepad-play.txt
+---
+=== screen chest-open ===
+                                            LithicRivers
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌MODES ☼ 08:06─────────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  ------ - - -- - FOG │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Inventory─────────────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Nail x10              │
+vvvvvvvvvvvvvvv┌────────────────────────────── Chest ───────────────────────────────┐              │
+vvvvvvvvvvvvvvv│┌ Chest Items (2/16) ────────────┐┌ Your Items ────────────────────┐│              │
+vvvvvvvvvvvvvvv││10 x Log                        ││10 x Nail                       ││──────────────┘
+vvvvvvvvvvvvvvv││ 5 x Stone                      ││ 1 x Acorn                      ││ ! Damaged────┐
+vvvvvvvvvvvvvvv││                                ││ 3 x Log                        ││              │
+vvvvvvvvvvvvvvv││                                ││ 2 x Stick                      ││k             │
+vvvvvvvvvvvvvvv││                                ││ 3 x Torch                      ││              │
+vvvvvvvvvvvvvvv││                                ││ 2 x String                     ││ok            │
+vvvvvvvvvvvvvvv││                                ││ 3 x Scrap Electronics          ││ mode         │
+vvvvvvvvvvvvvvv││                                ││                                ││chest         │
+vvvvvvvvvvvvvvv││                                ││                                ││              │
+vvvvvvvvvvvvvvv││                                ││                                ││              │
+vvvvvvvvvvvvvvv││                                ││                                ││              │
+vvvvvvvvvvvvvvv││                                ││                                ││──────────────┘
+┌Messages──────││                                ││                                ││──────────────┐
+│[401] Opened c││                                ││                                ││              │
+│              │└────←→ Panel | ↑↓ Select | Enter Move | a Take All | Esc Close────┘│              │
+│              └────────────────────────────────────────────────────────────────────┘              │
+│                                                                                                  │
+│                                                                                                  │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Production │ Menu │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===
+=== screen placed ===
+                                            LithicRivers
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌MODES ☼ 08:06─────────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  ------ - P -- - FOG │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Inventory─────────────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Nail x10              │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Acorn x1              │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Log x3                │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvC@vv|||>CvvvC→>|CvvvvvCvvvvvvvvvvvvvGvv┌Help (h) ! Damaged────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#vvvvvvvvvvvvvvvvvvvv|vvvvv||F>CvvvG+v│Place mode, direction:│
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv||╬>Cvvvvvvvvvvvvvv│  R-stick             │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│F1-F12: hotbar        │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvCvvvvvvvvvvvvvvvv│r: turn (^)           │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Y: next mode          │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvt│Hold LB: more actions │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
+┌Hotbar (F1-F12) | facing ^ north (r to turn)──────────────────────────────────────────────────────┐
+│            F1[■] F2[ ] F3[ ] F4[ ] F5[ ] F6[ ] F7[ ] F8[ ] F9[ ] F10[ ] F11[ ] F12[ ]            │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
+│[401] Choose block for slot F1                                                                    │
+│[401] Assigned Stone to slot F1                                                                   │
+│[401] Build mode: Break                                                                           │
+│[401] Build mode: Place                                                                           │
+│[401] Placed Stone at (-11, -6, 0)                                                                │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Production │ Menu │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===

@@ -233,6 +233,33 @@ impl App {
                 self.press_demo_key(*code);
                 true
             }
+            // Demos play pad steps as they come; a hold opens its wheel on later frames
+            Step::Pad(pad) => {
+                use crate::gamepad::{handle_event, PadEvent};
+                use crate::headless::PadStep;
+                let button = |button, pressed| PadEvent::Button { button, pressed };
+                match *pad {
+                    PadStep::Tap(b, n) => {
+                        for _ in 0..n {
+                            handle_event(self, button(b, true));
+                            handle_event(self, button(b, false));
+                        }
+                    }
+                    PadStep::Hold(b) => handle_event(self, button(b, true)),
+                    PadStep::Release(b) => handle_event(self, button(b, false)),
+                    PadStep::Push(stick, dir) => {
+                        handle_event(
+                            self,
+                            PadEvent::Stick {
+                                stick,
+                                dir: Some(dir),
+                            },
+                        );
+                        handle_event(self, PadEvent::Stick { stick, dir: None });
+                    }
+                }
+                true
+            }
             Step::Type(text) => {
                 demo.pending.extend(text.chars().map(KeyCode::Char));
                 if let Some(first) = demo.pending.pop_front() {

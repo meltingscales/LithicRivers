@@ -37,7 +37,7 @@ pub(crate) fn render_filter_picker(f: &mut Frame, app: &App) {
             ListItem::new(format!("{mark}{label}"))
         })
         .collect();
-    let key = |c: &str, a: &str| app.core.config_manager.get_printable_key_for_keybind(c, a);
+    let key = |c: &str, a: &str| app.key_label(c, a);
     // The search hint, plus how to set and close while no search is going on
     let search = &picker.search;
     let footer = if search.typing || !search.text.is_empty() {

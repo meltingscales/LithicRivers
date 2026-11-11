@@ -54,9 +54,7 @@ fn record_rows(
 }
 
 fn key(app: &App, action: &str) -> &'static str {
-    app.core
-        .config_manager
-        .get_printable_key_for_keybind("title", action)
+    app.key_label("title", action)
 }
 
 fn hint(app: &App, extra: &str) -> Line<'static> {
@@ -298,7 +296,16 @@ fn render_options(f: &mut Frame, app: &App, area: Rect) {
                 "only on mobile".to_string()
             }
         ),
-        OPTIONS_ROWS[6].to_string(),
+        format!(
+            "{}: {}",
+            OPTIONS_ROWS[6],
+            if window.mobile {
+                "not on mobile".to_string()
+            } else {
+                window_value(on_off(window.gamepad, "on", "off"))
+            }
+        ),
+        OPTIONS_ROWS[7].to_string(),
     ];
     let mut lines = vec![Line::from("")];
     lines.extend(menu_lines(&rows, app.title.options_selected));

@@ -4,6 +4,7 @@
 
 pub mod display;
 pub mod fonts;
+pub mod gamepad;
 pub mod input;
 pub mod settings;
 pub mod touch;
@@ -208,6 +209,7 @@ pub fn run(app: &mut App, event_loop: EventLoop<()>) -> Result<(), String> {
         fullscreen: false,
         modifiers: ModifiersState::empty(),
         pointer_cell: None,
+        pads: gamepad::Poller::default(),
         error: None,
     };
     let result = event_loop.run_app(&mut handler);
@@ -241,6 +243,8 @@ struct WindowApp<'a> {
     /// The game window cell the pointer was last reported on, so moves are sent once
     /// per cell
     pointer_cell: Option<(u16, u16)>,
+    /// Connected gamepads (desktop only)
+    pads: gamepad::Poller,
     /// Why the game window couldn't be created, if it couldn't
     error: Option<String>,
 }
@@ -446,6 +450,7 @@ impl WindowApp<'_> {
                 let text = event.text.as_ref().map(|t| t.as_str());
                 let shift = self.modifiers.shift_key();
                 if let Some(code) = input::key_code(&event.logical_key, text, shift) {
+                    self.app.ui.last_input = crate::gamepad::InputDevice::Keyboard;
                     if let Err(e) = crate::handle_input(self.app, code) {
                         tracing::warn!(target: "game", "input error: {e}");
                     }
@@ -584,6 +589,11 @@ impl ApplicationHandler for WindowApp<'_> {
     }
 
     fn about_to_wait(&mut self, event_loop: &ActiveEventLoop) {
+        if !self.app.ui.window.mobile {
+            for event in self.pads.poll() {
+                crate::gamepad::handle_event(self.app, event);
+            }
+        }
         crate::step(self.app);
         if self.app.core.should_quit {
             event_loop.exit();

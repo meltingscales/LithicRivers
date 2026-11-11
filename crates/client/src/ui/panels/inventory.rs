@@ -107,6 +107,7 @@ pub fn render_inventory_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     let mut left_lines: Vec<Line<'static>> = Vec::new();
     if let Some(kind) = selected_kind {
         let (category, sprite_name) = ("items", itemkind_sprite_name(kind));
+        let use_key = app.key_label("inventory", "USE_ITEM");
         let sd = app.core.sprite_loader.load_sprite(sprite_name, category);
         // Art
         if let Some(block) = sd.art12x8_sprites.first() {
@@ -129,12 +130,7 @@ pub fn render_inventory_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
         // Gear says how to use it right under its name
         if kind == lithicrivers_core::components::ItemKind::MobileTeleAccessDevice {
             left_lines.push(Line::from(Span::styled(
-                format!(
-                    "{}: use",
-                    app.core
-                        .config_manager
-                        .get_printable_key_for_keybind("inventory", "USE_ITEM")
-                ),
+                format!("{use_key}: use"),
                 Style::default().fg(Color::Yellow),
             )));
         }
@@ -145,21 +141,15 @@ pub fn render_inventory_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
 
         left_lines.push(Line::from(Span::raw(format!(
             "  {}=drop",
-            app.core
-                .config_manager
-                .get_printable_key_for_keybind("inventory", "DROP_ITEM")
+            app.key_label("inventory", "DROP_ITEM")
         ))));
         left_lines.push(Line::from(Span::raw(format!(
             "  {}=duplicate",
-            app.core
-                .config_manager
-                .get_printable_key_for_keybind("inventory", "CHEAT_DUPLICATE_ITEM")
+            app.key_label("inventory", "CHEAT_DUPLICATE_ITEM")
         ))));
         left_lines.push(Line::from(Span::raw(format!(
             "  {}=destroy",
-            app.core
-                .config_manager
-                .get_printable_key_for_keybind("inventory", "DESTROY_ITEM")
+            app.key_label("inventory", "DESTROY_ITEM")
         ))));
     } else {
         left_lines.push(Line::from(Span::raw("Select an item")));

@@ -56,11 +56,7 @@ pub(crate) fn render_death_screen(f: &mut Frame, app: &App) {
     };
     f.render_widget(Clear, area);
     app.ui.click_targets.push(area, ClickTarget::ModalArea);
-    let key = |a| {
-        app.core
-            .config_manager
-            .get_printable_key_for_keybind("ui", a)
-    };
+    let key = |a| app.key_label("ui", a);
     let block = Block::default()
         .borders(Borders::ALL)
         .title(" Backup systems ")
@@ -204,11 +200,7 @@ fn render_resurrect_screen(f: &mut Frame, app: &App, selected: usize) {
     };
     f.render_widget(Clear, area);
     app.ui.click_targets.push(area, ClickTarget::ModalArea);
-    let key = |a| {
-        app.core
-            .config_manager
-            .get_printable_key_for_keybind("ui", a)
-    };
+    let key = |a| app.key_label("ui", a);
     let block = Block::default()
         .borders(Borders::ALL)
         .title(" Backup systems ")
