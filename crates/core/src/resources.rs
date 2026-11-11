@@ -223,6 +223,9 @@ pub struct Resources {
     /// Power history and item flow, for the pole graph and the Production tab
     #[serde(default)]
     pub factory_stats: crate::factory_stats::FactoryStats,
+    /// Shots fired in the last few ticks, for the client to draw their lines
+    #[serde(default)]
+    pub shots: Vec<crate::systems::ranged::ShotTrace>,
 }
 
 /// Counts of what the player has done in a world, saved with it.
@@ -263,6 +266,7 @@ impl Resources {
             sounds: Vec::new(),
             stats: PlayerStats::default(),
             factory_stats: Default::default(),
+            shots: Vec::new(),
         }
     }
 

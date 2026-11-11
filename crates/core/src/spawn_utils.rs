@@ -239,12 +239,55 @@ pub fn world_spawn_mining_bot(
     ))
 }
 
+/// A military android's health: more than a feral dog's 80.
+pub const MILITARY_ANDROID_HEALTH: u32 = 140;
+
+/// How a military android shoots: out to 7 tiles, 85% from 1 tile, 10% less per tile.
+pub const MILITARY_ANDROID_GUN: crate::components::RangedAttack = crate::components::RangedAttack {
+    range: 7,
+    accuracy_at_1: 85,
+    falloff: 10,
+    ammo: crate::components::ItemKind::BrassCartridge,
+};
+
+/// Spawn a rusty military android carrying its ammo and salvage, rolled from the world
+/// seed and its spawn position.
+pub fn world_spawn_military_android(
+    ecs_world: &mut hecs::World,
+    x: i64,
+    y: i64,
+    z: i64,
+    game_world: &GameWorld,
+) -> hecs::Entity {
+    let mut rng = ChaCha20Rng::seed_from_u64(game_world.mix_coords(x, y, z) ^ 0xA2D_201D);
+    let mut inventory = Inventory::default();
+    for (item, qty) in crate::crafting::roll_loot(crate::crafting::MILITARY_ANDROID_LOOT, &mut rng)
+    {
+        inventory.add(item, qty);
+    }
+    ecs_world.spawn((
+        Position { x, y, z },
+        GameEntity,
+        EntityKind::MilitaryAndroid,
+        crate::components::MilitaryAndroid,
+        crate::components::AndroidAI::default(),
+        MILITARY_ANDROID_GUN,
+        Health::new(MILITARY_ANDROID_HEALTH),
+        Glyph('A'),
+        SpriteRef::new("entities", "military_android"),
+        BlocksMovement,
+        Combat::default(),
+        inventory,
+    ))
+}
+
 /// Hostile creatures that can be spawned on demand (e.g. by the `spawn_enemy` cheat).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum EnemyKind {
     FeralDog,
     NuclearSlime,
     MiningBot,
+    MilitaryAndroid,
 }
 
 impl EnemyKind {
@@ -252,6 +295,7 @@ impl EnemyKind {
         EnemyKind::FeralDog,
         EnemyKind::NuclearSlime,
         EnemyKind::MiningBot,
+        EnemyKind::MilitaryAndroid,
     ];
 
     pub fn name(self) -> &'static str {
@@ -259,6 +303,7 @@ impl EnemyKind {
             EnemyKind::FeralDog => "feral_dog",
             EnemyKind::NuclearSlime => "nuclear_slime",
             EnemyKind::MiningBot => "mining_bot",
+            EnemyKind::MilitaryAndroid => "military_android",
         }
     }
 
@@ -268,6 +313,7 @@ impl EnemyKind {
             EnemyKind::FeralDog => "feral dogs",
             EnemyKind::NuclearSlime => "nuclear slimes",
             EnemyKind::MiningBot => "mining bots",
+            EnemyKind::MilitaryAndroid => "military androids",
         }
     }
 
@@ -320,6 +366,9 @@ pub fn spawn_enemy(
             world_spawn_nuclear_slime(ecs_world, pos.x, pos.y, pos.z, game_world)
         }
         EnemyKind::MiningBot => world_spawn_mining_bot(ecs_world, pos.x, pos.y, pos.z, game_world),
+        EnemyKind::MilitaryAndroid => {
+            world_spawn_military_android(ecs_world, pos.x, pos.y, pos.z, game_world)
+        }
     })
 }
 

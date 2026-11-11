@@ -4,6 +4,7 @@ pub mod ecs_utils;
 pub mod entity_ai;
 pub mod fog_of_war;
 pub mod player_movement;
+pub mod ranged;
 
 // Re-export all systems for external use
 pub use combat_actions::*;
@@ -12,3 +13,4 @@ pub use ecs_utils::*;
 pub use entity_ai::*;
 pub use fog_of_war::*;
 pub use player_movement::*;
+pub use ranged::military_android_system;

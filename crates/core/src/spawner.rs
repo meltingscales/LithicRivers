@@ -224,7 +224,7 @@ pub fn embryo(creature: EnemyKind, grade: EmbryoGrade) -> Option<ItemKind> {
         (EnemyKind::NuclearSlime, Flawed) => ItemKind::NuclearSlimeEmbryoFlawed,
         (EnemyKind::NuclearSlime, Flawless) => ItemKind::NuclearSlimeEmbryoFlawless,
         // Machines have no embryos
-        (EnemyKind::MiningBot, _) => return None,
+        (EnemyKind::MiningBot | EnemyKind::MilitaryAndroid, _) => return None,
     })
 }
 

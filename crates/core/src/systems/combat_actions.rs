@@ -61,6 +61,7 @@ pub fn action_queue_system(world: &mut World, res: &mut Resources) {
     const DELTA_TICKS: u64 = 1; // Each game tick advances by 1
 
     combat_energy_regen(world, res);
+    super::ranged::prune_shot_traces(res);
 
     let mut entities_with_queues = Vec::new();
 
@@ -214,6 +215,15 @@ pub fn execute_combat_action(world: &mut World, res: &mut Resources, action: &Qu
             }
 
             execute_enemy_attack(world, res, action.entity, *target_entity, *damage);
+        }
+        CombatAction::EnemyShoot { target_entity } => {
+            if world.get::<&Dead>(*target_entity).is_ok() {
+                return;
+            }
+            super::ranged::execute_enemy_shoot(world, res, action.entity, *target_entity);
+        }
+        CombatAction::EnemyStep { away } => {
+            super::ranged::execute_enemy_step(world, res, action.entity, *away);
         }
     }
 }
@@ -490,7 +500,7 @@ pub fn cleanup_actions_targeting_dead_entity(
 }
 
 /// Apply damage to an entity using safe component access
-fn apply_damage(
+pub(crate) fn apply_damage(
     world: &mut World,
     res: &mut Resources,
     target_entity: hecs::Entity,
@@ -662,7 +672,10 @@ fn entity_death(world: &mut World, res: &mut Resources, entity: hecs::Entity, by
     let entity_pos = world.get::<&Position>(entity).ok().map(|p| *p);
     let is_player = is_player_entity(world, entity);
     // Creatures leave a corpse with what they carried; one carrying nothing just goes
-    let is_bot = world.get::<&crate::components::MiningBot>(entity).is_ok();
+    let is_bot = world.get::<&crate::components::MiningBot>(entity).is_ok()
+        || world
+            .get::<&crate::components::MilitaryAndroid>(entity)
+            .is_ok();
     let is_sheep = world.get::<&crate::components::Sheep>(entity).is_ok();
     let is_creature = is_bot
         || is_sheep
@@ -689,6 +702,7 @@ fn entity_death(world: &mut World, res: &mut Resources, entity: hecs::Entity, by
             EntityKind::FeralDog => Some(crate::spawn_utils::EnemyKind::FeralDog),
             EntityKind::NuclearSlime => Some(crate::spawn_utils::EnemyKind::NuclearSlime),
             EntityKind::MiningBot => Some(crate::spawn_utils::EnemyKind::MiningBot),
+            EntityKind::MilitaryAndroid => Some(crate::spawn_utils::EnemyKind::MilitaryAndroid),
             _ => None,
         });
     if let (Some(creature), Some(pos)) = (creature, entity_pos) {

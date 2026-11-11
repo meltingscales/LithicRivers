@@ -130,9 +130,7 @@ fn player_queue(runner: &Runner) -> Vec<(String, Option<hecs::Entity>)> {
                 target_entity,
                 ..
             } => (move_data.name.clone(), *target_entity),
-            CombatAction::EnemyAttack { target_entity, .. } => {
-                ("enemy attack".into(), Some(*target_entity))
-            }
+            other => ("enemy action".into(), other.target()),
         })
         .collect()
 }

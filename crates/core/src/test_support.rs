@@ -30,6 +30,7 @@ enum Placement {
     FeralDog,
     NuclearSlime,
     MiningBot,
+    MilitaryAndroid,
     TutorialAndroid,
     Item(ItemKind, u32),
 }
@@ -121,6 +122,10 @@ impl TestWorld {
         self.add(x, y, z, Placement::MiningBot)
     }
 
+    pub fn military_android(&mut self, x: i64, y: i64, z: i64) -> Handle {
+        self.add(x, y, z, Placement::MilitaryAndroid)
+    }
+
     /// The tutorial quest NPC (Broken SapienCorp Android).
     pub fn npc(&mut self, x: i64, y: i64, z: i64) -> Handle {
         self.add(x, y, z, Placement::TutorialAndroid)
@@ -180,6 +185,13 @@ impl TestWorld {
                 Placement::MiningBot => {
                     spawn_utils::world_spawn_mining_bot(world, x, y, z, &game.res.world_state.world)
                 }
+                Placement::MilitaryAndroid => spawn_utils::world_spawn_military_android(
+                    world,
+                    x,
+                    y,
+                    z,
+                    &game.res.world_state.world,
+                ),
                 Placement::TutorialAndroid => {
                     spawn_utils::world_spawn_tutorial_android(world, x, y, z)
                 }
@@ -344,8 +356,9 @@ mod tests {
         for (_, (kind, pos)) in game.game.world.query::<(&EntityKind, &Position)>().iter() {
             match kind {
                 EntityKind::Player => {}
-                // An outpost's guard dog stands in the outpost, beside its spawner
-                EntityKind::FeralDog => assert!(
+                // An outpost's guard dog and cellar android stand in the outpost, near its
+                // spawner
+                EntityKind::FeralDog | EntityKind::MilitaryAndroid => assert!(
                     spawners
                         .iter()
                         .any(|s| (s.x - pos.x).abs().max((s.y - pos.y).abs()) <= 15),

@@ -5,24 +5,24 @@ input_file: scripts/snapshots/combat-nuclear-slime.txt
 ---
 === screen 10 ===
                                             LithicRivers
-┌──────────────────── Combat ────────────────────┐vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-│┌HED──┐┌TOR──┐┌PWR──┐┌LAM─┐┌RAM──┐┌LLG──┐┌RLG──┐│vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvCvvvvvvvvvvvvvv
-││ 100 ││ 100 ││ 21  ││ GON││ 100 ││ 100 ││ 43  ││vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-│└─────┘└─────┘└─────┘└────┘└─────┘└─────┘└─────┘│vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-│┌──────────────────────────────────────────────┐│vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-││                                              ││vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+┌──────────────────── COMBAT ────────────────────┐vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+│ HEAD   TORSO  CORE   L.ARM  R.ARM  L.LEG  R.LEG│vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvCvvvvvvvvvvvvvv
+│█100 █ █100 █ █ 21     --   █100 █ █100 █ ██43  │vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+│█████████████████ENERGY 100/100 ████████████████│vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+│┌▶ Nuclear slime───────────────────────────────┐│vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 ││                     ▄▄▄▄                     ││vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-││┌Nuclear slime───────────────────────────────┐││vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-│││█████████████████ 120/120  █████████████████│││vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-││└────────────────────────────────────────────┘││vvvvvvvvvvvvvvvvvvvvvvvvv@Ωvvvvvvvvvvvvvvvvvvvvvvv
-││                                              ││vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+││                   ▄▓▒░░▒▓▄                   ││vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+││                  ▐▓░ o  ░▓▌                  ││vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+││███████████████████120/120 ███████████████████││vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+││             1 tile · strikes 16t             ││vvvvvvvvvvvvvvvvvvvvvvvvv@Ωvvvvvvvvvvvvvvvvvvvvvvv
 │└──────────────────────────────────────────────┘│vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-│1: Melee - 0E - 5t                ┌Action Queue┐│vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-│2: Power Strike - 40E - 13t       │Current:    ││vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-│3: Tackle - 20E - 10t             │> Ready     ││vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-│4: Escape - 20E - 15t             │            ││vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-│5: DebugInstantKill - 0E - 5t     └────────────┘│vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-│[←→] Target | [↑↓] Move | [c] Clear | [5] Wait |│vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+│Moves───────────────────────┌Action Queue 0/3───│vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+│▶ Melee               0E  5t│> Ready            │vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+│  Power Strike       40E 13t│                   │vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+│  Tackle             20E 10t│                   │vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+│  Escape             20E 15t│                   │vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+│  DebugInstantKill    0E  5t│                   │vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+│    [↑↓] Move [ENTER] Use [c] Clear [5] Wait    │vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 └────────────────────────────────────────────────┘vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 ┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
 │[1] Spawned nuclear_slime at (2, 5, 0)                                                            │

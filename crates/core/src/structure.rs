@@ -71,6 +71,7 @@ pub fn block_will_spawn_entity(tile_kind: TileKind) -> bool {
         TileKind::TreasureCommon => true,
         TileKind::TreasureRare => true,
         TileKind::EnemySpawn => true,
+        TileKind::AndroidSpawn => true,
         TileKind::WildSpawner => true,
         TileKind::TeleporterStation | TileKind::TeleporterStationInner => true,
         TileKind::SapiencorpRtg | TileKind::StationItemCharger | TileKind::PowerPole => true,
@@ -103,6 +104,11 @@ pub fn spawn_entity_for_block(
             //by default, enemyspawn just spawns a feral dog.
             //in the future, we can add more options here
             spawn_utils::world_spawn_feraldog(ecs_world, block_x, block_y, block_z, game_world);
+        }
+        TileKind::AndroidSpawn => {
+            spawn_utils::world_spawn_military_android(
+                ecs_world, block_x, block_y, block_z, game_world,
+            );
         }
         TileKind::TreasureCommon => {
             spawn_utils::world_spawn_treasurecommon(

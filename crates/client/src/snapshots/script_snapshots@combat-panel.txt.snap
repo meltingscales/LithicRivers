@@ -5,24 +5,24 @@ input_file: scripts/snapshots/combat-panel.txt
 ---
 === screen combat ===
                                             LithicRivers
-┌──────────────────── Combat ────────────────────┐vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-│┌HED──┐┌TOR──┐┌PWR──┐┌LAM─┐┌RAM──┐┌LLG──┐┌RLG──┐│vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-││ 100 ││ 100 ││ 21  ││ GON││ 100 ││ 100 ││ 43  ││vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#vvvvvvvvvvvvvvv
-│└─────┘└─────┘└─────┘└────┘└─────┘└─────┘└─────┘│vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-│┌──────────────────────────────────────────────┐│vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-││                                              ││vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+┌──────────────────── COMBAT ────────────────────┐vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+│ HEAD   TORSO  CORE   L.ARM  R.ARM  L.LEG  R.LEG│vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+│█100 █ █100 █ █ 21     --   █100 █ █100 █ ██43  │vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv#vvvvvvvvvvvvvvv
+│█████████████████ENERGY 100/100 ████████████████│vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+│┌▶ Feral dog───────────────────────────────────┐│vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 ││                  ▄     ,▄▄▄                  ││vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-││┌Feral dog───────────────────────────────────┐││vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-│││██████████████████ 80/80  ██████████████████│││vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-││└────────────────────────────────────────────┘││vvvvvvvvvvvvvvvvvvvvvvvvv@dtvvvtvvvvvvvvvvvvvvvvvv
-││                                              ││vvvvvvvvvvvvvvvvvvvvvvvvvtvtttttvvvvvvvvvvvvvvvvvv
-│└──────────────────────────────────────────────┘│vvvvvvvvvvvvvvvvvvvvvvvvvvvvvtttvvvvvvvvvvvvvvvvvv
-│1: Melee - 0E - 5t                ┌Action Queue┐│vvvvvvvvvvvvvvvvvvvvvvvvvvvvttvvvvvvvvvvvvvvvvvvvv
-│2: Power Strike - 40E - 13t       │Current:    ││vvvvvvvvvvvvvvvvvvvvvvvvvvvvtttvvvvvvvvvvvvvvvvvvv
-│3: Tackle - 20E - 10t             │> Ready     ││vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-│4: Escape - 20E - 15t             │            ││#vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-│5: DebugInstantKill - 0E - 5t     └────────────┘│##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-│[←→] Target | [↑↓] Move | [c] Clear | [5] Wait |│##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+││                  ▀█▄▄▄█▓▓▒▀▄                 ││vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+││                    █▓▓▓▓▓█ ▀                 ││vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+││████████████████████80/80 ████████████████████││vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+││              1 tile · strikes 8t             ││vvvvvvvvvvvvvvvvvvvvvvvvv@dtvvvtvvvvvvvvvvvvvvvvvv
+│└──────────────────────────────────────────────┘│vvvvvvvvvvvvvvvvvvvvvvvvvtvtttttvvvvvvvvvvvvvvvvvv
+│Moves───────────────────────┌Action Queue 0/3───│vvvvvvvvvvvvvvvvvvvvvvvvvvvvvtttvvvvvvvvvvvvvvvvvv
+│▶ Melee               0E  5t│> Ready            │vvvvvvvvvvvvvvvvvvvvvvvvvvvvttvvvvvvvvvvvvvvvvvvvv
+│  Power Strike       40E 13t│                   │vvvvvvvvvvvvvvvvvvvvvvvvvvvvtttvvvvvvvvvvvvvvvvvvv
+│  Tackle             20E 10t│                   │vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+│  Escape             20E 15t│                   │#vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+│  DebugInstantKill    0E  5t│                   │##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+│    [↑↓] Move [ENTER] Use [c] Clear [5] Wait    │##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 └────────────────────────────────────────────────┘###vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 ┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
 │[0] Quest marker added: SapienCorp Bunker                                                         │

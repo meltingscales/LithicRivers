@@ -133,6 +133,7 @@ impl SpriteLoader {
             EntityKind::FeralDog => ("entities".to_string(), "feral_dog".to_string()),
             EntityKind::NuclearSlime => ("entities".to_string(), "nuclear_slime".to_string()),
             EntityKind::MiningBot => ("entities".to_string(), "mining_bot".to_string()),
+            EntityKind::MilitaryAndroid => ("entities".to_string(), "military_android".to_string()),
             EntityKind::Corpse => ("entities".to_string(), "corpse".to_string()),
             EntityKind::QuestTutorialBrokenAndroid => (
                 "entities".to_string(),

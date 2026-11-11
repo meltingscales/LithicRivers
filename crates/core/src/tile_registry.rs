@@ -105,6 +105,7 @@ define_tiles! {
     CarrotSeedling, "carrot_seedling", "carrot seedling", true,
     CarrotGrowing, "carrot_growing", "growing carrot", true,
     CarrotRipe, "carrot_ripe", "ripe carrot", true,
+    AndroidSpawn, "android_spawn", "android spawn", false,
 }
 
 impl TileKind {

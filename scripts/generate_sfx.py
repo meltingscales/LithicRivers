@@ -110,6 +110,16 @@ def craft():
     return render(0.3, lambda t: 0.35 * (note(660, 0.0, t) + note(990, 0.09, t)))
 
 
+def shot():
+    """A dry bang: a hard noise burst with a falling thump, then a short rattle."""
+    blast = noise(0x5407)
+    def voice(t):
+        bang = blast() * env(t, 0.09, attack=0.001, curve=4.0)
+        thump = math.sin(2 * math.pi * (160 - 500 * t) * t) * env(t, 0.1, attack=0.001, curve=5.0)
+        return 0.7 * bang + 0.6 * thump
+    return lowpass(render(0.18, voice), 0.5)
+
+
 SOUNDS = {
     "mine": mine,
     "place": place,
@@ -118,6 +128,7 @@ SOUNDS = {
     "hurt": hurt,
     "teleport": teleport,
     "craft": craft,
+    "shot": shot,
 }
 
 

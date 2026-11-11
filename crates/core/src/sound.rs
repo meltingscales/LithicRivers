@@ -21,10 +21,12 @@ pub enum SoundCue {
     Teleport,
     /// A recipe is crafted
     Craft,
+    /// A gun fires
+    Shot,
 }
 
 impl SoundCue {
-    pub const ALL: [SoundCue; 8] = [
+    pub const ALL: [SoundCue; 9] = [
         SoundCue::Chop,
         SoundCue::Mine,
         SoundCue::Place,
@@ -33,6 +35,7 @@ impl SoundCue {
         SoundCue::Hurt,
         SoundCue::Teleport,
         SoundCue::Craft,
+        SoundCue::Shot,
     ];
 
     /// The name the client registers the cue's sound under, and its file's name.
@@ -46,6 +49,7 @@ impl SoundCue {
             SoundCue::Hurt => "hurt",
             SoundCue::Teleport => "teleport",
             SoundCue::Craft => "craft",
+            SoundCue::Shot => "shot",
         }
     }
 }

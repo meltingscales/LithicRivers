@@ -167,39 +167,13 @@ pub fn handle_combat_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn 
                 let target_entity =
                     if selected_move.move_type != lithicrivers_core::moves::MoveType::Escape {
                         // Not escape move - need a target
-                        // Find the actual entity for the selected enemy
-                        let mut enemy_count = 0;
-                        let mut target = None;
-                        for (entity, (_, combat, _)) in app
-                            .core
-                            .game
-                            .world
-                            .query::<(
-                                &lithicrivers_core::components::Position,
-                                &lithicrivers_core::components::Combat,
-                                &lithicrivers_core::components::GameEntity,
-                            )>()
-                            .iter()
-                        {
-                            if entity == player_entity || !combat.triggered {
-                                continue;
-                            }
-                            // Skip dead enemies
-                            if app
-                                .core
-                                .game
-                                .world
-                                .get::<&lithicrivers_core::components::Dead>(entity)
-                                .is_ok()
-                            {
-                                continue;
-                            }
-                            if enemy_count == current_enemy {
-                                target = Some(entity);
-                                break;
-                            }
-                            enemy_count += 1;
-                        }
+                        // The selected enemy, in the combat panel's order
+                        let target =
+                            lithicrivers_core::combat_state_manager::CombatStateManager::enemies(
+                                &app.core.game.world,
+                            )
+                            .get(current_enemy)
+                            .copied();
 
                         // Validate we have a target for moves that need one
                         if target.is_none() {
@@ -336,60 +310,9 @@ pub fn handle_combat_input(app: &mut App, key: KeyCode) -> Result<bool, Box<dyn 
     Ok(true)
 }
 
-/// Get the current count of living combat enemies adjacent to the player
+/// How many living enemies are in the fight
 fn get_combat_enemy_count(game: &mut lithicrivers_core::Game) -> usize {
-    use lithicrivers_core::components::{Combat, GameEntity, Position};
-
-    let mut count = 0;
-
-    if let Some(player_entity) = game.get_player_entity() {
-        if let Ok(player_pos) = game.world.get::<&Position>(player_entity) {
-            let player_pos = *player_pos;
-
-            // Define the 8 adjacent positions around the player (same as combat_trigger_system)
-            let adjacent_positions = [
-                (player_pos.x - 1, player_pos.y - 1), // NW
-                (player_pos.x, player_pos.y - 1),     // N
-                (player_pos.x + 1, player_pos.y - 1), // NE
-                (player_pos.x - 1, player_pos.y),     // W
-                (player_pos.x + 1, player_pos.y),     // E
-                (player_pos.x - 1, player_pos.y + 1), // SW
-                (player_pos.x, player_pos.y + 1),     // S
-                (player_pos.x + 1, player_pos.y + 1), // SE
-            ];
-
-            // Look for adjacent combat entities that are alive and in combat
-            for (entity, (pos, combat, _)) in game
-                .world
-                .query::<(&Position, &Combat, &GameEntity)>()
-                .iter()
-            {
-                if entity == player_entity {
-                    continue; // Skip player
-                }
-
-                // Check if enemy is in any of the 8 adjacent positions
-                let is_adjacent = adjacent_positions.iter().any(|&(adj_x, adj_y)| {
-                    pos.x == adj_x && pos.y == adj_y && pos.z == player_pos.z
-                });
-
-                if is_adjacent && combat.triggered {
-                    // Skip dead enemies
-                    if game
-                        .world
-                        .get::<&lithicrivers_core::components::Dead>(entity)
-                        .is_ok()
-                    {
-                        continue;
-                    }
-
-                    count += 1;
-                }
-            }
-        }
-    }
-
-    count
+    lithicrivers_core::combat_state_manager::CombatStateManager::enemies(&game.world).len()
 }
 
 /// Calculate total pending energy consumption from queued moves

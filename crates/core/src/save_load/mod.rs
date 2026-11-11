@@ -90,6 +90,9 @@ saved_components! {
     "feral_dog" => FeralDog,
     "nuclear_slime" => crate::components::NuclearSlime,
     "mining_bot" => crate::components::MiningBot,
+    "military_android" => crate::components::MilitaryAndroid,
+    "android_ai" => crate::components::AndroidAI,
+    "ranged_attack" => crate::components::RangedAttack,
     "wreck" => crate::components::Wreck,
     "slime_ai" => crate::components::SlimeAI,
     "quest_tutorial_broken_android" => QuestTutorialBrokenAndroid,
@@ -495,6 +498,7 @@ mod tests {
         world.feral_dog(4, 4, 0);
         world.npc(-4, 3, 0);
         world.mining_bot(-5, 5, 0);
+        world.military_android(5, -5, 0);
         world.item(2, 2, 0, crate::components::ItemKind::Log, 1);
         let mut fight = world.build();
         let chest = crate::factory::place(

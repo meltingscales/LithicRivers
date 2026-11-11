@@ -5,24 +5,24 @@ input_file: scripts/snapshots/combat-queue-full.txt
 ---
 === screen 11 ===
                                             LithicRivers
-┌──────────────────── Combat ────────────────────┐#######vvvvvvvvvvvvvvvvvvvdvvvvvvvvvvvvvvvvvvvvvvv
-│┌HED──┐┌TOR──┐┌PWR──┐┌LAM─┐┌RAM──┐┌LLG──┐┌RLG──┐│########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-││ 100 ││ 100 ││ 21  ││ GON││ 100 ││ 100 ││ 43  ││########vvvvvvvvvvvvvvvvvvdvvvvvvvvvvvvvvvvvvvvvv#
-│└─────┘└─────┘└─────┘└────┘└─────┘└─────┘└─────┘│#########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-│┌──────────────────────────────────────────────┐│#########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-││                                              ││##########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+┌──────────────────── COMBAT ────────────────────┐#######vvvvvvvvvvvvvvvvvvvdvvvvvvvvvvvvvvvvvvvvvvv
+│ HEAD   TORSO  CORE   L.ARM  R.ARM  L.LEG  R.LEG│########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+│█100 █ █100 █ █ 21     --   █100 █ █100 █ ██43  │########vvvvvvvvvvvvvvvvvvdvvvvvvvvvvvvvvvvvvvvvv#
+│█████████████████ENERGY 100/100 ████████████████│#########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+│┌▶ Feral dog───────────────────────────────────┐│#########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 ││                  ▄     ,▄▄▄                  ││##########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-││┌Feral dog───────────────────────────────────┐││###########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-│││██████████████████ 80/80  ██████████████████│││###########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-││└────────────────────────────────────────────┘││############vvvvvvvvvvvvv@dvvvvvvvvvvvvvtttvvvtvvv
-││                                              ││#############vvvvvvvvvvvvvvvvvvvvvvvvvvvtvtttttvvv
-│└──────────────────────────────────────────────┘│#############vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvtttvvv
-│1: Melee - 0E - 5t                ┌Action Queue┐│##############vvvvvvvvvvvvvvvvvvvvvvvvvvvvvttvvvvv
-│2: Power Strike - 40E - 13t       │Current:    ││##############vvvvvvvvvvvvvvvvvvvvvvvvvvvvvtttvvvv
-│3: Tackle - 20E - 10t             │> Melee →   ││###############vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-│4: Escape - 20E - 15t             │Feral dog   ││################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-│5: DebugInstantKill - 0E - 5t     └────────────┘│#################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-│[←→] Target | [↑↓] Move | [c] Clear | [5] Wait |│#################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+││                  ▀█▄▄▄█▓▓▒▀▄                 ││##########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+││                    █▓▓▓▓▓█ ▀                 ││###########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+││████████████████████80/80 ████████████████████││###########vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+││              1 tile · strikes 4t             ││############vvvvvvvvvvvvv@dvvvvvvvvvvvvvtttvvvtvvv
+│└──────────────────────────────────────────────┘│#############vvvvvvvvvvvvvvvvvvvvvvvvvvvtvtttttvvv
+│Moves───────────────────────┌Action Queue 3/3───│#############vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvtttvvv
+│▶ Melee               0E  5t│> Melee → Feral dog│##############vvvvvvvvvvvvvvvvvvvvvvvvvvvvvttvvvvv
+│  Power Strike       40E 13t│  Melee → Feral dog│##############vvvvvvvvvvvvvvvvvvvvvvvvvvvvvtttvvvv
+│  Tackle             20E 10t│  Melee → Feral dog│###############vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+│  Escape             20E 15t│  Melee → Feral dog│################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+│  DebugInstantKill    0E  5t│                   │#################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+│    [↑↓] Move [ENTER] Use [c] Clear [5] Wait    │#################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 └────────────────────────────────────────────────┘##################vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 ┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
 │[402] Queued Melee against target 0                                                               │

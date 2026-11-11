@@ -285,6 +285,26 @@ pub enum CombatAction {
         target_entity: Entity,
         damage: u32,
     },
+    /// A ranged creature fires one shot (`systems::ranged`)
+    EnemyShoot {
+        target_entity: Entity,
+    },
+    /// A creature steps one tile in combat: away from the player, or toward them
+    EnemyStep {
+        away: bool,
+    },
+}
+
+impl CombatAction {
+    /// The entity this action is aimed at, if any.
+    pub fn target(&self) -> Option<Entity> {
+        match self {
+            CombatAction::PlayerMove { target_entity, .. } => *target_entity,
+            CombatAction::EnemyAttack { target_entity, .. }
+            | CombatAction::EnemyShoot { target_entity } => Some(*target_entity),
+            CombatAction::EnemyStep { .. } => None,
+        }
+    }
 }
 
 /// Component for the action queue system - attached to combat entities
@@ -380,12 +400,7 @@ impl ActionQueue {
     pub fn remove_actions_targeting(&mut self, dead_entity: Entity) {
         // Check current action
         if let Some(ref current) = self.current_action {
-            let should_remove_current = match &current.action {
-                CombatAction::PlayerMove { target_entity, .. } => {
-                    target_entity.is_some_and(|target| target == dead_entity)
-                }
-                CombatAction::EnemyAttack { target_entity, .. } => *target_entity == dead_entity,
-            };
+            let should_remove_current = current.action.target() == Some(dead_entity);
 
             if should_remove_current {
                 self.current_action = None;
@@ -396,12 +411,8 @@ impl ActionQueue {
 
         // Remove queued actions targeting the dead entity
         let original_len = self.actions.len();
-        self.actions.retain(|action| match &action.action {
-            CombatAction::PlayerMove { target_entity, .. } => {
-                target_entity.is_none_or(|target| target != dead_entity)
-            }
-            CombatAction::EnemyAttack { target_entity, .. } => *target_entity != dead_entity,
-        });
+        self.actions
+            .retain(|action| action.action.target() != Some(dead_entity));
         let _removed_count = original_len - self.actions.len();
 
         // After removing actions, if we have no current action and there are remaining

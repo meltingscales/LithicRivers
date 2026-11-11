@@ -27,6 +27,7 @@ pub enum SystemId {
     FeralDogSystem,
     NuclearSlimeSystem,
     MiningBotSystem,
+    MilitaryAndroidSystem,
     CreatureSpawnSystem,
     StumblingSheepSystem,
     BattleDelayTimerSystem,
@@ -148,6 +149,19 @@ impl SystemScheduler {
 
         self.register_system(
             SystemDesc {
+                id: SystemId::MilitaryAndroidSystem,
+                phase: SystemPhase::EntityAI,
+                depends_on: vec![SystemId::MovePlayerSystem],
+                name: "military_android_system",
+            },
+            |world, res| {
+                crate::systems::military_android_system(world, res);
+                None
+            },
+        );
+
+        self.register_system(
+            SystemDesc {
                 id: SystemId::CreatureSpawnSystem,
                 phase: SystemPhase::EntityAI,
                 depends_on: vec![SystemId::MovePlayerSystem],
@@ -200,6 +214,7 @@ impl SystemScheduler {
                     SystemId::FeralDogSystem,   // AI positions finalized
                     SystemId::NuclearSlimeSystem,
                     SystemId::MiningBotSystem,
+                    SystemId::MilitaryAndroidSystem,
                     SystemId::BattleDelayTimerSystem, // Timers updated first
                 ],
                 name: "combat_trigger_system",
