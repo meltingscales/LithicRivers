@@ -292,6 +292,17 @@ pub enum ItemKind {
     BiomechEmbryoWrinkly,
     BiomechEmbryoPerfect,
     BrassCartridge,
+    Nitre,
+    Sulfur,
+    BrassNugget,
+    BrassIngot,
+    Gunpowder,
+    Paper,
+    IronShot,
+    ShellCasing,
+    PaperCartridge,
+    PipeGun,
+    Rifle,
 }
 
 pub fn itemkind_name(kind: ItemKind) -> &'static str {
@@ -384,6 +395,17 @@ pub fn itemkind_name(kind: ItemKind) -> &'static str {
         ItemKind::BiomechEmbryoWrinkly => "Wrinkly Biomech Embryo",
         ItemKind::BiomechEmbryoPerfect => "Perfect Biomech Embryo",
         ItemKind::BrassCartridge => "Brass Cartridge",
+        ItemKind::Nitre => "Nitre",
+        ItemKind::Sulfur => "Sulfur",
+        ItemKind::BrassNugget => "Brass Nugget",
+        ItemKind::BrassIngot => "Brass Ingot",
+        ItemKind::Gunpowder => "Gunpowder",
+        ItemKind::Paper => "Paper",
+        ItemKind::IronShot => "Iron Shot",
+        ItemKind::ShellCasing => "Shell Casing",
+        ItemKind::PaperCartridge => "Paper Cartridge",
+        ItemKind::PipeGun => "Pipe Gun",
+        ItemKind::Rifle => "Rifle",
     }
 }
 
@@ -477,6 +499,17 @@ pub fn itemkind_sprite_name(kind: ItemKind) -> &'static str {
         ItemKind::BiomechEmbryoWrinkly => "biomech_embryo_wrinkly",
         ItemKind::BiomechEmbryoPerfect => "biomech_embryo_perfect",
         ItemKind::BrassCartridge => "brass_cartridge",
+        ItemKind::Nitre => "nitre",
+        ItemKind::Sulfur => "sulfur",
+        ItemKind::BrassNugget => "brass_nugget",
+        ItemKind::BrassIngot => "brass_ingot",
+        ItemKind::Gunpowder => "gunpowder",
+        ItemKind::Paper => "paper",
+        ItemKind::IronShot => "iron_shot",
+        ItemKind::ShellCasing => "shell_casing",
+        ItemKind::PaperCartridge => "paper_cartridge",
+        ItemKind::PipeGun => "pipe_gun",
+        ItemKind::Rifle => "rifle",
     }
 }
 
@@ -570,6 +603,17 @@ pub fn parse_itemkind_from_sprite_name(sprite_name: &str) -> Option<ItemKind> {
         "biomech_embryo_wrinkly" => Some(ItemKind::BiomechEmbryoWrinkly),
         "biomech_embryo_perfect" => Some(ItemKind::BiomechEmbryoPerfect),
         "brass_cartridge" => Some(ItemKind::BrassCartridge),
+        "nitre" => Some(ItemKind::Nitre),
+        "sulfur" => Some(ItemKind::Sulfur),
+        "brass_nugget" => Some(ItemKind::BrassNugget),
+        "brass_ingot" => Some(ItemKind::BrassIngot),
+        "gunpowder" => Some(ItemKind::Gunpowder),
+        "paper" => Some(ItemKind::Paper),
+        "iron_shot" => Some(ItemKind::IronShot),
+        "shell_casing" => Some(ItemKind::ShellCasing),
+        "paper_cartridge" => Some(ItemKind::PaperCartridge),
+        "pipe_gun" => Some(ItemKind::PipeGun),
+        "rifle" => Some(ItemKind::Rifle),
         _ => None,
     }
 }

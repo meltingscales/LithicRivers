@@ -161,6 +161,29 @@ pub const DEPOSITS: &[Deposit] = &[
         shallows: None,
         deep: Some(0.66),
     },
+    // The ammo chain's minerals and salvage (add-firearms): nitre near the surface,
+    // sulfur and brass scrap in the deep
+    Deposit {
+        tile: TileKind::Nitre,
+        salt: 0x417E,
+        scale: 0.12,
+        shallows: Some(0.74),
+        deep: None,
+    },
+    Deposit {
+        tile: TileKind::Sulfur,
+        salt: 0x5017,
+        scale: 0.12,
+        shallows: None,
+        deep: Some(0.7),
+    },
+    Deposit {
+        tile: TileKind::BrassScrap,
+        salt: 0xB2A5,
+        scale: 0.11,
+        shallows: None,
+        deep: Some(0.74),
+    },
 ];
 
 /// The noise fields of the legacy terrain (surface biomes and Lithic Rivers caverns).

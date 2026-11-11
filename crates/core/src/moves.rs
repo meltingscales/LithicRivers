@@ -15,6 +15,7 @@ pub enum MoveType {
     Shield,
     LightningBolt,
     PowerStrike,
+    Shoot,
 }
 
 impl MoveType {
@@ -29,6 +30,7 @@ impl MoveType {
             MoveType::Shield => "Shield",
             MoveType::LightningBolt => "Lightning Bolt",
             MoveType::PowerStrike => "Power Strike",
+            MoveType::Shoot => "Shoot",
         }
     }
 }
@@ -204,6 +206,17 @@ pub fn get_available_moves(cheats_allowed: bool) -> Vec<Move> {
     ];
     if cheats_allowed {
         moves.push(Move::debuginstantkill());
+    }
+    moves
+}
+
+/// The moves the player has right now: the usual ones, with Shoot after Melee while an
+/// equipped gun has rounds for it (`firearms`).
+pub fn player_moves(world: &hecs::World, player: Entity, cheats_allowed: bool) -> Vec<Move> {
+    let mut moves = get_available_moves(cheats_allowed);
+    let guns = crate::firearms::loaded_guns(world, player);
+    if !guns.is_empty() {
+        moves.insert(1, crate::firearms::shoot_move(&guns));
     }
     moves
 }
@@ -703,7 +716,10 @@ mod tests {
             },
         );
 
-        let body = Body { parts };
+        let body = Body {
+            parts,
+            weapons: Default::default(),
+        };
         let integrity = calculate_body_integrity(&body);
         assert_eq!(integrity, 1.0); // 100% functional
 
@@ -738,7 +754,10 @@ mod tests {
             },
         );
 
-        let body = Body { parts };
+        let body = Body {
+            parts,
+            weapons: Default::default(),
+        };
         let integrity = calculate_body_integrity(&body);
         assert_eq!(integrity, 0.75); // (1.0 + 0.5) / 2 = 0.75
     }
@@ -764,7 +783,10 @@ mod tests {
                 stamina_modifier: 0,
             },
         );
-        let body = Body { parts };
+        let body = Body {
+            parts,
+            weapons: Default::default(),
+        };
         assert_eq!(get_body_status_description(&body), "Systems Nominal");
 
         // Test critical damage
@@ -783,7 +805,10 @@ mod tests {
                 stamina_modifier: 0,
             },
         );
-        let body = Body { parts };
+        let body = Body {
+            parts,
+            weapons: Default::default(),
+        };
         assert_eq!(get_body_status_description(&body), "Severe System Failure");
     }
 }

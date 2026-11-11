@@ -282,6 +282,78 @@ impl RecipeHandler {
                 result: ItemKind::Teleporter,
                 quantity: 1,
             },
+            // The ammo chain (add-firearms)
+            Recipe {
+                name: "Gunpowder",
+                ingredients: &[
+                    (ItemKind::Biochar, 1),
+                    (ItemKind::Nitre, 1),
+                    (ItemKind::Sulfur, 1),
+                ],
+                result: ItemKind::Gunpowder,
+                quantity: 2,
+            },
+            Recipe {
+                name: "Paper",
+                ingredients: &[(ItemKind::WoodenShavings, 2)],
+                result: ItemKind::Paper,
+                quantity: 2,
+            },
+            Recipe {
+                name: "Iron Shot",
+                ingredients: &[(ItemKind::IronScrap, 1)],
+                result: ItemKind::IronShot,
+                quantity: 4,
+            },
+            Recipe {
+                name: "Shell Casings",
+                ingredients: &[(ItemKind::BrassIngot, 1)],
+                result: ItemKind::ShellCasing,
+                quantity: 3,
+            },
+            Recipe {
+                name: "Paper Cartridges",
+                ingredients: &[
+                    (ItemKind::Paper, 1),
+                    (ItemKind::Gunpowder, 1),
+                    (ItemKind::IronShot, 1),
+                ],
+                result: ItemKind::PaperCartridge,
+                quantity: 2,
+            },
+            Recipe {
+                name: "Brass Cartridges",
+                ingredients: &[
+                    (ItemKind::ShellCasing, 2),
+                    (ItemKind::Gunpowder, 1),
+                    (ItemKind::IronShot, 2),
+                ],
+                result: ItemKind::BrassCartridge,
+                quantity: 2,
+            },
+            // Pipe gun: an iron pipe on a wooden stock, early and crude
+            Recipe {
+                name: "Pipe Gun",
+                ingredients: &[
+                    (ItemKind::IronScrap, 3),
+                    (ItemKind::WoodenPlank, 2),
+                    (ItemKind::Nail, 4),
+                ],
+                result: ItemKind::PipeGun,
+                quantity: 1,
+            },
+            // Rifle: brass, plasteel from the deep and working electronics
+            Recipe {
+                name: "Rifle",
+                ingredients: &[
+                    (ItemKind::BrassIngot, 2),
+                    (ItemKind::IronScrap, 3),
+                    (ItemKind::ScrapElectronics, 2),
+                    (ItemKind::PlasteelScrap, 1),
+                ],
+                result: ItemKind::Rifle,
+                quantity: 1,
+            },
             // Meat slurry: 2x meat, ground down to feed spawners
             Recipe {
                 name: "Meat Slurry",

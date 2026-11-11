@@ -283,6 +283,11 @@ pub fn execute_player_move(
                 apply_damage(world, res, target, damage, "melee attack");
             }
         }
+        MoveType::Shoot => {
+            if let Some(target) = target_entity {
+                crate::firearms::execute_shoot(world, res, player_entity, target);
+            }
+        }
         MoveType::Fireball => {
             if let Some(target) = target_entity {
                 apply_damage(world, res, target, move_data.damage, "fireball");

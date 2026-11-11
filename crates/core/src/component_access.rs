@@ -182,7 +182,8 @@ impl<'w> ComponentAccess<'w> {
                     });
                 } else if new_state == BodyPartState::Missing && old_state != BodyPartState::Missing
                 {
-                    // Part was destroyed but robot survives
+                    // Part was destroyed but robot survives; a lost arm drops its gun
+                    crate::firearms::release_lost_weapons(self.world, self.res, entity);
                     return Ok(DamageResult::BodyPartDestroyed {
                         part_name,
                         part_type: target_part_type,

@@ -1,0 +1,26 @@
+# Wield a rifle in the Body tab, then shoot a military android with it: the Shoot move
+# appears with a loaded gun, the enemy card shows the rifle's odds, and a fired brass
+# round leaves a shell casing
+seed 12345
+size 100x30
+skip-splash
+cheat tp 0 0 0
+cheat giveitem rifle 1
+cheat giveitem brass_cartridge 4
+# The Body tab, with the right arm selected (the left one is missing)
+key ui.MENU_NEXT 3
+key ui.MENU_DOWN 4
+expect-text "Wield Rifle"
+key body.WIELD
+expect-text "[Rifle]"
+screen body
+key ui.MENU_PREV 4
+cheat spawn_enemy military_android ~6 ~ ~
+key movement.WAIT
+expect-text "Shoot"
+expect-text "You: Rifle"
+key ui.MENU_DOWN
+key ui.MENU_ACTIVATE
+wait 11000
+screen shot
+state

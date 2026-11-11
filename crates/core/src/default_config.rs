@@ -31,6 +31,7 @@ pub fn default_config() -> ConfigRoot {
         "body": {
             "INSTALL_PART": ["i"], // Body tab: install a fitting part into the selected one (swapping it)
             "REMOVE_PART": ["u"],  // Body tab: take the selected part out
+            "WIELD": ["w"], // Body tab: put the best carried gun in the selected arm, or put its gun away
         },
         "build": {
             "TOGGLE_BREAK_PLACE_MODE": ["`"], // Cycle movement/break/place/rotate mode

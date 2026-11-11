@@ -69,6 +69,30 @@ fn the_deep_has_every_deposit() {
 }
 
 #[test]
+fn the_ammo_chain_deposits_sit_in_their_bands() {
+    let w = world();
+    // Nitre in the shallows, about 0.3% (0.2 to 0.6 by layer for seed 12345)
+    for z in -5..=-1 {
+        let s = w.survey(z, 256);
+        let nitre = share(&s, "Nitre");
+        assert!((0.1..=1.0).contains(&nitre), "z={z}: nitre {nitre:.2}%");
+        assert_eq!(share(&s, "Sulfur") + share(&s, "BrassScrap"), 0.0, "z={z}");
+    }
+    // Sulfur (about 0.3%) and brass scrap (about 0.2%) in the deep, and no nitre
+    for z in [-6, -10, -20] {
+        let s = w.survey(z, 256);
+        let sulfur = share(&s, "Sulfur");
+        let brass = share(&s, "BrassScrap");
+        assert!((0.15..=0.6).contains(&sulfur), "z={z}: sulfur {sulfur:.2}%");
+        assert!(
+            (0.1..=0.4).contains(&brass),
+            "z={z}: brass scrap {brass:.2}%"
+        );
+        assert_eq!(share(&s, "Nitre"), 0.0, "z={z}");
+    }
+}
+
+#[test]
 fn shallow_caves_mostly_line_up_between_layers() {
     let w = world();
     let noises = UndergroundNoises::new(12345);

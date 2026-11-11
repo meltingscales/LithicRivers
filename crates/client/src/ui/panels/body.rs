@@ -51,10 +51,17 @@ pub fn render_body_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
                     style = style.add_modifier(Modifier::REVERSED);
                 }
                 let marker = if is_selected { ">" } else { " " };
-                list_lines.push(Line::from(Span::styled(
+                let mut spans = vec![Span::styled(
                     format!("{marker}{:>14}: {} ({})", p.name, label, p.integrity),
                     style,
-                )));
+                )];
+                if let Some(gun) = body.weapons.get(part_type) {
+                    spans.push(Span::styled(
+                        format!("  [{}]", itemkind_name(*gun)),
+                        Style::default().fg(Color::LightRed),
+                    ));
+                }
+                list_lines.push(Line::from(spans));
                 part_rows += 1;
             }
 
@@ -160,6 +167,26 @@ pub fn render_body_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     }
     if !lithicrivers_core::model::body::is_locked(selected_part) {
         controls_text.push_str(&format!("   [{}] Remove", key("REMOVE_PART")));
+    }
+    let wield = app.core.game.get_player_entity().and_then(|p| {
+        let world = &app.core.game.world;
+        let held = world
+            .get::<&Body>(p)
+            .ok()
+            .and_then(|b| b.weapons.get(&selected_part).copied());
+        match (
+            lithicrivers_core::firearms::best_carried_gun(world, p),
+            held,
+        ) {
+            (Some(gun), _) => Some(format!("Wield {}", itemkind_name(gun))),
+            (None, Some(_)) => Some("Put away gun".to_string()),
+            (None, None) => None,
+        }
+    });
+    if let Some(wield) =
+        wield.filter(|_| lithicrivers_core::firearms::ARMS.contains(&selected_part))
+    {
+        controls_text.push_str(&format!("   [{}] {wield}", key("WIELD")));
     }
     let controls_para = Paragraph::new(controls_text)
         .alignment(Alignment::Center)

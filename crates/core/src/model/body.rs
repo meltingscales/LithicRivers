@@ -85,6 +85,9 @@ impl BodyPart {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Body {
     pub parts: HashMap<BodyPartType, BodyPart>,
+    /// The gun each arm holds: one weapon slot per working arm (`firearms`)
+    #[serde(default)]
+    pub weapons: std::collections::BTreeMap<BodyPartType, ItemKind>,
 }
 
 /// Body parts in the order the Body tab and the repair window list them.
@@ -241,10 +244,13 @@ impl Body {
         let item = part_item(part, target.state);
         target.integrity = 0;
         target.state = BodyPartState::Missing;
-        Ok(match item {
+        let mut items = match item {
             Some(item) => vec![(item, 1)],
             None => REMOVED_PART_SCRAP.to_vec(),
-        })
+        };
+        // An arm comes out with the gun it held
+        items.extend(self.weapons.remove(&part).map(|gun| (gun, 1)));
+        Ok(items)
     }
 }
 
@@ -561,7 +567,10 @@ impl Default for Body {
             "Right Leg",
             "Torque feedback mismatch detected",
         );
-        Body { parts }
+        Body {
+            parts,
+            weapons: Default::default(),
+        }
     }
 }
 

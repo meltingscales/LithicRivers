@@ -11,6 +11,7 @@ pub mod dialogue;
 pub mod dialogue_database;
 pub mod factory;
 pub mod factory_stats;
+pub mod firearms;
 pub mod furnace;
 pub mod game;
 pub mod game_config;

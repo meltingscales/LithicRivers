@@ -25,6 +25,40 @@ pub(crate) fn install_fitting(app: &mut App, index: usize) {
     }
 }
 
+/// Put the best carried gun in `arm`, or, if it already holds one and no other gun is
+/// carried, put that gun away.
+fn wield(app: &mut App, arm: lithicrivers_core::model::body::BodyPartType) {
+    use lithicrivers_core::components::itemkind_name;
+    use lithicrivers_core::firearms;
+    let Some(player) = app.core.game.get_player_entity() else {
+        return;
+    };
+    let game = &mut app.core.game;
+    if !firearms::ARMS.contains(&arm) {
+        game.res.log_yellow("Only an arm can hold a gun");
+        return;
+    }
+    let held = game
+        .world
+        .get::<&lithicrivers_core::model::body::Body>(player)
+        .ok()
+        .and_then(|b| b.weapons.get(&arm).copied());
+    match (firearms::best_carried_gun(&game.world, player), held) {
+        (Some(gun), _) => match firearms::equip_into(&mut game.world, player, arm, gun) {
+            Ok(_) => game
+                .res
+                .log_green(format!("Equipped the {}", itemkind_name(gun))),
+            Err(e) => game.res.log_yellow(e.to_string()),
+        },
+        (None, Some(_)) => {
+            if let Some(gun) = firearms::unequip(&mut game.world, player, arm) {
+                game.res.log(format!("Put away the {}", itemkind_name(gun)));
+            }
+        }
+        (None, None) => game.res.log_yellow("You carry no gun"),
+    }
+}
+
 /// The Body tab's own keys: move between parts (or fitting items), install and remove.
 fn handle_part_keys(app: &mut App, key: &KeyCode) -> bool {
     let keys = &app.ui.keybinds;
@@ -74,6 +108,8 @@ fn handle_part_keys(app: &mut App, key: &KeyCode) -> bool {
         }
     } else if keys.matches("body", "REMOVE_PART", key) {
         let _ = app.core.game.remove_part(part);
+    } else if keys.matches("body", "WIELD", key) {
+        wield(app, part);
     } else {
         return false;
     }

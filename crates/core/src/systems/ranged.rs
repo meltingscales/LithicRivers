@@ -122,24 +122,67 @@ pub fn execute_enemy_shoot(
         inv.remove(gun.ammo, 1);
     }
     let name = shooter_name(world, shooter);
-    let clear = tile_distance(from, to) <= gun.range && line_of_sight(world, res, from, to);
     let chance = hit_chance(gun.accuracy_at_1, gun.falloff, tile_distance(from, to));
-    let hit = clear && res.world_state.rng.gen_range(0..100) < chance;
-    res.shots.push(ShotTrace {
-        from,
-        to,
-        hit,
-        tick: res.time.tick,
-    });
-    res.play(crate::sound::SoundCue::Shot);
-    if !hit {
-        let why = if clear { "goes wide" } else { "hits the wall" };
-        res.events
-            .combat_event(format!("The {name}'s shot {why}."), res.time.tick);
+    let shot = fire(world, res, from, to, gun.range, chance);
+    if shot != Shot::Hit {
+        res.events.combat_event(
+            format!("The {name}'s shot {}.", shot.miss_words()),
+            res.time.tick,
+        );
         return;
     }
     let damage = res.world_state.rng.gen_range(8..=14);
     super::combat_actions::apply_damage(world, res, target, damage, &format!("{name}'s shot"));
+}
+
+/// How a shot went.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Shot {
+    Hit,
+    Wide,
+    /// Out of range, or something in the way
+    Blocked,
+}
+
+impl Shot {
+    /// How the combat log tells a miss: "goes wide".
+    pub fn miss_words(self) -> &'static str {
+        match self {
+            Shot::Hit => "hits",
+            Shot::Wide => "goes wide",
+            Shot::Blocked => "hits the wall",
+        }
+    }
+}
+
+/// Fire one shot from `from` at `to` with `chance` percent to hit: it can't hit beyond
+/// `range` or without a line of sight, and is rolled from the world's seeded RNG. Every
+/// shot draws its line and makes its sound; the caller deals the damage.
+pub fn fire(
+    world: &World,
+    res: &mut Resources,
+    from: Position,
+    to: Position,
+    range: i64,
+    chance: u32,
+) -> Shot {
+    use rand::Rng;
+    let clear = tile_distance(from, to) <= range && line_of_sight(world, res, from, to);
+    let shot = if !clear {
+        Shot::Blocked
+    } else if res.world_state.rng.gen_range(0..100) < chance {
+        Shot::Hit
+    } else {
+        Shot::Wide
+    };
+    res.shots.push(ShotTrace {
+        from,
+        to,
+        hit: shot == Shot::Hit,
+        tick: res.time.tick,
+    });
+    res.play(crate::sound::SoundCue::Shot);
+    shot
 }
 
 /// Take one queued step: away from the player when `away`, else toward where it last saw
