@@ -18,10 +18,10 @@ input_file: scripts/snapshots/options.txt
                │                 Fullscreen: only in the game window                │
                │                  Display: only in the game window                  │
                │                   Touch controls: only on mobile                   │
+               │                  Gamepad: only in the game window                  │
                │                                Back                                │
                │                                                                    │
                │    UP/DOWN move   ENTER select   ESCAPE back   LEFT/RIGHT change   │
-               │                                                                    │
                │                                                                    │
                │                                                                    │
                │                                                                    │

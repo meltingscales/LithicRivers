@@ -64,7 +64,7 @@ fn bound(app: &App, action: &str, input: &MouseInput) -> bool {
 }
 
 /// Whether a window or menu over the world has the input.
-fn modal_open(app: &App) -> bool {
+pub(crate) fn modal_open(app: &App) -> bool {
     use crate::app_state::*;
     app.panels.furnace_window.is_some()
         || app.panels.filter_picker.is_some()

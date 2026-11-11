@@ -1,0 +1,101 @@
+---
+source: crates/client/src/snapshot_tests.rs
+expression: "String::from_utf8(out).unwrap()"
+input_file: scripts/snapshots/gamepad-wheel.txt
+---
+=== screen wheel-world ===
+                                            LithicRivers
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌MODES ☼ 08:00─────────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  ------ - - -- - FOG │
+vvvvvvvvvvvvvvvvvvvvvvvvvvCvvv|>>>CvvvC→>>CvvvvvCvvvvvvv|vvvvvGvvvvvvvvv|▲>C└──────────────────────┘
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv^vvvvv|>f>CvvvG+vvvvvvvv/vvv┌Inventory─────────────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv|>╬>Cvvvvvvvvvvvvvvpvvtvvvvvvv│Nail x10              │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv↑vvvvvvvvvv│Acorn x1              │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvCvvvvvvvvvvvvvvvvCHvvvvvvvvv│Log x3                │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvtvvttvvvvvvv┌Help (h) ! Damaged────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv@vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Move:                 │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvv┌────────── Actions - release LB ──────────┐vvvv│  L-stick             │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvv│     menu        pick up        torch     │vvvv│X: mine               │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvv│                                          │vvvv│View: look            │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvv│     look        > torch      pass time   │vvvv│Y: build mode         │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvv│                                          │vvvv│A: interact           │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvv│  help panel    blueprints    inventory   │vvvv│Hold LB: more actions │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────────────────────────┘vvvv│                      │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│                      │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
+┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
+│                                                                                                  │
+│                                                                                                  │
+│                                                                                                  │
+│                                                                                                  │
+│                                                                                                  │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Production │ Menu │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===
+=== screen wheel-build ===
+                                            LithicRivers
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌MODES ☼ 08:00─────────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvvCvvv|>>>CvvvC→>>CvvvvvCvvvvvvv|vvvvvGvvvvvvvvv|▲>C│  ------ - P -- T FOG │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv^vvvvv|>f>CvvvG+vvvvvvvv/vvv└──────────────────────┘
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv|>╬>Cvvvvvvvvvvvvvvpvvtvvvvvvv┌Inventory─────────────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv↑vvvvvvvvvv│Nail x10              │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvCvvvvvvvvvvvvvvvvCHvvvvvvvvv│Acorn x1              │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Log x3                │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvtvvttvvvvvvv└──────────────────────┘
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv@vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Help (h) ! Damaged────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Place mode, direction:│
+vvvvvvvvvvvvvvvvvvvvvvvvvvvv┌───────── Building - release LB ──────────┐vvvv│  R-stick             │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvv│  prev slot       rotate      next slot   │vvvv│F1-F12: hotbar        │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvv│                                          │vvvv│r: turn (^)           │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvv│      -          > rotate     bp library  │vvvv│Y: next mode          │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvv│                                          │vvvv│Hold LB: more actions │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvv│  blueprints    next mode       new bp    │vvvv└──────────────────────┘
+┌Hotbar (F1-F12) | facing ^ └──────────────────────────────────────────┘───────────────────────────┐
+│            F1[ ] F2[ ] F3[ ] F4[ ] F5[ ] F6[ ] F7[ ] F8[ ] F9[ ] F10[ ] F11[ ] F12[ ]            │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
+│[1] Torch lit! Light radius increased to 8.                                                       │
+│[1] Build mode: Break                                                                             │
+│[1] Build mode: Place                                                                             │
+│                                                                                                  │
+│                                                                                                  │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Production │ Menu │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===
+=== screen rotated ===
+                                            LithicRivers
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌MODES ☼ 08:00─────────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvvCvvv|>>>CvvvC→>>CvvvvvCvvvvvvv|vvvvvGvvvvvvvvv|▲>C│  ------ - P -- T FOG │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv^vvvvv|>f>CvvvG+vvvvvvvv/vvv└──────────────────────┘
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv|>╬>Cvvvvvvvvvvvvvvpvvtvvvvvvv┌Inventory─────────────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv↑vvvvvvvvvv│Nail x10              │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvCvvvvvvvvvvvvvvvvCHvvvvvvvvv│Acorn x1              │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Log x3                │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvtvvttvvvvvvv└──────────────────────┘
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv@vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Help (h) ! Damaged────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Place mode, direction:│
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  R-stick             │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│F1-F12: hotbar        │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│r: turn (>)           │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Y: next mode          │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Hold LB: more actions │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
+┌Hotbar (F1-F12) | facing > east (r to turn)───────────────────────────────────────────────────────┐
+│            F1[ ] F2[ ] F3[ ] F4[ ] F5[ ] F6[ ] F7[ ] F8[ ] F9[ ] F10[ ] F11[ ] F12[ ]            │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
+│[1] Torch lit! Light radius increased to 8.                                                       │
+│[1] Build mode: Break                                                                             │
+│[1] Build mode: Place                                                                             │
+│[1] Placing facing east                                                                           │
+│                                                                                                  │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Production │ Menu │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===

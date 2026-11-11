@@ -105,6 +105,7 @@ impl App {
             .and_then(|v| v.as_bool())
             .unwrap_or(true);
         let window = crate::window::settings::WindowSettings::from_config(&config_manager);
+        let gamepad_layout = crate::gamepad::Layout::from_config(&config_manager);
 
         let repair_handler = RepairRecipeHandler::new();
         let saves_dir = lithicrivers_core::config::data_path(
@@ -136,6 +137,8 @@ impl App {
                 tutorial_visible: true, // Tutorial tab is visible by default
                 show_context_help,
                 window,
+                gamepad: crate::gamepad::Mapper::new(gamepad_layout),
+                last_input: Default::default(),
                 view_x: 0,
                 view_y: 0,
                 view_z: 0,

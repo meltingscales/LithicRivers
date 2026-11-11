@@ -145,14 +145,8 @@ pub(crate) fn render_cheat_console_modal(f: &mut Frame, app: &mut App) {
             // Add scroll instructions if there are more commands
             if total_commands > max_visible_commands {
                 lines.push(Line::from(""));
-                let up_key = app
-                    .core
-                    .config_manager
-                    .get_printable_key_for_keybind("ui", "CHEAT_CONSOLE_SCROLL_UP");
-                let down_key = app
-                    .core
-                    .config_manager
-                    .get_printable_key_for_keybind("ui", "CHEAT_CONSOLE_SCROLL_DOWN");
+                let up_key = app.key_label("ui", "CHEAT_CONSOLE_SCROLL_UP");
+                let down_key = app.key_label("ui", "CHEAT_CONSOLE_SCROLL_DOWN");
                 lines.push(Line::from(format!(
                     "Use {}/{} to scroll through commands",
                     up_key, down_key
@@ -179,14 +173,8 @@ pub(crate) fn render_cheat_console_modal(f: &mut Frame, app: &mut App) {
         f.render_widget(help_paragraph, help_area);
 
         // Controls
-        let up = app
-            .core
-            .config_manager
-            .get_printable_key_for_keybind("ui", "CHEAT_CONSOLE_SCROLL_UP");
-        let down = app
-            .core
-            .config_manager
-            .get_printable_key_for_keybind("ui", "CHEAT_CONSOLE_SCROLL_DOWN");
+        let up = app.key_label("ui", "CHEAT_CONSOLE_SCROLL_UP");
+        let down = app.key_label("ui", "CHEAT_CONSOLE_SCROLL_DOWN");
         let controls = Paragraph::new(if autocomplete_suggestions.is_empty() {
             "Enter: Execute | Tab: Autocomplete | Esc: Cancel".to_string()
         } else {

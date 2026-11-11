@@ -20,10 +20,7 @@ const DIRECTIONS: [(&str, (i64, i64)); 8] = [
 ];
 
 fn key(app: &App, category: &str, action: &str) -> String {
-    app.core
-        .config_manager
-        .get_printable_key_for_keybind(category, action)
-        .to_string()
+    app.key_label(category, action).to_string()
 }
 
 /// Enter Blueprint mode, or leave it for Movement mode.

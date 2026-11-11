@@ -114,7 +114,7 @@ pub(crate) fn render_power_info_modal(f: &mut Frame, app: &App) {
         None => lines.push(Line::from("Not part of a network yet")),
     }
     lines.push(Line::from(""));
-    let key = |c, a| app.core.config_manager.get_printable_key_for_keybind(c, a);
+    let key = |c, a| app.key_label(c, a);
     lines.push(Line::from(Span::styled(
         format!(
             "{}: {}  {}: close",

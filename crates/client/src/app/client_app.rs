@@ -84,6 +84,35 @@ impl MenuTab {
         }
     }
 
+    /// The tab's name in config (gamepad `tab.<NAME>` actions): its title, upper case,
+    /// with spaces as underscores ("GLOBAL_MAP", "ITEMS").
+    pub(crate) fn config_name(self) -> &'static str {
+        match self {
+            MenuTab::World => "WORLD",
+            MenuTab::Tutorial => "TUTORIAL",
+            MenuTab::GlobalMap => "GLOBAL_MAP",
+            MenuTab::Quests => "QUESTS",
+            MenuTab::Body => "BODY",
+            MenuTab::Inventory => "INVENTORY",
+            MenuTab::Crafting => "CRAFTING",
+            MenuTab::ItemDictionary => "ITEMS",
+            MenuTab::Production => "PRODUCTION",
+            MenuTab::Menu => "MENU",
+            MenuTab::Help => "HELP",
+            MenuTab::Credits => "CREDITS",
+            MenuTab::Quit => "QUIT",
+        }
+    }
+
+    pub(crate) fn from_config_name(name: &str) -> Option<Self> {
+        Self::ORDER.into_iter().find(|t| t.config_name() == name)
+    }
+
+    /// Whether the tab is in the menu bar.
+    pub(crate) fn visible_with(self, tutorial_visible: bool) -> bool {
+        self != MenuTab::Tutorial || tutorial_visible
+    }
+
     pub(crate) fn next(self, tutorial_visible: bool) -> Self {
         let tabs = Self::visible(tutorial_visible);
         tabs[(self.as_index(tutorial_visible) + 1) % tabs.len()]

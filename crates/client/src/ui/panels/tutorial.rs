@@ -49,10 +49,7 @@ pub fn render_tutorial_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
             }
             crate::tutorialsystem::TutorialAction::Keybind { category, action } => {
                 // Get the configured key for this keybind
-                let key_name = app
-                    .core
-                    .config_manager
-                    .get_printable_key_for_keybind(category, action);
+                let key_name = app.key_label(category, action);
                 let key_hint = format!("Press [{}] to continue", key_name);
                 lines.push(Line::from(Span::styled(
                     key_hint,
@@ -67,10 +64,7 @@ pub fn render_tutorial_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
                 tile,
             } => {
                 // Get the configured key for this keybind
-                let key_name = app
-                    .core
-                    .config_manager
-                    .get_printable_key_for_keybind(category, action);
+                let key_name = app.key_label(category, action);
 
                 // Get tile display name from tile registry
                 let tile_name = tile.display_name();
@@ -221,10 +215,7 @@ pub fn render_tutorial_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
                             .iter()
                             .map(|(category, action)| {
                                 // Get the actual configured key for this keybind
-                                let key_name = app
-                                    .core
-                                    .config_manager
-                                    .get_printable_key_for_keybind(category, action);
+                                let key_name = app.key_label(category, action);
                                 format!("[{}]", key_name)
                             })
                             .collect::<Vec<_>>()

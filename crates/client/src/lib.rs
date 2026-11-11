@@ -16,6 +16,7 @@ mod dialogue_presenter;
 mod factory_tests;
 #[cfg(test)]
 mod farming_tests;
+mod gamepad;
 mod headless;
 mod mcp;
 #[cfg(test)]
@@ -339,6 +340,7 @@ fn step(app: &mut App) {
     }
     app.update_demo();
     app.update_flyover();
+    gamepad::tick(app);
     // Auto-advance ticks when combat is active (one tick per COMBAT_MS_PER_TICK)
     if app.combat.is_active() {
         let tick_ms = app
@@ -424,6 +426,8 @@ where
 /// anywhere else the game handles it.
 fn handle_mouse_event(app: &mut App, input: app::input::mouse::MouseInput) {
     use app::input::mouse::MouseKind;
+    // Only the window sends these: the player is on the mouse, so hints show keys
+    app.ui.last_input = gamepad::InputDevice::Keyboard;
     if let SplashState::BootMessage = app.splash.state {
         match input.kind {
             MouseKind::ScrollDown => {

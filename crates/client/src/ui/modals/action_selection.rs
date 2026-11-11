@@ -100,11 +100,7 @@ fn render_action_selection_modal(
     app.ui.click_targets.push(area, ClickTarget::ModalArea);
 
     let player = player_position(app);
-    let key = |app: &App, (category, action): (&str, &str)| {
-        app.core
-            .config_manager
-            .get_printable_key_for_keybind(category, action)
-    };
+    let key = |app: &App, (category, action): (&str, &str)| app.key_label(category, action);
     let offsets: Vec<(i64, i64)> = available_actions
         .iter()
         .map(|a| player.map_or((0, 0), |p| a.offset_from(p)))

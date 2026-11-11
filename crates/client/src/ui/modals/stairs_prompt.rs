@@ -41,7 +41,7 @@ pub(crate) fn render_stairs_prompt(f: &mut Frame, app: &App) {
     };
     f.render_widget(Clear, area);
     app.ui.click_targets.push(area, ClickTarget::ModalArea);
-    let key = |c, a| app.core.config_manager.get_printable_key_for_keybind(c, a);
+    let key = |c, a| app.key_label(c, a);
     let block = Block::default()
         .borders(Borders::ALL)
         .title(" Build stairs? ")
