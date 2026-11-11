@@ -70,3 +70,12 @@
 
 - [Guns trivialize combat] → Ammo costs a chain of materials, the pipe gun is inaccurate, and enemies scale later.
 - [Many new items] → All go through the Item Dictionary, which shows where each comes from and what uses it.
+
+## Implementation notes
+
+- **Slots** live on the body as `Body::weapons` (arm to gun), saved with it. `firearms::ARMS` lists the arms that fire, in order; `add-multi-arm-bodies` extends it.
+- **Equipping:** the Body tab's Wield key (`body.WIELD`, `w`) puts the best carried gun (the rifle before the pipe gun) in the selected arm, swapping out what it held, or puts the gun away when no other is carried.
+- **Shoot** is listed after Melee only while a gun has rounds; two guns of one kind need a round each. The selected enemy's card shows each gun's chance from there and the rounds carried.
+- **Shared rules:** player and enemy shots both go through `systems::ranged::fire` (range, line of sight, seeded roll, the shot's line and sound).
+- **Deposit shares** for seed 12345: nitre 0.2 to 0.6% by shallow layer, sulfur about 0.3% and brass scrap about 0.2% in the deep. Military androids also carry 1 to 2 brass nuggets.
+- **Recipes:** pipe gun from 3 iron scrap, 2 planks and 4 nails; rifle from 2 brass ingots, 3 iron scrap, 2 scrap electronics and 1 plasteel scrap (plasteel comes from the deep).

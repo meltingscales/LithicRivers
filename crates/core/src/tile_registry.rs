@@ -106,6 +106,9 @@ define_tiles! {
     CarrotGrowing, "carrot_growing", "growing carrot", true,
     CarrotRipe, "carrot_ripe", "ripe carrot", true,
     AndroidSpawn, "android_spawn", "android spawn", false,
+    Nitre, "nitre", "nitre", false,
+    Sulfur, "sulfur", "sulfur", false,
+    BrassScrap, "brass_scrap", "brass scrap", false,
 }
 
 impl TileKind {

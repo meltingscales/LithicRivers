@@ -118,6 +118,15 @@ pub const SMELTING: &[SmeltingRecipe] = &[
     biochar(ItemKind::Stick, 4, 3),
     biochar(ItemKind::Acorn, 4, 5),
     biochar(ItemKind::WoodenShavings, 8, 2),
+    // 4 brass nuggets melt down into an ingot
+    SmeltingRecipe {
+        input: ItemKind::BrassNugget,
+        input_count: 4,
+        output: ItemKind::BrassIngot,
+        output_count: 1,
+        seconds: 6,
+        byproduct: None,
+    },
 ];
 
 pub fn smelting_recipe(input: ItemKind) -> Option<&'static SmeltingRecipe> {
@@ -746,6 +755,18 @@ mod tests {
         );
         steps(&mut g, 1);
         assert!(!furnace(&g, f).lit, "out of input");
+    }
+
+    #[test]
+    fn four_brass_nuggets_smelt_into_an_ingot() {
+        let mut g = game();
+        let f = put(&mut g, FactoryKind::CrudeFurnace, at(0, 0), Facing::East);
+        load(&mut g, f, Slot::Input, ItemKind::BrassNugget, 4);
+        load(&mut g, f, Slot::Fuel, ItemKind::Log, 2);
+        steps(&mut g, 6 * STEPS_PER_FACTORY_SECOND);
+        let state = furnace(&g, f);
+        assert_eq!(state.input, None);
+        assert_eq!(state.output, Some(ItemStack::new(ItemKind::BrassIngot, 1)));
     }
 
     #[test]

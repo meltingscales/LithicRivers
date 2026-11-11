@@ -1,5 +1,5 @@
 ---
-source: crates/client/src/sprite_loader.rs
+source: crates/client/src/bin/../sprite_loader.rs
 expression: loader.gallery()
 ---
 === entities/corpse  #8B4513  The remains of a fallen creature
@@ -2107,6 +2107,44 @@ eee
     ▐▓▓▌    
     ▀▀▀▀    
             
+=== items/brass_ingot  #C9A23C  A bar of brass, poured rough. Enough for a few shell casings.
+-- 1x
+▬
+-- 2x
+▄▄
+▀▀
+-- 3x
+▄▄▄
+███
+▀▀▀
+-- art 0
+            
+            
+   ▄▄▄▄▄▄   
+  ▐▓▓▓▓▓▓▌  
+  ▐██████▌  
+   ▀▀▀▀▀▀   
+            
+            
+=== items/brass_nugget  #A67D33  A fused lump of old brass, green at the edges.
+-- 1x
+•
+-- 2x
+•·
+·•
+-- 3x
+•·•
+·•·
+•·•
+-- art 0
+            
+            
+     ▄▄     
+    ▐▓▒▌    
+    ▐▒▓▌    
+     ▀▀     
+            
+            
 === items/burner_generator  #902A20  Burns logs, planks, sticks and shavings to power its network
 -- 1x
 G
@@ -2523,6 +2561,25 @@ ccc
     ▀▀      
             
             
+=== items/gunpowder  #5A5650  Black powder in a twist of paper. Keep it away from the furnace.
+-- 1x
+∴
+-- 2x
+∴∴
+∴∴
+-- 3x
+∴∴∴
+∴∴∴
+∴∴∴
+-- art 0
+            
+            
+     ░      
+    ░▒░     
+   ░▒▓▒░    
+  ░▒▓▓▓▒░   
+            
+            
 === items/iron_ore  #FFFF00  iron ore
 -- 1x
 i
@@ -2559,6 +2616,25 @@ iii
    ▀▒▓▓▀└┬┘ 
     ╱▓▒▓▄ │ 
    ▀  ▀▀    
+            
+            
+=== items/iron_shot  #8C8C8C  Iron scrap cut and rolled into shot. Rattles in the pocket.
+-- 1x
+∙
+-- 2x
+∙∙
+∙∙
+-- 3x
+∙∙∙
+∙∙∙
+∙∙∙
+-- art 0
+            
+            
+    ● ●     
+   ● ● ●    
+    ● ●     
+            
             
             
 === items/item_charger  #6B9C50  A two-socket charging cradle; cells slotted into it tick quietly as they fill
@@ -2711,6 +2787,25 @@ n
       ▀     
             
             
+=== items/nitre  #BFB8A2  Scraped saltpeter, gritty and cold. It wants to burn something.
+-- 1x
+°
+-- 2x
+°°
+°°
+-- 3x
+°°°
+°°°
+°°°
+-- art 0
+            
+            
+    ░▒░     
+   ▒▓▒░▒    
+  ░▒▓▓▒▓░   
+   ▀▀▀▀▀    
+            
+            
 === items/nuclear_slime_embryo_flawed  #8CC060  A nuclear slime embryo that glows faintly; it grows four slimes before it gives out
 -- 1x
 ε
@@ -2765,6 +2860,63 @@ n
    █▓▒▓/█   
    █▄▄▄▄█ ░ 
     ▀▀▀▀ ░  
+            
+=== items/paper  #E2D9BE  Rough paper pressed from wood shavings. Good for wrapping powder, not for writing.
+-- 1x
+□
+-- 2x
+□□
+□□
+-- 3x
+┌─┐
+│ │
+└─┘
+-- art 0
+            
+   ┌─────┐  
+   │ ─── │  
+   │ ─── │  
+   │ ──  │  
+   └─────┘  
+            
+            
+=== items/paper_cartridge  #D2C29A  Powder and shot rolled in paper, burned up in the firing.
+-- 1x
+!
+-- 2x
+▐▌
+▐▌
+-- 3x
+▄█▄
+▐▒▌
+▀▀▀
+-- art 0
+            
+     ▄▄     
+    ▐██▌    
+    ▐▒▒▌    
+    ▐▒▒▌    
+    ▀▀▀▀    
+            
+            
+=== items/pipe_gun  #7C6B58  An iron pipe strapped to a wooden stock. Loud, and only roughly pointed.
+-- 1x
+¬
+-- 2x
+═╗
+  
+-- 3x
+══╗
+  ║
+   
+-- art 0
+            
+            
+ ══════╦══╗ 
+       ║▓▓║ 
+       ╚═╗║ 
+         ╚╝ 
+            
             
 === items/plank_block  #A0522D  A block made out of wooden planks
 -- 1x
@@ -2840,6 +2992,25 @@ ooo
      ║      
      ║      
    ▄▄█▄▄    
+            
+            
+=== items/rifle  #8E7048  A SapienCorp service rifle, rebuilt around a brass action. It still knows how to aim.
+-- 1x
+⌐
+-- 2x
+═╦
+▓╝
+-- 3x
+══╦
+▓▓║
+  ╝
+-- art 0
+            
+            
+═══════╤═╦╗ 
+  ▀▀▀▀▀█▓▓║ 
+       ▐▌╚╝ 
+            
             
             
 === items/riverglass  #7A57AE  A shard of riverglass. Held near a power cell, it hums louder.
@@ -2955,6 +3126,25 @@ eee
    │░**░│   
    └┐  ┌┘   
     ▀██▀    
+            
+=== items/shell_casing  #B8923A  An empty brass case, ready to be packed again.
+-- 1x
+¡
+-- 2x
+▐▌
+▐▌
+-- 3x
+▄▄▄
+▐ ▌
+▀▀▀
+-- art 0
+            
+     ▄▄     
+    ▐  ▌    
+    ▐  ▌    
+    ▐  ▌    
+    ▀▀▀▀    
+            
             
 === items/spawner  #873043  A SapienCorp growth tank, still warm; something wet turns over inside the glass
 -- 1x
@@ -3222,6 +3412,25 @@ U
          ╲  
             
             
+=== items/sulfur  #C2AD2C  A lump of brimstone. The smell gets into everything.
+-- 1x
+°
+-- 2x
+°▴
+▴°
+-- 3x
+▴°▴
+°▴°
+▴°▴
+-- art 0
+            
+            
+     ▲      
+    ▲█▲▲    
+   ▲███▓▲   
+    ▀▀▀▀    
+            
+            
 === items/teleporter  #3BA196  A SapienCorp transit gate; it folds you through the grid's dark and sets you down somewhere else, mostly intact
 -- 1x
 Ξ
@@ -3450,6 +3659,25 @@ A!!
    ║   ╚═╝╚ 
   ═╩═ ═╗╔═  
        ╚╝   
+=== tiles/brass_scrap  #B58A3C  Crushed brass fittings packed into the rock, from some SapienCorp depot that fell in.
+-- 1x
+=
+-- 2x
+=b
+b=
+-- 3x
+=b=
+b=b
+=b=
+-- art 0
+▓▓▒▓▓▓▓▒▓▓▓▒
+▓▓▒╞══╡▓▒▓▓▓
+▓▓▓▓▓▓▓▒▓○▓▓
+▓○▓▓▒▓▓▓▓▓▓▒
+▒▓▓▓╞═══╡▓▓░
+░▓▓▒▓▓▓▓▓▓○▒
+▒▓▓▓▓○▓▓▓▓▓▓
+▓▓▓▓▓▒▓▓▒▓▓▓
 === tiles/carrot_growing  #8FC84A  Carrot tops in a tidy row, the roots still pale.
 -- 1x
 v
@@ -3735,6 +3963,25 @@ v  '  v  ,
  ░▒░░▒░░▒░░ 
   ░░▒░░▒░   
             
+=== tiles/nitre  #E2DCC8  A white crust of nitre weeping out of the rock, sharp on the tongue.
+-- 1x
+n
+-- 2x
+n▓
+▓n
+-- 3x
+▓n▓
+n▓n
+▓n▓
+-- art 0
+▓▓▒▓▓▓▓▒▓▓▓▒
+▓░░▓▓▒▓▓░▓▓▓
+▓▓░░▒▓▓░░░▓▒
+▒▓▓▓▓▓▓▓░▓▓▓
+▓▓▒░░▓▒▓▓▓░▓
+▓▓░░░░▓▓▓░░▓
+▒▓▓░░▓▒▓▓▓▓▓
+▓▓▓▓▓▒▓▓▒▓▓▓
 === tiles/plank_block  #A0522D  A block made out of wooden planks
 -- 1x
 P
@@ -4058,6 +4305,25 @@ ps!
 ▀▀▀▀▘▝▀▀▀▀▀▀
 ██▌▐██████▌▐
             
+=== tiles/sulfur  #D8C232  Yellow sulfur crystals furring a seam, still smelling of the deep fires.
+-- 1x
+s
+-- 2x
+s▓
+▓s
+-- 3x
+▓s▓
+s▓s
+▓s▓
+-- art 0
+▓▓▒▓▓▓▓▒▓▓▓▒
+▓▓▲▓▓▒▓▓▓▲▓▓
+▓▲█▲▒▓▓▓▲█▲▒
+▒▓▓▓▓▲▓▓▓▓▓▓
+▓▓▒▓▲█▲▓▓▓▓▓
+▓▓▓▓▓▓▓▲▓▒▓▓
+▒▓▓▒▓▓▲█▲▓▓▓
+▓▓▓▓▓▒▓▓▒▓▓▓
 === tiles/teleporter_station  #FFFF00  Special worldgen block that turns into a SapienCorp transit station
 -- 1x
 Ψ

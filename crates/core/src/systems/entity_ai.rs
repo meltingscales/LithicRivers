@@ -411,7 +411,13 @@ pub fn drillable(tile: crate::tiles::TileKind) -> bool {
     use crate::tiles::TileKind::*;
     matches!(
         tile,
-        Rock | IronScrap | ScrapElectronics | PlasteelScrap | Riverglass
+        Rock | IronScrap
+            | ScrapElectronics
+            | PlasteelScrap
+            | Riverglass
+            | Nitre
+            | Sulfur
+            | BrassScrap
     )
 }
 

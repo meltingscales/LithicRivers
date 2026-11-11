@@ -34,6 +34,9 @@ pub fn mining_drop(tile: TileKind) -> Option<MiningDrop> {
         TileKind::ScrapElectronics => drop(TileKind::Air, &[(ItemKind::ScrapElectronics, 1, 1)]),
         TileKind::PlasteelScrap => drop(TileKind::Air, &[(ItemKind::PlasteelScrap, 1, 1)]),
         TileKind::Riverglass => drop(TileKind::Air, &[(ItemKind::Riverglass, 1, 1)]),
+        TileKind::Nitre => drop(TileKind::Air, &[(ItemKind::Nitre, 1, 2)]),
+        TileKind::Sulfur => drop(TileKind::Air, &[(ItemKind::Sulfur, 1, 2)]),
+        TileKind::BrassScrap => drop(TileKind::Air, &[(ItemKind::BrassNugget, 1, 3)]),
         // Ripe crops: their produce and 1 to 2 seeds; the field is left as dirt
         TileKind::WheatRipe => drop(
             TileKind::Dirt,
@@ -117,6 +120,7 @@ pub const MINING_BOT_LOOT: &[CreatureLoot] = &[
 /// and salvage.
 pub const MILITARY_ANDROID_LOOT: &[CreatureLoot] = &[
     always(ItemKind::BrassCartridge, 5, 7),
+    always(ItemKind::BrassNugget, 1, 2),
     always(ItemKind::ScrapElectronics, 1, 2),
     always(ItemKind::IronScrap, 1, 3),
 ];
@@ -489,6 +493,10 @@ mod tests {
             ItemKind::NuclearSlimeEmbryoFlawless,
             // Military androids carry ammo
             ItemKind::BrassCartridge,
+            // The ammo chain's deposits
+            ItemKind::Nitre,
+            ItemKind::Sulfur,
+            ItemKind::BrassNugget,
         ]
         .into_iter()
         .collect();

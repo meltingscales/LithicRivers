@@ -38,9 +38,7 @@ pub fn render_combat_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     };
 
     let enemies = enemy_cards(app);
-    let moves = lithicrivers_core::moves::get_available_moves(
-        app.core.game.res.world_settings.cheats_allowed,
-    );
+    let moves = crate::app::input::combat::current_moves(app);
     let current_move = current_move.min(moves.len().saturating_sub(1));
     let current_enemy = current_enemy.min(enemies.len().saturating_sub(1));
     if let crate::CombatUiState::Active {
@@ -277,12 +275,18 @@ fn render_enemy(
     let inner = block.inner(area);
     f.render_widget(block, area);
 
-    let [portrait_area, health_area, info_area] = Layout::vertical([
+    // Your guns' odds against the selected enemy, under its card
+    let aim = if selected { your_aim(app, enemy) } else { None };
+    let [portrait_area, health_area, info_area, aim_area] = Layout::vertical([
         Constraint::Fill(1),
         Constraint::Length(1),
         Constraint::Length(1),
+        Constraint::Length(aim.is_some() as u16),
     ])
     .areas(inner);
+    if let Some(aim) = aim {
+        f.render_widget(Paragraph::new(aim).alignment(Alignment::Center), aim_area);
+    }
 
     if let Some(sprite_ref) = &enemy.sprite_ref {
         let sprite = app.core.sprite_loader.load_by_spriteref(sprite_ref);
@@ -355,6 +359,49 @@ fn render_enemy(
         Paragraph::new(Line::from(info)).alignment(Alignment::Center),
         info_area,
     );
+}
+
+/// Each equipped gun's chance to hit `enemy` from here and the rounds carried for it:
+/// "Pipe Gun 54% (3)". `None` without an equipped gun.
+fn your_aim(app: &crate::App, enemy: &EnemyCard) -> Option<Line<'static>> {
+    use lithicrivers_core::firearms;
+    let world = &app.core.game.world;
+    let player = app.core.game.get_player_entity()?;
+    let body = world.get::<&Body>(player).ok()?;
+    let inv = world
+        .get::<&lithicrivers_core::components::Inventory>(player)
+        .ok()?;
+    let mut spans = vec![Span::styled("You: ", Style::default().fg(Color::Gray))];
+    for arm in firearms::ARMS {
+        let Some(gun) = body.weapons.get(&arm).and_then(|g| firearms::gun(*g)) else {
+            continue;
+        };
+        let state = body
+            .parts
+            .get(&arm)
+            .map(|p| p.state)
+            .unwrap_or(BodyPartState::Missing);
+        if state == BodyPartState::Missing {
+            continue;
+        }
+        if spans.len() > 1 {
+            spans.push(Span::styled(" | ", Style::default().fg(DIM)));
+        }
+        let rounds = inv.count(gun.ammo);
+        let name = lithicrivers_core::components::itemkind_name(gun.item);
+        let style = if rounds == 0 || enemy.distance > gun.range {
+            Style::default().fg(DIM)
+        } else {
+            Style::default().fg(Color::Green)
+        };
+        let chance = if enemy.distance > gun.range {
+            "out of range".to_string()
+        } else {
+            format!("{}%", firearms::gun_hit_chance(gun, enemy.distance, state))
+        };
+        spans.push(Span::styled(format!("{name} {chance} ({rounds})"), style));
+    }
+    (spans.len() > 1).then(|| Line::from(spans))
 }
 
 /// What an enemy is about to do, from its current action: "aims 3t".
