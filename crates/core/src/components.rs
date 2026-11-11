@@ -49,6 +49,32 @@ pub struct NuclearSlime;
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct MiningBot;
 
+/// Marker for rusty military androids: SapienCorp security units that shoot from a
+/// distance while their ammo lasts (`ranged`)
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct MilitaryAndroid;
+
+/// A military android's pace and memory: it acts on every other turn, and walks to where
+/// it last saw the player when it loses sight of them
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct AndroidAI {
+    pub turns: u8,
+    pub last_seen: Option<Position>,
+}
+
+/// A creature that can shoot. Its ammo is the `ammo` items in its inventory, so a wreck
+/// keeps what it didn't fire. Hit chance falls off with distance (`ranged::hit_chance`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct RangedAttack {
+    /// Farthest a shot reaches, in tiles
+    pub range: i64,
+    /// Percent chance to hit from 1 tile away
+    pub accuracy_at_1: u32,
+    /// Percent lost per tile beyond the first
+    pub falloff: u32,
+    pub ammo: ItemKind,
+}
+
 /// A nuclear slime's pace: it moves on every other turn it is chasing
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SlimeAI {
@@ -265,6 +291,7 @@ pub enum ItemKind {
     BiomechEmbryoDeformed,
     BiomechEmbryoWrinkly,
     BiomechEmbryoPerfect,
+    BrassCartridge,
 }
 
 pub fn itemkind_name(kind: ItemKind) -> &'static str {
@@ -356,6 +383,7 @@ pub fn itemkind_name(kind: ItemKind) -> &'static str {
         ItemKind::BiomechEmbryoDeformed => "Deformed Biomech Embryo",
         ItemKind::BiomechEmbryoWrinkly => "Wrinkly Biomech Embryo",
         ItemKind::BiomechEmbryoPerfect => "Perfect Biomech Embryo",
+        ItemKind::BrassCartridge => "Brass Cartridge",
     }
 }
 
@@ -448,6 +476,7 @@ pub fn itemkind_sprite_name(kind: ItemKind) -> &'static str {
         ItemKind::BiomechEmbryoDeformed => "biomech_embryo_deformed",
         ItemKind::BiomechEmbryoWrinkly => "biomech_embryo_wrinkly",
         ItemKind::BiomechEmbryoPerfect => "biomech_embryo_perfect",
+        ItemKind::BrassCartridge => "brass_cartridge",
     }
 }
 
@@ -540,6 +569,7 @@ pub fn parse_itemkind_from_sprite_name(sprite_name: &str) -> Option<ItemKind> {
         "biomech_embryo_deformed" => Some(ItemKind::BiomechEmbryoDeformed),
         "biomech_embryo_wrinkly" => Some(ItemKind::BiomechEmbryoWrinkly),
         "biomech_embryo_perfect" => Some(ItemKind::BiomechEmbryoPerfect),
+        "brass_cartridge" => Some(ItemKind::BrassCartridge),
         _ => None,
     }
 }
@@ -597,6 +627,7 @@ pub enum EntityKind {
     QuestTutorialBrokenAndroid,
     NuclearSlime,
     MiningBot,
+    MilitaryAndroid,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -658,6 +689,27 @@ impl Inventory {
         }
         self.slots.push(stack);
         true
+    }
+
+    /// How many items of `kind` are carried.
+    pub fn count(&self, kind: ItemKind) -> u32 {
+        self.slots
+            .iter()
+            .filter(|s| s.kind == kind)
+            .map(|s| s.qty)
+            .sum()
+    }
+
+    /// Take up to `qty` items of `kind`, emptying stacks in order; returns how many.
+    pub fn remove(&mut self, kind: ItemKind, qty: u32) -> u32 {
+        let mut left = qty;
+        for stack in self.slots.iter_mut().filter(|s| s.kind == kind) {
+            let n = stack.qty.min(left);
+            stack.qty -= n;
+            left -= n;
+        }
+        self.slots.retain(|s| s.qty > 0);
+        qty - left
     }
 
     /// Take one item from stack `slot`, with its charge if it is a cell.

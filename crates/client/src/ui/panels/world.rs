@@ -313,12 +313,59 @@ pub fn render_game_view(f: &mut Frame, app: &mut crate::App, area: Rect) {
     arrival_overlay(app, area, &mut lines);
     hover_overlay(app, area, &mut lines);
     blueprint_overlay(app, area, &mut lines);
+    shot_overlay(app, area, &mut lines);
 
     let paragraph = Paragraph::new(lines)
         .block(Block::default())
         .wrap(Wrap { trim: false });
 
     f.render_widget(paragraph, area);
+}
+
+/// Shots fired in the last few ticks: a line from the shooter to its target, red on a hit
+/// with a burst where it struck, dull yellow on a miss. Drawing only.
+fn shot_overlay(app: &mut crate::App, area: Rect, lines: &mut [Line]) {
+    use lithicrivers_core::systems::ranged::SHOT_TRACE_TICKS;
+    let now = app.core.game.res.time.tick;
+    let z = app.ui.view_z;
+    let mut cells: HashMap<(i64, i64), (char, Color)> = HashMap::new();
+    for shot in app
+        .core
+        .game
+        .res
+        .shots
+        .iter()
+        .filter(|s| s.from.z == z && now.saturating_sub(s.tick) < SHOT_TRACE_TICKS)
+    {
+        let color = if shot.hit {
+            Color::Rgb(0xFF, 0x50, 0x30)
+        } else {
+            Color::Rgb(0xB0, 0x98, 0x50)
+        };
+        for (cell, glyph) in wire_cells(&[(shot.from, shot.to)], z) {
+            cells.insert(cell, (glyph, color));
+        }
+        if shot.hit {
+            cells.insert((shot.to.x, shot.to.y), ('*', color));
+        }
+    }
+    if cells.is_empty() {
+        return;
+    }
+    let scale = app.ui.scale.as_i64();
+    for (row, line) in lines.iter_mut().enumerate() {
+        for (col, span) in line.spans.iter_mut().enumerate() {
+            let (x, y, _, _) = cell_to_tile(
+                (app.ui.view_x, app.ui.view_y),
+                (area.width as i64, area.height as i64),
+                scale,
+                (col as i64, row as i64),
+            );
+            if let Some((glyph, color)) = cells.get(&(x, y)) {
+                *span = Span::styled(glyph.to_string(), Style::default().fg(*color).bold());
+            }
+        }
+    }
 }
 
 /// How long the rings around a teleport landing last.

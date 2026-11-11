@@ -36,6 +36,8 @@ pub enum PaletteKey {
     ExistingWorldgen,
     // special tile that spawns enemies
     EnemySpawn,
+    // special tile that spawns a military android
+    AndroidSpawn,
     // special tile that becomes a wild spawner block
     WildSpawner,
     // special tile that becomes a SapienCorp transit station block

@@ -113,6 +113,14 @@ pub const MINING_BOT_LOOT: &[CreatureLoot] = &[
     always(ItemKind::IronScrap, 0, 2),
 ];
 
+/// What a military android carries: its ammo (what it doesn't fire stays in its wreck)
+/// and salvage.
+pub const MILITARY_ANDROID_LOOT: &[CreatureLoot] = &[
+    always(ItemKind::BrassCartridge, 5, 7),
+    always(ItemKind::ScrapElectronics, 1, 2),
+    always(ItemKind::IronScrap, 1, 3),
+];
+
 /// Every creature's loot, with how the Item Dictionary names the creature. Creatures with
 /// embryos can also drop one of their own kind when they die (`spawner::roll_embryo`).
 pub const CREATURE_LOOT: &[(&str, EnemyKind, &[CreatureLoot])] = &[
@@ -123,6 +131,11 @@ pub const CREATURE_LOOT: &[(&str, EnemyKind, &[CreatureLoot])] = &[
         NUCLEAR_SLIME_LOOT,
     ),
     ("mining bots", EnemyKind::MiningBot, MINING_BOT_LOOT),
+    (
+        "military androids",
+        EnemyKind::MilitaryAndroid,
+        MILITARY_ANDROID_LOOT,
+    ),
 ];
 
 /// Whether a creature can carry or drop `item`.
@@ -474,6 +487,8 @@ mod tests {
             ItemKind::NuclearSlimeEmbryoPoor,
             ItemKind::NuclearSlimeEmbryoFlawed,
             ItemKind::NuclearSlimeEmbryoFlawless,
+            // Military androids carry ammo
+            ItemKind::BrassCartridge,
         ]
         .into_iter()
         .collect();

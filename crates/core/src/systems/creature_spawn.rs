@@ -125,6 +125,7 @@ fn entity_kind(kind: EnemyKind) -> EntityKind {
         EnemyKind::FeralDog => EntityKind::FeralDog,
         EnemyKind::NuclearSlime => EntityKind::NuclearSlime,
         EnemyKind::MiningBot => EntityKind::MiningBot,
+        EnemyKind::MilitaryAndroid => EntityKind::MilitaryAndroid,
     }
 }
 

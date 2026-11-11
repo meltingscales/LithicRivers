@@ -67,6 +67,25 @@ impl Pathfinder {
             // 15% chance to just move randomly/stupidly
             return self.random_move(start, is_passable, world_seed, tick);
         }
+        self.planned_step(start, goal, is_passable, world_seed, tick)
+    }
+
+    /// The next step of an A* path from start to goal, with none of the dogs' random
+    /// stumbles (a goal out of reach still falls back to a simple step toward it).
+    pub fn planned_step<F>(
+        &self,
+        start: Position,
+        goal: Position,
+        is_passable: F,
+        world_seed: u64,
+        tick: u64,
+    ) -> Option<Position>
+    where
+        F: Fn(Position) -> bool,
+    {
+        if start == goal || !is_passable(goal) {
+            return None;
+        }
 
         let mut open_set = BinaryHeap::new();
         let mut closed_set = HashSet::new();

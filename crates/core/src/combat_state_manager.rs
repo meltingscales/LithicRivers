@@ -84,46 +84,31 @@ impl CombatStateManager {
         }
 
         // Not in combat, check if it should start
-        Self::should_start_combat(world, player_pos)
+        !Self::engaging(world, res, player_pos).is_empty()
     }
 
-    /// Check if combat should start (enemies nearby)
-    /// Uses exact adjacency logic like the original system for compatibility
-    fn should_start_combat(world: &World, player_pos: Position) -> bool {
-        // Define the 8 adjacent positions around the player (original logic)
-        let adjacent_positions = [
-            (player_pos.x - 1, player_pos.y - 1), // NW
-            (player_pos.x, player_pos.y - 1),     // N
-            (player_pos.x + 1, player_pos.y - 1), // NE
-            (player_pos.x - 1, player_pos.y),     // W
-            (player_pos.x + 1, player_pos.y),     // E
-            (player_pos.x - 1, player_pos.y + 1), // SW
-            (player_pos.x, player_pos.y + 1),     // S
-            (player_pos.x + 1, player_pos.y + 1), // SE
-        ];
+    /// Living combatants without a battle delay that fight the player now: beside them,
+    /// or able to shoot them (`ranged::engages`)
+    fn engaging(world: &World, res: &Resources, player_pos: Position) -> Vec<hecs::Entity> {
+        world
+            .query::<(&Position, &Combat, &GameEntity)>()
+            .iter()
+            .filter(|&(entity, (pos, _, _))| {
+                world.get::<&Dead>(entity).is_err()
+                    && world.get::<&BattleDelay>(entity).is_err()
+                    && crate::systems::ranged::engages(world, res, entity, *pos, player_pos)
+            })
+            .map(|(entity, _)| entity)
+            .collect()
+    }
 
-        for (entity, (pos, _, _)) in world.query::<(&Position, &Combat, &GameEntity)>().iter() {
-            // Skip dead entities
-            if world.get::<&Dead>(entity).is_ok() {
-                continue;
-            }
-
-            // Skip entities with BattleDelay
-            if world.get::<&BattleDelay>(entity).is_ok() {
-                continue;
-            }
-
-            // Check if entity is in any of the 8 adjacent positions
-            let is_adjacent = adjacent_positions
-                .iter()
-                .any(|&(adj_x, adj_y)| pos.x == adj_x && pos.y == adj_y && pos.z == player_pos.z);
-
-            if is_adjacent {
-                return true;
+    /// Mark every combatant that fights the player as in combat
+    fn trigger_engaging(world: &mut World, res: &Resources, player_pos: Position) {
+        for entity in Self::engaging(world, res, player_pos) {
+            if let Ok(mut combat) = world.get::<&mut Combat>(entity) {
+                combat.triggered = true;
             }
         }
-
-        false
     }
 
     /// Check if combat should continue (any living enemies nearby)
@@ -151,50 +136,9 @@ impl CombatStateManager {
 
     /// Update combat participants - ensure all adjacent enemies have triggered = true
     /// This is called every tick while in combat to handle enemies joining mid-combat
-    fn update_combat_participants(world: &mut World, _res: &mut Resources) {
-        // Get player position for adjacency checks
-        let player_pos = match get_player_position(world) {
-            Some(pos) => pos,
-            None => return, // No player
-        };
-
-        // Define the 8 adjacent positions around the player
-        let adjacent_positions = [
-            (player_pos.x - 1, player_pos.y - 1), // NW
-            (player_pos.x, player_pos.y - 1),     // N
-            (player_pos.x + 1, player_pos.y - 1), // NE
-            (player_pos.x - 1, player_pos.y),     // W
-            (player_pos.x + 1, player_pos.y),     // E
-            (player_pos.x - 1, player_pos.y + 1), // SW
-            (player_pos.x, player_pos.y + 1),     // S
-            (player_pos.x + 1, player_pos.y + 1), // SE
-        ];
-
-        // Set combat.triggered = true for all adjacent combat entities
-        for (entity, (pos, combat, _)) in world
-            .query::<(&Position, &mut Combat, &GameEntity)>()
-            .iter()
-        {
-            // Skip dead entities
-            if world.get::<&Dead>(entity).is_ok() {
-                continue;
-            }
-
-            // Skip entities with BattleDelay
-            if world.get::<&BattleDelay>(entity).is_ok() {
-                continue;
-            }
-
-            // Check if entity is in any of the 8 adjacent positions
-            let is_adjacent = adjacent_positions
-                .iter()
-                .any(|&(adj_x, adj_y)| pos.x == adj_x && pos.y == adj_y && pos.z == player_pos.z);
-
-            if is_adjacent && !combat.triggered {
-                combat.triggered = true;
-                // Log when a new enemy joins combat
-                // Note: This might spam the log, but useful for debugging
-            }
+    fn update_combat_participants(world: &mut World, res: &mut Resources) {
+        if let Some(player_pos) = get_player_position(world) {
+            Self::trigger_engaging(world, res, player_pos);
         }
     }
 
@@ -203,48 +147,10 @@ impl CombatStateManager {
         res.player_state.combat_active = true;
         res.player_state.combat_ended_this_tick = false;
 
-        // Get player position for adjacency checks
-        let player_pos = match get_player_position(world) {
-            Some(pos) => pos,
-            None => return, // No player to start combat with
+        let Some(player_pos) = get_player_position(world) else {
+            return; // No player to start combat with
         };
-
-        // Define the 8 adjacent positions around the player
-        let adjacent_positions = [
-            (player_pos.x - 1, player_pos.y - 1), // NW
-            (player_pos.x, player_pos.y - 1),     // N
-            (player_pos.x + 1, player_pos.y - 1), // NE
-            (player_pos.x - 1, player_pos.y),     // W
-            (player_pos.x + 1, player_pos.y),     // E
-            (player_pos.x - 1, player_pos.y + 1), // SW
-            (player_pos.x, player_pos.y + 1),     // S
-            (player_pos.x + 1, player_pos.y + 1), // SE
-        ];
-
-        // Set combat.triggered = true for adjacent combat entities (original behavior)
-        for (entity, (pos, combat, _)) in world
-            .query::<(&Position, &mut Combat, &GameEntity)>()
-            .iter()
-        {
-            // Skip dead entities
-            if world.get::<&Dead>(entity).is_ok() {
-                continue;
-            }
-
-            // Skip entities with BattleDelay
-            if world.get::<&BattleDelay>(entity).is_ok() {
-                continue;
-            }
-
-            // Check if entity is in any of the 8 adjacent positions
-            let is_adjacent = adjacent_positions
-                .iter()
-                .any(|&(adj_x, adj_y)| pos.x == adj_x && pos.y == adj_y && pos.z == player_pos.z);
-
-            if is_adjacent {
-                combat.triggered = true;
-            }
-        }
+        Self::trigger_engaging(world, res, player_pos);
 
         // Ensure player has an ActionQueue component for combat
         if let Some(player_entity) = get_player_entity(world) {
@@ -271,6 +177,29 @@ impl CombatStateManager {
     /// Force end combat (for escape, death, etc.)
     pub fn force_end_combat(world: &mut World, res: &mut Resources) {
         Self::end_combat(world, res);
+    }
+
+    /// The living enemies in the fight, nearest first: the combat panel's cards and the
+    /// targets the player picks from, in the same order
+    pub fn enemies(world: &World) -> Vec<hecs::Entity> {
+        let Some(player_pos) = get_player_position(world) else {
+            return vec![];
+        };
+        let mut enemies: Vec<(i64, u64, hecs::Entity)> = world
+            .query::<(&Position, &Combat, &GameEntity)>()
+            .iter()
+            .filter(|&(entity, (_, combat, _))| {
+                combat.triggered
+                    && world.get::<&Dead>(entity).is_err()
+                    && world.get::<&crate::components::Player>(entity).is_err()
+            })
+            .map(|(entity, (pos, _, _))| {
+                let d = crate::systems::ranged::tile_distance(*pos, player_pos);
+                (d, entity.to_bits().get(), entity)
+            })
+            .collect();
+        enemies.sort();
+        enemies.into_iter().map(|(_, _, e)| e).collect()
     }
 
     /// Check if currently in combat

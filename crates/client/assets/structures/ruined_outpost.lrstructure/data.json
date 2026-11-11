@@ -4,6 +4,7 @@
     "#": "rock",
     ".": "existing_worldgen",
     ">": "stairs",
+    "A": "android_spawn",
     "D": "door",
     "E": "enemy_spawn",
     "S": "scrap_rare",

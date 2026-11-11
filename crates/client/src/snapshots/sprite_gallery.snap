@@ -78,6 +78,25 @@ sws
      ▘▝ ▘▝  
             
             
+=== entities/military_android  #9C6B4E  A SapienCorp security unit gone to rust, still counting the rounds in its arm.
+-- 1x
+A
+-- 2x
+▄*
+▐▓
+-- 3x
+▄*▄
+▓█╾
+▌ ▐
+-- art 0
+   ▄▄▄▄▄    
+  █▀ * ▀█   
+  ▀█▄▄▄█▀   
+ ▐▓█▒▒▒█▓▌  
+ ▐▌█▓▒▓█═══╾
+  ▀ █▒▓█    
+    ▐▌ ▐▌   
+   ▄▀▀ ▀▀▄  
 === entities/mining_bot  #E8A33A  A SapienCorp digger still working its last dig order. It hears you through the rock.
 -- 1x
 m
@@ -2069,6 +2088,25 @@ eee
     ▀▓▓▀    
             
             
+=== items/brass_cartridge  #C9A23C  A rifle round from SapienCorp's armories, its brass gone dull. Useless without a gun.
+-- 1x
+!
+-- 2x
+▐▌
+▐▌
+-- 3x
+▄█▄
+▐▓▌
+▀▀▀
+-- art 0
+            
+     ▄▄     
+    ▐██▌    
+    ▐▓▓▌    
+    ▐▓▓▌    
+    ▐▓▓▌    
+    ▀▀▀▀    
+            
 === items/burner_generator  #902A20  Burns logs, planks, sticks and shavings to power its network
 -- 1x
 G
@@ -3353,6 +3391,25 @@ t,
             
             
             
+            
+            
+=== tiles/android_spawn  #FFFF00  Military android spawn point
+-- 1x
+A
+-- 2x
+A!
+A!
+-- 3x
+A!!
+A!!
+A!!
+-- art 0
+            
+ ┌ ─ ─ ─ ─┐ 
+ ╎        ╎ 
+ ╎   A    ╎ 
+ ╎        ╎ 
+ └ ─ ─ ─ ─┘ 
             
             
 === tiles/bedrock  #808080  Unbreakable bedrock that forms the foundation of the world

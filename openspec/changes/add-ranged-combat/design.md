@@ -40,3 +40,9 @@
 
 - [Unfair at range] → Accuracy falls off, walls give cover, and ammo runs out.
 - [Fights that never start because of line of sight] → An android that loses sight walks toward the robot's last seen position.
+
+## Implementation notes
+
+- **Ammo is inventory:** the android's rounds are `brass_cartridge` items it carries, so its wreck keeps exactly what it didn't fire, and `add-firearms` can make them usable without a conversion.
+- **Placement:** the ruined outpost's cellar has an `android_spawn` tile guarding its loot. The SapienCorp facility has none yet: it is the arm quest, played with one arm and no gun, so an android there waits for `add-firearms`.
+- **Pace:** combat ticks once a second, so a shot takes 10 to 14 seconds to line up, a little slower than a dog's bite.

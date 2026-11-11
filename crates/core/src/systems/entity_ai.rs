@@ -616,6 +616,15 @@ pub fn generate_enemy_action(world: &mut World, res: &mut Resources, enemy_entit
         }
     };
 
+    // Shooters pick their own action: shoot, keep their distance, or close in
+    if let Some(action) = crate::systems::ranged::ranged_combat_action(world, res, enemy_entity) {
+        if let Ok(mut queue) = world.get::<&mut ActionQueue>(enemy_entity) {
+            queue.queue_action(action);
+            queue.start_next_action();
+        }
+        return;
+    }
+
     // Simple AI: attack the player with random damage and timing. Slimes are slower and
     // hit harder than dogs
     let slime = world

@@ -1,7 +1,7 @@
 use hecs::Entity;
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::moves::{CombatAction, QueuedAction};
+use crate::moves::QueuedAction;
 
 /// Efficient targeting relationship tracker to optimize queue cleanup performance.
 ///
@@ -85,10 +85,7 @@ impl TargetTracker {
 
     /// Extract the target entity from a combat action, if any
     fn extract_target_from_action(&self, action: &QueuedAction) -> Option<Entity> {
-        match &action.action {
-            CombatAction::PlayerMove { target_entity, .. } => *target_entity,
-            CombatAction::EnemyAttack { target_entity, .. } => Some(*target_entity),
-        }
+        action.action.target()
     }
 
     /// Get statistics about the tracker (for debugging/monitoring)

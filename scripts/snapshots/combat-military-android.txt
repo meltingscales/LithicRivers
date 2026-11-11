@@ -1,0 +1,14 @@
+# A military android opens fire from five tiles away: the combat panel shows its
+# distance, rounds left and chance to hit, and the shot's line crosses the map
+seed 12345
+size 100x30
+skip-splash
+cheat tp 0 0 0
+cheat spawn_enemy military_android ~5 ~ ~
+key movement.WAIT
+expect-text "Military android"
+expect-text "5 tiles"
+wait 14000
+expect-text "shot goes wide"
+screen first-shot
+state
