@@ -50,11 +50,11 @@ jobs:
         with:
           components: clippy
 
-      - name: Install audio build dependencies (Linux)
+      - name: Install audio and gamepad build dependencies (Linux)
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends pkg-config libasound2-dev
+          sudo apt-get install -y --no-install-recommends pkg-config libasound2-dev libudev-dev
 
       # PRs restore the cache saved by the latest release run; only release runs save it
       - name: Cache cargo builds
