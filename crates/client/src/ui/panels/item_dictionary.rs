@@ -190,8 +190,7 @@ pub fn render_item_dictionary_panel(f: &mut Frame, app: &mut crate::App, area: R
     f.render_widget(Paragraph::new(art), parts[1]);
 
     // The search line
-    let search_line =
-        search.hint(|c, a| app.core.config_manager.get_printable_key_for_keybind(c, a));
+    let search_line = search.hint(|c, a| app.key_label(c, a));
     f.render_widget(
         Paragraph::new(Span::styled(search_line, Style::default().fg(Color::Gray))),
         rows[1],

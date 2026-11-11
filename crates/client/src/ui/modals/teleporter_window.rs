@@ -18,7 +18,7 @@ pub(crate) fn render_teleporter_window(f: &mut Frame, app: &App) {
         return;
     };
     let world = &app.core.game.world;
-    let key = |c: &str, a: &str| app.core.config_manager.get_printable_key_for_keybind(c, a);
+    let key = |c: &str, a: &str| app.key_label(c, a);
     let teleporter = world
         .get::<&Teleporter>(window.entity)
         .ok()

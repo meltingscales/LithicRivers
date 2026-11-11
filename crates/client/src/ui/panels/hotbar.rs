@@ -66,9 +66,7 @@ pub fn render_hotbar_panel(f: &mut Frame, app: &mut App, area: Rect) {
                         .config_manager
                         .get_keybind_str("hotbar", "HOTBAR_SLOT_12"),
                     placement_label(app),
-                    app.core
-                        .config_manager
-                        .get_printable_key_for_keybind("build", "ROTATE_PLACEMENT")
+                    app.key_label("build", "ROTATE_PLACEMENT")
                 )))
                 .style(Style::default().fg(Color::White)),
         );

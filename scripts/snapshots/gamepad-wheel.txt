@@ -1,0 +1,21 @@
+# The gamepad's context wheels: holding LB on the World page opens the actions wheel, the
+# right stick highlights the torch and releasing LB lights it. In Place mode the building
+# wheel opens instead, and its north slot turns the next placement.
+seed 12345
+size 100x30
+world factory-showcase
+key ui.MENU_PREV
+pad hold lb
+pad rstick ne
+expect-text "Actions - release LB"
+expect-text "> torch"
+screen wheel-world
+pad release lb
+pad y 2
+pad hold lb
+pad rstick n
+expect-text "Building - release LB"
+screen wheel-build
+pad release lb
+expect-text "facing > east"
+screen rotated

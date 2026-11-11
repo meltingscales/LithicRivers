@@ -253,9 +253,7 @@ fn render_markers_panel(f: &mut Frame, app: &mut App, area: Rect) {
         .title_alignment(Alignment::Center)
         .title_bottom(Line::from(format!(
             " {}: add waypoint ",
-            app.core
-                .config_manager
-                .get_printable_key_for_keybind("global_map", "ADD_WAYPOINT")
+            app.key_label("global_map", "ADD_WAYPOINT")
         )))
         .style(Style::default().fg(Color::Magenta));
 
@@ -272,11 +270,7 @@ fn render_markers_panel(f: &mut Frame, app: &mut App, area: Rect) {
             .map(|(i, distance)| (&app.core.game.res.quest_markers[i], distance))
             .collect();
         let wrap_width = inner_area.width.saturating_sub(3) as usize;
-        let map_key = |action| {
-            app.core
-                .config_manager
-                .get_printable_key_for_keybind("global_map", action)
-        };
+        let map_key = |action| app.key_label("global_map", action);
         let delete_key = map_key("DELETE_MARKER");
         let rename_key = map_key("RENAME_WAYPOINT");
         let move_key = map_key("MOVE_WAYPOINT");
@@ -508,11 +502,7 @@ pub(crate) fn render_delete_prompt(f: &mut Frame, app: &App) {
     else {
         return;
     };
-    let key = |a| {
-        app.core
-            .config_manager
-            .get_printable_key_for_keybind("global_map", a)
-    };
+    let key = |a| app.key_label("global_map", a);
     let lines = vec![
         Line::from(format!(
             "Delete the marker for {} at ({}, {}, {})?",

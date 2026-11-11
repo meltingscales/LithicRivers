@@ -15,11 +15,7 @@ pub fn render_menu_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     lines.push(Line::from(""));
 
     // The world and its save keys
-    let key = |action: &str| {
-        app.core
-            .config_manager
-            .get_printable_key_for_keybind("ui", action)
-    };
+    let key = |action: &str| app.key_label("ui", action);
     let world_name = app
         .current_world
         .as_ref()

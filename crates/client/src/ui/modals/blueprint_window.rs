@@ -42,7 +42,7 @@ pub(crate) fn render_blueprint_window(f: &mut Frame, app: &App) {
             })
             .collect()
     };
-    let key = |c, a| app.core.config_manager.get_printable_key_for_keybind(c, a);
+    let key = |c, a| app.key_label(c, a);
     let hints = if window.renaming.is_some() {
         format!(
             " {}: keep name  {}: cancel ",

@@ -15,13 +15,20 @@ use ratatui::{
 const MAX_INTERACTIONS: usize = 3;
 
 fn key(app: &App, category: &str, action: &str) -> &'static str {
-    app.core
-        .config_manager
-        .get_printable_key_for_keybind(category, action)
+    app.key_label(category, action)
 }
 
-/// The keys of a 3x3 direction set (NW..SE, center in the middle) as three rows.
+/// The keys of a 3x3 direction set (NW..SE, center in the middle) as three rows, or one
+/// line when a stick covers them all (after gamepad use).
 fn grid(app: &App, category: &str, actions: [&str; 9]) -> Vec<String> {
+    let labels: Vec<&str> = actions
+        .iter()
+        .filter(|a| !a.ends_with("CENTER") && **a != "WAIT")
+        .map(|a| key(app, category, a))
+        .collect();
+    if labels.windows(2).all(|w| w[0] == w[1]) && labels[0].contains("stick") {
+        return vec![format!("  {}", labels[0])];
+    }
     actions
         .chunks(3)
         .map(|row| {
@@ -184,6 +191,9 @@ pub fn context_help_lines(app: &App) -> Vec<String> {
                 lines.push(format!("{interact}: {}", interaction_label(action)));
             }
         }
+    }
+    if app.pad_wheel_here() {
+        lines.push("Hold LB: more actions".to_string());
     }
     lines
 }

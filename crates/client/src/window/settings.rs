@@ -57,6 +57,8 @@ pub struct WindowSettings {
     pub display: DisplayMode,
     /// Whether the on-screen touch controls are wanted (only ever shown on mobile)
     pub touch_controls: bool,
+    /// Whether gamepads drive the game (`ui.GAMEPAD_ENABLED`); desktop builds only
+    pub gamepad: bool,
     /// Whether the game is running in its own window (false in terminal and headless runs)
     pub active: bool,
     /// Whether this is a phone or tablet build; desktop builds assume a keyboard and
@@ -71,6 +73,7 @@ impl Default for WindowSettings {
             fullscreen: false,
             display: DisplayMode::Docked,
             touch_controls: true,
+            gamepad: true,
             active: false,
             mobile: false,
         }
@@ -95,6 +98,9 @@ impl WindowSettings {
             touch_controls: get("TOUCH_CONTROLS")
                 .and_then(|v| v.as_bool())
                 .unwrap_or(defaults.touch_controls),
+            gamepad: get("GAMEPAD_ENABLED")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(defaults.gamepad),
             active: false,
             mobile: false,
         }
@@ -151,12 +157,16 @@ pub fn use_mobile_defaults(app: &mut App) {
 /// Change the window settings and save them to the config file (outside headless runs).
 pub fn change(app: &mut App, f: impl FnOnce(&mut WindowSettings)) {
     f(&mut app.ui.window);
+    if !app.ui.window.gamepad {
+        app.ui.gamepad.release_all();
+    }
     let settings = app.ui.window;
     let ui = &mut app.core.config_manager.data.settings["ui"];
     ui["WINDOW_FONT_PX"] = serde_json::json!(settings.font_px);
     ui["WINDOW_FULLSCREEN"] = serde_json::json!(settings.fullscreen);
     ui["WINDOW_DISPLAY"] = serde_json::json!(settings.display.name());
     ui["TOUCH_CONTROLS"] = serde_json::json!(settings.touch_controls);
+    ui["GAMEPAD_ENABLED"] = serde_json::json!(settings.gamepad);
     if app.persist_config {
         if let Err(e) = app.core.config_manager.save() {
             tracing::warn!(target: "game", "could not save config: {e:#}");

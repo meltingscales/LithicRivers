@@ -88,16 +88,9 @@ pub fn render_crafting_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     let main_area = chunks[0];
     let search_area = chunks[1];
     let message_area = chunks[2];
-    let search_line = app
-        .panels
-        .crafting
-        .search
-        .hint(|c, a| app.core.config_manager.get_printable_key_for_keybind(c, a));
+    let search_line = app.panels.crafting.search.hint(|c, a| app.key_label(c, a));
     // The craftable-only toggle's hint follows the search hint, and is clickable
-    let toggle_key = app
-        .core
-        .config_manager
-        .get_printable_key_for_keybind("crafting", "TOGGLE_CRAFTABLE_ONLY");
+    let toggle_key = app.key_label("crafting", "TOGGLE_CRAFTABLE_ONLY");
     let craftable_only = app.panels.crafting.craftable_only;
     let toggle_hint = format!(
         "{toggle_key}: craftable only ({})",

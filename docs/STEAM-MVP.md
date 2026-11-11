@@ -171,6 +171,7 @@ The game opens its own window with a bundled font (`add-game-window`), so it no 
   - [x] **Colored message log system with red NumLock warnings**
   - [x] Volume sliders (music/sfx)
     - [x] **Music and sound volume on the title screen's Options**
+  - [ ] Gamepad and Steam Deck controls (`add-controller-support`): pads drive the game with prompts that follow the device, and holding LB opens a context wheel of actions; waiting on the user checks with a pad and on a Deck
 - [ ] Performance optimizations for target hardware (still to check on a Steam Deck)
   - [x] Profiling budget: ~60 FPS at 80x24; ≤16 ms tick under normal load (`just util-bench`, `performance-budget` spec)
   - [x] Identify top 2 hotspots and add targeted optimizations: reloading the chunks around the player every tick, and querying fog of war for every drawn tile
