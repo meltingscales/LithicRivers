@@ -1,0 +1,132 @@
+# Benchmark: wait in the deep beside sulfur vents and lava while they grow crystals and
+# near-lava spawn checks run, then fight a sulfur slime with a burst carbine.
+# Steps before the first `beat` are setup and aren't timed.
+seed 12345
+size 80x24
+skip-splash
+key ui.MENU_PREV
+cheat tp 500 0 -20
+# Carve an open room so the vents have floor to grow on
+cheat set_tile ~-5 ~-4 ~ air
+cheat set_tile ~-4 ~-4 ~ air
+cheat set_tile ~-3 ~-4 ~ air
+cheat set_tile ~-2 ~-4 ~ air
+cheat set_tile ~-1 ~-4 ~ air
+cheat set_tile ~ ~-4 ~ air
+cheat set_tile ~1 ~-4 ~ air
+cheat set_tile ~2 ~-4 ~ air
+cheat set_tile ~3 ~-4 ~ air
+cheat set_tile ~4 ~-4 ~ air
+cheat set_tile ~5 ~-4 ~ air
+cheat set_tile ~-5 ~-3 ~ air
+cheat set_tile ~-4 ~-3 ~ air
+cheat set_tile ~-3 ~-3 ~ air
+cheat set_tile ~-2 ~-3 ~ air
+cheat set_tile ~-1 ~-3 ~ air
+cheat set_tile ~ ~-3 ~ air
+cheat set_tile ~1 ~-3 ~ air
+cheat set_tile ~2 ~-3 ~ air
+cheat set_tile ~3 ~-3 ~ air
+cheat set_tile ~4 ~-3 ~ air
+cheat set_tile ~5 ~-3 ~ air
+cheat set_tile ~-5 ~-2 ~ air
+cheat set_tile ~-4 ~-2 ~ air
+cheat set_tile ~-3 ~-2 ~ air
+cheat set_tile ~-2 ~-2 ~ air
+cheat set_tile ~-1 ~-2 ~ air
+cheat set_tile ~ ~-2 ~ air
+cheat set_tile ~1 ~-2 ~ air
+cheat set_tile ~2 ~-2 ~ air
+cheat set_tile ~3 ~-2 ~ air
+cheat set_tile ~4 ~-2 ~ air
+cheat set_tile ~5 ~-2 ~ air
+cheat set_tile ~-5 ~-1 ~ air
+cheat set_tile ~-4 ~-1 ~ air
+cheat set_tile ~-3 ~-1 ~ air
+cheat set_tile ~-2 ~-1 ~ air
+cheat set_tile ~-1 ~-1 ~ air
+cheat set_tile ~ ~-1 ~ air
+cheat set_tile ~1 ~-1 ~ air
+cheat set_tile ~2 ~-1 ~ air
+cheat set_tile ~3 ~-1 ~ air
+cheat set_tile ~4 ~-1 ~ air
+cheat set_tile ~5 ~-1 ~ air
+cheat set_tile ~-5 ~ ~ air
+cheat set_tile ~-4 ~ ~ air
+cheat set_tile ~-3 ~ ~ air
+cheat set_tile ~-2 ~ ~ air
+cheat set_tile ~-1 ~ ~ air
+cheat set_tile ~ ~ ~ air
+cheat set_tile ~1 ~ ~ air
+cheat set_tile ~2 ~ ~ air
+cheat set_tile ~3 ~ ~ air
+cheat set_tile ~4 ~ ~ air
+cheat set_tile ~5 ~ ~ air
+cheat set_tile ~-5 ~1 ~ air
+cheat set_tile ~-4 ~1 ~ air
+cheat set_tile ~-3 ~1 ~ air
+cheat set_tile ~-2 ~1 ~ air
+cheat set_tile ~-1 ~1 ~ air
+cheat set_tile ~ ~1 ~ air
+cheat set_tile ~1 ~1 ~ air
+cheat set_tile ~2 ~1 ~ air
+cheat set_tile ~3 ~1 ~ air
+cheat set_tile ~4 ~1 ~ air
+cheat set_tile ~5 ~1 ~ air
+cheat set_tile ~-5 ~2 ~ air
+cheat set_tile ~-4 ~2 ~ air
+cheat set_tile ~-3 ~2 ~ air
+cheat set_tile ~-2 ~2 ~ air
+cheat set_tile ~-1 ~2 ~ air
+cheat set_tile ~ ~2 ~ air
+cheat set_tile ~1 ~2 ~ air
+cheat set_tile ~2 ~2 ~ air
+cheat set_tile ~3 ~2 ~ air
+cheat set_tile ~4 ~2 ~ air
+cheat set_tile ~5 ~2 ~ air
+cheat set_tile ~-5 ~3 ~ air
+cheat set_tile ~-4 ~3 ~ air
+cheat set_tile ~-3 ~3 ~ air
+cheat set_tile ~-2 ~3 ~ air
+cheat set_tile ~-1 ~3 ~ air
+cheat set_tile ~ ~3 ~ air
+cheat set_tile ~1 ~3 ~ air
+cheat set_tile ~2 ~3 ~ air
+cheat set_tile ~3 ~3 ~ air
+cheat set_tile ~4 ~3 ~ air
+cheat set_tile ~5 ~3 ~ air
+cheat set_tile ~-5 ~4 ~ air
+cheat set_tile ~-4 ~4 ~ air
+cheat set_tile ~-3 ~4 ~ air
+cheat set_tile ~-2 ~4 ~ air
+cheat set_tile ~-1 ~4 ~ air
+cheat set_tile ~ ~4 ~ air
+cheat set_tile ~1 ~4 ~ air
+cheat set_tile ~2 ~4 ~ air
+cheat set_tile ~3 ~4 ~ air
+cheat set_tile ~4 ~4 ~ air
+cheat set_tile ~5 ~4 ~ air
+cheat set_tile ~3 ~ ~ sulfur_vent
+cheat set_tile ~-4 ~2 ~ sulfur_vent
+cheat set_tile ~2 ~-3 ~ sulfur_vent
+cheat set_tile ~6 ~ ~ lava
+cheat set_tile ~6 ~1 ~ lava
+cheat set_tile ~6 ~-1 ~ lava
+cheat giveitem burst_carbine 1
+cheat giveitem brass_cartridge 30
+key ui.MENU_NEXT 4
+key ui.MENU_DOWN 4
+key body.WIELD
+key ui.MENU_PREV 4
+beat 0
+key action.PASS_TIME 12
+key movement.WAIT 20
+cheat spawn_enemy sulfur_slime ~-2 ~ ~
+key movement.WAIT
+key ui.MENU_DOWN
+key ui.MENU_ACTIVATE
+wait 13000
+key ui.MENU_ACTIVATE
+wait 13000
+expect-text "LithicRivers"
+state end

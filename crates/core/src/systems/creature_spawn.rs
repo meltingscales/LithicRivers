@@ -36,6 +36,22 @@ pub enum SpawnPlace {
     Biome(BiomeBand),
     /// A layer of the underground
     Band(DepthBand),
+    /// The deep, within `NEAR_LAVA` tiles of lava
+    NearLava,
+}
+
+/// How close to lava counts as by the lava rivers, in tiles.
+pub const NEAR_LAVA: i64 = 4;
+
+/// Whether lava lies within `NEAR_LAVA` tiles of `pos` on its layer.
+pub fn near_lava(res: &Resources, pos: Position) -> bool {
+    let world = &res.world_state.world;
+    (-NEAR_LAVA..=NEAR_LAVA).any(|dy| {
+        (-NEAR_LAVA..=NEAR_LAVA).any(|dx| {
+            world.get_tile_at_z_no_worldgen(pos.x + dx, pos.y + dy, pos.z)
+                == crate::tiles::TileKind::Lava
+        })
+    })
 }
 
 impl SpawnPlace {
@@ -44,6 +60,7 @@ impl SpawnPlace {
         match self {
             SpawnPlace::Biome(_) => crate::world::depth_band(z) == DepthBand::Surface,
             SpawnPlace::Band(band) => crate::world::depth_band(z) == band,
+            SpawnPlace::NearLava => crate::world::depth_band(z) == DepthBand::Deep,
         }
     }
 
@@ -57,6 +74,7 @@ impl SpawnPlace {
                         == biome
                 }
                 SpawnPlace::Band(_) => true,
+                SpawnPlace::NearLava => near_lava(res, pos),
             }
     }
 }
@@ -108,6 +126,16 @@ pub const SPAWN_RULES: &[SpawnRule] = &[
         radius: 64,
         away_from_bunker: 0,
     },
+    // Sulfur slimes graze the crust of the deep's lava rivers
+    SpawnRule {
+        kind: EnemyKind::SulfurSlime,
+        place: SpawnPlace::NearLava,
+        chance_percent: 10,
+        night_chance_percent: 10,
+        cap: 4,
+        radius: 64,
+        away_from_bunker: 0,
+    },
     // Mining bots dig through the deep, far from the bunker so the first escape is fair
     SpawnRule {
         kind: EnemyKind::MiningBot,
@@ -126,6 +154,7 @@ fn entity_kind(kind: EnemyKind) -> EntityKind {
         EnemyKind::NuclearSlime => EntityKind::NuclearSlime,
         EnemyKind::MiningBot => EntityKind::MiningBot,
         EnemyKind::MilitaryAndroid => EntityKind::MilitaryAndroid,
+        EnemyKind::SulfurSlime => EntityKind::SulfurSlime,
     }
 }
 
@@ -515,6 +544,34 @@ mod tests {
         };
         assert_eq!(slimes(0), 0);
         assert!(slimes(-20) > 0);
+    }
+
+    #[test]
+    fn sulfur_slimes_spawn_by_deep_lava_and_never_in_the_shallows() {
+        let spawned = |z: i64, lava: bool| {
+            let mut world = TestWorld::new(12345).player_at(1000, 1000, z).fill(
+                (900, 900, z),
+                (1100, 1100, z),
+                TileKind::Air,
+            );
+            if lava {
+                world = world.fill((900, 1020, z), (1100, 1024, z), TileKind::Lava);
+            }
+            let mut t = world.build();
+            run_checks(&mut t, 150);
+            let found = positions(&t, EntityKind::SulfurSlime);
+            for p in &found {
+                assert!(
+                    near_lava(&t.game.res, *p),
+                    "a sulfur slime away from lava at {p:?}"
+                );
+            }
+            found.len()
+        };
+        assert_eq!(spawned(-3, true), 0, "none in the shallows");
+        assert_eq!(spawned(-20, false), 0, "none without lava");
+        let n = spawned(-20, true);
+        assert!((1..=4).contains(&n), "{n} by deep lava, within the cap");
     }
 
     #[test]

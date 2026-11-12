@@ -264,6 +264,25 @@ S
    ▘▝  ▘▝   
             
             
+=== entities/sulfur_slime  #E6D23A  A slime that grazes the crust of the lava rivers, its back studded with sulfur crystals it can't digest
+-- 1x
+Ω
+-- 2x
+▲▲
+██
+-- 3x
+▲ ▲
+▄o▄
+▀▀▀
+-- art 0
+     ▲  ▲   
+    ▄█▄▄█   
+  ▄▓▒░░▒▓▄  
+ ▐▓░ o  ░▓▌ 
+ ▐▓▒░ * ▒▓▌ 
+  ▀▓▓▒▒▓▓▀  
+ ░ ▀▀▀▀▀▀ ░ 
+            
 === entities/wreck  #8A3A2E  Your old body, cold now, still holding everything you carried
 -- 1x
 &
@@ -1898,6 +1917,25 @@ U
       │     
       ▀     
             
+=== items/arc_caster  #5CC8E8  Two coils and a cell clamp. It throws lightning the cell can't spare.
+-- 1x
+ϟ
+-- 2x
+≈╦
+¦╝
+-- 3x
+≈≈╦
+¦▓║
+  ╝
+-- art 0
+            
+  ≈≈≈       
+ ≈ ╔═○═○═╦╗ 
+   ╚═════▓║ 
+      ¦▐▌╚╝ 
+            
+            
+            
 === items/auto_feeder  #78603A  A folded trough and hopper, ready to fill with carrots or mash.
 -- 1x
 u
@@ -2145,6 +2183,25 @@ eee
      ▀▀     
             
             
+=== items/brass_slug  #B8903C  A heavy round packed into an old casing. It hits like a door.
+-- 1x
+¡
+-- 2x
+▄▄
+██
+-- 3x
+▄█▄
+▐█▌
+▀▀▀
+-- art 0
+            
+     ▄▄     
+    ▐██▌    
+    ▐▓▓▌    
+    ▐▓▓▌    
+    ▀▀▀▀    
+            
+            
 === items/burner_generator  #902A20  Burns logs, planks, sticks and shavings to power its network
 -- 1x
 G
@@ -2162,6 +2219,25 @@ GG
  █▓┌────┐▓█ 
  █▓│░▒▓│▓█  
  ▀▀▀▀▀▀▀▀▀▀ 
+            
+            
+=== items/burst_carbine  #9C7C50  A short SapienCorp carbine that spits three rounds a pull.
+-- 1x
+⌐
+-- 2x
+═╦
+▓▌
+-- 3x
+═╦╗
+▓█▌
+▀▀ 
+-- art 0
+            
+            
+ ═════╦═╦╗  
+   ▀▀▀█▓█║  
+      ▐▌╚╝  
+            
             
             
 === items/carrot  #E87A22  A carrot. Plant it to grow more; animals would want it, if there were any farms left.
@@ -2637,6 +2713,44 @@ iii
             
             
             
+=== items/isotope_canister  #88D038  A brass canister of nuclear waste with a crude fuse. It is warm.
+-- 1x
+Θ
+-- 2x
+▄▄
+Θ▌
+-- 3x
+▄▄▄
+▐Θ▌
+▀▀▀
+-- art 0
+            
+    ▄▄▄▄    
+   ▐▓▓▓▓▌   
+   ▐▓Θ▓▓▌   
+   ▐▓▓▓▓▌   
+    ▀▀▀▀    
+            
+            
+=== items/isotope_launcher  #9CE040  A tube that lobs canisters of the old world's waste. Stand well back.
+-- 1x
+Θ
+-- 2x
+Θ╦
+█╝
+-- 3x
+▄▄╦
+Θ█║
+▀▀╝
+-- art 0
+            
+ ▄▄▄▄▄▄▄▄   
+▐Θ▓▓▓▓▓▓█═╗ 
+ ▀▀▀▀▀▀▀█▓║ 
+        ▐▌╝ 
+            
+            
+            
 === items/item_charger  #6B9C50  A two-socket charging cradle; cells slotted into it tick quietly as they fill
 -- 1x
 ŧ
@@ -2785,6 +2899,25 @@ n
       █     
       █     
       ▀     
+            
+            
+=== items/nail_driver  #8A7A66  A spring and a pipe that throws nails. It barely hurts, but nails are cheap.
+-- 1x
+¬
+-- 2x
+═╕
+  
+-- 3x
+═══
+╕  
+   
+-- art 0
+            
+            
+ ═════╤═╗   
+  ∞∞∞ │▓║   
+      ╘═╝   
+            
             
             
 === items/nitre  #BFB8A2  Scraped saltpeter, gritty and cold. It wants to burn something.
@@ -3032,6 +3165,25 @@ ooo
     ╲▓▓╱    
      ╲╱     
             
+=== items/riverglass_lance  #B080F0  A rod of riverglass that focuses a cell's charge into a beam that doesn't stop.
+-- 1x
+‡
+-- 2x
+◊═
+¦╝
+-- 3x
+◊══
+▓▓║
+¦ ╝
+-- art 0
+            
+            
+ ◊═════════╗
+  ▓▓▓▓▓▓▓▓▓║
+     ¦ ▐▌ ╚╝
+            
+            
+            
 === items/rock  #808080  A rock.
 -- 1x
 *
@@ -3089,6 +3241,44 @@ o\
        ▀▓█▄ 
          ▀▀<
             
+=== items/scatter_shell  #C8B48C  Powder and a fistful of iron shot in a paper tube.
+-- 1x
+¡
+-- 2x
+∙∙
+▐▌
+-- 3x
+∙∙∙
+▐▒▌
+▀▀▀
+-- art 0
+            
+    ∙∙∙     
+    ▐▒▒▌    
+    ▐▒▒▌    
+    ▐▒▒▌    
+    ▀▀▀▀    
+            
+            
+=== items/scattergun  #7A6450  A pipe gun with its barrel hammered wide. Point it at something close.
+-- 1x
+¬
+-- 2x
+═<
+╗ 
+-- 3x
+══<
+╗  
+║  
+-- art 0
+            
+            
+ ◄════╦══╗  
+      ║▓▓║  
+      ╚═╗║  
+        ╚╝  
+            
+            
 === items/scrap_electronics  #00FF00  Electronic components. They look burnt.
 -- 1x
 e
@@ -3144,6 +3334,25 @@ eee
     ▐  ▌    
     ▐  ▌    
     ▀▀▀▀    
+            
+            
+=== items/slug_thrower  #7E6440  A fat-barreled brass gun that knocks the wind out of whatever it hits.
+-- 1x
+⌐
+-- 2x
+█╦
+▓╝
+-- 3x
+██╦
+▓▓║
+  ╝
+-- art 0
+            
+            
+ ▄▄▄▄▄▄╦══╗ 
+ ▀▀▀▀▀▀█▓▓║ 
+       ▐▌╚╝ 
+            
             
             
 === items/spawner  #873043  A SapienCorp growth tank, still warm; something wet turns over inside the glass
@@ -3430,6 +3639,42 @@ U
    ▲███▓▲   
     ▀▀▀▀    
             
+            
+=== items/sulfur_slime_embryo_flawed  #C9B848  A sulfur slime embryo that smells of struck matches; it grows four slimes before it gives out
+-- 1x
+ε
+-- art 0
+            
+    ▄▄▄▄    
+  ▄▀░░░░▀▄  
+ █░░▄▀▀▄░░█ 
+ █░░▀▄ █░░█ 
+  ▀▄░░░░▄▀  
+    ▀▀▀▀    
+            
+=== items/sulfur_slime_embryo_flawless  #F0E070  A flawless sulfur slime embryo, crusted with tiny crystals; it grows eight slimes before it gives out
+-- 1x
+ε
+-- art 0
+            
+    ▄▄▄▄    
+  ▄▀░░░░▀▄  
+ █░░▄▀▀▄░░█ 
+ █░░▀▄ █░░█ 
+  ▀▄░░░░▄▀  
+    ▀▀▀▀    
+            
+=== items/sulfur_slime_embryo_poor  #A89A48  A sulfur slime embryo, a dull yellow bead; a poor one grows two slimes before it gives out
+-- 1x
+ε
+-- art 0
+            
+    ▄▄▄▄    
+  ▄▀░░░░▀▄  
+ █░░▄▀▀▄░░█ 
+ █░░▀▄ █░░█ 
+  ▀▄░░░░▄▀  
+    ▀▀▀▀    
             
 === items/teleporter  #3BA196  A SapienCorp transit gate; it folds you through the grid's dark and sets you down somewhere else, mostly intact
 -- 1x
@@ -4323,6 +4568,44 @@ s▓s
 ▓▓▒▓▲█▲▓▓▓▓▓
 ▓▓▓▓▓▓▓▲▓▒▓▓
 ▒▓▓▒▓▓▲█▲▓▓▓
+▓▓▓▓▓▒▓▓▒▓▓▓
+=== tiles/sulfur_crystal  #F0DC50  A cluster of sulfur crystals grown from vent fumes, brittle as sugar.
+-- 1x
+♦
+-- 2x
+▲▲
+██
+-- 3x
+▲ ▲
+█▲█
+███
+-- art 0
+            
+   ▲   ▲    
+  ▲█▲ ▲█▲   
+  ███▲███   
+  ███████   
+   ▀▀▀▀▀    
+            
+            
+=== tiles/sulfur_vent  #E8C840  A fissure that breathes yellow fumes from the lava below. Crystals grow at its lips.
+-- 1x
+V
+-- 2x
+╲╱
+▓▓
+-- 3x
+░▲░
+╲▓╱
+▓▓▓
+-- art 0
+▓▓▒▓░ ░ ▓▓▓▒
+▓▓▒░ ░ ░▒▓▓▓
+▓▓░  ▄▲▄ ░▓▓
+▒▓░ ▐███▌ ░▓
+▓▓▒░ ▀▀▀ ░▓▓
+▓▓▓▒░╲ ╱░▓▓▓
+▒▓▓▓▒ ▼ ▒▓▓▓
 ▓▓▓▓▓▒▓▓▒▓▓▓
 === tiles/teleporter_station  #FFFF00  Special worldgen block that turns into a SapienCorp transit station
 -- 1x

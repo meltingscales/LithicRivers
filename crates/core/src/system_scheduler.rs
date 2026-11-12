@@ -28,6 +28,7 @@ pub enum SystemId {
     NuclearSlimeSystem,
     MiningBotSystem,
     MilitaryAndroidSystem,
+    SulfurVentSystem,
     CreatureSpawnSystem,
     StumblingSheepSystem,
     BattleDelayTimerSystem,
@@ -156,6 +157,19 @@ impl SystemScheduler {
             },
             |world, res| {
                 crate::systems::military_android_system(world, res);
+                None
+            },
+        );
+
+        self.register_system(
+            SystemDesc {
+                id: SystemId::SulfurVentSystem,
+                phase: SystemPhase::EntityAI,
+                depends_on: vec![SystemId::MovePlayerSystem],
+                name: "sulfur_vent_system",
+            },
+            |world, res| {
+                crate::sulfur_vents::sulfur_vent_system(world, res);
                 None
             },
         );

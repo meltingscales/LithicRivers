@@ -9,11 +9,21 @@ use crate::resources::Resources;
 use crate::systems::ranged::{fire, hit_chance, tile_distance, Shot};
 use hecs::{Entity, World};
 
-/// One kind of gun and how it shoots.
+/// What a gun fires.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Ammo {
+    /// One of this item per round
+    Item(ItemKind),
+    /// This many joules per round, from the fullest carried power cell
+    Charge(u64),
+}
+
+/// One kind of gun and how it shoots. A Shoot fires `burst` rounds; each round fires
+/// `pellets` pellets, and each pellet rolls its own hit.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Gun {
     pub item: ItemKind,
-    pub ammo: ItemKind,
+    pub ammo: Ammo,
     pub range: i64,
     /// Percent chance to hit from 1 tile away
     pub accuracy_at_1: u32,
@@ -24,31 +34,145 @@ pub struct Gun {
     pub ticks: u64,
     /// What firing one round leaves in the inventory
     pub casing: Option<ItemKind>,
+    pub pellets: u32,
+    pub burst: u32,
+    /// Percent chance a hit stuns
+    pub stun_percent: u32,
+    /// The shot rolls against every enemy on its line out to its range
+    pub pierce: bool,
+    /// Damage a hit also deals to every other enemy beside the target
+    pub splash: Option<(u32, u32)>,
 }
 
-pub const PIPE_GUN: Gun = Gun {
+/// How long a stunning hit stuns, in ticks (as long as Tackle's stun).
+pub const STUN_TICKS: u64 = 600;
+
+const BASE: Gun = Gun {
     item: ItemKind::PipeGun,
-    ammo: ItemKind::PaperCartridge,
+    ammo: Ammo::Item(ItemKind::PaperCartridge),
     range: 6,
     accuracy_at_1: 70,
     falloff: 8,
     damage: (10, 18),
     ticks: 12,
     casing: None,
+    pellets: 1,
+    burst: 1,
+    stun_percent: 0,
+    pierce: false,
+    splash: None,
 };
+
+pub const PIPE_GUN: Gun = BASE;
 
 pub const RIFLE: Gun = Gun {
     item: ItemKind::Rifle,
-    ammo: ItemKind::BrassCartridge,
+    ammo: Ammo::Item(ItemKind::BrassCartridge),
     range: 12,
     accuracy_at_1: 90,
     falloff: 4,
     damage: (16, 26),
     ticks: 10,
     casing: Some(ItemKind::ShellCasing),
+    ..BASE
 };
 
-pub const GUNS: &[Gun] = &[PIPE_GUN, RIFLE];
+pub const NAIL_DRIVER: Gun = Gun {
+    item: ItemKind::NailDriver,
+    ammo: Ammo::Item(ItemKind::Nail),
+    range: 4,
+    accuracy_at_1: 65,
+    falloff: 10,
+    damage: (5, 9),
+    ticks: 8,
+    ..BASE
+};
+
+pub const SCATTERGUN: Gun = Gun {
+    item: ItemKind::Scattergun,
+    ammo: Ammo::Item(ItemKind::ScatterShell),
+    range: 3,
+    accuracy_at_1: 75,
+    falloff: 20,
+    damage: (4, 7),
+    ticks: 12,
+    pellets: 5,
+    ..BASE
+};
+
+pub const BURST_CARBINE: Gun = Gun {
+    item: ItemKind::BurstCarbine,
+    ammo: Ammo::Item(ItemKind::BrassCartridge),
+    range: 8,
+    accuracy_at_1: 75,
+    falloff: 6,
+    damage: (10, 16),
+    ticks: 12,
+    casing: Some(ItemKind::ShellCasing),
+    burst: 3,
+    ..BASE
+};
+
+pub const SLUG_THROWER: Gun = Gun {
+    item: ItemKind::SlugThrower,
+    ammo: Ammo::Item(ItemKind::BrassSlug),
+    range: 5,
+    accuracy_at_1: 60,
+    falloff: 10,
+    damage: (24, 34),
+    ticks: 16,
+    casing: Some(ItemKind::ShellCasing),
+    stun_percent: 30,
+    ..BASE
+};
+
+pub const ARC_CASTER: Gun = Gun {
+    item: ItemKind::ArcCaster,
+    ammo: Ammo::Charge(1_000_000),
+    range: 8,
+    accuracy_at_1: 85,
+    falloff: 5,
+    damage: (18, 28),
+    ticks: 10,
+    ..BASE
+};
+
+pub const RIVERGLASS_LANCE: Gun = Gun {
+    item: ItemKind::RiverglassLance,
+    ammo: Ammo::Charge(4_000_000),
+    range: 14,
+    accuracy_at_1: 95,
+    falloff: 2,
+    damage: (30, 40),
+    ticks: 20,
+    pierce: true,
+    ..BASE
+};
+
+pub const ISOTOPE_LAUNCHER: Gun = Gun {
+    item: ItemKind::IsotopeLauncher,
+    ammo: Ammo::Item(ItemKind::IsotopeCanister),
+    range: 7,
+    accuracy_at_1: 80,
+    falloff: 6,
+    damage: (30, 45),
+    ticks: 18,
+    splash: Some((15, 25)),
+    ..BASE
+};
+
+/// Every gun, from the earliest to the latest.
+pub const GUNS: &[Gun] = &[
+    NAIL_DRIVER,
+    PIPE_GUN,
+    SCATTERGUN,
+    RIFLE,
+    BURST_CARBINE,
+    SLUG_THROWER,
+    ARC_CASTER,
+    RIVERGLASS_LANCE,
+    ISOTOPE_LAUNCHER,
+];
 
 /// A Damaged arm shoots at this share of its gun's accuracy, in percent.
 pub const DAMAGED_ARM_ACCURACY: u32 = 75;
@@ -197,21 +321,60 @@ fn give_or_drop(world: &mut World, entity: Entity, item: ItemKind) {
 }
 
 /// The equipped guns with ammo carried for them, in firing order, with the arm that holds
-/// each. Two guns of one kind share the rounds, so each needs its own.
+/// each. Two guns firing the same rounds need one each; guns on charge need the fullest
+/// cell to cover a round for every one of them.
 pub fn loaded_guns(world: &World, entity: Entity) -> Vec<(BodyPartType, &'static Gun)> {
     let (Ok(body), Ok(inv)) = (world.get::<&Body>(entity), world.get::<&Inventory>(entity)) else {
         return vec![];
     };
+    let charge = crate::power_cells::fullest_charge(world, entity);
     let mut rounds: std::collections::BTreeMap<ItemKind, u32> = Default::default();
+    let mut joules = 0u64;
     ARMS.into_iter()
         .filter(|arm| arm_works(&body, *arm))
         .filter_map(|arm| Some((arm, gun(*body.weapons.get(&arm)?)?)))
-        .filter(|(_, g)| {
-            let used = rounds.entry(g.ammo).or_insert(0);
-            *used += 1;
-            inv.count(g.ammo) >= *used
+        .filter(|(_, g)| match g.ammo {
+            Ammo::Item(item) => {
+                let used = rounds.entry(item).or_insert(0);
+                *used += 1;
+                inv.count(item) >= *used
+            }
+            Ammo::Charge(j) => {
+                joules += j;
+                charge >= joules
+            }
         })
         .collect()
+}
+
+/// Rounds of `gun` the entity can fire now: items carried, or whole rounds in the fullest
+/// cell.
+pub fn rounds_left(world: &World, entity: Entity, gun: &Gun) -> u32 {
+    match gun.ammo {
+        Ammo::Item(item) => world
+            .get::<&Inventory>(entity)
+            .map_or(0, |inv| inv.count(item)),
+        Ammo::Charge(j) => (crate::power_cells::fullest_charge(world, entity) / j.max(1)) as u32,
+    }
+}
+
+/// Use one round of `gun`'s ammo, leaving its casing; false with none left.
+fn use_round(world: &mut World, entity: Entity, gun: &Gun) -> bool {
+    match gun.ammo {
+        Ammo::Item(item) => {
+            let Ok(mut inv) = world.get::<&mut Inventory>(entity) else {
+                return false;
+            };
+            if inv.remove(item, 1) == 0 {
+                return false;
+            }
+            if let Some(casing) = gun.casing {
+                inv.add(casing, 1);
+            }
+            true
+        }
+        Ammo::Charge(j) => crate::power_cells::use_power(world, entity, j).is_ok(),
+    }
 }
 
 /// The Shoot move for this many guns: as slow as the slowest of them.
@@ -243,10 +406,11 @@ pub fn gun_hit_chance(gun: &Gun, distance: i64, state: BodyPartState) -> u32 {
     }
 }
 
-/// Fire every equipped, loaded gun at `target`, in arm order: each uses one round, rolls
-/// its own hit, and a brass round leaves a shell casing.
+/// Fire every equipped, loaded gun at `target`, in arm order. Each gun fires its burst,
+/// using a round per shot (bursts stop when rounds run out), and every pellet rolls its
+/// own hit; a piercing shot rolls against every enemy on its line, and a hit can stun or
+/// splash by the gun's traits.
 pub fn execute_shoot(world: &mut World, res: &mut Resources, shooter: Entity, target: Entity) {
-    use rand::Rng;
     let guns = loaded_guns(world, shooter);
     if guns.is_empty() {
         res.events
@@ -254,45 +418,172 @@ pub fn execute_shoot(world: &mut World, res: &mut Resources, shooter: Entity, ta
         return;
     }
     for (arm, gun) in guns {
-        // The target can fall to an earlier shot this turn
-        if world.get::<&crate::components::Dead>(target).is_ok() {
-            break;
-        }
-        let (Ok(from), Ok(to)) = (
-            world.get::<&Position>(shooter).map(|p| *p),
-            world.get::<&Position>(target).map(|p| *p),
-        ) else {
-            break;
-        };
         let state = world
             .get::<&Body>(shooter)
             .ok()
             .and_then(|b| b.parts.get(&arm).map(|p| p.state))
             .unwrap_or(BodyPartState::Functional);
-        if let Ok(mut inv) = world.get::<&mut Inventory>(shooter) {
-            inv.remove(gun.ammo, 1);
-            if let Some(casing) = gun.casing {
-                inv.add(casing, 1);
+        for _ in 0..gun.burst {
+            // The target can fall to an earlier shot this turn
+            if world.get::<&crate::components::Dead>(target).is_ok() {
+                return;
+            }
+            if !use_round(world, shooter, gun) {
+                break;
+            }
+            fire_round(world, res, shooter, target, gun, state);
+        }
+    }
+}
+
+/// Living creatures in the fight that a shot can strike: not the robot.
+fn is_enemy(world: &World, entity: Entity) -> bool {
+    world.get::<&crate::components::Combat>(entity).is_ok()
+        && world.get::<&crate::components::Dead>(entity).is_err()
+        && world.get::<&crate::components::Player>(entity).is_err()
+}
+
+/// The enemies a piercing shot from `from` toward `to` passes, nearest first: along the
+/// line out to `range`, stopping at the first tile that blocks sight.
+fn pierced(
+    world: &World,
+    res: &Resources,
+    from: Position,
+    to: Position,
+    range: i64,
+) -> Vec<Entity> {
+    use crate::systems::fog_of_war::{blocks_sight, bresenham_line};
+    let (dx, dy) = (to.x - from.x, to.y - from.y);
+    let steps = dx.abs().max(dy.abs()).max(1);
+    let scale = (range + steps - 1) / steps;
+    let end = (from.x + dx * scale, from.y + dy * scale);
+    let mut hit = Vec::new();
+    for (x, y) in bresenham_line(from.x, from.y, end.0, end.1)
+        .into_iter()
+        .skip(1)
+    {
+        let p = Position { x, y, z: from.z };
+        if tile_distance(from, p) > range || blocks_sight(world, res, x, y, from.z) {
+            break;
+        }
+        for (e, q) in world.query::<&Position>().iter() {
+            if *q == p && is_enemy(world, e) {
+                hit.push(e);
             }
         }
-        let name = crate::components::itemkind_name(gun.item);
-        let chance = gun_hit_chance(gun, tile_distance(from, to), state);
-        let shot = fire(world, res, from, to, gun.range, chance);
-        if shot != Shot::Hit {
-            res.events.combat_event(
-                format!("Your {name} shot {}.", shot.miss_words()),
-                res.time.tick,
-            );
-            continue;
+    }
+    hit
+}
+
+/// One round of `gun` at `target`: its pellets, or its piercing line.
+fn fire_round(
+    world: &mut World,
+    res: &mut Resources,
+    shooter: Entity,
+    target: Entity,
+    gun: &'static Gun,
+    state: BodyPartState,
+) {
+    let (Ok(from), Ok(to)) = (
+        world.get::<&Position>(shooter).map(|p| *p),
+        world.get::<&Position>(target).map(|p| *p),
+    ) else {
+        return;
+    };
+    let name = crate::components::itemkind_name(gun.item);
+    let targets = if gun.pierce {
+        pierced(world, res, from, to, gun.range)
+    } else {
+        vec![target]
+    };
+    if targets.is_empty() {
+        // Nothing on the line before a wall: the beam still fires and is spent
+        fire(world, res, from, to, gun.range, 0);
+        res.events
+            .combat_event(format!("Your {name} shot hits the wall."), res.time.tick);
+        return;
+    }
+    let mut hits = 0;
+    for victim in targets {
+        for _ in 0..gun.pellets {
+            if world.get::<&crate::components::Dead>(victim).is_ok() {
+                break;
+            }
+            let Ok(at) = world.get::<&Position>(victim).map(|p| *p) else {
+                break;
+            };
+            let chance = gun_hit_chance(gun, tile_distance(from, at), state);
+            let shot = fire(world, res, from, at, gun.range, chance);
+            if shot != Shot::Hit {
+                if gun.pellets == 1 {
+                    res.events.combat_event(
+                        format!("Your {name} shot {}.", shot.miss_words()),
+                        res.time.tick,
+                    );
+                }
+                continue;
+            }
+            hits += 1;
+            strike(world, res, victim, at, gun, name);
         }
-        let damage = res.world_state.rng.gen_range(gun.damage.0..=gun.damage.1);
-        crate::systems::combat_actions::apply_damage(
-            world,
-            res,
-            target,
-            damage,
-            &format!("your {name}"),
+    }
+    if gun.pellets > 1 {
+        res.events.combat_event(
+            format!("Your {name}: {hits} of {} pellets hit.", gun.pellets),
+            res.time.tick,
         );
+    }
+}
+
+/// A hit on `victim`: its damage, then a chance to stun, then splash on every other enemy
+/// beside it.
+fn strike(
+    world: &mut World,
+    res: &mut Resources,
+    victim: Entity,
+    at: Position,
+    gun: &Gun,
+    name: &str,
+) {
+    use rand::Rng;
+    let damage = res.world_state.rng.gen_range(gun.damage.0..=gun.damage.1);
+    crate::systems::combat_actions::apply_damage(
+        world,
+        res,
+        victim,
+        damage,
+        &format!("your {name}"),
+    );
+    if gun.stun_percent > 0
+        && res.world_state.rng.gen_range(0..100) < gun.stun_percent
+        && world.get::<&crate::components::Dead>(victim).is_err()
+    {
+        world
+            .insert_one(victim, crate::components::Stunned::new(STUN_TICKS))
+            .ok();
+        res.events
+            .combat_event(format!("Your {name} stuns it!"), res.time.tick);
+    }
+    if let Some((low, high)) = gun.splash {
+        let mut beside: Vec<(Position, Entity)> = world
+            .query::<&Position>()
+            .iter()
+            .filter(|&(e, p)| {
+                e != victim && p.z == at.z && tile_distance(*p, at) <= 1 && is_enemy(world, e)
+            })
+            .map(|(e, p)| (*p, e))
+            .collect();
+        beside.sort_by_key(|(p, e)| (p.y, p.x, e.to_bits()));
+        for (_, e) in beside {
+            let splash = res.world_state.rng.gen_range(low..=high);
+            crate::systems::combat_actions::apply_damage(
+                world,
+                res,
+                e,
+                splash,
+                &format!("your {name}'s blast"),
+            );
+        }
     }
 }
 
@@ -585,5 +876,244 @@ mod tests {
         let target = game.entity(dog);
         shoot_once(&mut game, target);
         assert!(!game.game.res.shots[0].hit);
+    }
+
+    /// The player carrying `items` with `gun` in the right arm, and dogs at `dogs`.
+    fn armed(
+        gun: ItemKind,
+        items: &[(ItemKind, u32)],
+        dogs: &[(i64, i64)],
+    ) -> (TestGame, Vec<Handle>) {
+        let mut world = TestWorld::new(7)
+            .fill((-12, -4, 0), (16, 4, 0), TileKind::Grass)
+            .inventory(items);
+        let handles = dogs
+            .iter()
+            .map(|&(x, y)| world.feral_dog(x, y, 0))
+            .collect();
+        let mut game = world.build();
+        let p = player(&game);
+        game.game
+            .world
+            .get::<&mut Inventory>(p)
+            .unwrap()
+            .add(gun, 1);
+        equip(&mut game.game.world, p, gun).unwrap();
+        (game, handles)
+    }
+
+    fn tough(game: &mut TestGame, h: Handle) -> Entity {
+        let e = game.entity(h);
+        game.game.world.get::<&mut Health>(e).unwrap().current = 100_000;
+        e
+    }
+
+    fn give_cell(game: &mut TestGame, kind: ItemKind, joules: u64) {
+        let p = player(game);
+        let mut stack = crate::components::ItemStack::new(kind, 1);
+        stack.charge_j = Some(joules);
+        game.game
+            .world
+            .get::<&mut Inventory>(p)
+            .unwrap()
+            .add_stack(stack);
+    }
+
+    #[test]
+    fn each_new_gun_has_its_odds_at_one_and_three_tiles() {
+        use BodyPartState::Functional as F;
+        let expect = [
+            (NAIL_DRIVER, 65, 45),
+            (SCATTERGUN, 75, 35),
+            (BURST_CARBINE, 75, 63),
+            (SLUG_THROWER, 60, 40),
+            (ARC_CASTER, 85, 75),
+            (RIVERGLASS_LANCE, 95, 91),
+            (ISOTOPE_LAUNCHER, 80, 68),
+        ];
+        for (g, at1, at3) in expect {
+            assert_eq!(gun_hit_chance(&g, 1, F), at1, "{:?} at 1", g.item);
+            assert_eq!(gun_hit_chance(&g, 3, F), at3, "{:?} at 3", g.item);
+        }
+    }
+
+    #[test]
+    fn every_scatter_pellet_rolls_its_own_hit() {
+        let (mut game, dogs) = armed(
+            ItemKind::Scattergun,
+            &[(ItemKind::ScatterShell, 2)],
+            &[(1, 0)],
+        );
+        let dog = tough(&mut game, dogs[0]);
+        shoot_once(&mut game, dog);
+        assert_eq!(
+            game.player_has(ItemKind::ScatterShell),
+            1,
+            "one shell for five pellets"
+        );
+        assert_eq!(game.game.res.shots.len(), 5);
+    }
+
+    #[test]
+    fn a_burst_fires_three_rounds_and_a_short_burst_fewer() {
+        let (mut game, dogs) = armed(
+            ItemKind::BurstCarbine,
+            &[(ItemKind::BrassCartridge, 5)],
+            &[(3, 0)],
+        );
+        let dog = tough(&mut game, dogs[0]);
+        shoot_once(&mut game, dog);
+        assert_eq!(game.player_has(ItemKind::BrassCartridge), 2);
+        assert_eq!(game.player_has(ItemKind::ShellCasing), 3);
+        assert_eq!(game.game.res.shots.len(), 3);
+        game.game.res.shots.clear();
+        shoot_once(&mut game, dog);
+        assert_eq!(game.game.res.shots.len(), 2, "only two rounds left");
+        assert_eq!(game.player_has(ItemKind::BrassCartridge), 0);
+    }
+
+    #[test]
+    fn slugs_stun_about_three_hits_in_ten() {
+        let (mut game, dogs) = armed(
+            ItemKind::SlugThrower,
+            &[(ItemKind::BrassSlug, 600)],
+            &[(1, 0)],
+        );
+        let dog = tough(&mut game, dogs[0]);
+        let (mut hits, mut stuns) = (0, 0);
+        for _ in 0..600 {
+            game.game
+                .world
+                .remove_one::<crate::components::Stunned>(dog)
+                .ok();
+            game.game.res.shots.clear();
+            shoot_once(&mut game, dog);
+            if game.game.res.shots.iter().any(|s| s.hit) {
+                hits += 1;
+                stuns += game
+                    .game
+                    .world
+                    .get::<&crate::components::Stunned>(dog)
+                    .is_ok() as u32;
+            }
+        }
+        let share = stuns * 100 / hits;
+        assert!((22..=38).contains(&share), "{stuns} stuns in {hits} hits");
+    }
+
+    #[test]
+    fn the_arc_caster_draws_charge_and_isnt_offered_on_flat_cells() {
+        let (mut game, dogs) = armed(ItemKind::ArcCaster, &[], &[(3, 0)]);
+        let p = player(&game);
+        give_cell(&mut game, ItemKind::CrudePowerCell, 0);
+        assert!(
+            loaded_guns(&game.game.world, p).is_empty(),
+            "flat cell, no Shoot"
+        );
+        assert!(!crate::moves::player_moves(&game.game.world, p, false)
+            .iter()
+            .any(|m| m.move_type == crate::moves::MoveType::Shoot));
+        give_cell(&mut game, ItemKind::CrudePowerCell, 2_000_000);
+        assert_eq!(rounds_left(&game.game.world, p, &ARC_CASTER), 2);
+        let dog = tough(&mut game, dogs[0]);
+        shoot_once(&mut game, dog);
+        assert_eq!(
+            crate::power_cells::fullest_charge(&game.game.world, p),
+            1_000_000
+        );
+    }
+
+    #[test]
+    fn the_lance_rolls_against_every_dog_on_its_line_until_a_wall() {
+        let (mut game, dogs) = armed(
+            ItemKind::RiverglassLance,
+            &[],
+            &[(2, 0), (5, 0), (9, 0), (4, 2)],
+        );
+        give_cell(&mut game, ItemKind::StandardPowerCell, 20_000_000);
+        for y in -4..=4 {
+            game.game
+                .res
+                .world_state
+                .world
+                .set_tile_cached(7, y, 0, TileKind::Rock);
+        }
+        let near = tough(&mut game, dogs[0]);
+        tough(&mut game, dogs[1]);
+        tough(&mut game, dogs[2]);
+        tough(&mut game, dogs[3]);
+        shoot_once(&mut game, near);
+        let ends: Vec<i64> = game.game.res.shots.iter().map(|s| s.to.x).collect();
+        assert_eq!(
+            ends,
+            vec![2, 5],
+            "both dogs before the wall, not the one behind it or off the line"
+        );
+    }
+
+    #[test]
+    fn an_isotope_blast_hurts_the_dogs_beside_the_target_and_never_the_robot() {
+        let (mut game, dogs) = armed(
+            ItemKind::IsotopeLauncher,
+            &[(ItemKind::IsotopeCanister, 30)],
+            &[(3, 0), (4, 0), (6, 0)],
+        );
+        let target = tough(&mut game, dogs[0]);
+        let beside = tough(&mut game, dogs[1]);
+        let far = tough(&mut game, dogs[2]);
+        let p = player(&game);
+        let body_before = format!(
+            "{:?}",
+            game.game
+                .world
+                .get::<&Body>(p)
+                .unwrap()
+                .parts
+                .get(&BodyPartType::Torso)
+        );
+        let tiles_before: Vec<TileKind> = (0..8).map(|x| game.tile(x, 0, 0)).collect();
+        for _ in 0..30 {
+            game.game.res.shots.clear();
+            shoot_once(&mut game, target);
+            if game.game.res.shots.iter().any(|s| s.hit) {
+                break;
+            }
+        }
+        let hp = |e: Entity| game.game.world.get::<&Health>(e).unwrap().current;
+        assert!(hp(target) < 100_000);
+        assert!(
+            hp(beside) < 100_000,
+            "the dog beside it is caught in the blast"
+        );
+        assert_eq!(hp(far), 100_000, "two tiles away is safe");
+        let body_after = format!(
+            "{:?}",
+            game.game
+                .world
+                .get::<&Body>(p)
+                .unwrap()
+                .parts
+                .get(&BodyPartType::Torso)
+        );
+        assert_eq!(body_before, body_after);
+        let tiles_after: Vec<TileKind> = (0..8).map(|x| game.tile(x, 0, 0)).collect();
+        assert_eq!(tiles_before, tiles_after, "the world is unchanged");
+    }
+
+    #[test]
+    fn trait_shots_replay_the_same() {
+        let run = || {
+            let (mut game, dogs) = armed(
+                ItemKind::Scattergun,
+                &[(ItemKind::ScatterShell, 4)],
+                &[(2, 0)],
+            );
+            let dog = tough(&mut game, dogs[0]);
+            for _ in 0..4 {
+                shoot_once(&mut game, dog);
+            }
+            game.game.res.shots.clone()
+        };
+        assert_eq!(run(), run());
     }
 }

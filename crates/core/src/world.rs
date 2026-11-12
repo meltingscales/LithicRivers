@@ -117,6 +117,7 @@ const WILD_CROP_PATCH_CHANCE: f64 = 0.2;
 pub enum Feature {
     Stairways,
     WildCrops,
+    SulfurVents,
 }
 
 /// A resource that generates as veins, with a vein-noise threshold per band (higher is
@@ -677,6 +678,9 @@ impl GameWorld {
             }
         }
         self.place_deposits(&noises, cx, cy, cz, chunk);
+        if depth_band(cz) == DepthBand::Deep {
+            self.place_sulfur_vent(cx, cy, cz, chunk);
+        }
         // Stairways shared with the layer above, and with the layer below
         for lower in [cz, cz - 1] {
             if lower + 1 > -1 {
@@ -742,6 +746,35 @@ impl GameWorld {
             }
         }
         spots
+    }
+
+    /// The deep's sulfur vents: about one chunk in `VENT_CHUNK_ODDS` gets one, on open floor
+    /// within `NEAR_LAVA` tiles of lava in the same chunk. Its own generator, so nothing
+    /// else shifts.
+    fn place_sulfur_vent(&self, cx: i64, cy: i64, cz: i64, chunk: &mut Chunk) {
+        use crate::sulfur_vents::VENT_CHUNK_ODDS;
+        use crate::systems::creature_spawn::NEAR_LAVA;
+        let mut rng = self.feature_rng(cx, cy, cz, Feature::SulfurVents);
+        if rng.gen_range(0..VENT_CHUNK_ODDS) != 0 {
+            return;
+        }
+        let near_lava = |chunk: &Chunk, tx: i64, ty: i64| {
+            (-NEAR_LAVA..=NEAR_LAVA).any(|dy| {
+                (-NEAR_LAVA..=NEAR_LAVA).any(|dx| {
+                    let (x, y) = (tx + dx, ty + dy);
+                    (0..CHUNK_SIZE).contains(&x)
+                        && (0..CHUNK_SIZE).contains(&y)
+                        && chunk.get(x, y) == TileKind::Lava
+                })
+            })
+        };
+        for _ in 0..32 {
+            let (tx, ty) = (rng.gen_range(0..CHUNK_SIZE), rng.gen_range(0..CHUNK_SIZE));
+            if chunk.get(tx, ty) == TileKind::Air && near_lava(chunk, tx, ty) {
+                chunk.set(tx, ty, TileKind::SulfurVent);
+                return;
+            }
+        }
     }
 
     /// A generator for one feature of one chunk, so features never shift each other's rolls.
