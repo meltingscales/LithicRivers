@@ -37,6 +37,7 @@ pub fn mining_drop(tile: TileKind) -> Option<MiningDrop> {
         TileKind::Nitre => drop(TileKind::Air, &[(ItemKind::Nitre, 1, 2)]),
         TileKind::Sulfur => drop(TileKind::Air, &[(ItemKind::Sulfur, 1, 2)]),
         TileKind::BrassScrap => drop(TileKind::Air, &[(ItemKind::BrassNugget, 1, 3)]),
+        TileKind::SulfurCrystal => drop(TileKind::Air, &[(ItemKind::Sulfur, 1, 2)]),
         // Ripe crops: their produce and 1 to 2 seeds; the field is left as dirt
         TileKind::WheatRipe => drop(
             TileKind::Dirt,
@@ -125,6 +126,9 @@ pub const MILITARY_ANDROID_LOOT: &[CreatureLoot] = &[
     always(ItemKind::IronScrap, 1, 3),
 ];
 
+/// What a sulfur slime carries: always some sulfur.
+pub const SULFUR_SLIME_LOOT: &[CreatureLoot] = &[always(ItemKind::Sulfur, 1, 3)];
+
 /// Every creature's loot, with how the Item Dictionary names the creature. Creatures with
 /// embryos can also drop one of their own kind when they die (`spawner::roll_embryo`).
 pub const CREATURE_LOOT: &[(&str, EnemyKind, &[CreatureLoot])] = &[
@@ -140,6 +144,7 @@ pub const CREATURE_LOOT: &[(&str, EnemyKind, &[CreatureLoot])] = &[
         EnemyKind::MilitaryAndroid,
         MILITARY_ANDROID_LOOT,
     ),
+    ("sulfur slimes", EnemyKind::SulfurSlime, SULFUR_SLIME_LOOT),
 ];
 
 /// Whether a creature can carry or drop `item`.
@@ -491,6 +496,9 @@ mod tests {
             ItemKind::NuclearSlimeEmbryoPoor,
             ItemKind::NuclearSlimeEmbryoFlawed,
             ItemKind::NuclearSlimeEmbryoFlawless,
+            ItemKind::SulfurSlimeEmbryoPoor,
+            ItemKind::SulfurSlimeEmbryoFlawed,
+            ItemKind::SulfurSlimeEmbryoFlawless,
             // Military androids carry ammo
             ItemKind::BrassCartridge,
             // The ammo chain's deposits

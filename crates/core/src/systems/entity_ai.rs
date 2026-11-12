@@ -343,13 +343,13 @@ pub const SLIME_NOTICE: i64 = 6;
 /// one tile toward them every other turn, without planning a path. Combat starts when one
 /// is adjacent, as with dogs.
 pub fn nuclear_slime_system(world: &mut World, res: &mut Resources) {
-    use crate::components::{NuclearSlime, SlimeAI};
+    use crate::components::SlimeAI;
     let Some(player_pos) = get_player_position(world) else {
         return;
     };
     let mut slimes: Vec<(hecs::Entity, Position)> = world
         .query::<&Position>()
-        .with::<&NuclearSlime>()
+        .with::<&SlimeAI>()
         .iter()
         .map(|(e, p)| (e, *p))
         .collect();
@@ -418,6 +418,7 @@ pub fn drillable(tile: crate::tiles::TileKind) -> bool {
             | Nitre
             | Sulfur
             | BrassScrap
+            | SulfurCrystal
     )
 }
 
@@ -636,11 +637,16 @@ pub fn generate_enemy_action(world: &mut World, res: &mut Resources, enemy_entit
     let slime = world
         .get::<&crate::components::NuclearSlime>(enemy_entity)
         .is_ok();
+    let sulfur_slime = world
+        .get::<&crate::components::SulfurSlime>(enemy_entity)
+        .is_ok();
     let bot = world
         .get::<&crate::components::MiningBot>(enemy_entity)
         .is_ok();
     let (damage_range, time_range) = if bot {
         (12..=22, 10..=13)
+    } else if sulfur_slime {
+        (8..=16, 12..=16)
     } else if slime {
         (10..=20, 14..=18)
     } else {
@@ -811,6 +817,63 @@ mod tests {
             .map(|(_, (_, inv))| inv.slots.iter().map(|s| (s.kind, s.qty)).collect())
             .expect("a wreck remains");
         assert_eq!(wreck, salvage, "the wreck holds its salvage and no embryo");
+    }
+
+    #[test]
+    fn a_sulfur_slime_closes_in_like_a_nuclear_slime() {
+        let mut world = TestWorld::new(7)
+            .fill((-6, -3, 0), (8, 3, 0), TileKind::Air)
+            .inventory(&[]);
+        let slime = world.sulfur_slime(4, 0, 0);
+        let mut game = world.build();
+        wait(&mut game, 5);
+        assert!(game.pos(slime).unwrap().x > 1, "not adjacent after 5 turns");
+        wait(&mut game, 1);
+        assert_eq!(game.pos(slime).unwrap().x, 1, "adjacent after 6 turns");
+        wait(&mut game, 1);
+        assert!(engaged(&game, slime));
+    }
+
+    #[test]
+    fn a_sulfur_slime_sits_between_a_dog_and_a_nuclear_slime_and_carries_sulfur() {
+        let mut world = TestWorld::new(7).fill((-3, -3, 0), (3, 3, 0), TileKind::Air);
+        let dog = world.feral_dog(-2, 0, 0);
+        let sulfur = world.sulfur_slime(2, 0, 0);
+        let nuclear = world.nuclear_slime(0, 2, 0);
+        let mut game = world.build();
+        assert!(game.health(dog) < game.health(sulfur));
+        assert!(game.health(sulfur) < game.health(nuclear));
+        let carried = carried(&game, sulfur);
+        let n: u32 = carried
+            .iter()
+            .filter(|(k, _)| *k == ItemKind::Sulfur)
+            .map(|(_, n)| n)
+            .sum();
+        assert!((1..=3).contains(&n), "{carried:?}");
+        let entity = game.entity(sulfur);
+        game.game.world.get::<&mut Health>(entity).unwrap().current = 0;
+        crate::systems::handle_entity_death(&mut game.game.world, &mut game.game.res, entity);
+        let corpse_sulfur: u32 = game
+            .game
+            .world
+            .query::<(&EntityKind, &Inventory)>()
+            .iter()
+            .filter(|(_, (k, _))| **k == EntityKind::Corpse)
+            .flat_map(|(_, (_, inv))| inv.slots.clone())
+            .filter(|s| s.kind == ItemKind::Sulfur)
+            .map(|s| s.qty)
+            .sum();
+        assert_eq!(corpse_sulfur, n, "its corpse holds the sulfur");
+    }
+
+    #[test]
+    fn the_same_sulfur_slime_carries_the_same_sulfur() {
+        let run = || {
+            let mut world = TestWorld::new(7);
+            let slime = world.sulfur_slime(9, 4, 0);
+            carried(&world.build(), slime)
+        };
+        assert_eq!(run(), run());
     }
 
     #[test]

@@ -31,6 +31,7 @@ enum Placement {
     NuclearSlime,
     MiningBot,
     MilitaryAndroid,
+    SulfurSlime,
     TutorialAndroid,
     Item(ItemKind, u32),
 }
@@ -126,6 +127,10 @@ impl TestWorld {
         self.add(x, y, z, Placement::MilitaryAndroid)
     }
 
+    pub fn sulfur_slime(&mut self, x: i64, y: i64, z: i64) -> Handle {
+        self.add(x, y, z, Placement::SulfurSlime)
+    }
+
     /// The tutorial quest NPC (Broken SapienCorp Android).
     pub fn npc(&mut self, x: i64, y: i64, z: i64) -> Handle {
         self.add(x, y, z, Placement::TutorialAndroid)
@@ -186,6 +191,13 @@ impl TestWorld {
                     spawn_utils::world_spawn_mining_bot(world, x, y, z, &game.res.world_state.world)
                 }
                 Placement::MilitaryAndroid => spawn_utils::world_spawn_military_android(
+                    world,
+                    x,
+                    y,
+                    z,
+                    &game.res.world_state.world,
+                ),
+                Placement::SulfurSlime => spawn_utils::world_spawn_sulfur_slime(
                     world,
                     x,
                     y,

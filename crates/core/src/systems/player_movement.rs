@@ -225,10 +225,12 @@ pub fn mining_system(world: &mut World, res: &mut Resources) -> bool {
         }
         tile => {
             let Some(gained) = crate::crafting::mine_tile(res, Position { x, y, z }) else {
-                res.events.interaction_event(
-                    format!("You can't mine the {:?} tile.", tile_to_mine),
-                    res.time.tick,
-                );
+                let why = if tile_to_mine == crate::tiles::TileKind::SulfurVent {
+                    "The sulfur vent can't be broken.".to_string()
+                } else {
+                    format!("You can't mine the {:?} tile.", tile_to_mine)
+                };
+                res.events.interaction_event(why, res.time.tick);
                 return false;
             };
             for &(kind, qty) in &gained {

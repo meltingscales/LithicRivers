@@ -226,6 +226,9 @@ pub struct Resources {
     /// Shots fired in the last few ticks, for the client to draw their lines
     #[serde(default)]
     pub shots: Vec<crate::systems::ranged::ShotTrace>,
+    /// The last growth period sulfur vents grew in (`sulfur_vents`)
+    #[serde(default)]
+    pub vent_growth_period: u64,
 }
 
 /// Counts of what the player has done in a world, saved with it.
@@ -267,6 +270,7 @@ impl Resources {
             stats: PlayerStats::default(),
             factory_stats: Default::default(),
             shots: Vec::new(),
+            vent_growth_period: 0,
         }
     }
 

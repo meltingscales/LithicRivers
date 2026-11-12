@@ -1,0 +1,22 @@
+# A sulfur vent beside lava grows sulfur crystals on the open ground around it while the
+# robot waits nearby; mining one gives sulfur, and the vent itself can't be broken
+seed 12345
+size 100x30
+world void
+key ui.MENU_PREV
+cheat toggle_fogofwar
+cheat tp 0 0 -20
+cheat set_tile ~3 ~ ~ sulfur_vent
+cheat set_tile ~5 ~ ~ lava
+cheat set_tile ~5 ~1 ~ lava
+cheat set_tile ~5 ~-1 ~ lava
+key action.PASS_TIME 9
+expect-text "♦"
+screen crystals
+# Walk up beside the vent and try to break it
+key movement.MOVE_EAST 2
+key build.TOGGLE_BREAK_PLACE_MODE
+key build.BREAK_EAST
+expect-text "The sulfur vent can't be broken."
+screen vent-refuses
+state

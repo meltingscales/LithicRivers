@@ -46,6 +46,7 @@ pub mod stairs;
 pub mod structure;
 pub mod structure_lint;
 pub mod structure_plan;
+pub mod sulfur_vents;
 pub mod system_scheduler;
 pub mod systems;
 #[cfg(test)]

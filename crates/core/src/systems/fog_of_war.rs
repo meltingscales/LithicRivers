@@ -12,7 +12,12 @@ pub const LANTERN_RADIUS: i64 = 6;
 pub const LANTERN_GATHER_RANGE: i64 = 48;
 
 /// Bresenham line algorithm to get all points on a line from start to end
-fn bresenham_line(start_x: i64, start_y: i64, end_x: i64, end_y: i64) -> Vec<(i64, i64)> {
+pub(crate) fn bresenham_line(
+    start_x: i64,
+    start_y: i64,
+    end_x: i64,
+    end_y: i64,
+) -> Vec<(i64, i64)> {
     let mut points = Vec::new();
 
     let dx = (end_x - start_x).abs();
@@ -47,7 +52,7 @@ fn bresenham_line(start_x: i64, start_y: i64, end_x: i64, end_y: i64) -> Vec<(i6
 
 /// Whether a tile stops sight and light: anything impassable except lava and see-through
 /// blocks (fences, gates and lanterns).
-fn blocks_sight(world: &World, resources: &Resources, x: i64, y: i64, z: i64) -> bool {
+pub(crate) fn blocks_sight(world: &World, resources: &Resources, x: i64, y: i64, z: i64) -> bool {
     let tile = resources
         .world_state
         .world

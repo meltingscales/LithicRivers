@@ -362,15 +362,13 @@ fn render_enemy(
 }
 
 /// Each equipped gun's chance to hit `enemy` from here and the rounds carried for it:
-/// "Pipe Gun 54% (3)". `None` without an equipped gun.
+/// "Pipe Gun 54% (3)", "Scattergun 75% x5 (4)", "Arc Caster 80% (2 shots)". `None`
+/// without an equipped gun.
 fn your_aim(app: &crate::App, enemy: &EnemyCard) -> Option<Line<'static>> {
     use lithicrivers_core::firearms;
     let world = &app.core.game.world;
     let player = app.core.game.get_player_entity()?;
     let body = world.get::<&Body>(player).ok()?;
-    let inv = world
-        .get::<&lithicrivers_core::components::Inventory>(player)
-        .ok()?;
     let mut spans = vec![Span::styled("You: ", Style::default().fg(Color::Gray))];
     for arm in firearms::ARMS {
         let Some(gun) = body.weapons.get(&arm).and_then(|g| firearms::gun(*g)) else {
@@ -387,19 +385,29 @@ fn your_aim(app: &crate::App, enemy: &EnemyCard) -> Option<Line<'static>> {
         if spans.len() > 1 {
             spans.push(Span::styled(" | ", Style::default().fg(DIM)));
         }
-        let rounds = inv.count(gun.ammo);
+        let rounds = firearms::rounds_left(world, player, gun);
         let name = lithicrivers_core::components::itemkind_name(gun.item);
         let style = if rounds == 0 || enemy.distance > gun.range {
             Style::default().fg(DIM)
         } else {
             Style::default().fg(Color::Green)
         };
+        let times = match (gun.pellets, gun.burst) {
+            (1, 1) => String::new(),
+            (1, n) | (n, 1) => format!(" x{n}"),
+            (p, b) => format!(" x{}", p * b),
+        };
         let chance = if enemy.distance > gun.range {
             "out of range".to_string()
         } else {
-            format!("{}%", firearms::gun_hit_chance(gun, enemy.distance, state))
+            let pct = firearms::gun_hit_chance(gun, enemy.distance, state);
+            format!("{pct}%{times}")
         };
-        spans.push(Span::styled(format!("{name} {chance} ({rounds})"), style));
+        let left = match gun.ammo {
+            firearms::Ammo::Charge(_) => format!("{rounds} shots"),
+            firearms::Ammo::Item(_) => rounds.to_string(),
+        };
+        spans.push(Span::styled(format!("{name} {chance} ({left})"), style));
     }
     (spans.len() > 1).then(|| Line::from(spans))
 }
@@ -606,6 +614,7 @@ fn enemy_name(app: &crate::App, entity: hecs::Entity) -> String {
     match app.core.game.world.get::<&EntityKind>(entity).map(|k| *k) {
         Ok(EntityKind::FeralDog) => "Feral dog",
         Ok(EntityKind::NuclearSlime) => "Nuclear slime",
+        Ok(EntityKind::SulfurSlime) => "Sulfur slime",
         Ok(EntityKind::MiningBot) => "Mining bot",
         Ok(EntityKind::MilitaryAndroid) => "Military android",
         Ok(EntityKind::Sheep) => "Sheep",
