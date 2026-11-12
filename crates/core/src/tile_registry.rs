@@ -111,6 +111,13 @@ define_tiles! {
     BrassScrap, "brass_scrap", "brass scrap", false,
     SulfurVent, "sulfur_vent", "sulfur vent", false,
     SulfurCrystal, "sulfur_crystal", "sulfur crystal", false,
+    Ash, "ash", "ash", true,
+    CrackedRoad, "cracked_road", "cracked road", true,
+    Rubble, "rubble", "rubble", false,
+    Concrete, "concrete", "concrete", false,
+    TreasureQuest2, "treasure_quest_2", "quest treasure", false,
+    SealedDoorSite, "sealed_door_site", "sealed door", false,
+    BurnerGeneratorSite, "burner_generator_site", "burner generator", false,
 }
 
 impl TileKind {

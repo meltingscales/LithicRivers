@@ -116,6 +116,12 @@ pub const EXAMPLES: &[Example] = &[
         has_input: true,
         build: scrap_line,
     },
+    Example {
+        name: "Sealed door: open while its generator burns",
+        size: (7, 2),
+        has_input: true,
+        build: sealed_door,
+    },
 ];
 
 /// The top-left corner of the first example; the rest follow eastward.
@@ -297,6 +303,25 @@ fn belt_fed_furnace(game: &mut Game, o: Position) {
 ///   . . G . + .      G generator, + pole
 ///   c > = = W c      c chest, > extractor, = belt, W workbench
 /// ```
+/// A SapienCorp sealed door on a fueled burner generator's network: the player can walk
+/// through while it burns.
+///
+/// ```text
+///   . . . G . + .      G generator, + pole (kept clear of the scrap line's pole)
+///   . . . . . . X      X sealed door
+/// ```
+fn sealed_door(game: &mut Game, o: Position) {
+    let generator = place(
+        game,
+        FactoryKind::BurnerGenerator,
+        at(o, 3, 0),
+        Facing::North,
+    );
+    fill(game, generator, &[(ItemKind::Biochar, 8)]);
+    place(game, FactoryKind::PowerPole, at(o, 5, 0), Facing::North);
+    place(game, FactoryKind::SealedDoor, at(o, 6, 1), Facing::North);
+}
+
 fn scrap_line(game: &mut Game, o: Position) {
     let generator = place(
         game,

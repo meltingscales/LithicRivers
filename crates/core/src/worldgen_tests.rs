@@ -346,3 +346,126 @@ fn the_deep_places_dig_sites() {
     }
     assert!(sites > 0, "no dig site in 576 deep chunks");
 }
+
+/// The share of a 1024-tile square of surface that is city, for `seed`.
+fn city_share(seed: u64, cx: i64, cy: i64) -> f64 {
+    let w = GameWorld::new(0, 0, seed);
+    let mut city = 0;
+    let mut total = 0;
+    for y in (cy - 512..cy + 512).step_by(8) {
+        for x in (cx - 512..cx + 512).step_by(8) {
+            total += 1;
+            city += w.is_city(x as f64, y as f64) as u32;
+        }
+    }
+    city as f64 * 100.0 / total as f64
+}
+
+#[test]
+fn cities_are_uncommon_and_large() {
+    // Far from the datacenter, over several seeds: some city, mostly not
+    let shares: Vec<f64> = [1u64, 7, 12345, 99, 2024]
+        .iter()
+        .map(|&s| city_share(s, 4000, 4000))
+        .collect();
+    let mean = shares.iter().sum::<f64>() / shares.len() as f64;
+    assert!((1.0..=25.0).contains(&mean), "city shares {shares:?}");
+    // Large: a city tile's neighbours 8 tiles away are mostly city too
+    let w = GameWorld::new(0, 0, 12345);
+    let (mut city, mut same) = (0, 0);
+    for y in (3000..5000).step_by(16) {
+        for x in (3000..5000).step_by(16) {
+            if w.is_city(x as f64, y as f64) {
+                city += 1;
+                same += w.is_city(x as f64 + 8.0, y as f64) as u32;
+            }
+        }
+    }
+    assert!(city > 0 && same * 100 / city >= 80, "{same} of {city}");
+}
+
+#[test]
+fn the_datacenter_always_stands_in_a_city() {
+    let (x, y, _) = crate::game::DATACENTER_POS;
+    for seed in [1u64, 7, 12345, 99, 2024] {
+        let mut w = GameWorld::new(0, 0, seed);
+        assert!(w.is_city(x as f64, y as f64));
+        assert_eq!(
+            w.biome_for(x as f64, y as f64, 0.0),
+            crate::world::BiomeBand::RuinedCity
+        );
+        let ground = w.get_tile_cached(x + 3, y + 5, 0);
+        assert!(
+            matches!(
+                ground,
+                TileKind::Ash | TileKind::CrackedRoad | TileKind::Rubble
+            ),
+            "{ground:?}"
+        );
+    }
+}
+
+#[test]
+fn city_ground_has_no_grass_or_trees_and_rubble_breaks_into_stone() {
+    let (x0, y0, _) = crate::game::DATACENTER_POS;
+    let mut w = GameWorld::new(0, 0, 12345);
+    let mut kinds = std::collections::BTreeSet::new();
+    for y in y0 - 60..y0 + 60 {
+        for x in x0 - 60..x0 + 60 {
+            kinds.insert(format!("{:?}", w.get_tile_cached(x, y, 0)));
+        }
+    }
+    assert!(
+        !kinds.contains("Grass") && !kinds.contains("Tree"),
+        "{kinds:?}"
+    );
+    assert!(kinds.contains("CrackedRoad") && kinds.contains("Rubble"));
+    let drop = crate::crafting::mining_drop(TileKind::Rubble).unwrap();
+    assert_eq!(drop.becomes, TileKind::Ash);
+    assert!(drop
+        .items
+        .iter()
+        .any(|(k, _, _)| *k == crate::components::ItemKind::Stone));
+}
+
+#[test]
+fn cities_are_the_same_for_the_same_seed() {
+    let a = GameWorld::new(0, 0, 4242);
+    let b = GameWorld::new(0, 0, 4242);
+    for i in 0..400 {
+        let (x, y) = ((i * 37) as f64, (i * 53) as f64);
+        assert_eq!(a.is_city(x, y), b.is_city(x, y));
+    }
+}
+
+#[test]
+fn city_chunks_hold_skyscrapers_with_more_than_one_floor() {
+    let mut game = crate::test_support::TestWorld::new(12345).build().game;
+    let (x0, y0, _) = crate::game::DATACENTER_POS;
+    let (ccx, ccy) = (x0.div_euclid(CHUNK_SIZE), y0.div_euclid(CHUNK_SIZE));
+    let mut concrete_upstairs = 0;
+    for cy in ccy - 4..=ccy + 4 {
+        for cx in ccx - 4..=ccx + 4 {
+            game.ensure_chunk_with_pending_structures(cx, cy, 0);
+        }
+    }
+    let w = &mut game.res.world_state.world;
+    for y in (ccy - 4) * CHUNK_SIZE..(ccy + 5) * CHUNK_SIZE {
+        for x in (ccx - 4) * CHUNK_SIZE..(ccx + 5) * CHUNK_SIZE {
+            if w.get_tile_cached(x, y, 2) == TileKind::Concrete {
+                concrete_upstairs += 1;
+            }
+        }
+    }
+    assert!(concrete_upstairs > 0, "no skyscraper reached a third floor");
+}
+
+#[test]
+fn surface_generation_builds_the_biome_noise_once_per_world() {
+    let before = crate::world::biome_noises_built();
+    let mut w = world();
+    for x in 0..CHUNK_SIZE * 3 {
+        w.get_tile_cached(x, 0, 0);
+    }
+    assert_eq!(crate::world::biome_noises_built() - before, 1);
+}

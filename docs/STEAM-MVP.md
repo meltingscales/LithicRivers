@@ -112,7 +112,7 @@ The game opens its own window with a bundled font (`add-game-window`), so it no 
 - arboreal biome
 - frozen wasteland biome
 - lush forest biome with springs and pools, and ruins
-- nuked city biome
+- ~~nuked city biome~~ (the Ruined City, `add-ruined-city-quest`)
 - abandoned mine biome
 
 - forced structure spawns just like the python version

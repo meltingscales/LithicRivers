@@ -1,0 +1,12 @@
+# A Ruined City skyscraper on its own: the lobby, then the top floor where an old security
+# android still walks
+seed 12345
+size 100x30
+world structure:skyscraper
+key ui.MENU_PREV
+cheat tp 5 13 0
+expect-text "DD"
+screen lobby
+key action.LOOK_TOGGLE
+key movement.MOVE_UP 3
+screen top-floor

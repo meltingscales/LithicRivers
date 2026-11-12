@@ -399,6 +399,7 @@ impl Resources {
             match quest_type {
                 QuestType::RepairBrokenAndroid => marker.marker_type != QuestMarkerType::FetchQuest,
                 QuestType::ReplaceArm => marker.name != crate::game::FACILITY_MARKER,
+                QuestType::BlackBox => marker.name != crate::game::DATACENTER_MARKER,
             }
         });
     }

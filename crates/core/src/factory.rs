@@ -153,6 +153,9 @@ pub enum FactoryKind {
     BioVat,
     /// Uncrafts items on grid power, recovering some of their ingredients
     ScrapWorkbench,
+    /// A SapienCorp security door, built into ruins: the player walks through it only while
+    /// its network is powered (`sealed_door`)
+    SealedDoor,
     /// A consumer that does nothing but draw power, for grid tests
     #[cfg(any(test, feature = "test-support"))]
     TestConsumer,
@@ -224,6 +227,7 @@ impl FactoryKind {
             FactoryKind::Spawner => Some(ItemKind::Spawner),
             FactoryKind::Teleporter => Some(ItemKind::Teleporter),
             FactoryKind::TransitStation => None,
+            FactoryKind::SealedDoor => None,
             FactoryKind::Battery => Some(ItemKind::Battery),
             FactoryKind::Rtg => Some(ItemKind::Rtg),
             FactoryKind::ItemCharger => Some(ItemKind::ItemCharger),
@@ -264,6 +268,7 @@ impl FactoryKind {
             FactoryKind::Spawner => "spawner",
             FactoryKind::Teleporter => "teleporter",
             FactoryKind::TransitStation => "transit station",
+            FactoryKind::SealedDoor => "sealed door",
             FactoryKind::Battery => "battery",
             FactoryKind::Rtg => "RTG",
             FactoryKind::ItemCharger => "item charger",
@@ -302,6 +307,7 @@ impl FactoryKind {
             FactoryKind::VerticalConveyorUp | FactoryKind::VerticalConveyorDown => false,
             FactoryKind::Fence | FactoryKind::Gate | FactoryKind::Spawner => false,
             FactoryKind::Teleporter | FactoryKind::TransitStation | FactoryKind::Battery => false,
+            FactoryKind::SealedDoor => false,
             FactoryKind::Rtg | FactoryKind::ItemCharger => false,
             FactoryKind::AutoFeeder | FactoryKind::AnimalCounter | FactoryKind::BioVat => false,
             #[cfg(any(test, feature = "test-support"))]
@@ -386,6 +392,7 @@ impl FactoryKind {
             FactoryKind::Spawner => SpriteRef::new("factory", "spawner"),
             FactoryKind::Teleporter => SpriteRef::new("factory", "teleporter"),
             FactoryKind::TransitStation => SpriteRef::new("factory", "transit_station"),
+            FactoryKind::SealedDoor => crate::sealed_door::sprite(false),
             FactoryKind::Battery => SpriteRef::new("factory", "battery"),
             FactoryKind::Rtg => SpriteRef::new("factory", "rtg"),
             FactoryKind::ItemCharger => SpriteRef::new("factory", "item_charger"),
@@ -569,6 +576,11 @@ pub fn place(
             ));
         }
         FactoryKind::Fence | FactoryKind::Gate => {}
+        FactoryKind::SealedDoor => {
+            builder.add(crate::power::PowerConsumer::new(
+                crate::sealed_door::SEALED_DOOR_W,
+            ));
+        }
         FactoryKind::AutoFeeder => {
             builder.add(crate::livestock::Feeder::default());
             builder.add(Inventory {
@@ -872,11 +884,13 @@ pub fn run_due_steps(world: &mut World, res: &mut Resources) {
         crate::power_cells::update_charger_demand(world);
         crate::livestock::update_demand(world);
         crate::scrap::update_demand(world);
+        crate::sealed_door::update_demand(world);
         crate::power::step_power(world, res);
         crate::factory_stats::sample_power(res, step_tick);
         crate::machines::step_machines(world, res);
         crate::livestock::step(world, res, step_tick);
         crate::scrap::step(world, res);
+        crate::sealed_door::step(world);
         crate::furnace::step_furnaces(world, res);
         crate::teleporter::step_charging(world);
         crate::power_cells::charge_slot_cells(world);
@@ -931,7 +945,8 @@ pub fn takes(kind: FactoryKind, item: ItemKind) -> bool {
         FactoryKind::Fence
         | FactoryKind::Gate
         | FactoryKind::Teleporter
-        | FactoryKind::TransitStation => false,
+        | FactoryKind::TransitStation
+        | FactoryKind::SealedDoor => false,
         FactoryKind::Battery | FactoryKind::ItemCharger => crate::power_cells::is_cell(item),
         FactoryKind::Rtg => false,
         FactoryKind::AutoFeeder | FactoryKind::BioVat => crate::livestock::takes(kind, item),

@@ -219,6 +219,12 @@ pub fn handle_npc_interaction_input(app: &mut App, key: KeyCode) -> Result<bool,
                                             lithicrivers_core::quests::replace_arm(Some(entity)),
                                         );
                                     }
+                                    lithicrivers_core::dialogue::QuestType::BlackBox => {
+                                        lithicrivers_core::quests::start_black_box(
+                                            &mut app.core.game.res,
+                                            Some(entity),
+                                        );
+                                    }
                                 }
                             } else {
                                 app.core.game.res.log_yellow("Quest already active");
@@ -344,6 +350,15 @@ pub fn handle_npc_interaction_input(app: &mut App, key: KeyCode) -> Result<bool,
                                 // Complete the RepairBrokenAndroid quest
                                 app.core.game.res.complete_quest(
                                     lithicrivers_core::dialogue::QuestType::RepairBrokenAndroid,
+                                );
+                            }
+                            // The data shard was just handed over: finish "Black Box"
+                            if *next_node_id
+                                == lithicrivers_core::dialogue::DialogueNodeID::BlackBoxReveal
+                            {
+                                lithicrivers_core::quests::finish_black_box(
+                                    &mut app.core.game.world,
+                                    &mut app.core.game.res,
                                 );
                             }
                         }

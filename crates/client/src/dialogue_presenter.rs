@@ -405,7 +405,8 @@ impl DialoguePresenter {
                                                 has_diamond && has_electronics
                                             }
                                             // Completes on its own, not by handing items over
-                                            lithicrivers_core::dialogue::QuestType::ReplaceArm => false,
+                                            lithicrivers_core::dialogue::QuestType::ReplaceArm
+                                            | lithicrivers_core::dialogue::QuestType::BlackBox => false,
                                         }
                                     } else {
                                         false

@@ -1,0 +1,22 @@
+{
+  "blocks": {
+    " ": "air",
+    "#": "concrete",
+    ".": "existing_worldgen",
+    ">": "stairs",
+    "A": "android_spawn",
+    "D": "door",
+    "E": "enemy_spawn",
+    "R": "rubble",
+    "S": "scrap_rare",
+    "T": "treasure_rare",
+    "s": "scrap_common",
+    "t": "treasure_common"
+  },
+  "gen_biomes": "QUEST_ONLY",
+  "gen_chance": 0.0,
+  "y_layer_gen_range": [
+    0,
+    0
+  ]
+}

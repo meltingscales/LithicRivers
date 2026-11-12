@@ -1,0 +1,192 @@
+# A gutted SapienCorp-era office tower in the Ruined City: four floors of concrete joined
+# by stairs, with rubble where the floors above came down, scrap in the offices, and an
+# old security android still walking the top floor.
+# Compiled into shape_layers.txt by `just util-structure-build`; edit this, not that.
+layers = 4
+width = 12
+height = 12
+
+[legend]
+"#" = "concrete"
+" " = "air"
+"." = "existing_worldgen"
+"D" = "door"
+">" = "stairs"
+"R" = "rubble"
+"s" = "scrap_common"
+"S" = "scrap_rare"
+"t" = "treasure_common"
+"T" = "treasure_rare"
+"E" = "enemy_spawn"
+"A" = "android_spawn"
+
+# --- Layer 0: the lobby, doors onto the street ---
+[[shape]]
+kind = "room"
+layer = 0
+x = 0
+y = 0
+w = 12
+h = 12
+wall = "#"
+doors = [[5, 11], [6, 11]]
+
+[[shape]]
+kind = "fill"
+layer = 0
+x = 7
+y = 2
+w = 3
+h = 2
+block = "R"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 2
+y = 8
+block = "s"
+
+# --- Layer 1: offices, one wall blown out ---
+[[shape]]
+kind = "room"
+layer = 1
+x = 0
+y = 0
+w = 12
+h = 12
+wall = "#"
+
+[[shape]]
+kind = "fill"
+layer = 1
+x = 11
+y = 4
+w = 1
+h = 3
+block = "."
+
+[[shape]]
+kind = "fill"
+layer = 1
+x = 1
+y = 6
+w = 6
+h = 1
+block = "#"
+
+[[shape]]
+kind = "put"
+layer = 1
+x = 4
+y = 6
+block = " "
+
+[[shape]]
+kind = "put"
+layer = 1
+x = 2
+y = 9
+block = "t"
+
+[[shape]]
+kind = "put"
+layer = 1
+x = 5
+y = 3
+block = "s"
+
+[[shape]]
+kind = "put"
+layer = 1
+x = 8
+y = 9
+block = "E"
+
+# --- Layer 2: half the floor collapsed into rubble ---
+[[shape]]
+kind = "room"
+layer = 2
+x = 0
+y = 0
+w = 12
+h = 12
+wall = "#"
+
+[[shape]]
+kind = "fill"
+layer = 2
+x = 1
+y = 6
+w = 7
+h = 5
+block = "R"
+
+[[shape]]
+kind = "put"
+layer = 2
+x = 9
+y = 3
+block = "s"
+
+# --- Layer 3: the top floor, where the guard still walks ---
+[[shape]]
+kind = "room"
+layer = 3
+x = 0
+y = 0
+w = 12
+h = 12
+wall = "#"
+
+[[shape]]
+kind = "fill"
+layer = 3
+x = 4
+y = 0
+w = 4
+h = 1
+block = "."
+
+[[shape]]
+kind = "put"
+layer = 3
+x = 8
+y = 8
+block = "A"
+
+[[shape]]
+kind = "put"
+layer = 3
+x = 2
+y = 2
+block = "T"
+
+[[shape]]
+kind = "put"
+layer = 3
+x = 9
+y = 2
+block = "S"
+
+# --- Stairs, a different corner each flight ---
+[[shape]]
+kind = "stairs"
+x = 2
+y = 2
+from_layer = 0
+to_layer = 1
+
+[[shape]]
+kind = "stairs"
+x = 9
+y = 2
+from_layer = 1
+to_layer = 2
+
+[[shape]]
+kind = "stairs"
+x = 9
+y = 9
+from_layer = 2
+to_layer = 3
