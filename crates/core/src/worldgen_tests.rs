@@ -93,6 +93,34 @@ fn the_ammo_chain_deposits_sit_in_their_bands() {
 }
 
 #[test]
+fn sulfur_vents_sit_near_lava_in_the_deep_only() {
+    let mut w = world();
+    let mut vents = 0;
+    for z in [-2, -5, -8, -14, -20] {
+        for cy in -8..8 {
+            for cx in -8..8 {
+                for y in 0..CHUNK_SIZE {
+                    for x in 0..CHUNK_SIZE {
+                        let (wx, wy) = (cx * CHUNK_SIZE + x, cy * CHUNK_SIZE + y);
+                        if w.get_tile_cached(wx, wy, z) != TileKind::SulfurVent {
+                            continue;
+                        }
+                        assert_eq!(depth_band(z), DepthBand::Deep, "a vent at z={z}");
+                        let lava = (-4..=4).any(|dy| {
+                            (-4..=4)
+                                .any(|dx| w.get_tile_cached(wx + dx, wy + dy, z) == TileKind::Lava)
+                        });
+                        assert!(lava, "a vent away from lava at ({wx}, {wy}, {z})");
+                        vents += 1;
+                    }
+                }
+            }
+        }
+    }
+    assert!(vents > 0, "some vents in the deep");
+}
+
+#[test]
 fn shallow_caves_mostly_line_up_between_layers() {
     let w = world();
     let noises = UndergroundNoises::new(12345);
@@ -147,6 +175,8 @@ fn every_generated_solid_tile_can_be_mined() {
                     || tile == TileKind::Bedrock
                     // A fluid, bridged with blocks rather than mined
                     || tile == TileKind::Lava
+                    // A permanent feature that grows sulfur crystals
+                    || tile == TileKind::SulfurVent
                     || crate::crafting::mining_drop(tile).is_some(),
                 "{name} at z={z} is solid and can't be mined"
             );

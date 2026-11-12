@@ -208,6 +208,38 @@ pub fn world_spawn_nuclear_slime(
     ))
 }
 
+/// A sulfur slime's health: between a feral dog's 80 and a nuclear slime's 120.
+pub const SULFUR_SLIME_HEALTH: u32 = 100;
+
+/// Spawn a sulfur slime carrying its sulfur, rolled from the world seed and its spawn
+/// position.
+pub fn world_spawn_sulfur_slime(
+    ecs_world: &mut hecs::World,
+    x: i64,
+    y: i64,
+    z: i64,
+    game_world: &GameWorld,
+) -> hecs::Entity {
+    let mut rng = ChaCha20Rng::seed_from_u64(game_world.mix_coords(x, y, z) ^ 0x5017_5117);
+    let mut inventory = Inventory::default();
+    for (item, qty) in crate::crafting::roll_loot(crate::crafting::SULFUR_SLIME_LOOT, &mut rng) {
+        inventory.add(item, qty);
+    }
+    ecs_world.spawn((
+        Position { x, y, z },
+        GameEntity,
+        EntityKind::SulfurSlime,
+        crate::components::SulfurSlime,
+        crate::components::SlimeAI::default(),
+        Health::new(SULFUR_SLIME_HEALTH),
+        Glyph('s'),
+        SpriteRef::new("entities", "sulfur_slime"),
+        BlocksMovement,
+        Combat::default(),
+        inventory,
+    ))
+}
+
 /// A mining bot's health: more than a nuclear slime's.
 pub const MINING_BOT_HEALTH: u32 = 150;
 
@@ -288,6 +320,7 @@ pub enum EnemyKind {
     NuclearSlime,
     MiningBot,
     MilitaryAndroid,
+    SulfurSlime,
 }
 
 impl EnemyKind {
@@ -296,6 +329,7 @@ impl EnemyKind {
         EnemyKind::NuclearSlime,
         EnemyKind::MiningBot,
         EnemyKind::MilitaryAndroid,
+        EnemyKind::SulfurSlime,
     ];
 
     pub fn name(self) -> &'static str {
@@ -304,6 +338,7 @@ impl EnemyKind {
             EnemyKind::NuclearSlime => "nuclear_slime",
             EnemyKind::MiningBot => "mining_bot",
             EnemyKind::MilitaryAndroid => "military_android",
+            EnemyKind::SulfurSlime => "sulfur_slime",
         }
     }
 
@@ -314,6 +349,7 @@ impl EnemyKind {
             EnemyKind::NuclearSlime => "nuclear slimes",
             EnemyKind::MiningBot => "mining bots",
             EnemyKind::MilitaryAndroid => "military androids",
+            EnemyKind::SulfurSlime => "sulfur slimes",
         }
     }
 
@@ -368,6 +404,9 @@ pub fn spawn_enemy(
         EnemyKind::MiningBot => world_spawn_mining_bot(ecs_world, pos.x, pos.y, pos.z, game_world),
         EnemyKind::MilitaryAndroid => {
             world_spawn_military_android(ecs_world, pos.x, pos.y, pos.z, game_world)
+        }
+        EnemyKind::SulfurSlime => {
+            world_spawn_sulfur_slime(ecs_world, pos.x, pos.y, pos.z, game_world)
         }
     })
 }

@@ -354,6 +354,124 @@ impl RecipeHandler {
                 result: ItemKind::Rifle,
                 quantity: 1,
             },
+            // More firearms (add-more-firearms): ammo, then guns from early to late
+            Recipe {
+                name: "Scatter Shells",
+                ingredients: &[
+                    (ItemKind::Paper, 1),
+                    (ItemKind::Gunpowder, 1),
+                    (ItemKind::IronShot, 3),
+                ],
+                result: ItemKind::ScatterShell,
+                quantity: 2,
+            },
+            Recipe {
+                name: "Brass Slugs",
+                ingredients: &[
+                    (ItemKind::ShellCasing, 2),
+                    (ItemKind::Gunpowder, 2),
+                    (ItemKind::IronScrap, 1),
+                ],
+                result: ItemKind::BrassSlug,
+                quantity: 2,
+            },
+            Recipe {
+                name: "Isotope Canister",
+                ingredients: &[
+                    (ItemKind::NuclearWaste, 1),
+                    (ItemKind::BrassIngot, 1),
+                    (ItemKind::Gunpowder, 1),
+                ],
+                result: ItemKind::IsotopeCanister,
+                quantity: 1,
+            },
+            Recipe {
+                name: "Nail Driver",
+                ingredients: &[
+                    (ItemKind::IronScrap, 2),
+                    (ItemKind::WoodenPlank, 1),
+                    (ItemKind::String, 2),
+                ],
+                result: ItemKind::NailDriver,
+                quantity: 1,
+            },
+            Recipe {
+                name: "Scattergun",
+                ingredients: &[
+                    (ItemKind::PipeGun, 1),
+                    (ItemKind::IronScrap, 2),
+                    (ItemKind::Nail, 1),
+                ],
+                result: ItemKind::Scattergun,
+                quantity: 1,
+            },
+            Recipe {
+                name: "Burst Carbine",
+                ingredients: &[
+                    (ItemKind::BrassIngot, 3),
+                    (ItemKind::IronScrap, 2),
+                    (ItemKind::ScrapElectronics, 2),
+                    (ItemKind::PlasteelScrap, 1),
+                ],
+                result: ItemKind::BurstCarbine,
+                quantity: 1,
+            },
+            Recipe {
+                name: "Slug Thrower",
+                ingredients: &[
+                    (ItemKind::BrassIngot, 2),
+                    (ItemKind::IronScrap, 4),
+                    (ItemKind::PlasteelScrap, 1),
+                ],
+                result: ItemKind::SlugThrower,
+                quantity: 1,
+            },
+            Recipe {
+                name: "Arc Caster",
+                ingredients: &[
+                    (ItemKind::ScrapElectronics, 6),
+                    (ItemKind::PlasteelScrap, 3),
+                    (ItemKind::Riverglass, 1),
+                    (ItemKind::CrudePowerCell, 1),
+                ],
+                result: ItemKind::ArcCaster,
+                quantity: 1,
+            },
+            Recipe {
+                name: "Riverglass Lance",
+                ingredients: &[
+                    (ItemKind::Riverglass, 6),
+                    (ItemKind::PlasteelScrap, 4),
+                    (ItemKind::ScrapElectronics, 4),
+                    (ItemKind::StandardPowerCell, 1),
+                ],
+                result: ItemKind::RiverglassLance,
+                quantity: 1,
+            },
+            Recipe {
+                name: "Isotope Launcher",
+                ingredients: &[
+                    (ItemKind::BrassIngot, 4),
+                    (ItemKind::PlasteelScrap, 3),
+                    (ItemKind::NuclearWaste, 2),
+                    (ItemKind::ScrapElectronics, 2),
+                ],
+                result: ItemKind::IsotopeLauncher,
+                quantity: 1,
+            },
+            // Scrap workbench: an iron-topped bench that takes crafted things apart on grid
+            // power
+            Recipe {
+                name: "Scrap Workbench",
+                ingredients: &[
+                    (ItemKind::IronScrap, 4),
+                    (ItemKind::WoodenPlank, 4),
+                    (ItemKind::Nail, 4),
+                    (ItemKind::ScrapElectronics, 2),
+                ],
+                result: ItemKind::ScrapWorkbench,
+                quantity: 1,
+            },
             // Meat slurry: 2x meat, ground down to feed spawners
             Recipe {
                 name: "Meat Slurry",

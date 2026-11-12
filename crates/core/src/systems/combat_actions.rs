@@ -685,9 +685,7 @@ fn entity_death(world: &mut World, res: &mut Resources, entity: hecs::Entity, by
     let is_creature = is_bot
         || is_sheep
         || world.get::<&FeralDog>(entity).is_ok()
-        || world
-            .get::<&crate::components::NuclearSlime>(entity)
-            .is_ok();
+        || world.get::<&crate::components::SlimeAI>(entity).is_ok();
     let mut inventory_items = if let (true, Some(pos)) = (is_sheep, entity_pos) {
         // Sheep carry nothing while alive; what they drop is rolled where they fall
         crate::livestock::sheep_drops(world, res, entity, pos)
@@ -708,6 +706,7 @@ fn entity_death(world: &mut World, res: &mut Resources, entity: hecs::Entity, by
             EntityKind::NuclearSlime => Some(crate::spawn_utils::EnemyKind::NuclearSlime),
             EntityKind::MiningBot => Some(crate::spawn_utils::EnemyKind::MiningBot),
             EntityKind::MilitaryAndroid => Some(crate::spawn_utils::EnemyKind::MilitaryAndroid),
+            EntityKind::SulfurSlime => Some(crate::spawn_utils::EnemyKind::SulfurSlime),
             _ => None,
         });
     if let (Some(creature), Some(pos)) = (creature, entity_pos) {

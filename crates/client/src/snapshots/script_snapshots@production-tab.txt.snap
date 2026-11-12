@@ -38,23 +38,23 @@ input_file: scripts/snapshots/production-tab.txt
 === screen production-ten-minutes ===
                                             LithicRivers
 ┌ Per minute, last 10 minutes (r: range) ────────┐┌ Details ───────────────────────────────────────┐
-│Item                     Made   Used            ││Stick                                           │
-│Log                       1.2    3.8            ││Made - / min, used 0.1 / min                    │
-│Acorn                     0.7    0.7            ││                                                │
-│Stick                       -    0.1            ││Sources, last 10 minutes:                       │
-│Scrap Electronics           -    0.1            ││  burned as fuel: used 1                        │
-│Leather                   0.1      -            ││                                                │
-│Meat                      0.5    0.6            ││None made lately.                               │
-│Biochar                   2.3    0.7            ││                                                │
-│Wheat Seeds               0.6    0.9            ││                                                │
+│Item                     Made   Used            ││Acorn                                           │
+│Log                       1.2    3.8            ││Made 0.7 / min, used 0.7 / min                  │
+│Wooden Plank              0.5      -            ││                                                │
+│Acorn                     0.7    0.7            ││Sources, last 10 minutes:                       │
+│Stick                       -    0.1            ││  auto-harvester: made 7                        │
+│Nail                      1.5      -            ││  planting: used 7                              │
+│Scrap Electronics           -    0.1            ││                                                │
+│Leather                   0.1      -            ││Made each minute, oldest first (peak 4):        │
+│Meat                      0.5    0.6            ││   █                                            │
+│Iron Scrap                0.6      -            ││  ██                                            │
+│Biochar                   2.3    0.8            ││  ██                                            │
+│Wheat Seeds               0.6    0.9            ││  ██                                            │
 │Wheat                     0.8    0.8            ││                                                │
 │Carrot                      -    0.3            ││                                                │
 │Straw                     0.4      -            ││                                                │
 │Mash                        -    0.2            ││                                                │
 │Bottled Ethanol           1.0      -            ││                                                │
-│Perfect Biomech Embryo    0.1      -            ││                                                │
-│                                                ││                                                │
-│                                                ││                                                │
 └────────────────────────────────────────────────┘└────────────────────────────────────────────────┘
 ┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
 │[8001] Time passes...                                                                             │

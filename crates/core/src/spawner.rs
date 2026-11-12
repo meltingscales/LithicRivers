@@ -223,6 +223,9 @@ pub fn embryo(creature: EnemyKind, grade: EmbryoGrade) -> Option<ItemKind> {
         (EnemyKind::NuclearSlime, Poor) => ItemKind::NuclearSlimeEmbryoPoor,
         (EnemyKind::NuclearSlime, Flawed) => ItemKind::NuclearSlimeEmbryoFlawed,
         (EnemyKind::NuclearSlime, Flawless) => ItemKind::NuclearSlimeEmbryoFlawless,
+        (EnemyKind::SulfurSlime, Poor) => ItemKind::SulfurSlimeEmbryoPoor,
+        (EnemyKind::SulfurSlime, Flawed) => ItemKind::SulfurSlimeEmbryoFlawed,
+        (EnemyKind::SulfurSlime, Flawless) => ItemKind::SulfurSlimeEmbryoFlawless,
         // Machines have no embryos
         (EnemyKind::MiningBot | EnemyKind::MilitaryAndroid, _) => return None,
     })
@@ -731,6 +734,15 @@ mod tests {
         let inv = t.game.world.get::<&Inventory>(spawner).unwrap();
         let state = t.game.world.get::<&Spawner>(spawner).unwrap();
         assert_eq!(state.creature(Some(&inv)), None);
+    }
+
+    #[test]
+    fn a_sulfur_slime_embryo_grows_sulfur_slimes() {
+        let (mut t, spawner) = farm(20);
+        feed(&mut t, spawner, ItemKind::MeatSlurry, 1);
+        feed(&mut t, spawner, ItemKind::SulfurSlimeEmbryoPoor, 1);
+        pass(&mut t, SPAWN_INTERVAL_TICKS);
+        assert_eq!(count(&t, EntityKind::SulfurSlime), 1);
     }
 
     #[test]

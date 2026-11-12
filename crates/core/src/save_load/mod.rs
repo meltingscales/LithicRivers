@@ -89,6 +89,7 @@ saved_components! {
     "sheep" => Sheep,
     "feral_dog" => FeralDog,
     "nuclear_slime" => crate::components::NuclearSlime,
+    "sulfur_slime" => crate::components::SulfurSlime,
     "mining_bot" => crate::components::MiningBot,
     "military_android" => crate::components::MilitaryAndroid,
     "android_ai" => crate::components::AndroidAI,
@@ -124,6 +125,7 @@ saved_components! {
     "animal_counter" => crate::livestock::AnimalCounter,
     "livestock_processor" => crate::livestock::Processor,
     "bio_vat" => crate::livestock::BioVat,
+    "scrap_workbench" => crate::scrap::ScrapWorkbench,
     "belt_slot" => crate::factory::BeltSlot,
     "generator" => crate::power::Generator,
     "power_pole" => crate::power::PowerPole,
@@ -499,6 +501,7 @@ mod tests {
         world.npc(-4, 3, 0);
         world.mining_bot(-5, 5, 0);
         world.military_android(5, -5, 0);
+        world.sulfur_slime(-5, -5, 0);
         world.item(2, 2, 0, crate::components::ItemKind::Log, 1);
         let mut fight = world.build();
         let chest = crate::factory::place(

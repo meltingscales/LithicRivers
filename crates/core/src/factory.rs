@@ -151,6 +151,8 @@ pub enum FactoryKind {
     LivestockProcessor,
     /// Grows biomechanical embryos from meat, mash and scrap electronics on grid power
     BioVat,
+    /// Uncrafts items on grid power, recovering some of their ingredients
+    ScrapWorkbench,
     /// A consumer that does nothing but draw power, for grid tests
     #[cfg(any(test, feature = "test-support"))]
     TestConsumer,
@@ -164,6 +166,7 @@ impl FactoryKind {
     pub fn from_item(item: ItemKind) -> Option<Self> {
         match item {
             ItemKind::Chest => Some(FactoryKind::Chest),
+            ItemKind::ScrapWorkbench => Some(FactoryKind::ScrapWorkbench),
             ItemKind::WoodenConveyor => Some(FactoryKind::Belt),
             ItemKind::BurnerGenerator => Some(FactoryKind::BurnerGenerator),
             ItemKind::PowerPole => Some(FactoryKind::PowerPole),
@@ -229,6 +232,7 @@ impl FactoryKind {
             FactoryKind::AnimalCounter => Some(ItemKind::AnimalCounter),
             FactoryKind::LivestockProcessor => Some(ItemKind::LivestockProcessor),
             FactoryKind::BioVat => Some(ItemKind::BioVat),
+            FactoryKind::ScrapWorkbench => Some(ItemKind::ScrapWorkbench),
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestConsumer => None,
             #[cfg(any(test, feature = "test-support"))]
@@ -268,6 +272,7 @@ impl FactoryKind {
             FactoryKind::AnimalCounter => "animal counter",
             FactoryKind::LivestockProcessor => "livestock processor",
             FactoryKind::BioVat => "bio-vat",
+            FactoryKind::ScrapWorkbench => "scrap workbench",
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestConsumer => "test consumer",
             #[cfg(any(test, feature = "test-support"))]
@@ -285,6 +290,7 @@ impl FactoryKind {
             | FactoryKind::ElectricFurnace
             | FactoryKind::Fermenter
             | FactoryKind::LivestockProcessor
+            | FactoryKind::ScrapWorkbench
             | FactoryKind::Extractor
             | FactoryKind::FilterExtractor
             | FactoryKind::BeltRouter => true,
@@ -372,6 +378,9 @@ impl FactoryKind {
                 SpriteRef::new("factory", &format!("livestock_processor_{}", facing.name()))
             }
             FactoryKind::BioVat => SpriteRef::new("factory", "bio_vat"),
+            FactoryKind::ScrapWorkbench => {
+                SpriteRef::new("factory", &format!("scrap_workbench_{}", facing.name()))
+            }
             FactoryKind::Fence => SpriteRef::new("factory", "fence"),
             FactoryKind::Gate => SpriteRef::new("factory", "gate"),
             FactoryKind::Spawner => SpriteRef::new("factory", "spawner"),
@@ -577,6 +586,16 @@ pub fn place(
             ));
             builder.add(Inventory {
                 max_slots: crate::livestock::PROCESSOR_SLOTS,
+                ..Default::default()
+            });
+        }
+        FactoryKind::ScrapWorkbench => {
+            builder.add(crate::scrap::ScrapWorkbench::default());
+            builder.add(crate::power::PowerConsumer::idle(
+                crate::scrap::SCRAP_WORKBENCH_W,
+            ));
+            builder.add(Inventory {
+                max_slots: crate::scrap::OUTPUT_SLOTS,
                 ..Default::default()
             });
         }
@@ -852,10 +871,12 @@ pub fn run_due_steps(world: &mut World, res: &mut Resources) {
         crate::teleporter::update_demand(world);
         crate::power_cells::update_charger_demand(world);
         crate::livestock::update_demand(world);
+        crate::scrap::update_demand(world);
         crate::power::step_power(world, res);
         crate::factory_stats::sample_power(res, step_tick);
         crate::machines::step_machines(world, res);
         crate::livestock::step(world, res, step_tick);
+        crate::scrap::step(world, res);
         crate::furnace::step_furnaces(world, res);
         crate::teleporter::step_charging(world);
         crate::power_cells::charge_slot_cells(world);
@@ -914,6 +935,7 @@ pub fn takes(kind: FactoryKind, item: ItemKind) -> bool {
         FactoryKind::Battery | FactoryKind::ItemCharger => crate::power_cells::is_cell(item),
         FactoryKind::Rtg => false,
         FactoryKind::AutoFeeder | FactoryKind::BioVat => crate::livestock::takes(kind, item),
+        FactoryKind::ScrapWorkbench => crate::scrap::takes(item),
         FactoryKind::AnimalCounter | FactoryKind::LivestockProcessor => false,
         _ => true,
     }
@@ -930,6 +952,7 @@ pub fn takes_label(kind: FactoryKind) -> Option<&'static str> {
         FactoryKind::Fermenter => Some("fermentables"),
         FactoryKind::AutoFeeder => Some("feed"),
         FactoryKind::BioVat => Some("vat ingredients"),
+        FactoryKind::ScrapWorkbench => Some("craftable items"),
         FactoryKind::LivestockProcessor => Some("nothing"),
         FactoryKind::CrudeVat => Some("crude body parts"),
         FactoryKind::StandardVat => Some("crude/standard body parts"),
@@ -1001,6 +1024,7 @@ pub fn accepts_from(
         FactoryKind::AutoFeeder | FactoryKind::BioVat => {
             return crate::livestock::accepts(world, target, block.kind, item)
         }
+        FactoryKind::ScrapWorkbench => return crate::scrap::accepts(world, target, item),
         FactoryKind::AnimalCounter | FactoryKind::LivestockProcessor => return false,
         _ => {}
     }
@@ -1034,6 +1058,10 @@ pub fn insert_from(
     }
     if let Ok(mut router) = world.get::<&mut crate::logistics::Router>(target) {
         router.item = Some(item);
+        return true;
+    }
+    if let Ok(mut bench) = world.get::<&mut crate::scrap::ScrapWorkbench>(target) {
+        crate::scrap::insert(&mut bench, item);
         return true;
     }
     if let Ok(mut belt) = world.get::<&mut BeltSlot>(target) {

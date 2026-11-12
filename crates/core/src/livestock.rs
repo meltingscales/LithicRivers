@@ -216,6 +216,8 @@ fn kind_name(kind: EntityKind, n: u32) -> &'static str {
         (EntityKind::NuclearSlime, false) => "nuclear slimes",
         (EntityKind::MiningBot, true) => "mining bot",
         (EntityKind::MiningBot, false) => "mining bots",
+        (EntityKind::SulfurSlime, true) => "sulfur slime",
+        (EntityKind::SulfurSlime, false) => "sulfur slimes",
         _ => "other",
     }
 }
@@ -225,7 +227,11 @@ fn kind_name(kind: EntityKind, n: u32) -> &'static str {
 pub fn is_animal(kind: EntityKind) -> bool {
     matches!(
         kind,
-        EntityKind::Sheep | EntityKind::FeralDog | EntityKind::NuclearSlime | EntityKind::MiningBot
+        EntityKind::Sheep
+            | EntityKind::FeralDog
+            | EntityKind::NuclearSlime
+            | EntityKind::MiningBot
+            | EntityKind::SulfurSlime
     )
 }
 

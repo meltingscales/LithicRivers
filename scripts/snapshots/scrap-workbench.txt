@@ -1,0 +1,21 @@
+# The Factory showcase's scrap line: a chest of pipe guns fed down a belt into a powered
+# scrap workbench, which scraps each into some of its iron scrap, planks and nails and
+# pushes them into the chest in front
+seed 12345
+size 100x30
+world factory-showcase
+key ui.MENU_PREV
+key action.PASS_TIME 6
+# South of the workbench; the belt beside it offers a choice, so pick the tile north
+cheat tp 132 -5 0
+key action.INTERACT
+key movement.MOVE_NORTH
+expect-text "Scrap Workbench"
+screen scrap-workbench-window
+key ui.CLOSE_HELP_MENU
+# The chest in front holds what it recovered
+cheat tp 133 -5 0
+key action.INTERACT
+key movement.MOVE_NORTH
+expect-text "Iron Scrap"
+screen recovered-chest

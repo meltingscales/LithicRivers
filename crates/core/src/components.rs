@@ -45,6 +45,11 @@ pub struct Wreck;
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct NuclearSlime;
 
+/// Marker for sulfur slimes: yellow slimes of the deep's lava rivers that always carry
+/// sulfur. They move like nuclear slimes (`SlimeAI`)
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct SulfurSlime;
+
 /// Marker for mining bots: SapienCorp diggers in the deep that drill toward the player
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct MiningBot;
@@ -303,6 +308,20 @@ pub enum ItemKind {
     PaperCartridge,
     PipeGun,
     Rifle,
+    SulfurSlimeEmbryoPoor,
+    SulfurSlimeEmbryoFlawed,
+    SulfurSlimeEmbryoFlawless,
+    NailDriver,
+    Scattergun,
+    BurstCarbine,
+    SlugThrower,
+    ArcCaster,
+    RiverglassLance,
+    IsotopeLauncher,
+    ScatterShell,
+    BrassSlug,
+    IsotopeCanister,
+    ScrapWorkbench,
 }
 
 pub fn itemkind_name(kind: ItemKind) -> &'static str {
@@ -406,6 +425,20 @@ pub fn itemkind_name(kind: ItemKind) -> &'static str {
         ItemKind::PaperCartridge => "Paper Cartridge",
         ItemKind::PipeGun => "Pipe Gun",
         ItemKind::Rifle => "Rifle",
+        ItemKind::SulfurSlimeEmbryoPoor => "Sulfur Slime Embryo (Poor)",
+        ItemKind::SulfurSlimeEmbryoFlawed => "Sulfur Slime Embryo (Flawed)",
+        ItemKind::SulfurSlimeEmbryoFlawless => "Sulfur Slime Embryo (Flawless)",
+        ItemKind::NailDriver => "Nail Driver",
+        ItemKind::Scattergun => "Scattergun",
+        ItemKind::BurstCarbine => "Burst Carbine",
+        ItemKind::SlugThrower => "Slug Thrower",
+        ItemKind::ArcCaster => "Arc Caster",
+        ItemKind::RiverglassLance => "Riverglass Lance",
+        ItemKind::IsotopeLauncher => "Isotope Launcher",
+        ItemKind::ScatterShell => "Scatter Shell",
+        ItemKind::BrassSlug => "Brass Slug",
+        ItemKind::IsotopeCanister => "Isotope Canister",
+        ItemKind::ScrapWorkbench => "Scrap Workbench",
     }
 }
 
@@ -510,6 +543,20 @@ pub fn itemkind_sprite_name(kind: ItemKind) -> &'static str {
         ItemKind::PaperCartridge => "paper_cartridge",
         ItemKind::PipeGun => "pipe_gun",
         ItemKind::Rifle => "rifle",
+        ItemKind::SulfurSlimeEmbryoPoor => "sulfur_slime_embryo_poor",
+        ItemKind::SulfurSlimeEmbryoFlawed => "sulfur_slime_embryo_flawed",
+        ItemKind::SulfurSlimeEmbryoFlawless => "sulfur_slime_embryo_flawless",
+        ItemKind::NailDriver => "nail_driver",
+        ItemKind::Scattergun => "scattergun",
+        ItemKind::BurstCarbine => "burst_carbine",
+        ItemKind::SlugThrower => "slug_thrower",
+        ItemKind::ArcCaster => "arc_caster",
+        ItemKind::RiverglassLance => "riverglass_lance",
+        ItemKind::IsotopeLauncher => "isotope_launcher",
+        ItemKind::ScatterShell => "scatter_shell",
+        ItemKind::BrassSlug => "brass_slug",
+        ItemKind::IsotopeCanister => "isotope_canister",
+        ItemKind::ScrapWorkbench => "scrap_workbench",
     }
 }
 
@@ -614,6 +661,20 @@ pub fn parse_itemkind_from_sprite_name(sprite_name: &str) -> Option<ItemKind> {
         "paper_cartridge" => Some(ItemKind::PaperCartridge),
         "pipe_gun" => Some(ItemKind::PipeGun),
         "rifle" => Some(ItemKind::Rifle),
+        "sulfur_slime_embryo_poor" => Some(ItemKind::SulfurSlimeEmbryoPoor),
+        "sulfur_slime_embryo_flawed" => Some(ItemKind::SulfurSlimeEmbryoFlawed),
+        "sulfur_slime_embryo_flawless" => Some(ItemKind::SulfurSlimeEmbryoFlawless),
+        "nail_driver" => Some(ItemKind::NailDriver),
+        "scattergun" => Some(ItemKind::Scattergun),
+        "burst_carbine" => Some(ItemKind::BurstCarbine),
+        "slug_thrower" => Some(ItemKind::SlugThrower),
+        "arc_caster" => Some(ItemKind::ArcCaster),
+        "riverglass_lance" => Some(ItemKind::RiverglassLance),
+        "isotope_launcher" => Some(ItemKind::IsotopeLauncher),
+        "scatter_shell" => Some(ItemKind::ScatterShell),
+        "brass_slug" => Some(ItemKind::BrassSlug),
+        "isotope_canister" => Some(ItemKind::IsotopeCanister),
+        "scrap_workbench" => Some(ItemKind::ScrapWorkbench),
         _ => None,
     }
 }
@@ -672,6 +733,7 @@ pub enum EntityKind {
     NuclearSlime,
     MiningBot,
     MilitaryAndroid,
+    SulfurSlime,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

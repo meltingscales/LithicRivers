@@ -109,6 +109,8 @@ define_tiles! {
     Nitre, "nitre", "nitre", false,
     Sulfur, "sulfur", "sulfur", false,
     BrassScrap, "brass_scrap", "brass scrap", false,
+    SulfurVent, "sulfur_vent", "sulfur vent", false,
+    SulfurCrystal, "sulfur_crystal", "sulfur crystal", false,
 }
 
 impl TileKind {

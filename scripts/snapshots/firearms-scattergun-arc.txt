@@ -1,0 +1,39 @@
+# A scattergun blast at a dog beside the robot (five pellets from one shell), then the
+# arc caster in the same arm with only an empty power cell: its odds line shows no shots
+# and Shoot isn't offered
+seed 12345
+size 100x30
+skip-splash
+cheat tp 0 0 0
+cheat giveitem scattergun 1
+cheat giveitem scatter_shell 3
+cheat giveitem arc_caster 1
+cheat giveitem crude_power_cell 1
+# The Body tab, right arm: Wield takes the best gun (the arc caster); a second Wield swaps
+# in the scattergun
+key ui.MENU_NEXT 3
+key ui.MENU_DOWN 4
+key body.WIELD
+key body.WIELD
+expect-text "[Scattergun]"
+key ui.MENU_PREV 4
+cheat spawn_enemy feral_dog ~1 ~ ~
+key movement.WAIT
+expect-text "Scattergun 75% x5 (3)"
+key ui.MENU_DOWN
+key ui.MENU_ACTIVATE
+wait 13000
+expect-text "pellets hit"
+screen scattergun
+# Finish the dog (Debug Instant Kill, four below Shoot), then wield the arc caster
+key ui.MENU_DOWN 4
+key ui.MENU_ACTIVATE
+wait 6000
+key ui.MENU_NEXT 4
+key body.WIELD
+expect-text "[Arc Caster]"
+key ui.MENU_PREV 4
+cheat spawn_enemy feral_dog ~3 ~ ~
+key movement.WAIT 3
+expect-text "Arc Caster 85% (0 shots)"
+screen arc-caster-flat-cell

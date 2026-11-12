@@ -65,6 +65,8 @@ pub enum PaletteKey {
     Nitre,
     Sulfur,
     BrassScrap,
+    SulfurVent,
+    SulfurCrystal,
     WheatSeedling,
     WheatGrowing,
     WheatRipe,

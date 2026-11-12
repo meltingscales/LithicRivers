@@ -356,6 +356,37 @@ fn render_corpse_loot_modal(
                 ),
             )
         }
+        Some(FactoryKind::ScrapWorkbench) => {
+            let world = &app.core.game.world;
+            let bench = world
+                .get::<&lithicrivers_core::scrap::ScrapWorkbench>(corpse_entity)
+                .ok()
+                .map(|b| *b)
+                .unwrap_or_default();
+            let consumer = world
+                .get::<&lithicrivers_core::power::PowerConsumer>(corpse_entity)
+                .ok()
+                .map(|c| *c);
+            let powered = app.core.game.res.power.network_of(corpse_entity).is_some();
+            let status = match consumer {
+                Some(c) if c.active && powered => format!(
+                    "scrapping {}%, power {}%",
+                    lithicrivers_core::scrap::progress_percent(world, corpse_entity),
+                    c.satisfaction_permille / 10
+                ),
+                Some(c) if c.active => "no power pole in reach".to_string(),
+                _ if bench.input.is_some() => "waiting for a full batch or output room".to_string(),
+                _ => "idle".to_string(),
+            };
+            (
+                format!(" Scrap Workbench - {status} "),
+                format!(
+                    " Recovered ({}/{}) ",
+                    corpse_inv.slots.len(),
+                    corpse_inv.max_slots
+                ),
+            )
+        }
         Some(FactoryKind::Battery) => (
             format!(
                 " Battery - {} ",
@@ -411,12 +442,15 @@ fn render_corpse_loot_modal(
     // Clear the background
     f.render_widget(Clear, area);
 
-    // Main modal block
-    let block = Block::default()
+    // Main modal block; a scrap workbench names its input and what it gives on the bottom
+    let mut block = Block::default()
         .borders(Borders::ALL)
         .title(Line::from(title))
         .title_alignment(Alignment::Center)
         .style(Style::default());
+    if let Some(footer) = scrap_footer(app, corpse_entity) {
+        block = block.title_bottom(Line::from(footer).centered());
+    }
 
     let inner = block.inner(area);
     f.render_widget(block, area);
@@ -543,6 +577,27 @@ fn render_corpse_loot_modal(
         };
         f.render_widget(controls, controls_area);
     }
+}
+
+/// " Input: Pipe Gun x5 → up to 3 Iron Scrap, 2 Wooden Plank, 4 Nail " for a scrap
+/// workbench with something in it.
+fn scrap_footer(app: &App, entity: hecs::Entity) -> Option<String> {
+    let bench = app
+        .core
+        .game
+        .world
+        .get::<&lithicrivers_core::scrap::ScrapWorkbench>(entity)
+        .ok()?;
+    let input = match bench.input {
+        Some(s) => s,
+        None => return Some(" Input: empty ".to_string()),
+    };
+    Some(format!(
+        " Input: {} x{} → {} ",
+        lithicrivers_core::components::itemkind_name(input.kind),
+        input.qty,
+        lithicrivers_core::scrap::describe(input.kind).unwrap_or_default()
+    ))
 }
 
 /// The inside of a bordered box.
