@@ -19,5 +19,5 @@
 ## 3. Client and checks
 
 - [x] 3.1 Equipping in the Body tab, the Shoot move listing each gun's hit chance and ammo in the combat panel, and sprites for every new item and deposit; verify Body tab and combat snapshots and the sprite gallery
-- [ ] 3.2 Verify `just code-clippy`, `cargo test --workspace` and PR checks pass
+- [x] 3.2 Verify `just code-clippy`, `cargo test --workspace` and PR checks pass
 - [ ] 3.3 User check that making ammo feels worth it and shooting feels good
