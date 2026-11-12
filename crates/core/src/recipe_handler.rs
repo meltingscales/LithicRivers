@@ -459,6 +459,19 @@ impl RecipeHandler {
                 result: ItemKind::IsotopeLauncher,
                 quantity: 1,
             },
+            // Scrap workbench: an iron-topped bench that takes crafted things apart on grid
+            // power
+            Recipe {
+                name: "Scrap Workbench",
+                ingredients: &[
+                    (ItemKind::IronScrap, 4),
+                    (ItemKind::WoodenPlank, 4),
+                    (ItemKind::Nail, 4),
+                    (ItemKind::ScrapElectronics, 2),
+                ],
+                result: ItemKind::ScrapWorkbench,
+                quantity: 1,
+            },
             // Meat slurry: 2x meat, ground down to feed spawners
             Recipe {
                 name: "Meat Slurry",

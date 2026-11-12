@@ -1518,6 +1518,82 @@ C
    └┐  ┌┘   
     ▀██▀    
             
+=== factory/scrap_workbench_east  #B07A4A  An iron-topped bench of clamps and cutting wheels that takes crafted things apart. About half survives.
+-- 1x
+π
+-- 2x
+π>
+π>
+-- 3x
+╤╤>
+█▓>
+╨╨>
+-- art 0
+            
+ ▄▄▄▄▄▄▄▄   
+ █○═╪═○█ ═► 
+ █▓▒▓▒▓█ ═► 
+ ╨▀▀▀▀▀╨    
+ ║     ║    
+            
+            
+=== factory/scrap_workbench_north  #B07A4A  An iron-topped bench of clamps and cutting wheels that takes crafted things apart. About half survives.
+-- 1x
+π
+-- 2x
+^^
+ππ
+-- 3x
+^^^
+╤█╤
+╨▓╨
+-- art 0
+   ▲  ▲     
+   ║  ║     
+ ▄▄▄▄▄▄▄▄   
+ █○═╪═○█    
+ █▓▒▓▒▓█    
+ ╨▀▀▀▀▀╨    
+ ║     ║    
+            
+=== factory/scrap_workbench_south  #B07A4A  An iron-topped bench of clamps and cutting wheels that takes crafted things apart. About half survives.
+-- 1x
+π
+-- 2x
+ππ
+vv
+-- 3x
+╤█╤
+╨▓╨
+vvv
+-- art 0
+            
+ ▄▄▄▄▄▄▄▄   
+ █○═╪═○█    
+ █▓▒▓▒▓█    
+ ╨▀▀▀▀▀╨    
+ ║  ║  ║    
+    ▼       
+            
+=== factory/scrap_workbench_west  #B07A4A  An iron-topped bench of clamps and cutting wheels that takes crafted things apart. About half survives.
+-- 1x
+π
+-- 2x
+<π
+<π
+-- 3x
+<╤╤
+<█▓
+<╨╨
+-- art 0
+            
+   ▄▄▄▄▄▄▄▄ 
+◄═ █○═╪═○█  
+◄═ █▓▒▓▒▓█  
+   ╨▀▀▀▀▀╨  
+   ║     ║  
+            
+            
 === factory/spawner  #B4405A  A SapienCorp growth tank, still warm; something wet turns over inside the glass
 -- 1x
 Ø
@@ -3316,6 +3392,25 @@ eee
    │░**░│   
    └┐  ┌┘   
     ▀██▀    
+            
+=== items/scrap_workbench  #845B37  A crated scrap workbench. Someone has scratched tally marks into its top.
+-- 1x
+π
+-- 2x
+ππ
+ππ
+-- 3x
+╤╤╤
+█▓█
+╨╨╨
+-- art 0
+            
+ ▄▄▄▄▄▄▄▄   
+ █○═╪═○█    
+ █▓▒▓▒▓█    
+ ╨▀▀▀▀▀╨    
+ ║     ║    
+            
             
 === items/shell_casing  #B8923A  An empty brass case, ready to be packed again.
 -- 1x

@@ -251,7 +251,7 @@ fn take_one(world: &mut World, machine: Entity, item: ItemKind) {
 }
 
 /// Push the first output item into the factory block in front, if it accepts it.
-fn push_output(
+pub(crate) fn push_output(
     world: &mut World,
     res: &Resources,
     machine: Entity,

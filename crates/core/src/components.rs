@@ -321,6 +321,7 @@ pub enum ItemKind {
     ScatterShell,
     BrassSlug,
     IsotopeCanister,
+    ScrapWorkbench,
 }
 
 pub fn itemkind_name(kind: ItemKind) -> &'static str {
@@ -437,6 +438,7 @@ pub fn itemkind_name(kind: ItemKind) -> &'static str {
         ItemKind::ScatterShell => "Scatter Shell",
         ItemKind::BrassSlug => "Brass Slug",
         ItemKind::IsotopeCanister => "Isotope Canister",
+        ItemKind::ScrapWorkbench => "Scrap Workbench",
     }
 }
 
@@ -554,6 +556,7 @@ pub fn itemkind_sprite_name(kind: ItemKind) -> &'static str {
         ItemKind::ScatterShell => "scatter_shell",
         ItemKind::BrassSlug => "brass_slug",
         ItemKind::IsotopeCanister => "isotope_canister",
+        ItemKind::ScrapWorkbench => "scrap_workbench",
     }
 }
 
@@ -671,6 +674,7 @@ pub fn parse_itemkind_from_sprite_name(sprite_name: &str) -> Option<ItemKind> {
         "scatter_shell" => Some(ItemKind::ScatterShell),
         "brass_slug" => Some(ItemKind::BrassSlug),
         "isotope_canister" => Some(ItemKind::IsotopeCanister),
+        "scrap_workbench" => Some(ItemKind::ScrapWorkbench),
         _ => None,
     }
 }
