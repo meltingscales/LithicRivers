@@ -22,7 +22,7 @@
 ## 5. Checks
 
 - [x] 5.1 Update `docs/QUESTS.md` with quest 3, and add `datacenter` to the `tp_quest` line in `AGENTS.md`; remove the nuked-city row from `docs/SPEC-GAPS.md`; verify by reading the diff
-- [ ] 5.2 Verify `just code-clippy`, `cargo test --workspace`, `just util-bench` and PR checks pass
+- [x] 5.2 Verify `just code-clippy`, `cargo test --workspace`, `just util-bench` and PR checks pass
 - [ ] 5.3 User check: the city feels like the old world's ruins, the datacenter is findable and the power step is clear, and the reveal lands
 
 ## Workflow follow-up
