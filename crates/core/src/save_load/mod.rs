@@ -125,6 +125,7 @@ saved_components! {
     "animal_counter" => crate::livestock::AnimalCounter,
     "livestock_processor" => crate::livestock::Processor,
     "bio_vat" => crate::livestock::BioVat,
+    "scrap_workbench" => crate::scrap::ScrapWorkbench,
     "belt_slot" => crate::factory::BeltSlot,
     "generator" => crate::power::Generator,
     "power_pole" => crate::power::PowerPole,

@@ -37,6 +37,7 @@ pub mod quests;
 pub mod recipe_handler;
 pub mod resources;
 pub mod save_load;
+pub mod scrap;
 mod serde_pairs;
 pub mod showcase;
 pub mod sound;

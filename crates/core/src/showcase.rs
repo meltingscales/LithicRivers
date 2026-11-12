@@ -110,6 +110,12 @@ pub const EXAMPLES: &[Example] = &[
         has_input: true,
         build: sheep_farm,
     },
+    Example {
+        name: "Scrap workbench: pipe guns from a chest scrapped back into parts",
+        size: (6, 2),
+        has_input: true,
+        build: scrap_line,
+    },
 ];
 
 /// The top-left corner of the first example; the rest follow eastward.
@@ -284,6 +290,32 @@ fn belt_fed_furnace(game: &mut Game, o: Position) {
 ///   . . G . + . . . . . .      G generator, + pole
 ///   C > = = = E = = = = C      E electric furnace facing east
 /// ```
+/// A chest of pipe guns fed down a belt into a powered scrap workbench, whose recovered
+/// iron scrap, planks and nails fill the chest in front.
+///
+/// ```text
+///   . . G . + .      G generator, + pole
+///   c > = = W c      c chest, > extractor, = belt, W workbench
+/// ```
+fn scrap_line(game: &mut Game, o: Position) {
+    let generator = place(
+        game,
+        FactoryKind::BurnerGenerator,
+        at(o, 2, 0),
+        Facing::North,
+    );
+    fill(game, generator, &[(ItemKind::Biochar, 8)]);
+    place(game, FactoryKind::PowerPole, at(o, 4, 0), Facing::North);
+    let source = place(game, FactoryKind::Chest, at(o, 0, 1), Facing::North);
+    fill(game, source, &[(ItemKind::PipeGun, 6)]);
+    place(game, FactoryKind::Extractor, at(o, 1, 1), Facing::East);
+    for dx in [2, 3] {
+        place(game, FactoryKind::Belt, at(o, dx, 1), Facing::East);
+    }
+    place(game, FactoryKind::ScrapWorkbench, at(o, 4, 1), Facing::East);
+    place(game, FactoryKind::Chest, at(o, 5, 1), Facing::North);
+}
+
 fn electric_furnace_line(game: &mut Game, o: Position) {
     let generator = place(
         game,
