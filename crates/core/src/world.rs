@@ -16,7 +16,32 @@ pub enum BiomeBand {
     Forest,
     Rocky,
     LithicRivers, // underground lava/rare ore biome
+    /// The surface ruins of the old world: ash, rubble, cracked roads and skyscrapers
+    RuinedCity,
 }
+
+/// The city noise's scale: cities are large.
+const CITY_SCALE: f64 = 0.0035;
+/// City noise above this is Ruined City (higher is rarer).
+pub const CITY_THRESHOLD: f64 = 0.55;
+/// Within this many tiles of the datacenter the ground is always city.
+pub const CITY_FORCE_RADIUS: i64 = 96;
+#[cfg(any(test, feature = "test-support"))]
+thread_local! {
+    static BIOME_NOISES_BUILT: std::cell::Cell<u64> = const { std::cell::Cell::new(0) };
+}
+
+/// How many times this thread built a world's biome and city noise, so tests can check a
+/// world builds them once rather than once per tile.
+#[cfg(any(test, feature = "test-support"))]
+pub fn biome_noises_built() -> u64 {
+    BIOME_NOISES_BUILT.with(|n| n.get())
+}
+
+/// The chance a city surface chunk holds a skyscraper.
+const SKYSCRAPER_CHANCE: f64 = 0.3;
+/// Cracked roads run every this many tiles across a city, two tiles wide.
+const ROAD_SPACING: i64 = 16;
 
 impl GameWorld {
     #[inline]
@@ -25,11 +50,16 @@ impl GameWorld {
         if zf <= -5.0 {
             return BiomeBand::LithicRivers;
         }
+        if self.is_city(wx, wy) {
+            return BiomeBand::RuinedCity;
+        }
         // Smooth, large-scale 3D noise to decide surface biome; depends on X, Y and Z.
         let scale = 0.0015; // large features
-        let noise = Perlin::new((self.seed as u32) ^ 0xB10E);
-        let v = noise.get([wx * scale, wy * scale, zf * scale]); // [-1,1]
-                                                                 // Map v into three overlapping ranges; choose the closest center
+        let v = self
+            .biome_noises()
+            .0
+            .get([wx * scale, wy * scale, zf * scale]); // [-1,1]
+                                                        // Map v into three overlapping ranges; choose the closest center
         let centers = [-0.75f64, 0.0, 0.75];
         let labels = [BiomeBand::Plains, BiomeBand::Forest, BiomeBand::Rocky];
         let mut best = 0usize;
@@ -42,6 +72,30 @@ impl GameWorld {
             }
         }
         labels[best]
+    }
+
+    /// Whether a surface position is Ruined City: its own noise, layered over the other
+    /// biomes so they keep their borders, and always near the datacenter.
+    pub fn is_city(&self, wx: f64, wy: f64) -> bool {
+        let (dx, dy, _) = crate::game::DATACENTER_POS;
+        let near = (wx as i64 - dx).abs().max((wy as i64 - dy).abs()) <= CITY_FORCE_RADIUS;
+        near || self
+            .biome_noises()
+            .1
+            .get([wx * CITY_SCALE, wy * CITY_SCALE, 0.5])
+            > CITY_THRESHOLD
+    }
+
+    /// The biome and city noise fields for this world's seed.
+    fn biome_noises(&self) -> &(Perlin, Perlin) {
+        self.biome_noises.get_or_init(|| {
+            #[cfg(any(test, feature = "test-support"))]
+            BIOME_NOISES_BUILT.with(|n| n.set(n.get() + 1));
+            (
+                Perlin::new((self.seed as u32) ^ 0xB10E),
+                Perlin::new((self.seed as u32) ^ 0xC17E),
+            )
+        })
     }
 }
 
@@ -295,6 +349,14 @@ impl GameWorld {
     }
 }
 
+/// Ground only the Ruined City generates.
+fn is_city_tile(tile: TileKind) -> bool {
+    matches!(
+        tile,
+        TileKind::Ash | TileKind::CrackedRoad | TileKind::Rubble
+    )
+}
+
 impl Chunk {
     pub fn new_filled(fill: TileKind) -> Self {
         Self {
@@ -330,10 +392,10 @@ pub struct GameWorld {
     chunks: HashMap<(i64, i64, i64), Chunk>,
     // Guard against re-entrant structure placement triggering recursive generation
     structure_placement_depth: u32,
-    /// Quest-treasure tiles placed by structures, waiting for the game to turn them into
-    /// quest chests (`Game::place_quest_chests`)
+    /// Quest-treasure tiles placed by structures, with the item each chest holds, waiting
+    /// for the game to turn them into quest chests (`Game::place_quest_chests`)
     #[serde(skip)]
-    pub quest_treasures: Vec<(i64, i64, i64)>,
+    pub quest_treasures: Vec<(i64, i64, i64, crate::components::ItemKind)>,
     /// Wild-spawner tiles placed by structures, waiting for the game to turn them into
     /// spawner blocks (`Game::place_wild_spawners`)
     #[serde(skip)]
@@ -346,6 +408,10 @@ pub struct GameWorld {
     /// turn them into factory blocks (`Game::place_transit_stations`)
     #[serde(skip)]
     pub structure_blocks: Vec<(i64, i64, i64, crate::tiles::TileKind)>,
+    /// The biome and city noise fields, built once from the seed on first use (building a
+    /// Perlin table per tile was most of a chunk's surface generation)
+    #[serde(skip)]
+    biome_noises: std::sync::OnceLock<(Perlin, Perlin)>,
 }
 
 impl GameWorld {
@@ -358,6 +424,7 @@ impl GameWorld {
             structure_placement_depth: 0,
             quest_treasures: Vec::new(),
             wild_spawners: Vec::new(),
+            biome_noises: std::sync::OnceLock::new(),
             transit_stations: Vec::new(),
             structure_blocks: Vec::new(),
         }
@@ -419,7 +486,10 @@ impl GameWorld {
             if rng.gen::<f64>() < *p {
                 let x = rng.gen_range(0..CHUNK_SIZE);
                 let y = rng.gen_range(0..CHUNK_SIZE);
-                chunk.set(x, y, *resource);
+                // The city's ground is its own
+                if !is_city_tile(chunk.get(x, y)) {
+                    chunk.set(x, y, *resource);
+                }
             }
         }
 
@@ -525,6 +595,17 @@ impl GameWorld {
                     TileKind::Rock
                 }
             }
+            // Ash streets cut by a grid of cracked roads, with rubble heaps where buildings fell
+            BiomeBand::RuinedCity => {
+                let on_road = |v: f64| (v as i64).rem_euclid(ROAD_SPACING) < 2;
+                if on_road(wx) || on_road(wy) {
+                    TileKind::CrackedRoad
+                } else if feature_value > 0.45 {
+                    TileKind::Rubble
+                } else {
+                    TileKind::Ash
+                }
+            }
             BiomeBand::LithicRivers => {
                 // Horizontal Lithic Rivers (left-right) with cave-like features.
                 // Build a horizontal stripe field by sampling along Y with an X/Z-dependent offset.
@@ -598,6 +679,7 @@ impl GameWorld {
                     tile = TileKind::IronScrap;
                 }
             }
+            BiomeBand::RuinedCity => {}
             BiomeBand::LithicRivers => {
                 // Ore enrichment near rim based on horizontal stripe distance
                 let meander = biome_noise.get([wx * 0.02, zf * 0.02, 17.0]);
@@ -991,7 +1073,13 @@ impl GameWorld {
         let zf = (cz as f64) * (CHUNK_SIZE_Z as f64) + (CHUNK_SIZE_Z as f64 * 0.5);
         let band_for_chunk = self.biome_for(center_wx, center_wy, zf);
         let mut rng = ChaCha20Rng::seed_from_u64(self.mix_coords(cx, cy, cz));
-        if rng.gen::<f64>() < 0.05 {
+        // Cities get a skyline: a skyscraper in many of their surface chunks
+        let city = band_for_chunk == BiomeBand::RuinedCity;
+        if city && cz != 0 {
+            return;
+        }
+        let chance = if city { SKYSCRAPER_CHANCE } else { 0.05 };
+        if rng.gen::<f64>() < chance {
             let mut bury = false;
             let (name, ox, oy) = match band_for_chunk {
                 BiomeBand::Plains => (
@@ -1012,6 +1100,11 @@ impl GameWorld {
                 }
                 BiomeBand::Rocky => (
                     "small_ship.lrstructure",
+                    rng.gen_range(0..CHUNK_SIZE),
+                    rng.gen_range(0..CHUNK_SIZE),
+                ),
+                BiomeBand::RuinedCity => (
+                    "skyscraper.lrstructure",
                     rng.gen_range(0..CHUNK_SIZE),
                     rng.gen_range(0..CHUNK_SIZE),
                 ),

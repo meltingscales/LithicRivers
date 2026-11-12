@@ -1,0 +1,26 @@
+{
+  "blocks": {
+    " ": "air",
+    "#": "concrete",
+    ".": "existing_worldgen",
+    "2": "treasure_quest_2",
+    "A": "android_spawn",
+    "D": "door",
+    "G": "burner_generator_site",
+    "H": "station_item_charger",
+    "I": "power_pole",
+    "P": "teleporter_station",
+    "R": "sapiencorp_rtg",
+    "S": "scrap_rare",
+    "T": "treasure_rare",
+    "X": "sealed_door_site",
+    "e": "scrap_electronics",
+    "s": "scrap_common"
+  },
+  "gen_biomes": "QUEST_ONLY",
+  "gen_chance": 0.0,
+  "y_layer_gen_range": [
+    0,
+    0
+  ]
+}

@@ -75,9 +75,10 @@ pub fn block_will_spawn_entity(tile_kind: TileKind) -> bool {
         TileKind::WildSpawner => true,
         TileKind::TeleporterStation | TileKind::TeleporterStationInner => true,
         TileKind::SapiencorpRtg | TileKind::StationItemCharger | TileKind::PowerPole => true,
+        TileKind::SealedDoorSite | TileKind::BurnerGeneratorSite => true,
         TileKind::ScrapCommon => true,
         TileKind::ScrapRare => true,
-        TileKind::TreasureQuest1 => true,
+        TileKind::TreasureQuest1 | TileKind::TreasureQuest2 => true,
         _ => false,
     }
 }
@@ -138,15 +139,27 @@ pub fn spawn_entity_for_block(
                 crate::teleporter::station_name(structure_name, inner).to_string(),
             ));
         }
-        TileKind::SapiencorpRtg | TileKind::StationItemCharger | TileKind::PowerPole => {
+        TileKind::SapiencorpRtg
+        | TileKind::StationItemCharger
+        | TileKind::PowerPole
+        | TileKind::SealedDoorSite
+        | TileKind::BurnerGeneratorSite => {
             // The game turns it into its factory block
             game_world
                 .structure_blocks
                 .push((block_x, block_y, block_z, tile_kind));
         }
-        TileKind::TreasureQuest1 => {
-            // The game turns it into the quest chest, once per world
-            game_world.quest_treasures.push((block_x, block_y, block_z));
+        TileKind::TreasureQuest1 | TileKind::TreasureQuest2 => {
+            // The game turns it into the quest chest, once per world: the arm, or the
+            // datacenter's data shard
+            let item = if tile_kind == TileKind::TreasureQuest1 {
+                crate::components::ItemKind::SalvagedArm
+            } else {
+                crate::components::ItemKind::DataShard
+            };
+            game_world
+                .quest_treasures
+                .push((block_x, block_y, block_z, item));
         }
         _ => {
             panic!("Unknown tile kind for entity spawning {:?}", tile_kind);

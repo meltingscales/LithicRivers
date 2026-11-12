@@ -1594,6 +1594,44 @@ vvv
    ║     ║  
             
             
+=== factory/sealed_door_open  #5CE08A  A SapienCorp blast door, slid open on its own power. Its green lamp hums.
+-- 1x
+O
+-- 2x
+╔╗
+  
+-- 3x
+╔═╗
+║ ║
+   
+-- art 0
+ ╔════════╗ 
+ ║▓      ▓║ 
+ ║▓  ●●  ▓║ 
+ ║▓      ▓║ 
+ ║▓      ▓║ 
+ ║▓      ▓║ 
+ ╚        ╝ 
+            
+=== factory/sealed_door_sealed  #C04A3A  A SapienCorp blast door, its red lamp dark. It wants power before it will open.
+-- 1x
+Ø
+-- 2x
+╔╗
+╚╝
+-- 3x
+╔═╗
+║○║
+╚═╝
+-- art 0
+ ╔════════╗ 
+ ║▓▓▓▓▓▓▓▓║ 
+ ║▓▓▓○○▓▓▓║ 
+ ║════════║ 
+ ║▓▓▓▓▓▓▓▓║ 
+ ║▓▓▓▓▓▓▓▓║ 
+ ╚════════╝ 
+            
 === factory/spawner  #B4405A  A SapienCorp growth tank, still warm; something wet turns over inside the glass
 -- 1x
 Ø
@@ -2506,6 +2544,25 @@ U
  █▌ ░▌▐░ ▐█ 
  ▀████████▀ 
    ▀▀  ▀▀   
+=== items/data_shard  #6CD8F0  A SapienCorp backup shard: the reactor's last 41 days, output held past its limit by order of Chief Executive Odessa Crane and the board, for Project T▒▒▒▒▒▒▒▒, directed by Dr. Emeric Thale.
+-- 1x
+◊
+-- 2x
+◊▌
+▐◊
+-- 3x
+▄◊▄
+▐◊▌
+▀▀▀
+-- art 0
+            
+     ▄▄     
+    ▐◊◊▌    
+   ▐▓◊◊▓▌   
+   ▐▓▓▓▓▌   
+    ▀▀▀▀    
+            
+            
 === items/diamond  #00FFFF  A precious diamond
 -- 1x
 d
@@ -3961,6 +4018,25 @@ A!!
  └ ─ ─ ─ ─┘ 
             
             
+=== tiles/ash  #7A7470  Grey ash, ankle deep, all that's left of the city's streets and the people on them.
+-- 1x
+·
+-- 2x
+·.
+.·
+-- 3x
+·.·
+.·.
+·.·
+-- art 0
+ · .  ·  . ·
+.  ·  . ·   
+ ·  .   ·  .
+.  ·  ·   · 
+ · .  ·  .  
+.   ·  . ·  
+ ·  .  ·   .
+.  ·  .  ·  
 === tiles/bedrock  #808080  Unbreakable bedrock that forms the foundation of the world
 -- 1x
 #
@@ -4018,6 +4094,25 @@ b=b
 ░▓▓▒▓▓▓▓▓▓○▒
 ▒▓▓▓▓○▓▓▓▓▓▓
 ▓▓▓▓▓▒▓▓▒▓▓▓
+=== tiles/burner_generator_site  #FFFF00  Special worldgen block that becomes a built-in burner generator
+-- 1x
+G
+-- 2x
+G!
+!G
+-- 3x
+G!G
+!G!
+G!G
+-- art 0
+            
+ ┌ ─ ─ ─ ─┐ 
+ ╎        ╎ 
+ ╎   G    ╎ 
+ ╎        ╎ 
+ └ ─ ─ ─ ─┘ 
+            
+            
 === tiles/carrot_growing  #8FC84A  Carrot tops in a tidy row, the roots still pale.
 -- 1x
 v
@@ -4094,6 +4189,44 @@ oo
    ▀▀▀▀▀▀   
             
             
+=== tiles/concrete  #A8A29A  Poured SapienCorp concrete, stained black up to the third floor.
+-- 1x
+█
+-- 2x
+██
+██
+-- 3x
+███
+███
+███
+-- art 0
+████████████
+█▓██████▓███
+████████████
+███▓████████
+████████▓███
+████████████
+█▓██████████
+████████▓███
+=== tiles/cracked_road  #5E5A56  Old asphalt split by heat and roots. A faded lane line still runs down the middle.
+-- 1x
+=
+-- 2x
+=-
+-=
+-- 3x
+═─═
+─═─
+═─═
+-- art 0
+▒▒▒▒╱▒▒▒▒▒▒▒
+▒▒▒╱▒▒▒▒▒▒▒▒
+▒▒▒▒▒▒▒▒╲▒▒▒
+━━  ━━  ━━  
+▒▒▒▒▒▒▒▒▒╲▒▒
+▒╱▒▒▒▒▒▒▒▒▒▒
+▒▒╲▒▒▒▒▒▒▒▒▒
+▒▒▒▒▒▒╱▒▒▒▒▒
 === tiles/dirt  #964B00  Basic dirt that can be mined for resources
 -- 1x
 ,
@@ -4474,6 +4607,25 @@ s=s
 ░▒▓▓▓▒▓▓▓▓▓▒
 ▒▓▓▓▒░▒▓▓▓▓▓
 ▓▓▓▓▓▒▓▓▒▓▓▓
+=== tiles/rubble  #8C847A  A heap of broken concrete and rebar where something tall came down.
+-- 1x
+%
+-- 2x
+%▄
+▄%
+-- 3x
+▄%▄
+%▓%
+▀▀▀
+-- art 0
+            
+    ▄ ▄     
+  ▄▓▒▄▓▄ ╱  
+ ▄▓▒▓▓▒▓▄   
+▄▓▓▒▓▒▓▒▓▄  
+▀▀▀▀▀▀▀▀▀▀  
+            
+            
 === tiles/sapiencorp_rtg  #FFFF00  Special worldgen block that turns into a built-in SapienCorp RTG
 -- 1x
 Ж
@@ -4565,6 +4717,25 @@ c$c
  ┌ ─ ─ ─ ─┐ 
  ╎        ╎ 
  ╎   $$   ╎ 
+ ╎        ╎ 
+ └ ─ ─ ─ ─┘ 
+            
+            
+=== tiles/sealed_door_site  #FFFF00  Special worldgen block that becomes a built-in sealed door
+-- 1x
+X
+-- 2x
+X!
+!X
+-- 3x
+X!X
+!X!
+X!X
+-- art 0
+            
+ ┌ ─ ─ ─ ─┐ 
+ ╎        ╎ 
+ ╎   X    ╎ 
  ╎        ╎ 
  └ ─ ─ ─ ─┘ 
             
@@ -4776,6 +4947,25 @@ $$$
  █═══╡╞═══█ 
  █▓▓▓▓▓▓▓▓█ 
  ▀▀▀▀▀▀▀▀▀▀ 
+            
+            
+=== tiles/treasure_quest_2  #FFFF00  Special worldgen block that turns into the datacenter's quest treasure
+-- 1x
+$
+-- 2x
+$2
+2$
+-- 3x
+$2$
+2$2
+$2$
+-- art 0
+            
+ ┌ ─ ─ ─ ─┐ 
+ ╎        ╎ 
+ ╎   $2   ╎ 
+ ╎        ╎ 
+ └ ─ ─ ─ ─┘ 
             
             
 === tiles/treasure_rare  #FFFF00  Special worldgen block that turns into rare treasure

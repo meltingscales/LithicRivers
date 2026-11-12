@@ -5,13 +5,15 @@ use serde::{Deserialize, Serialize};
 pub enum QuestType {
     RepairBrokenAndroid,
     ReplaceArm,
+    /// "Black Box": recover the reactor's data from the SapienCorp datacenter
+    BlackBox,
 }
 
 impl QuestType {
     /// Quests whose objectives the game checks each tick, in order (`quests::advance`),
     /// instead of completing fetch objectives as items come in.
     pub fn ordered(self) -> bool {
-        matches!(self, QuestType::ReplaceArm)
+        matches!(self, QuestType::ReplaceArm | QuestType::BlackBox)
     }
 }
 
@@ -53,6 +55,12 @@ pub enum QuestObjectiveType {
         npc_name: String,
     },
     GoToLocation {
+        x: i64,
+        y: i64,
+        z: i64,
+    },
+    /// The factory block there (a sealed door) has power
+    PoweredAt {
         x: i64,
         y: i64,
         z: i64,
@@ -111,6 +119,10 @@ pub enum DialogueNodeID {
     NewArm,
     /// The repaired android's greeting, in place of `Start`
     Repaired,
+    /// The third quest's offer, once the arm is in
+    BlackBoxOffer,
+    /// Handing in the data shard: what it reveals
+    BlackBoxReveal,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

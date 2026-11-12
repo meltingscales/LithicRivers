@@ -343,6 +343,26 @@ impl DialogueDatabase {
                     requires_quest_complete: None,
                 },
                 DialogueChoice {
+                    text: "My arm works. What else did SapienCorp leave behind?".to_string(),
+                    leads_to: Some(DialogueNodeID::BlackBoxOffer),
+                    requires_item: None,
+                    npc_mood_change: Some(NPCMood::Neutral),
+                    player_mood_change: Some(NPCMood::Neutral),
+                    unlocks_quest: None,
+                    requires_quest_active: None,
+                    requires_quest_complete: Some(QuestType::ReplaceArm),
+                },
+                DialogueChoice {
+                    text: "I brought the data shard from the datacenter.".to_string(),
+                    leads_to: Some(DialogueNodeID::BlackBoxReveal),
+                    requires_item: Some("Data Shard".to_string()),
+                    npc_mood_change: Some(NPCMood::Neutral),
+                    player_mood_change: Some(NPCMood::Neutral),
+                    unlocks_quest: None,
+                    requires_quest_active: Some(QuestType::BlackBox),
+                    requires_quest_complete: None,
+                },
+                DialogueChoice {
                     text: "Just checking on you. Goodbye!".to_string(),
                     leads_to: None,
                     requires_item: None,
@@ -386,6 +406,60 @@ impl DialogueDatabase {
                     requires_quest_complete: None,
                 },
             ],
+            auto_continue: false,
+            shop_item: None,
+        });
+
+        // The third quest, offered once the arm is in
+        tree.add_node(DialogueNode {
+            id: DialogueNodeID::BlackBoxOffer,
+            speaker: "SC-M4X7".to_string(),
+            text: "SapienCorp backed everything up to its datacenter in the ruined city west of here. If anything remembers what happened to the reactor, it's in there. Bring something to burn, user, and watch for the security units.".to_string(),
+            text_effects: vec![],
+            mood: NPCMood::Neutral,
+            choices: vec![
+                DialogueChoice {
+                    text: "I'll find the reactor's data.".to_string(),
+                    leads_to: None,
+                    requires_item: None,
+                    npc_mood_change: Some(NPCMood::Happy),
+                    player_mood_change: Some(NPCMood::Neutral),
+                    unlocks_quest: Some(QuestType::BlackBox),
+                    requires_quest_active: None,
+                    requires_quest_complete: None,
+                },
+                DialogueChoice {
+                    text: "Not yet.".to_string(),
+                    leads_to: None,
+                    requires_item: None,
+                    npc_mood_change: None,
+                    player_mood_change: None,
+                    unlocks_quest: None,
+                    requires_quest_active: None,
+                    requires_quest_complete: None,
+                },
+            ],
+            auto_continue: false,
+            shop_item: None,
+        });
+
+        // Handing in the shard: what the telemetry says
+        tree.add_node(DialogueNode {
+            id: DialogueNodeID::BlackBoxReveal,
+            speaker: "SC-M4X7".to_string(),
+            text: "<1>*reading shard*</1> The reactor was held past its limit for 41 days, on orders from Chief Executive Odessa Crane and the board, for a project run by Dr. Emeric Thale. His last entry: \"Hold output. The aperture is almost stable.\" Thale... a sealed site under the river of fire. Keep looking, user.".to_string(),
+            text_effects: vec![TextEffect::Static],
+            mood: NPCMood::Neutral,
+            choices: vec![DialogueChoice {
+                text: "I'll find out what Thale was building.".to_string(),
+                leads_to: None,
+                requires_item: None,
+                npc_mood_change: Some(NPCMood::Neutral),
+                player_mood_change: Some(NPCMood::Neutral),
+                unlocks_quest: None,
+                requires_quest_active: None,
+                requires_quest_complete: None,
+            }],
             auto_continue: false,
             shop_item: None,
         });

@@ -97,6 +97,7 @@ pub fn station_name(structure: &str, inner: bool) -> &'static str {
     }
     match (structure, inner) {
         ("sapiencorp-bunker", _) => "Bunker Station",
+        ("sapiencorp-datacenter", _) => "Datacenter Station",
         (_, false) => "Transit Station",
         (_, true) => "Inner Transit Station",
     }
@@ -455,6 +456,8 @@ impl crate::Game {
             let (kind, built_in) = match tile {
                 TileKind::SapiencorpRtg => (FactoryKind::Rtg, true),
                 TileKind::StationItemCharger => (FactoryKind::ItemCharger, true),
+                TileKind::SealedDoorSite => (FactoryKind::SealedDoor, true),
+                TileKind::BurnerGeneratorSite => (FactoryKind::BurnerGenerator, true),
                 _ => (FactoryKind::PowerPole, false),
             };
             // Something already stands there: the structure goes without

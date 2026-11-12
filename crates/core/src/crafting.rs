@@ -38,6 +38,12 @@ pub fn mining_drop(tile: TileKind) -> Option<MiningDrop> {
         TileKind::Sulfur => drop(TileKind::Air, &[(ItemKind::Sulfur, 1, 2)]),
         TileKind::BrassScrap => drop(TileKind::Air, &[(ItemKind::BrassNugget, 1, 3)]),
         TileKind::SulfurCrystal => drop(TileKind::Air, &[(ItemKind::Sulfur, 1, 2)]),
+        // City ruins: rubble heaps break into stone and the odd bit of iron
+        TileKind::Rubble => drop(
+            TileKind::Ash,
+            &[(ItemKind::Stone, 1, 1), (ItemKind::IronScrap, 0, 1)],
+        ),
+        TileKind::Concrete => drop(TileKind::Air, &[(ItemKind::Stone, 1, 1)]),
         // Ripe crops: their produce and 1 to 2 seeds; the field is left as dirt
         TileKind::WheatRipe => drop(
             TileKind::Dirt,

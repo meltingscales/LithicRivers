@@ -1,0 +1,88 @@
+# Quest 3, "Black Box". The arm quest first (as in quest-new-arm.txt), then the repaired
+# android sends the robot to the datacenter: fuel its generator so the sealed door has
+# power, take the data shard (a cheat stands in for the fight to it), and hand it back
+# for the reveal and the reward.
+seed 12345
+size 100x30
+skip-splash
+key ui.MENU_PREV
+# Repair the android: Can I help? > What do you need? > I'll find them
+key movement.MOVE_EAST
+key action.INTERACT
+key movement.MOVE_SOUTH 2
+key ui.MENU_ACTIVATE 3
+cheat giveitem diamond
+cheat giveitem scrap_electronics
+# [Give items] is the sixth choice, then "You're welcome!"
+key action.INTERACT
+key movement.MOVE_SOUTH 5
+key ui.MENU_ACTIVATE 2
+expect-text "Quest completed: Repair the Broken Android"
+# The repaired android greets you as itself and asks about the arm first
+key action.INTERACT
+expect-text "fully operational"
+key ui.MENU_ACTIVATE
+expect-text "SapienCorp built that model"
+key ui.MENU_ACTIVATE
+expect-text "Quest started: A New Arm"
+# Walk to the facility's entrance (tp_quest goes to the quest's next spot)
+cheat tp_quest
+key movement.WAIT
+expect-text "Quest objective completed: Reach the SapienCorp facility"
+# The parts locker on the assembly line, seven levels down
+cheat tp_quest
+expect-text "Teleported to (114, 811, -6)"
+# The Locker Station stands just east, so pick the locker to the west
+key action.INTERACT
+key movement.MOVE_WEST
+# The window opens on the locker's side: take the arm
+key ui.MENU_ACTIVATE
+key ui.CLOSE_HELP_MENU
+# Back out past the locker's guard dog; objectives are checked each tick
+cheat tp 111 831 0
+key movement.WAIT
+expect-text "Quest objective completed: Find the salvaged arm"
+key ui.MENU_NEXT 4
+# Select the missing left arm (fourth in the list), then install
+key movement.MOVE_SOUTH 3
+key body.INSTALL_PART
+expect-text "Quest completed: A New Arm"
+key ui.MENU_PREV
+expect-text "Two hands again, user!"
+# Back to the World tab and the android: the second choice asks what else SapienCorp
+# left behind
+key ui.MENU_PREV 3
+cheat tp_quest android
+key action.INTERACT
+key movement.MOVE_SOUTH
+key ui.MENU_ACTIVATE
+expect-text "ruined city west"
+screen black-box-offer
+key ui.MENU_ACTIVATE
+expect-text "Quest started: Black Box"
+cheat tp_quest datacenter
+key movement.WAIT
+expect-text "Quest objective completed: Reach the SapienCorp datacenter"
+# Fuel the generator in the west room
+cheat toggle_fogofwar
+cheat tp -614 383 0
+cheat giveitem biochar 5
+key action.INTERACT
+key ui.MENU_DOWN 2
+key ui.MENU_ACTIVATE
+key ui.CLOSE_HELP_MENU
+key action.PASS_TIME 1
+expect-text "Quest objective completed: Restore the datacenter's power"
+cheat giveitem data_shard
+key movement.WAIT
+expect-text "Quest objective completed: Recover the data shard"
+# Hand it in: the third choice once the shard is carried
+cheat tp_quest android
+key action.INTERACT
+key movement.MOVE_SOUTH 2
+key ui.MENU_ACTIVATE
+expect-text "Emeric Thale"
+screen reveal
+key ui.MENU_ACTIVATE
+expect-text "Received 1 Burst Carbine"
+screen reward

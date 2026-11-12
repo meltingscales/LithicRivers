@@ -17,7 +17,7 @@ To act on one, ask for it by its suggested change name ("propose add-day-night-c
 
 | Idea | Source | Today | Suggested change |
 |---|---|---|---|
-| **More surface biomes:** arboreal, frozen wasteland, lush forest with springs, pools and ruins, nuked city, abandoned mine. `overhaul-worldgen-depth` leaves the surface as it is on purpose. | STEAM-MVP.md (small temp list), TODO.md | Missing | `add-surface-biomes` |
+| **More surface biomes:** arboreal, frozen wasteland, lush forest with springs, pools and ruins, abandoned mine (the nuked city is `add-ruined-city-quest`'s Ruined City). `overhaul-worldgen-depth` leaves the surface as it is on purpose. | STEAM-MVP.md (small temp list), TODO.md | Missing | `add-surface-biomes` |
 | **Landmark structures** placed by worldgen, like the Python version's: a crashed ship and an abandoned research station (the abandoned factory exists). | STEAM-MVP.md | Partly | `add-landmark-structures` |
 | **Procedural dungeons v2**, using the TinyKeep layout algorithm in `docs/dungeons/tinybuild-dungeons.md` (originally from https://www.gamedeveloper.com/programming/procedural-dungeon-generation-algorithm). | TODO.md, docs/dungeons | Missing | `add-procedural-dungeons` |
 | **Structure generation "stretched" across z**, noted as a bug. `overhaul-worldgen-depth` (archived) reworked the bands but did not check it. | STEAM-MVP.md (small temp list) | Bug | `fix-structure-z-stretch` |

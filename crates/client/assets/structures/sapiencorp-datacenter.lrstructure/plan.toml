@@ -1,0 +1,201 @@
+# The SapienCorp datacenter, the third quest's goal: a dark concrete block in the Ruined
+# City. The entrance hall holds a dormant transit station and its guards; a cold burner
+# generator in the west room powers the sealed door to the server hall, where the data
+# shard waits in a quest chest. The generator's network is kept apart from the station's
+# RTG, so only fuel opens the door.
+# Compiled into shape_layers.txt by `just util-structure-build`; edit this, not that.
+layers = 1
+width = 22
+height = 16
+
+[legend]
+"#" = "concrete"
+" " = "air"
+"." = "existing_worldgen"
+"D" = "door"
+"X" = "sealed_door_site"
+"G" = "burner_generator_site"
+"I" = "power_pole"
+"2" = "treasure_quest_2"
+"P" = "teleporter_station"
+"R" = "sapiencorp_rtg"
+"H" = "station_item_charger"
+"A" = "android_spawn"
+"s" = "scrap_common"
+"S" = "scrap_rare"
+"T" = "treasure_rare"
+"e" = "scrap_electronics"
+
+# The building, doors onto the street
+[[shape]]
+kind = "room"
+layer = 0
+x = 0
+y = 0
+w = 22
+h = 16
+wall = "#"
+doors = [[10, 15], [11, 15]]
+
+# The wall between the entrance hall and the rooms behind it
+[[shape]]
+kind = "fill"
+layer = 0
+x = 1
+y = 8
+w = 20
+h = 1
+block = "#"
+
+# The wall between the generator room and the server hall
+[[shape]]
+kind = "fill"
+layer = 0
+x = 8
+y = 1
+w = 1
+h = 7
+block = "#"
+
+# The generator room: an ordinary door, a cold generator and its pole
+[[shape]]
+kind = "put"
+layer = 0
+x = 4
+y = 8
+block = "D"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 5
+y = 3
+block = "G"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 7
+y = 5
+block = "I"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 2
+y = 6
+block = "s"
+
+# The sealed door into the server hall, and the pole beside it
+[[shape]]
+kind = "put"
+layer = 0
+x = 14
+y = 8
+block = "X"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 13
+y = 9
+block = "I"
+
+# The server hall: racks of dead electronics, a guard, and the data shard
+[[shape]]
+kind = "fill"
+layer = 0
+x = 10
+y = 2
+w = 1
+h = 4
+block = "e"
+
+[[shape]]
+kind = "fill"
+layer = 0
+x = 13
+y = 2
+w = 1
+h = 4
+block = "e"
+
+[[shape]]
+kind = "fill"
+layer = 0
+x = 16
+y = 2
+w = 1
+h = 4
+block = "e"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 19
+y = 2
+block = "2"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 19
+y = 6
+block = "T"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 18
+y = 4
+block = "A"
+
+# The entrance hall: the dormant station with its RTG and charger, and two guards
+[[shape]]
+kind = "put"
+layer = 0
+x = 2
+y = 12
+block = "P"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 3
+y = 12
+block = "R"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 1
+y = 12
+block = "H"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 2
+y = 14
+block = "I"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 8
+y = 11
+block = "A"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 16
+y = 12
+block = "A"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 19
+y = 13
+block = "S"

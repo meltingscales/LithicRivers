@@ -203,6 +203,7 @@ impl SaveOwned {
         game.res = self.resources;
         game.res.factory_index = crate::factory::rebuild_index(&game.world);
         game.place_quest_chests_for_old_save();
+        game.queue_datacenter();
         Ok(LoadedSave {
             client: self.client,
             viewport: None,
@@ -247,6 +248,7 @@ pub fn load_from_str(game: &mut crate::Game, json: &str) -> Result<LoadedSave> {
         v4::VERSION => {
             let viewport = v4::load_json_str(game, json)?;
             game.place_quest_chests_for_old_save();
+            game.queue_datacenter();
             game.res.log("Save upgraded from version 4");
             Ok(LoadedSave {
                 client: serde_json::Value::Null,
@@ -494,7 +496,7 @@ mod tests {
             started.tick();
         }
 
-        let mut world = TestWorld::new(7).fill((-6, -6, 0), (6, 6, 0), TileKind::Grass);
+        let mut world = TestWorld::new(7).fill((-6, -6, 0), (16, 6, 0), TileKind::Grass);
         world.sheep(-3, -3, 0);
         let dog = world.feral_dog(1, 0, 0);
         world.feral_dog(4, 4, 0);

@@ -23,8 +23,14 @@ pub const BUNKER_POS: (i64, i64, i64) = (10, 10, 1);
 /// (half the distance it started at, so the first trip is less of a walk).
 pub const FACILITY_STRUCTURE: &str = "sapiencorp-factory.lrstructure";
 pub const FACILITY_POS: (i64, i64, i64) = (105, 810, 1);
+/// Where the SapienCorp datacenter stands, the third quest's goal: about 0.45 miles from
+/// the bunker, always in a Ruined City (`GameWorld::is_city`).
+pub const DATACENTER_POS: (i64, i64, i64) = (-620, 380, 0);
 /// The facility's quest marker, removed when the arm quest is done.
 pub const FACILITY_MARKER: &str = "SapienCorp Factory";
+/// The third quest's structure and its marker.
+pub const DATACENTER_STRUCTURE: &str = "sapiencorp-datacenter.lrstructure";
+pub const DATACENTER_MARKER: &str = "SapienCorp Datacenter";
 
 pub struct Game {
     pub world: World,
@@ -282,6 +288,9 @@ impl Game {
             .res
             .log_green("Quest marker added: SapienCorp Factory");
 
+        // The 3rd quest's datacenter loads when its chunk is first needed
+        new_game.queue_datacenter();
+
         // Run one tick to generate structures around the player spawn
         new_game.tick();
 
@@ -517,10 +526,10 @@ impl Game {
         }
     }
 
-    /// Turn quest-treasure tiles that structures placed into quest chests holding a
-    /// Salvaged SapienCorp Arm, each position once per world.
+    /// Turn quest-treasure tiles that structures placed into quest chests holding their
+    /// item (the arm, the data shard), each position once per world.
     pub fn place_quest_chests(&mut self) {
-        for (x, y, z) in std::mem::take(&mut self.res.world_state.world.quest_treasures) {
+        for (x, y, z, item) in std::mem::take(&mut self.res.world_state.world.quest_treasures) {
             if !self.res.quest_chests_placed.insert((x, y, z)) {
                 continue;
             }
@@ -538,18 +547,15 @@ impl Game {
                         .world
                         .insert_one(chest, SpriteRef::new("factory", "quest_chest"));
                     if let Ok(mut inv) = self.world.get::<&mut Inventory>(chest) {
-                        inv.add(ItemKind::SalvagedArm, 1);
+                        inv.add(item, 1);
                     }
                 }
-                // Something already stands there: leave the arm on the floor instead
+                // Something already stands there: leave the item on the floor instead
                 Err(_) => {
                     self.world.spawn((
                         pos,
-                        DroppedItem {
-                            kind: ItemKind::SalvagedArm,
-                            qty: 1,
-                        },
-                        SpriteRef::new("items", "salvaged_arm"),
+                        DroppedItem { kind: item, qty: 1 },
+                        SpriteRef::new("items", crate::components::itemkind_sprite_name(item)),
                     ));
                 }
             }
@@ -579,6 +585,40 @@ impl Game {
         }
     }
 
+    /// Queue the datacenter (the third quest's structure) to load with its chunk, unless it
+    /// is already placed or queued; old saves get it this way on load.
+    pub fn queue_datacenter(&mut self) {
+        // Only worlds with the quest line (the facility placed or queued) get it
+        let (fx, fy, fz) = FACILITY_POS;
+        let has_quests = self.is_structure_generated(FACILITY_STRUCTURE, fx, fy, fz)
+            || self
+                .res
+                .pending_structures
+                .iter()
+                .any(|p| p.name == FACILITY_STRUCTURE);
+        if !has_quests {
+            return;
+        }
+        let (x, y, z) = DATACENTER_POS;
+        let queued = self
+            .res
+            .pending_structures
+            .iter()
+            .any(|p| p.name == DATACENTER_STRUCTURE);
+        if queued || self.is_structure_generated(DATACENTER_STRUCTURE, x, y, z) {
+            return;
+        }
+        self.res
+            .pending_structures
+            .push(crate::resources::PendingStructure {
+                name: DATACENTER_STRUCTURE.to_string(),
+                x,
+                y,
+                z,
+                bury_structure: false,
+            });
+    }
+
     /// A save from before quest chests has the facility placed but no arm chest: place
     /// it once, where the facility's quest-treasure tile is.
     pub(crate) fn place_quest_chests_for_old_save(&mut self) {
@@ -597,7 +637,11 @@ impl Game {
                 .world
                 .set_tile_cached(tx, ty, tz, TileKind::Air);
         }
-        self.res.world_state.world.quest_treasures.extend(treasures);
+        self.res.world_state.world.quest_treasures.extend(
+            treasures
+                .into_iter()
+                .map(|(x, y, z)| (x, y, z, ItemKind::SalvagedArm)),
+        );
         self.place_quest_chests();
     }
 
@@ -1534,7 +1578,11 @@ mod tests {
             game.tick();
         }
         // A structure placing the same tile again adds nothing
-        game.res.world_state.world.quest_treasures.push((x, y, z));
+        game.res
+            .world_state
+            .world
+            .quest_treasures
+            .push((x, y, z, ItemKind::SalvagedArm));
         game.place_quest_chests();
         assert_eq!(arms(&game), 1);
     }
@@ -1655,7 +1703,14 @@ mod tests {
 
         // With the initial tick during game creation, structures near the player spawn
         // are now loaded immediately. The structure should be processed and removed from queue.
-        assert_eq!(game.res.pending_structures.len(), 0);
+        assert_eq!(
+            game.res
+                .pending_structures
+                .iter()
+                .filter(|p| p.name != DATACENTER_STRUCTURE)
+                .count(),
+            0
+        );
 
         // The chunk should exist due to the initial tick processing
         let chunk_x = 30_i64.div_euclid(crate::world::CHUNK_SIZE);
@@ -1681,7 +1736,14 @@ mod tests {
         let mut game = Game::new(12345);
 
         // With the initial tick, the structure near player spawn is already loaded
-        assert_eq!(game.res.pending_structures.len(), 0);
+        assert_eq!(
+            game.res
+                .pending_structures
+                .iter()
+                .filter(|p| p.name != DATACENTER_STRUCTURE)
+                .count(),
+            0
+        );
 
         // Try loading structures for a chunk far away - this should not cause issues
         let far_chunk_x = 100_i64;
@@ -1691,7 +1753,14 @@ mod tests {
         game.load_pending_structures_for_chunk(far_chunk_x, far_chunk_y, far_chunk_z);
 
         // The queue should still be empty since no structures are queued for that chunk
-        assert_eq!(game.res.pending_structures.len(), 0);
+        assert_eq!(
+            game.res
+                .pending_structures
+                .iter()
+                .filter(|p| p.name != DATACENTER_STRUCTURE)
+                .count(),
+            0
+        );
     }
 
     #[test]
@@ -1704,13 +1773,27 @@ mod tests {
         let chunk_z = 0_i64.div_euclid(crate::world::CHUNK_SIZE_Z);
 
         // With the initial tick, structure is already loaded and queue is empty
-        assert_eq!(game.res.pending_structures.len(), 0);
+        assert_eq!(
+            game.res
+                .pending_structures
+                .iter()
+                .filter(|p| p.name != DATACENTER_STRUCTURE)
+                .count(),
+            0
+        );
 
         // Use the combined method - this should work without issues
         game.ensure_chunk_with_pending_structures(chunk_x, chunk_y, chunk_z);
 
         // The queue should remain empty and chunk should exist
-        assert_eq!(game.res.pending_structures.len(), 0);
+        assert_eq!(
+            game.res
+                .pending_structures
+                .iter()
+                .filter(|p| p.name != DATACENTER_STRUCTURE)
+                .count(),
+            0
+        );
         assert!(game
             .res
             .world_state

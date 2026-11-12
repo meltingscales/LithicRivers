@@ -9,8 +9,8 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌M
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  ------ - - -- - FOG │
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Inventory─────────────┐
-╫╫╫vvv¤vvvGG+ΞvvvvΞvvvvvvvvvG+βvvvvvvG,,,,,vvvv╫╫╫╫╫╫╫╫╫vvvvvGv+vvvvvvvvvvvv│Nail x10              │
-+G╫vvvvvvvvvv╲─vvvvvvvvvvvvvvEvvvvvvvG+,,vvvvvv╫Svvvvvv╫vvvC→>>πCvvvvvvvvvvv│Acorn x1              │
+╫╫╫vvv¤vvvGG+ΞvvvvΞvvvvvvvvvG+βvvvvvvG,,,,,vvvv╫╫╫╫╫╫╫╫╫vvvvvGv+vvvvvvvGv+vv│Nail x10              │
++G╫vvvvvvvvvv╲─vvvvvvvvvvvvvvEvvvvvvvG+,,vvvvvv╫Svvvvvv╫vvvC→>>πCvvvvvvvvvOv│Acorn x1              │
 vv╫vvvvvvvΨvvvv╲─vΨvvvvvvvvvvvvvvvvvvGvvpvv,vvv╫vuvvv#v╫vvvvvvvvvvvvvvvvvvvv│Log x3                │
 vv╫vvvvvvvvvvvvvЖ+ŧvvvvvvvvvvvvvvvvvvvvv↑vvvvvv╫vvvvvvv╫vvvvvvvvvvvvvvvvvvvv└──────────────────────┘
 vv╫vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvCB←CHvvvvv╫vvvvvSv╫vvvvvvvvvvvvvvvvvvvv┌Help (h) ! Damaged────┐
@@ -41,7 +41,7 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌M
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  ------ - - -- - FOG │
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Inventory─────────────┐
-╫╫╫vvv¤vvvGG+ΞvvvvΞvvvvvvvvvG+βvvvvvvG,,,,,vvvv╫╫╫╫╫╫╫╫╫vvvvvGv+vvvvvvvvvvvv│Nail x10              │
+╫╫╫vvv¤vvvGG+ΞvvvvΞvvvvvvvvvG+βvvvvvvG,,,,,vvvv╫╫╫╫╫╫╫╫╫vvvvvGv+vvvvvvvGv+vv│Nail x10              │
 +G╫vvvvvvvvvv╲─┌────────────── Fermenter facing west - fermenting 50% ──────────────┐              │
 vv╫vvvvvvvΨvvvv│┌ Slots - power 100% ────────────┐┌ Showing fermentables: 0 of 7 ──┐│              │
 vv╫vvvvvvvvvvvv││Input:     4 x Wheat            ││                                ││──────────────┘

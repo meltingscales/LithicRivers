@@ -1,0 +1,29 @@
+# The SapienCorp datacenter in the Ruined City: outside its doors, then from the cold
+# generator room the sealed door to the server hall (Ø), which opens (O) once the
+# generator is fueled; the robot then walks in, and the guards engage
+seed 12345
+size 100x30
+skip-splash
+key ui.MENU_PREV
+cheat toggle_fogofwar
+cheat tp_quest datacenter
+expect-text "DD"
+screen outside
+# In the generator room, east of the cold generator
+cheat tp -614 383 0
+expect-text "Ø"
+screen sealed
+cheat giveitem biochar 5
+key action.INTERACT
+key ui.MENU_DOWN 2
+key ui.MENU_ACTIVATE
+expect-text "Stored Biochar"
+key ui.CLOSE_HELP_MENU
+key action.PASS_TIME 1
+expect-text "█O█"
+screen open
+# Through the door into the server hall
+cheat tp -606 389 0
+key movement.MOVE_NORTH
+expect-text "COMBAT"
+screen inside

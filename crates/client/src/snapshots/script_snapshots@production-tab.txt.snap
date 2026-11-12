@@ -48,7 +48,7 @@ input_file: scripts/snapshots/production-tab.txt
 │Leather                   0.1      -            ││Made each minute, oldest first (peak 4):        │
 │Meat                      0.5    0.6            ││   █                                            │
 │Iron Scrap                0.6      -            ││  ██                                            │
-│Biochar                   2.3    0.8            ││  ██                                            │
+│Biochar                   2.3    0.9            ││  ██                                            │
 │Wheat Seeds               0.6    0.9            ││  ██                                            │
 │Wheat                     0.8    0.8            ││                                                │
 │Carrot                      -    0.3            ││                                                │

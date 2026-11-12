@@ -210,6 +210,7 @@ pub fn walkable(res: &mut Resources, world: &World, pos: Position) -> bool {
                     || world
                         .get::<&FactoryBlock>(e)
                         .is_ok_and(|b| b.kind == FactoryKind::Gate)
+                    || crate::sealed_door::is_open(world, e)
             }))
 }
 

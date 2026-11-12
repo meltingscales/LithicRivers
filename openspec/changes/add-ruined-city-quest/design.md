@@ -75,6 +75,6 @@ Names are LithicRivers' own. They live in the shard's item description and the d
 ## Risks / Trade-offs
 
 - [The datacenter is far for an early player] → It's the same distance class as the facility, and the dormant Datacenter Station links it to the transit network once woken.
-- [Power puzzle stalls players without fuel] → The generator room has a sign-like look text ("The generator is cold. Biochar or logs would do."), and logs are everywhere.
+- [Power puzzle stalls players without fuel] → SC-M4X7's offer says to bring something to burn, the generator's window says it has no fuel, and logs are everywhere.
 - [Cities change the surface hash] → Re-pinned in the same PR, with the reason in the test's comment.
 - [Saves from before this change] → `Game::new` queues the datacenter for new worlds; for an old save, the datacenter is queued on load if its structure state is missing, the way old saves get quest chests (`place_quest_chests_for_old_save`).
