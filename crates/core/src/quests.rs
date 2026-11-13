@@ -4,6 +4,7 @@ use crate::components::{itemkind_name, Inventory, ItemKind, Player, Position};
 use crate::dialogue::{ActiveQuest, QuestObjective, QuestObjectiveType, QuestState, QuestType};
 use crate::game::{
     ANNEX_DEPTH, ANNEX_MARKER, ANNEX_POS, DATACENTER_MARKER, DATACENTER_POS, FACILITY_POS,
+    FOUNDRY_MARKER, FOUNDRY_POS,
 };
 use crate::model::body::{Body, BodyPartState, BodyPartType};
 use crate::resources::Resources;
@@ -45,6 +46,16 @@ pub const ANNEX_DOOR: (i64, i64, i64) = (
 /// What SC-M4X7 says once the journal is handed over.
 pub const SEALED_SITE_CLOSING_LINE: &str =
     "SC-M4X7: \"The frames were my model line. Find the foundry, user.\"";
+
+/// The street outside the foundry's south gate.
+pub const FOUNDRY_ENTRANCE: (i64, i64, i64) =
+    (FOUNDRY_POS.0 + 15, FOUNDRY_POS.1 + 21, FOUNDRY_POS.2);
+/// The pattern vault, beyond the casting pit.
+pub const FOUNDRY_VAULT: (i64, i64, i64) = (FOUNDRY_POS.0 + 15, FOUNDRY_POS.1 + 3, FOUNDRY_POS.2);
+
+/// What SC-M4X7 says once the patterns are handed over.
+pub const FOUNDRY_CLOSING_LINE: &str =
+    "SC-M4X7: \"Build it, frame. Open it. That is what we were for.\"";
 
 /// The guns "Black Box" can give, with their ammo; the world seed picks one.
 pub const BLACK_BOX_GUNS: [(ItemKind, ItemKind, u32); 4] = [
@@ -305,6 +316,94 @@ pub fn hand_in_sealed_site(world: &mut World, res: &mut Resources) -> bool {
     true
 }
 
+/// "The Foundry", offered by the repaired android once "Under the River of Fire" is done.
+pub fn foundry(npc_entity: Option<hecs::Entity>) -> ActiveQuest {
+    let (x, y, z) = FOUNDRY_ENTRANCE;
+    let (vx, vy, vz) = FOUNDRY_VAULT;
+    ActiveQuest::new(
+        QuestType::Foundry,
+        "The Foundry".to_string(),
+        "The foundry that cast the aperture's ring stands far to the east. Its casting patterns are in the vault past the molten pit. Bring them back.".to_string(),
+        vec![
+            objective(
+                "Reach the SapienCorp foundry",
+                QuestObjectiveType::GoToLocation { x, y, z },
+            ),
+            objective(
+                "Cross the casting pit",
+                QuestObjectiveType::GoToLocation {
+                    x: vx,
+                    y: vy,
+                    z: vz,
+                },
+            ),
+            objective(
+                "Recover the aperture casting patterns",
+                QuestObjectiveType::FetchItem {
+                    item_name: itemkind_name(ItemKind::CastingPatterns).to_string(),
+                    quantity: 1,
+                    consumed: false,
+                },
+            ),
+            objective(
+                "Bring the patterns to SC-M4X7",
+                QuestObjectiveType::TalkToNPC {
+                    npc_name: "SC-M4X7".to_string(),
+                },
+            ),
+        ],
+        npc_entity,
+    )
+}
+
+/// Start "The Foundry" and mark the foundry on the map.
+pub fn start_foundry(res: &mut Resources, npc_entity: Option<hecs::Entity>) {
+    res.start_quest(foundry(npc_entity));
+    let (x, y, z) = FOUNDRY_ENTRANCE;
+    res.add_quest_marker(crate::resources::QuestMarker {
+        name: FOUNDRY_MARKER.to_string(),
+        description: "Recover the aperture's casting patterns".to_string(),
+        x,
+        y,
+        z,
+        marker_type: crate::resources::QuestMarkerType::MainQuest,
+    });
+    res.log_green("Quest marker added: SapienCorp Foundry");
+}
+
+/// Finish "The Foundry" (the patterns already handed over): complete it and reveal the
+/// Aperture, whose recipes the patterns become. The android hands the patterns back, since
+/// the Aperture's core is cast from them.
+pub fn finish_foundry(world: &mut World, res: &mut Resources) {
+    if !complete_all(res, QuestType::Foundry) {
+        return;
+    }
+    res.revealed.insert(crate::resources::Reveal::Aperture);
+    reward(world, res, &[(ItemKind::CastingPatterns, 1)]);
+    res.log_green("New recipes: the Aperture's core, frame and ports (Crafting tab)");
+    res.log_green(FOUNDRY_CLOSING_LINE);
+}
+
+/// Hand the casting patterns to the android: take them and finish the quest. False,
+/// changing nothing, without the patterns or the quest.
+pub fn hand_in_foundry(world: &mut World, res: &mut Resources) -> bool {
+    let Some(player) = crate::systems::get_player_entity(world) else {
+        return false;
+    };
+    if !res.is_quest_active(QuestType::Foundry) {
+        return false;
+    }
+    let taken = world
+        .get::<&mut Inventory>(player)
+        .map(|mut inv| inv.remove(ItemKind::CastingPatterns, 1))
+        .unwrap_or(0);
+    if taken == 0 {
+        return false;
+    }
+    finish_foundry(world, res);
+    true
+}
+
 /// Hand the data shard to the android: take it and finish the quest. False, changing
 /// nothing, without the shard or the quest.
 pub fn hand_in_black_box(world: &mut World, res: &mut Resources) -> bool {
@@ -426,7 +525,14 @@ pub fn advance(world: &World, res: &mut Resources) {
 }
 
 /// Places the `tp_quest` cheat can take the player, for debugging quests.
-pub const TP_QUEST_TARGETS: [&str; 5] = ["android", "facility", "locker", "datacenter", "annex"];
+pub const TP_QUEST_TARGETS: [&str; 6] = [
+    "android",
+    "facility",
+    "locker",
+    "datacenter",
+    "annex",
+    "foundry",
+];
 
 /// A walkable tile next to `pos` (east, west, south, north), or `pos` itself.
 pub(crate) fn beside(res: &mut Resources, pos: (i64, i64, i64)) -> Position {
@@ -493,6 +599,7 @@ pub fn tp_quest_target(
         }
         "datacenter" => Ok(beside(res, DATACENTER_ENTRANCE)),
         "annex" => Ok(beside(res, ANNEX_ENTRANCE)),
+        "foundry" => Ok(beside(res, FOUNDRY_ENTRANCE)),
         other => Err(format!(
             "unknown quest target '{other}'; targets: {}",
             TP_QUEST_TARGETS.join(", ")
@@ -1084,5 +1191,177 @@ mod tests {
             game.res.world_state.world.get_tile_cached(x, y, z),
             TileKind::Stairs
         );
+    }
+
+    /// A new world with the foundry loaded and its blocks placed.
+    fn with_foundry() -> Game {
+        let mut game = Game::new(12345);
+        let (x, y, z) = FOUNDRY_POS;
+        for (dx, dy) in [(0, 0), (30, 0), (0, 20), (30, 20)] {
+            game.ensure_chunk_with_pending_structures_worldcoords(x + dx, y + dy, z);
+        }
+        game.place_structure_blocks();
+        game
+    }
+
+    fn foundry_at(dx: i64, dy: i64) -> Position {
+        let (x, y, z) = FOUNDRY_POS;
+        Position {
+            x: x + dx,
+            y: y + dy,
+            z,
+        }
+    }
+
+    /// Whether the player could walk from the foundry's gate to its vault on the tiles
+    /// as they are.
+    fn vault_reachable(game: &mut Game) -> bool {
+        let start = foundry_at(15, 18);
+        let goal = foundry_at(15, 3);
+        let mut seen = std::collections::HashSet::from([start]);
+        let mut queue = std::collections::VecDeque::from([start]);
+        while let Some(p) = queue.pop_front() {
+            if p == goal {
+                return true;
+            }
+            for (dx, dy) in [(1, 0), (-1, 0), (0, 1), (0, -1)] {
+                let q = Position {
+                    x: p.x + dx,
+                    y: p.y + dy,
+                    z: p.z,
+                };
+                let inside = (0..30).contains(&(q.x - FOUNDRY_POS.0))
+                    && (0..20).contains(&(q.y - FOUNDRY_POS.1));
+                if inside
+                    && seen.insert(q)
+                    && game
+                        .res
+                        .world_state
+                        .world
+                        .get_tile_cached(q.x, q.y, q.z)
+                        .is_passable()
+                {
+                    queue.push_back(q);
+                }
+            }
+        }
+        false
+    }
+
+    fn foundry_done(game: &Game) -> Vec<bool> {
+        game.res
+            .get_active_quest(QuestType::Foundry)
+            .unwrap()
+            .objectives
+            .iter()
+            .map(|o| o.completed)
+            .collect()
+    }
+
+    fn finish_sealed_site_quest(game: &mut Game) {
+        finish_black_box_quest(game);
+        game.res.start_quest(sealed_site(None));
+        game.res.complete_quest(QuestType::SealedSite);
+    }
+
+    fn bridge(game: &mut Game) {
+        for dy in 5..10 {
+            let p = foundry_at(15, dy);
+            crate::factory::place_plain_block(&game.world, &mut game.res, TileKind::Rock, p)
+                .unwrap();
+        }
+    }
+
+    #[test]
+    fn every_world_has_the_foundry_and_its_vault_lies_past_the_pit() {
+        let mut game = with_foundry();
+        let chest = game.res.factory_index[&foundry_at(15, 2)];
+        assert_eq!(
+            game.world
+                .get::<&Inventory>(chest)
+                .unwrap()
+                .count(ItemKind::CastingPatterns),
+            1
+        );
+        assert!(!vault_reachable(&mut game), "the pit blocks the way");
+        bridge(&mut game);
+        assert!(vault_reachable(&mut game), "a bridge of crust crosses it");
+    }
+
+    #[test]
+    fn the_foundry_is_offered_only_after_quest_four() {
+        let mut game = Game::new(12345);
+        let asks =
+            |c: &crate::dialogue::DialogueChoice| c.leads_to == Some(DialogueNodeID::FoundryOffer);
+        let accepts =
+            |c: &crate::dialogue::DialogueChoice| c.unlocks_quest == Some(QuestType::Foundry);
+        finish_black_box_quest(&mut game);
+        assert!(!offered(&game, DialogueNodeID::Repaired, asks), "too early");
+        game.res.start_quest(sealed_site(None));
+        game.res.complete_quest(QuestType::SealedSite);
+        assert!(offered(&game, DialogueNodeID::Repaired, asks));
+        assert!(offered(&game, DialogueNodeID::FoundryOffer, accepts));
+        start_foundry(&mut game.res, None);
+        assert!(!offered(&game, DialogueNodeID::FoundryOffer, accepts));
+        assert!(game
+            .res
+            .quest_markers
+            .iter()
+            .any(|m| m.name == FOUNDRY_MARKER));
+    }
+
+    #[test]
+    fn the_foundry_runs_in_order_and_reveals_the_aperture() {
+        let mut game = with_foundry();
+        finish_sealed_site_quest(&mut game);
+        start_foundry(&mut game.res, None);
+        teleport(&mut game, FOUNDRY_ENTRANCE);
+        game.tick();
+        assert_eq!(foundry_done(&game), [true, false, false, false]);
+        bridge(&mut game);
+        teleport(&mut game, FOUNDRY_VAULT);
+        game.tick();
+        assert_eq!(foundry_done(&game), [true, true, false, false]);
+        let player = game.get_player_entity().unwrap();
+        game.world
+            .get::<&mut Inventory>(player)
+            .unwrap()
+            .add(ItemKind::CastingPatterns, 1);
+        game.tick();
+        assert_eq!(foundry_done(&game), [true, true, true, false]);
+
+        assert!(
+            !game.res.item_revealed(ItemKind::ApertureCore),
+            "still a secret"
+        );
+        assert!(hand_in_foundry(&mut game.world, &mut game.res));
+        assert!(game.res.is_quest_completed(QuestType::Foundry));
+        assert!(game.res.item_revealed(ItemKind::ApertureCore));
+        assert!(game
+            .res
+            .revealed
+            .contains(&crate::resources::Reveal::Aperture));
+        assert_eq!(
+            game.world
+                .get::<&Inventory>(player)
+                .unwrap()
+                .count(ItemKind::CastingPatterns),
+            1,
+            "handed back for the core"
+        );
+        assert!(!game
+            .res
+            .quest_markers
+            .iter()
+            .any(|m| m.name == FOUNDRY_MARKER));
+    }
+
+    #[test]
+    fn tp_quest_reaches_the_foundry() {
+        let mut game = Game::new(12345);
+        let p = tp_quest_target(&game.world, &mut game.res, Some("foundry")).unwrap();
+        let (x, y, z) = FOUNDRY_ENTRANCE;
+        assert_eq!(p.z, z);
+        assert!((p.x - x).abs() <= 1 && (p.y - y).abs() <= 1);
     }
 }

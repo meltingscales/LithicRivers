@@ -1,5 +1,5 @@
 ---
-source: crates/client/src/bin/../sprite_loader.rs
+source: crates/client/src/sprite_loader.rs
 expression: loader.gallery()
 ---
 === entities/corpse  #8B4513  The remains of a fallen creature
@@ -339,6 +339,82 @@ U
     └─┬──┘  
       │     
     ▄▄█▄▄   
+            
+=== factory/aperture_core  #C86E8E  A grown heart of reactor ceramics and something that pulses. The frame around it must be whole before it wakes.
+-- 1x
+◎
+-- 2x
+╭╮
+╰╯
+-- 3x
+╭─╮
+│◎│
+╰─╯
+-- art 0
+            
+   ╭────╮   
+  ╱ ░▒▒░ ╲  
+ │ ▒ ◎◎ ▒ │ 
+ │ ▒ ◎◎ ▒ │ 
+  ╲ ░▒▒░ ╱  
+   ╰────╯   
+            
+=== factory/aperture_core_open  #F0B0D0  The Aperture stands open. Past it, something waits for you to be ready.
+-- 1x
+◉
+-- 2x
+◉◉
+◉◉
+-- 3x
+╭─╮
+│◉│
+╰─╯
+-- art 0
+            
+   ╭────╮   
+  ╱      ╲  
+ │   ◉◉   │ 
+ │   ◉◉   │ 
+  ╲      ╱  
+   ╰────╯   
+            
+=== factory/aperture_frame  #8A6A78  A segment of the Aperture's ring, plasteel laced with riverglass veins.
+-- 1x
+╬
+-- 2x
+┏┓
+┗┛
+-- 3x
+┏┳┓
+┣╋┫
+┗┻┛
+-- art 0
+            
+  ┏━┳━━┳━┓  
+  ┃░┃▒▒┃░┃  
+  ┣━╋━━╋━┫  
+  ┃░┃▒▒┃░┃  
+  ┗━┻━━┻━┛  
+            
+            
+=== factory/aperture_port  #B08AA0  An intake in the Aperture's ring. Once the ring is whole it drinks one kind of thing, and only that.
+-- 1x
+◇
+-- 2x
+┏┓
+◇┛
+-- 3x
+┏━┓
+┃◇┃
+┗━┛
+-- art 0
+            
+  ┏━━━━━━┓  
+  ┃ ╲  ╱ ┃  
+  ┃  ◇◇  ┃  
+  ┃ ╱  ╲ ┃  
+  ┗━━━━━━┛  
+            
             
 === factory/auto_feeder  #A07C4A  A plank trough under an iron hopper; it drops one ration at a time to whatever comes close.
 -- 1x
@@ -2050,6 +2126,63 @@ U
       │     
       ▀     
             
+=== items/aperture_core  #9A5470  A cast core, warm to the touch and faintly beating.
+-- 1x
+◎
+-- 2x
+╭╮
+╰╯
+-- 3x
+╭─╮
+│◎│
+╰─╯
+-- art 0
+            
+   ╭────╮   
+  ╱ ░▒▒░ ╲  
+ │ ▒ ◎◎ ▒ │ 
+ │ ▒ ◎◎ ▒ │ 
+  ╲ ░▒▒░ ╱  
+   ╰────╯   
+            
+=== items/aperture_frame  #6A505C  A curved plasteel segment, veined with riverglass. Forty of them make a ring.
+-- 1x
+╬
+-- 2x
+┏┓
+┗┛
+-- 3x
+┏┳┓
+┣╋┫
+┗┻┛
+-- art 0
+            
+  ┏━┳━━┳━┓  
+  ┃░┃▒▒┃░┃  
+  ┣━╋━━╋━┫  
+  ┃░┃▒▒┃░┃  
+  ┗━┻━━┻━┛  
+            
+            
+=== items/aperture_port  #86687A  A ring segment with an intake throat and a grasping arm folded inside.
+-- 1x
+◇
+-- 2x
+┏┓
+◇┛
+-- 3x
+┏━┓
+┃◇┃
+┗━┛
+-- art 0
+            
+  ┏━━━━━━┓  
+  ┃ ╲  ╱ ┃  
+  ┃  ◇◇  ┃  
+  ┃ ╱  ╲ ┃  
+  ┗━━━━━━┛  
+            
+            
 === items/arc_caster  #5CC8E8  Two coils and a cell clamp. It throws lightning the cell can't spare.
 -- 1x
 ϟ
@@ -2391,6 +2524,25 @@ GG
      ▓█▓    
       █     
       ▀     
+            
+=== items/casting_patterns  #C8A0B4  SapienCorp casting patterns stamped THALE PROGRAM. The ring they describe is eleven paces across, and its core is not entirely machine.
+-- 1x
+≡
+-- 2x
+◎═
+═◎
+-- 3x
+┌─┐
+│◎│
+└─┘
+-- art 0
+            
+  ┌──────┐  
+  │◎ ═╪═ │  
+  │ ╱╲╱╲ │  
+  │═╪═ ◎ │  
+  └──────┘  
+            
             
 === items/chest  #946A2F  A wooden chest; place it to store items
 -- 1x
@@ -5116,6 +5268,25 @@ $3$
  ┌ ─ ─ ─ ─┐ 
  ╎        ╎ 
  ╎   $3   ╎ 
+ ╎        ╎ 
+ └ ─ ─ ─ ─┘ 
+            
+            
+=== tiles/treasure_quest_4  #FFFF00  Special worldgen block that turns into the SapienCorp foundry quest treasure
+-- 1x
+$
+-- 2x
+$4
+4$
+-- 3x
+$4$
+4$4
+$4$
+-- art 0
+            
+ ┌ ─ ─ ─ ─┐ 
+ ╎        ╎ 
+ ╎   $4   ╎ 
  ╎        ╎ 
  └ ─ ─ ─ ─┘ 
             

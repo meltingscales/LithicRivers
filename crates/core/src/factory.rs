@@ -158,6 +158,12 @@ pub enum FactoryKind {
     SealedDoor,
     /// Gives constant power from a radioactive heat source it never uses up
     Thermoelectric,
+    /// The Aperture's heart, at the center of its 11-by-11 frame (`aperture`)
+    ApertureCore,
+    /// The Aperture's border
+    ApertureFrame,
+    /// A border block that takes one of the Aperture's inputs
+    AperturePort,
     /// A consumer that does nothing but draw power, for grid tests
     #[cfg(any(test, feature = "test-support"))]
     TestConsumer,
@@ -194,6 +200,9 @@ impl FactoryKind {
             ItemKind::Battery => Some(FactoryKind::Battery),
             ItemKind::Rtg => Some(FactoryKind::Rtg),
             ItemKind::Thermoelectric => Some(FactoryKind::Thermoelectric),
+            ItemKind::ApertureCore => Some(FactoryKind::ApertureCore),
+            ItemKind::ApertureFrame => Some(FactoryKind::ApertureFrame),
+            ItemKind::AperturePort => Some(FactoryKind::AperturePort),
             ItemKind::ItemCharger => Some(FactoryKind::ItemCharger),
             ItemKind::Fermenter => Some(FactoryKind::Fermenter),
             ItemKind::AutoFeeder => Some(FactoryKind::AutoFeeder),
@@ -234,6 +243,9 @@ impl FactoryKind {
             FactoryKind::Battery => Some(ItemKind::Battery),
             FactoryKind::Rtg => Some(ItemKind::Rtg),
             FactoryKind::Thermoelectric => Some(ItemKind::Thermoelectric),
+            FactoryKind::ApertureCore => Some(ItemKind::ApertureCore),
+            FactoryKind::ApertureFrame => Some(ItemKind::ApertureFrame),
+            FactoryKind::AperturePort => Some(ItemKind::AperturePort),
             FactoryKind::ItemCharger => Some(ItemKind::ItemCharger),
             FactoryKind::Fermenter => Some(ItemKind::Fermenter),
             FactoryKind::AutoFeeder => Some(ItemKind::AutoFeeder),
@@ -276,6 +288,9 @@ impl FactoryKind {
             FactoryKind::Battery => "battery",
             FactoryKind::Rtg => "RTG",
             FactoryKind::Thermoelectric => "thermoelectric generator",
+            FactoryKind::ApertureCore => "aperture core",
+            FactoryKind::ApertureFrame => "aperture frame",
+            FactoryKind::AperturePort => "aperture port",
             FactoryKind::ItemCharger => "item charger",
             FactoryKind::Fermenter => "fermenter",
             FactoryKind::AutoFeeder => "auto-feeder",
@@ -314,6 +329,9 @@ impl FactoryKind {
             FactoryKind::Teleporter | FactoryKind::TransitStation | FactoryKind::Battery => false,
             FactoryKind::SealedDoor => false,
             FactoryKind::Rtg | FactoryKind::ItemCharger | FactoryKind::Thermoelectric => false,
+            FactoryKind::ApertureCore | FactoryKind::ApertureFrame | FactoryKind::AperturePort => {
+                false
+            }
             FactoryKind::AutoFeeder | FactoryKind::AnimalCounter | FactoryKind::BioVat => false,
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestConsumer => false,
@@ -401,6 +419,9 @@ impl FactoryKind {
             FactoryKind::Battery => SpriteRef::new("factory", "battery"),
             FactoryKind::Rtg => SpriteRef::new("factory", "rtg"),
             FactoryKind::Thermoelectric => SpriteRef::new("factory", "thermoelectric_generator"),
+            FactoryKind::ApertureCore => SpriteRef::new("factory", "aperture_core"),
+            FactoryKind::ApertureFrame => SpriteRef::new("factory", "aperture_frame"),
+            FactoryKind::AperturePort => SpriteRef::new("factory", "aperture_port"),
             FactoryKind::ItemCharger => SpriteRef::new("factory", "item_charger"),
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestConsumer => SpriteRef::new("factory", "chest"),
@@ -654,6 +675,13 @@ pub fn place(
             builder.add(crate::power::Generator::default());
             builder.add(crate::power::Rtg);
         }
+        FactoryKind::ApertureCore => {
+            builder.add(crate::aperture::Aperture::default());
+        }
+        FactoryKind::ApertureFrame => {}
+        FactoryKind::AperturePort => {
+            builder.add(crate::aperture::AperturePort::default());
+        }
         FactoryKind::Thermoelectric => {
             builder.add(crate::power::Generator::default());
             builder.add(crate::power::Thermoelectric);
@@ -905,6 +933,7 @@ pub fn run_due_steps(world: &mut World, res: &mut Resources) {
         crate::livestock::step(world, res, step_tick);
         crate::scrap::step(world, res);
         crate::sealed_door::step(world);
+        crate::aperture::step(world, res, step_tick);
         crate::furnace::step_furnaces(world, res);
         crate::teleporter::step_charging(world);
         crate::power_cells::charge_slot_cells(world);
@@ -964,6 +993,8 @@ pub fn takes(kind: FactoryKind, item: ItemKind) -> bool {
         FactoryKind::Battery | FactoryKind::ItemCharger => crate::power_cells::is_cell(item),
         FactoryKind::Rtg => false,
         FactoryKind::Thermoelectric => crate::power::heat_source_w(item).is_some(),
+        FactoryKind::AperturePort => crate::aperture::INPUTS.iter().any(|i| i.item == item),
+        FactoryKind::ApertureCore | FactoryKind::ApertureFrame => false,
         FactoryKind::AutoFeeder | FactoryKind::BioVat => crate::livestock::takes(kind, item),
         FactoryKind::ScrapWorkbench => crate::scrap::takes(item),
         FactoryKind::AnimalCounter | FactoryKind::LivestockProcessor => false,
@@ -984,6 +1015,7 @@ pub fn takes_label(kind: FactoryKind) -> Option<&'static str> {
         FactoryKind::BioVat => Some("vat ingredients"),
         FactoryKind::ScrapWorkbench => Some("craftable items"),
         FactoryKind::Thermoelectric => Some("radioactive heat sources"),
+        FactoryKind::AperturePort => Some("the Aperture's inputs"),
         FactoryKind::LivestockProcessor => Some("nothing"),
         FactoryKind::CrudeVat => Some("crude body parts"),
         FactoryKind::StandardVat => Some("crude/standard body parts"),
@@ -1056,6 +1088,8 @@ pub fn accepts_from(
             return crate::livestock::accepts(world, target, block.kind, item)
         }
         FactoryKind::ScrapWorkbench => return crate::scrap::accepts(world, target, item),
+        FactoryKind::AperturePort => return crate::aperture::port_accepts(world, target, item),
+        FactoryKind::ApertureCore | FactoryKind::ApertureFrame => return false,
         // One heat source at a time
         FactoryKind::Thermoelectric => {
             return crate::power::heat_source_w(item).is_some()
@@ -1096,6 +1130,10 @@ pub fn insert_from(
     }
     if let Ok(mut router) = world.get::<&mut crate::logistics::Router>(target) {
         router.item = Some(item);
+        return true;
+    }
+    if let Ok(mut port) = world.get::<&mut crate::aperture::AperturePort>(target) {
+        crate::aperture::port_insert(&mut port);
         return true;
     }
     if let Ok(mut bench) = world.get::<&mut crate::scrap::ScrapWorkbench>(target) {

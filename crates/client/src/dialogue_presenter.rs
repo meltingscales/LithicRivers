@@ -407,7 +407,8 @@ impl DialoguePresenter {
                                             // Completes on its own, not by handing items over
                                             lithicrivers_core::dialogue::QuestType::ReplaceArm
                                             | lithicrivers_core::dialogue::QuestType::BlackBox
-                                            | lithicrivers_core::dialogue::QuestType::SealedSite => false,
+                                            | lithicrivers_core::dialogue::QuestType::SealedSite
+                                            | lithicrivers_core::dialogue::QuestType::Foundry => false,
                                         }
                                     } else {
                                         false

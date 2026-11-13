@@ -327,6 +327,10 @@ pub enum ItemKind {
     ReactorCasingScrap,
     Thermoelectric,
     ThalesJournal,
+    CastingPatterns,
+    ApertureCore,
+    ApertureFrame,
+    AperturePort,
 }
 
 pub fn itemkind_name(kind: ItemKind) -> &'static str {
@@ -449,6 +453,10 @@ pub fn itemkind_name(kind: ItemKind) -> &'static str {
         ItemKind::ReactorCasingScrap => "Reactor Casing Scrap",
         ItemKind::Thermoelectric => "Thermoelectric Generator",
         ItemKind::ThalesJournal => "Thale's Journal",
+        ItemKind::CastingPatterns => "Aperture Casting Patterns",
+        ItemKind::ApertureCore => "Aperture Core",
+        ItemKind::ApertureFrame => "Aperture Frame",
+        ItemKind::AperturePort => "Aperture Port",
     }
 }
 
@@ -572,6 +580,10 @@ pub fn itemkind_sprite_name(kind: ItemKind) -> &'static str {
         ItemKind::ReactorCasingScrap => "reactor_casing_scrap",
         ItemKind::Thermoelectric => "thermoelectric_generator",
         ItemKind::ThalesJournal => "thales_journal",
+        ItemKind::CastingPatterns => "casting_patterns",
+        ItemKind::ApertureCore => "aperture_core",
+        ItemKind::ApertureFrame => "aperture_frame",
+        ItemKind::AperturePort => "aperture_port",
     }
 }
 
@@ -695,6 +707,10 @@ pub fn parse_itemkind_from_sprite_name(sprite_name: &str) -> Option<ItemKind> {
         "reactor_casing_scrap" => Some(ItemKind::ReactorCasingScrap),
         "thermoelectric_generator" => Some(ItemKind::Thermoelectric),
         "thales_journal" => Some(ItemKind::ThalesJournal),
+        "casting_patterns" => Some(ItemKind::CastingPatterns),
+        "aperture_core" => Some(ItemKind::ApertureCore),
+        "aperture_frame" => Some(ItemKind::ApertureFrame),
+        "aperture_port" => Some(ItemKind::AperturePort),
         _ => None,
     }
 }

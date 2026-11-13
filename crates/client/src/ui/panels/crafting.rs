@@ -8,21 +8,26 @@ use ratatui::{
     Frame,
 };
 
-/// The recipes the tab lists right now, as indices into the recipe list: those whose name,
-/// result (name or description) or an ingredient matches the search.
 /// How long the "Crafted ..." or "Not enough resources" message stays up.
 pub const CRAFT_MESSAGE_DURATION: std::time::Duration = std::time::Duration::from_millis(2500);
 
+/// The recipes the tab lists right now, as indices into the recipe list: those whose name,
+/// result (name or description) or an ingredient matches the search.
 pub fn filtered_recipes(app: &mut crate::App) -> Vec<usize> {
     let inventory = get_player_inventory(app);
     let crafting = &mut app.panels.crafting;
     let loader = &mut app.core.sprite_loader;
+    let res = &app.core.game.res;
     let shown: Vec<usize> = crafting
         .recipe_handler
         .get_recipes()
         .iter()
         .enumerate()
         .filter(|&(i, recipe)| {
+            // Secrets stay out of the list until uncovered
+            if !res.item_revealed(recipe.result) {
+                return false;
+            }
             if crafting.craftable_only && !crafting.recipe_handler.can_craft(i, &inventory) {
                 return false;
             }
@@ -70,7 +75,16 @@ pub fn render_crafting_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
 
     // The shown recipes, keeping the selection on one of them
     let shown = filtered_recipes(app);
-    let total = app.panels.crafting.recipe_handler.get_recipes().len();
+    // Hidden recipes don't count, so the total gives no secret away
+    let res = &app.core.game.res;
+    let total = app
+        .panels
+        .crafting
+        .recipe_handler
+        .get_recipes()
+        .iter()
+        .filter(|r| res.item_revealed(r.result))
+        .count();
     let state = &mut app.panels.crafting;
     state.selected = state.selected.min(shown.len().saturating_sub(1));
     let selected_recipe = shown.get(state.selected).copied();
@@ -328,4 +342,42 @@ pub fn render_crafting_panel(f: &mut Frame, app: &mut crate::App, area: Rect) {
     }
 
     f.render_widget(block, area);
+}
+
+#[cfg(test)]
+mod reveal_tests {
+    use crate::headless::chain_commands;
+    use lithicrivers_core::components::ItemKind;
+
+    fn aperture_listed(runner: &mut crate::headless::Runner) -> (bool, bool) {
+        let app = &mut runner.app;
+        let recipes = super::filtered_recipes(app);
+        let in_crafting = recipes.iter().any(|&i| {
+            app.panels.crafting.recipe_handler.get_recipes()[i].result == ItemKind::ApertureCore
+        });
+        let in_dictionary =
+            super::super::item_dictionary::filtered_items(app).contains(&ItemKind::ApertureCore);
+        (in_crafting, in_dictionary)
+    }
+
+    #[test]
+    fn the_aperture_is_hidden_until_revealed_and_stays_revealed() {
+        let mut runner = chain_commands(&["skip-splash", "key ui.MENU_NEXT 5"]);
+        assert_eq!(aperture_listed(&mut runner), (false, false));
+        runner.chain(&[
+            "key search.SEARCH",
+            "type \"aperture\"",
+            "key search.END_SEARCH",
+        ]);
+        let screen = runner.screen_text();
+        assert!(!screen.contains("Aperture Core"), "{screen}");
+
+        runner.chain(&["cheat reveal aperture"]);
+        assert_eq!(aperture_listed(&mut runner), (true, true));
+        let screen = runner.screen_text();
+        assert!(screen.contains("Aperture Core"), "{screen}");
+
+        runner.chain(&["save-reload"]);
+        assert_eq!(aperture_listed(&mut runner), (true, true));
+    }
 }

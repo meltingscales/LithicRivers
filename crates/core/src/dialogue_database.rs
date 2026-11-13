@@ -383,6 +383,26 @@ impl DialogueDatabase {
                     requires_quest_complete: None,
                 },
                 DialogueChoice {
+                    text: "Where is the foundry that cast the ring?".to_string(),
+                    leads_to: Some(DialogueNodeID::FoundryOffer),
+                    requires_item: None,
+                    npc_mood_change: Some(NPCMood::Neutral),
+                    player_mood_change: Some(NPCMood::Neutral),
+                    unlocks_quest: None,
+                    requires_quest_active: None,
+                    requires_quest_complete: Some(QuestType::SealedSite),
+                },
+                DialogueChoice {
+                    text: "I brought the casting patterns.".to_string(),
+                    leads_to: Some(DialogueNodeID::FoundryReveal),
+                    requires_item: Some("Aperture Casting Patterns".to_string()),
+                    npc_mood_change: Some(NPCMood::Neutral),
+                    player_mood_change: Some(NPCMood::Neutral),
+                    unlocks_quest: None,
+                    requires_quest_active: Some(QuestType::Foundry),
+                    requires_quest_complete: None,
+                },
+                DialogueChoice {
                     text: "Just checking on you. Goodbye!".to_string(),
                     leads_to: None,
                     requires_item: None,
@@ -526,6 +546,60 @@ impl DialogueDatabase {
             mood: NPCMood::Sad,
             choices: vec![DialogueChoice {
                 text: "Then I'll find the foundry.".to_string(),
+                leads_to: None,
+                requires_item: None,
+                npc_mood_change: Some(NPCMood::Neutral),
+                player_mood_change: Some(NPCMood::Neutral),
+                unlocks_quest: None,
+                requires_quest_active: None,
+                requires_quest_complete: None,
+            }],
+            auto_continue: false,
+            shop_item: None,
+        });
+
+        // The fifth quest, offered once "Under the River of Fire" is done
+        tree.add_node(DialogueNode {
+            id: DialogueNodeID::FoundryOffer,
+            speaker: "SC-M4X7".to_string(),
+            text: "The SapienCorp foundry, far to the east. They poured the ring there, and kept its patterns in a vault past the casting pit. The pit never cooled, user. Bring blocks to bridge it, and something to fight with.".to_string(),
+            text_effects: vec![],
+            mood: NPCMood::Neutral,
+            choices: vec![
+                DialogueChoice {
+                    text: "I'll bring the patterns back.".to_string(),
+                    leads_to: None,
+                    requires_item: None,
+                    npc_mood_change: Some(NPCMood::Neutral),
+                    player_mood_change: Some(NPCMood::Neutral),
+                    unlocks_quest: Some(QuestType::Foundry),
+                    requires_quest_active: None,
+                    requires_quest_complete: None,
+                },
+                DialogueChoice {
+                    text: "Not yet.".to_string(),
+                    leads_to: None,
+                    requires_item: None,
+                    npc_mood_change: None,
+                    player_mood_change: None,
+                    unlocks_quest: None,
+                    requires_quest_active: None,
+                    requires_quest_complete: None,
+                },
+            ],
+            auto_continue: false,
+            shop_item: None,
+        });
+
+        // Handing in the patterns: what the player is for
+        tree.add_node(DialogueNode {
+            id: DialogueNodeID::FoundryReveal,
+            speaker: "SC-M4X7".to_string(),
+            text: "<1>*reading patterns*</1> Core, frame, ports. The whole aperture. User... Thale built the frames to open it again if he failed. I kept the bunker. You were sent down the shaft. You are one of the frames. Keep the patterns: the core is cast from them.".to_string(),
+            text_effects: vec![TextEffect::Static],
+            mood: NPCMood::Weird,
+            choices: vec![DialogueChoice {
+                text: "Then I'll open it.".to_string(),
                 leads_to: None,
                 requires_item: None,
                 npc_mood_change: Some(NPCMood::Neutral),

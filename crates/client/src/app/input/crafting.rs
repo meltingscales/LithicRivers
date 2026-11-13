@@ -233,7 +233,10 @@ mod search_tests {
         assert!(runner.screen_text().contains(&format!(
             "showing {} of {}",
             shown.len(),
-            recipes.len()
+            recipes
+                .iter()
+                .filter(|r| runner.app.core.game.res.item_revealed(r.result))
+                .count()
         )));
     }
 
@@ -253,13 +256,17 @@ mod search_tests {
         assert!(count(&runner, second) > before, "crafted {second:?}");
 
         runner.chain(&["rawkey ESCAPE"]);
+        // Every recipe but the Aperture's, which stay hidden until revealed
+        let res = &runner.app.core.game.res;
         let all = runner
             .app
             .panels
             .crafting
             .recipe_handler
             .get_recipes()
-            .len();
+            .iter()
+            .filter(|r| res.item_revealed(r.result))
+            .count();
         assert_eq!(shown_results(&mut runner).len(), all);
         assert!(runner.app.panels.crafting.search.text.is_empty());
     }

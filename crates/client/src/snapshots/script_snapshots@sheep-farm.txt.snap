@@ -7,9 +7,9 @@ input_file: scripts/snapshots/sheep-farm.txt
                                             LithicRivers
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌MODES ☼ 08:48─────────┐
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  ------ - - -- - FOG │
-vvvvΞvvvvvvvvvG+βvvvvvvG,,vvvvvvv╫╫╫╫╫╫╫╫╫vvvvvGv+vvvvvvvGv+vvvvvvvTv+vvvvvv└──────────────────────┘
-─vvvvvvvvvvvvvvEvvvvvvvG+vvvvvvvv╫vvvvvvv╫vvvC→>>πCvvvvvvvvvOvvvvvvvvvOvvvvv┌Inventory─────────────┐
-v╲─vΨvvvvvvvvvvvvvvvvvvGvvpvv,vvv╫vuvSv#v╫vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Nail x10              │
+vvvvΞvvvvvvvvvG+βvvvvvvG,,vvvvvvv╫╫╫╫╫╫╫╫╫vvvvvGv+vvvvvvvGv+vvvvvvvTv+vvvv◇╬└──────────────────────┘
+─vvvvvvvvvvvvvvEvvvvvvvG+vvvvvvvv╫vvvvvvv╫vvvC→>>πCvvvvvvvvvOvvvvvvvvvOvvv╬v┌Inventory─────────────┐
+v╲─vΨvvvvvvvvvvvvvvvvvvGvvpvv,vvv╫vuvSv#v╫vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv╬v│Nail x10              │
 vvЖ+ŧvvvvvvvvvv┌──────────────── Bio-Vat - growing 25%, power 100% ─────────────────┐              │
 vvvvvvvvvvvvvvv│┌ Contents (3/6) ────────────────┐┌ Showing vat ingredients: 1 of 7┐│              │
 vvvvvvvvvvvvvvv││ 6 x Meat                       ││ 3 x Scrap Electronics          ││──────────────┘
@@ -44,17 +44,17 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌L
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Pos: (122, -5, 0)     │
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Animal counter        │
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  Counts a 9x9 square │
-vvvΞvvvvvvvvvG+βvvvvvvG,,vvvvvvv╫╫╫╫╫╫╫╫╫vvvvvGv+vvvvvvvGv+vvvvvvvTv+vvvvvvv│  4 sheep             │
-vvvvvvvvvvvvvvEvvvvvvvG+vvvvvvvv╫vvvvvvv╫vvvC→>>πCvvvvvvvvvOvvvvvvvvvOvvvvvv│Above: Air            │
-╲─vΨvvvvvvvvvvvvvvvvvvGvvpvv,vvv╫vuvS@*v╫vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Below: Rock           │
-vЖ+ŧvvvvvvvvvvvvvvvvvvvvv↑vvvvvv╫vvsvSSv╫vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
-vvvvvvvvvvvvvvvvvvvvvvCb←CHvvvvv╫vvvvvvv╫vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Help (h) ! Damaged────┐
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv╫╫╫╫X╫╫╫╫vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Look mode             │
-vvvvvvvvvvvvvvvvvvvvvvvv¥vv¥¥vvvvGG+vΩvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Move cursor:          │
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  7 8 9               │
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  4 5 6               │
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  1 2 3               │
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│v: stop looking       │
+vvvΞvvvvvvvvvG+βvvvvvvG,,vvvvvvv╫╫╫╫╫╫╫╫╫vvvvvGv+vvvvvvvGv+vvvvvvvTv+vvvv◇╬╬│  4 sheep             │
+vvvvvvvvvvvvvvEvvvvvvvG+vvvvvvvv╫vvvvvvv╫vvvC→>>πCvvvvvvvvvOvvvvvvvvvOvvv╬vv│Above: Air            │
+╲─vΨvvvvvvvvvvvvvvvvvvGvvpvv,vvv╫vuvS@*v╫vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv╬vv│Below: Rock           │
+vЖ+ŧvvvvvvvvvvvvvvvvvvvvv↑vvvvvv╫vvsvSSv╫vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv╬vv└──────────────────────┘
+vvvvvvvvvvvvvvvvvvvvvvCb←CHvvvvv╫vvvvvvv╫vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv╬vv┌Help (h) ! Damaged────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv╫╫╫╫X╫╫╫╫vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv◇vv│Look mode             │
+vvvvvvvvvvvvvvvvvvvvvvvv¥vv¥¥vvvvGG+vΩvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv╬vv│Move cursor:          │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv╬vv│  7 8 9               │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv╬vv│  4 5 6               │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv╬vv│  1 2 3               │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv╬╬╬│v: stop looking       │
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
 ┌Messages──────────────────────────────────────────────────────────────────────────────────────────┐
 │[2001] Time passes...                                                                             │

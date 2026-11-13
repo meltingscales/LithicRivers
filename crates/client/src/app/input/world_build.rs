@@ -255,7 +255,10 @@ fn get_blocks_from_inventory(app: &App) -> Vec<lithicrivers_core::components::It
             for stack in &inv.slots {
                 // Only include items that are placeable blocks
                 // For now, let's include all ItemKind variants that could be blocks
-                if is_placeable(stack.kind) && !blocks.contains(&stack.kind) {
+                if is_placeable(stack.kind)
+                    && app.core.game.res.item_revealed(stack.kind)
+                    && !blocks.contains(&stack.kind)
+                {
                     blocks.push(stack.kind);
                 }
             }
@@ -358,7 +361,7 @@ pub(crate) fn place_from_hotbar(app: &mut App, x: i64, y: i64, z: i64) {
         return;
     };
     let name = itemkind_name(item);
-    if !is_placeable(item) {
+    if !is_placeable(item) || !app.core.game.res.item_revealed(item) {
         app.core
             .game
             .res

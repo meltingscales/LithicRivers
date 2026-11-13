@@ -122,6 +122,7 @@ define_tiles! {
     NuclearWasteDeposit, "nuclear_waste_deposit", "nuclear waste", false,
     UraniumDeposit, "uranium_deposit", "uranium deposit", false,
     TreasureQuest3, "treasure_quest_3", "quest treasure", false,
+    TreasureQuest4, "treasure_quest_4", "quest treasure", false,
 }
 
 impl TileKind {

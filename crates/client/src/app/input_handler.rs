@@ -32,6 +32,11 @@ pub fn dispatch(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
         return Ok(());
     }
 
+    // The closing sequence takes every key while it plays
+    if crate::app::input::ending::handle_ending_input(app, key) {
+        return Ok(());
+    }
+
     // Handle cheat console input (high priority to intercept "/" key) - delegated to input module
     if crate::app::input::cheat_console::handle_input(app, key)? {
         return Ok(());
@@ -108,6 +113,14 @@ pub fn dispatch(app: &mut App, key: KeyCode) -> Result<(), Box<dyn Error>> {
             app.panels.power_info = None;
         } else if app.ui.keybinds.matches("stats", "CYCLE_RANGE", &key) {
             app.panels.power_range_long = !app.panels.power_range_long;
+        }
+        return Ok(());
+    }
+
+    // The Aperture's flow window closes on the close key and swallows other keys
+    if app.panels.aperture_window.is_some() {
+        if app.ui.keybinds.matches("ui", "CLOSE_HELP_MENU", &key) {
+            app.panels.aperture_window = None;
         }
         return Ok(());
     }

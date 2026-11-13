@@ -181,6 +181,7 @@ impl App {
     fn fresh_panels(credits_text: String) -> PanelStates {
         PanelStates {
             power_info: None,
+            aperture_window: None,
             power_range_long: false,
             production: Default::default(),
             furnace_window: None,
@@ -190,6 +191,8 @@ impl App {
             blueprint_window: None,
             stairs_prompt: None,
             death_choice: 0,
+            ending_page: 0,
+            ending_credits_since: None,
             resurrect: None,
             inventory: InventoryPanelState { selected: 0 },
             crafting: CraftingPanelState {

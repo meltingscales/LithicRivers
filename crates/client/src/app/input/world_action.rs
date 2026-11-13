@@ -214,6 +214,19 @@ pub fn nearby_interactions(app: &App) -> Option<NearbyInteractions> {
             FactoryKind::AnimalCounter => {
                 available_actions.push(InteractionType::AdjustCounter { entity, position })
             }
+            FactoryKind::ApertureCore | FactoryKind::ApertureFrame | FactoryKind::AperturePort => {
+                // One choice for the whole ring, however many of its blocks are adjacent
+                let core = lithicrivers_core::aperture::core_near(&app.core.game.world, position);
+                let listed = available_actions.iter().any(|a| {
+                    matches!(a, InteractionType::InspectAperture { entity: e, .. } if Some(*e) == core)
+                });
+                if let (Some(core), false) = (core, listed) {
+                    available_actions.push(InteractionType::InspectAperture {
+                        entity: core,
+                        position,
+                    })
+                }
+            }
             _ => {}
         }
     }
@@ -483,6 +496,22 @@ pub fn execute_interaction_action(app: &mut App, action: &crate::app_state::Inte
         }
         InteractionType::InspectPole { entity, .. } => {
             app.panels.power_info = Some(*entity);
+        }
+        InteractionType::InspectAperture { entity, .. } => {
+            let opened = app
+                .core
+                .game
+                .world
+                .get::<&lithicrivers_core::aperture::Aperture>(*entity)
+                .is_ok_and(|a| a.opened);
+            if opened {
+                app.core
+                    .game
+                    .res
+                    .log(lithicrivers_core::aperture::FAR_SIDE_NOT_READY);
+            } else {
+                app.panels.aperture_window = Some(*entity);
+            }
         }
         InteractionType::FeedSheep { entity, .. } => {
             let Some(player) = app.core.game.get_player_entity() else {

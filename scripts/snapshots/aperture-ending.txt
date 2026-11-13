@@ -1,0 +1,26 @@
+# The ending: the showcase's Aperture opened by cheat plays the closing pages over its open
+# art, then the credits scrolling on the clock; any key steps, and afterwards the world
+# shows it open and Interact says the far side isn't ready.
+seed 12345
+size 100x30
+world factory-showcase
+key ui.MENU_PREV
+cheat tp 162 -8 0
+key action.PASS_TIME 1
+cheat open_aperture
+expect-text "The ring takes the last of what you fed it."
+screen first-page
+rawkey ENTER
+rawkey ENTER
+rawkey ENTER
+expect-text "The Aperture stands open."
+screen last-page
+rawkey ENTER
+wait 4000
+expect-text "Credits"
+screen credits
+rawkey ENTER
+save-reload
+key action.INTERACT
+expect-text "The far side is not ready for you yet."
+screen after

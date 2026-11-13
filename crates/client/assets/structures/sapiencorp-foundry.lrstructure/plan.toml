@@ -1,0 +1,168 @@
+# The SapienCorp Foundry, the fifth quest's goal: where the aperture's ring was cast. Its
+# entrance yard is guarded; its casting hall is cut across by a molten casting pit, five
+# tiles of lava wall to wall, with rock heaps on the near side to bridge it from (a plain
+# block placed on lava leaves walkable crust). Beyond the pit, the pattern vault holds the
+# aperture's casting patterns in a quest chest. No transit station: the walk out is the
+# last journey.
+# Compiled into shape_layers.txt by `just util-structure-build`; edit this, not that.
+layers = 1
+width = 30
+height = 20
+
+[legend]
+"#" = "concrete"
+" " = "air"
+"." = "existing_worldgen"
+"L" = "lava"
+"r" = "rock"
+"4" = "treasure_quest_4"
+"T" = "treasure_rare"
+"S" = "scrap_rare"
+"s" = "scrap_common"
+"X" = "iron_scrap"
+"A" = "android_spawn"
+"E" = "enemy_spawn"
+
+# The foundry walls, open to the yard on the south
+[[shape]]
+kind = "room"
+layer = 0
+x = 0
+y = 0
+w = 30
+h = 20
+wall = "#"
+
+[[shape]]
+kind = "fill"
+layer = 0
+x = 13
+y = 19
+w = 4
+h = 1
+block = " "
+
+# The pattern vault, beyond the pit
+[[shape]]
+kind = "put"
+layer = 0
+x = 15
+y = 2
+block = "4"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 5
+y = 2
+block = "T"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 24
+y = 2
+block = "S"
+
+# The molten casting pit, wall to wall
+[[shape]]
+kind = "fill"
+layer = 0
+x = 1
+y = 5
+w = 28
+h = 5
+block = "L"
+
+# Rock heaps on the near side, to bridge it from
+[[shape]]
+kind = "fill"
+layer = 0
+x = 3
+y = 10
+w = 4
+h = 1
+block = "r"
+
+[[shape]]
+kind = "fill"
+layer = 0
+x = 22
+y = 10
+w = 4
+h = 1
+block = "r"
+
+[[shape]]
+kind = "fill"
+layer = 0
+x = 4
+y = 11
+w = 2
+h = 1
+block = "r"
+
+# The casting floor and yard: slag, scrap and the guards
+[[shape]]
+kind = "put"
+layer = 0
+x = 9
+y = 12
+block = "X"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 10
+y = 12
+block = "X"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 20
+y = 13
+block = "X"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 2
+y = 16
+block = "s"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 27
+y = 14
+block = "s"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 12
+y = 17
+block = "s"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 6
+y = 15
+block = "A"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 23
+y = 15
+block = "A"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 15
+y = 13
+block = "E"
+

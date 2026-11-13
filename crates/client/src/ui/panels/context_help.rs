@@ -88,6 +88,7 @@ fn interaction_label(action: &InteractionType) -> String {
         ),
         InteractionType::FeedSheep { .. } => "feed sheep".to_string(),
         InteractionType::AdjustCounter { .. } => "adjust counter".to_string(),
+        InteractionType::InspectAperture { .. } => "inspect aperture".to_string(),
         InteractionType::OpenCloseDoor { is_open: true, .. } => "close door".to_string(),
         InteractionType::OpenCloseDoor { is_open: false, .. } => "open door".to_string(),
     }

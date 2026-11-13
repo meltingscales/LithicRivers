@@ -1,0 +1,22 @@
+{
+  "blocks": {
+    " ": "air",
+    "#": "concrete",
+    ".": "existing_worldgen",
+    "4": "treasure_quest_4",
+    "A": "android_spawn",
+    "E": "enemy_spawn",
+    "L": "lava",
+    "S": "scrap_rare",
+    "T": "treasure_rare",
+    "X": "iron_scrap",
+    "r": "rock",
+    "s": "scrap_common"
+  },
+  "gen_biomes": "QUEST_ONLY",
+  "gen_chance": 0.0,
+  "y_layer_gen_range": [
+    0,
+    0
+  ]
+}

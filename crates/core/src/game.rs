@@ -38,6 +38,10 @@ pub const ANNEX_MARKER: &str = "Thale's Annex";
 pub const ANNEX_POS: (i64, i64, i64) = (-260, -820, 0);
 /// How many layers below its surface hut the annex is.
 pub const ANNEX_DEPTH: i64 = 12;
+/// The fifth quest's site: the SapienCorp foundry, on the surface far from the bunker.
+pub const FOUNDRY_STRUCTURE: &str = "sapiencorp-foundry.lrstructure";
+pub const FOUNDRY_MARKER: &str = "SapienCorp Foundry";
+pub const FOUNDRY_POS: (i64, i64, i64) = (900, -460, 0);
 
 pub struct Game {
     pub world: World,
@@ -608,6 +612,7 @@ impl Game {
         }
         self.queue_quest_structure(DATACENTER_STRUCTURE, DATACENTER_POS, false);
         self.queue_quest_structure(ANNEX_STRUCTURE, ANNEX_POS, true);
+        self.queue_quest_structure(FOUNDRY_STRUCTURE, FOUNDRY_POS, false);
     }
 
     /// Queue a quest structure to load with its chunk, unless it is already placed or
@@ -1743,7 +1748,10 @@ mod tests {
             game.res
                 .pending_structures
                 .iter()
-                .filter(|p| p.name != DATACENTER_STRUCTURE && p.name != ANNEX_STRUCTURE)
+                .filter(
+                    |p| ![DATACENTER_STRUCTURE, ANNEX_STRUCTURE, FOUNDRY_STRUCTURE]
+                        .contains(&p.name.as_str())
+                )
                 .count(),
             0
         );
@@ -1776,7 +1784,10 @@ mod tests {
             game.res
                 .pending_structures
                 .iter()
-                .filter(|p| p.name != DATACENTER_STRUCTURE && p.name != ANNEX_STRUCTURE)
+                .filter(
+                    |p| ![DATACENTER_STRUCTURE, ANNEX_STRUCTURE, FOUNDRY_STRUCTURE]
+                        .contains(&p.name.as_str())
+                )
                 .count(),
             0
         );
@@ -1793,7 +1804,10 @@ mod tests {
             game.res
                 .pending_structures
                 .iter()
-                .filter(|p| p.name != DATACENTER_STRUCTURE && p.name != ANNEX_STRUCTURE)
+                .filter(
+                    |p| ![DATACENTER_STRUCTURE, ANNEX_STRUCTURE, FOUNDRY_STRUCTURE]
+                        .contains(&p.name.as_str())
+                )
                 .count(),
             0
         );
@@ -1813,7 +1827,10 @@ mod tests {
             game.res
                 .pending_structures
                 .iter()
-                .filter(|p| p.name != DATACENTER_STRUCTURE && p.name != ANNEX_STRUCTURE)
+                .filter(
+                    |p| ![DATACENTER_STRUCTURE, ANNEX_STRUCTURE, FOUNDRY_STRUCTURE]
+                        .contains(&p.name.as_str())
+                )
                 .count(),
             0
         );
@@ -1826,7 +1843,10 @@ mod tests {
             game.res
                 .pending_structures
                 .iter()
-                .filter(|p| p.name != DATACENTER_STRUCTURE && p.name != ANNEX_STRUCTURE)
+                .filter(
+                    |p| ![DATACENTER_STRUCTURE, ANNEX_STRUCTURE, FOUNDRY_STRUCTURE]
+                        .contains(&p.name.as_str())
+                )
                 .count(),
             0
         );

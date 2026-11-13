@@ -236,6 +236,7 @@ fn ui_main(f: &mut Frame, app: &mut App) {
 
     // Render the power pole info box if open
     crate::ui::modals::render_power_info_modal(f, app);
+    crate::ui::modals::render_aperture_window(f, app);
     crate::ui::modals::render_furnace_window(f, app);
     crate::ui::modals::render_filter_picker(f, app);
     crate::ui::modals::render_teleporter_window(f, app);
@@ -257,6 +258,7 @@ fn ui_main(f: &mut Frame, app: &mut App) {
     // Render cheat console if active (on top of everything else)
     render_cheat_console_modal(f, app);
     crate::ui::modals::render_death_screen(f, app);
+    crate::ui::modals::render_ending(f, app);
     crate::ui::modals::render_gamepad_wheel(f, app);
 }
 

@@ -78,7 +78,10 @@ pub fn block_will_spawn_entity(tile_kind: TileKind) -> bool {
         TileKind::SealedDoorSite | TileKind::BurnerGeneratorSite => true,
         TileKind::ScrapCommon => true,
         TileKind::ScrapRare => true,
-        TileKind::TreasureQuest1 | TileKind::TreasureQuest2 | TileKind::TreasureQuest3 => true,
+        TileKind::TreasureQuest1
+        | TileKind::TreasureQuest2
+        | TileKind::TreasureQuest3
+        | TileKind::TreasureQuest4 => true,
         _ => false,
     }
 }
@@ -149,13 +152,17 @@ pub fn spawn_entity_for_block(
                 .structure_blocks
                 .push((block_x, block_y, block_z, tile_kind));
         }
-        TileKind::TreasureQuest1 | TileKind::TreasureQuest2 | TileKind::TreasureQuest3 => {
+        TileKind::TreasureQuest1
+        | TileKind::TreasureQuest2
+        | TileKind::TreasureQuest3
+        | TileKind::TreasureQuest4 => {
             // The game turns it into the quest chest, once per world: the arm, the
             // datacenter's data shard, or Thale's journal
             let item = match tile_kind {
                 TileKind::TreasureQuest1 => crate::components::ItemKind::SalvagedArm,
                 TileKind::TreasureQuest2 => crate::components::ItemKind::DataShard,
-                _ => crate::components::ItemKind::ThalesJournal,
+                TileKind::TreasureQuest3 => crate::components::ItemKind::ThalesJournal,
+                _ => crate::components::ItemKind::CastingPatterns,
             };
             game_world
                 .quest_treasures
