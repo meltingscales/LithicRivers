@@ -85,7 +85,7 @@ These came up in the docs but need no new change:
 | Body repair | Implemented (repair modal, `RepairRecipeHandler`) |
 | Branching saves and checkpoints | `add-world-snapshots` |
 | A 3D world explorer | `add-3d-viewer` |
-| Ore spouts, ruined reactors, nuclear tier | `add-ore-spouts`, `add-ruined-reactors`, `nuclear-slime` spec |
+| Ore spouts, ruined reactors, nuclear tier | `add-ore-spouts`, `add-sealed-site-quest` (ruined reactors), `nuclear-slime` spec |
 | Lithic Rivers depth, caves and deposits | `worldgen-depth` spec |
 | Factorio-style hotbar, building that isn't annoying | `mouse-input`, `blueprints` and the factory specs |
 | Player death, day/night cycle, the arm quest, body damage effects | `player-death` and `death-options` specs, `day-night-cycle` spec, `arm-replacement-quest` spec, `body-damage-effects` spec |

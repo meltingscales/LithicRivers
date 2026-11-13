@@ -469,3 +469,57 @@ fn surface_generation_builds_the_biome_noise_once_per_world() {
     }
     assert_eq!(crate::world::biome_noises_built() - before, 1);
 }
+
+#[test]
+fn every_reactor_layout_has_uranium_and_far_more_waste() {
+    use crate::structure::StructureDefinition;
+    for name in crate::world::REACTOR_RUINS {
+        let def = StructureDefinition::load_from_embedded(name);
+        let count = |t| def.tile_positions(t, 0, 0, 0, false).len();
+        let (uranium, waste) = (
+            count(TileKind::UraniumDeposit),
+            count(TileKind::NuclearWasteDeposit),
+        );
+        assert!(uranium >= 1, "{name}: no uranium");
+        assert!(
+            waste >= uranium * 2,
+            "{name}: {uranium} uranium, {waste} waste"
+        );
+        assert!(count(TileKind::ReactorCasing) > 0, "{name}: no casing");
+    }
+}
+
+/// The surface chunks (of a 24 by 24 square far from the quest sites) holding reactor
+/// casing once their structures are placed, for `seed`.
+fn reactor_chunks(seed: u64) -> Vec<(i64, i64)> {
+    let mut game = crate::test_support::TestWorld::new(seed).build().game;
+    let mut found = Vec::new();
+    for cy in 40..64 {
+        for cx in 40..64 {
+            game.ensure_chunk_with_pending_structures(cx, cy, 0);
+        }
+    }
+    let w = &mut game.res.world_state.world;
+    for cy in 40..64 {
+        for cx in 40..64 {
+            let has = (0..CHUNK_SIZE).any(|y| {
+                (0..CHUNK_SIZE).any(|x| {
+                    w.get_tile_cached(cx * CHUNK_SIZE + x, cy * CHUNK_SIZE + y, 0)
+                        == TileKind::ReactorCasing
+                })
+            });
+            if has {
+                found.push((cx, cy));
+            }
+        }
+    }
+    found
+}
+
+#[test]
+fn reactor_ruins_are_rare_and_the_same_for_the_same_seed() {
+    let a = reactor_chunks(12345);
+    assert!(!a.is_empty(), "some ruins in 576 chunks");
+    assert!(a.len() < 40, "rare: {} chunks", a.len());
+    assert_eq!(a, reactor_chunks(12345));
+}

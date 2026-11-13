@@ -202,6 +202,7 @@ pub fn nearby_interactions(app: &App) -> Option<NearbyInteractions> {
             | FactoryKind::AutoFeeder
             | FactoryKind::LivestockProcessor
             | FactoryKind::ScrapWorkbench
+            | FactoryKind::Thermoelectric
             | FactoryKind::BioVat => available_actions.push(InteractionType::OpenMachine {
                 entity,
                 position,

@@ -98,6 +98,7 @@ pub fn station_name(structure: &str, inner: bool) -> &'static str {
     match (structure, inner) {
         ("sapiencorp-bunker", _) => "Bunker Station",
         ("sapiencorp-datacenter", _) => "Datacenter Station",
+        ("thale-annex", _) => "Annex Station",
         (_, false) => "Transit Station",
         (_, true) => "Inner Transit Station",
     }

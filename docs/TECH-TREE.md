@@ -30,9 +30,9 @@ Metal doesn't come from veins you dig out. Molten ore spouts well up liquid ore,
 - `add-ore-spouts`: spouts (iron first), fluids, pumps, pipe networks, casting basins, crucibles, iron ingots.
 - Later: copper and other spouts, alloy mixing from two fluids, processing machines that take fluid from pipes.
 
-### 3. Ruins and thermoelectrics (planned)
-Rare ruined reactors from the old world hold nuclear waste and a little uranium. A thermoelectric generator turns one radioactive item into small, endless power: the first power source that needs no fuel.
-- `add-ruined-reactors`: ruin layouts, casing, waste, uranium deposits, the thermoelectric generator.
+### 3. Ruins and thermoelectrics
+Rare ruined reactors from the old world hold nuclear waste and a little uranium. A thermoelectric generator turns one radioactive item into small, endless power: the first power source that needs no fuel. Until ore spouts make iron ingots, it is built from iron scrap, scrap electronics and reactor casing scrap; quest 4 has the player build one to open Thale's Annex.
+- `add-sealed-site-quest`: ruin layouts, casing, waste, uranium deposits, the thermoelectric generator (folded in from `add-ruined-reactors`).
 
 ### 4. Advanced nuclear (idea, not yet proposed)
 - Refining uranium into fuel through fluid processing (pipes from tier 2).

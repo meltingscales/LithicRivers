@@ -17,7 +17,7 @@ The Fractal Tear's materials (`add-fractal-tear-biome`) are worthless raw. The u
   3. precipitate the leachate into yellowcake
   4. enrich the yellowcake in a centrifuge, which mostly yields depleted uranium and rarely enriched uranium
 
-  Enriched uranium feeds the nuclear tier (`add-ruined-reactors`' reactor and fuel rods).
+  Enriched uranium feeds the nuclear tier (`add-sealed-site-quest`' reactor and fuel rods).
 - **Ore washing:**
   - A **washing plant** washes fractal residue (and any sludge byproduct) with water.
   - Each wash rolls a seeded loot table: mostly grit, sometimes scrap, very rarely a material found nowhere else (for example "strange matter", an endgame catalyst).
@@ -44,4 +44,4 @@ The Fractal Tear's materials (`add-fractal-tear-biome`) are worthless raw. The u
   - `add-fractal-tear-biome` (the raw materials)
   - `add-ore-spouts` (fluids, pipes and pumps)
   - the power grid
-  - `add-ruined-reactors`, which uses the enriched uranium
+  - `add-sealed-site-quest`, which uses the enriched uranium

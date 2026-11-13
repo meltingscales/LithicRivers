@@ -1,0 +1,126 @@
+# A ruined reactor: the cracked containment ring of a small SapienCorp reactor, open to
+# the sky, its spent waste spilled across the floor and one uranium deposit left in the
+# core pit a layer down.
+# Compiled into shape_layers.txt by `just util-structure-build`; edit this, not that.
+layers = 2
+width = 11
+height = 11
+
+[legend]
+"C" = "reactor_casing"
+"W" = "nuclear_waste_deposit"
+"U" = "uranium_deposit"
+" " = "air"
+"." = "existing_worldgen"
+">" = "stairs"
+"s" = "scrap_common"
+
+# --- Layer 0: the core pit, below ground ---
+[[shape]]
+kind = "fill"
+layer = 0
+x = 0
+y = 0
+w = 11
+h = 11
+block = "C"
+
+[[shape]]
+kind = "room"
+layer = 0
+x = 3
+y = 3
+w = 5
+h = 5
+wall = "C"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 5
+y = 5
+block = "U"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 4
+y = 4
+block = "W"
+
+# --- Layer 1: the ring at ground level ---
+[[shape]]
+kind = "room"
+layer = 1
+x = 0
+y = 0
+w = 11
+h = 11
+wall = "C"
+
+[[shape]]
+kind = "fill"
+layer = 1
+x = 0
+y = 4
+w = 1
+h = 3
+block = "."
+
+[[shape]]
+kind = "fill"
+layer = 1
+x = 7
+y = 0
+w = 2
+h = 1
+block = "."
+
+[[shape]]
+kind = "put"
+layer = 1
+x = 2
+y = 2
+block = "W"
+
+[[shape]]
+kind = "put"
+layer = 1
+x = 8
+y = 3
+block = "W"
+
+[[shape]]
+kind = "put"
+layer = 1
+x = 3
+y = 8
+block = "W"
+
+[[shape]]
+kind = "put"
+layer = 1
+x = 8
+y = 8
+block = "W"
+
+[[shape]]
+kind = "put"
+layer = 1
+x = 7
+y = 6
+block = "W"
+
+[[shape]]
+kind = "put"
+layer = 1
+x = 2
+y = 6
+block = "s"
+
+[[shape]]
+kind = "stairs"
+x = 4
+y = 6
+from_layer = 0
+to_layer = 1

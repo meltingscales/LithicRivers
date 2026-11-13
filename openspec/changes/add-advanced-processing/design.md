@@ -15,7 +15,7 @@
 - Every machine works with belts and pipes.
 
 **Non-Goals:**
-- The nuclear reactor itself (`add-ruined-reactors`).
+- The nuclear reactor itself (`add-sealed-site-quest`).
 - Heat simulation beyond each machine's own progress.
 
 ## Decisions

@@ -7,8 +7,8 @@ input_file: scripts/snapshots/sheep-farm.txt
                                             LithicRivers
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌MODES ☼ 08:48─────────┐
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  ------ - - -- - FOG │
-vvvvΞvvvvvvvvvG+βvvvvvvG,,vvvvvvv╫╫╫╫╫╫╫╫╫vvvvvGv+vvvvvvvGv+vvvvvvvvvvvvvvvv└──────────────────────┘
-─vvvvvvvvvvvvvvEvvvvvvvG+vvvvvvvv╫vvvvvvv╫vvvC→>>πCvvvvvvvvvOvvvvvvvvvvvvvvv┌Inventory─────────────┐
+vvvvΞvvvvvvvvvG+βvvvvvvG,,vvvvvvv╫╫╫╫╫╫╫╫╫vvvvvGv+vvvvvvvGv+vvvvvvvTv+vvvvvv└──────────────────────┘
+─vvvvvvvvvvvvvvEvvvvvvvG+vvvvvvvv╫vvvvvvv╫vvvC→>>πCvvvvvvvvvOvvvvvvvvvOvvvvv┌Inventory─────────────┐
 v╲─vΨvvvvvvvvvvvvvvvvvvGvvpvv,vvv╫vuvSv#v╫vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Nail x10              │
 vvЖ+ŧvvvvvvvvvv┌──────────────── Bio-Vat - growing 25%, power 100% ─────────────────┐              │
 vvvvvvvvvvvvvvv│┌ Contents (3/6) ────────────────┐┌ Showing vat ingredients: 1 of 7┐│              │
@@ -44,8 +44,8 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌L
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Pos: (122, -5, 0)     │
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Animal counter        │
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  Counts a 9x9 square │
-vvvΞvvvvvvvvvG+βvvvvvvG,,vvvvvvv╫╫╫╫╫╫╫╫╫vvvvvGv+vvvvvvvGv+vvvvvvvvvvvvvvvvv│  4 sheep             │
-vvvvvvvvvvvvvvEvvvvvvvG+vvvvvvvv╫vvvvvvv╫vvvC→>>πCvvvvvvvvvOvvvvvvvvvvvvvvvv│Above: Air            │
+vvvΞvvvvvvvvvG+βvvvvvvG,,vvvvvvv╫╫╫╫╫╫╫╫╫vvvvvGv+vvvvvvvGv+vvvvvvvTv+vvvvvvv│  4 sheep             │
+vvvvvvvvvvvvvvEvvvvvvvG+vvvvvvvv╫vvvvvvv╫vvvC→>>πCvvvvvvvvvOvvvvvvvvvOvvvvvv│Above: Air            │
 ╲─vΨvvvvvvvvvvvvvvvvvvGvvpvv,vvv╫vuvS@*v╫vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Below: Rock           │
 vЖ+ŧvvvvvvvvvvvvvvvvvvvvv↑vvvvvv╫vvsvSSv╫vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
 vvvvvvvvvvvvvvvvvvvvvvCb←CHvvvvv╫vvvvvvv╫vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Help (h) ! Damaged────┐

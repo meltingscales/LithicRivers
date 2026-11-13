@@ -1,0 +1,11 @@
+# A ruined reactor on the surface (a drained spent-fuel pond): its casing, the waste
+# racks and the stairs down to its uranium
+seed 12345
+size 100x30
+skip-splash
+key ui.MENU_PREV
+cheat toggle_fogofwar
+cheat noclip_toggle
+cheat tp 3608 2645 0
+expect-text "Θ"
+screen ruin

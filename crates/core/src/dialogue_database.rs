@@ -363,6 +363,26 @@ impl DialogueDatabase {
                     requires_quest_complete: None,
                 },
                 DialogueChoice {
+                    text: "Where is the sealed site under the river of fire?".to_string(),
+                    leads_to: Some(DialogueNodeID::SealedSiteOffer),
+                    requires_item: None,
+                    npc_mood_change: Some(NPCMood::Neutral),
+                    player_mood_change: Some(NPCMood::Neutral),
+                    unlocks_quest: None,
+                    requires_quest_active: None,
+                    requires_quest_complete: Some(QuestType::BlackBox),
+                },
+                DialogueChoice {
+                    text: "I found Thale's journal.".to_string(),
+                    leads_to: Some(DialogueNodeID::SealedSiteReveal),
+                    requires_item: Some("Thale's Journal".to_string()),
+                    npc_mood_change: Some(NPCMood::Neutral),
+                    player_mood_change: Some(NPCMood::Neutral),
+                    unlocks_quest: None,
+                    requires_quest_active: Some(QuestType::SealedSite),
+                    requires_quest_complete: None,
+                },
+                DialogueChoice {
                     text: "Just checking on you. Goodbye!".to_string(),
                     leads_to: None,
                     requires_item: None,
@@ -452,6 +472,60 @@ impl DialogueDatabase {
             mood: NPCMood::Neutral,
             choices: vec![DialogueChoice {
                 text: "I'll find out what Thale was building.".to_string(),
+                leads_to: None,
+                requires_item: None,
+                npc_mood_change: Some(NPCMood::Neutral),
+                player_mood_change: Some(NPCMood::Neutral),
+                unlocks_quest: None,
+                requires_quest_active: None,
+                requires_quest_complete: None,
+            }],
+            auto_continue: false,
+            shop_item: None,
+        });
+
+        // The fourth quest, offered once "Black Box" is done
+        tree.add_node(DialogueNode {
+            id: DialogueNodeID::SealedSiteOffer,
+            speaker: "SC-M4X7".to_string(),
+            text: "Thale's annex. A SapienCorp shaft goes down from a hut south-west of here, past the rivers of fire. The annex ran on its own reactor's leavings, user: if the door is dead, the leavings are still there.".to_string(),
+            text_effects: vec![],
+            mood: NPCMood::Neutral,
+            choices: vec![
+                DialogueChoice {
+                    text: "I'll go down.".to_string(),
+                    leads_to: None,
+                    requires_item: None,
+                    npc_mood_change: Some(NPCMood::Neutral),
+                    player_mood_change: Some(NPCMood::Neutral),
+                    unlocks_quest: Some(QuestType::SealedSite),
+                    requires_quest_active: None,
+                    requires_quest_complete: None,
+                },
+                DialogueChoice {
+                    text: "Not yet.".to_string(),
+                    leads_to: None,
+                    requires_item: None,
+                    npc_mood_change: None,
+                    player_mood_change: None,
+                    unlocks_quest: None,
+                    requires_quest_active: None,
+                    requires_quest_complete: None,
+                },
+            ],
+            auto_continue: false,
+            shop_item: None,
+        });
+
+        // Handing in the journal: the aperture
+        tree.add_node(DialogueNode {
+            id: DialogueNodeID::SealedSiteReveal,
+            speaker: "SC-M4X7".to_string(),
+            text: "<1>*reading journal*</1> The aperture: a gate to the far side, fed by the reactor. It opened once, four seconds. \"We heard the far side breathing. It turned toward us.\" Thale had the maintenance frames built to remember its shape. The frames were my model line, user. The last page names the foundry that cast the ring.".to_string(),
+            text_effects: vec![TextEffect::Static],
+            mood: NPCMood::Sad,
+            choices: vec![DialogueChoice {
+                text: "Then I'll find the foundry.".to_string(),
                 leads_to: None,
                 requires_item: None,
                 npc_mood_change: Some(NPCMood::Neutral),

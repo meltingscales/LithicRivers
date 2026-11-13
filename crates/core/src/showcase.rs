@@ -122,6 +122,12 @@ pub const EXAMPLES: &[Example] = &[
         has_input: true,
         build: sealed_door,
     },
+    Example {
+        name: "Thermoelectric generator: nuclear waste keeps a door open forever",
+        size: (7, 2),
+        has_input: false,
+        build: thermoelectric,
+    },
 ];
 
 /// The top-left corner of the first example; the rest follow eastward.
@@ -318,6 +324,25 @@ fn sealed_door(game: &mut Game, o: Position) {
         Facing::North,
     );
     fill(game, generator, &[(ItemKind::Biochar, 8)]);
+    place(game, FactoryKind::PowerPole, at(o, 5, 0), Facing::North);
+    place(game, FactoryKind::SealedDoor, at(o, 6, 1), Facing::North);
+}
+
+/// A thermoelectric generator on a lump of nuclear waste powering a sealed door, with no
+/// fuel to run out.
+///
+/// ```text
+///   . . . T . + .      T thermoelectric generator, + pole (clear of the last example's)
+///   . . . . . . X      X sealed door
+/// ```
+fn thermoelectric(game: &mut Game, o: Position) {
+    let generator = place(
+        game,
+        FactoryKind::Thermoelectric,
+        at(o, 3, 0),
+        Facing::North,
+    );
+    fill(game, generator, &[(ItemKind::NuclearWaste, 1)]);
     place(game, FactoryKind::PowerPole, at(o, 5, 0), Facing::North);
     place(game, FactoryKind::SealedDoor, at(o, 6, 1), Facing::North);
 }

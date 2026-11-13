@@ -356,6 +356,17 @@ fn render_corpse_loot_modal(
                 ),
             )
         }
+        Some(FactoryKind::Thermoelectric) => {
+            let source = corpse_inv.slots.first().map(|s| s.kind);
+            let status = match source.and_then(lithicrivers_core::power::heat_source_w) {
+                Some(w) => format!("{} kW forever", w / 1000),
+                None => "needs nuclear waste or a uranium chunk".to_string(),
+            };
+            (
+                format!(" Thermoelectric Generator - {status} "),
+                " Heat source ".to_string(),
+            )
+        }
         Some(FactoryKind::ScrapWorkbench) => {
             let world = &app.core.game.world;
             let bench = world

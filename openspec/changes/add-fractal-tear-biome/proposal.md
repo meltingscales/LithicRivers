@@ -15,7 +15,7 @@ The deepest layers are the Lithic Rivers caverns, richer in deposits as they go 
 - **New blocks:**
   - **Tear glass**, see-through and unbreakable, outlining the set's boundary.
   - **Petrogen shale**, the raw input of petrogen distillation.
-  - **Uranic crust**, raw uranium ore for `add-ruined-reactors`' nuclear tier.
+  - **Uranic crust**, raw uranium ore for `add-sealed-site-quest`' nuclear tier.
   - **Fractal residue**, a sludge that ore washing (`add-advanced-processing`) sifts for very rare materials.
   - Each has a mining drop, and the strange ones have a lore description.
 - **Atmosphere:**

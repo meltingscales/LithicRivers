@@ -47,6 +47,24 @@ pub struct Generator {
 
 /// What an RTG gives its network, in watts, always: it needs no fuel.
 pub const RTG_W: u64 = 100_000;
+/// What a thermoelectric generator gives with nuclear waste or a uranium chunk as its heat
+/// source, in watts.
+pub const THERMO_WASTE_W: u64 = 30_000;
+pub const THERMO_URANIUM_W: u64 = 60_000;
+
+/// A thermoelectric generator: constant power from the radioactive item in its one slot,
+/// which it never uses up.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct Thermoelectric;
+
+/// The power a heat source gives a thermoelectric generator, in watts.
+pub fn heat_source_w(item: ItemKind) -> Option<u64> {
+    match item {
+        ItemKind::NuclearWaste => Some(THERMO_WASTE_W),
+        ItemKind::UraniumChunk => Some(THERMO_URANIUM_W),
+        _ => None,
+    }
+}
 
 /// Marks a generator as an RTG: constant output, no fuel or buffer.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -275,6 +293,14 @@ fn available_j(world: &World, generator: Entity) -> u64 {
     if world.get::<&Rtg>(generator).is_ok() {
         return RTG_W / STEPS_PER_FACTORY_SECOND;
     }
+    if world.get::<&Thermoelectric>(generator).is_ok() {
+        let w = world
+            .get::<&Inventory>(generator)
+            .ok()
+            .and_then(|inv| inv.slots.iter().find_map(|s| heat_source_w(s.kind)))
+            .unwrap_or(0);
+        return w / STEPS_PER_FACTORY_SECOND;
+    }
     let max_step = BURNER_MAX_W / STEPS_PER_FACTORY_SECOND;
     let buffer = world.get::<&Generator>(generator).map_or(0, |g| g.buffer_j);
     let next = world
@@ -288,8 +314,8 @@ fn available_j(world: &World, generator: Entity) -> u64 {
 /// Take `joules` from a generator, starting its next fuel item if the buffer runs short.
 /// Returns the fuel item it started burning, if any.
 fn draw(world: &mut World, generator: Entity, joules: u64) -> Option<ItemKind> {
-    // An RTG burns nothing
-    if world.get::<&Rtg>(generator).is_ok() {
+    // An RTG burns nothing, and a thermoelectric generator keeps its heat source
+    if world.get::<&Rtg>(generator).is_ok() || world.get::<&Thermoelectric>(generator).is_ok() {
         return None;
     }
     let mut burned = None;
@@ -431,6 +457,7 @@ pub fn is_grid_block(kind: FactoryKind) -> bool {
             | FactoryKind::TransitStation
             | FactoryKind::Battery
             | FactoryKind::Rtg
+            | FactoryKind::Thermoelectric
             | FactoryKind::ItemCharger
     ) || kind.is_test_consumer()
 }
@@ -666,6 +693,71 @@ mod tests {
         fuel(&mut game, generator, ItemKind::Log, 1);
         pass_seconds(&mut game, 1);
         assert_eq!(satisfaction(&game, consumers[0]), 1000, "resumed");
+    }
+
+    /// A pole with a thermoelectric generator holding `source` and one 45 kW consumer.
+    fn thermo_grid(game: &mut Game, source: Option<ItemKind>) -> (Entity, Entity) {
+        put(game, FactoryKind::PowerPole, at(0, 0));
+        let generator = put(game, FactoryKind::Thermoelectric, at(-1, 0));
+        let consumer = put(game, FactoryKind::TestConsumer, at(1, 0));
+        if let Some(item) = source {
+            assert!(insert(&mut game.world, generator, item));
+        }
+        (generator, consumer)
+    }
+
+    #[test]
+    fn a_thermoelectric_generator_gives_power_by_its_heat_source_forever() {
+        for (source, expected) in [
+            (None, 0),
+            (
+                Some(ItemKind::NuclearWaste),
+                (THERMO_WASTE_W * 1000 / TEST_CONSUMER_W) as u16,
+            ),
+            (Some(ItemKind::UraniumChunk), 1000),
+        ] {
+            let mut game = grid_game();
+            let (generator, consumer) = thermo_grid(&mut game, source);
+            pass_seconds(&mut game, 600);
+            assert_eq!(satisfaction(&game, consumer), expected, "{source:?}");
+            let held = game
+                .world
+                .get::<&Inventory>(generator)
+                .unwrap()
+                .slots
+                .clone();
+            assert_eq!(
+                held.first().map(|s| (s.kind, s.qty)),
+                source.map(|k| (k, 1)),
+                "kept"
+            );
+        }
+    }
+
+    #[test]
+    fn a_thermoelectric_generator_takes_one_heat_source_only() {
+        let mut game = grid_game();
+        let (generator, _) = thermo_grid(&mut game, None);
+        assert!(
+            !accepts(&game.world, generator, ItemKind::Log),
+            "not a heat source"
+        );
+        assert!(insert(&mut game.world, generator, ItemKind::NuclearWaste));
+        assert!(
+            !accepts(&game.world, generator, ItemKind::UraniumChunk),
+            "already holds one"
+        );
+    }
+
+    #[test]
+    fn a_thermoelectric_generator_keeps_its_source_across_a_reload() {
+        let mut game = grid_game();
+        let (_, consumer) = thermo_grid(&mut game, Some(ItemKind::UraniumChunk));
+        pass_seconds(&mut game, 1);
+        let saved = crate::save_load::save_to_string(&game, &serde_json::Value::Null).unwrap();
+        crate::save_load::load_from_str(&mut game, &saved).unwrap();
+        pass_seconds(&mut game, 1);
+        assert_eq!(satisfaction(&game, consumer), 1000);
     }
 
     #[test]

@@ -7,13 +7,18 @@ pub enum QuestType {
     ReplaceArm,
     /// "Black Box": recover the reactor's data from the SapienCorp datacenter
     BlackBox,
+    /// "Under the River of Fire": recover Thale's journal from his annex in the deep
+    SealedSite,
 }
 
 impl QuestType {
     /// Quests whose objectives the game checks each tick, in order (`quests::advance`),
     /// instead of completing fetch objectives as items come in.
     pub fn ordered(self) -> bool {
-        matches!(self, QuestType::ReplaceArm | QuestType::BlackBox)
+        matches!(
+            self,
+            QuestType::ReplaceArm | QuestType::BlackBox | QuestType::SealedSite
+        )
     }
 }
 
@@ -123,6 +128,10 @@ pub enum DialogueNodeID {
     BlackBoxOffer,
     /// Handing in the data shard: what it reveals
     BlackBoxReveal,
+    /// The fourth quest's offer, once "Black Box" is done
+    SealedSiteOffer,
+    /// Handing in Thale's journal: the aperture
+    SealedSiteReveal,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

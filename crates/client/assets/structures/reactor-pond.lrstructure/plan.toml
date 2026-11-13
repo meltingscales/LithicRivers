@@ -1,0 +1,82 @@
+# A ruined reactor: a spent-fuel pond, drained long ago, its racks of waste still standing
+# in rows and one uranium deposit under the floor.
+# Compiled into shape_layers.txt by `just util-structure-build`; edit this, not that.
+layers = 2
+width = 7
+height = 7
+
+[legend]
+"C" = "reactor_casing"
+"W" = "nuclear_waste_deposit"
+"U" = "uranium_deposit"
+" " = "air"
+"." = "existing_worldgen"
+">" = "stairs"
+
+# --- Layer 0: under the pond floor ---
+[[shape]]
+kind = "fill"
+layer = 0
+x = 0
+y = 0
+w = 7
+h = 7
+block = "C"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 3
+y = 3
+block = "U"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 3
+y = 2
+block = " "
+
+# --- Layer 1: the drained pond ---
+[[shape]]
+kind = "room"
+layer = 1
+x = 0
+y = 0
+w = 7
+h = 7
+wall = "C"
+
+[[shape]]
+kind = "fill"
+layer = 1
+x = 2
+y = 2
+w = 1
+h = 3
+block = "W"
+
+[[shape]]
+kind = "fill"
+layer = 1
+x = 4
+y = 2
+w = 1
+h = 2
+block = "W"
+
+[[shape]]
+kind = "fill"
+layer = 1
+x = 3
+y = 6
+w = 1
+h = 1
+block = "."
+
+[[shape]]
+kind = "stairs"
+x = 3
+y = 2
+from_layer = 0
+to_layer = 1

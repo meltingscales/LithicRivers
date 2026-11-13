@@ -1,0 +1,17 @@
+{
+  "blocks": {
+    " ": "air",
+    ".": "existing_worldgen",
+    ">": "stairs",
+    "C": "reactor_casing",
+    "U": "uranium_deposit",
+    "W": "nuclear_waste_deposit",
+    "s": "scrap_common"
+  },
+  "gen_biomes": "QUEST_ONLY",
+  "gen_chance": 0.0,
+  "y_layer_gen_range": [
+    0,
+    0
+  ]
+}

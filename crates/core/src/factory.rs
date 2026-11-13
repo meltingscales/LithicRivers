@@ -156,6 +156,8 @@ pub enum FactoryKind {
     /// A SapienCorp security door, built into ruins: the player walks through it only while
     /// its network is powered (`sealed_door`)
     SealedDoor,
+    /// Gives constant power from a radioactive heat source it never uses up
+    Thermoelectric,
     /// A consumer that does nothing but draw power, for grid tests
     #[cfg(any(test, feature = "test-support"))]
     TestConsumer,
@@ -191,6 +193,7 @@ impl FactoryKind {
             ItemKind::Teleporter => Some(FactoryKind::Teleporter),
             ItemKind::Battery => Some(FactoryKind::Battery),
             ItemKind::Rtg => Some(FactoryKind::Rtg),
+            ItemKind::Thermoelectric => Some(FactoryKind::Thermoelectric),
             ItemKind::ItemCharger => Some(FactoryKind::ItemCharger),
             ItemKind::Fermenter => Some(FactoryKind::Fermenter),
             ItemKind::AutoFeeder => Some(FactoryKind::AutoFeeder),
@@ -230,6 +233,7 @@ impl FactoryKind {
             FactoryKind::SealedDoor => None,
             FactoryKind::Battery => Some(ItemKind::Battery),
             FactoryKind::Rtg => Some(ItemKind::Rtg),
+            FactoryKind::Thermoelectric => Some(ItemKind::Thermoelectric),
             FactoryKind::ItemCharger => Some(ItemKind::ItemCharger),
             FactoryKind::Fermenter => Some(ItemKind::Fermenter),
             FactoryKind::AutoFeeder => Some(ItemKind::AutoFeeder),
@@ -271,6 +275,7 @@ impl FactoryKind {
             FactoryKind::SealedDoor => "sealed door",
             FactoryKind::Battery => "battery",
             FactoryKind::Rtg => "RTG",
+            FactoryKind::Thermoelectric => "thermoelectric generator",
             FactoryKind::ItemCharger => "item charger",
             FactoryKind::Fermenter => "fermenter",
             FactoryKind::AutoFeeder => "auto-feeder",
@@ -308,7 +313,7 @@ impl FactoryKind {
             FactoryKind::Fence | FactoryKind::Gate | FactoryKind::Spawner => false,
             FactoryKind::Teleporter | FactoryKind::TransitStation | FactoryKind::Battery => false,
             FactoryKind::SealedDoor => false,
-            FactoryKind::Rtg | FactoryKind::ItemCharger => false,
+            FactoryKind::Rtg | FactoryKind::ItemCharger | FactoryKind::Thermoelectric => false,
             FactoryKind::AutoFeeder | FactoryKind::AnimalCounter | FactoryKind::BioVat => false,
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestConsumer => false,
@@ -395,6 +400,7 @@ impl FactoryKind {
             FactoryKind::SealedDoor => crate::sealed_door::sprite(false),
             FactoryKind::Battery => SpriteRef::new("factory", "battery"),
             FactoryKind::Rtg => SpriteRef::new("factory", "rtg"),
+            FactoryKind::Thermoelectric => SpriteRef::new("factory", "thermoelectric_generator"),
             FactoryKind::ItemCharger => SpriteRef::new("factory", "item_charger"),
             #[cfg(any(test, feature = "test-support"))]
             FactoryKind::TestConsumer => SpriteRef::new("factory", "chest"),
@@ -647,6 +653,14 @@ pub fn place(
         FactoryKind::Rtg => {
             builder.add(crate::power::Generator::default());
             builder.add(crate::power::Rtg);
+        }
+        FactoryKind::Thermoelectric => {
+            builder.add(crate::power::Generator::default());
+            builder.add(crate::power::Thermoelectric);
+            builder.add(Inventory {
+                max_slots: 1,
+                ..Default::default()
+            });
         }
         FactoryKind::ItemCharger => {
             builder.add(crate::power::PowerConsumer::idle(
@@ -949,6 +963,7 @@ pub fn takes(kind: FactoryKind, item: ItemKind) -> bool {
         | FactoryKind::SealedDoor => false,
         FactoryKind::Battery | FactoryKind::ItemCharger => crate::power_cells::is_cell(item),
         FactoryKind::Rtg => false,
+        FactoryKind::Thermoelectric => crate::power::heat_source_w(item).is_some(),
         FactoryKind::AutoFeeder | FactoryKind::BioVat => crate::livestock::takes(kind, item),
         FactoryKind::ScrapWorkbench => crate::scrap::takes(item),
         FactoryKind::AnimalCounter | FactoryKind::LivestockProcessor => false,
@@ -968,6 +983,7 @@ pub fn takes_label(kind: FactoryKind) -> Option<&'static str> {
         FactoryKind::AutoFeeder => Some("feed"),
         FactoryKind::BioVat => Some("vat ingredients"),
         FactoryKind::ScrapWorkbench => Some("craftable items"),
+        FactoryKind::Thermoelectric => Some("radioactive heat sources"),
         FactoryKind::LivestockProcessor => Some("nothing"),
         FactoryKind::CrudeVat => Some("crude body parts"),
         FactoryKind::StandardVat => Some("crude/standard body parts"),
@@ -1040,6 +1056,13 @@ pub fn accepts_from(
             return crate::livestock::accepts(world, target, block.kind, item)
         }
         FactoryKind::ScrapWorkbench => return crate::scrap::accepts(world, target, item),
+        // One heat source at a time
+        FactoryKind::Thermoelectric => {
+            return crate::power::heat_source_w(item).is_some()
+                && world
+                    .get::<&Inventory>(target)
+                    .is_ok_and(|inv| inv.slots.is_empty())
+        }
         FactoryKind::AnimalCounter | FactoryKind::LivestockProcessor => return false,
         _ => {}
     }
