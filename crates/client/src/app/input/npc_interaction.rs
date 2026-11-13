@@ -225,6 +225,12 @@ pub fn handle_npc_interaction_input(app: &mut App, key: KeyCode) -> Result<bool,
                                             Some(entity),
                                         );
                                     }
+                                    lithicrivers_core::dialogue::QuestType::SealedSite => {
+                                        lithicrivers_core::quests::start_sealed_site(
+                                            &mut app.core.game.res,
+                                            Some(entity),
+                                        );
+                                    }
                                 }
                             } else {
                                 app.core.game.res.log_yellow("Quest already active");
@@ -357,6 +363,15 @@ pub fn handle_npc_interaction_input(app: &mut App, key: KeyCode) -> Result<bool,
                                 == lithicrivers_core::dialogue::DialogueNodeID::BlackBoxReveal
                             {
                                 lithicrivers_core::quests::finish_black_box(
+                                    &mut app.core.game.world,
+                                    &mut app.core.game.res,
+                                );
+                            }
+                            // Thale's journal was just handed over: finish quest 4
+                            if *next_node_id
+                                == lithicrivers_core::dialogue::DialogueNodeID::SealedSiteReveal
+                            {
+                                lithicrivers_core::quests::finish_sealed_site(
                                     &mut app.core.game.world,
                                     &mut app.core.game.res,
                                 );

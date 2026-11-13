@@ -2,7 +2,9 @@
 
 use crate::components::{itemkind_name, Inventory, ItemKind, Player, Position};
 use crate::dialogue::{ActiveQuest, QuestObjective, QuestObjectiveType, QuestState, QuestType};
-use crate::game::{DATACENTER_MARKER, DATACENTER_POS, FACILITY_POS};
+use crate::game::{
+    ANNEX_DEPTH, ANNEX_MARKER, ANNEX_POS, DATACENTER_MARKER, DATACENTER_POS, FACILITY_POS,
+};
 use crate::model::body::{Body, BodyPartState, BodyPartType};
 use crate::resources::Resources;
 use hecs::World;
@@ -29,6 +31,20 @@ pub const DATACENTER_DOOR: (i64, i64, i64) = (
     DATACENTER_POS.1 + 8,
     DATACENTER_POS.2,
 );
+
+/// The bottom of the annex's stair shaft, where the arrival hall begins.
+pub const ANNEX_ENTRANCE: (i64, i64, i64) =
+    (ANNEX_POS.0 + 3, ANNEX_POS.1 + 3, ANNEX_POS.2 - ANNEX_DEPTH);
+/// The annex's blast door into Thale's lab.
+pub const ANNEX_DOOR: (i64, i64, i64) = (
+    ANNEX_POS.0 + 14,
+    ANNEX_POS.1 + 12,
+    ANNEX_POS.2 - ANNEX_DEPTH,
+);
+
+/// What SC-M4X7 says once the journal is handed over.
+pub const SEALED_SITE_CLOSING_LINE: &str =
+    "SC-M4X7: \"The frames were my model line. Find the foundry, user.\"";
 
 /// The guns "Black Box" can give, with their ammo; the world seed picks one.
 pub const BLACK_BOX_GUNS: [(ItemKind, ItemKind, u32); 4] = [
@@ -147,25 +163,80 @@ pub fn black_box_gun(seed: u64) -> (ItemKind, ItemKind, u32) {
 /// standard fusion core and the world's gun with its ammo, into the inventory or onto the
 /// ground when it's full.
 pub fn finish_black_box(world: &mut World, res: &mut Resources) {
-    if !res.is_quest_active(QuestType::BlackBox) {
+    if !complete_all(res, QuestType::BlackBox) {
         return;
     }
-    if let Some(quest) = res
-        .active_quests
-        .iter_mut()
-        .find(|q| q.quest_type == QuestType::BlackBox)
-    {
-        for o in &mut quest.objectives {
-            o.completed = true;
-        }
-    }
-    res.complete_quest(QuestType::BlackBox);
     let (gun, ammo, n) = black_box_gun(res.world_state.seed);
+    reward(
+        world,
+        res,
+        &[(ItemKind::StandardFusionCore, 1), (gun, 1), (ammo, n)],
+    );
+    res.log_green(BLACK_BOX_CLOSING_LINE);
+}
+
+/// "Under the River of Fire", offered by the repaired android once "Black Box" is done.
+pub fn sealed_site(npc_entity: Option<hecs::Entity>) -> ActiveQuest {
+    let (x, y, z) = ANNEX_ENTRANCE;
+    let (dx, dy, dz) = ANNEX_DOOR;
+    ActiveQuest::new(
+        QuestType::SealedSite,
+        "Under the River of Fire".to_string(),
+        "Thale's annex lies under a river of fire in the deep, down a SapienCorp shaft. It ran on its own reactor's leavings. Find what Thale left there.".to_string(),
+        vec![
+            objective(
+                "Reach Thale's Annex",
+                QuestObjectiveType::GoToLocation { x, y, z },
+            ),
+            objective(
+                "Power the annex door",
+                QuestObjectiveType::PoweredAt {
+                    x: dx,
+                    y: dy,
+                    z: dz,
+                },
+            ),
+            objective(
+                "Recover Thale's journal",
+                QuestObjectiveType::FetchItem {
+                    item_name: itemkind_name(ItemKind::ThalesJournal).to_string(),
+                    quantity: 1,
+                    consumed: false,
+                },
+            ),
+            objective(
+                "Bring the journal to SC-M4X7",
+                QuestObjectiveType::TalkToNPC {
+                    npc_name: "SC-M4X7".to_string(),
+                },
+            ),
+        ],
+        npc_entity,
+    )
+}
+
+/// Start "Under the River of Fire" and mark the annex's shaft on the map.
+pub fn start_sealed_site(res: &mut Resources, npc_entity: Option<hecs::Entity>) {
+    res.start_quest(sealed_site(npc_entity));
+    let (x, y, z) = ANNEX_POS;
+    res.add_quest_marker(crate::resources::QuestMarker {
+        name: ANNEX_MARKER.to_string(),
+        description: "Find what Thale left".to_string(),
+        x: x + 3,
+        y: y + 3,
+        z,
+        marker_type: crate::resources::QuestMarkerType::MainQuest,
+    });
+    res.log_green("Quest marker added: Thale's Annex");
+}
+
+/// Give `items` to the player, onto the ground what doesn't fit, logging each.
+fn reward(world: &mut World, res: &mut Resources, items: &[(ItemKind, u32)]) {
     let Some(player) = crate::systems::get_player_entity(world) else {
         return;
     };
     let pos = world.get::<&Position>(player).map(|p| *p).ok();
-    for (item, qty) in [(ItemKind::StandardFusionCore, 1), (gun, 1), (ammo, n)] {
+    for &(item, qty) in items {
         let left = world
             .get::<&mut Inventory>(player)
             .map(|mut inv| {
@@ -179,7 +250,59 @@ pub fn finish_black_box(world: &mut World, res: &mut Resources) {
         }
         res.log_green(format!("Received {qty} {}", itemkind_name(item)));
     }
-    res.log_green(BLACK_BOX_CLOSING_LINE);
+}
+
+/// Mark every objective of an active quest done and complete it. False if it wasn't
+/// active.
+fn complete_all(res: &mut Resources, quest_type: QuestType) -> bool {
+    if !res.is_quest_active(quest_type) {
+        return false;
+    }
+    if let Some(quest) = res
+        .active_quests
+        .iter_mut()
+        .find(|q| q.quest_type == quest_type)
+    {
+        for o in &mut quest.objectives {
+            o.completed = true;
+        }
+    }
+    res.complete_quest(quest_type);
+    true
+}
+
+/// Finish "Under the River of Fire" (the journal already handed over): complete it and
+/// give an advanced arm and a uranium chunk.
+pub fn finish_sealed_site(world: &mut World, res: &mut Resources) {
+    if !complete_all(res, QuestType::SealedSite) {
+        return;
+    }
+    reward(
+        world,
+        res,
+        &[(ItemKind::AdvancedArm, 1), (ItemKind::UraniumChunk, 1)],
+    );
+    res.log_green(SEALED_SITE_CLOSING_LINE);
+}
+
+/// Hand Thale's journal to the android: take it and finish the quest. False, changing
+/// nothing, without the journal or the quest.
+pub fn hand_in_sealed_site(world: &mut World, res: &mut Resources) -> bool {
+    let Some(player) = crate::systems::get_player_entity(world) else {
+        return false;
+    };
+    if !res.is_quest_active(QuestType::SealedSite) {
+        return false;
+    }
+    let taken = world
+        .get::<&mut Inventory>(player)
+        .map(|mut inv| inv.remove(ItemKind::ThalesJournal, 1))
+        .unwrap_or(0);
+    if taken == 0 {
+        return false;
+    }
+    finish_sealed_site(world, res);
+    true
 }
 
 /// Hand the data shard to the android: take it and finish the quest. False, changing
@@ -303,7 +426,7 @@ pub fn advance(world: &World, res: &mut Resources) {
 }
 
 /// Places the `tp_quest` cheat can take the player, for debugging quests.
-pub const TP_QUEST_TARGETS: [&str; 4] = ["android", "facility", "locker", "datacenter"];
+pub const TP_QUEST_TARGETS: [&str; 5] = ["android", "facility", "locker", "datacenter", "annex"];
 
 /// A walkable tile next to `pos` (east, west, south, north), or `pos` itself.
 pub(crate) fn beside(res: &mut Resources, pos: (i64, i64, i64)) -> Position {
@@ -369,6 +492,7 @@ pub fn tp_quest_target(
             Ok(beside(res, chest))
         }
         "datacenter" => Ok(beside(res, DATACENTER_ENTRANCE)),
+        "annex" => Ok(beside(res, ANNEX_ENTRANCE)),
         other => Err(format!(
             "unknown quest target '{other}'; targets: {}",
             TP_QUEST_TARGETS.join(", ")
@@ -382,6 +506,7 @@ mod tests {
     use crate::dialogue::DialogueNodeID;
     use crate::dialogue_database::DialogueDatabase;
     use crate::game::Game;
+    use crate::tiles::TileKind;
 
     fn reload(game: &mut Game) {
         let saved = crate::save_load::save_to_string(game, &serde_json::Value::Null).unwrap();
@@ -763,5 +888,201 @@ mod tests {
         let (x, y, z) = DATACENTER_ENTRANCE;
         assert_eq!(p.z, z);
         assert!((p.x - x).abs() <= 1 && (p.y - y).abs() <= 1);
+    }
+
+    /// A new world with Thale's Annex loaded (arriving at its depth first) and its blocks
+    /// placed.
+    fn with_annex() -> Game {
+        let mut game = Game::new(12345);
+        let (x, y, z) = ANNEX_ENTRANCE;
+        game.ensure_chunk_with_pending_structures_worldcoords(x, y, z);
+        game.place_structure_blocks();
+        game
+    }
+
+    fn annex(dx: i64, dy: i64) -> Position {
+        let (x, y, z) = ANNEX_POS;
+        Position {
+            x: x + dx,
+            y: y + dy,
+            z: z - crate::game::ANNEX_DEPTH,
+        }
+    }
+
+    fn steps(game: &mut Game, n: u64) {
+        for _ in 0..n {
+            game.res.time.tick += crate::factory::FACTORY_STEP_TICKS;
+            crate::factory::run_due_steps(&mut game.world, &mut game.res);
+        }
+    }
+
+    fn finish_black_box_quest(game: &mut Game) {
+        finish_arm_quest(game);
+        game.res.start_quest(black_box(None));
+        game.res.complete_quest(QuestType::BlackBox);
+    }
+
+    fn sealed_done(game: &Game) -> Vec<bool> {
+        game.res
+            .get_active_quest(QuestType::SealedSite)
+            .unwrap()
+            .objectives
+            .iter()
+            .map(|o| o.completed)
+            .collect()
+    }
+
+    #[test]
+    fn every_world_has_the_annex_with_its_shaft_journal_and_materials() {
+        let mut game = with_annex();
+        let (x, y, _) = ANNEX_POS;
+        let w = &mut game.res.world_state.world;
+        for z in [0, -1, -6, -11, -12] {
+            assert_eq!(
+                w.get_tile_cached(x + 3, y + 3, z),
+                TileKind::Stairs,
+                "z={z}"
+            );
+        }
+        let mut count = std::collections::BTreeMap::new();
+        for dy in 0..18 {
+            for dx in 0..24 {
+                let p = annex(dx, dy);
+                *count
+                    .entry(format!("{:?}", w.get_tile_cached(p.x, p.y, p.z)))
+                    .or_insert(0) += 1;
+            }
+        }
+        let n = |k: &str| count.get(k).copied().unwrap_or(0);
+        assert!(
+            n("ReactorCasing") >= 2 && n("NuclearWasteDeposit") >= 1,
+            "{count:?}"
+        );
+        assert!(
+            n("IronScrap") >= 4 && n("ScrapElectronics") >= 2,
+            "{count:?}"
+        );
+        assert!(
+            n("Lava") > 0 && n("LavaCrust") == 1,
+            "the river and its ford"
+        );
+        let chest = game.res.factory_index[&annex(21, 8)];
+        assert_eq!(
+            game.world
+                .get::<&Inventory>(chest)
+                .unwrap()
+                .count(ItemKind::ThalesJournal),
+            1
+        );
+        let station = game.res.factory_index[&annex(5, 1)];
+        assert_eq!(
+            game.world
+                .get::<&crate::teleporter::TransitStation>(station)
+                .unwrap()
+                .name,
+            "Annex Station"
+        );
+        let door = game.res.factory_index[&annex(14, 12)];
+        assert_eq!(
+            game.world
+                .get::<&crate::factory::FactoryBlock>(door)
+                .unwrap()
+                .kind,
+            crate::factory::FactoryKind::SealedDoor
+        );
+        // The station's RTG runs, but the door stays sealed
+        steps(&mut game, 10);
+        assert!(!crate::sealed_door::is_open(&game.world, door));
+    }
+
+    #[test]
+    fn under_the_river_of_fire_is_offered_only_after_black_box() {
+        let mut game = Game::new(12345);
+        let asks = |c: &crate::dialogue::DialogueChoice| {
+            c.leads_to == Some(DialogueNodeID::SealedSiteOffer)
+        };
+        let accepts =
+            |c: &crate::dialogue::DialogueChoice| c.unlocks_quest == Some(QuestType::SealedSite);
+        finish_arm_quest(&mut game);
+        assert!(!offered(&game, DialogueNodeID::Repaired, asks), "too early");
+        game.res.start_quest(black_box(None));
+        game.res.complete_quest(QuestType::BlackBox);
+        assert!(offered(&game, DialogueNodeID::Repaired, asks));
+        assert!(offered(&game, DialogueNodeID::SealedSiteOffer, accepts));
+        start_sealed_site(&mut game.res, None);
+        assert!(!offered(&game, DialogueNodeID::SealedSiteOffer, accepts));
+        assert!(game
+            .res
+            .quest_markers
+            .iter()
+            .any(|m| m.name == ANNEX_MARKER));
+    }
+
+    #[test]
+    fn a_placed_thermoelectric_generator_opens_the_annex_and_the_quest_pays_out() {
+        let mut game = with_annex();
+        finish_black_box_quest(&mut game);
+        start_sealed_site(&mut game.res, None);
+        teleport(&mut game, ANNEX_ENTRANCE);
+        game.tick();
+        assert_eq!(sealed_done(&game), [true, false, false, false]);
+
+        // Build a generator on the door's network, with waste from the reactor room
+        let generator = crate::factory::place(
+            &mut game.world,
+            &mut game.res,
+            crate::factory::FactoryKind::Thermoelectric,
+            annex(12, 13),
+            crate::factory::Facing::North,
+        )
+        .unwrap();
+        assert!(crate::factory::insert(
+            &mut game.world,
+            generator,
+            ItemKind::NuclearWaste
+        ));
+        steps(&mut game, 5);
+        game.tick();
+        assert_eq!(sealed_done(&game), [true, true, false, false]);
+
+        let player = game.get_player_entity().unwrap();
+        game.world
+            .get::<&mut Inventory>(player)
+            .unwrap()
+            .add(ItemKind::ThalesJournal, 1);
+        game.tick();
+        assert_eq!(sealed_done(&game), [true, true, true, false]);
+
+        assert!(hand_in_sealed_site(&mut game.world, &mut game.res));
+        assert!(game.res.is_quest_completed(QuestType::SealedSite));
+        let inv = game.world.get::<&Inventory>(player).unwrap();
+        assert_eq!(inv.count(ItemKind::ThalesJournal), 0);
+        assert_eq!(inv.count(ItemKind::AdvancedArm), 1);
+        assert_eq!(inv.count(ItemKind::UraniumChunk), 1);
+        drop(inv);
+        assert!(!game
+            .res
+            .quest_markers
+            .iter()
+            .any(|m| m.name == ANNEX_MARKER));
+        assert!(
+            !hand_in_sealed_site(&mut game.world, &mut game.res),
+            "only once"
+        );
+    }
+
+    #[test]
+    fn tp_quest_reaches_the_annex_and_finds_it_built() {
+        let mut game = Game::new(12345);
+        let p = tp_quest_target(&game.world, &mut game.res, Some("annex")).unwrap();
+        teleport(&mut game, (p.x, p.y, p.z));
+        game.tick();
+        let (x, y, z) = ANNEX_ENTRANCE;
+        assert_eq!(p.z, z);
+        assert!((p.x - x).abs() <= 1 && (p.y - y).abs() <= 1);
+        assert_eq!(
+            game.res.world_state.world.get_tile_cached(x, y, z),
+            TileKind::Stairs
+        );
     }
 }

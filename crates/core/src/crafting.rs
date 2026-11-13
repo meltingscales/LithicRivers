@@ -16,11 +16,27 @@ use crate::tiles::TileKind;
 pub struct MiningDrop {
     pub becomes: TileKind,
     pub items: &'static [(ItemKind, u32, u32)],
+    /// How many times the usual mining time it takes (reactor casing 5, everything else 1)
+    pub hardness: u32,
+}
+
+/// How many times rock's mining time reactor casing takes.
+pub const REACTOR_CASING_HARDNESS: u32 = 5;
+
+/// How many times the usual mining time a tile takes: its drop's hardness, or 1.
+pub fn hardness(tile: TileKind) -> u32 {
+    mining_drop(tile).map_or(1, |d| d.hardness)
 }
 
 /// The mining drop table. Tiles not listed can't be mined.
 pub fn mining_drop(tile: TileKind) -> Option<MiningDrop> {
-    let drop = |becomes, items| Some(MiningDrop { becomes, items });
+    let drop = |becomes, items| {
+        Some(MiningDrop {
+            becomes,
+            items,
+            hardness: 1,
+        })
+    };
     match tile {
         TileKind::Tree => drop(
             TileKind::Dirt,
@@ -44,6 +60,14 @@ pub fn mining_drop(tile: TileKind) -> Option<MiningDrop> {
             &[(ItemKind::Stone, 1, 1), (ItemKind::IronScrap, 0, 1)],
         ),
         TileKind::Concrete => drop(TileKind::Air, &[(ItemKind::Stone, 1, 1)]),
+        // Ruined reactors: casing is slow to cut, waste and uranium come out whole
+        TileKind::ReactorCasing => Some(MiningDrop {
+            becomes: TileKind::Air,
+            items: &[(ItemKind::ReactorCasingScrap, 1, 1)],
+            hardness: REACTOR_CASING_HARDNESS,
+        }),
+        TileKind::NuclearWasteDeposit => drop(TileKind::Air, &[(ItemKind::NuclearWaste, 1, 1)]),
+        TileKind::UraniumDeposit => drop(TileKind::Air, &[(ItemKind::UraniumChunk, 1, 1)]),
         // Ripe crops: their produce and 1 to 2 seeds; the field is left as dirt
         TileKind::WheatRipe => drop(
             TileKind::Dirt,
@@ -461,7 +485,10 @@ mod tests {
         );
         assert_eq!(
             raw_sources_of(ItemKind::NuclearWaste),
-            [RawSource::Carried("nuclear slimes")]
+            [
+                RawSource::Mined(TileKind::NuclearWasteDeposit),
+                RawSource::Carried("nuclear slimes")
+            ]
         );
         assert_eq!(
             made_by(recipes, ItemKind::Chest).first().map(|r| r.name),
@@ -507,6 +534,9 @@ mod tests {
             ItemKind::SulfurSlimeEmbryoFlawless,
             // Military androids carry ammo
             ItemKind::BrassCartridge,
+            // Ruined reactors
+            ItemKind::UraniumChunk,
+            ItemKind::ReactorCasingScrap,
             // The ammo chain's deposits
             ItemKind::Nitre,
             ItemKind::Sulfur,
@@ -743,5 +773,39 @@ mod tests {
         let err = components_for(r, ItemKind::Log, 1, false).unwrap_err();
         assert_eq!(err, NoRecipe(ItemKind::Log));
         assert_eq!(err.to_string(), "Log has no recipe");
+    }
+
+    #[test]
+    fn reactor_tiles_drop_their_parts_and_casing_is_five_times_as_hard() {
+        let drop = |t| mining_drop(t).unwrap();
+        assert_eq!(
+            drop(TileKind::ReactorCasing).items[0].0,
+            ItemKind::ReactorCasingScrap
+        );
+        assert_eq!(
+            drop(TileKind::NuclearWasteDeposit).items[0].0,
+            ItemKind::NuclearWaste
+        );
+        assert_eq!(
+            drop(TileKind::UraniumDeposit).items[0].0,
+            ItemKind::UraniumChunk
+        );
+        assert_eq!(hardness(TileKind::ReactorCasing), 5);
+        assert_eq!(hardness(TileKind::Rock), 1);
+        assert_eq!(hardness(TileKind::Air), 1);
+    }
+
+    #[test]
+    fn mining_casing_takes_five_times_as_long_as_rock() {
+        let mut game = crate::test_support::TestWorld::new(7)
+            .fill((-3, -3, 0), (3, 3, 0), TileKind::Grass)
+            .tile(1, 0, 0, TileKind::Rock)
+            .tile(-1, 0, 0, TileKind::ReactorCasing)
+            .build();
+        game.game.queue_mine_at(1, 0, 0);
+        let rock = game.game.res.player_state.intent.tick_cost;
+        game.game.queue_mine_at(-1, 0, 0);
+        let casing = game.game.res.player_state.intent.tick_cost;
+        assert_eq!(casing, rock * 5);
     }
 }

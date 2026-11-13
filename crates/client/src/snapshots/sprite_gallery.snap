@@ -1689,6 +1689,25 @@ U
   ╚╗▒░░▒╔╝  
  ▄▄╩════╩▄▄ 
             
+=== factory/thermoelectric_generator  #8AC060  A thermocouple stack around a radioactive heart. Feed it waste or uranium and it hums forever.
+-- 1x
+T
+-- 2x
+╔╗
+Θ║
+-- 3x
+╔═╗
+║Θ║
+╚═╝
+-- art 0
+            
+  ╔═╤═╤═╗   
+  ║ │ │ ║   
+  ║─Θ─Θ─║ ≈ 
+  ║ │ │ ║   
+  ╚═╧═╧═╝   
+            
+            
 === factory/transit_station  #5C7290  A SapienCorp transit node, plated and cold; a dusty panel waits for a hand to wake it
 -- 1x
 Ψ
@@ -3260,6 +3279,25 @@ ooo
    ▄▄█▄▄    
             
             
+=== items/reactor_casing_scrap  #5C665F  A slab cut from a reactor's containment, heavy enough to stop most things.
+-- 1x
+▓
+-- 2x
+▓▒
+▒▓
+-- 3x
+▄▓▄
+▓▒▓
+▀▀▀
+-- art 0
+            
+            
+   ▄▄▄▄▄    
+  ▐▓▒▓▒▓▌   
+  ▐▒▓▒▓▒▌   
+   ▀▀▀▀▀    
+            
+            
 === items/rifle  #8E7048  A SapienCorp service rifle, rebuilt around a brass action. It still knows how to aim.
 -- 1x
 ⌐
@@ -3847,6 +3885,44 @@ U
   ╚╗▒░░▒╔╝  
  ▄▄╩════╩▄▄ 
             
+=== items/thales_journal  #D8C49A  Dr. Emeric Thale's journal. The aperture was his gate to the far side, fed by the reactor; it opened once, four seconds, and "turned toward us." He had the maintenance frames built to remember its shape.
+-- 1x
+≡
+-- 2x
+▐▌
+▐▌
+-- 3x
+▄▄▄
+▐≡▌
+▀▀▀
+-- art 0
+            
+   ▄▄▄▄▄▄   
+  ▐▓≡≡≡≡▌   
+  ▐▓≡≡≡ ▌   
+  ▐▓≡≡≡≡▌   
+   ▀▀▀▀▀▀   
+            
+            
+=== items/thermoelectric_generator  #67904A  A crated thermoelectric generator, its casing still ticking as it cools.
+-- 1x
+T
+-- 2x
+╔╗
+╚╝
+-- 3x
+╔═╗
+║T║
+╚═╝
+-- art 0
+            
+  ╔═╤═╤═╗   
+  ║ │ │ ║   
+  ║─ ─ ─║   
+  ║ │ │ ║   
+  ╚═╧═╧═╝   
+            
+            
 === items/torch  #FFD700  A small torch.
 -- 1x
 t
@@ -3865,6 +3941,25 @@ t,
      █      
      █      
      ▀      
+            
+=== items/uranium_chunk  #B0D850  A fist-sized chunk of reactor uranium. It keeps the hand that holds it warm.
+-- 1x
+*
+-- 2x
+*·
+·*
+-- 3x
+·*·
+*●*
+·*·
+-- art 0
+            
+            
+     ▄▄     
+    ▐█*▌    
+    ▐*█▌    
+     ▀▀     
+            
             
 === items/vertical_conveyor  #9C6B30  A conveyor turned on its end; place it to carry items between layers
 -- 1x
@@ -4455,6 +4550,25 @@ n▓n
 ▓▓░░░░▓▓▓░░▓
 ▒▓▓░░▓▒▓▓▓▓▓
 ▓▓▓▓▓▒▓▓▒▓▓▓
+=== tiles/nuclear_waste_deposit  #9AE04A  A drum of spent fuel rotted into the floor, still warm, still glowing.
+-- 1x
+Θ
+-- 2x
+Θ▓
+▓Θ
+-- 3x
+▄Θ▄
+▓Θ▓
+▀▀▀
+-- art 0
+            
+   ▄▄▄▄▄▄   
+  █▓▓▓▓▓▓█  
+  █▓▓Θ▓▓▓█  
+  █▓▓▓▓▓▓█  
+  █▓▓▓▓Θ▓█  
+   ▀▀▀▀▀▀   
+            
 === tiles/plank_block  #A0522D  A block made out of wooden planks
 -- 1x
 P
@@ -4569,6 +4683,25 @@ s=s
             
             
             
+=== tiles/reactor_casing  #6E7A72  Containment casing, thick as a wall and scorched black inside. It takes a long time to cut.
+-- 1x
+▓
+-- 2x
+▓▒
+▒▓
+-- 3x
+▓▒▓
+▒▓▒
+▓▒▓
+-- art 0
+▓▓▓▓▒▓▓▓▓▒▓▓
+▓╔══╗▓▓╔══╗▓
+▓║▒▒║▓▓║▒▒║▓
+▓╚══╝▓▓╚══╝▓
+▓▓▒▓▓▓▓▓▒▓▓▓
+▓╔══╗▓▓╔══╗▓
+▓║▒▒║▓▓║▒▒║▓
+▓╚══╝▓▓╚══╝▓
 === tiles/riverglass  #A374E8  Black glass with a violet sheen, grown where the lava meets the rock. It hums faintly.
 -- 1x
 *
@@ -4968,6 +5101,25 @@ $2$
  └ ─ ─ ─ ─┘ 
             
             
+=== tiles/treasure_quest_3  #FFFF00  Special worldgen block that turns into Thale's Annex quest treasure
+-- 1x
+$
+-- 2x
+$3
+3$
+-- 3x
+$3$
+3$3
+$3$
+-- art 0
+            
+ ┌ ─ ─ ─ ─┐ 
+ ╎        ╎ 
+ ╎   $3   ╎ 
+ ╎        ╎ 
+ └ ─ ─ ─ ─┘ 
+            
+            
 === tiles/treasure_rare  #FFFF00  Special worldgen block that turns into rare treasure
 -- 1x
 $
@@ -5006,6 +5158,25 @@ t
      ▐█▌    
     ▄███▄   
             
+=== tiles/uranium_deposit  #C8F05A  A seam of the reactor's last uranium, fused into the rock. Your sensors buzz near it.
+-- 1x
+u
+-- 2x
+u▓
+▓u
+-- 3x
+▓u▓
+u*u
+▓u▓
+-- art 0
+▓▓▒▓▓▓▓▒▓▓▓▒
+▓▓▒▓*▓▓▒▓▓▓▓
+▒▓▓▓▓▓▓▓▒*▓▓
+▓▓*▓▓▒▓▓▓▓▓▒
+▓▓▒▓▓▓▓*▓▓▓▓
+▓▓▓▓▓▒▓▓▓▓*▓
+▒▓▓*▓▓▒▓▓▓▓▓
+▓▓▓▓▓▒▓▓▒▓▓▓
 === tiles/wheat_growing  #B9C25A  Green wheat, its heads still soft and closed.
 -- 1x
 ;

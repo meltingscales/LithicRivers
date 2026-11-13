@@ -1,0 +1,97 @@
+# A ruined reactor: a half-buried core, its casing dome caved in, with two uranium
+# deposits still glowing at the bottom among the waste.
+# Compiled into shape_layers.txt by `just util-structure-build`; edit this, not that.
+layers = 2
+width = 9
+height = 9
+
+[legend]
+"C" = "reactor_casing"
+"W" = "nuclear_waste_deposit"
+"U" = "uranium_deposit"
+" " = "air"
+"." = "existing_worldgen"
+">" = "stairs"
+"S" = "scrap_rare"
+
+# --- Layer 0: the core, below ground ---
+[[shape]]
+kind = "room"
+layer = 0
+x = 0
+y = 0
+w = 9
+h = 9
+wall = "C"
+
+[[shape]]
+kind = "fill"
+layer = 0
+x = 3
+y = 3
+w = 3
+h = 3
+block = "W"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 4
+y = 4
+block = "U"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 6
+y = 2
+block = "U"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 2
+y = 6
+block = "S"
+
+# --- Layer 1: the caved-in dome ---
+[[shape]]
+kind = "room"
+layer = 1
+x = 0
+y = 0
+w = 9
+h = 9
+wall = "C"
+
+[[shape]]
+kind = "fill"
+layer = 1
+x = 3
+y = 0
+w = 3
+h = 1
+block = "."
+
+[[shape]]
+kind = "fill"
+layer = 1
+x = 5
+y = 5
+w = 2
+h = 2
+block = "C"
+
+[[shape]]
+kind = "put"
+layer = 1
+x = 2
+y = 3
+block = "W"
+
+[[shape]]
+kind = "stairs"
+x = 2
+y = 2
+from_layer = 0
+to_layer = 1

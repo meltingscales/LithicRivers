@@ -31,6 +31,13 @@ pub const FACILITY_MARKER: &str = "SapienCorp Factory";
 /// The third quest's structure and its marker.
 pub const DATACENTER_STRUCTURE: &str = "sapiencorp-datacenter.lrstructure";
 pub const DATACENTER_MARKER: &str = "SapienCorp Datacenter";
+/// The fourth quest's site: Thale's Annex, buried so its surface hut sits at z = 0 and the
+/// annex itself twelve layers down, in the deep.
+pub const ANNEX_STRUCTURE: &str = "thale-annex.lrstructure";
+pub const ANNEX_MARKER: &str = "Thale's Annex";
+pub const ANNEX_POS: (i64, i64, i64) = (-260, -820, 0);
+/// How many layers below its surface hut the annex is.
+pub const ANNEX_DEPTH: i64 = 12;
 
 pub struct Game {
     pub world: World,
@@ -585,8 +592,8 @@ impl Game {
         }
     }
 
-    /// Queue the datacenter (the third quest's structure) to load with its chunk, unless it
-    /// is already placed or queued; old saves get it this way on load.
+    /// Queue the later quests' structures (the datacenter and Thale's Annex) to load with
+    /// their chunks, unless already placed or queued; old saves get them this way on load.
     pub fn queue_datacenter(&mut self) {
         // Only worlds with the quest line (the facility placed or queued) get it
         let (fx, fy, fz) = FACILITY_POS;
@@ -599,23 +606,25 @@ impl Game {
         if !has_quests {
             return;
         }
-        let (x, y, z) = DATACENTER_POS;
-        let queued = self
-            .res
-            .pending_structures
-            .iter()
-            .any(|p| p.name == DATACENTER_STRUCTURE);
-        if queued || self.is_structure_generated(DATACENTER_STRUCTURE, x, y, z) {
+        self.queue_quest_structure(DATACENTER_STRUCTURE, DATACENTER_POS, false);
+        self.queue_quest_structure(ANNEX_STRUCTURE, ANNEX_POS, true);
+    }
+
+    /// Queue a quest structure to load with its chunk, unless it is already placed or
+    /// queued.
+    fn queue_quest_structure(&mut self, name: &str, (x, y, z): (i64, i64, i64), bury: bool) {
+        let queued = self.res.pending_structures.iter().any(|p| p.name == name);
+        if queued || self.is_structure_generated(name, x, y, z) {
             return;
         }
         self.res
             .pending_structures
             .push(crate::resources::PendingStructure {
-                name: DATACENTER_STRUCTURE.to_string(),
+                name: name.to_string(),
                 x,
                 y,
                 z,
-                bury_structure: false,
+                bury_structure: bury,
             });
     }
 
@@ -928,14 +937,24 @@ impl Game {
         Some(effects.mine_cost(300.0))
     }
 
+    /// The mining cost times the tile's hardness.
+    fn mine_cost_for(&mut self, x: i64, y: i64, z: i64) -> Option<u64> {
+        let tile = self.res.world_state.world.get_tile_cached(x, y, z);
+        self.mine_cost()
+            .map(|cost| cost * crate::crafting::hardness(tile) as u64)
+    }
+
     pub fn queue_mine(&mut self) {
-        if let Some(cost) = self.mine_cost() {
+        let Some(pos) = self.get_player_component::<Position>() else {
+            return;
+        };
+        if let Some(cost) = self.mine_cost_for(pos.x, pos.y, pos.z) {
             self.res.player_state.intent = crate::intent::PlayerIntent::mine(cost);
         }
     }
 
     pub fn queue_mine_at(&mut self, x: i64, y: i64, z: i64) {
-        if let Some(cost) = self.mine_cost() {
+        if let Some(cost) = self.mine_cost_for(x, y, z) {
             self.res.player_state.intent = crate::intent::PlayerIntent::mine_at(x, y, z, cost);
         }
     }
@@ -1184,6 +1203,8 @@ impl Game {
             }
 
             // Check if structure is within or overlaps this chunk
+            // A buried structure also loads from any chunk in the column of layers below
+            // its top, so arriving at its depth first (a teleport) still finds it
             let structure_in_chunk = Self::is_point_in_chunk(
                 structure.x,
                 structure.y,
@@ -1191,7 +1212,22 @@ impl Game {
                 chunk_x,
                 chunk_y,
                 chunk_z,
-            );
+            ) || (structure.bury_structure && {
+                let layers =
+                    crate::structure::StructureDefinition::load_from_embedded(&structure.name)
+                        .layers
+                        .len() as i64;
+                (0..layers).any(|down| {
+                    Self::is_point_in_chunk(
+                        structure.x,
+                        structure.y,
+                        structure.z - down,
+                        chunk_x,
+                        chunk_y,
+                        chunk_z,
+                    )
+                })
+            });
 
             if structure_in_chunk {
                 tracing::info!(target: "game", "Structure '{}' at ({}, {}, {}) belongs to chunk ({}, {}, {}) - will load",
@@ -1707,7 +1743,7 @@ mod tests {
             game.res
                 .pending_structures
                 .iter()
-                .filter(|p| p.name != DATACENTER_STRUCTURE)
+                .filter(|p| p.name != DATACENTER_STRUCTURE && p.name != ANNEX_STRUCTURE)
                 .count(),
             0
         );
@@ -1740,7 +1776,7 @@ mod tests {
             game.res
                 .pending_structures
                 .iter()
-                .filter(|p| p.name != DATACENTER_STRUCTURE)
+                .filter(|p| p.name != DATACENTER_STRUCTURE && p.name != ANNEX_STRUCTURE)
                 .count(),
             0
         );
@@ -1757,7 +1793,7 @@ mod tests {
             game.res
                 .pending_structures
                 .iter()
-                .filter(|p| p.name != DATACENTER_STRUCTURE)
+                .filter(|p| p.name != DATACENTER_STRUCTURE && p.name != ANNEX_STRUCTURE)
                 .count(),
             0
         );
@@ -1777,7 +1813,7 @@ mod tests {
             game.res
                 .pending_structures
                 .iter()
-                .filter(|p| p.name != DATACENTER_STRUCTURE)
+                .filter(|p| p.name != DATACENTER_STRUCTURE && p.name != ANNEX_STRUCTURE)
                 .count(),
             0
         );
@@ -1790,7 +1826,7 @@ mod tests {
             game.res
                 .pending_structures
                 .iter()
-                .filter(|p| p.name != DATACENTER_STRUCTURE)
+                .filter(|p| p.name != DATACENTER_STRUCTURE && p.name != ANNEX_STRUCTURE)
                 .count(),
             0
         );

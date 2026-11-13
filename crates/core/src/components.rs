@@ -323,6 +323,10 @@ pub enum ItemKind {
     IsotopeCanister,
     ScrapWorkbench,
     DataShard,
+    UraniumChunk,
+    ReactorCasingScrap,
+    Thermoelectric,
+    ThalesJournal,
 }
 
 pub fn itemkind_name(kind: ItemKind) -> &'static str {
@@ -441,6 +445,10 @@ pub fn itemkind_name(kind: ItemKind) -> &'static str {
         ItemKind::IsotopeCanister => "Isotope Canister",
         ItemKind::ScrapWorkbench => "Scrap Workbench",
         ItemKind::DataShard => "Data Shard",
+        ItemKind::UraniumChunk => "Uranium Chunk",
+        ItemKind::ReactorCasingScrap => "Reactor Casing Scrap",
+        ItemKind::Thermoelectric => "Thermoelectric Generator",
+        ItemKind::ThalesJournal => "Thale's Journal",
     }
 }
 
@@ -560,6 +568,10 @@ pub fn itemkind_sprite_name(kind: ItemKind) -> &'static str {
         ItemKind::IsotopeCanister => "isotope_canister",
         ItemKind::ScrapWorkbench => "scrap_workbench",
         ItemKind::DataShard => "data_shard",
+        ItemKind::UraniumChunk => "uranium_chunk",
+        ItemKind::ReactorCasingScrap => "reactor_casing_scrap",
+        ItemKind::Thermoelectric => "thermoelectric_generator",
+        ItemKind::ThalesJournal => "thales_journal",
     }
 }
 
@@ -679,6 +691,10 @@ pub fn parse_itemkind_from_sprite_name(sprite_name: &str) -> Option<ItemKind> {
         "isotope_canister" => Some(ItemKind::IsotopeCanister),
         "scrap_workbench" => Some(ItemKind::ScrapWorkbench),
         "data_shard" => Some(ItemKind::DataShard),
+        "uranium_chunk" => Some(ItemKind::UraniumChunk),
+        "reactor_casing_scrap" => Some(ItemKind::ReactorCasingScrap),
+        "thermoelectric_generator" => Some(ItemKind::Thermoelectric),
+        "thales_journal" => Some(ItemKind::ThalesJournal),
         _ => None,
     }
 }

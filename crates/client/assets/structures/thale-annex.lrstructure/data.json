@@ -1,0 +1,31 @@
+{
+  "blocks": {
+    " ": "air",
+    "#": "concrete",
+    ".": "existing_worldgen",
+    "3": "treasure_quest_3",
+    ">": "stairs",
+    "A": "android_spawn",
+    "B": "sealed_door_site",
+    "C": "reactor_casing",
+    "D": "door",
+    "F": "lava_crust",
+    "H": "station_item_charger",
+    "I": "power_pole",
+    "L": "lava",
+    "P": "teleporter_station",
+    "R": "sapiencorp_rtg",
+    "S": "scrap_rare",
+    "W": "nuclear_waste_deposit",
+    "X": "iron_scrap",
+    "e": "scrap_electronics",
+    "p": "plasteel_scrap",
+    "r": "rock"
+  },
+  "gen_biomes": "QUEST_ONLY",
+  "gen_chance": 0.0,
+  "y_layer_gen_range": [
+    0,
+    0
+  ]
+}

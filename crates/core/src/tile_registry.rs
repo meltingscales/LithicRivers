@@ -118,6 +118,10 @@ define_tiles! {
     TreasureQuest2, "treasure_quest_2", "quest treasure", false,
     SealedDoorSite, "sealed_door_site", "sealed door", false,
     BurnerGeneratorSite, "burner_generator_site", "burner generator", false,
+    ReactorCasing, "reactor_casing", "reactor casing", false,
+    NuclearWasteDeposit, "nuclear_waste_deposit", "nuclear waste", false,
+    UraniumDeposit, "uranium_deposit", "uranium deposit", false,
+    TreasureQuest3, "treasure_quest_3", "quest treasure", false,
 }
 
 impl TileKind {

@@ -1,0 +1,447 @@
+# Thale's Annex, the fourth quest's goal: a SapienCorp access hut on the surface over a
+# twelve-layer stair shaft, down to Thale's reactor annex under a river of fire in the
+# deep. A lava channel with one crust ford crosses the arrival hall. The outer reactor room
+# holds the casing, waste, iron and electronics for one thermoelectric generator, and the
+# blast door to Thale's lab sits on a network with a pole and no generator. The Annex
+# Station's RTG is kept more than a wire's reach from that pole, so it can't open the door.
+# Compiled into shape_layers.txt by `just util-structure-build`; edit this, not that.
+layers = 13
+width = 24
+height = 18
+
+[legend]
+"#" = "concrete"
+"r" = "rock"
+" " = "air"
+"." = "existing_worldgen"
+"D" = "door"
+">" = "stairs"
+"L" = "lava"
+"F" = "lava_crust"
+"C" = "reactor_casing"
+"W" = "nuclear_waste_deposit"
+"X" = "iron_scrap"
+"e" = "scrap_electronics"
+"p" = "plasteel_scrap"
+"B" = "sealed_door_site"
+"I" = "power_pole"
+"P" = "teleporter_station"
+"R" = "sapiencorp_rtg"
+"H" = "station_item_charger"
+"3" = "treasure_quest_3"
+"S" = "scrap_rare"
+"A" = "android_spawn"
+
+# --- Layer 12 (the surface): the access hut ---
+[[shape]]
+kind = "room"
+layer = 12
+x = 1
+y = 1
+w = 5
+h = 5
+wall = "#"
+doors = [[3, 5]]
+
+# --- Layers 1 to 11: rock around the shaft ---
+[[shape]]
+kind = "fill"
+layer = 1
+x = 1
+y = 1
+w = 5
+h = 5
+block = "r"
+
+[[shape]]
+kind = "fill"
+layer = 1
+x = 2
+y = 2
+w = 3
+h = 3
+block = " "
+
+[[shape]]
+kind = "fill"
+layer = 2
+x = 1
+y = 1
+w = 5
+h = 5
+block = "r"
+
+[[shape]]
+kind = "fill"
+layer = 2
+x = 2
+y = 2
+w = 3
+h = 3
+block = " "
+
+[[shape]]
+kind = "fill"
+layer = 3
+x = 1
+y = 1
+w = 5
+h = 5
+block = "r"
+
+[[shape]]
+kind = "fill"
+layer = 3
+x = 2
+y = 2
+w = 3
+h = 3
+block = " "
+
+[[shape]]
+kind = "fill"
+layer = 4
+x = 1
+y = 1
+w = 5
+h = 5
+block = "r"
+
+[[shape]]
+kind = "fill"
+layer = 4
+x = 2
+y = 2
+w = 3
+h = 3
+block = " "
+
+[[shape]]
+kind = "fill"
+layer = 5
+x = 1
+y = 1
+w = 5
+h = 5
+block = "r"
+
+[[shape]]
+kind = "fill"
+layer = 5
+x = 2
+y = 2
+w = 3
+h = 3
+block = " "
+
+[[shape]]
+kind = "fill"
+layer = 6
+x = 1
+y = 1
+w = 5
+h = 5
+block = "r"
+
+[[shape]]
+kind = "fill"
+layer = 6
+x = 2
+y = 2
+w = 3
+h = 3
+block = " "
+
+[[shape]]
+kind = "fill"
+layer = 7
+x = 1
+y = 1
+w = 5
+h = 5
+block = "r"
+
+[[shape]]
+kind = "fill"
+layer = 7
+x = 2
+y = 2
+w = 3
+h = 3
+block = " "
+
+[[shape]]
+kind = "fill"
+layer = 8
+x = 1
+y = 1
+w = 5
+h = 5
+block = "r"
+
+[[shape]]
+kind = "fill"
+layer = 8
+x = 2
+y = 2
+w = 3
+h = 3
+block = " "
+
+[[shape]]
+kind = "fill"
+layer = 9
+x = 1
+y = 1
+w = 5
+h = 5
+block = "r"
+
+[[shape]]
+kind = "fill"
+layer = 9
+x = 2
+y = 2
+w = 3
+h = 3
+block = " "
+
+[[shape]]
+kind = "fill"
+layer = 10
+x = 1
+y = 1
+w = 5
+h = 5
+block = "r"
+
+[[shape]]
+kind = "fill"
+layer = 10
+x = 2
+y = 2
+w = 3
+h = 3
+block = " "
+
+[[shape]]
+kind = "fill"
+layer = 11
+x = 1
+y = 1
+w = 5
+h = 5
+block = "r"
+
+[[shape]]
+kind = "fill"
+layer = 11
+x = 2
+y = 2
+w = 3
+h = 3
+block = " "
+
+# --- Layer 0 (the deep): the annex ---
+[[shape]]
+kind = "room"
+layer = 0
+x = 0
+y = 0
+w = 24
+h = 18
+wall = "#"
+
+# The river of fire across the arrival hall, and its one ford
+[[shape]]
+kind = "fill"
+layer = 0
+x = 1
+y = 6
+w = 22
+h = 1
+block = "L"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 4
+y = 6
+block = "F"
+
+# The dormant Annex Station, its RTG, charger and pole
+[[shape]]
+kind = "put"
+layer = 0
+x = 5
+y = 1
+block = "P"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 6
+y = 1
+block = "R"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 4
+y = 1
+block = "H"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 5
+y = 3
+block = "I"
+
+# The outer reactor room: cracked casing, waste, iron and electronics
+[[shape]]
+kind = "fill"
+layer = 0
+x = 1
+y = 9
+w = 1
+h = 4
+block = "C"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 6
+y = 15
+block = "C"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 7
+y = 15
+block = "C"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 3
+y = 10
+block = "W"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 4
+y = 13
+block = "W"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 6
+y = 11
+block = "W"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 8
+y = 9
+block = "X"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 9
+y = 9
+block = "X"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 10
+y = 9
+block = "X"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 8
+y = 10
+block = "X"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 10
+y = 12
+block = "e"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 11
+y = 12
+block = "e"
+
+# The wall to the lab, its sealed blast door, and the door's pole (no generator)
+[[shape]]
+kind = "fill"
+layer = 0
+x = 14
+y = 7
+w = 1
+h = 10
+block = "#"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 14
+y = 12
+block = "B"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 13
+y = 13
+block = "I"
+
+# Thale's lab: the journal, salvage and a guard
+[[shape]]
+kind = "put"
+layer = 0
+x = 21
+y = 8
+block = "3"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 20
+y = 15
+block = "S"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 17
+y = 15
+block = "p"
+
+[[shape]]
+kind = "put"
+layer = 0
+x = 18
+y = 11
+block = "A"
+
+# The stairs, from the hut down to the annex
+[[shape]]
+kind = "stairs"
+x = 3
+y = 3
+from_layer = 0
+to_layer = 12

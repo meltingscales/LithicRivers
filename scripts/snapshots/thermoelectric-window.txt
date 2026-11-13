@@ -1,0 +1,11 @@
+# The Factory showcase's thermoelectric generator: nuclear waste in its one heat-source
+# slot keeps a sealed door open with no fuel to run out
+seed 12345
+size 100x30
+world factory-showcase
+key ui.MENU_PREV
+key action.PASS_TIME 1
+cheat tp 150 -6 0
+key action.INTERACT
+expect-text "Thermoelectric Generator - 30 kW forever"
+screen thermoelectric-window

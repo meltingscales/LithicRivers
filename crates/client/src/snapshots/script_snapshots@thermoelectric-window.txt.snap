@@ -1,0 +1,37 @@
+---
+source: crates/client/src/snapshot_tests.rs
+expression: "String::from_utf8(out).unwrap()"
+input_file: scripts/snapshots/thermoelectric-window.txt
+---
+=== screen thermoelectric-window ===
+                                            LithicRivers
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌MODES ☼ 08:16─────────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│  ------ - - -- - FOG │
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv└──────────────────────┘
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv┌Inventory─────────────┐
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv│Nail x10              │
+vvvvvvvvvvvvvvv┌───────────── Thermoelectric Generator - 30 kW forever ─────────────┐              │
+vvvvvvvvvvvvvvv│┌ Heat source ───────────────────┐┌ Showing radioactive heat source┐│              │
+vvvvvvvvvvvvvvv││ 1 x Nuclear Waste              ││                                ││──────────────┘
+vvvv╫╫╫╫╫╫╫╫╫vv││                                ││                                ││ ! Damaged────┐
+vvvv╫vvvSvvv╫vv││                                ││                                ││              │
+¥vvv╫vuSvv#v╫vv││                                ││                                ││              │
+vvvv╫vvvvvvS╫vv││                                ││                                ││              │
+vvvv╫vvvSvvv╫vv││                                ││                                ││              │
+vvvv╫╫╫╫X╫╫╫╫vv││                                ││                                ││              │
+¥vvvvGG+vΩvvvvv││                                ││                                ││              │
+vvvvvvvvvvvvvvv││                                ││                                ││ mode         │
+vvvvvvvvvvvvvvv││                                ││                                ││thermoelectric│
+vvvvvvvvvvvvvvv││                                ││                                ││              │
+vvvvvvvvvvvvvvv││                                ││                                ││──────────────┘
+┌Messages──────││                                ││                                ││──────────────┐
+│[1001] Time pa││                                ││                                ││              │
+│[1001] Opened │└────←→ Panel | ↑↓ Select | Enter Move | a Take All | Esc Close────┘│              │
+│              └────────────────────────────────────────────────────────────────────┘              │
+│                                                                                                  │
+│                                                                                                  │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌Menu──────────────────────────────────────────────────────────────────────────────────────────────┐
+│ World │ Tutorial │ Global Map │ Quests │ Body │ Inventory │ Crafting │ Items │ Production │ Menu │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+=== end screen ===

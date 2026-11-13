@@ -38,6 +38,15 @@ pub fn biome_noises_built() -> u64 {
     BIOME_NOISES_BUILT.with(|n| n.get())
 }
 
+/// The chance a surface chunk outside cities holds a ruined reactor.
+pub const REACTOR_RUIN_CHANCE: f64 = 0.015;
+/// The ruined reactor layouts, picked evenly.
+pub const REACTOR_RUINS: [&str; 3] = [
+    "reactor-ring.lrstructure",
+    "reactor-core.lrstructure",
+    "reactor-pond.lrstructure",
+];
+
 /// The chance a city surface chunk holds a skyscraper.
 const SKYSCRAPER_CHANCE: f64 = 0.3;
 /// Cracked roads run every this many tiles across a city, two tiles wide.
@@ -172,6 +181,7 @@ pub enum Feature {
     Stairways,
     WildCrops,
     SulfurVents,
+    ReactorRuins,
 }
 
 /// A resource that generates as veins, with a vein-noise threshold per band (higher is
@@ -1079,7 +1089,8 @@ impl GameWorld {
             return;
         }
         let chance = if city { SKYSCRAPER_CHANCE } else { 0.05 };
-        if rng.gen::<f64>() < chance {
+        let placed = rng.gen::<f64>() < chance;
+        if placed {
             let mut bury = false;
             let (name, ox, oy) = match band_for_chunk {
                 BiomeBand::Plains => (
@@ -1118,6 +1129,18 @@ impl GameWorld {
             let structure = StructureDefinition::load_from_embedded(name);
             let world_z = cz * CHUNK_SIZE_Z;
             self.apply_structure_world(ecs_world, cx, cy, cz, &structure, ox, oy, world_z, bury);
+        }
+
+        // 3) Now and then a ruined reactor, on the surface outside cities, where nothing
+        // else stands; its own generator, so the roll above is unchanged
+        if !placed && cz == 0 && !city {
+            let mut rng = self.feature_rng(cx, cy, cz, Feature::ReactorRuins);
+            if rng.gen::<f64>() < REACTOR_RUIN_CHANCE {
+                let name = REACTOR_RUINS[rng.gen_range(0..REACTOR_RUINS.len())];
+                let (ox, oy) = (rng.gen_range(0..CHUNK_SIZE), rng.gen_range(0..CHUNK_SIZE));
+                let structure = StructureDefinition::load_from_embedded(name);
+                self.apply_structure_world(ecs_world, cx, cy, cz, &structure, ox, oy, 0, true);
+            }
         }
     }
 

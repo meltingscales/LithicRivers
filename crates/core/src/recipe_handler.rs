@@ -472,6 +472,17 @@ impl RecipeHandler {
                 result: ItemKind::ScrapWorkbench,
                 quantity: 1,
             },
+            // Thermoelectric generator: casing from a ruined reactor around a heat pile
+            Recipe {
+                name: "Thermoelectric Generator",
+                ingredients: &[
+                    (ItemKind::IronScrap, 4),
+                    (ItemKind::ScrapElectronics, 2),
+                    (ItemKind::ReactorCasingScrap, 2),
+                ],
+                result: ItemKind::Thermoelectric,
+                quantity: 1,
+            },
             // Meat slurry: 2x meat, ground down to feed spawners
             Recipe {
                 name: "Meat Slurry",
