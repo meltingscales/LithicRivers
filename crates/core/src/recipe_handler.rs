@@ -483,6 +483,38 @@ impl RecipeHandler {
                 result: ItemKind::Thermoelectric,
                 quantity: 1,
             },
+            // The Aperture (revealed by "The Foundry"): rare materials, a one-time cost
+            Recipe {
+                name: "Aperture Frame",
+                ingredients: &[
+                    (ItemKind::PlasteelScrap, 4),
+                    (ItemKind::Riverglass, 2),
+                    (ItemKind::ReactorCasingScrap, 1),
+                ],
+                result: ItemKind::ApertureFrame,
+                quantity: 4,
+            },
+            Recipe {
+                name: "Aperture Port",
+                ingredients: &[
+                    (ItemKind::ApertureFrame, 1),
+                    (ItemKind::ScrapElectronics, 4),
+                    (ItemKind::AdvancedArm, 1),
+                ],
+                result: ItemKind::AperturePort,
+                quantity: 1,
+            },
+            Recipe {
+                name: "Aperture Core",
+                ingredients: &[
+                    (ItemKind::AdvancedFusionCore, 1),
+                    (ItemKind::Riverglass, 6),
+                    (ItemKind::UraniumChunk, 4),
+                    (ItemKind::CastingPatterns, 1),
+                ],
+                result: ItemKind::ApertureCore,
+                quantity: 1,
+            },
             // Meat slurry: 2x meat, ground down to feed spawners
             Recipe {
                 name: "Meat Slurry",

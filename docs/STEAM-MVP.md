@@ -145,6 +145,9 @@ The game opens its own window with a bundled font (`add-game-window`), so it no 
   - [x] **15+ emotional dialogue states for rich NPC interactions**
   - [x] **Summon Night-style dual portraits (NPC + player mood-based)**
 - [x] Combat system with tick-based moves and an option to use items and run away
+- [ ] A story with an ending (`add-foundry-quest-and-aperture`, waiting on a playtest)
+  - [x] Five quests from the bunker to the foundry, each revealing a little more (`docs/QUESTS.md`)
+  - [x] The Aperture: a hidden endgame build fed by renewable factory chains for two game hours, then the closing sequence and credits
   - [x] Running away costs 600 ticks
   - [x] Tackling an enemy costs 800 ticks
   - [x] Tackling an enemy stuns it for 400 ticks (50% chance)

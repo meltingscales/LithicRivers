@@ -31,3 +31,16 @@
 - the annex's blast door has no power: build a thermoelectric generator from the casing, waste, iron and electronics in its outer reactor room and place it on the door's network
 - bring Thale's journal back to SC-M4X7: an advanced arm and a uranium chunk
 - **reveal:** the aperture was Thale's gate to "the far side," fed by the overloaded reactor; it opened once, for four seconds ("We heard the far side breathing. It turned toward us."); the maintenance frames were built to remember its shape, and SC-M4X7 was one of them. The journal's last page names the foundry that cast the aperture's ring, the hook for quest 5. Nothing says what the robot is for.
+
+## 5: The Foundry
+
+- once "Under the River of Fire" is done, SC-M4X7 sends the robot east to the SapienCorp foundry that cast the aperture's ring
+- past the guard androids in the entrance yard, the casting hall's lava pit stands between the robot and the pattern vault: bridge it with plain blocks (lava crust) to reach the vault
+- bring the casting patterns back to SC-M4X7, who hands them back: the core is cast from them
+- **reveal:** SC-M4X7 says plainly what the robot is: one of the frames, built to remember the aperture's shape and finish it. The Aperture's recipes (core, frame, port) appear in the Crafting tab and Item Dictionary only now
+
+## The ending: the Aperture
+
+- an 11-by-11 ring: the core in the middle, frame blocks around the border and five input ports, each taking only perfect biomech embryos, meat slurry, ethanol, mash or biochar, all chains the factory can run without end
+- each game minute it judges every input over the last ten minutes and charges by the weakest one's fraction of its rate; an input below half its rate for three minutes drains a point. Interact opens its flow window (rates, colors, charge, time left, or the missing block)
+- at 120 points (two game hours at full rates) it opens: the closing pages and the credits play, and the world comes back with the Aperture standing open. Interact on it: "The far side is not ready for you yet." The far side is a later change

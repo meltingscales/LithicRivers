@@ -1,0 +1,14 @@
+# Benchmark: the factory showcase world with its machines running, viewed from its finished
+# Aperture while ten game minutes pass, so the ring is checked every factory step and its
+# charge settled every minute alongside the rest of the showcase.
+# Steps before the first `beat` are setup and aren't timed.
+seed 12345
+size 80x24
+world factory-showcase
+key ui.MENU_PREV
+cheat tp 162 -8 0
+beat 0
+key action.PASS_TIME 60
+key movement.MOVE_WEST 10
+expect-text "LithicRivers"
+state end

@@ -25,14 +25,14 @@ The Aperture SHALL be an 11-by-11 square with a core at its center, frame blocks
 - **THEN** the Aperture is complete and starts tracking its inputs
 
 ### Requirement: Inputs and their rates
-Each input port SHALL take only its item kind (perfect biomech embryos, meat slurry, ethanol, mash or biochar) from belts, extractors or the player, and SHALL track how many arrived in each of the last ten game minutes. Every input SHALL be something the factory can make without end.
+Each input port SHALL take only its item kind (perfect biomech embryos, meat slurry, ethanol, mash or biochar) from belts or extractors, and SHALL track how many arrived in each of the last ten game minutes. Every input SHALL be something the factory can make without end.
 
 #### Scenario: Wrong item
 - **WHEN** a belt carries biochar into the ethanol port
 - **THEN** the port doesn't take it
 
 ### Requirement: Charge
-Each game minute, a complete Aperture SHALL gain one point when every input met its required rate, gain the lowest input's fraction of a point when any fell short, and lose a point when any input stayed below half its rate for three minutes in a row. At 120 points it SHALL open.
+Each game minute, a complete Aperture SHALL judge every input over its last ten minutes (or fewer, early on), gain one point when every input met its required rate, gain the lowest input's fraction of a point when any fell short, and lose a point when any input was below half its rate for three minutes in a row. At 120 points it SHALL open. Judging over ten minutes lets slow inputs, like a fraction of an embryo a minute, count fairly.
 
 #### Scenario: Full rates
 - **WHEN** every input meets its rate for 120 game minutes

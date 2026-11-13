@@ -29,7 +29,7 @@
 
 ### The foundry
 `sapiencorp-foundry` is a surface plan (not buried) of one layer, about 30 by 20, at `FOUNDRY_POS` = (900, -460, 0), queued with the other quest structures. Its layout:
-- **Entrance yard:** scrap heaps, a mining bot spawn and two android spawns.
+- **Entrance yard:** scrap heaps and two android spawns (mining bots stay in the deep band, so none guard the foundry).
 - **Casting hall:** a molten casting pit, a band of lava five tiles wide across the hall, with stone heaps on the near side to make the bridge from (the player can also bring their own blocks).
 - **Pattern vault**, beyond the pit: a `TreasureQuest4` chest holding the aperture casting patterns, and some rare loot.
 - **No transit station:** the walk out is part of the last journey.
@@ -57,7 +57,7 @@ The "cross the casting pit" objective is a `GoToLocation` on the vault side, rea
 Each port counts arrivals into the core's per-minute history (10 buckets, like `factory_stats`), and takes from belts and extractors like a machine input. These rates need a farm of roughly a dozen bio-vats, a sheep farm, a wheat field with fermenters and a tree farm with furnaces: a big factory, but buildable. They are constants, tuned in the playtest.
 
 ### Charge
-Per game minute, with `fraction` = each input's arrivals over its required rate for that minute, capped at 1:
+Per game minute, with `fraction` = each input's arrivals over its required rate across the kept minutes (up to ten), capped at 1, so slow inputs like embryos aren't short in every minute one doesn't happen to arrive:
 
 - every input at 1 or more: +1000 milli-points
 - otherwise: + 1000 × the lowest fraction
@@ -87,7 +87,7 @@ Interact on the open Aperture logs "The far side is not ready for you yet." That
 | Aperture port | 1 frame, 4 scrap electronics, 1 advanced arm |
 | Aperture core | 1 advanced fusion core, 6 riverglass, 4 uranium chunks, the casting patterns |
 
-The core uses up the patterns, so the reveal flag (not the patterns) keeps the recipes visible.
+The android hands the patterns back on hand-in, and the core uses them up, so the reveal flag (not the patterns) keeps the recipes visible.
 
 ### The bench
 A `scripts/bench/aperture-farm.txt` scenario in the factory showcase world with the Aperture built (cheated) and a fed showcase factory around it, timing a minute of play.

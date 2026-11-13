@@ -229,6 +229,30 @@ pub struct Resources {
     /// The last growth period sulfur vents grew in (`sulfur_vents`)
     #[serde(default)]
     pub vent_growth_period: u64,
+    /// Secrets the player has uncovered, unlocking what they hide (the Aperture)
+    #[serde(default)]
+    pub revealed: std::collections::BTreeSet<Reveal>,
+}
+
+/// A secret that hides recipes, items and blocks until a quest uncovers it.
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, serde::Serialize, serde::Deserialize,
+)]
+pub enum Reveal {
+    /// The biomechanical teleporter, revealed by "The Foundry"
+    Aperture,
+}
+
+impl Reveal {
+    /// The secret an item belongs to, if it is one.
+    pub fn of_item(item: crate::components::ItemKind) -> Option<Reveal> {
+        use crate::components::ItemKind;
+        matches!(
+            item,
+            ItemKind::ApertureCore | ItemKind::ApertureFrame | ItemKind::AperturePort
+        )
+        .then_some(Reveal::Aperture)
+    }
 }
 
 /// Counts of what the player has done in a world, saved with it.
@@ -271,6 +295,7 @@ impl Resources {
             factory_stats: Default::default(),
             shots: Vec::new(),
             vent_growth_period: 0,
+            revealed: Default::default(),
         }
     }
 
@@ -401,8 +426,15 @@ impl Resources {
                 QuestType::ReplaceArm => marker.name != crate::game::FACILITY_MARKER,
                 QuestType::BlackBox => marker.name != crate::game::DATACENTER_MARKER,
                 QuestType::SealedSite => marker.name != crate::game::ANNEX_MARKER,
+                QuestType::Foundry => marker.name != crate::game::FOUNDRY_MARKER,
             }
         });
+    }
+
+    /// Whether the player may see and use `item`: it hides behind no secret, or its
+    /// secret is uncovered.
+    pub fn item_revealed(&self, item: crate::components::ItemKind) -> bool {
+        Reveal::of_item(item).is_none_or(|r| self.revealed.contains(&r))
     }
 
     /// Check if a quest is active

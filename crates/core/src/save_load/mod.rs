@@ -127,6 +127,8 @@ saved_components! {
     "bio_vat" => crate::livestock::BioVat,
     "scrap_workbench" => crate::scrap::ScrapWorkbench,
     "thermoelectric" => crate::power::Thermoelectric,
+    "aperture" => crate::aperture::Aperture,
+    "aperture_port" => crate::aperture::AperturePort,
     "belt_slot" => crate::factory::BeltSlot,
     "generator" => crate::power::Generator,
     "power_pole" => crate::power::PowerPole,

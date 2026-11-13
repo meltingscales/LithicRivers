@@ -81,6 +81,16 @@ impl CommandRegistry {
                 handler: handle_keepbody_command,
             },
             Command {
+                name: "reveal",
+                description: "reveal aperture - Uncover a secret, unlocking what it hides",
+                handler: handle_reveal_command,
+            },
+            Command {
+                name: "open_aperture",
+                description: "open_aperture - Fill the nearest Aperture's charge so it opens",
+                handler: handle_open_aperture_command,
+            },
+            Command {
                 name: "set_tile",
                 description: "set_tile x y z <tile> - Replace a tile, e.g. set_tile ~1 ~ ~ tree (~ = relative to player)",
                 handler: handle_set_tile_command,
@@ -486,6 +496,36 @@ fn handle_kill_player_command(app: &mut App, _parts: &[&str]) -> Result<(), Box<
         player,
         "self-destruct command".to_string(),
     );
+    Ok(())
+}
+
+fn handle_reveal_command(app: &mut App, parts: &[&str]) -> Result<(), Box<dyn Error>> {
+    match parts.get(1).copied() {
+        Some("aperture") => {
+            app.core
+                .game
+                .res
+                .revealed
+                .insert(lithicrivers_core::resources::Reveal::Aperture);
+            app.core.game.res.log("Revealed: the Aperture");
+            Ok(())
+        }
+        _ => Err("Usage: reveal aperture".into()),
+    }
+}
+
+fn handle_open_aperture_command(app: &mut App, _parts: &[&str]) -> Result<(), Box<dyn Error>> {
+    let game = &mut app.core.game;
+    let from = game.get_player_position().ok_or("no player")?;
+    let core = game
+        .world
+        .query::<&Position>()
+        .with::<&lithicrivers_core::aperture::Aperture>()
+        .iter()
+        .min_by_key(|(_, p)| (p.x - from.x).abs() + (p.y - from.y).abs() + (p.z - from.z).abs())
+        .map(|(e, _)| e)
+        .ok_or("there is no Aperture core")?;
+    lithicrivers_core::aperture::force_open(&mut game.world, &mut game.res, core);
     Ok(())
 }
 

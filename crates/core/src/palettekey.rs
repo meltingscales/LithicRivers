@@ -78,6 +78,7 @@ pub enum PaletteKey {
     NuclearWasteDeposit,
     UraniumDeposit,
     TreasureQuest3,
+    TreasureQuest4,
     WheatSeedling,
     WheatGrowing,
     WheatRipe,

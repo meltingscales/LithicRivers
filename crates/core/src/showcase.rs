@@ -128,6 +128,12 @@ pub const EXAMPLES: &[Example] = &[
         has_input: false,
         build: thermoelectric,
     },
+    Example {
+        name: "The Aperture: a finished 11-by-11 frame, its five input ports waiting",
+        size: (11, 11),
+        has_input: false,
+        build: aperture,
+    },
 ];
 
 /// The top-left corner of the first example; the rest follow eastward.
@@ -345,6 +351,37 @@ fn thermoelectric(game: &mut Game, o: Position) {
     fill(game, generator, &[(ItemKind::NuclearWaste, 1)]);
     place(game, FactoryKind::PowerPole, at(o, 5, 0), Facing::North);
     place(game, FactoryKind::SealedDoor, at(o, 6, 1), Facing::North);
+}
+
+/// A finished Aperture: the core at the center, frame blocks around the border and the
+/// five input ports where `aperture::INPUTS` puts them. Nothing feeds it.
+fn aperture(game: &mut Game, o: Position) {
+    use crate::aperture::{HALF, INPUTS};
+    let center = (HALF, HALF);
+    place(
+        game,
+        FactoryKind::ApertureCore,
+        at(o, center.0, center.1),
+        Facing::North,
+    );
+    for dy in -HALF..=HALF {
+        for dx in -HALF..=HALF {
+            if dx.abs() != HALF && dy.abs() != HALF {
+                continue;
+            }
+            let kind = if INPUTS.iter().any(|i| i.offset == (dx, dy)) {
+                FactoryKind::AperturePort
+            } else {
+                FactoryKind::ApertureFrame
+            };
+            place(
+                game,
+                kind,
+                at(o, center.0 + dx, center.1 + dy),
+                Facing::North,
+            );
+        }
+    }
 }
 
 fn scrap_line(game: &mut Game, o: Position) {

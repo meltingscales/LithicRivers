@@ -1,0 +1,21 @@
+# The Aperture's flow window: the showcase's finished ring with nothing feeding it (every
+# input red), then with one frame block broken (incomplete, naming where).
+seed 12345
+size 100x30
+world factory-showcase
+key ui.MENU_PREV
+cheat reveal aperture
+# Stand just north of the ring's north port (the core is at 162, -2)
+cheat tp 162 -8 0
+# Let it check its ring and judge a few empty minutes
+key action.PASS_TIME 20
+key action.INTERACT
+expect-text "The Aperture - charging"
+screen charging
+key ui.CLOSE_HELP_MENU
+# Break the frame block northeast of the port
+click 39 11 right
+key action.PASS_TIME 1
+key action.INTERACT
+expect-text "The ring is incomplete."
+screen incomplete

@@ -161,6 +161,8 @@ pub struct ProductionPanelState {
 pub struct PanelStates {
     /// The power pole whose network info box is open
     pub power_info: Option<hecs::Entity>,
+    /// The Aperture core whose flow window is open
+    pub aperture_window: Option<hecs::Entity>,
     /// Whether the pole box graphs the last 10 game minutes instead of the last 60 seconds
     pub power_range_long: bool,
     /// The Production tab
@@ -174,6 +176,10 @@ pub struct PanelStates {
     pub stairs_prompt: Option<StairsPrompt>,
     /// The selected row of the system-failure screen (0 respawn, 1 quit)
     pub death_choice: usize,
+    /// The closing sequence's page, while it plays
+    pub ending_page: usize,
+    /// When the credits page came up, which scrolls them from the clock
+    pub ending_credits_since: Option<std::time::Instant>,
     /// The Resurrect screen's selected row while it is open: ready vats, then the junker
     pub resurrect: Option<usize>,
     pub inventory: InventoryPanelState,
@@ -587,6 +593,12 @@ pub enum InteractionType {
         entity: hecs::Entity,
         position: Position,
     },
+    /// Show an Aperture's flow window (`entity` is its core; `position` the block beside
+    /// the player)
+    InspectAperture {
+        entity: hecs::Entity,
+        position: Position,
+    },
 }
 
 impl InteractionType {
@@ -607,7 +619,8 @@ impl InteractionType {
             | InteractionType::UseTeleporter { position, .. }
             | InteractionType::LoadBelt { position, .. }
             | InteractionType::FeedSheep { position, .. }
-            | InteractionType::AdjustCounter { position, .. } => *position,
+            | InteractionType::AdjustCounter { position, .. }
+            | InteractionType::InspectAperture { position, .. } => *position,
         }
     }
 
@@ -627,7 +640,8 @@ impl InteractionType {
             | InteractionType::UseTeleporter { entity, .. }
             | InteractionType::LoadBelt { entity, .. }
             | InteractionType::FeedSheep { entity, .. }
-            | InteractionType::AdjustCounter { entity, .. } => Some(*entity),
+            | InteractionType::AdjustCounter { entity, .. }
+            | InteractionType::InspectAperture { entity, .. } => Some(*entity),
             InteractionType::OpenCloseDoor { .. } => None,
         }
     }
@@ -691,6 +705,7 @@ impl InteractionType {
                     .map_or(0, |c| c.size);
                 format!("Adjust animal counter ({size}x{size})")
             }
+            InteractionType::InspectAperture { .. } => "Inspect the Aperture".to_string(),
             InteractionType::OpenCloseDoor { is_open: true, .. } => "Close door".to_string(),
             InteractionType::OpenCloseDoor { is_open: false, .. } => "Open door".to_string(),
         }
@@ -712,6 +727,7 @@ impl InteractionType {
             InteractionType::LoadBelt { .. } => ">", // onto the belt
             InteractionType::FeedSheep { .. } => "e",
             InteractionType::AdjustCounter { .. } => "n",
+            InteractionType::InspectAperture { .. } => "O",
             InteractionType::OpenCloseDoor { is_open, .. } => {
                 if *is_open {
                     "o"

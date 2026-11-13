@@ -9,6 +9,8 @@ pub enum QuestType {
     BlackBox,
     /// "Under the River of Fire": recover Thale's journal from his annex in the deep
     SealedSite,
+    /// "The Foundry": recover the aperture's casting patterns, revealing the Aperture
+    Foundry,
 }
 
 impl QuestType {
@@ -17,7 +19,10 @@ impl QuestType {
     pub fn ordered(self) -> bool {
         matches!(
             self,
-            QuestType::ReplaceArm | QuestType::BlackBox | QuestType::SealedSite
+            QuestType::ReplaceArm
+                | QuestType::BlackBox
+                | QuestType::SealedSite
+                | QuestType::Foundry
         )
     }
 }
@@ -132,6 +137,10 @@ pub enum DialogueNodeID {
     SealedSiteOffer,
     /// Handing in Thale's journal: the aperture
     SealedSiteReveal,
+    /// The fifth quest's offer, once "Under the River of Fire" is done
+    FoundryOffer,
+    /// Handing in the casting patterns: what the player is for
+    FoundryReveal,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

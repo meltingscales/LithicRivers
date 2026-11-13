@@ -13,6 +13,13 @@ To act on one, ask for it by its suggested change name ("propose add-day-night-c
 | **Combat panel cleanup:** the emojis and stray "z" are gone and the enemy health bar shows again at small sizes; the spacing still needs a look by eye. | STEAM-MVP.md ("ugly combat UI") | Partly | `polish-combat-panel` |
 | **Mods:** a modding system and Steam Workshop support. | TODO.md | Missing | `add-modding` |
 
+## After the ending
+
+| Idea | Source | Today | Suggested change |
+|---|---|---|---|
+| **The far side (the Inversion):** a hostile world past the open Aperture, with its own worldgen, changed automation and crafting tree, and endgame quests that need a big factory again. | Discussion on `add-foundry-quest-and-aperture` | Missing (the Aperture opens onto "not ready yet") | `add-far-side` |
+| **The Listener:** the thing that "turned toward us," a final boss fought through factory output rather than melee. | Discussion on `add-foundry-quest-and-aperture` | Missing | `add-far-side` or its own change |
+
 ## Worldgen and places
 
 | Idea | Source | Today | Suggested change |

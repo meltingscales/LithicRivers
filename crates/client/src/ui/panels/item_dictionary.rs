@@ -33,7 +33,10 @@ pub fn matching_items(loader: &mut SpriteLoader, search: &SearchBox) -> Vec<Item
 /// The items the tab lists right now.
 pub fn filtered_items(app: &mut crate::App) -> Vec<ItemKind> {
     let search = app.panels.item_dictionary.search.clone();
-    matching_items(&mut app.core.sprite_loader, &search)
+    let mut items = matching_items(&mut app.core.sprite_loader, &search);
+    // Secrets stay out of the dictionary until uncovered
+    items.retain(|&item| app.core.game.res.item_revealed(item));
+    items
 }
 
 fn colored(loader: &mut SpriteLoader, item: ItemKind, text: String) -> Span<'static> {
@@ -148,7 +151,9 @@ pub fn render_item_dictionary_panel(f: &mut Frame, app: &mut crate::App, area: R
         art_color = color;
         let recipes = app.panels.crafting.recipe_handler.get_recipes();
         let made = crafting::made_by(recipes, item);
-        let used = crafting::used_in(recipes, item);
+        // Recipes for secrets aren't named until they're uncovered
+        let mut used = crafting::used_in(recipes, item);
+        used.retain(|r| app.core.game.res.item_revealed(r.result));
         let sources = crafting::raw_sources_of(item);
         if !sources.is_empty() {
             lines.push(Line::from("Found:"));

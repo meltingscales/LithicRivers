@@ -203,7 +203,16 @@ fn can_carry(loot: &CreatureLoot) -> bool {
     loot.chance_percent > 0 && loot.max > 0
 }
 
-/// Items obtainable without crafting: everything the mining table drops, plus creature loot.
+/// Items found once each in a quest location's chest, with where.
+pub const QUEST_ITEMS: &[(ItemKind, &str)] = &[
+    (ItemKind::SalvagedArm, "the SapienCorp facility"),
+    (ItemKind::DataShard, "the SapienCorp datacenter"),
+    (ItemKind::ThalesJournal, "Thale's Annex"),
+    (ItemKind::CastingPatterns, "the SapienCorp foundry"),
+];
+
+/// Items obtainable without crafting: everything the mining table drops, creature loot,
+/// and the quest items.
 pub fn raw_sources() -> BTreeSet<ItemKind> {
     let mined = TileKind::all_variants()
         .iter()
@@ -221,7 +230,8 @@ pub fn raw_sources() -> BTreeSet<ItemKind> {
             .into_iter()
             .filter_map(move |g| crate::spawner::embryo(creature, g))
     });
-    mined.chain(carried).chain(embryos).collect()
+    let quest = QUEST_ITEMS.iter().map(|&(item, _)| item);
+    mined.chain(carried).chain(embryos).chain(quest).collect()
 }
 
 /// Where an item comes from without crafting.
@@ -231,6 +241,8 @@ pub enum RawSource {
     Mined(TileKind),
     /// These creatures (named in the plural) can carry it
     Carried(&'static str),
+    /// Found once, in this quest location
+    Quest(&'static str),
 }
 
 impl RawSource {
@@ -238,6 +250,7 @@ impl RawSource {
         match self {
             RawSource::Mined(tile) => format!("Mined from {}", tile.display_name()),
             RawSource::Carried(creatures) => format!("Carried by {creatures}"),
+            RawSource::Quest(place) => format!("Found once, in {place}"),
         }
     }
 }
@@ -253,6 +266,12 @@ pub fn raw_sources_of(item: ItemKind) -> Vec<RawSource> {
             sources.push(RawSource::Carried(creatures));
         }
     }
+    sources.extend(
+        QUEST_ITEMS
+            .iter()
+            .filter(|&&(i, _)| i == item)
+            .map(|&(_, place)| RawSource::Quest(place)),
+    );
     sources
 }
 
@@ -534,6 +553,11 @@ mod tests {
             ItemKind::SulfurSlimeEmbryoFlawless,
             // Military androids carry ammo
             ItemKind::BrassCartridge,
+            // Found once each, in a quest location
+            ItemKind::SalvagedArm,
+            ItemKind::DataShard,
+            ItemKind::ThalesJournal,
+            ItemKind::CastingPatterns,
             // Ruined reactors
             ItemKind::UraniumChunk,
             ItemKind::ReactorCasingScrap,

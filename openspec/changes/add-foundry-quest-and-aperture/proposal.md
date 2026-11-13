@@ -6,7 +6,7 @@ Quest 4 names the foundry that cast the aperture's ring, and the game still has 
 
 ## What Changes
 
-- **The SapienCorp Foundry:** a guaranteed surface ruin, one per world, far from the bunker. Its casting hall holds the aperture's casting patterns in a vault across a molten casting pit; the player bridges the pit with blocks (placing a plain block on lava leaves walkable crust). Guarded by military androids and a mining bot.
+- **The SapienCorp Foundry:** a guaranteed surface ruin, one per world, far from the bunker. Its casting hall holds the aperture's casting patterns in a vault across a molten casting pit; the player bridges the pit with blocks (placing a plain block on lava leaves walkable crust). Guarded by military androids.
 - **Quest 5, "The Foundry":** offered by SC-M4X7 once "Under the River of Fire" is complete.
   1. Reach the foundry.
   2. Cross the casting pit.

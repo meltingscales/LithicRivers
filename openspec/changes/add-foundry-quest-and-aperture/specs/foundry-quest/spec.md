@@ -36,7 +36,7 @@ The pattern vault SHALL lie across a molten casting pit that can only be crossed
 
 #### Scenario: Hand-in
 - **WHEN** the player carrying the casting patterns talks to the android with the quest active
-- **THEN** the patterns are handed over, the quest completes, and the Aperture is revealed
+- **THEN** the quest completes, the Aperture is revealed, and the android hands the patterns back for casting the core
 
 ### Requirement: The goal is revealed
 Handing in the patterns SHALL reveal the Aperture, and the android's dialogue SHALL tell the player that the frames were made to open it again and that the player is one of them.
