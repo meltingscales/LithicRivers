@@ -22,7 +22,7 @@
 ## 5. Checks
 
 - [x] 5.1 Update `docs/QUESTS.md` (quest 4), `docs/TECH-TREE.md` (thermoelectric before ore spouts' ingots), `AGENTS.md` (`tp_quest annex`, the generator) and remove `openspec/changes/add-ruined-reactors`; verify by reading the diff
-- [ ] 5.2 Verify `just code-clippy`, `cargo test --workspace`, `just util-bench` and PR checks pass
+- [x] 5.2 Verify `just code-clippy`, `cargo test --workspace`, `just util-bench` and PR checks pass
 - [ ] 5.3 User check: the descent feels like a journey, building the generator to open the door is clear and satisfying, and the aperture reveal lands
 
 ## Workflow follow-up
